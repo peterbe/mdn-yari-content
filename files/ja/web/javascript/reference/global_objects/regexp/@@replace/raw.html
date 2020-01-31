@@ -1,0 +1,115 @@
+<div>{{JSRef}}</div>
+
+<p><strong><code>[@@replace]()</code></strong> メソッドは、<code>replacement</code> によって文字列内の <code>this</code> パターンの一部または、すべての一致を置き換えて、置換結果を新しい文字列として返します。<code>replacement</code> は文字列か関数をすべてのマッチごとに呼び出されるようにできます。</p>
+
+<div>{{EmbedInteractiveExample("pages/js/regexp-prototype-@@replace.html")}}</div>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox"><var>regexp</var>[Symbol.replace](str, <var>newSubStr</var>|<var>function</var>)</pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<dl>
+ <dt><code>str</code></dt>
+ <dd>置換対象の {{jsxref("String")}}。</dd>
+ <dt><code>newSubStr (replacement)</code></dt>
+ <dd>部分を置換する {{jsxref("String")}}。特殊な置換パターンの数値がサポートされている：{{jsxref("String.prototype.replace()")}} ページの{{jsxref("String.prototype.replace", "引数としての文字列の指定", "#Specifying_a_string_as_a_parameter", 1)}}セクションを見てください。</dd>
+ <dt><code>function (replacement)</code></dt>
+ <dd>新しい部分文字列を生成するために呼び出される関数。この関数に提供される引数については、{{jsxref("String.prototype.replace()")}} ページの{{jsxref("String.prototype.replace", "引数としての関数の指定", "#Specifying_a_function_as_a_parameter", 1)}}セクションを見てください。</dd>
+</dl>
+
+<h3 id="Return_value" name="Return_value">戻り値</h3>
+
+<p>置換によって置き換えられたパターンの一部またはすべてのマッチを持つ新しい文字列です。</p>
+
+<h2 id="Description" name="Description">説明</h2>
+
+<p>このメソッドは {{jsxref("String.prototype.replace()")}} の内部で（ <code>replace()</code> の） <code>pattern</code> 引数が {{jsxref("RegExp")}} オブジェクトだった場合に呼び出されます。たとえば、次の 2 つの例は同じ結果を返します。</p>
+
+<pre class="brush: js">'abc'.replace(/a/, 'A');
+
+/a/[Symbol.replace]('abc', 'A');</pre>
+
+<p>このメソッドは、<code>RegExp</code> サブクラスの置換動作をカスタマイズするために存在しています。</p>
+
+<p>{{jsxref("String.prototype.replace()")}} は <code>pattern</code> 引数が {{jsxref("RegExp")}} オブジェクトでは<strong>ない</strong>場合、このメソッドの呼び出しや {{jsxref("RegExp")}} オブジェクトの生成を行いません。</p>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<h3 id="Direct_call" name="Direct_call">直接呼出し</h3>
+
+<p><code>this</code> と引数の順序が異なる点を除いて、このメソッドは {{jsxref("String.prototype.replace()")}} とほどんど同じ使い方ができます。</p>
+
+<pre class="brush: js">var re = /-/g; 
+var str = '2016-01-01';
+var newstr = re[Symbol.replace](str, '.');
+console.log(newstr);  // 2016.01.01
+</pre>
+
+<h3 id="Using_replace_in_subclasses" name="Using_replace_in_subclasses">サブクラスで @@replace を使用する</h3>
+
+<p>既定の動作を修正するために、{{jsxref("RegExp")}} のサブクラスで <code>[@@replace]()</code> メソッドをオーバーライドできます。</p>
+
+<pre class="brush: js">class MyRegExp extends RegExp {
+  constructor(pattern, flags, count) {
+    super(pattern, flags);
+    this.count = count;
+  }
+  [Symbol.replace](str, replacement) {
+    // Perform @@replace |count| times.
+    var result = str;
+    for (var i = 0; i &lt; this.count; i++) {
+      result = RegExp.prototype[Symbol.replace].call(this, result, replacement);
+    }
+    return result;
+  }
+}
+
+var re = new MyRegExp('\\d', '', 3);
+var str = '01234567';
+var newstr = str.replace(re, '#'); // String.prototype.replace calls re[@@replace].
+console.log(newstr); // ###34567</pre>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">状態</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-regexp.prototype-@@replace', 'RegExp.prototype[@@replace]')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td>初期定義。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-regexp.prototype-@@replace', 'RegExp.prototype[@@replace]')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td></td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザー実装状況</h2>
+
+<div>
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.builtins.RegExp.@@replace")}}</p>
+</div>
+
+<h2 id="See_also" name="See_also">関連項目</h2>
+
+<ul>
+ <li>{{jsxref("String.prototype.replace()")}}</li>
+ <li>{{jsxref("RegExp.prototype.@@match()", "RegExp.prototype[@@match]()")}}</li>
+ <li>{{jsxref("RegExp.prototype.@@search()", "RegExp.prototype[@@search]()")}}</li>
+ <li>{{jsxref("RegExp.prototype.@@split()", "RegExp.prototype[@@split]()")}}</li>
+ <li>{{jsxref("RegExp.prototype.exec()")}}</li>
+ <li>{{jsxref("RegExp.prototype.test()")}}</li>
+</ul>

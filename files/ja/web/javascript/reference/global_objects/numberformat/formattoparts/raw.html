@@ -1,0 +1,143 @@
+<div>{{JSRef}} {{SeeCompatTable}}</div>
+
+<p><strong><code>Intl.Numberformat.prototype.formatToParts()</code></strong><font><font>メソッド</font></font><font><font>は</font></font><code>NumberTimeFormat</code><font>フォーマッタ</font><font>によって生成された文字列のロケールに応じた書式設定を可能にします</font><font>。</font></p>
+
+<h2 id="構文">構文</h2>
+
+<pre class="syntaxbox">Intl.NumberFormat.prototype.formatToParts(number)</pre>
+
+<h3 id="引数">引数</h3>
+
+<dl>
+ <dt><code>number</code> {{optional_inline}}</dt>
+ <dd>フォーマットする数値</dd>
+</dl>
+
+<h3 id="Return_value" name="Return_value">戻り値</h3>
+
+<p>フォーマットされた数を含む要素のオブジェクトの{{jsxref("Array")}} 。</p>
+
+<h2 id="説明">説明</h2>
+
+<p><font><font>この</font></font><code>formatToParts()</code><font><font>メソッドは、数値文字列のカスタム書式設定を行うときに便利です。ロケール固有のトークンを含むオブジェクトの</font></font><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array" title="JavaScript Arrayオブジェクトは、配列の構築に使用されるグローバルオブジェクトです。 高レベルのリストのようなオブジェクトです。">Array</a></code>を取得します。その戻り値を利用することで<font><font>ロケール固有の要素を保持しながらカスタム文字列の構築を可能にします。</font></font><code>formatToParts()</code><font><font>メソッドの戻り値</font><font>は</font><font>次のようになります。</font></font></p>
+
+<pre class="brush: js">[
+  { type: "integer", value: "3" }
+  { type: "group", value: "." }
+  { type: "integer", value: "500" }
+]</pre>
+
+<p>可能なタイプは以下のとおりです。</p>
+
+<dl>
+ <dt>currency</dt>
+ <dd>通貨の文字列です。"$"や"€"のような記号または"Dollar", "Euro" の文字列です。これらの文字列は<code>currencyDisplay</code> の特定方法に依存します。</dd>
+ <dt>decimal</dt>
+ <dd>小数点区切り文字 (".")</dd>
+ <dt>fraction</dt>
+ <dd>端数</dd>
+ <dt>group</dt>
+ <dd>グループ区切り文字 ("1,000")</dd>
+ <dt>infinity</dt>
+ <dd>{{jsxref("Infinity")}}文字列 ("∞").</dd>
+ <dt>integer</dt>
+ <dd>整数</dd>
+ <dt>literal</dt>
+ <dd>書式設定された数字のリテラル文字列または空白</dd>
+ <dt>minusSign</dt>
+ <dd>マイナス記号の文字列("-")</dd>
+ <dt>nan</dt>
+ <dd>{{jsxref("NaN")}}文字列 ("NaN")</dd>
+ <dt>plusSign</dt>
+ <dd>
+ <p>プラス起動の文字列 ("+")</p>
+ </dd>
+</dl>
+
+<dl>
+ <dt>percentSign</dt>
+ <dd>パーセント文字列("%")</dd>
+</dl>
+
+<h2 id="例">例</h2>
+
+<p><code>NumberFormat</code> はローカライズされた不明瞭な文字列を出力します。出力された文字列は直接操作できません。</p>
+
+<pre class="brush: js">var number = 3500;
+
+var formatter = new Intl.NumberFormat('de-DE', { 
+  style: 'currency', 
+  currency: 'EUR' 
+});
+
+formatter.format(number);
+// "3.500,00 €"
+</pre>
+
+<p>しかし、多くのユーザーインターフェースでは、この文字列の書式形式をカスタマイズしたいと要望があります。<code>formatToParts</code> <font><font>メソッド</font></font><font><font>は</font></font><code>NumberFormat</code><font>フォーマッタ</font><font>によって生成された文字列を要素ごとの文字列として提供することでロケールに応じた書式設定を可能にします</font><font>。</font></p>
+
+<pre class="brush: js">formatter.formatToParts(number);
+
+// return value: 
+[ 
+  { type: "integer",  value: "3"   }
+  { type: "group",    value: "."   }
+  { type: "integer",  value: "500" }
+  { type: "decimal",  value: ","   }
+  { type: "fraction", value: "00"  }
+  { type: "literal",  value: " "   }
+  { type: "currency", value: "€"   }
+]
+</pre>
+
+<p>これで情報は個別に利用可能となり、カスタマイズされた方法でフォーマットして連結することができます。例えば {{jsxref("Array.prototype.map()")}}や、 <a href="/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions">arrow functions</a>、 a <a href="/en-US/docs/Web/JavaScript/Reference/Statements/switch">switch statement</a>、 <a href="/en-US/docs/Web/JavaScript/Reference/Template_literals">template literals</a>、{{jsxref("Array.prototype.reduce()")}}を使います。</p>
+
+<pre class="brush: js">var numberString = formatter.formatToParts(number).map(({type, value}) =&gt; { 
+  switch (type) {
+    case 'currency': return `&lt;strong&gt;${value}&lt;/strong&gt;`; 
+    default : return value; 
+  } 
+}).reduce((string, part) =&gt; string + part);
+</pre>
+
+<p>上記は<code>formatToParts()</code>メソッドを使い、通貨を太字にします。</p>
+
+<pre class="brush: js">console.log(numberString);
+// "3.500,00 &lt;strong&gt;€&lt;/strong&gt;"</pre>
+
+<h2 id="ポリフィル">ポリフィル</h2>
+
+<p>この機能のポリフィルは <a href="https://github.com/zbraniecki/proposal-intl-formatToParts">proposal repository</a> で可能です。</p>
+
+<h2 id="仕様">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES Int Draft', '#sec-Intl.NumberFormat.prototype.formatToParts', 'Intl.NumberFormat.prototype.formatToParts')}}</td>
+   <td>{{Spec2('ES Int Draft')}}</td>
+   <td>Initial definition</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="ブラウザ実装状況">ブラウザ実装状況</h2>
+
+<div>
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.builtins.Intl.NumberFormat.formatToParts")}}</p>
+</div>
+
+<h2 id="関連情報">関連情報</h2>
+
+<ul>
+ <li>{{jsxref("NumberFormat", "Intl.NumberFormat")}}</li>
+ <li>{{jsxref("NumberFormat.format", "Intl.NumberFormat.prototype.format")}}</li>
+ <li>Formatting dates: {{jsxref("DateFormat.formatToParts", "Intl.DateTimeFormat.prototype.formatToParts()")}}</li>
+</ul>

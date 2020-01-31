@@ -1,0 +1,117 @@
+<p><strong>HTTP Strict Transport Security</strong> (souvent abrégé par <em>HSTS</em>) est un dispositif de sécurité par lequel un site web peut déclarer aux navigateurs qu'ils doivent communiquer avec lui en utilisant exclusivement le protocole HTTPS, au lieu du <a href="http://fr.wikipedia.org/wiki/HTTP" title="en/HTTP">HTTP</a>.</p>
+
+<h2 id="Pourquoi_est-ce_utile">Pourquoi est-ce utile ?</h2>
+
+<p>Si un site web accepte une connexion via HTTP et la redirige en HTTPS, l'utilisateur peut dans la phase initiale être en communication avec la version non chiffrée du site avant la redirection, si par exemple il entre une adresse comme <span class="nowiki">http://www.machin.com/</span> ou même seulement machin<span class="nowiki">.com</span>.</p>
+
+<p>Ce qui ouvre une brèche potentielle à une <a href="http://fr.wikipedia.org/wiki/Attaque_de_l%27homme_du_milieu" title="http://fr.wikipedia.org/wiki/Attaque_de_l%27homme_du_milieu">attaque de l'homme du milieu </a>(man-in-the-middle attack), par laquelle la redirection peut être détournée pour envoyer l'utilisateur vers un site malveillant au lieu de la version sécurisée de la page désirée.</p>
+
+<p>Le mécanisme <em>HTTP Strict Transport Security </em>permet au site web d'informer le navigateur qu'il ne doit jamais charger le site utilisant le HTTP, et doit en revanche convertir toutes les requêtes en HTTP en requêtes HTTPS.</p>
+
+<h3 id="Un_exemple_d'utilisation">Un exemple d'utilisation</h3>
+
+<p>Vous vous connectez sur un point d'accès WiFi public dans un aéroport et commencez à naviguer sur le Web, vous vérifiez sur votre service bancaire en ligne l'état de votre compte et payez quelques factures. Malheureusement le point d'accès que vous utilisez est en fait l'ordinateur portable d'un pirate, et il intercepte votre requête initiale en HTTP et la redirige vers une copie frauduleuse du site de votre banque et non vers le site authentique. Et voilà comment vos données confidentielles se retrouvent entre les mains du pirate.</p>
+
+<p>Le protocole <em>Strict Transport Security</em> résout ce problème ; si vous avez accédé une première fois au site de votre banque en utilisant le HTTPS, et que le site de la banque utilise le protocole <em>Strict Transport Security</em>, votre navigateur saura automatiquement qu'il ne doit utiliser que le HTTPS, ce qui empêchera les pirates de mener une attaque de type<em> l'homme du milieu</em>.</p>
+
+<h2 id="Activation_du_protocole_Strict_Transport_Security">Activation du protocole Strict Transport Security</h2>
+
+<p>Activer le dispositif sur votre site consiste tout simplement à retourner l'en-tête HTTP  <code>Strict-Transport-Security </code>quand votre site reçoit une requête d'accès HTTPS :</p>
+
+<pre>Strict-Transport-Security: max-age=<em>expireTime</em> [; includeSubDomains] [; preload]
+</pre>
+
+<dl>
+ <dt><code>expireTime</code></dt>
+ <dd>La durée exprimée en secondes, pendant laquelle le navigateur doit retenir que le site n'est accessible que par le protocole HTTPS.</dd>
+ <dt><code>includeSubDomains</code> {{ optional_inline() }}</dt>
+ <dd>Si ce paramètre facultatif est précisé, la règle s'appliquera également à tous les sous-domaines du site.</dd>
+ <dt><code>preload</code> {{ optional_inline() }}</dt>
+ <dd>Voir {{anch("Liste préchargé pour Strict Transport Security")}} pour le détail. Ne fait pas partie de la spécification.</dd>
+</dl>
+
+<div class="note"><strong>Note :</strong> L'en-tête <code>Strict-Transport-Security</code> est <strong>ignoré</strong> par le navigateur si on accède à votre site en utilisant HTTP ; en effet, un attaquant malveillant peut intercepter les connexions via HTTP et injecter un autre en-tête ou le supprimer. Quand on accède à votre site via HTTPS sans erreur de certificat, le navigateur sait que le site est compatible HTTPS et respectera l'en-tête <code>Strict-Transport-Security</code>.</div>
+
+<h2 id="Comment_le_navigateur_gère_le_protocole">Comment le navigateur gère le protocole</h2>
+
+<p>La première fois qu'on accède à votre site via HTTPS et qu'il renvoie l'en-tête <code>Strict-Transport-Security</code>, le navigateur mémorise cette information, de sorte que toutes les tentatives ultérieures de connexion via HTTP utiliseront automatiquement le HTTPS en substitution.</p>
+
+<p>Lorsque le délai d'expiration (<code>expireTime</code>) précisé dans l'en-tête Strict-Transport-Security arrive à son terme, la tentative suivante de charger le site via HTTP sera traitée comme normale au lieu d'être automatiquement convertie en HTTPS.</p>
+
+<p>À chaque fois que l'en-tête Strict-Transport-Security est transmis au navigateur, celui-ci met à jour le délai d'expiration pour ce site, ce qui permet au concepteur du site de réactualiser cette information et éviter de dépasser le délai d'expiration.</p>
+
+<h2 id="Liste_préchargé_pour_Strict_Transport_Security">Liste préchargé pour Strict Transport Security</h2>
+
+<p>Google maintiens <a href="https://hstspreload.appspot.com/">un service de pré-chargement pour HSTS</a>. En suivant les recommandations et en soumettant votre domaine, les navigateurs utilisant cette liste ne se connecteront jamais en utilisant une connexion non sécurisée. Bien que le service soit hébergé par Google, tous les navigateurs web ont commencés (ou commencent) à utiliser cette liste.</p>
+
+<ul>
+ <li>Informations et consultation de la liste préchargé dans Chrome :  <a href="https://www.chromium.org/hsts">https://www.chromium.org/hsts</a></li>
+ <li>Consultation de la liste préchargé dans Firefox : <a href="https://dxr.mozilla.org/comm-central/source/mozilla/security/manager/ssl/nsSTSPreloadList.inc">nsSTSPreloadList.inc</a></li>
+</ul>
+
+<h2 id="Compatibilité_des_navigateurs">Compatibilité des navigateurs</h2>
+
+<p>{{ CompatibilityTable() }}</p>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Fonctionnalité</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>Support basique</td>
+   <td>4.0.211.0</td>
+   <td>{{CompatGeckoDesktop("4.0")}}</td>
+   <td>{{CompatIE("11 (June 2015)")}}[1]</td>
+   <td>12</td>
+   <td>{{CompatNo()}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Fonctionnalité</th>
+   <th>Chrome pour Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>Support basique</td>
+   <td>18</td>
+   <td>{{CompatGeckoDesktop("4.0")}}</td>
+   <td>{{CompatNo()}}</td>
+   <td>{{CompatUnknown()}}</td>
+   <td>{{CompatNo()}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<p id="sect1">[1] <a href="http://blogs.windows.com/msedgedev/2015/06/09/http-strict-transport-security-comes-to-internet-explorer-11-on-windows-8-1-and-windows-7/">KB 3058515</a></p>
+
+<h2 id="Spécifications">Spécifications</h2>
+
+<ul>
+ <li><a class="link-https" href="https://tools.ietf.org/html/rfc6797" title="https://tools.ietf.org/html/rfc6797">RFC 6797 - HTTP Strict Transport Security (HSTS)</a></li>
+</ul>
+
+<h2 id="Voir_également">Voir également</h2>
+
+<ul>
+ <li>Ce billet : <a class="external" href="http://blog.sidstamm.com/2010/08/http-strict-transport-security-has.html" title="http://blog.sidstamm.com/2010/08/http-strict-transport-security-has.html">HTTP Strict Transport Security has landed!</a></li>
+ <li>Cet autre billet : <a class="external" href="http://hacks.mozilla.org/2010/08/firefox-4-http-strict-transport-security-force-https/" title="http://hacks.mozilla.org/2010/08/firefox-4-http-strict-transport-security-force-https/">HTTP Strict Transport Security (force HTTPS)</a></li>
+ <li>L'article sur OWASP : <a href="https://www.owasp.org/index.php/HTTP_Strict_Transport_Security" title="https://www.owasp.org/index.php/HTTP_Strict_Transport_Security">HTTP Strict Transport Security</a></li>
+ <li>La page Wikipédia en français : <a href="http://fr.wikipedia.org/wiki/HTTP_Strict_Transport_Security" title="http://en.wikipedia.org/wiki/HTTP_Strict_Transport_Security">HTTP Strict Transport Security</a></li>
+</ul>

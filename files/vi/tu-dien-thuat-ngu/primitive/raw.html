@@ -1,0 +1,114 @@
+<p><span class="seoSummary">Trong {{Glossary("JavaScript")}}, <strong>giá trị sơ khai</strong> (giá trị sơ khai, kiểu dữ liệu sơ khai) là dữ liệu không phải {{Glossary("object")}} và không có {{glossary("method","phương thức")}}. Có 6 kiểu dữ liệu sơ khai: {{Glossary("string")}}, {{Glossary("number")}}, {{Glossary("boolean")}}, {{Glossary("null")}}, {{Glossary("undefined")}}, {{Glossary("symbol")}} (mới thêm vào trong {{Glossary("ECMAScript")}} 2015).</span></p>
+
+<p>Most of the time, a primitive value is represented directly at the lowest level of the language implementation.</p>
+
+<p>Mọi giá trị sơ khai đều là <strong>bất biến</strong>, tức là không thể bị thay đổi. Đừng để bối rối giữa một giá trị sơ khai với một biến được gán giá trị sơ khai. Biến đó có thể được gán lại giá trị mới, nhưng giá trị đang tồn tại không thể bị thay đổi như object, mảng và hàm.</p>
+
+<h2 id="Ví_dụ">Ví dụ</h2>
+
+<p>Ví dụ này sẽ giúp bạn hiểu rõ nguyên lý <strong>bất biến</strong> của giá trị sơ khai</p>
+
+<h3 id="JavaScript">JavaScript</h3>
+
+<pre class="brush: js">// Sử dụng phương thức chuỗi không làm thay đổi chuỗi
+var bar = "baz";
+console.log(bar);               // baz
+bar.toUpperCase();
+console.log(bar);               // baz
+
+// Sử dụng phương thức mảng không làm thay đổi mảng
+var foo = [];
+console.log(foo);               // []
+foo.push("plugh");
+console.log(foo);               // ["plugh"]
+
+// Gán giá trị cho giá trị sơ khai giá trị mới (không phải thay đổi nó)
+bar = bar.toUpperCase();       // BAZ
+</pre>
+
+<p>Giá trị sơ khai có thể được thay thế, nhưng không thể được thay đổi trực tiếp.</p>
+
+<h2 id="Ví_dụ_khác_Từng-bước">Ví dụ khác [ Từng-bước ]</h2>
+
+<p>Ví dụ sau đây sẽ cho bạn thấy cách JavaScript làm việc với giá trị sơ khai.</p>
+
+<h3 class="highlight-spanned" id="JavaScript_2"><span class="highlight-span">JavaScript</span></h3>
+
+<pre class="brush: js line-numbers  language-js">// Giá trị sơ khai
+let foo = 5;
+
+// Định nghĩa hàm thay đổi giá trị sơ khai
+function addTwo(num) {
+   num += 2;
+}
+// Một hàm khác làm điều tương tự
+function addTwo_v2(foo) {
+   foo += 2;
+}
+
+// Gọi hàm thứ nhất và truyền giá trị sơ khai vào tham số
+addTwo(foo);
+// Trả về giá trị sơ khai
+console.log(foo);   // 5
+
+// Làm tương tự với hàm thứ hai
+addTwo_v2(foo);
+console.log(foo);   // 5
+</pre>
+
+<p>Bạn có đang nghĩ rằng đó phải là <code>7</code> chứ không phải <code>5</code> không? Nếu có, dưới đây là cách đoạn mã hoạt động:</p>
+
+<ul>
+ <li>Cả hai lời gọi hàm <code>addTwo</code> và <code>addTwo_v2</code>, JavaScript tra cứu giá trị cho định danh <code>foo</code>. JavaScript tìm được đúng thể hiện biến trong dòng lệnh đầu tiên</li>
+ <li>Sau khi tìm thấy rồi, JavaScript truyền đối số tới hàm thông qua tham số</li>
+ <li>Trước khi thực thi các lệnh trong thân hàm, <strong>JavaScript sao chép đối số gốc được truyền vào</strong> (là giá trị sơ khai) và tạo ra một bản sao cục bộ. Các bản sao này, chỉ tồn tại trong phạm vi hàm, được truy nhập tới bằng các định danh ta đặc tả trong lúc định nghĩa hàm (<code>num</code> cho <code>addTwo</code>, <code>foo</code> cho <code>addTwo_v2</code>)</li>
+ <li>Sau đó, các lệnh trong thân hàm được thực thi:
+  <ul>
+   <li>Trong hàm thứ nhất, biến cục bộ <code>num</code> được khởi tạo. Ta tăng giá trị của nó thêm 2, không phải giá trị gốc của <code>foo</code>!</li>
+   <li>Trong hàm thứ hai, biến cục bộ <code>foo</code> được khởi tạo. Ta tăng giá trị của nó thêm 2, không phải giá trị gốc (nằm bên ngoài hàm) của <code>foo</code>! Ngoài ra, trong trường hợp này, biến ngoài hàm <code>foo</code> không thể được truy nhập theo <strong>bất cứ</strong> cách nào. Đó là tại JavaScript's lexical scoping và the resulting variable shadowing. Biến cục bộ <code>foo</code> che giấu cho biến ngoài hàm <code>foo</code>. Để biết thêm chi tiết, tham khảo <a href="/en-US/docs/Web/JavaScript/Closures">Closures</a>.</li>
+  </ul>
+ </li>
+ <li>Tóm lại, mọi thay đổi trong hàm <strong>sẽ không</strong> ảnh hưởng giá trị GỐC của <code>foo</code>, bởi ta đang làm việc dựa trên bản sao <strong>copies</strong> của nó</li>
+</ul>
+
+<p>Đó là lý do tại sao giá trị sơ khai bất biến. Bởi vì, ta không làm việc trực tiếp với chúng, ta sao chép chúng và làm việc với bản sao chép đó, thay vì sử dụng bản gốc.</p>
+
+<h2 id="Object_bọc_giá_trị_sơ_khai_trong_JavaScript">Object bọc giá trị sơ khai trong JavaScript</h2>
+
+<p>Ngoại trừ <code>null</code> và <code>undefined</code>, mọi giá trị sơ khai đều được bọc bởi object tương ứng:</p>
+
+<ul>
+ <li>{{jsxref("String")}} cho giá trị chuỗi sơ khai.</li>
+ <li>{{jsxref("Number")}} cho giá trị số sơ khai.</li>
+ <li>{{jsxref("Boolean")}} cho giá trị boolean sơ khai.</li>
+ <li>{{jsxref("Symbol")}} cho giá trị symbol sơ khai.</li>
+</ul>
+
+<p>Phương thức <a href="/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/valueOf"><code>valueOf()</code></a> trả về giá trị sơ khai.</p>
+
+<h2 id="Tham_khảo_thêm">Tham khảo thêm</h2>
+
+<h3 id="Hiểu_biết_chung">Hiểu biết chung</h3>
+
+<ul>
+ <li><a href="/en-US/docs/Web/JavaScript/Data_structures">Giới thiệu kiểu dữ liệu trong JavaScript</a></li>
+ <li>{{Interwiki("wikipedia", "Kiểu dữ liệu sơ khai")}} trên Wikipedia</li>
+</ul>
+
+<section class="Quick_links" id="Quick_Links">
+<ol>
+ <li><a href="/en-US/docs/Glossary">Từ điển thuật ngữ</a>
+
+  <ol>
+   <li>{{Glossary("JavaScript")}}</li>
+   <li>{{Glossary("string")}}</li>
+   <li>{{Glossary("number")}}</li>
+   <li>{{Glossary("boolean")}}</li>
+   <li>{{Glossary("null")}}</li>
+   <li>{{Glossary("undefined")}}</li>
+   <li>{{Glossary("symbol")}}</li>
+  </ol>
+ </li>
+ <li><a href="/en-US/docs/Web/JavaScript/Data_structures">Kiểu dữ liệu JavaScript</a></li>
+</ol>
+</section>

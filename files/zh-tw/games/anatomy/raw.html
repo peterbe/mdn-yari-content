@@ -1,0 +1,318 @@
+<div>{{GamesSidebar}}</div><p>{{IncludeSubnav("/zh-TW/docs/Games")}}</p>
+
+<div class="summary">
+<p><span class="seoSummary">本文是站在技術觀點，透過主迴圈的執行方式解析常見遊戲的作業流程。進而協助剛入門的遊戲開發者了解遊戲撰寫的必要條件，並說明如 JavaScript 等的 Web 標準是如何成為有效工具。</span>即使是剛要開始接觸  Web 的遊戲開發老手也能獲得不錯的資訊。</p>
+</div>
+
+<h2 id="呈現、接受、編譯、計算、重複">呈現、接受、編譯、計算、重複</h2>
+
+<p>所有遊戲的最終目標，就是要為玩家<strong>呈現</strong>某一情境、<strong>接受</strong>玩家輸入、將輸入訊號<strong>編譯</strong>為動作、由這些動作<strong>計算</strong>新的情境。遊戲其實就是這些流程不斷重複的迴圈，直到發生某些終止條件 (如勝＼敗或睡覺時間到了關機)。可別驚訝，這種形式與遊戲引擎的設計方式息息相關。</p>
+
+<p>某些特殊條件又根據遊戲而有所不同。</p>
+
+<p>某些遊戲是依照玩家的輸入訊號來進行此循環。試想你正開發「找出 2 張相似圖片的不同之處」類型的遊戲。這種遊戲就是為玩家<strong>呈現</strong> 2 張圖片、<strong>接受</strong>玩家點擊 (或觸碰)、<strong>編譯</strong>輸入訊號為成功＼失敗＼暫停＼選單互動等、<strong>計算</strong>更新過的圖片呈現本次輸入的結果。遊戲迴圈可因玩家輸入進行更多動作，或直接休眠等玩家後續輸入；不同於「回合制」的遊戲迴圈。回合制只有在玩家反應時才會更新畫面，而不會持續更新各個幀像。</p>
+
+<p>其他遊戲就會控制每一段儘可能最短的獨立時間片段 (Timeslice)，並套用上述的相同原則。些微的差異在於：動畫的每一幅幀像均將帶動整個週期，且任何玩家輸入訊號中的變動，都將由第一個可用的回合抓取。這種「各幅幀像用一次」的模式，即建置於所謂的「<strong>主迴圈 (Main loop)</strong>」之中。如果你的遊戲迴圈是以時間為基礎，則  this 將是其權限，且你的模擬作業也將遵循此一原則。</p>
+
+<p>但主迴圈可能不需「各幅幀像」的控制方式。你的遊戲迴圈可能類似上述「找出不同點」的範例，即以輸入事件為基礎。這種主迴圈就可能同時需要輸入與模擬時間，甚至是完全依賴其他事件的迴圈。</p>
+
+<p>還好，現今的 JavaScript (即如下一段所敘述) 可輕鬆開發有效率、各幅幀像執行一次的主迴圈。當然，你的遊戲只有等你自己完成最佳化。如果某樣東西看起來應該附掛於更罕見的事件上，則最好將之置於主迴圈之外 (並非一定如此)。</p>
+
+<h2 id="於_JavaScript_中建構主迴圈">於 JavaScript 中建構主迴圈</h2>
+
+<p>JavaScript 能與「事件 (Event)」以及「回呼 (Callback)」函式達到最佳效果。新款瀏覽器會立刻呼叫所需的函式，並趁機在間隔之間閒置 (或執行其他作業)。找到合適時機附加自己的程式碼是不錯的想法。試想，你可能真的必須依照嚴格的時間間隔、各幅幀像，或在特定事件發生之後，才能呼叫自己的函式。若搭配瀏覽器的限制就更嚴格了，而且呼叫函式的時機可讓瀏覽器進行最佳化。同樣的，如此可能讓你能更輕鬆作業。</p>
+
+<p>某些程式碼必須順著各幅幀像執行，所以這類函式為何需要附掛至瀏覽器 redraw schedule 以外的地方呢？在 Web 上，<code>{{ domxref("window.requestAnimationFrame()") }}</code> 就可以作為大部分 well-programmed per-frame 主迴圈的基礎。一旦呼叫 it，就必須將回呼函式送入其內。而在下次重新繪製之前，會在合適的時間回呼此函式。下列為簡易主迴圈的範例：</p>
+
+<pre>window.main = function () {
+  window.requestAnimationFrame( main );
+  
+  // Whatever your main loop needs to do.
+};
+
+main(); //Start the cycle.</pre>
+
+<div class="note">
+<p><strong>注意：</strong>此處所提及的每一個 <code>main()</code> 函式，我們都會在執行迴圈內容之前，排定新的 <code>requestAnimationFrame</code>。這並非意外得來，而是考慮過的最佳實作。接著可早點呼叫下個 <code>requestAnimationFrame</code> 以確保瀏覽器準時接收，即使你目前的幀像沒趕上其 VSync，也能依序規劃進行。</p>
+</div>
+
+<p>上面的程式碼片段共有 2 組陳述式。第一組陳述式所建立的函式可作為 <code>main()</code> 全域變數。此函式除了執行某些作業之外，也會告知瀏覽器要透過 <code>window.requestAnimationFrame()</code>，在下個幀像時呼叫函式本身。第二組即為 <code>main()</code> 函式，並透過第一組函式所定義而成。因為 <code>main()</code> 會在第二組陳述式中呼叫一次，且每次呼叫都會將 <code>main()</code> 本身置入下個幀像應進行事件的佇列之中，所以 <code>main()</code> 會和你的幀率同步。</p>
+
+<p>此迴圈當然還有許多有待改進之處。但在我們討論之前，先來說說已經算是完備的地方。</p>
+
+<p>Timing the main loop to when the browser paints to the display，可讓你隨著瀏覽器的繪製作業而一同執行迴圈。因為<code> main()</code> 是唯一納入迴圈的函式，所以你其實可控制動畫的所有幀像。第一人稱射擊遊戲 (或其他簡單遊戲) 就是每幅幀像都呈現一次新的場景。目前應該就是最順暢、最具反應度的遊戲了。</p>
+
+<p>但請別立刻假設：動畫都需要各幅幀像逐一控制。透過 CSS 動畫與瀏覽器內的其他工具，即使需要 GPU 加速的簡易動畫，也都能輕鬆執行。現在已經有許多工具可讓你更輕鬆。</p>
+
+<h2 id="在_Javascript_內建構更好的主迴圈">在 Javascript 內建構更好的主迴圈</h2>
+
+<p>在前面的main loop中有兩個明顯的問題：main()函式影響<font face="Consolas, Liberation Mono, Courier, monospace"> window 對象</font>（當所有全域變數儲存時）並且上面的代碼沒有給我們留下一個停止循環的方法，除非是整個tab頁面被關閉或者刷新。第一個問題，如果你想要主循環只是跑起來而不需要去操作它，你可以創建一個立即執行的函數表達式如下（IIFE）。</p>
+
+<pre>/*
+* Starting with the semicolon is in case whatever line of code above this example
+* relied on automatic semicolon insertion (ASI). The browser could accidentally
+* think this whole example continues from the previous line. The leading semicolon
+* marks the beginning of our new line if the previous one was not empty or terminated.
+*/
+
+;(function () {
+  function main() {
+    window.requestAnimationFrame( main );
+    
+    // Your main loop contents.
+  }
+  
+  main(); // Start the cycle
+})();</pre>
+
+<p>當瀏覽器運行到這裡，它會定義你的主循環並且立即把它放到執行隊列中，等待下一幀的到來。這個函數不會被添加到任何對象裏，所以main這個名字或者說這個函數在下面的代碼裏就依然有效，可以被定義來幹其他事情。</p>
+
+<p>提示：從實現上說，用一個if語句來判斷 requestAnimationFrame() 是否執行是一個更加常見的做法而不是調用 cancelAnimationFrame()。</p>
+
+<p>至於第二個問題，想要停止主循環，你需要停止調用main()通過{{ domxref("window.cancelAnimationFrame()") }}這個方法。你需要給 cancelAnimationFrame() 函數傳遞調用 requestAnimationFrame() 時返回的句柄。我們假設你的遊戲邏輯是寫在一個叫 MyGame 的模塊裏。我們來擴展上一個例子，主循環將會看起來如下：</p>
+
+<pre>/*
+* Starting with the semicolon is in case whatever line of code above this example
+* relied on automatic semicolon insertion (ASI). The browser could accidentally
+* think this whole example continues from the previous line. The leading semicolon
+* marks the beginning of our new line if the previous one was not empty or terminated.
+*
+* Let us also assume that MyGame is previously defined.
+*/
+
+;(function () {
+  function main() {
+    MyGame.stopMain = window.requestAnimationFrame( main );
+    
+    // Your main loop contents.
+  }
+  
+  main(); // Start the cycle
+})();</pre>
+
+<p>我們現在有一個定義在 MyGame 模塊內的變量 stopMain，這個變量存儲着在主循環裏調用 requestAnimationFrame() 返回的句柄。這樣在其他任何時候，我們想要停止主循環，只需要這樣調用一下就好：</p>
+
+<pre>window.cancelAnimationFrame( MyGame.stopMain );</pre>
+
+<p>在 javascript 裏寫一個主循環的關鍵就是決定你的遊戲行為是由哪些事件驅動起來的，並且注意不同的系統之間的相互影響。</p>
+
+<h2 id="創建一個更加優化的主循環">創建一個更加優化的主循環</h2>
+
+<p>最終，在 javascript 裏，瀏覽器跑它自己的邏輯循環，你的代碼也跑在它的循環裏。上面的章節講解的寫循環的方式是為了避免和瀏覽器的邏輯循環區分開。這些需要瀏覽器在每一幀調用的 main 方法，被添加到 window.requestAnimationFrame() 裏。至於怎麼把這些請求放進瀏覽器逻辑循环中取決於瀏覽器自身。<a href="http://www.w3.org/TR/animation-timing/">W3C spec for requestAnimationFrame</a> W3C對 <code>requestAnimationFrame 的定義並沒有明確規定瀏覽器需要在何時去執行 requestAnimationFrame 的回調函數。這其實也有利於瀏覽器來做一些針對性的優化，在瀏覽器合適的時候去調用。</code></p>
+
+<p><code>現代版本的 Firefox 和 Chrome 瀏覽器（也許其他的也是這樣）嘗試在他們邏輯循環一幀時間線的最開始地方去調用 requestAnimationFrame</code> 的回調函數。瀏覽器的主線程就像下面這樣執行：</p>
+
+<ol>
+ <li>開始一個新幀（當前一幀已經變現完）。</li>
+ <li>檢查所有調用 <code>requestAnimationFrame 的地方並執行。</code> </li>
+ <li>當 <code>requestAnimationFrame </code>的回调函数失去主線程的控制後，執行垃圾回收以及其他的一些需要在邏輯幀之前執行的任務。</li>
+ <li>休眠（直到被事件喚醒）直到顯示器準備垂直同步。</li>
+</ol>
+
+<p>如果擁有足夠的時間來運行所有的邏輯，你可以考慮一下開發一個實施應用。上面所有的步驟會在16.5 毫秒內被執行，也就是 60Hz 的刷新速率。瀏覽器會盡可能早的調用你的代碼讓它獲得最大的運行時間。你的邏輯代碼可能會啟動甚至不在主線程中的任務（比如WebGL裏的光柵化和著色器程序）。當瀏覽器主線程在處理垃圾回收、其他任務或者處理異步事件時，負載高的計算可以同時運行在Web Worker或者GPU中。</p>
+
+<p>當我們在討論運行時間時，許多瀏覽器提供一個叫做 <em>High Resolution Time 的工具。Date </em>對象不再是一個可以被信賴的處理時間事件的方法了，因為它非常的不精確並且可能會被操作系統的時鐘修改。High Resolution Time 這個工具會計算從 <code>navigationStart（當前面的document已經卸載了）</code> 開始的毫秒數，這個值是一個精確到千分之一毫秒的小數，它就是 <code>DOMHighResTimeStamp，無論為了用它幹什麼，請記得它是一個浮點數。</code></p>
+
+<p>提示：系統（硬件或者軟件）如果不提供毫秒級精度也允許提供毫秒精度當作最小值。如果它能夠提供，那麼它應該提供 0.001 ms 精度。</p>
+
+<p>This value is not too useful alone, since it is relative to a fairly uninteresting event, but it can be subtracted from another timestamp to accurately and precisely determine how much time elapsed between those two points. To acquire one of these timestamps, you can call <code>window.performance.now()</code> and store the result as a variable.</p>
+
+<pre>var tNow = window.performance.now();
+</pre>
+
+<p>Back to the topic of the main loop. You will often want to know when your main function was invoked. Because this is common, <code>window.requestAnimationFrame()</code> always provides a <code>DOMHighResTimeStamp</code> to callbacks as an argument when they are executed. This leads to another enhancement to our previous main loops.</p>
+
+<pre>/*
+* Starting with the semicolon is in case whatever line of code above this example
+* relied on automatic semicolon insertion (ASI). The browser could accidentally
+* think this whole example continues from the previous line. The leading semicolon
+* marks the beginning of our new line if the previous one was not empty or terminated.
+*
+* Let us also assume that MyGame is previously defined.
+*/
+
+;(function () {
+  function main( tFrame ) {
+    MyGame.stopMain = window.requestAnimationFrame( main );
+    
+    // Your main loop contents.
+    // tFrame, from "function main ( tFrame )", is now a DOMHighResTimeStamp provided by rAF.
+  }
+  
+  main(); // Start the cycle
+})();</pre>
+
+<p>Several other optimizations are possible and it really depends on what your game attempts to accomplish. Your game genre will obviously make a difference but it could even be more subtle than that. You could draw every pixel individually on a canvas or you could layer DOM elements (including multiple WebGL canvases with transparent backgrounds if you want) into a complex hierarchy. Each of these paths will lead to different opportunities and constraints.</p>
+
+<h2 id="It_is_decision..._time">It is decision... time</h2>
+
+<p>You will need to make hard decisions about your main loop: how to simulate the accurate progress of time. If you demand per-frame control then you will need to determine how frequently your game will update and draw. You might even want update and draw to occur at different rates. You will also need to consider how gracefully your game will fail if the user's system cannot keep up with the workload. Let us start by assuming that you will handle user input and update the game state every time you draw. We will branch out later.</p>
+
+<p><em><strong>Note</strong>: </em>Changing how your main loop deals with time is a debugging nightmare, everywhere. Think about your needs, carefully, before working on your main loop.</p>
+
+<h3 id="What_most_browser_games_should_look_like">What most browser games should look like</h3>
+
+<p>If your game can hit the maximum refresh rate of any hardware you support then your job is fairly easy. You can simply update, render, and then do nothing until VSync.</p>
+
+<pre>/*
+* Starting with the semicolon is in case whatever line of code above this example
+* relied on automatic semicolon insertion (ASI). The browser could accidentally
+* think this whole example continues from the previous line. The leading semicolon
+* marks the beginning of our new line if the previous one was not empty or terminated.
+*
+* Let us also assume that MyGame is previously defined.
+*/
+
+;(function () {
+  function main( tFrame ) {
+    MyGame.stopMain = window.requestAnimationFrame( main );
+    
+    update( tFrame ); //Call your update method. In our case, we give it rAF's timestamp.
+    render();
+  }
+  
+  main(); // Start the cycle
+})();</pre>
+
+<p>If the maximum refresh rate cannot be reached, quality settings could be adjusted to stay under your time budget. The most famous example of this concept is the game from id Software, RAGE. This game removed control from the user in order to keep its calculation time at roughly 16ms (or roughly 60fps). If computation took too long then rendered resolution would decrease, textures and other assets would fail to load or draw, and so forth. This (non-web) case study made a few assumptions and tradeoffs:</p>
+
+<ul>
+ <li>Each frame of animation accounts for user input.</li>
+ <li>No frame needs to be extrapolated (guessed) because each draw has its own update.</li>
+ <li>Simulation systems can basically assume that each full update is ~16ms apart.</li>
+ <li>Giving the user control over quality settings would be a nightmare.</li>
+ <li>Different monitors input at different rates: 30 FPS, 75 FPS, 100 FPS, 120 FPS, 144 FPS, etc.</li>
+ <li>Systems that are unable to keep up with 60 FPS lose visual quality to keep the game running at optimal speed (eventually it outright fails, if quality becomes too low.)</li>
+</ul>
+
+<h3 id="Other_ways_to_handle_variable_refresh_rate_needs">Other ways to handle variable refresh rate needs</h3>
+
+<p>Other methods of tackling the problem exist.</p>
+
+<p>One common technique is to update the simulation at a constant frequency and then draw as much (or as little) of the actual frames as possible. The update method can continue looping without care about what the user sees. The draw method can view the last update and when it happened. Since draw knows when it represents, and the simulation time for the last update, it can predict a plausible frame to draw for the user. It does not matter whether this is more frequent than the official update loop (or even less frequent). The update method sets checkpoints and, as frequently as the system allows, the render method draws instants of time around them. There are many ways to separate the update method in web standards:</p>
+
+<ul>
+ <li>Draw on <code>requestAnimationFrame</code> and update on a {{ domxref("window.setInterval") }} or {{ domxref("window.setTimeout") }}.
+
+  <ul>
+   <li>This uses processor time even when unfocused or minimized, hogs the main thread, and is probably an artifact of traditional game loops (but it is simple.)</li>
+  </ul>
+ </li>
+ <li>Draw on <code>requestAnimationFrame</code> and update on a <code>setInterval</code> or <code>setTimeout</code> in a <a href="/en-US/docs/Web/Guide/Performance/Using_web_workers">Web Worker</a>.
+  <ul>
+   <li>This is the same as above, except update does not hog the main thread (nor does the main thread hog it). This is a more complex solution, and might be too much overhead for simple updates.</li>
+  </ul>
+ </li>
+ <li>Draw on <code>requestAnimationFrame</code> and use it to poke a Web Worker containing the update method with the number of ticks to compute, if any.
+  <ul>
+   <li>This sleeps until <code>requestAnimationFrame</code> is called and does not pollute the main thread, plus you are not relying on old fashioned methods. Again, this is a bit more complex than the previous two options, and <em>starting</em> each update will be blocked until the browser decides to fire rAF callbacks.</li>
+  </ul>
+ </li>
+</ul>
+
+<p>Each of these methods have similar tradeoffs:</p>
+
+<ul>
+ <li>Users can skip rendering frames or interpolate extra ones depending on their performance.</li>
+ <li>You can count on all users updating non-cosmetic variables at the same constant frequency minus hiccups.</li>
+ <li>Much more complicated to program than the basic loops we saw earlier.</li>
+ <li>User input is completely ignored until the next update (even if the user has a fast device).</li>
+ <li>The mandatory interpolation has a performance penalty.</li>
+</ul>
+
+<p>A separate update and draw method could look like the following example. For the sake of demonstration, the example is based on the third bullet point, just without using Web Workers for readability (and, let's be honest, writeability).</p>
+
+<p><em>Note: This example, specifically, is in need of technical review.</em></p>
+
+<pre>/*
+* Starting with the semicolon is in case whatever line of code above this example
+* relied on automatic semicolon insertion (ASI). The browser could accidentally
+* think this whole example continues from the previous line. The leading semicolon
+* marks the beginning of our new line if the previous one was not empty or terminated.
+*
+* Let us also assume that MyGame is previously defined.
+*
+* MyGame.lastRender keeps track of the last provided requestAnimationFrame timestamp.
+* MyGame.lastTick keeps track of the last update time. Always increments by tickLength.
+* MyGame.tickLength is how frequently the game state updates. It is 20 Hz (50ms) here.
+*
+* timeSinceTick is the time between requestAnimationFrame callback and last update.
+* numTicks is how many updates should have happened between these two rendered frames.
+*
+* render() is passed tFrame because it is assumed that the render method will calculate
+*          how long it has been since the most recently passed update tick for 
+*          extrapolation (purely cosmetic for fast devices). It draws the scene.
+*
+* update() calculates the game state as of a given point in time. It should always
+*          increment by tickLength. It is the authority for game state. It is passed 
+*          the DOMHighResTimeStamp for the time it represents (which, again, is always 
+*          last update + MyGame.tickLength unless a pause feature is added, etc.)
+*
+* setInitialState() Performs whatever tasks are leftover before the mainloop must run.
+*                   It is just a generic example function that you might have added.
+*/
+
+;(function () {
+  function main( tFrame ) {
+    MyGame.stopMain = window.requestAnimationFrame( main );
+    var nextTick = MyGame.lastTick + MyGame.tickLength;
+    var numTicks = 0;
+
+    //If tFrame &lt; nextTick then 0 ticks need to be updated (0 is default for numTicks).
+    //If tFrame = nextTick then 1 tick needs to be updated (and so forth).
+    //Note: As we mention in summary, you should keep track of how large numTicks is.
+    //If it is large, then either your game was asleep, or the machine cannot keep up.
+    if (tFrame &gt; nextTick) {
+      var timeSinceTick = tFrame - MyGame.lastTick;
+      numTicks = Math.floor( timeSinceTick / MyGame.tickLength );
+    }
+
+    queueUpdates( numTicks );
+    render( tFrame );
+    MyGame.lastRender = tFrame;
+  }
+
+  function queueUpdates( numTicks ) {
+    for(var i=0; i &lt; numTicks; i++) {
+      MyGame.lastTick = MyGame.lastTick + MyGame.tickLength; //Now lastTick is this tick.
+      update( MyGame.lastTick );
+    }
+  }
+
+  MyGame.lastTick = performance.now();
+  MyGame.lastRender = MyGame.lastTick; //Pretend the first draw was on first update.
+  MyGame.tickLength = 50; //This sets your simulation to run at 20Hz (50ms)
+  
+  setInitialState();
+  main(performance.now()); // Start the cycle
+})();</pre>
+
+<p>Another alternative is to simply do certain things less often. If a portion of your update loop is difficult to compute but insensitive to time, you might consider scaling back its frequency and, ideally, spreading it out into chunks throughout that lengthened period. An implicit example of this is found over at The Artillery Blog for Artillery Games, where they <a href="http://blog.artillery.com/2012/10/browser-garbage-collection-and-framerate.html">adjust their rate of garbage generation</a> to optimize garbage collection. Obviously, cleaning up resources is not time sensitive (especially if tidying is more disruptive than the garbage itself).</p>
+
+<p>This may also apply to some of your own tasks. Those are good candidates to throttle when available resources become a concern.</p>
+
+<h2 id="Summary">Summary</h2>
+
+<p>I want to be clear that any of the above, or none of them, could be best for your game. The correct decision entirely depends on the trade-offs that you are willing (and unwilling) to make. The concern is mostly with switching to another option. Fortunately, I do not have any experience with this but I have heard it is an excruciating game of Whack-a-Mole.</p>
+
+<p>An important thing to remember for managed platforms, like the web, is that your loop may stop execution for significant periods of time. This could occur when the user unselects your tab and the browser sleeps (or slows) its <code>requestAnimationFrame</code> callback interval. You have many ways to deal with this situation and this could depend on whether your game is single player or multiplayer. Some choices are:</p>
+
+<ul>
+ <li>Consider the gap "a pause" and skip the time.
+  <ul>
+   <li>You can probably see how this is problematic for most multiplayer games.</li>
+  </ul>
+ </li>
+ <li>You can simulate the gap to catch up.
+  <ul>
+   <li>This can be a problem for long drops and/or complex updates.</li>
+  </ul>
+ </li>
+ <li>You can recover the game state from a peer or the server.
+  <ul>
+   <li>This is ineffective if your peers or server are out-of-date too, or they don't exist because the game is single player and doesn't have a server.</li>
+  </ul>
+ </li>
+</ul>
+
+<p>Once your main loop has been developed and you have decided on a set of assumptions and tradeoffs which suit your game, it is now just a matter of using your decisions to calculate any applicable physics, AI, sounds, network synchronization, and whatever else your game may require.</p>

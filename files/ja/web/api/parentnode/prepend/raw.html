@@ -1,0 +1,128 @@
+<div>{{APIRef("DOM")}}</div>
+
+<p><strong><code>ParentNode.prepend()</code></strong> メソッドは、{{domxref("Node")}} オブジェクトまたは {{domxref("DOMString")}} オブジェクトのセットを {{domxref("ParentNode")}} の最初の子の前に挿入します。 {{domxref("DOMString")}} オブジェクトは、同等の {{domxref("Text")}} ノードとして挿入されます。</p>
+
+<h2 id="構文">構文</h2>
+
+<pre class="syntaxbox"><em>ParentNode</em>.prepend(<em>...nodesToPrepend</em>);
+</pre>
+
+<h3 id="パラメータ">パラメータ</h3>
+
+<dl>
+ <dt><code>nodesToPrepend</code></dt>
+ <dd>現在 <code>ParentNode</code> にある最初の子ノードの前に挿入する1つ以上のノード。各ノードは {{domxref("Node")}} オブジェクトまたは文字列として指定できます。文字列は新しい {{domxref("Text")}} ノードとして挿入されます。</dd>
+</dl>
+
+<h3 id="戻り値">戻り値</h3>
+
+<p><code>undefined</code>.</p>
+
+<h3 id="例外">例外</h3>
+
+<ul>
+ <li>{{domxref("HierarchyRequestError")}}: 階層内の指定されたポイントにノードを挿入できません。</li>
+</ul>
+
+<h2 id="例">例</h2>
+
+<h3 id="要素の前につける">要素の前につける</h3>
+
+<pre class="brush: js">var parent = document.createElement("div");
+var p = document.createElement("p");
+var span = document.createElement("span");
+parent.append(p);
+parent.prepend(span);
+
+console.log(parent.childNodes); // NodeList [ &lt;span&gt;, &lt;p&gt; ]
+</pre>
+
+<h3 id="テキストの前につける">テキストの前につける</h3>
+
+<pre class="brush: js">var parent = document.createElement("div");
+parent.append("Some text");
+parent.prepend("Headline: ");
+
+console.log(parent.textContent); // "Headline: Some text"</pre>
+
+<h3 id="要素とテキストを追加する">要素とテキストを追加する</h3>
+
+<pre class="brush: js">var parent = document.createElement("div");
+var p = document.createElement("p");
+parent.prepend("Some text", p);
+
+console.log(parent.childNodes); // NodeList [ #text "Some text", &lt;p&gt; ]</pre>
+
+<h3 id="ParentNode.prepend()_はスコープされません"><code>ParentNode.prepend()</code> はスコープされません</h3>
+
+<p><code>prepend()</code> メソッドは <code>with</code> ステートメントにスコープされていません。詳細については {{jsxref("Symbol.unscopables")}} を参照してください。</p>
+
+<pre class="brush: js">var parent = document.createElement("div");
+
+with(parent) { 
+  prepend("foo");
+}
+// ReferenceError: prepend is not defined </pre>
+
+<h2 id="ポリフィル">ポリフィル</h2>
+
+<p><code>prepend()</code> メソッドが利用できない場合は、ポリフィルができます:</p>
+
+<pre class="brush: js">// Source: https://github.com/jserz/js_piece/blob/master/DOM/ParentNode/prepend()/prepend().md
+(function (arr) {
+  arr.forEach(function (item) {
+    if (item.hasOwnProperty('prepend')) {
+      return;
+    }
+    Object.defineProperty(item, 'prepend', {
+      configurable: true,
+      enumerable: true,
+      writable: true,
+      value: function prepend() {
+        var argArr = Array.prototype.slice.call(arguments),
+          docFrag = document.createDocumentFragment();
+        
+        argArr.forEach(function (argItem) {
+          var isNode = argItem instanceof Node;
+          docFrag.appendChild(isNode ? argItem : document.createTextNode(String(argItem)));
+        });
+        
+        this.insertBefore(docFrag, this.firstChild);
+      }
+    });
+  });
+})([Element.prototype, Document.prototype, DocumentFragment.prototype]);</pre>
+
+<h2 id="仕様">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">ステータス</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('DOM WHATWG', '#dom-parentnode-prepend', 'ParentNode.prepend()')}}</td>
+   <td>{{Spec2('DOM WHATWG')}}</td>
+   <td>初期定義</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="ブラウザの互換性">ブラウザの互換性</h2>
+
+<div class="hidden">このページの互換性テーブルは構造化データから生成されます。データに貢献したい場合は <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> をチェックして、プルリクエストを送信してください。</div>
+
+<p>{{Compat("api.ParentNode.prepend")}}</p>
+
+<h2 id="あわせて参照">あわせて参照</h2>
+
+<ul>
+ <li>{{domxref("ParentNode")}} と {{domxref("ChildNode")}}</li>
+ <li>{{domxref("ParentNode.append()")}}</li>
+ <li>{{domxref("Node.appendChild()")}}</li>
+ <li>{{domxref("Node.insertBefore()")}}</li>
+ <li>{{domxref("ChildNode.before()")}}</li>
+ <li>{{domxref("NodeList")}}</li>
+</ul>

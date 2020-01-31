@@ -1,0 +1,442 @@
+<p>ウェブアプリマニフェストは、 JSON 形式のファイルでアプリケーションについての情報 (名前、作者、アイコン、説明など) を提供するものです。マニフェストは端末のホーム画面にインストールされたウェブサイトの詳細を通知し、ユーザーによりすばやいアクセスと、より豊かな使い勝手を提供します<sup>[要出典]</sup>。</p>
+
+<p>ウェブアプリマニフェストは、<a href="/ja/docs/Web/Apps/Progressive">プログレッシブウェブアプリ</a> (PWA) と呼ばれる一連のウェブ技術の一部であり、これはアプリストアを通さずに端末のホーム画面にインストールすることができ、オフライン作業やプッシュ通知の受け取りなどのその他の可能性を持ったウェブサイトです。</p>
+
+<h2 id="Deploying_a_manifest_with_the_link_tag" name="Deploying_a_manifest_with_the_link_tag">マニフェストの展開</h2>
+
+<p>ウェブアプリマニフェストは、文書の {{HTMLElement("head")}} 内にある {{HTMLElement("link")}} 要素を使用して HTML ページから展開されます。</p>
+
+<pre class="brush: html">&lt;link rel="manifest" href="/manifest.webmanifest"&gt;</pre>
+
+<div class="note">
+<p><strong>メモ</strong>: <code>.webmanifest</code> の拡張子が仕様書の <a href="https://w3c.github.io/manifest/#media-type-registration">Media type registration</a> の節で指定されています (マニフェストファイルのレスポンスは <code>Content-Type: application/manifest+json</code> を返してください)。ブラウザーは一般に <code>.json</code> (<code>Content-Type: application/json</code>) のような他の適切な拡張子でマニフェストに対応します。</p>
+</div>
+
+<div class="note">
+<p><strong>メモ</strong>: マニフェストのアクセスに資格情報が必要な場合、マニフェストファイルが現在のページと同じオリジンにあったとしても、 {{domxref("HTML/CORS_settings_attributes", "crossorigin")}} 属性を <code>use-credentials</code> に設定する必要があります。</p>
+</div>
+
+<h2 id="Example_manifest" name="Example_manifest">マニフェストの例</h2>
+
+<pre class="brush: json">{
+  "name": "HackerWeb",
+  "short_name": "HackerWeb",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#fff",
+  "description": "A simply readable Hacker News app.",
+  "icons": [{
+    "src": "images/touch/homescreen48.png",
+    "sizes": "48x48",
+    "type": "image/png"
+  }, {
+    "src": "images/touch/homescreen72.png",
+    "sizes": "72x72",
+    "type": "image/png"
+  }, {
+    "src": "images/touch/homescreen96.png",
+    "sizes": "96x96",
+    "type": "image/png"
+  }, {
+    "src": "images/touch/homescreen144.png",
+    "sizes": "144x144",
+    "type": "image/png"
+  }, {
+    "src": "images/touch/homescreen168.png",
+    "sizes": "168x168",
+    "type": "image/png"
+  }, {
+    "src": "images/touch/homescreen192.png",
+    "sizes": "192x192",
+    "type": "image/png"
+  }],
+  "related_applications": [{
+    "platform": "play",
+    "url": "https://play.google.com/store/apps/details?id=cheeaun.hackerweb"
+  }]
+}</pre>
+
+<h2 id="Members" name="Members">メンバー</h2>
+
+<h3 id="background_color">background_color</h3>
+
+<p>ウェブサイトの期待される「背景色」を定義します。この値はサイトの CSS で既に利用できるものを繰り返すものですが、スタイルシートが読み込まれる前にマニフェストが有効になった時、ブラウザーが簡易的に背景色を描くために利用することがあります。これによって、ウェブアプリケーションの起動からサイトのコンテンツの読み込みまでが円滑に推移できるようになります。</p>
+
+<pre class="brush: json">"background_color": "red"</pre>
+
+<div class="note">
+<p><strong>メモ</strong>: <code>background_color</code> は指定されたサイトを読み込む間の見栄えを改善するためだけに意味があり、プログレッシブウェブアプリのスタイルシートが利用できるときにユーザーエージェントが{{cssxref("background-color", "背景色")}}として利用されることはありません。</p>
+</div>
+
+<h3 id="description">description</h3>
+
+<p>指定されたウェブサイトが何をするのかについての一般的な説明を提供します。</p>
+
+<pre class="brush: json">"description": "このアプリは町中で最高の食べ物を見つけるのに役立ちます。"</pre>
+
+<h3 id="dir">dir</h3>
+
+<p><code>name</code>, <code>short_name</code>, <code>description</code> の各メンバーの主なテキストの書字方向を指定します。 <code>lang</code> メンバーと共に、右から左に記述する言語の正しい表示に役立ちます。</p>
+
+<pre class="brush: json" dir="rtl">"dir": "rtl",
+"lang": "ar",
+"short_name": "أنا من التطبيق!"</pre>
+
+<p>以下の値のいずれか一つを取ります。</p>
+
+<ul>
+ <li><code>ltr</code> (左から右)</li>
+ <li><code>rtl</code> (右から左)</li>
+ <li><code>auto</code></li>
+</ul>
+
+<div class="note">
+<p><strong>メモ</strong>: 値が省略された場合の既定値は <code>auto</code> であり、ブラウザーは <a href="/ja/docs/Web/Localization/Unicode_Bidirectional_Text_Algorithm">Unicode の双方向アルゴリズム</a>を使用して、テキストの方向についての最適な推測を行います。</p>
+</div>
+
+<h3 id="display">display</h3>
+
+<p>ウェブサイトで開発者が推奨する表示モードを定義します。</p>
+
+<pre class="brush: json">"display": "standalone"</pre>
+
+<p>有効な値は次の通りです。</p>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">表示モード</th>
+   <th scope="col">説明</th>
+   <th scope="col">表示モードのフォールバック</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td><code>fullscreen</code></td>
+   <td>利用可能な表示エリアがすべて使用され、ユーザーエージェント ({{Glossary("chrome")}}) は表示されません。</td>
+   <td><code>standalone</code></td>
+  </tr>
+  <tr>
+   <td><code>standalone</code></td>
+   <td>アプリケーションはスタンドアロンアプリケーションのようなルック＆フィールになります。これはアプリケーションが別なウィンドウを持ったり、アプリケーションの起動に独自のアイコンを持ったりすることが含まれます。このモードでは、ユーザーエージェントはナビゲーションの制御のための UI 要素を非表示にしますが、ステータスバーのようなそのほかの UI を表示することはできます。</td>
+   <td><code>minimal-ui</code></td>
+  </tr>
+  <tr>
+   <td><code>minimal-ui</code></td>
+   <td>アプリケーションはスタンドアロンアプリケーションのようなルック＆フィールになりますが、ナビゲーション制御のための最小限の UI 要素が表示されます。この要素はブラウザーによって異なります。</td>
+   <td><code>browser</code></td>
+  </tr>
+  <tr>
+   <td><code>browser</code></td>
+   <td>アプリケーションは、ブラウザーとプラットフォームに応じて、従来のブラウザータブまたは新しいウィンドウで開きます。これが既定です。</td>
+   <td>(なし)</td>
+  </tr>
+ </tbody>
+</table>
+
+<div class="note">
+<p><strong>メモ</strong>: {{cssxref("@media/display-mode", "display-mode")}} メディア特性を使用して、アプリの表示モードに基づいて選択的に CSS を適用することができます。これは、 URL からサイトを起動したり、デスクトップのアイコンから起動したりした時の使い勝手の一貫性を提供するために利用することができます。</p>
+</div>
+
+<h3 id="icons">icons</h3>
+
+<p>様々な場面に応じて、アプリケーションのアイコンとして機能する画像ファイルの配列を指定します。例えば、他のアプリケーションのリストの中でそのウェブアプリケーションを表すために使用したり、ウェブアプリケーションを <abbr title="operating system">OS</abbr> のタスク切り替えやシステム設定に統合したりするために使用することができます。</p>
+
+<pre class="brush: json">"icons": [
+  {
+    "src": "icon/lowres.webp",
+    "sizes": "48x48",
+    "type": "image/webp"
+  },
+  {
+    "src": "icon/lowres",
+    "sizes": "48x48"
+  },
+  {
+    "src": "icon/hd_hi.ico",
+    "sizes": "72x72 96x96 128x128 256x256"
+  },
+  {
+    "src": "icon/hd_hi.svg",
+    "sizes": "72x72"
+  }
+]</pre>
+
+<p>画像オブジェクトは次の値を含むかもしれません。</p>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">メンバー</th>
+   <th scope="col">説明</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td><code>sizes</code></td>
+   <td>画像の寸法を空白区切りで含む文字列。</td>
+  </tr>
+  <tr>
+   <td><code>src</code></td>
+   <td>画像ファイルへのパス。 <code>src</code> が相対 URL の場合、基底 URL はマニフェストのある URL になります。</td>
+  </tr>
+  <tr>
+   <td><code>type</code></td>
+   <td>画像のメディアタイプについてのヒント。このメンバーの目的は、ユーザーエージェントが対応していないメディアタイプの画像をすばやく無視できるようにすることです。</td>
+  </tr>
+  <tr>
+   <td><code>purpose</code></td>
+   <td>
+    <p>画像の目的を定義します。例えば画像がホスト OS のコンテキストでいくつかの特殊な目的を提供するためのもの (つまり、より良い統合のため) などです。</p>
+
+    <p><a href="https://w3c.github.io/manifest/#purpose-member">目的のメンバー</a>には以下の値を指定することができます。</p>
+
+    <ul>
+     <li>"<strong>badge</strong>": アプリケーションのアイコンとは異なる場所の制約や色の要件があるアイコンであることをユーザーエージェントが示すことができます。</li>
+     <li>"<strong>maskable</strong>": 画像が <a href="https://w3c.github.io/manifest/#icon-masks">アイコンマスクと安全領域</a>を意識して画像が設計されています。画像の安全領域の外側にある部分はユーザーエージェントが無視し、マスクすることができます。</li>
+     <li>"<strong>any</strong>": あらゆるコンテキストにおいて、ユーザーエージェントがアイコンの表示を自由にできます (これが既定値です)。</li>
+    </ul>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+<h3 id="lang">lang</h3>
+
+<p><code>name</code> と <code>short_name</code> の各メンバーの値で、第一の言語を指定します。この値は単一の<a href="/ja/docs/Web/HTML/Global_attributes/lang">言語タグ</a>を含む文字列です。</p>
+
+<pre class="brush: json">"lang": "en-US"</pre>
+
+<h3 id="name">name</h3>
+
+<p>サイトがユーザーに表示されるときに使われる、人間が読める名前を提供します。例えば、他のアプリケーションのリストやアイコンのラベルとして使用されます。</p>
+
+<pre class="brush: json">"name": "Google I/O 2017" </pre>
+
+<h3 id="orientation">orientation</h3>
+
+<p>すべてのウェブサイトの最上位の{{Glossary("Browsing context", "閲覧コンテキスト")}}における既定の向きを定義します。</p>
+
+<pre class="brush: json"><code>​​"orientation": "portrait-primary"</code></pre>
+
+<p>向きは以下の値のうち一つを取ります。</p>
+
+<ul>
+ <li><code>any</code></li>
+ <li><code>natural</code></li>
+ <li><code>landscape</code></li>
+ <li><code>landscape-primary</code></li>
+ <li><code>landscape-secondary</code></li>
+ <li><code>portrait</code></li>
+ <li><code>portrait-primary</code></li>
+ <li><code>portrait-secondary</code></li>
+</ul>
+
+<h3 id="prefer_related_applications">prefer_related_applications</h3>
+
+<p>真偽値で指定し、ブラウザーに対して、ウェブアプリケーションよりも推奨される特定のネイティブアプリケーション {{anch("related_applications", "(下記参照)")}} が利用できることをユーザーに示すかどうかの示唆になります。これは、ウェブサイトが提供できないことを、関連するネイティブアプリが実際に提供できる場合にのみ使用してください。</p>
+
+<pre class="brush: json">"prefer_related_applications": false</pre>
+
+<div class="note">
+<p><strong>メモ</strong>: 省略した場合、既定値は <code>false</code> です。</p>
+</div>
+
+<h3 id="related_applications">related_applications</h3>
+
+<p>基礎となるプラットフォームでインストール可能、またはアクセス可能なネイティブアプリケーションの配列です。 — 例えば、 Google Play ストアから入手できるネイティブのアンドロイドアプリケーションなどです。このようなアプリケーションはウェブサイトの代わりに、類似/同等の機能を提供することを意図しています。 — ウェブサイトのネイティブアプリ版のようなものです。</p>
+
+<pre class="brush: json">"related_applications": [
+  {
+    "platform": "play",
+    "url": "https://play.google.com/store/apps/details?id=com.example.app1",
+    "id": "com.example.app1"
+  }, {
+    "platform": "itunes",
+    "url": "https://itunes.apple.com/app/example-app1/id123456789"
+  }]</pre>
+
+<p>アプリケーションオブジェクトは次の値を含んでいる可能性があります。</p>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">メンバー</th>
+   <th scope="col">説明</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td><code>platform</code></td>
+   <td>アプリケーションが見つかるプラットフォームです。</td>
+  </tr>
+  <tr>
+   <td><code>url</code></td>
+   <td>アプリケーションが見つかる URL です。</td>
+  </tr>
+  <tr>
+   <td><code>id</code></td>
+   <td>指定のプラットフォームでアプリケーションを表すために使用される ID です。</td>
+  </tr>
+ </tbody>
+</table>
+
+<h3 id="scope">scope</h3>
+
+<p>このウェブサイトのコンテキストにおける、ナビゲーション範囲を定義します。これはマニフェストが適用されているときに、表示することができるウェブページを制限します。ユーザーがこの範囲の外に移動しようとすると、ブラウザーのタブやウィンドウ内の普通のウェブページに戻ります。</p>
+
+<p>scope が相対 URL の場合、基底 URL はマニフェストの URL になります。</p>
+
+<pre class="brush: json">"scope": "/myapp/"</pre>
+
+<h3 id="short_name">short_name</h3>
+
+<p>アプリケーションの人が読める短い名前を提供します。端末のホームスクリーンのように、ウェブアプリケーションの完全な名前を表示するための十分な領域がないときに使用するためのものです。</p>
+
+<pre class="brush: json">"short_name": "I/O 2017"
+</pre>
+
+<h3 id="start_url">start_url</h3>
+
+<p>ユーザーが (ホーム画面に追加された場合など) アプリケーションを起動したときに読み込む URL で、通常はインデックスページです。なお、これはマニフェストの URL からの相対 URL である必要があります。</p>
+
+<pre class="brush: json">"start_url": "./?utm_source=web_app_manifest"</pre>
+
+<h3 id="theme_color">theme_color</h3>
+
+<p>アプリケーションの既定のテーマ色を定義します。これは OS がサイトを表示する方法に影響を与えることがあります (例えば、アンドロイドのタスク切り替えでは、サイトがテーマ色で囲まれます)。</p>
+
+<pre class="brush: json">"theme_color": "aliceblue"</pre>
+
+<h2 id="Splash_screens" name="Splash_screens">スプラッシュ画面</h2>
+
+<p>Chrome 47 以降では、ホーム画面からサイトが起動されるとスプラッシュ画面が表示されます。スプラッシュ画面はウェブアプリマニフェストのプロパティから、具体的には以下のように自動生成されます。</p>
+
+<ul>
+ <li><code>name</code></li>
+ <li><code>background_color</code></li>
+ <li><code>icons</code> の配列中のアイコンで、端末の 128dpi に最も近いもの。
+  <p> </p>
+ </li>
+</ul>
+
+<h2 id="MIME_タイプ">MIME タイプ</h2>
+
+<p>マニフェストは、 <code>application/manifest+json</code> MIME タイプを使用して提供するべきです。しかし、これは任意です。</p>
+
+<h2 id="Specification" name="Specification">仕様書</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">状態</th>
+   <th scope="col">備考</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('Manifest')}}</td>
+   <td>{{Spec2('Manifest')}}</td>
+   <td>初回定義</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザーの対応</h2>
+
+<div>{{CompatibilityTable}}</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>昨日</th>
+   <th>Android</th>
+   <th>Android Webview</th>
+   <th>Firefox モバイル (Gecko)</th>
+   <th>IE モバイル</th>
+   <th>Opera モバイル</th>
+   <th>Safari モバイル</th>
+   <th>Android 版 Chrome</th>
+  </tr>
+  <tr>
+   <td>基本対応</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatChrome(39.0)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>32.0</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatChrome(39.0)}}</td>
+  </tr>
+  <tr>
+   <td><code>background_color</code></td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatChrome(46.0)}}<sup>[1]</sup></td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatChrome(46.0)}} [1]</td>
+  </tr>
+  <tr>
+   <td><code>theme_color</code></td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatChrome(46.0)}}<sup>[1]</sup></td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatChrome(46.0)}} [1]</td>
+  </tr>
+  <tr>
+   <td><a href="https://support.mozilla.org/en-US/kb/how-add-shortcut-website-android">ホーム画面に追加</a>機能に使用される <code>icons</code>, <code>name</code>, <code>short_name</code>, <code>theme_color</code></td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatGeckoMobile(53)}}<sup>[2]</sup></td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>display</code></td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatGeckoMobile(47)}}<sup>[3]</sup></td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>機能</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari (WebKit)</th>
+  </tr>
+  <tr>
+   <td>基本対応</td>
+   <td>{{CompatChrome(39.0)}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<p>[1] <code>lang</code> と <code>scope</code> には対応していません。</p>
+
+<p>[2] (もしあれば) <a href="/ja/docs/Web/Manifest">ウェブアプリマニフェスト</a>の <code>icons</code>, <code>name</code>, <code>short_name</code>, <code>theme_color</code> の各フィールドが、「ホーム画面へ追加」で (それぞれ) ホーム画面やアプリのウィンドウのアイコン、アプリのウィンドウのタイトル、ホームスクリーンのアイコンのタイトル、アプリのウィンドウ色のソースになります (Firefox モバイルのみ、 {{bug("1234558")}} を参照)。この機能の実験的な対応は、 <code>about:config</code> の真偽値フラグ <code>manifest.install.enabled</code> で隠されています。</p>
+
+<p>[3] <code>display</code> の <code>browser</code> 値は47でのみ対応していました。 <code>minimal-ui</code>, <code>standalone</code> , <code>fullscreen</code> は Firefox 57 で追加されました。</p>

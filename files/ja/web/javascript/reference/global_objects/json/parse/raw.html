@@ -1,0 +1,115 @@
+<div>{{JSRef}}</div>
+
+<p><span class="seoSummary"><strong><code>JSON.parse()</code></strong> メソッドは文字列を JSON として解析し、文字列によって記述されている JavaScript の値やオブジェクトを構築します。任意の <strong>reviver</strong> 関数で、生成されたオブジェクトが返される前に変換を実行することができます。</span></p>
+
+<div>{{EmbedInteractiveExample("pages/js/json-parse.html")}}</div>
+
+<p class="hidden">この対話型サンプルのソースファイルは GitHub リポジトリに格納されています。対話型サンプルプロジェクトに協力したい場合は、 <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> をクローンしてプルリクエストを送信してください。</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox">JSON.parse(<var>text</var>[, <var>reviver</var>])</pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<dl>
+ <dt><code>text</code></dt>
+ <dd>JSON として解析する文字列。JSON の構文の説明は {{jsxref("JSON")}} オブジェクトを参照してください。</dd>
+ <dt><code>reviver</code> {{optional_inline}}</dt>
+ <dd>もし関数である場合、解析により作り出された元の値を、オブジェクトを返す前に変換する方法を指示します。</dd>
+</dl>
+
+<h3 id="Return_value" name="Return_value">返値</h3>
+
+<p><code>text</code> として与えられた JSON に相当する {{jsxref("Object")}} を返します。</p>
+
+<h3 id="Throws" name="Throws">例外</h3>
+
+<p>解析する文字列が有効な JSON でない場合、{{jsxref("SyntaxError")}} 例外をスローします。</p>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<h3 id="Using_JSON.parse()" name="Using_JSON.parse()"><code>JSON.parse()</code> の使用</h3>
+
+<pre class="brush: js">JSON.parse('{}');              // {}
+JSON.parse('true');            // true
+JSON.parse('"foo"');           // "foo"
+JSON.parse('[1, 5, "false"]'); // [1, 5, "false"]
+JSON.parse('null');            // null
+</pre>
+
+<h3 id="Using_the_reviver_parameter" name="Using_the_reviver_parameter"><code>reviver</code> 引数の使用</h3>
+
+<p>もし <code>reviver</code> が指定されている場合、解析によって計算された値は、オブジェクトを返す前に<em>変換</em>されます。正確に言えば、計算された値とそのすべてのプロパティ（最もネストされたプロパティから始まり、元の値へと進みます）はそれぞれ <code>reviver</code> を通して変換されます。<code>reviver</code> は処理されるプロパティを含むオブジェクトが <code>this</code> として、また文字列のプロパティ名とプロパティの値を引数として呼び出されます。もし <code>reviver</code> 関数が {{jsxref("undefined")}} を返したり、何の値も返さなかったり（例えば実行が関数の終わりで{{訳注('<code>return</code> 文によってではなくて')}}終了した場合）した場合、そのプロパティはオブジェクトから削除されます。そうでなければそのプロパティはその戻り値として再定義されます。</p>
+
+<p>もし <code>reviver</code> が一部の値だけを変換して他を変換しないのであれば、必ずすべての変換されない値をそのまま返すようにします。そうしなければ、それらの値は結果のオブジェクトから削除されるでしょう。</p>
+
+<pre class="brush: js">JSON.parse('{"p": 5}', (key, value) =&gt;
+  typeof value === 'number'
+    ? value * 2 // 数値ならば値の2倍を返す
+    : value     // それ以外ならば変更しない
+);
+
+// { p: 10 }
+
+JSON.parse('{"1": 1, "2": 2, "3": {"4": 4, "5": {"6": 6}}}', (key, value) =&gt; {
+  console.log(key); // 現在のプロパティ名を出力する。最後は ""。
+  return value;     // 変更されていないプロパティの値を返す。
+});
+
+// 1
+// 2
+// 4
+// 6
+// 5
+// 3 
+// ""
+</pre>
+
+<h3 id="JSON.parse()_does_not_allow_trailing_commas" name="JSON.parse()_does_not_allow_trailing_commas"><code>JSON.parse()</code> は末尾のカンマを許容しません</h3>
+
+<pre class="example-bad brush: js example-bad">// 両方とも SyntaxError をスローする
+JSON.parse('[1, 2, 3, 4, ]');
+JSON.parse('{"foo" : 1, }');
+</pre>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">策定状況</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-15.12.2', 'JSON.parse')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td>最初期の定義。JavaScript 1.7 で実装。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-json.parse', 'JSON.parse')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-json.parse', 'JSON.parse')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザー実装状況</h2>
+
+<div>
+<div class="hidden">このページの互換性一覧表は構造化データから生成されます。データに協力したいのであれば、 <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> をチェックアウトしてプルリクエストを送信してください。</div>
+
+<p>{{Compat("javascript.builtins.JSON.parse")}}</p>
+</div>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li>{{jsxref("JSON.stringify()")}}</li>
+</ul>

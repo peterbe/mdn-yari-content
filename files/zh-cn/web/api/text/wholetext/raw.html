@@ -1,0 +1,138 @@
+<p>{{ apiref("DOM") }}</p>
+
+<p><font><font>该</font></font><strong><code>Text.wholeText</code></strong><font><font>只读属性返回</font></font><a href="https://developer.mozilla.org/en-US/docs/Web/API/Text" title="文本界面表示元素或属性的文本内容。 如果一个元素在其内容中没有标记，则它有一个实现包含元素文本的Text的单个子元素。 但是，如果元素包含标记，则将其解析为形成子元素的信息项和文本节点。"><code>Text</code></a><font><font>逻辑上相邻的节点的所有文本。</font></font><font><font>文本按文档顺序连接。</font><font>这允许指定任何文本节点并获取所有相邻文本作为单个字符串。</font></font></p>
+
+<p> </p>
+
+<h2 id="Syntax" name="Syntax">Syntax</h2>
+
+<pre class="syntaxbox"><em>str</em> = <em>textnode</em>.wholeText;</pre>
+
+<h2 id="Example" name="Example">Notes and example</h2>
+
+<p>Suppose you have the following simple paragraph within your webpage (with some whitespace added to aid formatting throughout the code samples here), whose DOM node is stored in the variable <code>para</code>:</p>
+
+<pre class="brush: html">&lt;p&gt;Thru-hiking is great!  &lt;strong&gt;No insipid election coverage!&lt;/strong&gt;
+  However, &lt;a href="http://en.wikipedia.org/wiki/Absentee_ballot"&gt;casting a
+  ballot&lt;/a&gt; is tricky.&lt;/p&gt;
+</pre>
+
+<p>You decide you don’t like the middle sentence, so you remove it:</p>
+
+<pre class="brush: js">para.removeChild(para.childNodes[1]);
+</pre>
+
+<p>Later, you decide to rephrase things to, “Thru-hiking is great, but casting a ballot is tricky.” <em>while preserving the hyperlink</em>. So you try this:</p>
+
+<pre class="brush: js">para.firstChild.data = "Thru-hiking is great, but ";
+</pre>
+
+<p>All set, right? <em>Wrong!</em> What happened was you removed the <code>strong</code> element, but the removed sentence’s element separated two text nodes. One for the first sentence, and one for the first word of the last. Instead, you now effectively have this:</p>
+
+<pre class="brush: html">&lt;p&gt;Thru-hiking is great, but However, &lt;a
+  href="http://en.wikipedia.org/wiki/Absentee_ballot"&gt;casting a
+  ballot&lt;/a&gt; is tricky.&lt;/p&gt;
+</pre>
+
+<p>You’d really prefer to treat all those adjacent text nodes as a single one. That’s where <code>wholeText</code> comes in: if you have multiple adjacent text nodes, you can access the contents of all of them using <code>wholeText</code>. Let’s pretend you never made that last mistake. In that case, we have:</p>
+
+<pre class="brush: js">assert(para.firstChild.wholeText == "Thru-hiking is great!    However, ");
+</pre>
+
+<p><code>wholeText</code> is just a property of text nodes that returns the string of data making up all the adjacent (i.e. not separated by an element boundary) text nodes combined.</p>
+
+<p>Now let’s return to our original problem. What we want is to be able to <em>replace</em> the whole text with new text. That’s where {{domxref("Text.replaceWholeText", "replaceWholeText()")}} comes in:</p>
+
+<pre class="brush: js">para.firstChild.replaceWholeText("Thru-hiking is great, but ");
+</pre>
+
+<p>We’re removing every adjacent text node (all the ones that constituted the whole text) but the one on which <code>replaceWholeText()</code> is called, and we’re changing the remaining one to the new text. What we have now is this:</p>
+
+<pre class="brush: html">&lt;p&gt;Thru-hiking is great, but &lt;a
+  href="http://en.wikipedia.org/wiki/Absentee_ballot"&gt;casting a
+  ballot&lt;/a&gt; is tricky.&lt;/p&gt;
+</pre>
+
+<p>Some uses of the whole-text functionality may be better served by using <code>Node.textContent</code>, or the longstanding {{domxref("Element.innerHTML")}}; that’s fine and probably clearer in most circumstances. If you have to work with mixed content within an element, as seen here, <code>wholeText</code> and <span class="internal"><code>replaceWholeText()</code></span> may be useful.</p>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('DOM WHATWG', '#dom-text-wholetext', 'Text.wholeText')}}</td>
+   <td>{{Spec2('DOM WHATWG')}}</td>
+   <td>No significant change.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('DOM3 Core', 'core.html#Text3-wholeText', 'Text.wholeText')}}</td>
+   <td>{{Spec2('DOM3 Core')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<p>{{CompatibilityTable}}</p>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Edge</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>1.0</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatGeckoDesktop("1.9.1")}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Edge</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatGeckoMobile("1.9.1")}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li>The {{domxref("Text")}} interface it belongs to.</li>
+</ul>

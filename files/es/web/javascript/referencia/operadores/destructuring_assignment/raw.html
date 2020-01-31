@@ -1,0 +1,462 @@
+<div>{{jsSidebar("Operators")}}</div>
+
+<p>La sintaxis de <strong>destructuring assignment</strong> (asignación de desestructuración) es una expresión de JavaScript que hace posible la extracción de datos de arreglos u objetos usando una sintaxis que equivale a la construcción de arreglos y objetos literales.</p>
+
+<h2 id="Sintaxis">Sintaxis</h2>
+
+<pre class="brush: js">let a, b, rest;
+[a, b] = [10, 20];
+console.log(a); // 10
+console.log(b); // 20
+
+[a, b, ...rest] = [10, 20, 30, 40, 50];
+console.log(a); // 10
+console.log(b); // 20
+console.log(rest); // [30, 40, 50]
+
+({ a, b } = { a: 10, b: 20 });
+console.log(a); // 10
+console.log(b); // 20
+
+
+// Propuesta de etapa 4 (terminada)
+({a, b, ...rest} = {a: 10, b: 20, c: 30, d: 40});
+console.log(a); // 10
+console.log(b); // 20
+console.log(rest); // {c: 30, d: 40}</pre>
+
+<h2 id="Descripción">Descripción</h2>
+
+<p>Las expresiones literales de objetos y arreglos proporcionan una manera fácil de crear paquetes de datos <em>ad hoc</em>.</p>
+
+<pre class="brush: js">const x = [1, 2, 3, 4, 5];</pre>
+
+<p>Destructuring assignment utiliza una sintaxis similar, pero en el lado izquierdo de la asignación define qué valores desempaquetar de la variable de origen.</p>
+
+<pre class="brush: js">const x = [1, 2, 3, 4, 5];
+const [y, z] = x;
+console.log(y); // 1
+console.log(z); // 2</pre>
+
+<p><br>
+ Esta capacidad es similar a funcionalidades que puedes encontrar en otros lenguajes como Perl y Python.</p>
+
+<h2 id="Destructuración_de_un_Array">Destructuración de un Array</h2>
+
+<h3 id="Asignación_básica_de_variables">Asignación básica de variables</h3>
+
+<pre class="brush: js">const foo = ['uno', 'dos', 'tres'];
+
+const [rojo, amarillo, verde] = foo;
+console.log(rojo); // "uno"
+console.log(amarillo); // "dos"
+console.log(verde); // "tres"
+</pre>
+
+<h3 id="Asignación_separada_de_la_declaración">Asignación separada de la declaración</h3>
+
+<p>A una variable se le puede asignar su valor mediante la desestructuración separada de la declaración de la variable.</p>
+
+<pre class="brush: js">let a, b;
+
+[a, b] = [1, 2];
+console.log(a); // 1
+console.log(b); // 2</pre>
+
+<h3 id="Valores_por_default">Valores por default</h3>
+
+<p>A una variable se le puede asignar un valor predeterminado, en el caso de que el valor desempaquetado del arreglo sea <code>undefinded</code>.</p>
+
+<pre class="brush: js">let a, b;
+
+[a=5, b=7] = [1];
+console.log(a); // 1
+console.log(b); // 7
+</pre>
+
+<h3 id="Cambiando_orden_de_las_variables">Cambiando orden de las variables</h3>
+
+<p>Se pueden intercambiar dos valores de variables en una expresión de desestructuración.<br>
+ <br>
+ Sin destructuring assignment, cambiar el orden de dos variables requiere una variable temporal (alternativamente en algunos lenguajes de bajo nivel se puede usar el <a class="external" href="http://en.wikipedia.org/wiki/XOR_swap">algoritmo XOR-swap</a>).</p>
+
+<pre class="brush: js">let a = 1;
+let b = 3;
+
+[a, b] = [b, a];
+console.log(a); // 3
+console.log(b); // 1
+
+const arr = [1,2,3];
+[arr[2], arr[1]] = [arr[1], arr[2]];
+console.log(arr); // [1,3,2]</pre>
+
+<h3 id="Múltiples_valores_de_retorno">Múltiples valores de retorno</h3>
+
+<p>Gracias a destructuring assignment, las funciones pueden retornar multiples valores. Aunque en JavaScript siempre ha sido posible regresar un arreglo de una función, esto agrega más flexibilidad.</p>
+
+<p>En este ejemplo, <code>f()</code> retorna los valores <code>[1, 2]</code> como su salida, esto puede ser posible con una sola línea con desestructuración</p>
+
+<pre class="brush: js">function f() {
+  return [1, 2];
+}
+
+let a, b; 
+[a, b] = f();
+
+console.log(a); // 1
+console.log(b); // 2
+</pre>
+
+<p>La sentencia <code>[a, b] = f()</code> asigna los resultados de las variables en corchetes en orden. A <code><var>a</var></code> se le asigna el valor de 1 y a <code><var>b</var></code> se le asigna 2.</p>
+
+<p>También puedes tomar los valores de retorno en un solo arreglo:</p>
+
+<pre class="brush:js">let a = f();
+
+console.log(a); // [1, 2]
+</pre>
+
+<p>En este caso, <code><var>a</var></code> es un arreglo que contiene los valores 1 y 2.</p>
+
+<h3 id="Ignorando_algunos_valores_de_retorno">Ignorando algunos valores de retorno</h3>
+
+<p>Puedes ignorar los valores de retorno en los que no estás interesado:</p>
+
+<pre class="brush: js">function f() {
+  return [1, 2, 3];
+}
+
+const [a, , b] = f();
+console.log(a); // 1
+console.log(b); // 3</pre>
+
+<p>Puedes ignorar cualquiera de los valores retornados (o incluso todos). Por ejemplo:</p>
+
+<pre class="brush:js">[,,] = f();
+</pre>
+
+<h3 id="Asignación_del_resto_de_un_array_a_una_variable">Asignación del resto de un array a una variable</h3>
+
+<p>Al desestructurar un array, puedes desempaquetar y asignar la parte restantea una variable usando el patrón <code>rest</code>:</p>
+
+<pre class="brush: js">const [a, ...b] = [1, 2, 3];
+console.log(a); // 1
+console.log(b); // [2, 3]
+</pre>
+
+<p>Tenga en cuenta que se lanzará un {{jsxref ("SyntaxError")}} si se utiliza una coma final en el lado izquierdo con un elemento de <code>rest</code>:</p>
+
+<pre class="brush: js example-bad">const [a, ...b,] = [1, 2, 3];
+
+// SyntaxError: el elemento rest puede no tener una coma final
+// Considere siempre usar el operador rest como último elemento
+</pre>
+
+<h3 id="Extrayendo_valores_de_una_expresión_regular">Extrayendo valores de una expresión regular</h3>
+
+<p>Cuando el método de expresión regular <code><a href="/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/exec">exec()</a></code> encuentra una coincidencia, devuelve un arreglo que contiene la primera porción de la primera coincidencia entera y luego las porciones de la cadena que coinciden con cada grupo entre paréntesis en la expresión regular. Las asignaciones destructuring te permiten extraer facilmente las partes de este arreglo, ignorando la coincidencia entera si no es necesaria.</p>
+
+<pre class="brush:js">const url = "https://developer.mozilla.org/en-US/Web/JavaScript";
+
+const parsedURL = /^(\w+)\:\/\/([^\/]+)\/(.*)$/.exec(url);
+const [, protocol, fullhost, fullpath] = parsedURL;
+
+console.log(protocol); // https:
+</pre>
+
+<h2 id="Object_destructuring">Object destructuring</h2>
+
+<h3 id="Asignación_básica">Asignación básica</h3>
+
+<pre class="brush: js">const o = {p: 42, q: true};
+const {p, q} = o;
+
+console.log(p); // 42
+console.log(q); // true</pre>
+
+<h3 id="Asignación_sin_declaración">Asignación sin declaración</h3>
+
+<p>Se puede hacer destructuring assignment sin declaración en la sentencia de asignación.</p>
+
+<pre><code>let a, b;
+
+({a, b} = {a: 1, b: 2});</code></pre>
+
+<div class="note">
+<p>Los paréntesis <code>(...)</code> alrededor de la sentencia de asignación son obligatorios cuando se usa asignación object literal destructuring (asignación de desestructuración literal de objetos) sin una declaración.</p>
+
+<p><code>{a, b} = {a: 1, b: 2}</code> no es una sintaxis válida, ya que <code>{a, b}</code> en el lado izquierdo se considera un bloque y no un objeto literal.</p>
+
+<p>Sin embargo, <code>({a, b} = {a: 1, b: 2})</code> es válido, al igual que <code>const {a, b} = {a: 1, b: 2}</code> .</p>
+
+<p>La expresión <code>(...)</code> debe continuar con un punto y coma o puede usarse para ejecutar una función en la línea anterior.</p>
+</div>
+
+<h3 id="Asignación_a_nuevos_nombres_de_variables">Asignación a nuevos nombres de variables</h3>
+
+<p>Se puede desempaquetar una propiedad de un objeto y asignarla a una variable con un nombre diferente al de la propiedad del objeto.</p>
+
+<pre class="brush: js">const o = {p: 42, q: true};
+const {p: foo, q: bar} = o;
+ 
+console.log(foo); // 42 
+console.log(bar); // true
+</pre>
+
+<p>Aquí, por ejemplo, <code>const {p: foo} = o</code> toma del objeto <code>o</code> la propiedad llamada <code>p</code> y la asigna a una variable local llamada <code>foo</code>.</p>
+
+<h3 id="Valores_por_defecto">Valores por defecto</h3>
+
+<p>A una variable se le puede asignar un valor por defecto, en el caso de que el valor desempaquetado del objeto sea <code>undefined</code>.</p>
+
+<pre class="brush: js">const {a = 10, b = 5} = {a: 3};
+
+console.log(a); // 3
+console.log(b); // 5</pre>
+
+<h3 id="Argumentos_por_defecto_en_funciones">Argumentos por defecto en funciones</h3>
+
+<h4 id="Version_de_ES5">Version de ES5</h4>
+
+<pre class="brush: js">function drawES5Chart(options) {
+  options = options === undefined ? {} : options;
+  var size = options.size === undefined ? 'big' : options.size;
+  var cords = options.cords === undefined ? { x: 0, y: 0 } : options.cords;
+  var radius = options.radius === undefined ? 25 : options.radius;
+  console.log(size, cords, radius);
+  // now finally do some chart drawing
+}
+
+drawES5Chart({
+  cords: { x: 18, y: 30 },
+  radius: 30
+});</pre>
+
+<h4 id="Version_de_ES2015">Version de ES2015 </h4>
+
+<pre class="brush: js">function drawES2015Chart({size = 'big', cords = { x: 0, y: 0 }, radius = 25} = {}) 
+{
+  console.log(size, cords, radius);
+  // do some chart drawing
+}
+
+drawES2015Chart({
+  cords: { x: 18, y: 30 },
+  radius: 30
+});</pre>
+
+<div class="note">
+<p>En Firefox, todavía no se implementan los valores por default en destructuring assignments : var { x = 3 } = {} and var [foo = "bar"] = []. Revisa {{bug(932080)}} para valores destructured por default en funciones.</p>
+</div>
+
+<h3 id="Carga_de_módulos_no-ES2015">Carga de módulos (no-ES2015)</h3>
+
+<p>Destructuring puede ser útil para carga de subconjuntos específicos de módulos no-ES2015 como aquí en <a href="/en-US/Add-ons/SDK">Add-on SDK</a>:</p>
+
+<pre class="brush: js">const { Loader, main } = require('toolkit/loader');
+</pre>
+
+<h3 id="Objetos_anidados_y_destructuring_de_arreglos">Objetos anidados y destructuring de arreglos</h3>
+
+<pre class="brush:js">var metadata = {
+    title: "Scratchpad",
+    translations: [
+       {
+        locale: "de",
+        localization_tags: [ ],
+        last_edit: "2014-04-14T08:43:37",
+        url: "/de/docs/Tools/Scratchpad",
+        title: "JavaScript-Umgebung"
+       }
+    ],
+    url: "/en-US/docs/Tools/Scratchpad"
+};
+
+var { title: englishTitle, translations: [{ title: localeTitle }] } = metadata;
+
+console.log(englishTitle); // "Scratchpad"
+console.log(localeTitle);  // "JavaScript-Umgebung"</pre>
+
+<h3 id="For_para_iteraciones_con_destructuring">For para iteraciones con destructuring</h3>
+
+<pre class="brush: js">var people = [
+  {
+    name: "Mike Smith",
+    family: {
+      mother: "Jane Smith",
+      father: "Harry Smith",
+      sister: "Samantha Smith"
+    },
+    age: 35
+  },
+  {
+    name: "Tom Jones",
+    family: {
+      mother: "Norah Jones",
+      father: "Richard Jones",
+      brother: "Howard Jones"
+    },
+    age: 25
+  }
+];
+
+for (var {name: n, family: { father: f } } of people) {
+  console.log("Name: " + n + ", Father: " + f);
+}
+
+// "Name: Mike Smith, Father: Harry Smith"
+// "Name: Tom Jones, Father: Richard Jones"</pre>
+
+<h3 id="Obteniendo_campos_de_objetos_pasados_como_parametros_de_función">Obteniendo campos de objetos pasados como parametros de función</h3>
+
+<pre class="brush:js">function userId({id}) {
+  return id;
+}
+
+function whois({displayName: displayName, fullName: {firstName: name}}){
+  console.log(displayName + " is " + name);
+}
+
+var user = { 
+  id: 42, 
+  displayName: "jdoe",
+  fullName: { 
+      firstName: "John",
+      lastName: "Doe"
+  }
+};
+
+console.log("userId: " + userId(user)); // "userId: 42"
+whois(user); // "jdoe is John"</pre>
+
+<p>Esto obtiene los campos <code>id</code>, <code>displayName</code> and <code>firstName</code> del objeto usuario e imprime los valores.</p>
+
+<h3 id="Computed_object_property_names_and_destructuring">Computed object property names and destructuring</h3>
+
+<p>Computed property names, like on <a href="/en-US/docs/Web/JavaScript/Reference/Operators/Object_initializer#Computed_property_names">object literals</a>, can be used with destructuring.</p>
+
+<pre class="brush: js">let key = "z";
+let { [key]: foo } = { z: "bar" };
+
+console.log(foo); // "bar"
+</pre>
+
+<h2 id="Especificaciones">Especificaciones</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-destructuring-assignment', 'Destructuring assignment')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Compatibilidad_en_navegadores">Compatibilidad en navegadores</h2>
+
+<p>{{CompatibilityTable}}</p>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatNo}}</td>
+   <td>{{ CompatGeckoDesktop("1.8.1") }}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>7.1</td>
+  </tr>
+  <tr>
+   <td>Computed property names</td>
+   <td>{{CompatNo}}</td>
+   <td>{{ CompatGeckoDesktop("34") }}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+  <tr>
+   <td>Spread operator</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{ CompatGeckoDesktop("34") }}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Chrome for Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{ CompatGeckoMobile("1.0") }}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>8</td>
+  </tr>
+  <tr>
+   <td>Computed property names</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{ CompatGeckoMobile("34") }}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+  <tr>
+   <td>Spread operator</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{ CompatGeckoMobile("34") }}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="sect1"></h2>
+
+<h2 id="Notas_específicas_para_Firefox">Notas específicas para Firefox</h2>
+
+<ul>
+ <li>Firefox proporciona una extensión no estándar del lenguaje para destructuring en <a href="/en-US/docs/Web/JavaScript/New_in_JavaScript/1.7">JS1.7</a>. Esta extensión se quitó de Gecko 40 {{geckoRelease(40)}}. Puedes revisar {{bug(1083498)}}.</li>
+ <li>A partir de Gecko 41 {{geckoRelease(41)}} y para cumplir con la especificación ES2015, los patrones de destructuring con paréntesis, como <code>([a, b]) = [1, 2]</code> or <code>({a, b}) = { a: 1, b: 2 }</code>, ahora se consideran inválidos y lanzan una {{jsxref("SyntaxError")}}. Revisa <a class="external external-icon" href="http://whereswalden.com/2015/06/20/new-changes-to-make-spidermonkeys-and-firefoxs-parsing-of-destructuring-patterns-more-spec-compliant/">Jeff Walden's blog post</a> y {{bug(1146136)}} para más detalles.</li>
+</ul>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Web/JavaScript/Reference/Operators/Assignment_Operators">Operadores de asignación</a></li>
+ <li><a href="https://hacks.mozilla.org/2015/05/es6-in-depth-destructuring/">"ES6 in Depth: Destructuring" on hacks.mozilla.org</a></li>
+</ul>

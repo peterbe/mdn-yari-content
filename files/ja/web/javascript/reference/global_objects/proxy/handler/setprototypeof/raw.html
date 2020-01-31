@@ -1,0 +1,120 @@
+<div>{{JSRef}}</div>
+
+<p><strong><code>handler.setPrototypeOf()</code></strong> は {{jsxref("Object.setPrototypeOf()")}} に対するトラップです。</p>
+
+<div>{{EmbedInteractiveExample("pages/js/proxyhandler-setprototypeof.html", "taller", "taller")}}</div>
+
+<div class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</div>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="brush: js">var p = new Proxy(target, {
+  setPrototypeOf: function(target, prototype) {
+  }
+});
+</pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<p>次の引数は <code>setPrototypeOf</code> メソッドに渡されます。<code>this</code> はハンドラにバインドされます。</p>
+
+<dl>
+ <dt><code>target</code></dt>
+ <dd>ターゲットオブジェクトです。</dd>
+ <dt><code>prototype</code></dt>
+ <dd>オブジェクトの新しいプロトタイプ、または <code>null</code> です。</dd>
+</dl>
+
+<h3 id="Return_value" name="Return_value">戻り値</h3>
+
+<p><code>setPrototypeOf</code> メソッドは <code>[[Prototype]]</code> を変更できたかどうかを真偽値で返します。</p>
+
+<h2 id="説明">説明</h2>
+
+<p><code><strong>handler.setPrototypeOf</strong></code> メソッドは {{jsxref("Object.setPrototypeOf()")}} に対するトラップです。</p>
+
+<h3 id="インターセプト">インターセプト</h3>
+
+<p>このトラップは下記の操作をインターセプトできます。</p>
+
+<ul>
+ <li>{{jsxref("Object.setPrototypeOf()")}}</li>
+ <li>{{jsxref("Reflect.setPrototypeOf()")}}</li>
+</ul>
+
+<h3 id="不変条件">不変条件</h3>
+
+<p>次の不変条件に違反している場合、プロキシは{{jsxref("TypeError")}}をスローします。</p>
+
+<ul>
+ <li><code>target</code> が拡張可能でない場合、引数の <code>prototype</code> は　<code>Object.getPrototypeOf(target)</code> と同じ値でなければなりません。</li>
+</ul>
+
+<h2 id="例">例</h2>
+
+<p>If you want to disallow setting a new prototype for your object, your handler's <code>setPrototypeOf</code> method can either return <code>false</code>, or it can throw an exception.</p>
+
+<p>The former approach means that any operation that performs such mutation, that throws an exception on failure to mutate, will have to create the exception itself.  For example, {{jsxref("Object.setPrototypeOf()")}} will create and throw a <code>TypeError</code> itself.  If the mutation is performed by an operation that <em>doesn't</em> ordinarily throw in case of failure, such as {{jsxref("Reflect.setPrototypeOf()")}}, no exception will be thrown.</p>
+
+<pre class="brush: js">var handlerReturnsFalse = {
+    setPrototypeOf(target, newProto) {
+        return false;
+    }
+};
+
+var newProto = {}, target = {};
+
+var p1 = new Proxy(target, handlerReturnsFalse);
+Object.setPrototypeOf(p1, newProto); // throws a TypeError
+Reflect.setPrototypeOf(p1, newProto); // returns false</pre>
+
+<p>The latter approach will cause <em>any</em> operation that attempts to mutate, to throw.  This approach is required if you want even non-throwing operations to throw on failure, or you want to throw a custom exception value.</p>
+
+<pre class="brush: js">var handlerThrows = {
+    setPrototypeOf(target, newProto) {
+        throw new Error('custom error');
+    }
+}; 
+
+var newProto = {}, target = {};
+
+var p2 = new Proxy(target, handlerThrows);
+Object.setPrototypeOf(p2, newProto); // throws new Error("custom error")
+Reflect.setPrototypeOf(p2, newProto); // throws new Error("custom error")</pre>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">ステータス</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-proxy-object-internal-methods-and-internal-slots-setprototypeof-v', '[[SetPrototypeOf]]')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-proxy-object-internal-methods-and-internal-slots-setprototypeof-v', '[[SetPrototypeOf]]')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザ実装状況</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.builtins.Proxy.handler.setPrototypeOf")}}</p>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li>{{jsxref("Proxy")}}</li>
+ <li>{{jsxref("Proxy.handler", "handler")}}</li>
+ <li>{{jsxref("Object.setPrototypeOf()")}}</li>
+ <li>{{jsxref("Reflect.setPrototypeOf()")}}</li>
+</ul>

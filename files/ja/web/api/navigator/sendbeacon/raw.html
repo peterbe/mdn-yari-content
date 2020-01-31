@@ -1,0 +1,87 @@
+<div>{{APIRef("HTML DOM")}}</div>
+
+<p><code><strong>navigator.sendBeacon()</strong></code> メソッドは、 {{Glossary("HTTP")}} でウェブサーバーに非同期に少量のデータを送るために使用することができます。</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox">navigator.sendBeacon(<var>url</var>, <var>data</var>);
+</pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<dl>
+ <dt><code><var>url</var></code></dt>
+ <dd><var>url</var> 引数は、 <var>data</var> が送られる解決済みの URL を示します。</dd>
+ <dt><code><var>data</var></code></dt>
+ <dd><var>data</var> 引数は、送るデータを含む {{domxref("ArrayBuffer")}}, {{domxref("ArrayBufferView")}}, {{domxref("Blob")}}, {{domxref("DOMString")}}, {{domxref("FormData")}}, {{domxref("ReadableStream")}}, {{domxref("URLSearchParams")}} のいずれかのオブジェクトです。</dd>
+</dl>
+
+<h3 id="Return_values" name="Return_values">返値</h3>
+
+<p><code><strong>sendBeacon()</strong></code> メソッドはユーザーエージェントが転送キューにデータを入れられた時は <code>true</code> を返します。それ以外の時は <code>false</code> を返します。</p>
+
+<h2 id="Description" name="Description">解説</h2>
+
+<p>このメソッドはアナリティクスや診断コードでよくみられる、文書をアンロードする前にウェブサーバにデータを送信しようとするニーズに対応します。少しでも早くデータを送ると、データを収集する機会を失う可能性があります。しかし、文書のアンロード時に確実にデータが送信されるようにするのは開発者にとってずっと難しいことでした。ユーザーエージェントは通常 {{event("unload")}} ハンドラーの中で生成された非同期 {{domxref("XMLHttpRequest")}} を無視するからです。</p>
+
+<p>この問題を解決するために、アナリティクスや診断コードは伝統的に <code>unload</code> または {{event("beforeunload")}} イベントハンドラーの中で、同期 <code>XMLHttpRequest</code> を使ってデータを送信してきました。 同期 <code>XMLHttpRequest</code> は、文書をアンロードするプロセスをブロックするため次の操作が遅くなったように見えます。結果として、本当の原因はひとつ前のページにあるにも関わらず、次のページの読み込みが遅いのだとユーザは認識してしまいます。</p>
+
+<p>これらのデータを確実に送信するためにいくつかの回避策が使われています。このような手法のひとつは、データを送信するために unload ハンドラー内で {{HTMLElement("img")}} 要素を作成して、その <code>src</code> 属性を設定することでアンロードを遅延させる方法です。ほとんどのユーザーエージェントは、未完了の画像のロードを完了するためにアンロードを遅延させるため、アンロード中にデータを送信することができます。もうひとつの手法は、 unload ハンドラー内で数秒間何もしないループを作成して、アンロードを遅らせ、データをサーバーに送信する方法です。</p>
+
+<p>これらの手法はコーディングパターンとして好ましくないだけでなく、いくつかの手法は信頼性が低く、どの手法も次のページヘの遷移パフォーマンスが低下したと感じさせます。</p>
+
+<p>次の例は unload ハンドラーで同期 <code>XMLHttpRequest</code> を送ってサーバにデータを送信しようとする理論的なアナリティクスのコードです。これはページのアンロードを遅延させます。</p>
+
+<pre class="brush: js">window.addEventListener("unload", logData, false);
+
+function logData() {
+  var client = new XMLHttpRequest();
+  client.open("POST", "/log", false); // third parameter indicates sync xhr
+  client.setRequestHeader("Content-Type", "text/plain;charset=UTF-8");
+  client.send(analyticsData);
+}
+</pre>
+
+<p>そこで <code><strong>sendBeacon()</strong></code> の出番です。 <code>sendBeacon()</code> メソッドを使うことで、アンロードが遅延したり次のナビゲーションにパフォーマンスの影響を与えたりすることなく、ユーザーエージェントが転送できる時に、データは非同期にウェブサーバーに転送されます。これはアナリティクスデータの送信に関する全ての問題を解決します。データは確実に、非同期に、そして次のページの読み込みに影響を与えずに送信されます。さらに、そのコードは、実際に他のどんなテクニックよりも簡単です。</p>
+
+<p>次の例は、 <code>sendBeacon()</code> メソッドを使用してサーバーにデータを送信する、理論的なアナリティクスのコードパターンです。</p>
+
+<pre class="brush: js">window.addEventListener("unload", logData, false);
+
+function logData() {
+  navigator.sendBeacon("/log", analyticsData);
+}
+</pre>
+
+<p>XHR と同様に、ビーコンによるリクエストは <code><strong>sendBeacon()</strong></code> が呼び出された時点で有効な関連する Cookie が一緒に送信されます。</p>
+
+<h2 id="Specifications" name="Specifications">仕様書</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">状態</th>
+   <th scope="col">備考</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName('Beacon', '#sec-sendBeacon-method', 'sendBeacon()')}}</td>
+   <td>{{Spec2('Beacon')}}</td>
+   <td>初回定義</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザーの互換性</h2>
+
+<div class="hidden">このページの互換性一覧表は構造化データから生成されています。データに協力していただけるのであれば、 <a class="external" href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> をチェックアウトしてプルリクエストを送信してください。</div>
+
+<p>{{Compat("api.Navigator.sendBeacon")}}</p>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li>{{domxref("navigator", "navigator")}}</li>
+</ul>

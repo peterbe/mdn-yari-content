@@ -1,0 +1,125 @@
+<div>{{JSRef}}</div>
+
+<p><strong><code>handler.get()</code></strong> はプロパティの値を取得することに対するトラップです。</p>
+
+<div>{{EmbedInteractiveExample("pages/js/proxyhandler-get.html", "taller")}}</div>
+
+<div class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</div>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="brush: js">var p = new Proxy(target, {
+  get: function(target, property, receiver) {
+  }
+});
+</pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<p>次の引数が <code>get</code> メソッドに渡されます。<code>this</code>はハンドラにバインドされます。</p>
+
+<dl>
+ <dt><code>target</code></dt>
+ <dd>ターゲットオブジェクト</dd>
+ <dt><code>property</code></dt>
+ <dd>取得するプロパティの名称</dd>
+ <dt><code>receiver</code></dt>
+ <dd>proxy、または proxy から継承するオブジェクトのどちらか</dd>
+</dl>
+
+<h3 id="Return_value" name="Return_value">戻り値</h3>
+
+<p><code>get</code> メソッドはどんな値でも返すことができます。</p>
+
+<h2 id="説明">説明</h2>
+
+<p><code><strong>handler.get</strong></code> メソッドはプロパティ値を取得することに対するトラップです。</p>
+
+<h3 id="インターセプト">インターセプト</h3>
+
+<p>このトラップは次の操作をインターセプトできます。:</p>
+
+<ul>
+ <li>プロパティアクセス: <code>proxy[foo]<font face="Open Sans, arial, x-locale-body, sans-serif"><span style="background-color: #ffffff;"> と </span></font></code><code>proxy.bar</code></li>
+ <li>継承したプロパティアクセス: <code>Object.create(proxy)[foo]</code></li>
+ <li>{{jsxref("Reflect.get()")}}</li>
+</ul>
+
+<h3 id="不変条件">不変条件</h3>
+
+<p>次の不変条件に違反している場合、プロキシは{{jsxref("TypeError")}}をスローします。:</p>
+
+<ul>
+ <li>ターゲットオブジェクトプロパティが書き込み不可で非設定なデータプロパティなら、プロパティに対して報告される値は対応するターゲットオブジェクトプロパティと同じでなければなりません。</li>
+ <li>対応するターゲットオブジェクトプロパティが[[Get]]属性として未定義で非設定なアクセスプロパティなら、プロパティに対して報告される値は未定義でなければなりません。</li>
+</ul>
+
+<h2 id="例">例</h2>
+
+<p>次のコードではプロパティを取得してトラップします。</p>
+
+<pre class="brush: js">var p = new Proxy({}, {
+  get: function(target, property, receiver) {
+    console.log('called: ' + property);
+    return 10;
+  }
+});
+
+console.log(p.a); // "called: a"
+                  // 10
+</pre>
+
+<p>次のコードでは不変条件に違反します。</p>
+
+<pre class="brush: js">var obj = {};
+Object.defineProperty(obj, 'a', { 
+  configurable: false, 
+  enumerable: false, 
+  value: 10, 
+  writable: false 
+});
+
+var p = new Proxy(obj, {
+  get: function(target, prop) {
+    return 20;
+  }
+});
+
+p.a; // TypeError is thrown
+</pre>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">状況</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-proxy-object-internal-methods-and-internal-slots-get-p-receiver', '[[Get]]')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td>初期定義</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-proxy-object-internal-methods-and-internal-slots-get-p-receiver', '[[Get]]')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザ実装状況</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.builtins.Proxy.handler.get")}}</p>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li>{{jsxref("Proxy")}}</li>
+ <li>{{jsxref("Proxy.handler", "handler")}}</li>
+ <li>{{jsxref("Reflect.get()")}}</li>
+</ul>

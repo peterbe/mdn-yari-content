@@ -1,0 +1,174 @@
+<div>{{JSRef}}</div>
+
+<p><code><strong>Promise.race(iterable)</strong></code> метод, що повертає обіцянку, яка виконується або відхиляється, як тільки одна з переданих у метод ітерабельних обіцянок виконається чи відхилиться зі значеням або причиною.</p>
+
+<div>{{EmbedInteractiveExample("pages/js/promise-race.html")}}</div>
+
+<p class="hidden">Початковий код до цього інтерактивного демо зберігаєтся в GitHub репозиторії. Якщо ви хочете внести свій вклад до проекту цього інтерактивного демо, будь ласка, клонуйте <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> і надішліть нам запит на злиття.</p>
+
+<h2 id="Syntax">Syntax</h2>
+
+<pre class="syntaxbox"><var>Promise.race(iterable)</var>;</pre>
+
+<h3 id="Параметри">Параметри</h3>
+
+<dl>
+ <dt>iterable</dt>
+ <dd>Ітерабельний об'єкт, наприклад, {{jsxref("Array")}}. Дивись <a href="/en-US/docs/Web/JavaScript/Guide/iterable">iterable</a>.</dd>
+</dl>
+
+<h3 id="Return_value">Return value</h3>
+
+<p>A <strong>pending</strong> {{jsxref("Promise")}} that resolves or rejects <strong>asynchronically</strong> (as soon as the stack is empty) as soon as one of the promises in the given iterable resolves or rejects, adopting that first promise's value as its value.</p>
+
+<h2 id="Опис">Опис</h2>
+
+<p>Функція <code>race</code> повертає <code>Promise</code> , обіцянку, яка виконається таким чином (і отримає таке ж значення) як і перша виконана обіцянка посеред усіх, що були передані в метод у вигляді ітерабельного об'єкта.</p>
+
+<p>Якщо передано пустий ітерабельний об'єкт, така обіцянка буде вічно перебувати в стані очікування.</p>
+
+<p>Якщо ітерабельний об'єкт містить одне або більше значень. які не є обіцянками (<code>Promise</code>), або обіцянки, які вже були виконані чи відхилені, - <code>Promise.race</code>  виконає перше таке значення, що буде знайдено в ітерабельному об'єкті.</p>
+
+<h2 id="Приклади">Приклади</h2>
+
+<h3 id="Асинхронність_Promise.race"><font face="consolas, Liberation Mono, courier, monospace">Асинхронність <code>Promise.race</code></font></h3>
+
+<p>Цей приклад демострує асинхронність функції <code>Promise.race:</code></p>
+
+<pre class="brush: js">// we are passing as argument an array of promises that are already resolved,
+// to trigger Promise.race as soon as possible
+var resolvedPromisesArray = [Promise.resolve(33), Promise.resolve(44)];
+
+var p = Promise.race(resolvedPromisesArray);
+// immediately logging the value of p
+console.log(p);
+
+// using setTimeout we can execute code after the stack is empty
+setTimeout(function(){
+    console.log('the stack is now empty');
+    console.log(p);
+});
+
+// logs, in order:
+// Promise { &lt;state&gt;: "pending" }
+// the stack is now empty
+// Promise { &lt;state&gt;: "fulfilled", &lt;value&gt;: 33 }</pre>
+
+<p>Пустий ітерабельний об'єкт спричиняє поверення обіцянки, яка вічно знаходитиметься в стані очікування:</p>
+
+<pre class="brush: js">var foreverPendingPromise = Promise.race([]);
+console.log(foreverPendingPromise);
+setTimeout(function(){
+    console.log('Стек пустий');
+    console.log(foreverPendingPromise);
+});
+
+// logs, in order:
+// Promise { &lt;state&gt;: "pending" }
+// Стек пустий
+// Promise { &lt;state&gt;: "pending" }
+</pre>
+
+<p>Якщо ітерабельний об'єкт містить одне або більше значень. які не є обіцянками, або обіцянки, які вже були виконані чи відхилені, - <code>Promise.race</code>  виконає перше таке значення, що буде знайдено в масиві:</p>
+
+<pre class="brush: js">var foreverPendingPromise = Promise.race([]);
+var alreadyResolvedProm = Promise.resolve(666);
+
+var arr = [foreverPendingPromise, alreadyResolvedProm, "non-Promise value"];
+var arr2 = [foreverPendingPromise, "non-Promise value", Promise.resolve(666)];
+var p = Promise.race(arr);
+var p2 = Promise.race(arr2);
+
+console.log(p);
+console.log(p2);
+setTimeout(function(){
+    console.log('the stack is now empty');
+    console.log(p);
+    console.log(p2);
+});
+
+// logs, in order:
+// Promise { &lt;state&gt;: "pending" } 
+// Promise { &lt;state&gt;: "pending" } 
+// the stack is now empty
+// Promise { &lt;state&gt;: "fulfilled", &lt;value&gt;: 666 }
+// Promise { &lt;state&gt;: "fulfilled", &lt;value&gt;: "non-Promise value" }
+</pre>
+
+<h3 id="Використання_Promise.race_–_приклади_з_setTimeout">Використання <code>Promise.race</code> – приклади з <a href="/en-US/docs/Web/API/WindowOrWorkerGlobalScope/setTimeout"><code>setTimeout</code></a></h3>
+
+<pre class="brush: js">var p1 = new Promise(function(resolve, reject) { 
+    setTimeout(resolve, 500, 'one'); 
+});
+var p2 = new Promise(function(resolve, reject) { 
+    setTimeout(resolve, 100, 'two'); 
+});
+
+Promise.race([p1, p2]).then(function(value) {
+  console.log(value); // "two"
+  // Both resolve, but p2 is faster
+});
+
+var p3 = new Promise(function(resolve, reject) { 
+    setTimeout(resolve, 100, 'three');
+});
+var p4 = new Promise(function(resolve, reject) { 
+    setTimeout(reject, 500, 'four'); 
+});
+
+Promise.race([p3, p4]).then(function(value) {
+  console.log(value); // "three"
+  // p3 is faster, so it resolves
+}, function(reason) {
+  // Not called
+});
+
+var p5 = new Promise(function(resolve, reject) { 
+    setTimeout(resolve, 500, 'five'); 
+});
+var p6 = new Promise(function(resolve, reject) { 
+    setTimeout(reject, 100, 'six');
+});
+
+Promise.race([p5, p6]).then(function(value) {
+  // Not called
+}, function(reason) {
+  console.log(reason); // "six"
+  // p6 is faster, so it rejects
+});
+</pre>
+
+<h2 id="Специфікація">Специфікація</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Специфікація</th>
+   <th scope="col">Статус</th>
+   <th scope="col">Примітка</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-promise.race', 'Promise.race')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td>Initial definition in an ECMA standard.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-promise.race', 'Promise.race')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<p class="hidden">The compatibility table in this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</p>
+
+<p>{{Compat("javascript.builtins.Promise.race")}}</p>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li>{{jsxref("Promise")}}</li>
+ <li>{{jsxref("Promise.all()")}}</li>
+</ul>

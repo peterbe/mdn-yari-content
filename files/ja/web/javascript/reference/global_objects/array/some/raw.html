@@ -1,0 +1,195 @@
+<div>{{JSRef}}</div>
+
+<p><strong><code>some()</code></strong> メソッドは、配列の少なくとも 1 つの要素が、渡された関数によって実施されるテストに通るかどうかをテストします。</p>
+
+<div class="note">
+<p><strong>注</strong>: このメソッドは空の配列ではあらゆる条件式に対して <code>false</code> を返します。</p>
+</div>
+
+<div>{{EmbedInteractiveExample("pages/js/array-some.html")}}</div>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox"><var>arr</var>.some(<var>callback</var>[, <var>thisArg</var>])</pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<dl>
+ <dt><code>callback</code></dt>
+ <dd>各要素に対してテストを実行する関数です。次の 3 つの引数を取ります。
+ <dl>
+  <dt><code>element</code></dt>
+  <dd>現在処理されている要素です。</dd>
+  <dt><code>index</code>{{Optional_inline}}</dt>
+  <dd>現在処理されている要素のインデックスです。</dd>
+  <dt><code>array</code>{{Optional_inline}}</dt>
+  <dd><code>some()</code> が実行されている配列です。</dd>
+ </dl>
+ </dd>
+ <dt><code>thisArg</code>{{Optional_inline}}</dt>
+ <dd><code>callback</code> を実行するときに <code>this</code> として使用するオブジェクトです。</dd>
+</dl>
+
+<h3 id="Return_value" name="Return_value">返り値</h3>
+
+<p>コールバック関数がいずれかの配列要素で {{Glossary("truthy")}} 値を返した場合は <strong><code>true</code></strong> です。それ以外は <strong><code>false</code></strong> です。</p>
+
+<h2 id="Description" name="Description">説明</h2>
+
+<p><code>some()</code> は、与えられた <code>callback</code> 関数を、配列に含まれる各要素に対して一度ずつ、<code>callback</code> が真の値（Boolean に変換した際に真となる値）を返す要素が見つかるまで呼び出します。真の値を返す要素が見つかると、<code>some()</code> はただちに <code>true</code> を返します。見つからなかった場合、<code>some()</code> は <code>false</code> を返します。<code>callback</code> は値が代入されている配列のインデックスに対してのみ呼び出されます。つまり、すでに削除されたインデックスや、まだ値が代入されていないインデックスに対しては呼び出されません。</p>
+
+<p><code>callback</code> は、要素の値、要素のインデックス、走査されている Array オブジェクトという 3 つの引数をともなって呼び出されます。</p>
+
+<p><code>some()</code> に <code>thisArg</code> パラメータが与えられると、<code>callback</code> の <code>this</code> として使用されます。それ以外は、{{jsxref("undefined")}} 値が <code>this</code> として使用されるでしょう。<code>callback</code> が最終的に監視できる <code>this</code> の値は、<a href="/ja/docs/Web/JavaScript/Reference/Operators/this">関数から見た <code>this</code> の決定に関する一般的なルール</a>によって決定されます。</p>
+
+<p><code>some()</code> は呼び出された配列を変化させません。</p>
+
+<p><code>some()</code> によって処理される要素の範囲は、<code>callback</code> が最初に呼び出される前に設定されます。<code>some()</code> の呼び出しが開始された後に追加された要素に対しては、<code>callback</code> は実行されません。既存の配列要素が変更されたり、削除された場合、<code>callback</code> に渡される値は <code>some()</code> がそれらを訪れた時点での値になり、<code>some()</code> が削除された要素を訪問することはありません。</p>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<h3 id="Testing_value_of_array_elements" name="Testing_value_of_array_elements">配列要素の値をテストする</h3>
+
+<p>次の例は、配列のいずれかの要素が 10 よりも大きいかどうかをテストします。</p>
+
+<pre class="brush: js">function isBiggerThan10(element, index, array) {
+  return element &gt; 10;
+}
+
+[2, 5, 8, 1, 4].some(isBiggerThan10);  // false
+[12, 5, 8, 1, 4].some(isBiggerThan10); // true
+</pre>
+
+<h3 id="Testing_array_elements_using_arrow_functions" name="Testing_array_elements_using_arrow_functions">配列要素をアロー関数を使ってテストする</h3>
+
+<p><a href="/ja/docs/Web/JavaScript/Reference/Functions/Arrow_functions">アロー関数</a> はより短い構文で同じテストを提供します。</p>
+
+<pre class="brush: js">[2, 5, 8, 1, 4].some(x =&gt; x &gt; 10);  // false
+[12, 5, 8, 1, 4].some(x =&gt; x &gt; 10); // true
+</pre>
+
+<h3 id="Checking_whether_a_value_exists_in_an_array" name="Checking_whether_a_value_exists_in_an_array">ある値が配列に存在するかどうかをチェックする</h3>
+
+<p><code>includes()</code> メソッドを真似て、このカスタム関数は配列にその要素が存在する場合に <code>true</code> を返します。</p>
+
+<pre class="brush: js">var fruits = ['apple', 'banana', 'mango', 'guava'];
+
+function checkAvailability(arr, val) {
+  return arr.some(function(arrVal) {
+    return val === arrVal;
+  });
+}
+
+checkAvailability(fruits, 'kela');   // false
+checkAvailability(fruits, 'banana'); // true</pre>
+
+<h3 id="Checking_whether_a_value_exists_using_an_arrow_function" name="Checking_whether_a_value_exists_using_an_arrow_function">ある値が存在するかどうかをアロー関数を使ってチェックする</h3>
+
+<pre class="brush: js">var fruits = ['apple', 'banana', 'mango', 'guava'];
+
+function checkAvailability(arr, val) {
+  return arr.some(arrVal =&gt; val === arrVal);
+}
+
+checkAvailability(fruits, 'kela');   // false
+checkAvailability(fruits, 'banana'); // true</pre>
+
+<h3 id="Converting_any_value_to_Boolean" name="Converting_any_value_to_Boolean">任意の値を Boolean に変換する</h3>
+
+<pre class="brush: js">var TRUTHY_VALUES = [true, 'true', 1];
+
+function getBoolean(value) {
+  'use strict';
+   
+  if (typeof value === 'string') { 
+    value = value.toLowerCase().trim();
+  }
+
+  return TRUTHY_VALUES.some(function(t) {
+    return t === value;
+  });
+}
+
+getBoolean(false);   // false
+getBoolean('false'); // false
+getBoolean(1);       // true
+getBoolean('true');  // true</pre>
+
+<h2 id="Polyfill" name="Polyfill">Polyfill</h2>
+
+<p><code>some()</code> は ECMA-262 標準の第 5 版に追加されたメソッドなので、すべての版の標準には存在しない場合があります。次のコードをスクリプトの先頭に追加することにより <code>some()</code> がネイティブでサポートされていない実装上でも <code>some()</code> が使用可能となります。このアルゴリズムは ECMA-262 第 5 版で指示されたアルゴリズムと全く同じものです。{{jsxref("Object")}}、{{jsxref("TypeError")}} はそれぞれオリジナルの値を持ち、またそれらの <code>fun.call</code> は <code><a href="/ja/docs/JavaScript/Reference/Global_Objects/Function/call" rel="internal">Function.prototype.call</a></code> のオリジナルの値として評価されます。</p>
+
+<pre class="brush: js">// Production steps of ECMA-262, Edition 5, 15.4.4.17
+// Reference: http://es5.github.io/#x15.4.4.17
+if (!Array.prototype.some) {
+  Array.prototype.some = function(fun, thisArg) {
+    'use strict';
+
+    if (this == null) {
+      throw new TypeError('Array.prototype.some called on null or undefined');
+    }
+
+    if (typeof fun !== 'function') {
+      throw new TypeError();
+    }
+
+    var t = Object(this);
+    var len = t.length &gt;&gt;&gt; 0;
+
+    var thisArg = arguments.length &gt;= 2 ? arguments[1] : void 0;
+    for (var i = 0; i &lt; len; i++) {
+      if (i in t &amp;&amp; fun.call(thisArg, t[i], i, t)) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+}
+</pre>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">状況</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-15.4.4.17', 'Array.prototype.some')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td>初回の定義。JavaScript 1.6 で実装。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-array.prototype.some', 'Array.prototype.some')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-array.prototype.some', 'Array.prototype.some')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザー互換性</h2>
+
+<div>
+<div class="hidden">The compatibility table in this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.builtins.Array.some")}}</p>
+</div>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li>{{jsxref("Array.prototype.forEach()")}}</li>
+ <li>{{jsxref("Array.prototype.every()")}}</li>
+ <li>{{jsxref("Array.prototype.find()")}}</li>
+ <li>{{jsxref("TypedArray.prototype.some()")}}</li>
+</ul>

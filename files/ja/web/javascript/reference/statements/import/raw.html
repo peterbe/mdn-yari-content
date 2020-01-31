@@ -1,0 +1,204 @@
+<div>{{jsSidebar("Statements")}}</div>
+
+<p><code><strong>import</strong></code> 文は、他のモジュールからエクスポートされたバインディング（関数、オブジェクト、プリミティブ）をインポートするために用います。インポートされたモジュールは宣言のあるなしにかかわらず{{jsxref("Strict_mode", "Strict モード")}}で動作します。<code>import</code> 文は、<code>type="module"</code> を指定しない限り、埋め込まれたスクリプトでは使えません。</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox">import <em>defaultExport</em> from "<em>module-name</em>";
+import * as <em>name</em> from "<em>module-name</em>";
+import { <em>export </em>} from "<em>module-name</em>";
+import { <em>export</em> as <em>alias </em>} from "<em>module-name</em>";
+import { <em>export1 , export2</em> } from "<em>module-name</em>";
+import { <em>export1 , export2</em> as <em>alias2</em> , <em>[...]</em> } from "<em>module-name</em>";
+import <em>defaultExport</em>, { <em>export</em> [ , <em>[...]</em> ] } from "<em>module-name</em>";
+import <em>defaultExport</em>, * as <em>name</em> from "<em>module-name</em>";
+import "<em>module-name</em>";
+var <em>promise</em> = import(<em>module-name</em>);</pre>
+
+<dl>
+ <dt><code>defaultExport</code></dt>
+ <dd>モジュールからのデフォルトのエクスポートを参照する名前。</dd>
+ <dt><code>module-name</code></dt>
+ <dd>インポートするモジュール。 モジュールがある <code>.js</code> ファイルへの相対または絶対パス名です。 バンドラーによっては、拡張子を加えることが許され、あるいは求められることがあります。 環境を確認してください。 シングルクォートとダブルクォートだけが使えます。</dd>
+ <dt><code>name</code></dt>
+ <dd>インポートを参照するとき名前空間のように用いられるモジュールオブジェクトの名前。</dd>
+ <dt><code>export, exportN</code></dt>
+ <dd>インポートするエクスポートの名前。</dd>
+ <dt><code>alias, aliasN</code></dt>
+ <dd>指定されたインポートを参照する名前。</dd>
+</dl>
+
+<h2 id="Description" name="Description">説明</h2>
+
+<p><code>name</code> パラメータは、エクスポートを参照する名前空間のように用いられる「モジュールオブジェクト」の名前です。<code>export</code> パラメータは名前がつけられたエクスポートをそれぞれ指定します。それに対して、<code>import * as name</code> 構文はすべてをインポートします。構文の意味を明らかにするため、下記に例を示します。</p>
+
+<h3 id="Import_an_entire_module's_contents" name="Import_an_entire_module's_contents">モジュールのコンテンツすべてをインポートする</h3>
+
+<p>下記のコードは、<code>myModule</code> を現在のスコープに加え、<code>/modules/my-module.js</code> のファイルのモジュールからのエクスポートすべてを含めます。</p>
+
+<pre class="brush: js">import * as <em>myModule</em> from '/modules/my-module.js';
+</pre>
+
+<p>エクスポートにアクセスするには、モジュール名（ここでは「myModule」）を名前空間として用いることになります。 たとえば、上記でインポートされたモジュールがエクスポートに<code>doAllTheAmazingThings()</code>を含む場合は、下記のように呼び出します。</p>
+
+<pre class="brush: js">myModule.doAllTheAmazingThings();</pre>
+
+<h3 id="Import_a_single_export_from_a_module" name="Import_a_single_export_from_a_module">モジュールからエクスポートをひとつインポートする</h3>
+
+<p><code>myExport</code> という名前のオブジェクトまたは値が、<code>my-module</code> から暗黙的 (モジュール全体がエクスポートされた場合) あるいは {{jsxref("Statements/export", "export")}} 文を用いて明示的にエクスポートされると、<code>myExport</code> が現在のスコープに加えられます。</p>
+
+<pre class="brush: js">import {myExport} from '/modules/my-module.js';</pre>
+
+<h3 id="Import_multiple_exports_from_module" name="Import_multiple_exports_from_module">モジュールから複数のエクスポートをインポートする</h3>
+
+<p>下記のコードは、<code>foo</code> と <code>bar</code> を現在のスコープに加えます。</p>
+
+<pre class="brush: js">import {foo, bar} from '/modules/my-module.js';</pre>
+
+<h3 id="Import_an_export_with_a_more_convenient_alias" name="Import_an_export_with_a_more_convenient_alias">エクスポートを扱いやすいエイリアスにしてインポートする</h3>
+
+<p>インポートするときエクスポートの名前を変えることができます。 例えば下記のコードは、エクスポートを <code>shortName</code> として現在のスコープに加えます。</p>
+
+<pre class="brush: js">import {reallyReallyLongModuleExportName as shortName}
+  from '/modules/my-module.js';</pre>
+
+<h3 id="Rename_multiple_exports_during_import" name="Rename_multiple_exports_during_import">インポートする際に複数のエクスポートの名前を変える</h3>
+
+<p>下記のコードは、複数のエクスポートを扱いやすいエイリアスにしてモジュールからインポートします。</p>
+
+<pre class="brush: js">import {
+  reallyReallyLongModuleExportName as shortName,
+  anotherLongModuleName as short
+} from '/modules/my-module.js';</pre>
+
+<h3 id="Import_a_module_for_its_side_effects_only" name="Import_a_module_for_its_side_effects_only">付随効果のためだけにモジュールをインポートする</h3>
+
+<p>付随効果だけのためにモジュール全体をインポートしたときは、何もインポートされません。 モジュールのグローバルコードが実行されるだけで、実際の値はインポートされないのです。</p>
+
+<pre class="brush: js">import '/modules/my-module.js';
+</pre>
+
+<h3 id="Importing_defaults" name="Importing_defaults">デフォルトをインポートする</h3>
+
+<p>デフォルトの {{jsxref("Statements/export", "export")}}（オブジェクト、関数、クラスなど）にも対応できます。 <code>import</code> 文を用いて、そのようなデフォルトをインポートします。</p>
+
+<p>もっとも単純なやり方はデフォルトを直接インポートします。</p>
+
+<pre class="brush: js">import myDefault from '/modules/my-module.js';</pre>
+
+<p>また、デフォルトの構文とともに上記のエイリアス（名前空間または名前つきのインポート）を用いることもできます。 その場合は下記のように、デフォルトのインポートを先に宣言しなければなりません。</p>
+
+<pre class="brush: js">import myDefault, * as myModule from '/modules/my-module.js';
+// myModule は名前空間として使う</pre>
+
+<p>あるいは、つぎのような書き方もできます。</p>
+
+<pre class="brush: js">import myDefault, {foo, bar} from '/modules/my-module.js';
+// 特定の、名前つきのインポート
+</pre>
+
+<h3 id="Dynamic_Imports" name="Dynamic_Imports">動的にインポートする</h3>
+
+<p><code>import</code> キーワードを関数として呼び出すことで、モジュールを動的にインポートできます。この場合、Promise を返します。</p>
+
+<pre class="brush: js">import('/modules/my-module.js')
+  .then((module) =&gt; {
+    // module を使った何らかの処理
+  });
+</pre>
+
+<p>この方法は await キーワードを使えます。</p>
+
+<pre class="brush: js">let module = await import('/modules/my-module.js');</pre>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<h3 id="Standard_Import" name="Standard_Import">標準的なインポート</h3>
+
+<p>AJAX JSONリクエストの処理を助ける補助モジュールからインポートします。</p>
+
+<h4 id="The_module_file.js" name="The_module_file.js">モジュール: file.js</h4>
+
+<pre class="brush: js">function getJSON(url, callback) {
+  let xhr = new XMLHttpRequest();
+  xhr.onload = function () { 
+    callback(this.responseText) 
+  };
+  xhr.open('GET', url, true);
+  xhr.send();
+}
+
+export function getUsefulContents(url, callback) {
+  getJSON(url, data =&gt; callback(JSON.parse(data)));
+}</pre>
+
+<h4 id="The_main_program_main.js" name="The_main_program_main.js">メインプログラム: main.js</h4>
+
+<pre class="brush: js">import { getUsefulContents } from '/modules/file.js';
+
+getUsefulContents('http://www.example.com',
+    data =&gt; { doSomethingUseful(data); });</pre>
+
+<h3 id="Dynamic_Import" name="Dynamic_Import">動的なインポート</h3>
+
+<p>下記は、ユーザーの行動 (今回はボタンのクリック) をもとにページ内に何らかの機能を読み込み、そのモジュール内の関数を呼び出す方法を示すものです。<br>
+ 方法はこれだけではありません。<code>import()</code> 関数は <code>await</code> も使えます。</p>
+
+<pre class="brush: js">const main = document.querySelector("main");
+for (const link of document.querySelectorAll("nav &gt; a")) {
+  link.addEventListener("click", e =&gt; {
+    e.preventDefault();
+
+    import('/modules/my-module.js')
+      .then(module =&gt; {
+        module.loadPageInto(main);
+      })
+      .catch(err =&gt; {
+        main.textContent = err.message;
+      });
+  });
+}</pre>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">策定状況</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-imports', 'Imports')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td>初期定義</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-imports', 'Imports')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td><a href="https://github.com/tc39/proposal-dynamic-import">tc39/proposal-dynamic-import</a></td>
+   <td>Stage 3</td>
+   <td>動的インポートの初期定義</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザー実装状況</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.statements.import")}}</p>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li>{{jsxref("Statements/export", "export")}}</li>
+ <li><code><a href="/ja/docs/Web/JavaScript/Reference/Statements/import.meta">import.meta</a></code></li>
+ <li><a href="https://blogs.windows.com/msedgedev/2016/05/17/es6-modules-and-beyond/">Previewing ES6 Modules and more from ES2015, ES2016 and beyond</a></li>
+ <li><a href="https://hacks.mozilla.org/2015/08/es6-in-depth-modules/">ES6 in Depth: Modules</a>, Hacks blog post by Jason Orendorff</li>
+ <li><a href="https://hacks.mozilla.org/2018/03/es-modules-a-cartoon-deep-dive/">ES modules: A cartoon deep-dive</a>, Hacks blog post by Lin Clark</li>
+ <li><a class="external" href="http://exploringjs.com/es6/ch_modules.html">Axel Rauschmayer's book: "Exploring JS: Modules"</a></li>
+</ul>

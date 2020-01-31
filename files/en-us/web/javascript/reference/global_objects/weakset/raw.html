@@ -1,0 +1,136 @@
+<div>{{JSRef}}</div>
+
+<p>The <strong><code>WeakSet</code></strong> object lets you store weakly held <em>objects</em> in a collection.</p>
+
+<h2 id="Syntax">Syntax</h2>
+
+<pre class="syntaxbox">new WeakSet([iterable]);</pre>
+
+<h3 id="Parameters">Parameters</h3>
+
+<dl>
+ <dt>iterable</dt>
+ <dd>If an <a href="/en-US/docs/Web/JavaScript/Reference/Statements/for...of">iterable object </a>is passed, all of its elements will be added to the new <code>WeakSet</code>. null is treated as undefined.</dd>
+</dl>
+
+<h2 id="Examples">Examples</h2>
+
+<h3 id="Using_the_WeakSet_object">Using the WeakSet object</h3>
+
+<pre class="brush: js">var ws = new WeakSet();
+var foo = {};
+var bar = {};
+
+ws.add(foo);
+ws.add(bar);
+
+ws.has(foo);    // true
+ws.has(bar);    // true
+
+ws.delete(foo); // removes foo from the set
+ws.has(foo);    // false, foo has been removed
+ws.has(bar);    // true, bar is retained</pre>
+
+<p>Note that <code>foo !== bar</code>. While they are similar objects, <em>they are not <strong>the same object</strong></em>. And so they are both added to the set.</p>
+
+<h2 id="Description">Description</h2>
+
+<p><code>WeakSet</code> objects are collections of objects. An object in the <code>WeakSet</code> may occur only once; it is unique in the <code>WeakSet</code>'s collection.</p>
+
+<p>The main differences to the {{jsxref("Set")}} object are:</p>
+
+<ul>
+ <li>In contrast to <code>Sets</code>, <code>WeakSets</code> are <strong>collections of objects only</strong> and not of arbitrary values of any type.</li>
+ <li>The <code>WeakSet</code> is <em>weak</em>: References to objects in the collection are held weakly. If there is no other reference to an object stored in the <code>WeakSet</code>, they can be garbage collected. That also means that there is no list of current objects stored in the collection. <code>WeakSets</code> are not enumerable.</li>
+</ul>
+
+<h3 id="Detecting_circular_references">Detecting circular references</h3>
+
+<p>Functions that call themselves recursively need a way of guarding against circular data structures by tracking which objects have already been processed. <code>WeakSets</code> are ideal for this purpose:</p>
+
+<pre class="brush: js">// Execute a callback on everything stored inside an object
+function execRecursively(fn, subject, _refs = null){
+	if(!_refs)
+		_refs = new WeakSet();
+	
+	// Avoid infinite recursion
+	if(_refs.has(subject))
+		return;
+
+	fn(subject);
+	if("object" === typeof subject){
+		_refs.add(subject);
+		for(let key in subject)
+			execRecursively(fn, subject[key], _refs);
+	}
+}
+
+const foo = {
+	foo: "Foo",
+	bar: {
+		bar: "Bar"
+	}
+};
+
+foo.bar.baz = foo; // Circular reference!
+execRecursively(obj =&gt; console.log(obj), foo);
+</pre>
+
+<p>Here, a <code>WeakSet</code> is created on the first run, and passed along with every subsequent function call (using the internal <code>_refs</code> parameter). The number of objects or their traversal order is immaterial, so a <code>WeakSet</code> is more suitable (and performant) than a {{jsxref("Set")}} for tracking object references, especially if a very large number of objects is involved.</p>
+
+<h2 id="Properties">Properties</h2>
+
+<dl>
+ <dt><code>WeakSet.length</code></dt>
+ <dd>The value of the <code>length</code> property is 0.</dd>
+ <dt>{{jsxref("WeakSet.prototype")}}</dt>
+ <dd>Represents the prototype for the <code>WeakSet</code> constructor. Allows the addition of properties to all <code>WeakSet</code> objects.</dd>
+</dl>
+
+<h2 id="WeakSet_instances"><code>WeakSet</code> instances</h2>
+
+<p>All <code>WeakSet</code> instances inherit from {{jsxref("WeakSet.prototype")}}.</p>
+
+<h3 id="Properties_2">Properties</h3>
+
+<p>{{page('en-US/Web/JavaScript/Reference/Global_Objects/WeakSet/prototype','Properties')}}</p>
+
+<h3 id="Methods">Methods</h3>
+
+<p>{{page('en-US/Web/JavaScript/Reference/Global_Objects/WeakSet/prototype','Methods')}}</p>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-weakset-objects', 'WeakSet')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-weakset-objects', 'WeakSet')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td></td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.builtins.WeakSet")}}</p>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li>{{jsxref("Map")}}</li>
+ <li>{{jsxref("Set")}}</li>
+ <li>{{jsxref("WeakMap")}}</li>
+</ul>

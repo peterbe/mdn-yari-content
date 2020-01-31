@@ -1,0 +1,147 @@
+<div>{{CSSRef}} </div>
+
+<h2 id="摘要">摘要</h2>
+
+<p><code>@keyframes</code> 规则通过在动画序列中定义关键帧（或waypoints）的样式来控制CSS动画序列中的中间步骤。这比<a href="/zh-CN/docs/Web/CSS/CSS_Transitions">转换</a>更能控制动画序列的中间步骤。</p>
+
+<pre class="syntaxbox"><code>@keyframes slidein {
+  from {
+    margin-left: 100%;
+    width: 300%;
+  }
+
+  to {
+    margin-left: 0%;
+    width: 100%;
+  }
+}</code></pre>
+
+<p>JavaScript 可以通过 CSS对象模型接口{{domxref("CSSKeyframesRule")}}来访问 <code>@keyframes</code> </p>
+
+<p>要使用关键帧, 先创建一个带名称的<code>@keyframes</code>规则，以便后续使用 {{ cssxref("animation-name") }} 这个属性来将一个动画同其关键帧声明匹配。每个<code>@keyframes</code> 规则包含多个关键帧，也就是一段样式块语句，每个关键帧有一个百分比值作为名称，代表在动画进行中，在哪个阶段触发这个帧所包含的样式。</p>
+
+<p>您可以按任意顺序列出关键帧百分比；他们将按照其应该发生的顺序来处理。</p>
+
+<h3 id="让关键帧序列生效">让关键帧序列生效</h3>
+
+<p>如果一个关键帧规则没有指定动画的开始或结束状态（也就是，<code>0%</code>/<code>from</code> 和<code>100%</code>/<code>to</code>，浏览器将使用元素的现有样式作为起始/结束状态。这可以用来从初始状态开始元素动画，最终返回初始状态。</p>
+
+<p>如果在关键帧的样式中使用了不能用作动画的属性，那么这些属性会被忽略掉，支持动画的属性仍然是有效的，不受波及。</p>
+
+<h3 id="重复定义（Duplicate_resolution）">重复定义（Duplicate resolution）</h3>
+
+<p>如果多个关键帧使用同一个名称，以最后一次定义的为准。 <code>@keyframes</code> 不存在层叠样式(cascade)的情况，所以动画在一个时刻（阶段）只会使用一个的关键帧的数据。</p>
+
+<p>如果一个@keyframes 里的关键帧的百分比存在重复的情况，以最后一次定义的关键帧为准。 因为<code>@keyframes</code> 的规则不存在层叠样式(cascade)的情况，即使多个关键帧设置相同的百分值也不会全部执行。</p>
+
+<h3 id="属性个数不定">属性个数不定</h3>
+
+<p>如果一个关键帧中没有出现其他关键帧中的属性，那么这个属性将使用插值(不能使用插值的属性除外, 这些属性会被忽略掉)。例如：</p>
+
+<pre class="brush: css">@keyframes identifier {
+  0% { top: 0; left: 0; }
+  30% { top: 50px; }
+  68%, 72% { left: 50px; }
+  100% { top: 100px; left: 100%; }
+}
+</pre>
+
+<p>例子中，"top"属性分别出现在 <code>0%</code>, <code>30%</code>和<code>100%</code> 的关键帧中，"left"属性分别出现在<code>0%</code>, <code>68%</code>和<code>100%</code> 关键帧中.</p>
+
+<h3 id="当关键帧被重复定义">当关键帧被重复定义</h3>
+
+<p>如果某一个关键帧出现了重复的定义，且重复的关键帧中的css属性值不同，以最后一次定义的属性为准。例如：</p>
+
+<pre class="brush: css">@keyframes identifier {
+  0% { top: 0; left: 0px}
+  50% { top: 30px; left: 20px; }
+  50% { top: 10px; }
+  100% { top: 0; left: 30px;}
+}
+</pre>
+
+<p>上面这个例子中，<code>50%</code> 关键帧中设置的属性<code>top: 10px</code>是有效的，但是其他的属性会被忽略</p>
+
+<p>{{ non-standard_inline }} {{ fx_minversion_inline("14") }}  层叠样式(cascade) 的特性从Firefox 14版本开始可以使用了。 拿上面的例子来说，对于 <code>50%</code> 关键帧，<code>left: 20px</code> 这个值不会被忽略掉。 目前这种特性还没写入规范，但是已经在探讨中了。</p>
+
+<h3 id="关键帧中的_!important_关键词">关键帧中的 !important 关键词</h3>
+
+<p>关键帧中出现的 !important 关键词将会被忽略</p>
+
+<pre class="brush: css">@keyframes important1 {
+  from { margin-top: 50px; }
+  50%  { margin-top: 150px !important; } /* 忽略 */
+  to   { margin-top: 100px; }
+}
+
+@keyframes important2 {
+  from { margin-top: 50px;
+         margin-bottom: 100px; }
+  to   { margin-top: 150px !important; /* 忽略 */
+         margin-bottom: 50px; }
+}
+</pre>
+
+<h2 id="语法">语法</h2>
+
+<h3 id="取值">取值</h3>
+
+<dl>
+ <dt><code>&lt;identifier&gt;</code></dt>
+ <dd>帧列表的名称。 名称必须符合 CSS 语法中对标识符的定义。</dd>
+ <dt><code>from</code></dt>
+ <dd>等效于 <code>0%</code>.</dd>
+ <dt><code>to</code></dt>
+ <dd>等效于 <code>100%</code>.</dd>
+ <dt>{{cssxref("&lt;percentage&gt;")}}</dt>
+ <dd>动画序列中，触发关键帧的时间点，使用百分值来表示。</dd>
+ <dt>
+ <h3 id="语法格式">语法格式</h3>
+
+ <pre>{{csssyntax}}</pre>
+ </dt>
+</dl>
+
+<h2 id="实例">实例</h2>
+
+<p>参见<a href="/en/CSS/CSS_animations" title="en/CSS/CSS_animations">CSS animations</a>。</p>
+
+<h2 id="规范">规范</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">规范</th>
+   <th scope="col">状态</th>
+   <th scope="col">说明</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{ SpecName('CSS3 Animations', '#keyframes', '@keyframes') }}</td>
+   <td>{{ Spec2('CSS3 Animations') }}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_Compatibility" name="Browser_Compatibility">浏览器兼容性</h2>
+
+<div class="hidden">
+<p>The compatibility table in this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</p>
+</div>
+
+<p>{{Compat("css.at-rules.keyframes")}}</p>
+
+<h2 id="注意">注意</h2>
+
+<ol>
+ <li>@keyframes 不能在内联样式中使用 ({{bug(830056)}}).</li>
+</ol>
+
+<h2 id="相关链接">相关链接</h2>
+
+<ul>
+ <li><a href="/en-US/docs/CSS/Tutorials/Using_CSS_animations" title="Tutorial about CSS animations">Using CSS animations</a></li>
+ <li>{{ domxref("AnimationEvent") }}</li>
+</ul>

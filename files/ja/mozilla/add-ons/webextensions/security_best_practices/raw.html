@@ -1,0 +1,52 @@
+<div>{{AddonSidebar}}</div>
+
+<p>ここに拡張機能ユーザーの安全を保つために従うべき、すべてのベストプラクティスがあります。このベストプラクティスに従わないと、<a href="https://addons.mozilla.org">addons.mozilla.org</a> でのレビューに不合格となり、アドオンの配布ができなくなったり、Firefox でのインストールができなくなったりすることがあります。</p>
+
+<ul>
+ <li><strong>リモートスクリプトを挿入・組み合わせない</strong><br>
+  拡張機能で使いたいサービスを指定する場合、リモートソースからそのサービスのスクリプトを挿入しないでください。こうしたアプローチは危険で、なぜならコードが知らないうちに—そして、重要なことに、拡張機能のユーザーの知らないうちに—変更されうるためで、拡張機能のセキュリティに侵入することになります。このためスクリプトのコピーを拡張機能のコードに追加します。</li>
+ <li><strong>リモートコンテンツが安全に挿入されることを確かめる</strong><br>
+  拡張機能がリモートコンテンツを利用する時は、次のベストプラクティスに従っていることを確認します:
+  <ul>
+   <li>安全なネイティブ DOM 操作メソッドを使って文字列を挿入する: <a href="/ja/docs/Web/API/Document/createElement">document.createElement</a>, <a href="/ja/docs/Web/API/Element/setAttribute">Element.setAtttribute</a>, <a href="/ja/docs/Web/API/Node/textContent">Node.textContent</a>。</li>
+   <li>文字列挿入に jQuery関数 <code>attr()</code> と <code>text()</code> を使う。</li>
+   <li><a href="https://github.com/cure53/DOMPurify">DOMPurify</a> で HTML コンテンツをサニタイズする</li>
+   <li>あらゆる HTML挿入前にエスケープするテンプレートエンジンコマンドを使う。</li>
+  </ul>
+
+  <p>より詳しくは、<a href="/ja/Add-ons/WebExtensions/Safely_inserting_external_content_into_a_page">Safely inserting external content into a page</a> を見てください。</p>
+ </li>
+ <li><strong>Google Analytics 用の XHR を使う</strong><br>
+  Google Analytics を拡張機能に追加したい場合、Google Analytics JavaScript コードを挿入しないでください。そうではなく、XHR 呼び出しの中で Google Analytics REST API を使うのが推奨されます、たとえば:</li>
+ <li>
+  <pre class="brush: js">let request = new XMLHttpRequest();
+let message =
+  "v=1&amp;tid=" + GA_TRACKING_ID + "&amp;cid= " + GA_CLIENT_ID + "&amp;aip=1" +
+  "&amp;ds=add-on&amp;t=event&amp;ec=AAA&amp;ea=" + aType;
+      
+request.open("POST", "https://www.google-analytics.com/collect", true);
+request.send(message);</pre>
+  <a href="https://blog.mozilla.org/addons/2016/05/31/using-google-analytics-in-extensions/">Using Google Analytics in Extensions</a> のブログ記事に詳しい情報があります。</li>
+ <li><strong>標準の拡張機能の content security policy (CSP) を使う</strong><br>
+  The standard policy restricts the sources from which your extension can load <a href="/ja/docs/Web/HTML/Element/script"><code>&lt;script&gt;</code></a> and <a href="/ja/docs/Web/HTML/Element/object"><code>&lt;object&gt;</code></a> resources, and disallows potentially unsafe practices such as the use of <a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/eval">eval()</a>. While the manifest.json key <a href="/ja/Add-ons/WebExtensions/manifest.json/content_security_policy">content_security_policy</a> enables you to modify the content security policy for your extension, this isn’t recommended as the policy helps prevent extensions from inadvertently executing malicious content. If your modified CSP allows remote script injection your extension will get rejected from AMO during review.<br>
+  For more information, see <a href="/ja/Add-ons/WebExtensions/Content_Security_Policy#Default_content_security_policy">Default content security policy</a>.</li>
+ <li><strong>ページ内 JavaScript でのオブジェクト共有には気をつける</strong><br>
+  Firefox provides <code>wrappedJSObject</code> so a content script can access JavaScript objects created by page scripts. The danger here is that a malicious web page could, 例えば、modify the functions of JavaScript objects to run code of its own.<br>
+  For more information, see <a href="/ja/Add-ons/WebExtensions/Sharing_objects_with_page_scripts">Accessing page script objects from content scripts</a>.</li>
+ <li><strong>コンテンツスクリプトで <code>window.eval()</code> を使う時は注意する</strong><br>
+  You should be very careful when running code in the context of a page. A malicious web page could attempt to run code of its own by exploiting the use of <code>window.eval()</code>. It might do this by, 例えば、redefining objects your code might want to evaluate.<br>
+  For more information, see <a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/eval#Don't_use_eval_needlessly!">Don't use eval needlessly!</a></li>
+ <li><strong>拡張機能コンポーネントで UI を作る</strong><br>
+  Create the UI for your extension using the <a href="/ja/Add-ons/WebExtensions/user_interface">built-in extension UI features</a>, such as bundled pages, pageAction, and popups on pageAction and browserAction. Don’t add UI elements, such as buttons or toolbars, directly to web pages. If you do, scripts on the web page could compromise your extension. See <a href="https://www.grepular.com/Keybase_Browser_Extension_Insecure">Keybase Browser Extension Insecure</a> for an example of the potential issues.<br>
+  If the standard UI components aren’t sufficient for your needs use iframes with <a href="/ja/docs/Web/HTTP/Basics_of_HTTP/Data_URIs">data URLs</a> to prevent fingerprinting, or add iframes to the extension code so a page can’t interact with your UI content, such as buttons.</li>
+ <li><strong>ESLint に eslint-plugin-no-unsanitized を加える</strong><br>
+  If you make use of ESLint to check your extension code, consider adding eslint-plugin-no-unsanitized. This ESLint rules plug-in will flag instances where unsanitized code from APIs or user input could cause issues.</li>
+ <li><strong>moz-extension パスを直接インジェクトしない</strong><br>
+  When injected links, includes, or images include paths to <code>moz-extension://{hash}</code> a page’s tracking script could use this information to <a href="https://en.wikipedia.org/wiki/Device_fingerprint">fingerprint</a> the user, as the hash (UUID) is unique to the extension installation and, therefore, the user.<br>
+  The best way to avoid this issue is to follow the general advice about not injecting content. However, if you believe injecting content is your only practical approach, ensure that moz-extension paths are embedded inside an iframe using a <a href="/ja/docs/Web/HTTP/Basics_of_HTTP/Data_URIs">data URL</a> or the <a href="/ja/docs/Web/HTML/Element/iframe#attr-srcdoc">srcdoc</a> attribute.</li>
+ <li><strong>サードパーティライブラリーが最新であることを確かめる</strong><br>
+  Reputable third-party libraries will be updated when any issues are found. The use of outdated (and potentially insecure) third-party libraries is strongly discouraged and, when a significant risk is identified, AMO may act to block extensions using the out of date code.<br>
+  Therefore, always use the latest version of any third-party libraries when you create your extension. Then, be aware of updates to those libraries and be prepared to update your extension to ensure its using an up to date version of the library.</li>
+ <li><strong>サードパーティライブラリーを編集しない</strong><br>
+  Modifications to a third-party library are a significant indicator that a developer is trying to hide malicious code within code that is generally known and trusted. AMO will therefore try to detect changes to third-party libraries and may disable extensions when it finds changes.</li>
+</ul>

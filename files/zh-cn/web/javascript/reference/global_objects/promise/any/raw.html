@@ -1,0 +1,60 @@
+<p>{{JSRef}}</p>
+
+<p><code>Promise.any()</code> 接收一个{{JSxRef("Promise")}}可迭代对象，只要其中的一个 <code>promise</code> 完成，就返回那个已经有完成值的 <code>promise</code> 。如果可迭代对象中没有一个 <code>promise</code> 完成（即所有的 <code>promises</code> 都失败/拒绝），就返回一个拒绝的 <code>promise</code>，返回值还有待商榷：无非是拒绝原因数组或{{JSxRef("Global_Objects/AggregateError", "AggregateError")}}类型的实例，它是 {{JSxRef("Error")}} 的一个子类，用于把单一的错误集合在一起。本质上，这个方法和{{JSxRef("Promise.all()")}}是相反的。</p>
+
+<div class="blockIndicator warning">
+<p><strong>注意！</strong> <code>Promise.any()</code> 方法依然是实验性的，尚未被所有的浏览器完全支持。它当前处于 <a href="https://github.com/tc39/proposal-promise-any">TC39 第三阶段草案（Stage 3）</a></p>
+</div>
+
+<h2 id="语法">语法</h2>
+
+<pre>Promise.any(<var>iterable</var>);</pre>
+
+<h3 id="参数">参数</h3>
+
+<dl>
+ <dt><code>iterable</code></dt>
+ <dd>一个 <a href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Iteration_protocols#The_iterable_protocol">可迭代</a> 的对象, 例如 <a href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a>。</dd>
+</dl>
+
+<h3 id="返回值">返回值</h3>
+
+<ul>
+ <li>如果传入的参数是一个空的可迭代对象，则返回一个 <strong>已完成（already resolved）</strong> 状态的 <a href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a>。</li>
+ <li>如果传入的参数不包含任何 <code>promise</code><var>，则返回</var>一个 <strong>异步完成</strong> （<strong>asynchronously resolved</strong>）的 <a href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a>。</li>
+ <li>其他情况下都会返回一个<strong>处理中（pending）</strong> 的 <a href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a>。 只要传入的迭代对象中的任何一个 <code>promise</code> 变成完成（resolve）状态，或者其中的所有的 <code>promises</code> 都被拒绝，那么返回的 <code>promise</code> 就会 <strong>异步地</strong>（当调用栈为空时）<strong> </strong>变成完成/拒绝（resolved/reject）状态。</li>
+</ul>
+
+<h2 id="说明">说明</h2>
+
+<p>这个方法对于返回第一个已完成的 <code>promise</code> 是有用的。在一个 <code>promise</code> 完成后它就会终止，因此它不用等待其他的 <code>promise</code> 全部完成，只要发现一个就够了。</p>
+
+<p>不像 <a href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Promise/all">Promise.all()</a> 会返回一组完成值那样（resolved values），我们只能得到一个完成值（假设至少有一个 <code>promise</code> 完成）。当我们只需要一个 <code>promise</code> 完成，而不需要关心是哪一个完成时会很有用的。</p>
+
+<p>同时, 也不像 <a href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Promise/race">Promise.race()</a> 总是返回第一个结果值（resolved/reject）那样，这个方法返回的是第一个<em> 完成的</em> 值。这个方法将会忽略掉所有被拒绝的 <code>promise</code>，直到第一个 <code>promise</code> 完成。</p>
+
+<h3 id="完成（Fulfillment）：">完成（Fulfillment）：</h3>
+
+<p>当任何一个被传入的 <code>promise</code> 完成的时候, 无论其他的 <code>promises</code> 完成还是被拒绝，此函数返回的 <code>promise</code> 将异步完成，其值为传入的完成的那个 <code>promise</code> 的值。</p>
+
+<ul>
+ <li>如果传入的参数是一个空的可迭代对象, 这个方法将会同步返回一个已经完成的 <code>promise</code>。</li>
+ <li>如果传入的任何一个 <code>promise</code> 已完成, 或者传入的参数不包括任何 <code>promise</code>, 那么 <code>Promise.any</code> 返回一个异步完成的 <code>promise</code>。</li>
+</ul>
+
+<h3 id="失败拒绝（Rejection）：">失败/拒绝（Rejection）：</h3>
+
+<p>如果所有传入的 <code>promises</code> 都被拒绝, <code>Promise.any</code> 将会异步拒绝，其返回结果可能是以下之一（返回哪个目前还没有一致的决定）：</p>
+
+<ul>
+ <li>一个数组，其中包含作为参数传入的可迭代对象被拒绝的<strong>所有</strong>原因</li>
+ <li>一个 <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AggregateError">AggregateError</a> 对象，它继承自 <a href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Error">Error</a>，并且包含了一个指向异常（exceptions）数组的指针</li>
+</ul>
+
+<h2 id="参见">参见</h2>
+
+<ul>
+ <li>{{JSxRef("Promise")}}</li>
+ <li>{{JSxRef("Promise.all()")}}</li>
+ <li>{{JSxRef("Promise.race()")}}</li>
+</ul>

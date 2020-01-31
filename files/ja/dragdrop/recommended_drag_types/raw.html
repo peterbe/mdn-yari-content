@@ -1,0 +1,86 @@
+<p>以下は、ドラッグされるデータを登録する際の最適な方法についての解説です。</p>
+<h2 id="text">テキストのドラッグ</h2>
+<p>テキストをドラッグする時は、<code>text/plain</code>型を利用します。データはドラッグされる文字列です。例：</p>
+<pre>event.dataTransfer.setData("text/plain", "これはドラッグされるテキストです")
+</pre>
+<p>テキストボックスの中やWebページ中の選択範囲の文字列のドラッグ操作は自動的に処理されるため、あなたが自分で処理を書く必要はありません。</p>
+<p>そのデータが代替テキストでは表現できない物である場合を除いて、他のデータ形式をサポートしないアプリケーションやドロップ対象のためのフォールバック用に、常に<code>text/plain</code>型のデータを提供しておくことをおすすめします。そのために、データを追加する時には常に、最後にプレーンテキスト型のデータを登録しておいてください。</p>
+<p>古いコードにおいて、<code>text/unicode</code>や<code>Text</code>といった型の記述を見かけることがあるかもしれません。これらはどちらも<code>text/plain</code>と等しく扱われ、プレーンテキスト型のデータとして登録・取得されます。</p>
+<h2 id="link">リンクのドラッグ</h2>
+<p>リンクは2つの型でデータを含むべきです。一つは<code>text/uri-list</code>型として示されたURLで、もう一つは<code>text/plain</code>型として示されたURLです。どちらの型も、リンク先のURLをデータとして使用するべきです。例：</p>
+<pre>var dt = event.dataTransfer;
+dt.setData("text/uri-list", "http://www.mozilla.org");
+dt.setData("text/plain", "http://www.mozilla.org");
+</pre>
+<p>多くの場合、<code>text/plain</code>型は<code>text/uri-list</code>型に比べると正確さに欠ける物として、最後に登録されるべきです。</p>
+<p>URL用の型は<code>uri-list</code>で、「L（URL）」ではなく「I（URI）」であることに注意してください。</p>
+<p>複数のリンクをドラッグする場合、それぞれのリンクを改行で区切ることもできます。ナンバー記号（#）で始まる行はコメントで、有効なURLとしては扱われません。コメントは、リンクの目的を示したり、リンクに関連づけられたタイトルを保持したりする目的で利用できます。<code>text/plain</code>型で登録するフォールバック用のドラッグデータは、これと同様にすべてのリンク先URLを改行区切りで保持するべきですが、コメントは含めるべきではありません。</p>
+<p>例：</p>
+<pre>http://www.mozilla.org
+#2つ目のリンク
+http://www.xulplanet.com
+</pre>
+<p>これは2つのリンクと1つのコメントを含む<code>text/uri-list</code>型のデータの例です。</p>
+<p>ドロップされたリンクを取得する時は、複数のリンクがドラッグされた場合や、コメントがデータの中に含まれる場合があることを想定するべきです。利便性を高めるために、<code>text/uri-list</code>型で提供されたデータの中から最初の有効なURLを参照するための特別な型として、「<code>URL</code>」型が利用できます。データを追加する時の型としては「<code>URL</code>」型を指定するべきではありません。もし「<code>URL</code>」型でデータを登録しようとした場合には、値は代わりに<code>text/uri-list</code>型のデータとして登録されます。</p>
+<pre>var url = event.dataTransfer.getData("URL");
+</pre>
+<p>Mozilla特有の型として、<code>text/x-moz-url</code>型のデータを見かけることがあるかもしれません。この型が登場する場合は、順番では<code>text/uri-list</code>型よりも前に利用されるべきです。この型のデータは、リンクのURLに続いてリンクのタイトルが保持されており、それぞれが改行で区切られています。例：</p>
+<pre>http://www.mozilla.org
+Mozilla
+http://www.xulplanet.com
+XUL Planet
+</pre>
+<h2 id="html">HTMLとXMLのドラッグ</h2>
+<p>HTMLの内容に対しては、<code>text/html</code>型を使用します。この型のデータはドラッグされるHTMLをシリアライズしたものであるべきです。具体的には、この型のデータとして登録されるのに適した値は、要素の<code>innerHTML</code>プロパティの値です。</p>
+<p>XMLの内容に対しては<code>text/xml</code>型を使用するべきですが、内容は整形式のXMLに変換しておくべきです。</p>
+<p>あなたは<code>text/plain</code>型として、HTMLまたはXMLのプレーンテキストでの表現を提供することもできます。その場合のデータは単純なテキストであるべきで、タグや属性などのソース文字列を含めるべきではありません。具体例：</p>
+<pre>var dt = event.dataTransfer;
+dt.setData("text/html", "こんにちは、&lt;strong&gt;見知らぬ人&lt;/strong&gt;");
+dt.setData("text/plain", "こんにちは、見知らぬ人");
+</pre>
+<h2 id="file">ファイルのドラッグ</h2>
+<p>ローカルのファイルは<code>application/x-moz-file</code>型で、<a class="internal" href="/ja/nsIFile" title="ja/nsIFile">nsIFile</a>のオブジェクトとしてドラッグされます。特権を持っていないWebページでは、この型のデータを取得することも変更することもできません。ファイルは文字列にはできないため、データを登録するには<a class="internal" href="/Ja/DragDrop/DataTransfer#mozSetDataAt.28.29" title="Ja/DragDrop/DataTransfer#mozSetDataAt.28.29">mozSetDataAt</a>メソッドを使う必要があります。同様に、データを取得する時は<a class="internal" href="/Ja/DragDrop/DataTransfer#mozGetDataAt.28.29" title="Ja/DragDrop/DataTransfer#mozGetDataAt.28.29">mozGetDataAt</a>メソッドを使わなくてはなりません。</p>
+<pre>event.dataTransfer.mozSetDataAt("application/x-moz-file", file, 0);
+</pre>
+<p>もし可能なら、ファイルのURLを<code>text/uri-list</code>および<code>text/plain</code>型のデータとして提供することもできます。これらの型は最後に登録されるべきで、それによって、<code>application/x-moz-file</code>型は優先度の高い、より適切な型となります。</p>
+<p>データトランスファーにおける複数の項目として、ドロップ時に複数のファイルを受け取ることがあります。詳細については<a class="internal" href="/Ja/DragDrop/Dragging_and_Dropping_Multiple_Items" title="Ja/DragDrop/Dragging and Dropping Multiple Items">複数の項目のドラッグ＆ドロップ</a>を参照してください。</p>
+<p>以下の例は、ファイルのドロップを受け付ける領域の作り方を示しています：</p>
+<pre>&lt;listbox ondragenter="return checkDrag(event)"
+         ondragover="return checkDrag(event)"
+         ondrop="doDrop(event)"/&gt;
+
+&lt;script&gt;
+function checkDrag(event)
+{
+  return event.dataTransfer.types.contains("application/x-moz-file");
+}
+
+function doDrop(event)
+{
+  var file = event.dataTransfer.mozGetDataAt("application/x-moz-file", 0);
+  if (file instanceof Components.interfaces.nsIFile)
+    event.currentTarget.appendItem(file.leafName);
+}
+&lt;/script&gt;
+</pre>
+<p>この例では、イベントはデータトランスファーが<code>application/x-moz-file</code>型のデータを含んでいる時にのみfalseを返します。ドロップイベントの間、ファイル型として関連づけられたデータが取得され、ファイルのファイル名がリストボックスに追加されます。<a class="internal" href="/Ja/DragDrop/DataTransfer#mozGetDataAt.28.29" title="Ja/DragDrop/DataTransfer#mozGetDataAt.28.29">mozGetDataAt</a>メソッドは<code>nsISupports</code>型でデータを返すので、nsIFile型のデータであることを確認してnsIFile型に変換するために、<code>instanceof</code>演算子を使っていることに注意してください。これは、誰かが間違ってファイルでない型のデータを登録してしまっている場合のためのチェックとしても有効です。</p>
+<h2 id="image">画像のドラッグ</h2>
+<p>画像の直接のドラッグは一般的には処理されません。そのため、MozillaはMacとLinux上では画像の直接のドラッグをサポートしていません。その代わり、画像は多くの場合、URLとしてドラッグされます。これには、他のURLリンクの場合と同様に<code>text/uri-list</code>型を使用します。この場合のデータは、画像のURLか、画像がWeb上やディスク上に無い場合はdata URLにするべきです。data URLについてのより詳しい情報は、<a class="internal" href="/ja/The_data_URL_scheme" title="ja/The data URL scheme">data URLスキーム</a>を参照してください。</p>
+<p>他のリンクがそうであるように、<code>text/plain</code>型のデータもそれと同じURLを含んでいるべきです。とはいえ一般的には、data URLはテキスト型の内容として処理するには不向きですので、この場合についてのみ<code>text/plain</code>型のデータを登録しないようにしたいと考えることもあるでしょう。</p>
+<p>Chrome権限あるいはそれ以外の特権を持ったコードでは、<code>image/jpeg</code>、<code>image/png</code>、<code>image/gif</code>といった画像型のデータを使うこともできます。この場合のデータは<a class="internal" href="/ja/nsIInputStream" title="ja/nsIInputStream">nsIInputStream</a>インターフェースを実装したオブジェクトで渡します。このストリームが読み込まれる時には、そのファイル形式での画像のデータビットを提供する必要があります。</p>
+<p>また、画像がディスク上にある場合は、 <code>application/x-moz-file</code>型をデータ型の中に含めることもできます。実際に、これは画像ファイルがドラッグされた時に使われる一般的なやり方です。</p>
+<p>最も適切なデータ形式からそうでない形式まで、正しい順番でデータを登録することが重要です。<code>image/jpeg</code>のような画像型は最初に来るべきで、<code>application/x-moz-file</code>型がそれに続きます。その次に<code>text/uri-list</code>型、最後に<code>text/plain</code>型のデータを登録することになります。例：</p>
+<pre>var dt = event.dataTransfer;
+dt.mozSetDataAt("image/png", stream, 0);
+dt.mozSetDataAt("application/x-moz-file", file, 0);
+dt.setData("text/uri-list", imageurl);
+dt.setData("text/plain", imageurl);
+</pre>
+<p>文字列でないデータの登録には<a class="internal" href="/Ja/DragDrop/DataTransfer#mozGetDataAt.28.29" title="Ja/DragDrop/DataTransfer#mozGetDataAt.28.29">mozGetDataAt</a>メソッドを使うことに注意してください。場合によっては、これらのうちいくつかの型だけが利用可能となりますので、ドロップされた画像を受け取る時には、どの形式が利用可能であるかを確認することが大事です。</p>
+<h2 id="node">ノードのドラッグ</h2>
+<p>文書中のノードや要素は、<code>application/x-moz-node</code>型のデータとしてドラッグすることができます。この型のデータはDOMノードであるべきです。これによって、ドロップ対象はドラッグが開始された実際のノードを正確に受け取ることができるようになります。異なるドメインのスクリプトからデータを取得しようとした場合は、ドロップが行われた後であっても、ノードにはアクセスできないことに注意してください。</p>
+<p>あなたは常に、ノードの内容をプレーンテキスト型の代替文字列で提供するべきです。</p>
+<h2 id="custom">独自のデータのドラッグ</h2>
+<p>独自の目的のために、あなたは独自の型を使うこともできます。そのデータが特定のWebサイトやアプリケーション専用のものである場合以外は、プレーンテキスト型の代替文字列を提供するように常に努めてください。代替テキストを用意しなかった場合は、他の場所にはドロップできなくなります。</p>
+<p> </p>
+<p>{{ languages( { "en": "En/DragDrop/Recommended_Drag_Types" } ) }}</p>

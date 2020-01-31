@@ -1,0 +1,504 @@
+<p>{{APIRef("DOM Events")}}</p>
+
+<p>La méthode <code><strong>addEventListener()</strong></code> d'{{domxref("EventTarget")}} <span id="result_box" lang="fr"><span>met en place une fonction à appeler chaque fois que l'événement spécifié est remis à la cible</span></span>. Les cibles courantes sont un {{domxref("Element")}}, le {{domxref("Document")}} lui-même et une {{domxref("Window")}}, mais elle peut être tout objet prenant en charge les évènements (comme <code><a href="https://developer.mozilla.org/fr/docs/Web/API/XMLHttpRequest">XMLHttpRequest</a></code>).</p>
+
+<p><code>addEventListener()</code> fonctionne par ajout d'une fonction ou d'un objet implémentant {{domxref("EventListener")}} à la liste des écouteurs d'évènements pour un type d'évènement spécifié dans la {{domxref("EventTarget")}} sur laquelle elle est appelée.</p>
+
+<h2 id="Syntaxe">Syntaxe</h2>
+
+<pre class="syntaxbox"><em>target</em>.addEventListener(<em>type</em>, <em>listener, [</em><em>options</em>]);
+<em>target</em>.addEventListener(<em>type</em>, <em>listener, [</em><em>useCapture</em>]);
+<em>target</em>.addEventListener(<em>type</em>, <em>listener, [</em><em>useCapture</em>, <em>wantsUntrusted </em>{{Non-standard_inline}}]); // Gecko/Mozilla seulement</pre>
+
+<h3 id="Param.C3.A8tres" name="Param.C3.A8tres">Paramètres</h3>
+
+<dl>
+ <dt><code>type</code> </dt>
+ <dd>une chaîne représentant le <a href="https://developer.mozilla.org/fr/docs/Web/Events">type d'évènement</a> à écouter.</dd>
+ <dt>listener </dt>
+ <dd>l'objet qui recevra une notification (un objet qui implémente l'interface {{domxref("Event")}}) lorsqu'un évènement du type spécifié se produit. Il doit s'agir d'un objet implémentant l'interface {{domxref("EventListener")}} ou une <a href="https://developer.mozilla.org/fr/docs/Web/JavaScript/Guide/Fonctions" title="fr/Référence_de_JavaScript_1.5_Core/Fonctions">fonction</a> JavaScript.</dd>
+ <dt><code>options</code> {{optional_inline}}</dt>
+ <dd>un objet options qui spécifie les caractéristiques de l'écouteur d'évènements. Les options disponibles sont :
+ <ul>
+  <li><code>capture</code> : Un {{jsxref("Boolean")}} indiquant que les évènements de ce type seront envoyés au <code>listener</code> enregistré avant d'être distribués à tout <code>EventTarget</code> en-dessous dans l'arborescence du DOM.</li>
+  <li><code>once</code> : Un {{jsxref("Boolean")}} indiquant que le <code>listener</code> doit être invoqué au plus une fois après avoir été ajouté. Si la valeur est <code>true</code> (<em>vrai</em>), le <code>listener</code> sera automatiquement supprimé après son appel.</li>
+  <li><code>passive</code> : Un {{jsxref("Boolean")}} indiquant que le <code>listener</code>  n'appellera jamais <code>preventDefault()</code>. S'il doit le faire, l'agent utilisateur doit l'ignorer et générer un avertissement sur la console. Voir {{anch("Amélioration des performances de défilement avec les écouteurs passifs")}} pour en apprendre plus.</li>
+  <li>{{non-standard_inline}}<code> mozSystemGroup</code> : Un {{jsxref("Boolean")}} indiquant que l'écouteur doit être ajouté au groupe système. Disponible seulement pour le code exécuté dans XBL ou dans le chrome de Firefox.</li>
+ </ul>
+ </dd>
+ <dt><code>useCapture</code> {{optional_inline}}</dt>
+ <dd>Un  {{jsxref("Boolean")}} indiquant si les événements de ce type seront distribués au  <code>listener</code> enregistré avant d'être envoyés à toute <code>EventTarget</code> (<em>cible</em>) sous-jacente dans l'arborescence DOM. Les événements propagés dans l'arborescence ne déclenchent pas un écouteur désigné pour la capture. La propagation et la capture d'événements sont deux manières de propager des événements qui se produisent dans un élément imbriqué dans un autre, lorsque les deux éléments ont enregistré un gestionnaire pour cet événement. Le mode de propagation détermine l'ordre dans lequel les éléments reçoivent l'événement. Voir les événements du <a href="https://www.w3.org/TR/DOM-Level-3-Events/#event-flow">DOM niveau 3</a> et l'<a href="http://www.quirksmode.org/js/events_order.html#link4">ordre des événements JavaScript</a> pour une explication détaillée. Si non spécifié, <code>useCapture</code> a la valeur par défaut <code>false</code>.</dd>
+</dl>
+
+<div class="note">
+<p><strong>Note : </strong>Pour les écouteurs attachés à la cible, l'évènement est dans la phase cible, plutôt qu'en phase de propagation ou de capture. Les évènements dans la phase cible seront lancés à tous les écouteurs d'un élément dans l'ordre où ils sont enregistrés, quelque soit le paramètre <code>useCapture</code>.</p>
+</div>
+
+<div class="note">
+<p><strong>Note :</strong> <code>useCapture</code> n'est pas toujours facultatif. Idéalement, vous devez l'inclure pour la plus grande compatibilité de navigateur possible.</p>
+</div>
+
+<dl>
+ <dt><code>wantsUntrusted</code> {{Non-standard_inline}}</dt>
+ <dd>Un paramètre spécifique de Firefox (Gecko). Si la valeur est <code>true</code> (<em>vrai</em>), l'écouteur reçoit des événements synthétiques distribués par le contenu web (la valeur par défaut est <code>false</code> pour chrome et <code>true</code> pour les pages web normales). Ce paramètre est utile pour le code trouvé dans les add-ons ainsi que pour le navigateur lui-même. Voir<a href="https://developer.mozilla.org/fr/docs/Archive/Add-ons/Interaction_between_privileged_and_non-privileged_pages"> Interaction entre les pages privilégiées et non privilégiées</a> pour un exemple.</dd>
+</dl>
+
+<p>Avant l'utilisation d'une valeur particulière dans l'objet <code>options</code>, c'est une bonne idée de s'assurer que le navigateur de l'utilisateur le supporte, car il s'agit d'un ajout que tous les navigateurs n'ont pas pris en charge historiquement. Voir {{anch("Safely detecting option support")}} pour plus de détails.</p>
+
+<h3 id="Valeur_retournée">Valeur retournée</h3>
+
+<p><code>undefined</code>.</p>
+
+<h2 id="Notes_dutilisation">Notes d'utilisation</h2>
+
+<h3 id="Le_rappel_de_lécouteur_dévènement">Le rappel de l'écouteur d'évènement</h3>
+
+<p>L'écouteur d'évènement peut être spécifié comme une fonction de rappel ou comme un objet qui implémente {{domxref ("EventListener")}}, pour lequel la méthode {{domxref ("EventListener.handleEvent", "handleEvent ()")}} sert de fonction de rappel.</p>
+
+<p>La fonction de rappel a elle-même les mêmes paramètres et la même valeur de retour que la méthode <code>handleEvent()</code> ; c'est-à-dire que le rappel accepte un seul paramètre : un objet basé sur {{domxref ("Event")}} décrivant l'événement qui s'est produit et il ne retourne rien.</p>
+
+<p>Par exemple, un rappel de gestionnaire d'événements utilisable pour gérer à la fois {{event ("fullscreenchange")}} et {{event ("fullscreenerror")}} peut ressembler à ceci :</p>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js"><span class="keyword token">function</span> <span class="function token">eventHandler</span><span class="punctuation token">(</span>event<span class="punctuation token">)</span> <span class="punctuation token">{</span>
+  <span class="keyword token">if</span> <span class="punctuation token">(</span>event<span class="punctuation token">.</span>type <span class="operator token">==</span> fullscreenchange<span class="punctuation token">)</span> <span class="punctuation token">{</span>
+    <span class="comment token">/* gérer un passage en plein écran */</span>
+  <span class="punctuation token">}</span> <span class="keyword token">else</span> <span class="comment token">/* fullscreenerror */</span> <span class="punctuation token">{</span>
+    <span class="comment token">/* gérer une erreur de passage en plein écran */</span>
+  <span class="punctuation token">}</span>
+<span class="punctuation token">}</span></code></pre>
+
+<h3 id="Détection_en_toute_sécurité_du_support_des_options"><a id="Détection" name="Détection"></a>Détection en toute sécurité du support des options</h3>
+
+<p>Dans les anciennes versions de la spécification DOM, le troisième paramètre de <code>addEventListener()</code> était une valeur booléenne indiquant si la capture devait ou non être utilisée. Au fil du temps, il est devenu clair que plus d'options étaient nécessaires. Plutôt que d'ajouter plus de paramètres à la fonction (compliquant énormément les choses en traitant des valeurs optionnelles), le troisième paramètre a été changé en objet pouvant contenir diverses propriétés définissant les valeurs des options pour configurer le processus de suppression de l'écouteur d'événement.</p>
+
+<p>Parce que les navigateurs anciens (ainsi que certains navigateurs pas trop vieux) supposent toujours que le troisième paramètre est un booléen, vous devez construire votre code pour gérer ce scénario intelligemment. Vous pouvez le faire en utilisant la détection de fonctionnalités pour chacune des options qui vous intéresse.</p>
+
+<p>Par exemple, vous pouvez vouloir vérifier pour l'option <code>passive</code>  :</p>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js"><span class="keyword token">var</span> passiveSupported <span class="operator token">=</span> <span class="keyword token">false</span><span class="punctuation token">;</span>
+
+<span class="keyword token">try</span> <span class="punctuation token">{</span>
+  <span class="keyword token">var</span> options <span class="operator token">=</span> Object<span class="punctuation token">.</span><span class="function token">defineProperty</span><span class="punctuation token">(</span><span class="punctuation token">{</span><span class="punctuation token">}</span><span class="punctuation token">,</span> <span class="string token">"passive"</span><span class="punctuation token">,</span> <span class="punctuation token">{</span>
+    <span class="keyword token">get</span><span class="punctuation token">:</span> <span class="keyword token">function</span><span class="punctuation token">(</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+      passiveSupported <span class="operator token">=</span> <span class="keyword token">true</span><span class="punctuation token">;</span>
+    <span class="punctuation token">}</span>
+  <span class="punctuation token">}</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+
+  window<span class="punctuation token">.</span><span class="function token">addEventListener</span><span class="punctuation token">(</span><span class="string token">"test"</span><span class="punctuation token">,</span> options<span class="punctuation token">,</span> options<span class="punctuation token">)</span><span class="punctuation token">;</span>
+  window<span class="punctuation token">.</span><span class="function token">removeEventListener</span><span class="punctuation token">(</span><span class="string token">"test"</span><span class="punctuation token">,</span> options<span class="punctuation token">,</span> options<span class="punctuation token">)</span><span class="punctuation token">;</span>
+<span class="punctuation token">}</span> <span class="keyword token">catch</span><span class="punctuation token">(</span>err<span class="punctuation token">)</span> <span class="punctuation token">{</span>
+  passiveSupported <span class="operator token">=</span> <span class="keyword token">false</span><span class="punctuation token">;</span>
+<span class="punctuation token">}</span></code></pre>
+
+<p>Cela crée un objet <code>options</code> avec une fonction de récupération pour la propriété <code>passive</code> ; une marque est placée, <code>passiveSupported</code>, à <code>true</code> si elle est appelée. Cela signifie que si le navigateur vérifie la valeur de la propriété <code>passive</code> sur l'objet <code>options</code>, <code>passiveSupported</code> sera défini sur <code>true</code> ; sinon, il restera <code>false</code>. Nous appelons ensuite <code>addEventListener()</code> pour configurer un faux gestionnaire d'événements, en spécifiant ces options, afin qu'elles soient vérifiées si le navigateur reconnaît un objet comme troisième paramètre. Ensuite, nous appelons <code>removeEventListener()</code> pour nettoyer. (Notez que <code>handleEvent()</code> est ignoré sur les écouteurs d'événement qui ne sont pas appelés).</p>
+
+<p>Vous pouvez vérifier si une option est supportée de cette façon. Ajoutez simplement une fonction de récupération pour cette option en utilisant un code similaire à celui montré ci-dessus.</p>
+
+<p>Ensuite, lorsque vous voulez créer un écouteur d'événement réel qui utilise les options en question, vous pouvez faire quelque chose comme ceci :</p>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js">someElement<span class="punctuation token">.</span><span class="function token">addEventListener</span><span class="punctuation token">(</span><span class="string token">"mouseup"</span><span class="punctuation token">,</span> handleMouseUp<span class="punctuation token">,</span> passiveSupported
+                               <span class="operator token">?</span> <span class="punctuation token">{</span> passive<span class="punctuation token">:</span> <span class="keyword token">true</span> <span class="punctuation token">}</span> <span class="punctuation token">:</span> <span class="keyword token">false</span><span class="punctuation token">)</span><span class="punctuation token">;</span></code></pre>
+
+<p>Ici, nous ajoutons un écouteur pour l'événement {{event ("mouseup")}} sur l'élément <code>someElement</code>. Pour le troisième paramètre, si <code>passiveSupported</code> est <code>true</code>, nous spécifions un objet <code>options</code> avec <code>passive</code> défini à <code>true</code> ; sinon, nous savons que nous devons passer un booléen, et nous passons <code>false</code> comme valeur du paramètre <code>useCapture</code>.</p>
+
+<p>Si vous préférez, vous pouvez utiliser une bibliothèque tierce comme <a href="https://modernizr.com/docs">Modernizr</a> ou <a href="https://github.com/rafrex/detect-it">Detect It</a> pour faire ce test.</p>
+
+<p>Vous pouvez en apprendre plus dans l'article à propos des <code><a href="https://github.com/WICG/EventListenerOptions/blob/gh-pages/explainer.md#feature-detection">EventListenerOptions</a></code>  du <a href="https://wicg.github.io/admin/charter.html">Groupe Web Incubator Community</a>.</p>
+
+<h2 id="Exemple" name="Exemple">Exemples</h2>
+
+<h3 id="Ajout_dun_écouteur_simple">Ajout d'un écouteur simple</h3>
+
+<h4 id="HTML">HTML</h4>
+
+<pre class="brush: html line-numbers  language-html"><code class="language-html"><span class="tag token"><span class="tag token"><span class="punctuation token">&lt;</span>table</span> <span class="attr-name token">id</span><span class="attr-value token"><span class="punctuation token">=</span><span class="punctuation token">"</span>outside<span class="punctuation token">"</span></span><span class="punctuation token">&gt;</span></span>
+    <span class="tag token"><span class="tag token"><span class="punctuation token">&lt;</span>tr</span><span class="punctuation token">&gt;</span></span><span class="tag token"><span class="tag token"><span class="punctuation token">&lt;</span>td</span> <span class="attr-name token">id</span><span class="attr-value token"><span class="punctuation token">=</span><span class="punctuation token">"</span>t1<span class="punctuation token">"</span></span><span class="punctuation token">&gt;</span></span>one<span class="tag token"><span class="tag token"><span class="punctuation token">&lt;/</span>td</span><span class="punctuation token">&gt;</span></span><span class="tag token"><span class="tag token"><span class="punctuation token">&lt;/</span>tr</span><span class="punctuation token">&gt;</span></span>
+    <span class="tag token"><span class="tag token"><span class="punctuation token">&lt;</span>tr</span><span class="punctuation token">&gt;</span></span><span class="tag token"><span class="tag token"><span class="punctuation token">&lt;</span>td</span> <span class="attr-name token">id</span><span class="attr-value token"><span class="punctuation token">=</span><span class="punctuation token">"</span>t2<span class="punctuation token">"</span></span><span class="punctuation token">&gt;</span></span>two<span class="tag token"><span class="tag token"><span class="punctuation token">&lt;/</span>td</span><span class="punctuation token">&gt;</span></span><span class="tag token"><span class="tag token"><span class="punctuation token">&lt;/</span>tr</span><span class="punctuation token">&gt;</span></span>
+<span class="tag token"><span class="tag token"><span class="punctuation token">&lt;/</span>table</span><span class="punctuation token">&gt;</span></span></code></pre>
+
+<h4 id="JavaScript">JavaScript</h4>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js"><span class="comment token">// Fonction pour modifier le contenu de t2</span>
+<span class="keyword token">function</span> <span class="function token">modifyText</span><span class="punctuation token">(</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+  <span class="keyword token">var</span> t2 <span class="operator token">=</span> document<span class="punctuation token">.</span><span class="function token">getElementById</span><span class="punctuation token">(</span><span class="string token">"t2"</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+  <span class="keyword token">if</span> <span class="punctuation token">(</span>t2<span class="punctuation token">.</span>firstChild<span class="punctuation token">.</span>nodeValue <span class="operator token">==</span> <span class="string token">"three"</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+    t2<span class="punctuation token">.</span>firstChild<span class="punctuation token">.</span>nodeValue <span class="operator token">=</span> <span class="string token">"two"</span><span class="punctuation token">;</span>
+  <span class="punctuation token">}</span> <span class="keyword token">else</span> <span class="punctuation token">{</span>
+    t2<span class="punctuation token">.</span>firstChild<span class="punctuation token">.</span>nodeValue <span class="operator token">=</span> <span class="string token">"three"</span><span class="punctuation token">;</span>
+  <span class="punctuation token">}</span>
+<span class="punctuation token">}</span>
+
+<span class="comment token">// ajout d'un écouteur d'évènement au tableau</span>
+<span class="keyword token">var</span> el <span class="operator token">=</span> document<span class="punctuation token">.</span><span class="function token">getElementById</span><span class="punctuation token">(</span><span class="string token">"outside"</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+el<span class="punctuation token">.</span><span class="function token">addEventListener</span><span class="punctuation token">(</span><span class="string token">"click"</span><span class="punctuation token">,</span> modifyText<span class="punctuation token">,</span> <span class="keyword token">false</span><span class="punctuation token">)</span><span class="punctuation token">;</span></code></pre>
+
+<p>Dans l'exemple ci-dessus, <code>modifyText()</code> est un écouteur pour les évènements <code>click</code> enregistré à l'aide de <code>addEventListener()</code>. Un clic n'importe où sur le tableau se propagera jusqu'au gestionnaire et exécutera <code>modifyText()</code>.</p>
+
+<h4 id="Résultat">Résultat</h4>
+
+<p>{{EmbedLiveSample('Add_a_simple_listener')}}</p>
+
+<h3 id="Écouteur_dévènement_avec_une_fonction_anonyme">Écouteur d'évènement avec une fonction anonyme</h3>
+
+<p>Ici, nous allons voir comment utiliser une fonction anonyme pour transmettre des paramètres dans l'écouteur d'événements.</p>
+
+<h4 id="HTML_2">HTML</h4>
+
+<pre class="brush: html line-numbers  language-html"><code class="language-html"><span class="tag token"><span class="tag token"><span class="punctuation token">&lt;</span>table</span> <span class="attr-name token">id</span><span class="attr-value token"><span class="punctuation token">=</span><span class="punctuation token">"</span>outside<span class="punctuation token">"</span></span><span class="punctuation token">&gt;</span></span>
+    <span class="tag token"><span class="tag token"><span class="punctuation token">&lt;</span>tr</span><span class="punctuation token">&gt;</span></span><span class="tag token"><span class="tag token"><span class="punctuation token">&lt;</span>td</span> <span class="attr-name token">id</span><span class="attr-value token"><span class="punctuation token">=</span><span class="punctuation token">"</span>t1<span class="punctuation token">"</span></span><span class="punctuation token">&gt;</span></span>one<span class="tag token"><span class="tag token"><span class="punctuation token">&lt;/</span>td</span><span class="punctuation token">&gt;</span></span><span class="tag token"><span class="tag token"><span class="punctuation token">&lt;/</span>tr</span><span class="punctuation token">&gt;</span></span>
+    <span class="tag token"><span class="tag token"><span class="punctuation token">&lt;</span>tr</span><span class="punctuation token">&gt;</span></span><span class="tag token"><span class="tag token"><span class="punctuation token">&lt;</span>td</span> <span class="attr-name token">id</span><span class="attr-value token"><span class="punctuation token">=</span><span class="punctuation token">"</span>t2<span class="punctuation token">"</span></span><span class="punctuation token">&gt;</span></span>two<span class="tag token"><span class="tag token"><span class="punctuation token">&lt;/</span>td</span><span class="punctuation token">&gt;</span></span><span class="tag token"><span class="tag token"><span class="punctuation token">&lt;/</span>tr</span><span class="punctuation token">&gt;</span></span>
+<span class="tag token"><span class="tag token"><span class="punctuation token">&lt;/</span>table</span><span class="punctuation token">&gt;</span></span></code></pre>
+
+<h4 id="JavaScript_2">JavaScript</h4>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js"><span class="comment token">// Fonction pour modifier le contenu de t2</span>
+<span class="keyword token">function</span> <span class="function token">modifyText</span><span class="punctuation token">(</span>new_text<span class="punctuation token">)</span> <span class="punctuation token">{</span>
+  <span class="keyword token">var</span> t2 <span class="operator token">=</span> document<span class="punctuation token">.</span><span class="function token">getElementById</span><span class="punctuation token">(</span><span class="string token">"t2"</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+  t2<span class="punctuation token">.</span>firstChild<span class="punctuation token">.</span>nodeValue <span class="operator token">=</span> new_text<span class="punctuation token">;</span>    
+<span class="punctuation token">}</span>
+ 
+<span class="comment token">// Fonction pour ajouter un écouteur d'évènement au tableau</span>
+<span class="keyword token">var</span> el <span class="operator token">=</span> document<span class="punctuation token">.</span><span class="function token">getElementById</span><span class="punctuation token">(</span><span class="string token">"outside"</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+el<span class="punctuation token">.</span><span class="function token">addEventListener</span><span class="punctuation token">(</span><span class="string token">"click"</span><span class="punctuation token">,</span> <span class="keyword token">function</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">{</span><span class="function token">modifyText</span><span class="punctuation token">(</span><span class="string token">"four"</span><span class="punctuation token">)</span><span class="punctuation token">}</span><span class="punctuation token">,</span> <span class="keyword token">false</span><span class="punctuation token">)</span><span class="punctuation token">;</span></code></pre>
+
+<p>Notez que l'écouteur est une fonction anonyme encapsulant le code qui peut à son tour envoyer des paramètres à la fonction <code>modifyText()</code>, responsable de la réponse à l'événement.</p>
+
+<h4 id="Résultat_2">Résultat</h4>
+
+<p>{{EmbedLiveSample('Event_listener_with_anonymous_function')}}</p>
+
+<h3 id="Écouteur_dévènement_avec_une_fonction_flèche">Écouteur d'évènement avec une fonction flèche</h3>
+
+<p>Cet exemple illustre un écouteur d'événement simple implémenté à l'aide de la notation par fonction fléchée.</p>
+
+<h4 id="HTML_3">HTML</h4>
+
+<pre class="brush: html line-numbers  language-html"><code class="language-html"><span class="tag token"><span class="tag token"><span class="punctuation token">&lt;</span>table</span> <span class="attr-name token">id</span><span class="attr-value token"><span class="punctuation token">=</span><span class="punctuation token">"</span>outside<span class="punctuation token">"</span></span><span class="punctuation token">&gt;</span></span>
+    <span class="tag token"><span class="tag token"><span class="punctuation token">&lt;</span>tr</span><span class="punctuation token">&gt;</span></span><span class="tag token"><span class="tag token"><span class="punctuation token">&lt;</span>td</span> <span class="attr-name token">id</span><span class="attr-value token"><span class="punctuation token">=</span><span class="punctuation token">"</span>t1<span class="punctuation token">"</span></span><span class="punctuation token">&gt;</span></span>one<span class="tag token"><span class="tag token"><span class="punctuation token">&lt;/</span>td</span><span class="punctuation token">&gt;</span></span><span class="tag token"><span class="tag token"><span class="punctuation token">&lt;/</span>tr</span><span class="punctuation token">&gt;</span></span>
+    <span class="tag token"><span class="tag token"><span class="punctuation token">&lt;</span>tr</span><span class="punctuation token">&gt;</span></span><span class="tag token"><span class="tag token"><span class="punctuation token">&lt;</span>td</span> <span class="attr-name token">id</span><span class="attr-value token"><span class="punctuation token">=</span><span class="punctuation token">"</span>t2<span class="punctuation token">"</span></span><span class="punctuation token">&gt;</span></span>two<span class="tag token"><span class="tag token"><span class="punctuation token">&lt;/</span>td</span><span class="punctuation token">&gt;</span></span><span class="tag token"><span class="tag token"><span class="punctuation token">&lt;/</span>tr</span><span class="punctuation token">&gt;</span></span>
+<span class="tag token"><span class="tag token"><span class="punctuation token">&lt;/</span>table</span><span class="punctuation token">&gt;</span></span></code></pre>
+
+<h4 id="JavaScript_3">JavaScript</h4>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js"><span class="comment token">// Fonction pour modifier le contenu de t2</span>
+<span class="keyword token">function</span> <span class="function token">modifyText</span><span class="punctuation token">(</span>new_text<span class="punctuation token">)</span> <span class="punctuation token">{</span>
+  <span class="keyword token">var</span> t2 <span class="operator token">=</span> document<span class="punctuation token">.</span><span class="function token">getElementById</span><span class="punctuation token">(</span><span class="string token">"t2"</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+  t2<span class="punctuation token">.</span>firstChild<span class="punctuation token">.</span>nodeValue <span class="operator token">=</span> new_text<span class="punctuation token">;</span>    
+<span class="punctuation token">}</span>
+ 
+<span class="comment token">// Ajout d'un écouteur d'évènement au tableau avec une fonction flèche</span>
+<span class="keyword token">var</span> el <span class="operator token">=</span> document<span class="punctuation token">.</span><span class="function token">getElementById</span><span class="punctuation token">(</span><span class="string token">"outside"</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+el<span class="punctuation token">.</span><span class="function token">addEventListener</span><span class="punctuation token">(</span><span class="string token">"click"</span><span class="punctuation token">,</span> <span class="punctuation token">(</span><span class="punctuation token">)</span> <span class="operator token">=</span><span class="operator token">&gt;</span> <span class="punctuation token">{</span> <span class="function token">modifyText</span><span class="punctuation token">(</span><span class="string token">"four"</span><span class="punctuation token">)</span><span class="punctuation token">;</span> <span class="punctuation token">}</span><span class="punctuation token">,</span> <span class="keyword token">false</span><span class="punctuation token">)</span><span class="punctuation token">;</span></code></pre>
+
+<h4 id="Résultat_3">Résultat</h4>
+
+<p>{{EmbedLiveSample('Event_listener_with_an_arrow_function')}}</p>
+
+<p>Notez que les fonction anonyme et flèche sont similaires, elles ont différentes liaisons <code>this</code>. Alors que les fonctions anonymes (et toutes les fonctions JavaScript traditionnelles) créent leurs propres liaisons, les fonctions fléchées héritent de cette liaison de la fonction conteneur.</p>
+
+<p>Cela signifie que les variables et constantes disponibles pour la fonction conteneur sont aussi disponibles pour le gestionnaire d'évènements en utilisant la fonction flèche.</p>
+
+<h2 id="Notes" name="Notes">Autres notes</h2>
+
+<h3 id="Raisons_d.27utiliser_addEventListener" name="Raisons_d.27utiliser_addEventListener">Pourquoi utiliser <code>addEventListener</code> ?</h3>
+
+<p><code>addEventListener</code> est la manière d'enregistrer un écouteur telle que spécifiée dans le DOM du W3C. Ses avantages sont les suivants :</p>
+
+<ul>
+ <li>Elle permet d'ajouter plus d'un seul gestionnaire pour un évènement. Cela peut s'avérer particulièrement utile pour les bibliothèques <a href="https://developer.mozilla.org/fr/docs/DHTML" title="fr/DHTML">DHTML</a> ou les <a href="https://developer.mozilla.org/fr/Add-ons" title="fr/Extensions">extensions de Mozilla</a> qui doivent fonctionner correctement même si d'autres bibliothèques/extensions sont utilisées.</li>
+ <li>Elle donne un contrôle plus fin sur la phase d'activation de l'écouteur (capture ou propagation)</li>
+ <li>Elle fonctionne sur tout élément DOM, pas uniquement les éléments HTML.</li>
+</ul>
+
+<p>L'ancienne manière alternative d'enregistrer des évènements est <a href="#Ancienne manière">décrite ci-dessous</a>.</p>
+
+<h3 id="Ajout_d.27un_.C3.A9couteur_durant_le_traitement_d.27un_.C3.A9v.C3.A8nement" name="Ajout_d.27un_.C3.A9couteur_durant_le_traitement_d.27un_.C3.A9v.C3.A8nement">Ajout d'un écouteur durant la distribution d'un évènement</h3>
+
+<p>Si un écouteur (<code>EventListener</code>) est ajouté à une cible (<code>EventTarget</code>) pendant que celle-ci est en train de diffuser un évènement, il ne sera pas déclenché par l'action en cours mais peut être déclenché à un stade ultérieur de l'évènement, par exemple en phase de propagation (bubbling).</p>
+
+<h3 id=".C3.89couteurs_multiples_et_identiques" name=".C3.89couteurs_multiples_et_identiques">Plusieurs écouteurs d'évènements identiques</h3>
+
+<p>Si plusieurs écouteurs (<code>EventListener</code>s) sont enregistrés sur la même cible (<code>EventTarget</code>) avec les mêmes paramètres, les instances en double sont ignorées. L'écouteur ne sera pas appelé plusieurs fois, et comme elles seront ignorées elles ne doivent pas être enlevées à l'aide de la méthode <a href="https://developer.mozilla.org/fr/docs/Web/API/EventTarget/removeEventListener" title="fr/DOM/element.removeEventListener">removeEventListener</a>.</p>
+
+<h3 id="La_valeur_de_this" name="La_valeur_de_this">La valeur de <code>this</code> dans le gestionnaire</h3>
+
+<p>Il est souvent souhaitable de référencer l'élément sur lequel le gestionnaire d'évènements a été lancé, comme lors de l'utilisation d'un gestionnaire générique pour un ensemble d'éléments similaires.</p>
+
+<p>Si le gestionnaire est attaché à une fonction à l'aide de <code>addEventListener()</code>, la valeur de <code>this</code> dans le gestionnaire est une référence à l'élément. C'est la même valeur que celle de la propriété <code>currentTarget</code> de l'argument de l'évènement qui est passée au gestionnaire.</p>
+
+<p>Si un attribut d'évènement (par exemple, <code>onclick</code>) est spécifié sur un élément dans la source HTML, le code JavaScript dans la valeur de l'attribut est effectivement compris dans une fonction gestionnaire qui lie la valeur de <code>this</code> d'une manière compatible avec l'<code>addEventListener()</code> ; une occurrence de <code>this</code> dans le code représente une référence à l'élément. Notez que la valeur de <code>this</code> à l'intérieur d'une fonction, appelée par le code dans la valeur d'attribut, se comporte selon les <a href="https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Op%C3%A9rateurs/L_op%C3%A9rateur_this">règles standard</a>. Ceci est illustré dans l'exemple suivant :</p>
+
+<pre class="brush: html line-numbers  language-html"><code class="language-html"><span class="tag token"><span class="tag token"><span class="punctuation token">&lt;</span>table</span> <span class="attr-name token">id</span><span class="attr-value token"><span class="punctuation token">=</span><span class="punctuation token">"</span>t<span class="punctuation token">"</span></span> <span class="attr-name token">onclick</span><span class="attr-value token"><span class="punctuation token">=</span><span class="punctuation token">"</span>modifyText();<span class="punctuation token">"</span></span><span class="punctuation token">&gt;</span></span>
+  . . .</code></pre>
+
+<p>La valeur de <code>this</code> au sein de <code>modifyText()</code> est une référence à l'objet global {{domxref("Window")}} (ou <code>undefined</code> dans le cas du <a href="https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Strict_mode">mode strict</a>).</p>
+
+<h4 id="Spécifier_this_en_utilisant_bind">Spécifier <code>this</code> en utilisant bind()</h4>
+
+<p><strong>L</strong>a méthode <code><a href="https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Objets_globaux/Function/bind">Function.prototype.bind()</a></code>, qui vous permet de spécifier la valeur devant être utilisée pour tous les appels à une fonction donnée. Cette méthode vous permet de contourner facilement les éventuels problèmes, lorsque vous ne savez pas ce qu'il en résultera, en fonction du contexte à partir duquel votre fonction a été appelée. Notez toutefois que vous devrez conserver une référence à l'écouteur afin de pouvoir le supprimer ultérieurement.</p>
+
+<p>Ceci est un exemple avec et sans <code>bind</code> :</p>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js"><span class="keyword token">var</span> Something <span class="operator token">=</span> <span class="keyword token">function</span><span class="punctuation token">(</span>element<span class="punctuation token">)</span> <span class="punctuation token">{</span>
+  <span class="comment token">// |this| est un nouvel objet créé</span>
+  <span class="keyword token">this</span><span class="punctuation token">.</span>name <span class="operator token">=</span> <span class="string token">'Something Good'</span><span class="punctuation token">;</span>
+  <span class="keyword token">this</span><span class="punctuation token">.</span>onclick1 <span class="operator token">=</span> <span class="keyword token">function</span><span class="punctuation token">(</span>event<span class="punctuation token">)</span> <span class="punctuation token">{</span>
+    console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(</span><span class="keyword token">this</span><span class="punctuation token">.</span>name<span class="punctuation token">)</span><span class="punctuation token">;</span> <span class="comment token">// undefined (<em>indéfini</em>), car |this| est l'élément</span>
+  <span class="punctuation token">}</span><span class="punctuation token">;</span>
+  <span class="keyword token">this</span><span class="punctuation token">.</span>onclick2 <span class="operator token">=</span> <span class="keyword token">function</span><span class="punctuation token">(</span>event<span class="punctuation token">)</span> <span class="punctuation token">{</span>
+    console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(</span><span class="keyword token">this</span><span class="punctuation token">.</span>name<span class="punctuation token">)</span><span class="punctuation token">;</span> <span class="comment token">// 'Something Good', car |this| est lié à un nouvel objet créé</span>
+  <span class="punctuation token">}</span><span class="punctuation token">;</span>
+  element<span class="punctuation token">.</span><span class="function token">addEventListener</span><span class="punctuation token">(</span><span class="string token">'click'</span><span class="punctuation token">,</span> <span class="keyword token">this</span><span class="punctuation token">.</span>onclick1<span class="punctuation token">,</span> <span class="keyword token">false</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+  element<span class="punctuation token">.</span><span class="function token">addEventListener</span><span class="punctuation token">(</span><span class="string token">'click'</span><span class="punctuation token">,</span> <span class="keyword token">this</span><span class="punctuation token">.</span>onclick2<span class="punctuation token">.</span><span class="function token">bind</span><span class="punctuation token">(</span><span class="keyword token">this</span><span class="punctuation token">)</span><span class="punctuation token">,</span> <span class="keyword token">false</span><span class="punctuation token">)</span><span class="punctuation token">;</span> <span class="comment token">// Trick</span>
+<span class="punctuation token">}</span>
+<span class="keyword token">var</span> s <span class="operator token">=</span> <span class="keyword token">new</span> <span class="class-name token">Something</span><span class="punctuation token">(</span>document<span class="punctuation token">.</span>body<span class="punctuation token">)</span><span class="punctuation token">;</span></code></pre>
+
+<p>Un problème dans l'exemple ci-dessus, c'est que vous ne pouvez pas supprimer l'écouteur avec <code>bind</code>. Une solution est d'utiliser une fonction spéciale appelée par <code>handleEvent</code> (<em>gestion d'évènement</em>) pour atteindre tous les évènements :</p>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js"><span class="keyword token">var</span> Something <span class="operator token">=</span> <span class="keyword token">function</span><span class="punctuation token">(</span>element<span class="punctuation token">)</span> <span class="punctuation token">{</span>
+  <span class="comment token">// |this| est un nouvel objet créé</span>
+  <span class="keyword token">this</span><span class="punctuation token">.</span>name <span class="operator token">=</span> <span class="string token">'Something Good'</span><span class="punctuation token">;</span>
+  <span class="keyword token">this</span><span class="punctuation token">.</span>handleEvent <span class="operator token">=</span> <span class="keyword token">function</span><span class="punctuation token">(</span>event<span class="punctuation token">)</span> <span class="punctuation token">{</span>
+    console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(</span><span class="keyword token">this</span><span class="punctuation token">.</span>name<span class="punctuation token">)</span><span class="punctuation token">;</span> <span class="comment token">// 'Something Good', car this est lié à un nouvel objet créé</span>
+    <span class="keyword token">switch</span><span class="punctuation token">(</span>event<span class="punctuation token">.</span>type<span class="punctuation token">)</span> <span class="punctuation token">{</span>
+      <span class="keyword token">case</span> <span class="string token">'click'</span><span class="punctuation token">:</span>
+        <span class="comment token">// un peu de code ici...</span>
+        <span class="keyword token">break</span><span class="punctuation token">;</span>
+      <span class="keyword token">case</span> <span class="string token">'dblclick'</span><span class="punctuation token">:</span>
+        <span class="comment token">// un peu de code ici...</span>
+        <span class="keyword token">break</span><span class="punctuation token">;</span>
+    <span class="punctuation token">}</span>
+  <span class="punctuation token">}</span><span class="punctuation token">;</span>
+
+  <span class="comment token">// Notez que l'écouteur dans ce cas est |this| et non this.handleEvent</span>
+  element<span class="punctuation token">.</span><span class="function token">addEventListener</span><span class="punctuation token">(</span><span class="string token">'click'</span><span class="punctuation token">,</span> <span class="keyword token">this</span><span class="punctuation token">,</span> <span class="keyword token">false</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+  element<span class="punctuation token">.</span><span class="function token">addEventListener</span><span class="punctuation token">(</span><span class="string token">'dblclick'</span><span class="punctuation token">,</span> <span class="keyword token">this</span><span class="punctuation token">,</span> <span class="keyword token">false</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+
+  <span class="comment token">// Vous pouvez supprimer l'écouteur proprement</span>
+  element<span class="punctuation token">.</span><span class="function token">removeEventListener</span><span class="punctuation token">(</span><span class="string token">'click'</span><span class="punctuation token">,</span> <span class="keyword token">this</span><span class="punctuation token">,</span> <span class="keyword token">false</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+  element<span class="punctuation token">.</span><span class="function token">removeEventListener</span><span class="punctuation token">(</span><span class="string token">'dblclick'</span><span class="punctuation token">,</span> <span class="keyword token">this</span><span class="punctuation token">,</span> <span class="keyword token">false</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+<span class="punctuation token">}</span>
+<span class="keyword token">var</span> s <span class="operator token">=</span> <span class="keyword token">new</span> <span class="class-name token">Something</span><span class="punctuation token">(</span>document<span class="punctuation token">.</span>body<span class="punctuation token">)</span><span class="punctuation token">;</span></code></pre>
+
+<p>Une autre façon de gérer la référence à <code>this</code> est de passer à <code>EventListener</code> une fonction qui appelle la méthode de l'objet qui contient les champs auxquels il est nécessaire d'accéder :</p>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js"><span class="keyword token">class</span> <span class="class-name token">SomeClass</span> <span class="punctuation token">{</span>
+
+  <span class="function token">constructor</span><span class="punctuation token">(</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+    <span class="keyword token">this</span><span class="punctuation token">.</span>name <span class="operator token">=</span> <span class="string token">'Something Good'</span><span class="punctuation token">;</span>
+  <span class="punctuation token">}</span>
+
+  <span class="function token">register</span><span class="punctuation token">(</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+    <span class="keyword token">var</span> that <span class="operator token">=</span> <span class="keyword token">this</span><span class="punctuation token">;</span>
+    window<span class="punctuation token">.</span><span class="function token">addEventListener</span><span class="punctuation token">(</span><span class="string token">'keydown'</span><span class="punctuation token">,</span> <span class="keyword token">function</span><span class="punctuation token">(</span>e<span class="punctuation token">)</span> <span class="punctuation token">{</span><span class="keyword token">return</span> that<span class="punctuation token">.</span><span class="function token">someMethod</span><span class="punctuation token">(</span>e<span class="punctuation token">)</span><span class="punctuation token">;</span><span class="punctuation token">}</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+  <span class="punctuation token">}</span>
+
+  <span class="function token">someMethod</span><span class="punctuation token">(</span>e<span class="punctuation token">)</span> <span class="punctuation token">{</span>
+    console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(</span><span class="keyword token">this</span><span class="punctuation token">.</span>name<span class="punctuation token">)</span><span class="punctuation token">;</span>
+    <span class="keyword token">switch</span><span class="punctuation token">(</span>e<span class="punctuation token">.</span>keyCode<span class="punctuation token">)</span> <span class="punctuation token">{</span>
+      <span class="keyword token">case</span> <span class="number token">5</span><span class="punctuation token">:</span>
+        <span class="comment token">// un peu de code ici...</span>
+        <span class="keyword token">break</span><span class="punctuation token">;</span>
+      <span class="keyword token">case</span> <span class="number token">6</span><span class="punctuation token">:</span>
+        <span class="comment token">// </span></code> <code class="language-js"><span class="comment token">un peu de code ici</span></code> <code class="language-js"><span class="comment token">...</span>
+        <span class="keyword token">break</span><span class="punctuation token">;</span>
+    <span class="punctuation token">}</span>
+  <span class="punctuation token">}</span>
+
+<span class="punctuation token">}</span>
+
+<span class="keyword token">var</span> myObject <span class="operator token">=</span> <span class="keyword token">new</span> <span class="class-name token">SomeClass</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+myObject<span class="punctuation token">.</span><span class="function token">register</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">;</span></code></pre>
+
+<h3 id="Héritage_Internet_Explorer_et_attachEvent">  Héritage Internet Explorer et attachEvent</h3>
+
+<p>Dans les versions Internet Explorer versions avant IE 9, vous devez utiliser <code><a href="https://developer.mozilla.org/fr/docs/Web/API/EventTarget/addEventListener">attachEvent</a></code>, plutôt que la méthode standard <code>addEventListener</code>. Pour que le code fonctionne dans IE, l'exemple ci-dessus peut être adapté en :</p>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js"><span class="keyword token">if</span> <span class="punctuation token">(</span>el<span class="punctuation token">.</span>addEventListener<span class="punctuation token">)</span> <span class="punctuation token">{</span>
+  el<span class="punctuation token">.</span><span class="function token">addEventListener</span><span class="punctuation token">(</span><span class="string token">'click'</span><span class="punctuation token">,</span> modifyText<span class="punctuation token">,</span> <span class="keyword token">false</span><span class="punctuation token">)</span><span class="punctuation token">;</span> 
+<span class="punctuation token">}</span> <span class="keyword token">else</span> <span class="keyword token">if</span> <span class="punctuation token">(</span>el<span class="punctuation token">.</span>attachEvent<span class="punctuation token">)</span>  <span class="punctuation token">{</span>
+  el<span class="punctuation token">.</span><span class="function token">attachEvent</span><span class="punctuation token">(</span><span class="string token">'onclick'</span><span class="punctuation token">,</span> modifyText<span class="punctuation token">)</span><span class="punctuation token">;</span>
+<span class="punctuation token">}</span></code></pre>
+
+<p><code>attachEvent</code> présente un inconvénient : la valeur de <code>this</code> sera une référence à l'objet <code>window</code>, au lieu de l'élément sur lequel il a été lancé.</p>
+
+<h3 id="Compatibilité">Compatibilité</h3>
+
+<p>Vous pouvez contourner <code>addEventListener()</code>, <code>removeEventListener()</code>, <code>Event.preventDefault()</code> et <code>Event.stopPropagation()</code>, non pris en charge par IE 8, en utilisant le code suivant au début de votre script. Le code prend en charge l'utilisation de <code>handleEvent</code> et l'évènement <code>DOMContentLoaded</code> également.</p>
+
+<div class="note">
+<p><strong>Note : </strong><code>useCapture</code> n'est pas pris en charge, car IE 8 n'a aucune méthode alternative. Le code suivant ajoute  seulement cette capacité à IE 8. Ce polyfill pour IE 8 fonctionne uniquement en mode standard : une déclaration <code>doctype</code> est nécessaire.</p>
+</div>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js"><span class="punctuation token">(</span><span class="keyword token">function</span><span class="punctuation token">(</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+  <span class="keyword token">if</span> <span class="punctuation token">(</span><span class="operator token">!</span>Event<span class="punctuation token">.</span>prototype<span class="punctuation token">.</span>preventDefault<span class="punctuation token">)</span> <span class="punctuation token">{</span>
+    Event<span class="punctuation token">.</span>prototype<span class="punctuation token">.</span>preventDefault<span class="operator token">=</span><span class="keyword token">function</span><span class="punctuation token">(</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+      <span class="keyword token">this</span><span class="punctuation token">.</span>returnValue<span class="operator token">=</span><span class="keyword token">false</span><span class="punctuation token">;</span>
+    <span class="punctuation token">}</span><span class="punctuation token">;</span>
+  <span class="punctuation token">}</span>
+  <span class="keyword token">if</span> <span class="punctuation token">(</span><span class="operator token">!</span>Event<span class="punctuation token">.</span>prototype<span class="punctuation token">.</span>stopPropagation<span class="punctuation token">)</span> <span class="punctuation token">{</span>
+    Event<span class="punctuation token">.</span>prototype<span class="punctuation token">.</span>stopPropagation<span class="operator token">=</span><span class="keyword token">function</span><span class="punctuation token">(</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+      <span class="keyword token">this</span><span class="punctuation token">.</span>cancelBubble<span class="operator token">=</span><span class="keyword token">true</span><span class="punctuation token">;</span>
+    <span class="punctuation token">}</span><span class="punctuation token">;</span>
+  <span class="punctuation token">}</span>
+  <span class="keyword token">if</span> <span class="punctuation token">(</span><span class="operator token">!</span>Element<span class="punctuation token">.</span>prototype<span class="punctuation token">.</span>addEventListener<span class="punctuation token">)</span> <span class="punctuation token">{</span>
+    <span class="keyword token">var</span> eventListeners<span class="operator token">=</span><span class="punctuation token">[</span><span class="punctuation token">]</span><span class="punctuation token">;</span>
+    
+    <span class="keyword token">var</span> addEventListener<span class="operator token">=</span><span class="keyword token">function</span><span class="punctuation token">(</span>type<span class="punctuation token">,</span>listener <span class="comment token">/*, useCapture (sera ignoré) */</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+      <span class="keyword token">var</span> self<span class="operator token">=</span><span class="keyword token">this</span><span class="punctuation token">;</span>
+      <span class="keyword token">var</span> wrapper<span class="operator token">=</span><span class="keyword token">function</span><span class="punctuation token">(</span>e<span class="punctuation token">)</span> <span class="punctuation token">{</span>
+        e<span class="punctuation token">.</span>target<span class="operator token">=</span>e<span class="punctuation token">.</span>srcElement<span class="punctuation token">;</span>
+        e<span class="punctuation token">.</span>currentTarget<span class="operator token">=</span>self<span class="punctuation token">;</span>
+        <span class="keyword token">if</span> <span class="punctuation token">(</span><span class="keyword token">typeof</span> listener<span class="punctuation token">.</span>handleEvent <span class="operator token">!=</span> <span class="string token">'undefined'</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+          listener<span class="punctuation token">.</span><span class="function token">handleEvent</span><span class="punctuation token">(</span>e<span class="punctuation token">)</span><span class="punctuation token">;</span>
+        <span class="punctuation token">}</span> <span class="keyword token">else</span> <span class="punctuation token">{</span>
+          listener<span class="punctuation token">.</span><span class="function token">call</span><span class="punctuation token">(</span>self<span class="punctuation token">,</span>e<span class="punctuation token">)</span><span class="punctuation token">;</span>
+        <span class="punctuation token">}</span>
+      <span class="punctuation token">}</span><span class="punctuation token">;</span>
+      <span class="keyword token">if</span> <span class="punctuation token">(</span>type<span class="operator token">==</span><span class="string token">"DOMContentLoaded"</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+        <span class="keyword token">var</span> wrapper2<span class="operator token">=</span><span class="keyword token">function</span><span class="punctuation token">(</span>e<span class="punctuation token">)</span> <span class="punctuation token">{</span>
+          <span class="keyword token">if</span> <span class="punctuation token">(</span>document<span class="punctuation token">.</span>readyState<span class="operator token">==</span><span class="string token">"complete"</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+            <span class="function token">wrapper</span><span class="punctuation token">(</span>e<span class="punctuation token">)</span><span class="punctuation token">;</span>
+          <span class="punctuation token">}</span>
+        <span class="punctuation token">}</span><span class="punctuation token">;</span>
+        document<span class="punctuation token">.</span><span class="function token">attachEvent</span><span class="punctuation token">(</span><span class="string token">"onreadystatechange"</span><span class="punctuation token">,</span>wrapper2<span class="punctuation token">)</span><span class="punctuation token">;</span>
+        eventListeners<span class="punctuation token">.</span><span class="function token">push</span><span class="punctuation token">(</span><span class="punctuation token">{</span>object<span class="punctuation token">:</span><span class="keyword token">this</span><span class="punctuation token">,</span>type<span class="punctuation token">:</span>type<span class="punctuation token">,</span>listener<span class="punctuation token">:</span>listener<span class="punctuation token">,</span>wrapper<span class="punctuation token">:</span>wrapper2<span class="punctuation token">}</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+        
+        <span class="keyword token">if</span> <span class="punctuation token">(</span>document<span class="punctuation token">.</span>readyState<span class="operator token">==</span><span class="string token">"complete"</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+          <span class="keyword token">var</span> e<span class="operator token">=</span><span class="keyword token">new</span> <span class="class-name token">Event</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+          e<span class="punctuation token">.</span>srcElement<span class="operator token">=</span>window<span class="punctuation token">;</span>
+          <span class="function token">wrapper2</span><span class="punctuation token">(</span>e<span class="punctuation token">)</span><span class="punctuation token">;</span>
+        <span class="punctuation token">}</span>
+      <span class="punctuation token">}</span> <span class="keyword token">else</span> <span class="punctuation token">{</span>
+        <span class="keyword token">this</span><span class="punctuation token">.</span><span class="function token">attachEvent</span><span class="punctuation token">(</span><span class="string token">"on"</span><span class="operator token">+</span>type<span class="punctuation token">,</span>wrapper<span class="punctuation token">)</span><span class="punctuation token">;</span>
+        eventListeners<span class="punctuation token">.</span><span class="function token">push</span><span class="punctuation token">(</span><span class="punctuation token">{</span>object<span class="punctuation token">:</span><span class="keyword token">this</span><span class="punctuation token">,</span>type<span class="punctuation token">:</span>type<span class="punctuation token">,</span>listener<span class="punctuation token">:</span>listener<span class="punctuation token">,</span>wrapper<span class="punctuation token">:</span>wrapper<span class="punctuation token">}</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+      <span class="punctuation token">}</span>
+    <span class="punctuation token">}</span><span class="punctuation token">;</span>
+    <span class="keyword token">var</span> removeEventListener<span class="operator token">=</span><span class="keyword token">function</span><span class="punctuation token">(</span>type<span class="punctuation token">,</span>listener <span class="comment token">/*, useCapture (sera ignoré) */</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+      <span class="keyword token">var</span> counter<span class="operator token">=</span><span class="number token">0</span><span class="punctuation token">;</span>
+      <span class="keyword token">while</span> <span class="punctuation token">(</span>counter<span class="operator token">&lt;</span>eventListeners<span class="punctuation token">.</span>length<span class="punctuation token">)</span> <span class="punctuation token">{</span>
+        <span class="keyword token">var</span> eventListener<span class="operator token">=</span>eventListeners<span class="punctuation token">[</span>counter<span class="punctuation token">]</span><span class="punctuation token">;</span>
+        <span class="keyword token">if</span> <span class="punctuation token">(</span>eventListener<span class="punctuation token">.</span>object<span class="operator token">==</span><span class="keyword token">this</span> <span class="operator token">&amp;&amp;</span> eventListener<span class="punctuation token">.</span>type<span class="operator token">==</span>type <span class="operator token">&amp;&amp;</span> eventListener<span class="punctuation token">.</span>listener<span class="operator token">==</span>listener<span class="punctuation token">)</span> <span class="punctuation token">{</span>
+          <span class="keyword token">if</span> <span class="punctuation token">(</span>type<span class="operator token">==</span><span class="string token">"DOMContentLoaded"</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+            <span class="keyword token">this</span><span class="punctuation token">.</span><span class="function token">detachEvent</span><span class="punctuation token">(</span><span class="string token">"onreadystatechange"</span><span class="punctuation token">,</span>eventListener<span class="punctuation token">.</span>wrapper<span class="punctuation token">)</span><span class="punctuation token">;</span>
+          <span class="punctuation token">}</span> <span class="keyword token">else</span> <span class="punctuation token">{</span>
+            <span class="keyword token">this</span><span class="punctuation token">.</span><span class="function token">detachEvent</span><span class="punctuation token">(</span><span class="string token">"on"</span><span class="operator token">+</span>type<span class="punctuation token">,</span>eventListener<span class="punctuation token">.</span>wrapper<span class="punctuation token">)</span><span class="punctuation token">;</span>
+          <span class="punctuation token">}</span>
+          eventListeners<span class="punctuation token">.</span><span class="function token">splice</span><span class="punctuation token">(</span>counter<span class="punctuation token">,</span> <span class="number token">1</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+          <span class="keyword token">break</span><span class="punctuation token">;</span>
+        <span class="punctuation token">}</span>
+        <span class="operator token">++</span>counter<span class="punctuation token">;</span>
+      <span class="punctuation token">}</span>
+    <span class="punctuation token">}</span><span class="punctuation token">;</span>
+    Element<span class="punctuation token">.</span>prototype<span class="punctuation token">.</span>addEventListener<span class="operator token">=</span>addEventListener<span class="punctuation token">;</span>
+    Element<span class="punctuation token">.</span>prototype<span class="punctuation token">.</span>removeEventListener<span class="operator token">=</span>removeEventListener<span class="punctuation token">;</span>
+    <span class="keyword token">if</span> <span class="punctuation token">(</span>HTMLDocument<span class="punctuation token">)</span> <span class="punctuation token">{</span>
+      HTMLDocument<span class="punctuation token">.</span>prototype<span class="punctuation token">.</span>addEventListener<span class="operator token">=</span>addEventListener<span class="punctuation token">;</span>
+      HTMLDocument<span class="punctuation token">.</span>prototype<span class="punctuation token">.</span>removeEventListener<span class="operator token">=</span>removeEventListener<span class="punctuation token">;</span>
+    <span class="punctuation token">}</span>
+    <span class="keyword token">if</span> <span class="punctuation token">(</span>Window<span class="punctuation token">)</span> <span class="punctuation token">{</span>
+      Window<span class="punctuation token">.</span>prototype<span class="punctuation token">.</span>addEventListener<span class="operator token">=</span>addEventListener<span class="punctuation token">;</span>
+      Window<span class="punctuation token">.</span>prototype<span class="punctuation token">.</span>removeEventListener<span class="operator token">=</span>removeEventListener<span class="punctuation token">;</span>
+    <span class="punctuation token">}</span>
+  <span class="punctuation token">}</span>
+<span class="punctuation token">}</span><span class="punctuation token">)</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">;</span></code></pre>
+
+<h3 id="Ancienne_manière_dattacher_des_évènements"><a id="Ancienne manière" name="Ancienne manière"></a>Ancienne manière d'attacher des évènements</h3>
+
+<p>La méthode <code>addEventListener()</code> a été ajoutée dans la spécification DOM 2 <a class="external" href="http://www.w3.org/TR/DOM-Level-2-Events">Events</a>. Avant cela, les écouteurs d'évènements étaient enregistrés de la manière suivante :</p>
+
+<pre>// Utilisation d'une référence à une fonction — notez l'absence de parenthèses
+el.onclick = modifyText;
+ 
+// Utilisation d'une fonction directe
+element.onclick = function() {
+  ...instructions...
+};
+</pre>
+
+<p>Cette méthode remplace l'écouteur d'évènement existant <code>click</code> le cas échéant. De même pour les autres évènements et les gestionnaires d'évènements associés comme <code>blur</code> (<code>onblur</code>), et  <code>keypress</code> ( <code>onkeypress</code>) ont des comportements similaires.</p>
+
+<p>Comme elle faisait essentiellement partie du DOM 0, cette méthode est très largement supportée et ne nécessite aucun code spécial pour gérer les différents navigateurs. C'est pourquoi elle est souvent utilisée pour attacher des évènements dynamiquement tant que les fonctionnalités supplémentaires de <code>addEventListener()</code> ne sont pas nécessaires.</p>
+
+<h3 id="Problèmes_de_mémoire">Problèmes de mémoire</h3>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js"><span class="keyword token">var</span> i<span class="punctuation token">;</span>
+<span class="keyword token">var</span> els <span class="operator token">=</span> document<span class="punctuation token">.</span><span class="function token">getElementsByTagName</span><span class="punctuation token">(</span><span class="string token">'*'</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+
+<span class="comment token">// Case 1</span>
+<span class="keyword token">for</span><span class="punctuation token">(</span>i<span class="operator token">=</span><span class="number token">0</span> <span class="punctuation token">;</span> i<span class="operator token">&lt;</span>els<span class="punctuation token">.</span>length <span class="punctuation token">;</span> i<span class="operator token">++</span><span class="punctuation token">)</span><span class="punctuation token">{</span>
+  els<span class="punctuation token">[</span>i<span class="punctuation token">]</span><span class="punctuation token">.</span><span class="function token">addEventListener</span><span class="punctuation token">(</span><span class="string token">"click"</span><span class="punctuation token">,</span> <span class="keyword token">function</span><span class="punctuation token">(</span>e<span class="punctuation token">)</span><span class="punctuation token">{</span><span class="comment token">/*faire quelque chose*/</span><span class="punctuation token">}</span><span class="punctuation token">,</span> <span class="keyword token">false</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+<span class="punctuation token">}</span>
+
+<span class="comment token">// Case 2</span>
+<span class="keyword token">function</span> <span class="function token">processEvent</span><span class="punctuation token">(</span>e<span class="punctuation token">)</span><span class="punctuation token">{</span>
+  <span class="comment token">/*faire quelque chose*/</span>
+<span class="punctuation token">}</span>
+
+<span class="keyword token">for</span><span class="punctuation token">(</span>i<span class="operator token">=</span><span class="number token">0</span> <span class="punctuation token">;</span> i<span class="operator token">&lt;</span>els<span class="punctuation token">.</span>length <span class="punctuation token">;</span> i<span class="operator token">++</span><span class="punctuation token">)</span><span class="punctuation token">{</span>
+  els<span class="punctuation token">[</span>i<span class="punctuation token">]</span><span class="punctuation token">.</span><span class="function token">addEventListener</span><span class="punctuation token">(</span><span class="string token">"click"</span><span class="punctuation token">,</span> processEvent<span class="punctuation token">,</span> <span class="keyword token">false</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+<span class="punctuation token">}</span></code></pre>
+
+<p>Dans le premier cas, une nouvelle fonction (anonyme) est créée avec chaque itération de la boucle. Dans le second cas, la même fonction est déclarée préalablement et utilisée comme gestionnaire d'évènements. Cela entraîne une consommation de mémoire réduite. De plus, dans le premier cas, il n'est pas possible d'appeler {{domxref("EventTarget.removeEventListener", "removeEventListener()")}} parce qu'aucune référence à la fonction anonyme n'est conservée. Dans le second cas, il est possible de faire <code>myElement.removeEventListener("click", processEvent, false)</code>.</p>
+
+<h3 id="Amélioration_des_performances_de_défilement_avec_les_écouteurs_passifs">Amélioration des performances de défilement avec les écouteurs passifs</h3>
+
+<p>La valeur par défaut pour l'option <code>passive</code> est <code>false</code> (<em>faux</em>). À partir de Chrome 56 (bureau, Chrome pour Android et Android), la valeur par défaut pour {{event("touchstart")}} et {{event("touchmove")}} est <code>true</code> et les appels à {{domxref("Event.preventDefault","preventDefault()")}} ne sont pas autorisés. Pour remplacer ce comportement, vous pouvez définir l'option <code>passive</code> à <code>false</code> comme montré dans l'exemple ci-dessous. Cette modification empêche l'écouteur de bloquer le rendu de la page pendant que l'utilisateur fait défiler. Une démo est disponible sur le site <a href="https://developers.google.com/web/updates/2016/06/passive-event-listeners">Google Developer</a>. Notez que Edge ne prend pas en charge l'argument <code>options</code>  et l'ajouter emêchera l'utilisation de l'argument <code>useCapture</code> sans l'utilisation appropriée de la <a href="#Détection">fonctionnalité de détection</a>.</p>
+
+<pre class="brush: js">/* Fonctionnalité de détection */
+var passiveSupported = false;
+
+try {
+  window.addEventListener("test", null, Object.defineProperty({}, "passive", { get: function() { passiveSupported = true; } }));
+} catch(err) {}
+
+/* Écouteur d'évènements */
+var elem = document.getElementById('elem');
+
+elem.addEventListener('<code>touchmove</code>', function listener() {
+  /* faire quelque chose */
+}, passiveSupported ? { passive: false } : false);
+</pre>
+
+<p>La définition de <code>passive</code> n'est pas importante pour l'évènement {{event("scroll")}} de base, car il ne peut être annulé, aussi ses écouteurs n'ont aucun moyen de bloquer le rendu de la page.</p>
+
+<h2 id="Spécifications">Spécifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th>Spécification</th>
+   <th>Statut</th>
+   <th>Commentaire</th>
+  </tr>
+  <tr>
+   <td>{{SpecName("DOM WHATWG", "#dom-eventtarget-addeventlistener", "EventTarget.addEventListener()")}}</td>
+   <td>{{Spec2("DOM WHATWG")}}</td>
+   <td></td>
+  </tr>
+  <tr>
+   <td>{{SpecName("DOM4", "#dom-eventtarget-addeventlistener", "EventTarget.addEventListener()")}}</td>
+   <td>{{Spec2("DOM4")}}</td>
+   <td></td>
+  </tr>
+  <tr>
+   <td>{{SpecName("DOM2 Events", "#Events-EventTarget-addEventListener", "EventTarget.addEventListener()")}}</td>
+   <td>{{Spec2("DOM2 Events")}}</td>
+   <td>Définition initiale.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Compatibilité_des_navigateurs">Compatibilité des navigateurs</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("api.EventTarget.addEventListener", 3)}}</p>
+
+<h2 id="Voir_.C3.A9galement" name="Voir_.C3.A9galement">Voir aussi</h2>
+
+<ul>
+ <li>{{domxref("EventTarget.removeEventListener()")}}</li>
+ <li><a href="https://developer.mozilla.org/fr/docs/Web/Guide/DOM/Events/Creating_and_triggering_events">Création et déclenchement d'évènements</a></li>
+ <li><a href="http://www.quirksmode.org/js/this.html">Plus de détails sur l'utilisation de <code>this</code> dans les gestionnaires d'évènements </a>(en)</li>
+</ul>

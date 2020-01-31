@@ -1,0 +1,190 @@
+<p>{{AddonSidebar}}</p>
+
+<p>Les premières minutes après l'installation de votre extension peuvent être cruciales pour son succès. Votre nouvel utilisateur doit savoir par où commencer et comment utiliser les fonctions de l'extension de votre navigateur.</p>
+
+<p>Une étude de recherche sur les utilisateurs de Think Aloud, menée par Mozilla en août 2018, a révélé que de mauvais onglets post-installation peuvent éroder la confiance que les gens avaient gagnée dans une extension de sa liste <a href="http://addons.mozilla.org/">addons.mozilla.org</a>. Tant et si bien que, dans certains cas, les participants à l'étude ont voulu supprimer immédiatement la prolongation. La recherche a également révélé qu'une trop grande quantité d'information ou des exigences d'installation prolongées peuvent avoir un impact négatif similaire sur la perception d'une extension par les gens.</p>
+
+<p>Les meilleures extensions fournissent aux gens l'information dont ils ont besoin pour commencer, sans exiger trop de temps ou d'efforts pour la mise en place. De même, si l'extension comporte des limitations, celles-ci doivent être mentionnées lors de l'installation pour éviter les demandes d'assistance inutiles ou, pire, les mauvaises critiques.</p>
+
+<p>Cependant, l'engagement et l'information des gens ne se limitent pas aux premières minutes après l'installation, mais s'appliquent également lorsque vous mettez à niveau votre poste et même lorsque l'utilisateur le supprime.</p>
+
+<h2 id="L'intégration">L'intégration</h2>
+
+<p>Une bonne expérience d'intégration est essentielle pour chaque extension de navigateur et n'est pas difficile à faire. Vous pouvez embarquer des personnes via un nouvel onglet ou une nouvelle fenêtre popup.</p>
+
+<h3 id="Installation_de_détection">Installation de détection</h3>
+
+<p>Vous pouvez écouter l'installation de votre extension en utilisant <code>runtime.onInstalled</code> comme suit :</p>
+
+<pre class="brush: js line-numbers language-js">browser.runtime.onInstalled.addListener(async ({ reason, temporary, }) =&gt; {
+  if (temporary) return; // skip during development
+  switch (reason) {
+    case "install": {
+      const url = browser.runtime.getURL("views/installed.html");
+      await browser.tabs.create({ url, });
+      // or: await browser.windows.create({ url, type: "popup", height: 600, width: 600, });
+    } break;
+    // see below
+  }
+});</pre>
+
+<h3 id="Intégration_du_contenu_des_pages">Intégration du contenu des pages</h3>
+
+<p>Votre page d'accueil ou votre popup devrait fournir les informations essentielles dont les gens ont besoin pour commencer. Le contenu doit donc être bref et précis. Si votre extension possède de nombreuses fonctionnalités, fournissez un guide d'aide séparé. La page doit également compléter les détails fournis sur <a href="http://addons.mozilla.org/">addons.mozilla.org</a>, et non les répéter en détail : l'objectif de la page de démarrage doit être comment utiliser votre extension, plutôt que ce qu'elle fait.</p>
+
+<p>Envisagez d'ajouter les informations suivantes à la page d'accueil, dans l'ordre approximatif indiqué ci-dessous :</p>
+
+<ul>
+ <li>Le nom de votre extension, tel qu'il apparait sur <a href="http://addons.mozilla.org/">addons.mozilla.org</a>, ainsi que son icône ou logo.</li>
+ <li>Un bref aperçu des fonctionnalités et des fonctions de votre extension, assez d'informations pour rassurer le nouvel utilisateur qu'il a installé la bonne extension.</li>
+ <li>Informations pratiques sur l'utilisation de l'extension, y compris des détails sur la façon d'accéder à ses fonctions à partir d'un bouton de la barre d'outils, d'un bouton de la barre d'adresse, d'une barre latérale ou du menu contextuel. Inclure au moins une activité simple que l'utilisateur peut faire immédiatement. Si votre extension possède de nombreuses fonctionnalités, concentrez-vous sur la fourniture d'instructions sur ce que les utilisateurs doivent faire en premier.<br>
+  <u>Astuce</u>: Présentez une vidéo d'introduction : montrer à quelqu'un comment utiliser votre extension peut être beaucoup plus efficace que de le lui dire. Si vous créez une vidéo, fournissez un sous-titrage codé ou une transcription pour vous assurer qu'elle est accessible.</li>
+ <li>Si vos fonctions d'extension peuvent être personnalisées, expliquez les options disponibles et fournissez un lien vers la page des paramètres. Si les paramètres sont une caractéristique importante de l'extension ou si la gamme des paramètres est large, ne vous attendez pas à ce que votre nouvel utilisateur soit satisfait de travailler sur plusieurs pages de paramètres maintenant : pensez à fournir des liens rapides vers des configurations spécifiques.<br>
+  <u>Astuce</u>: Utilisez <code>runtime.openOptionsPage()</code> pour ouvrir la page des paramètres.</li>
+ <li>Si l'utilisateur a besoin d'un compte pour que votre service Web puisse utiliser l'extension, fournissez-lui un lien pour s'identifier ou s'inscrire.</li>
+ <li>Si votre extension a des fonctions payantes, informez l'utilisateur de leur nature et de leur coût. Si vous avez des paiements échelonnés, fournissez un tableau comparatif ou un lien vers le site Web de l'extension.<br>
+  <u>Astuce</u>: Si vous financez le développement de l'extension par des dons, c'est le bon moment de le dire aux gens et de fournir un lien vers la page des dons.</li>
+ <li>Fournissez des liens vers des informations supplémentaires telles que la page d'aide à l'extension, le guide d'aide, les tutoriels, etc.<br>
+  <u>Astuce</u>: Si vous avez d'autres extensions, mentionnez-les.</li>
+</ul>
+
+<p>Après avoir lu votre page d'intégration, votre nouvel utilisateur devrait être sûr de commencer à utiliser l'extension immédiatement et savoir où aller s'il a besoin de plus d'informations ou de support. Dans la mesure du possible, ils auraient dû avoir une certaine expérience pratique des principales caractéristiques.</p>
+
+<h3 id="Mise_en_page">Mise en page</h3>
+
+<p>Faites attention à la conception et au style de la page. Conservez la cohérence avec la page Web de votre extension et la liste de l'AMO. Par exemple, utilisez des icônes et des couleurs cohérentes. Cela aide à rassurer votre utilisateur sur le fait qu'il a installé et utilise le bon produit. Suivez le système <a href="http://design.firefox.com/photon/">Photon Design System</a>,  lorsque cela n'entre pas en conflit avec le design de votre produit.</p>
+
+<p>N'incluez pas de publicité sur votre page de post-installation. Les publicités peuvent dégrader la confiance des gens dans une extension, éloigner les gens avant qu'ils ne s'engagent avec votre extension, et créer de la confusion sur l'extension qui a été installée parmi d'autres inconvénients.</p>
+
+<h3 id="Exemples_de_pages_d'intégration">Exemples de pages d'intégration</h3>
+
+<p>Voici quelques exemples de bonnes pages d'intégration :</p>
+
+<div>
+<table>
+ <tbody>
+  <tr>
+   <td>
+    <h4 id="LASER_CAT"><a href="https://addons.mozilla.org/fr/firefox/addon/the-laser-cat/">LASER CAT</a></h4>
+
+    <p>Cette page fournit une description succincte de l'extension, des instructions claires sur la façon de tirer les lasers de votre chat, et comment allumer et éteindre votre chat laser.</p>
+   </td>
+   <td>
+    <p><img alt="Example onboarding page that details how to use the extension's features and turn them on and off" src="https://mdn.mozillademos.org/files/16218/Laser_cat_onboarding.png" style="height: 448px; width: 480px;"></p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <h4 id="Ghostery_–_Privacy_Ad_Blocker"><a href="https://addons.mozilla.org/fr/firefox/addon/ghostery/">Ghostery – Privacy Ad Blocker</a></h4>
+
+    <p>Comme les fonctionnalités de Ghostery sont pour la plupart silencieuses, cet écran d'intégration offre aux utilisateurs deux options pour l'installation initiale : Une simple option d'un seul clic et un lien vers les paramètres complets pour qu'ils puissent personnaliser le fonctionnement de Ghostery.</p>
+   </td>
+   <td>
+    <p><img alt="Example onboarding page that gives the user options for a one-click set up or the option to proceed to the settings page" src="https://mdn.mozillademos.org/files/16219/Ghostery_onboarding.png" style="height: 355px; width: 480px;"></p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="Upboarding">Upboarding</h2>
+
+<p>Lorsque vous mettez à jour votre extension, profitez-en pour informer vos utilisateurs des nouvelles fonctionnalités et des problèmes corrigés. En plus d'être une occasion de vous engager avec des utilisateurs actifs, vous pouvez également vous réengager avec des personnes qui ont peut-être arrêté ou n'ont jamais commencé à utiliser votre poste.</p>
+
+<h3 id="Détection_d'une_mise_à_jour">Détection d'une mise à jour</h3>
+
+<p>Vous pouvez écouter les mises à jour de votre extension en utilisant  <code>runtime.onInstalled</code> comme suit :</p>
+
+<pre class="brush: js line-numbers language-js">browser.runtime.onInstalled.addListener(async ({ reason, temporary, }) =&gt; {
+  if (temporary) return; // skip during development
+  switch (reason) {
+    // see above
+    case "update": {
+      const url = browser.runtime.getURL("views/updated.html");
+      await browser.tabs.create({ url, });
+      // or: await browser.windows.create({ url, type: "popup", height: 600, width: 600, });
+    } break;
+  }
+});</pre>
+
+<h3 id="Upboarding_page_content">Upboarding page content</h3>
+
+<p>Envisagez d'ajouter les informations suivantes à la page de mise à jour :</p>
+
+<ul>
+ <li>Une brève description de votre poste. Cela devrait suffire pour que vos utilisateurs réguliers puissent identifier l'extension qui a été mise à jour et suffisamment pour inciter les utilisateurs déchus à utiliser à nouveau l'extension.</li>
+ <li>Une liste des fonctionnalités nouvelles ou améliorées ou des problèmes corrigés dans cette mise à jour. Inclure de l'information sur la façon de trouver et d'utiliser les caractéristiques nouvelles ou améliorées.</li>
+ <li>Si l'utilisation de l'une ou l'autre de ces nouvelles fonctions nécessite un paiement, informez l'utilisateur de la nature de ces fonctions et de leur coût. Si vous avez des paiements échelonnés, fournissez un tableau comparatif ou un lien vers le site Web de l'extension. C'est aussi un bon moment pour demander des dons, en n'oubliant pas d'ajouter un lien vers la page des dons.</li>
+ <li>Fournir des liens vers des informations clés telles que la page d'extension, le guide d'aide, les tutoriels, etc.</li>
+</ul>
+
+<h3 id="Upboarding_page_examples">Upboarding page examples</h3>
+
+<p>Voici quelques exemples de bonnes pages d'upboarding :</p>
+
+<div>
+<table>
+ <tbody>
+  <tr>
+   <td>
+    <h4 id="Plus_de_Liens_instantanés"><a href="https://addons.mozilla.org/fr/firefox/addon/snaplinksplus/">Plus de Liens instantanés</a></h4>
+
+    <p>Cette page fournit une brève description de Snap Links Plus avant d'énumérer les améliorations apportées à la version. Clint, le développeur, précise également que le projet est un projet personnel non rémunéré et fournit aux utilisateurs des détails sur les endroits où ils peuvent contribuer. Il a également la gentillesse de mentionner les personnes qui ont contribué à la création de l'extension.</p>
+   </td>
+   <td>
+    <p><img alt="Example upboarding page that includes a summary of the extension's features, details of the improvements and updates, and a request for donations." src="https://mdn.mozillademos.org/files/16220/snaplinks_upboarding.jpg"></p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="Offboarding">Offboarding</h2>
+
+<p>Lorsqu'un utilisateur décide de supprimer votre extension, ne manquez pas l'occasion de recueillir des commentaires sur les raisons pour lesquelles l'extension n'a pas fonctionné pour lui : vous ne pourrez peut-être pas récupérer cet utilisateur, mais en répondant à ses préoccupations, vous pourrez peut-être réduire le nombre d'utilisateurs qui pourraient supprimer votre extension dans l'avenir.</p>
+
+<h3 id="Mise_en_place_d'un_lien_vers_une_page_d'hors-bord">Mise en place d'un lien vers une page d'hors-bord</h3>
+
+<p>Pour recueillir des informations auprès des utilisateurs sortants, vous devez configurer une page Web externe et l'indiquer dans <a href="/fr/Add-ons/WebExtensions/API/Runtime/setUninstallURL"><code>runtime.setUninstallURL()</code></a>. Cette page s'ouvre alors lorsqu'un utilisateur supprime l'extension.</p>
+
+<h3 id="Contenu_de_la_page">Contenu de la page</h3>
+
+<p>Envisagez d'ajouter les informations suivantes à la page d'embarquement :</p>
+
+<ul>
+ <li>Un message “aidez-nous à améliorer”.</li>
+ <li>Une enquête sur la raison pour laquelle l'utilisateur supprime l'extension. Offrez-leur une liste des raisons les plus probables et une zone de texte libre facultative pour fournir plus de détails.</li>
+</ul>
+
+<p>N'oubliez pas d'être bref. Il est peu probable qu'un utilisateur qui quitte le site réponde à un questionnaire à questions multiples sur les raisons de son départ.</p>
+
+<h3 id="Exemples_de_pages_débarquement">Exemples de pages débarquement</h3>
+
+<p>Voici quelques exemples de bonnes pages de débarquement :</p>
+
+<div>
+<table>
+ <tbody>
+  <tr>
+   <td>
+    <h4 id="Grammarly_for_Firefox"><a href="https://addons.mozilla.org/fr/firefox/addon/grammarly-1/">Grammarly for Firefox</a></h4>
+
+    <p>Cette page fournit un message personnel d'un des développeurs de Grammarly, une courte liste de raisons pour lesquelles l'utilisateur peut supprimer l'extension, et une zone de texte où il peut fournir plus d'informations.</p>
+   </td>
+   <td>
+    <p><img alt='Example of boarding page with a "help us improve" message and simple survey with a list of reasons the extension is being removed.' src="https://mdn.mozillademos.org/files/16221/grammarly_offboarding.png" style="height: 278px; width: 480px;"></p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <h4 id="Adblock_Plus"><a href="https://addons.mozilla.org/fr/firefox/addon/adblock-plus/">Adblock Plus</a></h4>
+
+    <p>Cette page fournit un lien pour réinstaller l'extension, afin d'éviter tout retrait accidentel. Ensuite, il offre une liste des raisons pour lesquelles l'utilisateur aurait pu supprimer l'extension, l'option finale se développant dans une zone de texte pour des détails sur d'autres raisons. Il y a également un rappel pratique que ces informations sont envoyées à Adblock Plus et un lien vers leur politique de confidentialité.</p>
+   </td>
+   <td>
+    <p><img alt="Example offboarding page that includes a reinstall button and request information about the removal with a simple questionnaire." src="https://mdn.mozillademos.org/files/16222/ADB_offboarding.png" style="height: 404px; width: 480px;"></p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+</div>

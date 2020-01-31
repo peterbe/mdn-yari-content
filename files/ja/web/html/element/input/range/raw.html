@@ -1,0 +1,504 @@
+<div>{{HTMLRef}}</div>
+
+<p><span class="seoSummary">{{HTMLElement("input")}} 要素の <strong><code>range</code></strong> 型は、ユーザーに一定の値より小さくなく、別な一定の値より大きくない数値を指定させるために使用します。しかし、厳密な値は重要であるとはされません。これは通常、 {{HTMLElement('input/number', 'number')}} 入力型のようなテキスト入力ボックスではなく、スライダーやダイアルコントロールを用いて表現されます。</span>この種のウィジェットは厳密なものではないので、コントロールの厳密な値が重要でないというのでない限り、通常は使用するべきではありません。</p>
+
+<div>{{EmbedInteractiveExample("pages/tabbed/input-range.html", "tabbed-standard")}}</div>
+
+<p class="hidden">このデモのソースファイルは GitHub リポジトリに格納されています。デモプロジェクトに協力したい場合は、 <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> をクローンしてプルリクエストを送信してください。</p>
+
+<p>ユーザーのブラウザーが <code>range</code> 型に対応していない場合は、 <code>{{HTMLElement('input/text', 'text')}}</code> 入力で代替されて扱われます。</p>
+
+<table class="properties">
+ <tbody>
+  <tr>
+   <td><strong>{{anch("Value", "値")}}</strong></td>
+   <td>選択された数値を表す文字列を含む {{domxref("DOMString")}}。 {{jsxref("Number")}} として値を取得するには {{domxref("HTMLInputElement.valueAsNumber", "valueAsNumber")}} を使用する。</td>
+  </tr>
+  <tr>
+   <td><strong>イベント</strong></td>
+   <td>{{event("change")}} および {{event("input")}}</td>
+  </tr>
+  <tr>
+   <td><strong>対応している共通属性</strong></td>
+   <td>{{htmlattrxref("autocomplete", "input")}}, {{htmlattrxref("list", "input")}}, {{htmlattrxref("max", "input")}}, {{htmlattrxref("min", "input")}}, {{htmlattrxref("step", "input")}}</td>
+  </tr>
+  <tr>
+   <td><strong>IDL 属性</strong></td>
+   <td><code>list</code>, <code>value</code>, <code>valueAsNumber</code></td>
+  </tr>
+  <tr>
+   <td><strong>メソッド</strong></td>
+   <td>{{domxref("HTMLInputElement.stepDown", "stepDown()")}} および {{domxref("HTMLInputElement.stepUp", "stepUp()")}}</td>
+  </tr>
+ </tbody>
+</table>
+
+<h3 id="Validation" name="Validation">検証</h3>
+
+<p>パターン検証は使えませんが、次のような検証が自動的に行われます。</p>
+
+<ul>
+ <li>もし {{htmlattrxref("value", "input")}} が浮動小数点数に変換できない場合、入力が不正であるため検証は失敗します。</li>
+ <li>値は、{{htmlattrxref("min", "input")}} より小さくすることはできません。その初期値は 0 です。</li>
+ <li>値は、{{htmlattrxref("max", "input")}} より大きくすることはできません。その初期値は 100 です。</li>
+ <li>値は、{{htmlattrxref("step", "input")}} の倍数でなければなりません。その初期値は 1 です。</li>
+</ul>
+
+<h3 id="Value" name="Value">値</h3>
+
+<p>{{htmlattrxref("value", "input")}} 属性は、選択された数値を表す文字列が入った {{domxref("DOMString")}} です。値は空文字列 (<code>""</code>) にはなりません。既定値は指定された最大値と最小値の中間値で、ただし最大値が最小値を下回っている場合は、既定値は <code>min</code> 属性の値に設定されます。既定値を特定するアルゴリズムは次の通りです。</p>
+
+<pre class="brush: js">defaultValue = (rangeElem.max &lt; rangeElem.min) ? rangeElem.min
+               : rangeElem.min + (rangeElem.max - rangeElem.min)/2;</pre>
+
+<p>最小値よりも小さな値を設定しようとすると、最小値に設定されます。同様に、最大値よりも大きな値を設定しようとすると、最大値に設定される結果になります。</p>
+
+<h2 id="Additional_attributes" name="Additional_attributes">追加の属性</h2>
+
+<p>すべての {{HTMLElement("input")}} 型で共通する属性に加え、 <code>range</code> 型の入力欄は次の属性にも対応しています。</p>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">属性</th>
+   <th scope="col">説明</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td><code>{{anch("list")}}</code></td>
+   <td>事前定義されたオプションを持つ &lt;datalist&gt; 要素の ID</td>
+  </tr>
+  <tr>
+   <td><code>{{anch("max")}}</code></td>
+   <td>許可されている最大値</td>
+  </tr>
+  <tr>
+   <td><code>{{anch("min")}}</code></td>
+   <td>許可されている最小値</td>
+  </tr>
+  <tr>
+   <td><code>{{anch("step")}}</code></td>
+   <td>ユーザーインターフェイスと検証の両方で使用される刻み値</td>
+  </tr>
+ </tbody>
+</table>
+
+<p id="htmlattrdeflist">{{page("/ja/docs/Web/HTML/Element/input/text", "list", 0, 1, 2)}}</p>
+
+<p>オプションの表示がサポートされたブラウザーでどのように行われるかは、下の <a href="#A_range_control_with_hash_marks">ハッシュマーク付きの範囲コントロール</a> を参照してください。</p>
+
+<h3 id="htmlattrdefmax">{{htmlattrdef("max")}}</h3>
+
+<p>許可されている値の範囲の最大値です。要素に入力された {{htmlattrxref("value", "input")}} がこれを超えた場合、要素は<a href="/ja/docs/Web/Guide/HTML/HTML5/Constraint_validation">制約の検証</a>に失敗します。 <code>max</code> 属性の値が数値でない場合、要素は最大値を持ちません。</p>
+
+<p>この値は <code>min</code> 属性の値より大きいか、等しくしなければなりません。</p>
+
+<h3 id="htmlattrdefmin">{{htmlattrdef("min")}}</h3>
+
+<p>許可されている値の範囲の最小値です。要素の {{htmlattrxref("value", "input")}} がこれより小さい場合、要素は<a href="/ja/docs/Web/Guide/HTML/HTML5/Constraint_validation">制約の検証</a>に失敗します。 <code>min</code> 属性の値が数値でない場合、要素は最小値を持ちません。</p>
+
+<p>この値は <code>max</code> 属性の値より小さいか、等しくしなければなりません。</p>
+
+<h3 id="htmlattrdefstep">{{htmlattrdef("step")}}</h3>
+
+<p>{{page("/ja/docs/Web/HTML/Element/input/number", "step-include")}}</p>
+
+<p><code>range</code> 入力欄の既定の刻み値は1であり、刻みの基準値が整数ではない場合を<em>除いて</em>、整数の入力のみを許可します。例えば、 <code>min</code> に -10 を、 <code>value</code> に 1.5 を設定した場合、 <code>step</code> が 1 の場合は正の方向に 1.5, 2.5, 3.5,... など、負の方向に -0.5, -1.5, -2.5,... などのみが許可されます。</p>
+
+<h3 id="Non_Standard_Attributes" name="Non_Standard_Attributes">非標準の属性</h3>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">属性</th>
+   <th scope="col">説明</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td><code>{{anch("orient")}}</code></td>
+   <td>範囲スライダーの方向を設定する。<strong>Firefox のみ</strong>。</td>
+  </tr>
+ </tbody>
+</table>
+
+<dl>
+ <dt>{{htmlattrdef("orient")}} {{non-standard_inline}}</dt>
+ <dd id="orient-include">{{htmlelement('progress')}} や {{htmlelement('meter')}} に影響する -moz-orient 非標準 CSS プロパティと同じように、<code>orient</code> 属性は範囲スライダーの方向を定義します。設定可能な値には、水平方向に描画されることを意味する <code>horizontal</code> と、垂直方向に描画されることを意味する <code>vertical</code> があります。</dd>
+</dl>
+
+<div class="blockIndicator note">
+<p>注意: 次の input 要素の属性は range 型には適用されません: <code>accept</code>, <code>alt</code>, <code>checked</code>, <code>dirname</code>, <code>formaction</code>, <code>formenctype</code>, <code>formmethod</code>, <code>formnovalidate</code>, <code>formtarget</code>, height, <code>maxlength</code>, <code>minlength</code>, <code>multiple</code>, <code>pattern</code>, <code>placeholder</code>, <code>readonly</code>, <code>required</code>, <code>size</code>, <code>src</code>, および <code>width</code>。これらの属性は、例え設定されていたとしても、無視されます。</p>
+</div>
+
+<h2 id="Using_range_inputs" name="Using_range_inputs">使用例</h2>
+
+<p><code>number</code> 型がユーザーに数値を入力させ、任意で値を最小値と最大値の間に強制することができるものですので、具体的な値を入力する必要があります。 <code>range</code> 入力型は、どの値が選択されているかをユーザーが気にする、または知る必要がない場合に、ユーザーに値を尋ねることができます。</p>
+
+<p>range 入力欄がよく使用される場合の例をいくつか示します。</p>
+
+<ul>
+ <li>ボリュームやバランス、フィルター制御のようなオーディオの制御。</li>
+ <li>カラーチャネル、透過度、明るさなどの色の構成の制御。</li>
+ <li>難易度、視点距離、ワールドサイズなどのゲームの構成の制御。</li>
+ <li>パスワードマネージャーが生成するパスワードの長さ。</li>
+</ul>
+
+<p>原則として、ユーザーが実際の数値自体よりも最大値と最小値の間のパーセント値に関心がある場合は、 range 入力が最有力候補になります。例えば、ホームステレオの音量制御では、ユーザーは通常「音量を0.5に設定する」ではなく、「音量を最大値の半分くらいに設定する」と考えます。</p>
+
+<h3 id="Specifying_the_minimum_and_maximum" name="Specifying_the_minimum_and_maximum">最小値と最大値の指定</h3>
+
+<p>既定では、最小値は0で最大値は100です。これが望むものでないのであれば、 {{htmlattrxref("min", "input")}} や {{htmlattrxref("max", "input")}} 属性の値を変更することで、簡単に範囲を変更することができます。浮動小数点値にすることもできます。</p>
+
+<p>例えば、ユーザーに-10から10までの値を尋ねるのであれば、次のようにすることができます。</p>
+
+<pre class="brush: html">&lt;input type="range" min="-10" max="10"&gt;</pre>
+
+<p>{{EmbedLiveSample("Specifying_the_minimum_and_maximum", 600, 40)}}</p>
+
+<h3 id="Setting_the_values_granularity" name="Setting_the_value's_granularity">値の精度の設定</h3>
+
+<p>既定の精度は 1 で、これは値が常に整数であることを意味します。この精度を制御するには、{{htmlattrxref("step")}} 属性を変更します。例えば、5 から 10 の間で小数点第 2 位までの値を入力させる場合、<code>step</code> の値を 0.01 に設定します。</p>
+
+<div id="Granularity_sample1">
+<pre class="brush: html">&lt;input type="range" min="5" max="10" step="0.01"&gt;</pre>
+
+<p>{{EmbedLiveSample("Granularity_sample1", 600, 40)}}</p>
+</div>
+
+<p>もし、小数点以下の桁数に関係なく値を入力させたい場合は、{{htmlattrxref("step", "input")}} 属性の値に <code>any</code> を指定します。</p>
+
+<div id="Granularity_sample2">
+<pre class="brush: html">&lt;input type="range" min="0" max="3.14" step="any"&gt;</pre>
+
+<p>{{EmbedLiveSample("Granularity_sample2", 600, 40)}}</p>
+
+<p>この例は、値の小数部分に制限なく、0 から π までの間からユーザーに任意の値を選択させます。</p>
+</div>
+
+<h3 id="Adding_hash_marks_and_labels" name="Adding_hash_marks_and_labels">ハッシュマークとラベルの追加</h3>
+
+<p>HTML 仕様により、ブラウザーは範囲コントロールをいくらか柔軟に表示できるようになります。これが明確にわかるのは、ハッシュマークと、その次点でラベルをおいて他にないでしょう。この仕様には、{{htmlattrxref("list", "input")}} 属性と {{HTMLElement("datalist")}} 要素を使って範囲コントロールにカスタムの点を追加できると書かれています。しかし、コントロールの長さに沿ったハッシュや目盛りの標準については、要件どころか推奨すらありません。</p>
+
+<h4 id="Range_control_mockups" name="Range_control_mockups">範囲コントロールのモックアップ</h4>
+
+<p>ブラウザーにはこの柔軟性があるものの、現時点で HTML の定義する範囲コントロールの機能は完全にはサポートされていないため、macOS のこれらをサポートするブラウザー上でどのように表示されるか、モックアップを用意しました。</p>
+
+<h5 id="An_unadorned_range_control" name="An_unadorned_range_control">簡素な範囲コントロール</h5>
+
+<p>以下は、{{htmlattrxref("list", "input")}} 属性を指定しない場合、またはそれらをサポートしないブラウザーの場合の表示です。</p>
+
+<table class="fullwidth standard-table">
+ <tbody>
+  <tr>
+   <th>HTML</th>
+   <th>Examples</th>
+  </tr>
+  <tr>
+   <td rowspan="4">
+    <pre class="brush: html">
+&lt;input type="range"&gt;</pre>
+   </td>
+   <th>Screenshot</th>
+  </tr>
+  <tr>
+   <td><img alt="Screenshot of a plain slider control on macOS" src="https://mdn.mozillademos.org/files/14989/macslider-plain.png" style="height: 28px; width: 184px;"></td>
+  </tr>
+  <tr>
+   <th>Live</th>
+  </tr>
+  <tr>
+   <td>{{EmbedLiveSample("An_unadorned_range_control",200,55,"","", "nobutton")}}</td>
+  </tr>
+ </tbody>
+</table>
+
+<h5 id="A_range_control_with_hash_marks" name="A_range_control_with_hash_marks">ハッシュマーク付きの範囲コントロール</h5>
+
+<p>この範囲コントロールは <code>list</code> 属性を使っており、それにはコントロール上に配置されるハッシュマークの定義である {{HTMLElement("datalist")}} の ID が指定されています。ハッシュマークは 11 個あり、0% にひとつ、10% ごとにひとつずつあります。それぞれの点は{{HTMLElement("option")}} 要素で表現されており、その点が描画されるべき位置の値が設定された {{htmlattrxref("value", "option")}} を持っています。</p>
+
+<table class="fullwidth standard-table">
+ <tbody>
+  <tr>
+   <th>HTML</th>
+   <th>Examples</th>
+  </tr>
+  <tr>
+   <td rowspan="4">
+    <pre class="brush: html">
+&lt;input type="range" list="tickmarks"&gt;
+
+&lt;datalist id="tickmarks"&gt;
+  &lt;option value="0"&gt;&lt;/option&gt;
+  &lt;option value="10"&gt;&lt;/option&gt;
+  &lt;option value="20"&gt;&lt;/option&gt;
+  &lt;option value="30"&gt;&lt;/option&gt;
+  &lt;option value="40"&gt;&lt;/option&gt;
+  &lt;option value="50"&gt;&lt;/option&gt;
+  &lt;option value="60"&gt;&lt;/option&gt;
+  &lt;option value="70"&gt;&lt;/option&gt;
+  &lt;option value="80"&gt;&lt;/option&gt;
+  &lt;option value="90"&gt;&lt;/option&gt;
+  &lt;option value="100"&gt;&lt;/option&gt;
+&lt;/datalist&gt;
+       </pre>
+   </td>
+   <th>Screeshot</th>
+  </tr>
+  <tr>
+   <td><img alt="Screenshot of a plain slider control on macOS" src="https://mdn.mozillademos.org/files/14991/macslider-ticks.png" style="height: 28px; width: 184px;"></td>
+  </tr>
+  <tr>
+   <th>Live</th>
+  </tr>
+  <tr>
+   <td>{{EmbedLiveSample("A_range_control_with_hash_marks_and_labels",200,55,"","", "nobutton")}}</td>
+  </tr>
+ </tbody>
+</table>
+
+<h5 id="A_range_control_with_hash_marks_and_labels" name="A_range_control_with_hash_marks_and_labels">ハッシュマークとラベル付きの範囲コントロール</h5>
+
+<p>範囲コントロールにラベルを追加するには、ラベルを表示したい目盛りの {{HTMLElement("option")}} 要素に、 {{htmlattrxref("label", "option")}} 属性を追加します。 </p>
+
+<table class="fullwidth standard-table">
+ <tbody>
+  <tr>
+   <th>HTML</th>
+   <th>Examples</th>
+  </tr>
+  <tr>
+   <td rowspan="4">
+    <pre class="brush: html">
+&lt;input type="range" list="tickmarks"&gt;
+
+&lt;datalist id="tickmarks"&gt;
+  &lt;option value="0" label="0%"&gt;&lt;/option&gt;
+  &lt;option value="10"&gt;&lt;/option&gt;
+  &lt;option value="20"&gt;&lt;/option&gt;
+  &lt;option value="30"&gt;&lt;/option&gt;
+  &lt;option value="40"&gt;&lt;/option&gt;
+  &lt;option value="50" label="50%"&gt;&lt;/option&gt;
+  &lt;option value="60"&gt;&lt;/option&gt;
+  &lt;option value="70"&gt;&lt;/option&gt;
+  &lt;option value="80"&gt;&lt;/option&gt;
+  &lt;option value="90"&gt;&lt;/option&gt;
+  &lt;option value="100" label="100%"&gt;&lt;/option&gt;
+&lt;/datalist&gt;
+       </pre>
+   </td>
+   <th>Screeshot</th>
+  </tr>
+  <tr>
+   <td><img alt="Screenshot of a plain slider control on macOS" src="https://mdn.mozillademos.org/files/14993/macslider-labels.png" style="height: 44px; width: 184px;"></td>
+  </tr>
+  <tr>
+   <th>Live</th>
+  </tr>
+  <tr>
+   <td>{{EmbedLiveSample("A_range_control_with_hash_marks_and_labels",200,55,"","", "nobutton")}}</td>
+  </tr>
+ </tbody>
+</table>
+
+<div class="note">
+<p><strong>注意</strong>: 現時点で、これらの機能を完全にサポートしたブラウザーはありません。例えば、Firefox はハッシュマークやラベルを全くサポートしておらず、Chrome はハッシュマークはサポートしていますが、ラベルはサポートしていません。Chrome のバージョン 66 (66.0.3359.181) はラベルをサポートしますが、{{htmlelement("datalist")}} タグについて、{{cssxref("display")}} プロパティがデフォルトでラベルを隠す <code>none</code> に設定されているため、CSS を使ってスタイルを設定する必要があります。</p>
+</div>
+
+<h3 id="Change_the_orientation" name="Change_the_orientation">方向の変更</h3>
+
+<div class="xhidden">
+<p>ブラウザーが範囲入力をスライダーとして描画する場合、デフォルトではノブが左右にスライドするように描画します。サポートされているならば、width の値よりも height の値が大きくなるよう CSS を定義することにより、上下にスライドする垂直のスライダーを作ることができるでしょう。しかし、実際にはこれはどの主要なブラウザーにも実装されていません (Firefox の {{bug(981916)}}、<a href="https://bugs.chromium.org/p/chromium/issues/detail?id=341071">Chrome bug 341071</a> を参照)。また、おそらくは、まだ<a href="https://github.com/whatwg/html/issues/4177">議論中</a>かもしれません。</p>
+
+<p>それまでの間、垂直の範囲を作るには CSS 変換を使うか、特定のブラウザーをターゲットにした固有の方法を使います。後者には、{{cssxref('appearance')}} に <code>slider-vertical</code> を設定したり、Firefox で非標準の <code>orient</code> 属性を使ったり、Internet Explorer と Edge 用のテキスト方向の変更を行うことが含まれます。</p>
+
+<p>このような範囲コントロールがあるとします。</p>
+
+<div id="Orientation_sample1">
+<pre class="brush: html">&lt;input type="range" id="volume" min="0" max="11" value="7" step="1"&gt;</pre>
+</div>
+
+<p>{{EmbedLiveSample("Orientation_sample1", 200, 200, "https://mdn.mozillademos.org/files/14983/Orientation_sample1.png")}}</p>
+
+<p>このコントロールは水平方向です (少なくとも、全てではないですが、ほとんどの主要なブラウザーでは。それ以外では異なるかもしれません)。</p>
+
+<h3 id="Standards" name="Standards">標準</h3>
+
+<p>仕様によれば、垂直にするには CSS を追加して、幅よりも高さが大きくなるようコントロールの寸法を変更する必要があります。次のように。</p>
+
+<div id="Orientation_sample2">
+<h4 id="CSS">CSS</h4>
+
+<pre class="brush: css">#volume {
+  height: 150px;
+  width: 50px;
+}</pre>
+
+<h4 id="HTML">HTML</h4>
+
+<pre class="brush: html">&lt;input type="range" id="volume" min="0" max="11" value="7" step="1"&gt;</pre>
+
+<h4 id="Result" name="Result">結果</h4>
+
+<p>{{EmbedLiveSample("Orientation_sample2", 200, 200, "https://mdn.mozillademos.org/files/14985/Orientation_sample2.png")}}</p>
+</div>
+</div>
+
+<p>残念なことに、この方法で範囲コントロールを垂直にすることは現時点で主要なブラウザーにサポートされていません。</p>
+
+<h3 id="transform_rotate-90deg" name="transform_rotate-90deg">transform: rotate(-90deg)</h3>
+
+<p>しかし、水平方向の範囲コントロールを垂直方向に描画することで、垂直方向の範囲コントロールを作ることができます。最も簡単なのは CSS を使うことです。要素を回転させるために {{cssxref("transform")}} を適用させると、垂直にできます。試してみましょう。</p>
+
+<h4 id="HTML_2">HTML</h4>
+
+<p>{{HTMLElement("input")}} を内包するような wrapper の {{HTMLElement("div")}} を HTML に追加します。これは、CSS 変換の後にレイアウトを修正するために使います (CSS 変換は、ページ上のレイアウトを自動的に変更するわけではありません)。</p>
+
+<pre class="brush: html">&lt;div class="slider-wrapper"&gt;
+  &lt;input type="range" min="0" max="11" value="7" step="1"&gt;
+&lt;/div&gt;</pre>
+
+<h4 id="CSS_2">CSS</h4>
+
+<p>次にいくつか CSS を設定します。まず wrapper 用の CSS で、これにはディスプレイ用のモードと、ページが正しくレイアウトされるようなサイズを指定します。本質的に言うと、スライダー用の領域をページ上で確保しておくことにより、回転されたスライダーが問題を起こすことなくその領域に収まるようにします。</p>
+
+<pre class="brush: css">.slider-wrapper {
+  display: inline-block;
+  width: 20px;
+  height: 150px;
+  padding: 0;
+}
+</pre>
+
+<p>次に、確保された領域の中にある <code>&lt;input&gt;</code> 要素のためのスタイル情報を設定します。</p>
+
+<pre class="brush: css">.slider-wrapper input {
+  width: 150px;
+  height: 20px;
+  margin: 0;
+  transform-origin: 75px 75px;
+  transform: rotate(-90deg);
+}</pre>
+
+<p>コントロールのサイズは、幅 150px、高さ 20px に設定します。マージンは 0 にし、{{cssxref("transform-origin")}} をスライダーが回転する領域の中心部分にずらします。スライダーは幅が 150 px に設定されているため、縦横 150px の四角形を通るように回転します。どちらの軸からも 75px の位置を原点にすることは、その領域の中央を中心に回転することを意味します。最後に、反時計回りに 90 度回転させます。この結果、範囲入力は最大値が上部に、最小値が下部になるよう回転されています。</p>
+
+<p>{{EmbedLiveSample("transform_rotate-90deg", 200, 200, "https://mdn.mozillademos.org/files/14987/Orientation_sample3.png")}}</p>
+
+<h3 id="appearance_property" name="appearance_property">appearance プロパティ</h3>
+
+<p>{{cssxref('appearance')}} プロパティは、非標準の値 <code>slider-vertical</code> を設定することができ、それによりスライダーを垂直にすることができます。</p>
+
+<h4 id="HTML_3">HTML</h4>
+
+<p>以前の例と同じ HTML を使います。</p>
+
+<pre class="brush: html">&lt;input type="range" min="0" max="11" value="7" step="1"&gt;
+</pre>
+
+<h4 id="CSS_3">CSS</h4>
+
+<p>range 型の input だけを対象にします。</p>
+
+<pre class="brush: css">input[type="range"] {
+  -webkit-appearance: slider-vertical;
+}</pre>
+
+<p>{{EmbedLiveSample("appearance_property", 200, 200)}}</p>
+
+<h3 id="orient_attribute" name="orient_attribute">orient 属性</h3>
+
+<p>Firefox のみ、非標準の <code>orient</code> プロパティを使えます。</p>
+
+<h4 id="HTML_4">HTML</h4>
+
+<p>以前の例と似た HTML を使いますが、<code>vertical</code> という値を持つ属性を追加します。</p>
+
+<pre class="brush: html">&lt;input type="range" min="0" max="11" value="7" step="1" orient="vertical"&gt;
+</pre>
+
+<p>{{EmbedLiveSample("orient_attribute", 200, 200)}}</p>
+
+<h3 id="writing-mode_bt-lr">writing-mode: bt-lr;</h3>
+
+<p>{{cssxref('writing-mode')}} プロパティは、国際化やローカライズ目的でテキストの方向を変更するために通常使うべきではありませんが、特別な効果のために使うことができます。</p>
+
+<h4 id="HTML_5">HTML</h4>
+
+<p>以前の例と同じ HTML を使います。</p>
+
+<pre class="brush: html">&lt;input type="range" min="0" max="11" value="7" step="1"&gt;
+</pre>
+
+<h4 id="CSS_4">CSS</h4>
+
+<p>range 型の input だけを対象にして、writing-mode をデフォルトから <code>bt-lr</code> に、つまり下から上、左から右に変更します。</p>
+
+<pre class="brush: css">input[type="range"] {
+  writing-mode: bt-lr;
+}</pre>
+
+<p>{{EmbedLiveSample("writing-mode_bt-lr", 200, 200)}}</p>
+
+<h3 id="Putting_it_all_together" name="Putting_it_all_together">全て一つにする</h3>
+
+<p>これまでの例はそれぞれ異なるブラウザーで動作するので、これらを全て一つにすることで、ブラウザー横断的に動作する例を作ることができます。</p>
+
+<h4 id="HTML_6">HTML</h4>
+
+<p>Firefox 用に、<code>orient</code> 属性を <code>vertical</code> にします。</p>
+
+<pre class="brush: html">&lt;input type="range" min="0" max="11" value="7" step="1" orient="vertical"&gt;
+</pre>
+
+<h4 id="CSS_5">CSS</h4>
+
+<p>range 型の input だけを対象にして、Edge と Internet Explorer 用に、writing-mode を デフォルトから <code>bt-lr</code> に変更し、全ての Webkit 基盤のブラウザー用に、<code>-webkit-appearance: slider-vertical</code> を追加します。</p>
+
+<pre class="brush: css">input[type="range"] {
+  writing-mode: bt-lr;
+  -webkit-appearance: slider-vertical;
+}</pre>
+
+<p>{{EmbedLiveSample("Putting_it_all_together", 200, 200)}}</p>
+
+<h2 id="Specifications" name="Specifications">仕様書</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">状態</th>
+   <th scope="col">備考</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName('HTML WHATWG', 'forms.html#range-state-(type=range)', '&lt;input type="range"&gt;')}}</td>
+   <td>{{Spec2('HTML WHATWG')}}</td>
+   <td>初回定義</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('HTML5.1', 'sec-forms.html#range-state-typerange', '&lt;input type="range"&gt;')}}</td>
+   <td>{{Spec2('HTML5.1')}}</td>
+   <td>初回定義</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザーの対応</h2>
+
+<div class="hidden">このページの互換性一覧表は構造化データから生成されています。データに協力していただけるのであれば、 <a class="external" href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> をチェックアウトしてプルリクエストを送信してください。</div>
+
+<p>{{Compat("html.elements.input.input-range")}}</p>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li><a href="/ja/docs/Learn/HTML/Forms">HTML フォーム</a></li>
+ <li>{{HTMLElement("input")}} およびそれに基づく {{domxref("HTMLInputElement")}} インターフェイス</li>
+ <li><code><a href="/ja/docs/Web/HTML/Element/input/number">&lt;input type="number"&gt;</a></code></li>
+ <li>{{domxref('validityState.rangeOverflow')}} および {{domxref('validityState.rangeUnderflow')}}</li>
+ <li><a href="/ja/docs/Web/API/Web_Audio_API/Controlling_multiple_parameters_with_ConstantSourceNode">Controlling multiple parameters with ConstantSourceNode</a></li>
+ <li><a href="https://css-tricks.com/sliding-nightmare-understanding-range-input">Styling the range element</a></li>
+</ul>

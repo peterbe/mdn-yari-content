@@ -1,0 +1,287 @@
+<p>{{APIRef("Web Notifications")}}</p>
+
+<p class="summary"><a href="/ja/docs/Web/API/Notifications_API">Notifications API</a> は、システムレベルでページ外部に表示される通知を Web ページやアプリから送ることを可能にします。これにより、アプリケーションがアイドルやバックグラウンドの状態であっても、アプリからユーザに情報を送信できます。この記事では、アプリで API を使用する方法の基礎を見ていきます。</p>
+
+<p>{{AvailableInWorkers}}</p>
+
+<p>一般的にシステム通知とは、オペレーティングシステムの標準的な通知メカニズムを指します。一般的なデスクトップシステムやモバイルデバイスが、通知を行う方法の実例を思い出しましょう。</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/10959/android-notification.png" style="display: block; height: 184px; margin: 0px auto; width: 300px;"><img alt="" src="https://mdn.mozillademos.org/files/10961/mac-notification.png" style="display: block; height: 97px; margin: 0px auto; width: 358px;"></p>
+
+<p>当然ながらシステム通知の仕組みはプラットフォームやブラウザによって異なりますが問題はなく、Notifications API はほとんどのシステム通知に対して十分な互換性を持つようになっています。</p>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<div class="column-container">
+<div class="column-half">
+<p>Web Notifications のもっともわかりやすい用途のひとつが、ユーザが別のアプリケーションを使用しているときでも新しいメッセージを受信したら通知が必要な、Web ベースのメールや IRC アプリケーションです。<a href="https://slack.com/">Slack</a> など、実例がたくさんあります。</p>
+
+<p>Web Notifications をどのように使用するかのアイデアを示すため、2 つの実例を掲載します:</p>
+
+<ul>
+ <li><strong>To-do list</strong>: <a href="/ja/docs/Web/API/IndexedDB_API">IndexedDB</a> を使用してデータをローカルに保存して、タスクの期限が来たときにシステム通知を使用して知らせるシンプルな To-Do リストアプリです。<a href="https://github.com/mdn/to-do-notifications/tree/gh-pages">To-do list のコードをダウンロードする</a>か、<a href="http://mdn.github.io/to-do-notifications/">アプリを実行してみて</a>ください。</li>
+ <li><strong>Emogotchi</strong>: たまごっちのややばかげたパロディであり、Emo を哀れな状態にし続けられなければ、負けになってしまいます。システム通知を使用して、あなたの行動に満足したかや不満をずっと言い続けます。<a href="https://github.com/mdn/emogotchi">Emogotchi のコードをダウンロードする</a>か、<a href="http://mdn.github.io/emogotchi/">実行してみてください</a>。</li>
+</ul>
+</div>
+
+<div class="column-half">
+<p style="text-align: center;"><img alt="" src="https://mdn.mozillademos.org/files/10963/emogotchi.png" style="max-width: 300px; width: 70%;">.</p>
+</div>
+</div>
+
+<h2 id="Requesting_permission" name="Requesting_permission">許可の要求</h2>
+
+<p>アプリが通知を送信可能になる前に、ユーザはアプリがそれを行う権利を認めなければなりません。これは、API が Web ページの外部にあるものと対話しようとする際の一般的な要件です。ユーザは少なくとも 1 回はアプリケーションが通知を送ることを認めなければならず、これによりどのアプリやサイトが通知を表示してよいかをユーザが制御できます。</p>
+
+<h3 id="Checking_current_permission_status" name="Checking_current_permission_status">現在の許可状態を確認する</h3>
+
+<p>読み取り専用の {{domxref("Notification.permission")}} プロパティの値を調べると、すでに許可を得ているかを確認できます。このプロパティは、3 種類の値のいずれかを持ちます:</p>
+
+<dl>
+ <dt><code>default</code></dt>
+ <dd>ユーザはまだ許可を求められておらず、通知は表示されません。</dd>
+ <dt><code>granted</code></dt>
+ <dd>ユーザは以前に通知表示の許可を求められており、許可しました。</dd>
+ <dt><code>denied</code></dt>
+ <dd>ユーザは、通知の表示を明示的に拒否しました。</dd>
+</dl>
+
+<h3 id="Getting_permission" name="Getting_permission">許可を得る</h3>
+
+<p>通知を表示する許可をまだ得ていない場合は、ユーザへ許可を求めるためにアプリケーションで {{domxref("Notification.requestPermission()")}} メソッドが必要です。もっともシンプルな形式では <a href="https://github.com/mdn/emogotchi/blob/gh-pages/main.js#L54">Emogotchi のデモ</a>で使用しているように、以下のコードを含めます:</p>
+
+<pre class="brush: js">Notification.requestPermission();</pre>
+
+<p>このメソッドは任意でコールバック関数を指定でき、この関数は通知の表示を許可するかの要求に答えたときに呼び出されます (以下のサンプルで 2 番目の <code>else ... if</code> ブロックを参照)。一般的に通知を表示する許可は、アプリを最初に初期化するときでインスタンス化を行う前に要求します。完全な形にしたい場合は、以下のような構成を使用するとよいでしょう (<a href="https://github.com/mdn/to-do-notifications/blob/gh-pages/scripts/todo.js#L305-L344">To-do List Notifications</a> をご覧ください):</p>
+
+<p>コールバック版はオプションで、ユーザーが表示パーミッションの要求に答えた時に呼び出されるコールバック関数を受け入れます (下記の2つ目の <code>else ... if</code> ブロックにあるように) Commonly,</p>
+
+<p>you'll ask for permission to display notifications when your app is first initialized, and before trying to instantiate any. If you wanted to be really thorough, you could use a construct like the following (see <a href="https://github.com/mdn/to-do-notifications/blob/gh-pages/scripts/todo.js#L305-L344">To-do List Notifications</a>):</p>
+
+<pre class="brush: js">function notifyMe() {
+  // ブラウザが通知をサポートしているか確認する
+  if (!("Notification" in window)) {
+    alert("このブラウザはシステム通知をサポートしていません");
+  }
+
+  // すでに通知の許可を得ているか確認する
+  else if (Notification.permission === "granted") {
+    // 許可を得ている場合は、通知を作成する
+    var notification = new Notification("Hi there!");
+  }
+
+  // 許可を得ていない場合は、ユーザに許可を求めなければならない
+  else if (Notification.permission !== 'denied') {
+    Notification.requestPermission(function (permission) {
+      // ユーザが許可した場合は、通知を作成する
+      if (permission === "granted") {
+        var notification = new Notification("Hi there!");
+      }
+    });
+  }
+
+  // 最後に、ユーザが通知を拒否した場合は、これ以上ユーザに 
+  // 迷惑をかけてはいけないことを尊重すべきです。
+}</pre>
+
+<div class="note">
+<p><strong>注記:</strong> バージョン 37 より前の Chrome は、<code>load</code> イベントハンドラ内で {{domxref("Notification.requestPermission()")}} を呼び出してはいけませんでした (<a href="https://code.google.com/p/chromium/issues/detail?id=274284" title="https://code.google.com/p/chromium/issues/detail?id=274284">issue 274284</a> をご覧ください)。</p>
+</div>
+
+<h3 id="Firefox_OS_manifest_permissions" name="Firefox_OS_manifest_permissions">Firefox OS マニフェストでの許可設定</h3>
+
+<p>Notifications API は {{Glossary("privileged")}} や {{Glossary("certified")}} ではありませんが、Firefox OS アプリに <code>manifest.webapp</code> ファイルを含める際に項目を含めてください:</p>
+
+<pre>"permissions": {
+  "desktop-notification": {
+    "description": "Needed for creating system notifications."
+  }
+},
+"messages": [{"notification": "path/to/your/index.html"}]
+</pre>
+
+<div class="note">
+<p><strong>注記</strong>: アプリケーションをインストールするとき、{{anch("Getting permission","明示的に許可を求める")}}必要はありませんが、通知を行うためには permissions および messages の項目が必要です。</p>
+</div>
+
+<h2 id="Creating_a_notification" name="Creating_a_notification">通知を作成する</h2>
+
+<p>通知は簡単に作成でき、{{domxref("Notification")}} コンストラクタを使用するだけです。このコンストラクタは通知で表示するタイトルや、{{domxref("Notification.icon","アイコン")}}あるいはテキスト{{domxref("Notification.body","本文")}}といったオプションを受け取ると想定します。</p>
+
+<p>例えば <a href="https://github.com/mdn/emogotchi/blob/gh-pages/main.js#L101-L117">Emogotchi</a> では、通知が必要になった際に呼び出す関数が 2 つあります。ひとつは通知を設定したいかに応じて呼び出すもの、もうひとつはランダムな内容を含む通知です:</p>
+
+<pre class="brush: js">function spawnNotification(theBody,theIcon,theTitle) {
+  var options = {
+      body: theBody,
+      icon: theIcon
+  }
+  var n = new Notification(theTitle,options);
+  setTimeout(n.close.bind(n), 5000); 
+}
+
+function randomNotification() {
+  var randomQuote = quoteChooser();
+  var options = {
+      body: randomQuote,
+      icon: 'img/sad_head.png',
+  }
+
+  var n = new Notification('Emogotchi says',options);
+  setTimeout(n.close.bind(n), 5000); 
+}</pre>
+
+<h2 id="Closing_notifications" name="Closing_notifications">通知を閉じる</h2>
+
+<p>Firefox および Safari は、少し (4 秒程度) 経過したら自動的に通知を閉じます。またこれは、オペレーティングシステムレベルで行われます。一方 Chrome など、動作が異なるブラウザがあります。すべてのブラウザで確実に通知を閉じるには 4 秒後に通知を閉じるため、前出の関数の末尾に {{domxref("Notification.close")}} 関数を収めた {{domxref("WindowTimers.setTimeout","setTimeout()")}} 関数を置きます。<code>close()</code> を通知に関連付けて呼び出すために <code><a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/Function/bind">bind()</a></code> を使用していることに注意してください。</p>
+
+<pre class="brush: js">setTimeout(n.close.bind(n), 5000);
+</pre>
+
+<div class="note">
+<p><strong>注記</strong>: "close" イベントを受け取るとき、ユーザが通知を閉じたことは保証されません。これは仕様書に準拠しており、以下のように記載されています: "When a notification is closed, either by the underlying notifications platform or by the user, the close steps for it must be run."</p>
+</div>
+
+<h2 id="Notification_events" name="Notification_events">Notification イベント</h2>
+
+<p>Notifications API の仕様では、{{domxref("Notification")}} のインスタンスで発生するイベントを 2 つ定義しています:</p>
+
+<dl>
+ <dt>{{event("click")}}</dt>
+ <dd>ユーザが通知をクリックしたときに発生します。</dd>
+ <dt>{{event("error")}}</dt>
+ <dd>通知で問題が発生したときに発生します。通常、なんらかの理由で通知が表示されなかったためです。</dd>
+</dl>
+
+<p>これらのイベントは、{{domxref("Notification.onclick","onclick")}} および {{domxref("Notification.onerror","onerror")}} ハンドラを使用して追跡できます。{{domxref("Notification")}} は {{domxref("EventTarget")}} も継承していますので、{{domxref("EventTarget.addEventListener","addEventListener()")}} メソッドも使用できます。</p>
+
+<p>仕様書で定義されていたイベントはもう 2 つありますが、最近削除されました。しばらくの間ブラウザで動作しますが、廃止扱いされて使用できなくなるでしょう:</p>
+
+<dl>
+ <dt>{{event("close")}}</dt>
+ <dd>通知を閉じたときに発生します。</dd>
+ <dt>{{event("show")}}</dt>
+ <dd>通知を表示したときに発生します。</dd>
+</dl>
+
+<h2 id="Replacing_existing_notifications" name="Replacing_existing_notifications">既存の通知を置き換える</h2>
+
+<p>ユーザが短期間に多くの通知を受け取ることは、通常望ましくありません。例えばメッセンジャーアプリがメッセージを受け取るたびに通知を行って、それが大量になったらいかがでしょうか? 大量の通知によるスパム状態を避けるため、準備中の通知キューを変更して 1 つ以上の未表示通知を新た通知で置き換えることができます。</p>
+
+<p>これを行うために、任意の新たな通知にタグを付加できます。すでに同じタグがついている通知がまだ表示されていない場合は、新しい通知が以前の通知を置き換えます。同じタグがついている通知がすでに表示されている場合は、前の通知を閉じて新しい通知を表示します。</p>
+
+<h3 id="Tag_example" name="Tag_example">タグの例</h3>
+
+<p>以下の基本的な HTML を想定します:</p>
+
+<pre class="brush: html">&lt;button&gt;Notify me!&lt;/button&gt;</pre>
+
+<p>以下の方法で、複数の通知を扱うことが可能です:</p>
+
+<pre class="brush: js">window.addEventListener('load', function () {
+  // 始めに、通知の許可を得ているかを確認しましょう
+  // 得ていなければ、尋ねましょう
+  if (window.Notification &amp;&amp; Notification.permission !== "granted") {
+    Notification.requestPermission(function (status) {
+      if (Notification.permission !== status) {
+        Notification.permission = status;
+      }
+    });
+  }
+
+  var button = document.getElementsByTagName('button')[0];
+
+  button.addEventListener('click', function () {
+    // 通知されることにユーザが同意している場合
+    // 10 個の通知を送信してみましょう
+    if (window.Notification &amp;&amp; Notification.permission === "granted") {
+      var i = 0;
+      // 一部のブラウザ (Firefox を含む) は一定の期間内に大量の通知を行うとブロックするため、interval を使用します。
+      var interval = window.setInterval(function () {
+        // タグのおかげで、私たちは "Hi!9" の通知だけを見るでしょう 
+        var n = new Notification("Hi! " + i, {tag: 'soManyNotification'});
+        if (i++ == 9) {
+          window.clearInterval(interval);
+        }
+      }, 200);
+    }
+
+    // 通知を受けたいか否かをユーザが告げていない場合
+    // 注記: Chrome のために permission プロパティが設定されているかの確信が
+    // 持てないため、値 "default" を確認するのは安全ではありません。
+    else if (window.Notification &amp;&amp; Notification.permission !== "denied") {
+      Notification.requestPermission(function (status) {
+        if (Notification.permission !== status) {
+          Notification.permission = status;
+        }
+
+        // ユーザが認めている場合
+        if (status === "granted") {
+          var i = 0;
+          // 一部のブラウザ (Firefox を含む) は一定の期間内に大量の通知を行うとブロックするため、interval を使用します。
+          var interval = window.setInterval(function () {
+            // タグのおかげで、私たちは "Hi!9" の通知だけを見るでしょう 
+            var n = new Notification("Hi! " + i, {tag: 'soManyNotification'});
+            if (i++ == 9) {
+              window.clearInterval(interval);
+            }
+          }, 200);
+        }
+
+        // 認めていなければ、通常型の alert にフォールバックします
+        else {
+          alert("Hi!");
+        }
+      });
+    }
+
+    // ユーザが通知を拒否している場合
+    else {
+      // 通常型の alert にフォールバックできます
+      alert("Hi!");
+    }
+  });
+});</pre>
+
+<p>結果は以下のとおりです:</p>
+
+<p>{{EmbedLiveSample('Tag_example', '100%', 30)}}</p>
+
+<h2 id="Receiving_notification_of_clicks_on_app_notifications" name="Receiving_notification_of_clicks_on_app_notifications">アプリの通知をクリックしたことの通知を受ける</h2>
+
+<p>アプリが生成した通知をユーザがクリックしたとき、アプリ側では状況に応じて 2 つの方法でクリックイベントの通知を受け取ることができます:</p>
+
+<ol>
+ <li>通知を作成してからユーザが通知をクリックするまでの間に、アプリが閉じられたりバックグラウンドに移されたりしていない場合は、click イベントを使用できます。</li>
+ <li>それ以外の場合は、<a href="/ja/docs/Web/API/Navigator/mozSetMessageHandler">システムメッセージ</a>を使用します。</li>
+</ol>
+
+<p>これらの扱い方の例については、<a href="https://github.com/mozilla/buddyup/commit/829cba7afa576052cf601c3e286b8d1981f93f45#diff-3">こちらのコードスニペット</a>をご覧ください。</p>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">策定状況</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('Web Notifications')}}</td>
+   <td>{{Spec2('Web Notifications')}}</td>
+   <td>Living standard</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザ実装状況</h2>
+
+<p>{{page("/ja/docs/Web/API/Notification","ブラウザ実装状況")}}</p>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li><a href="/ja/Apps/Build/User_notifications">ユーザー通知のリファレンス</a></li>
+ <li><a href="/en-US/Apps/Build/User_notifications/Notifying_users_via_the_Notification_and_Vibration">Notifying users via the Notification and Vibration APIs</a></li>
+ <li>{{domxref("Notification")}}</li>
+</ul>

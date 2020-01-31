@@ -1,0 +1,234 @@
+<div>
+<div>{{jsSidebar("Operators")}}</div>
+</div>
+
+<h2 id="Resum">Resum</h2>
+
+<p>L'operador <code>delete</code> elimina una propietat d'un objecte.</p>
+
+<h2 id="Syntax" name="Syntax">Sintaxi</h2>
+
+<pre class="syntaxbox">delete <em>expression</em> </pre>
+
+<p>On <em>expression</em> s'avaluaria com a una referència a una propietat, p.ex.:</p>
+
+<pre class="syntaxbox">delete <em>object.property</em>
+delete <em>object</em>['<em>property</em>']
+</pre>
+
+<h3 id="Parameters" name="Parameters">Paràmetres</h3>
+
+<dl>
+ <dt><code>object</code></dt>
+ <dd>El nom d'un objecte, o una expressió que es resol com un objecte.</dd>
+ <dt><code>property</code></dt>
+ <dd>La propietat a eliminar.</dd>
+</dl>
+
+<h3 id="Returns" name="Returns">Què retorna</h3>
+
+<p>En <a href="/en-US/docs/Web/JavaScript/Reference/Functions_and_function_scope/Strict_mode">mode estricte</a> llença un error si la propietat no és configurable (retorna <code>false</code> en el mode no estricte). Retorna <code>true</code> en tots els altres casos.</p>
+
+<h2 id="Description" name="Description">Descripció</h2>
+
+<p>Al contrari del que comunment es pensa, l'operador <code>delete</code> <strong>no té res </strong>a veure amb l'alliberament de memòria directament (només ho fa indirectament a través de trencar les referencies. Vegeu la pàgina de <a href="/en-US/docs/Web/JavaScript/Memory_Management">gestió de memòria</a> per més detalls).</p>
+
+<p>Si l'operador <code>delete</code> té èxit, elimina la propietat de l'objecte per complet. No obstant això, si existeix una propietat amb el mateix en la cadena de prototip de l'objecte, l'objecte heretarà aquesta propietat del prototipus.</p>
+
+<p><code>delete</code> és només efectiu en propietats d'un objecte. No té cap efecte en variables o en noms de funcions. Si bé de vegades hi ha assignacions mal caracteritzades com a variables globals, assignacions que no especifiquin un objecte (e.g. <code>x = 5</code>) són assignacions de propietats de l'objecte global.</p>
+
+<p><code>delete</code> no pot eliminar algunes propietats d'objectes predefinits (com Object, Array, Math etc). Aquests són descrits a partir de ECMAScript 5 cap endavant com a no configurables.</p>
+
+<h3 id="Temporal_dead_zone">Temporal dead zone</h3>
+
+<p>The "<a href="/en-US/docs/Web/JavaScript/Reference/Statements/let#Temporal_dead_zone_and_errors_with_let">temporal dead zone"</a> (TDZ), specified in ECMAScript 6 for <code><a href="/en-US/docs/Web/JavaScript/Reference/Statements/const">const</a></code> and <a href="/en-US/docs/Web/JavaScript/Reference/Statements/let"><code>let</code></a> declarations, also applies to the <code>delete</code> operator. Thus, code like the following will throw a {{jsxref("ReferenceError")}}.</p>
+
+<pre class="brush: js">function foo() { 
+  delete x;
+  let x;
+}
+
+function bar() { 
+  delete y; 
+  const y; 
+}</pre>
+
+<h2 id="Exemples">Exemples</h2>
+
+<pre class="brush: js">x = 42;         // creates the property x on the global object
+var y = 43;     // creates the property y on the global object, and marks it as non-configurable
+myobj = {
+  h: 4,
+  k: 5
+};
+
+// x is a property of the global object and can be deleted
+delete x;       // returns true
+
+// y is not configurable, so it cannot be deleted                
+delete y;       // returns false 
+
+// delete doesn't affect certain predefined properties
+delete Math.PI; // returns false 
+
+// user-defined properties can be deleted
+delete myobj.h; // returns true 
+
+// myobj is a property of the global object, not a variable,
+// so it can be deleted
+delete myobj;   // returns true
+
+function f() {
+  var z = 44;
+
+  // delete doesn't affect local variable names
+  delete z;     // returns false
+}
+</pre>
+
+<p>If the object inherits a property from a prototype, and doesn't have the property itself, the property can't be deleted by referencing the object. You can, however, delete it directly on the prototype.</p>
+
+<pre class="brush: js">function Foo(){}
+Foo.prototype.bar = 42;
+var foo = new Foo();
+
+// returns true, but with no effect, 
+// since bar is an inherited property
+delete foo.bar;           
+
+// logs 42, property still inherited
+console.log(foo.bar);
+
+// deletes property on prototype
+delete Foo.prototype.bar; 
+
+// logs "undefined", property no longer inherited
+console.log(foo.bar);           </pre>
+
+<h3 id="Deleting_array_elements" name="Deleting_array_elements">Deleting array elements</h3>
+
+<p>When you delete an array element, the array length is not affected. This holds even if you delete the last element of the array.</p>
+
+<p>When the <code>delete</code> operator removes an array element, that element is no longer in the array. In the following example, <code>trees[3]</code> is removed with <code>delete</code>.</p>
+
+<pre class="brush: js">var trees = ["redwood","bay","cedar","oak","maple"];
+delete trees[3];
+if (3 in trees) {
+    // this does not get executed
+}</pre>
+
+<p>If you want an array element to exist but have an undefined value, use the <code>undefined</code> value instead of the <code>delete</code> operator. In the following example, <code>trees[3]</code> is assigned the value undefined, but the array element still exists:</p>
+
+<pre class="brush: js">var trees = ["redwood","bay","cedar","oak","maple"];
+trees[3] = undefined;
+if (3 in trees) {
+    // this gets executed
+}</pre>
+
+<h2 id="Especificacions">Especificacions</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Especificació</th>
+   <th scope="col">Estat</th>
+   <th scope="col">Comentaris</th>
+  </tr>
+  <tr>
+   <td>1a edició d'ECMAScript.</td>
+   <td>Estàndard</td>
+   <td>Definició inicial. Implementat en JavaScript 1.2</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-11.4.1', 'The delete Operator')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-delete-operator', 'The delete Operator')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Compatibilitat_amb_navegadors">Compatibilitat amb navegadors</h2>
+
+<p>{{CompatibilityTable}}</p>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Característica</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>Suport bàsic</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+  <tr>
+   <td>Temporal dead zone</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatGeckoDesktop(36)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Característica</th>
+   <th>Android</th>
+   <th>Chrome for Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>Suport bàsic</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{ CompatVersionUnknown() }}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+  <tr>
+   <td>Temporal dead zone</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatGeckoMobile(36)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h3 id="Cross-browser_issues">Cross-browser issues</h3>
+
+<p>Although ECMAScript makes iteration order of objects implementation-dependent, it may appear that all major browsers support an iteration order based on the earliest added property coming first (at least for properties not on the prototype). However, in the case of Internet Explorer, when one uses <code>delete</code> on a property, some confusing behavior results, preventing other browsers from using simple objects like object literals as ordered associative arrays. In Explorer, while the property <em>value</em> is indeed set to undefined, if one later adds back a property with the same name, the property will be iterated in its <em>old</em> position--not at the end of the iteration sequence as one might expect after having deleted the property and then added it back.</p>
+
+<p>So, if you want to simulate an ordered associative array in a cross-browser environment, you are forced to either use two separate arrays (one for the keys and the other for the values), or build an array of single-property objects, etc.</p>
+
+<h2 id="See_also" name="See_also">Vegeu també</h2>
+
+<ul>
+ <li><a href="http://perfectionkills.com/understanding-delete/">In depth analysis on delete</a></li>
+</ul>

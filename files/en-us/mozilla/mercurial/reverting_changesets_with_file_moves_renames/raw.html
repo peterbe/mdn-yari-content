@@ -1,0 +1,35 @@
+
+<p>Normally backing out a changeset in Mercurial is as simple as:</p>
+<pre>$ hg backout <var>revision</var>
+$ hg merge
+$ hg commit</pre>
+<p>Mercurial has a <a class="external" href="http://www.selenic.com/mercurial/bts/issue93" title="http://www.selenic.com/mercurial/bts/issue93">bug</a>, however, when the revision being backed out contains file renames (moves). The backout will record the change as an add/remove, instead of a rename to the old location. Instead of using <code>hg backout</code> for these changes, use the following procedure instead.</p>
+<div class="note">Note: Benjamin Smedberg is more than happy to perform complex backouts, if these instructions are confusing or terrifying.</div>
+<p>These instructions assume you're trying to back out revision X, and that the parent of X is XPARENT:</p>
+<h3 id="Preparation_Install_and_enable_the_move-fixup_extension">Preparation: Install and enable the move-fixup extension:</h3>
+<p>Clone <a class=" external" href="http://hg.mozilla.org/users/bsmedberg_mozilla.com/move-fixup" rel="freelink">http://hg.mozilla.org/users/bsmedber...com/move-fixup</a> or download <a class=" external" href="http://hg.mozilla.org/users/bsmedberg_mozilla.com/move-fixup/file/tip/movefixup.py" rel="freelink">http://hg.mozilla.org/users/bsmedber...p/movefixup.py</a></p>
+<p>Enable movefixup in your Mercurial configuration file ~/.hgrc:</p>
+<pre>[extensions]
+movefixup = <var>/path/to/</var>movefixup.py
+</pre>
+<h3 id="Step_1_update_to_revision_X">Step 1: update to revision X</h3>
+<pre>$ hg up X
+</pre>
+<h3 id="Step_2_revert_to_revision_BADPARENT">Step 2: revert to revision BADPARENT</h3>
+<pre>$ hg revert -a -r XPARENT
+</pre>
+<h3 id="Step_3_Find_and_fix_file_moves">Step 3: Find and fix file moves</h3>
+<pre>$ hg status -ar # -ar shows only files that were added or removed
+A oldfilename
+R newfilename
+
+$ hg movefixup newfilename oldfilename
+</pre>
+<h3 id="Step_4_Check_your_work">Step 4: Check your work</h3>
+<p>Before committing, read a diff-style git to make sure that file was renamed correctly. The diff should say something like:</p>
+<pre>diff --git a/newfilename b/oldfilename
+rename from newfilename
+rename to oldfilename
+</pre>
+<h3 id="Step_5_Commit">Step 5: Commit</h3>
+<p>Commit your backout changeset, and merge forward as necessary.</p>

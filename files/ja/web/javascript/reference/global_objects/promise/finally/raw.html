@@ -1,0 +1,96 @@
+<div>{{JSRef}}</div>
+
+<p><code><strong>finally()</strong></code> メソッドは、{{jsxref("Promise")}} を返します。成功・失敗にかかわらず、promise が確立したら指定したコールバック関数が実行されます。これにより、promise が成功裏に実行されたか否かに関わりなく、<code>Promise</code> が処理された後に実行されなければならないコードを提供できます。</p>
+
+<p>これによって、promise の {{jsxref("Promise.then", "then()")}} ハンドラーと {{jsxref("Promise.catch", "catch()")}} ハンドラーで重複するコードを避けられます。</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox"><var>p.finally(onFinally)</var>;
+
+p.finally(function() {
+   // settled (resolved or rejected)
+});
+</pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<dl>
+ <dt><code>onFinally</code></dt>
+ <dd><code>Promise</code> が確立したら呼び出される {{jsxref("Function")}}。</dd>
+</dl>
+
+<h3 id="Return_value" name="Return_value">戻り値</h3>
+
+<p><code>finally</code> ハンドラーに指定した <code>onFinally</code> が設定した {{jsxref("Promise")}} を返す。</p>
+
+<h2 id="Description" name="Description">説明</h2>
+
+<p>promise が確立した後、結果に関わらず何らかの処理やクリーンナップを行いたいなら、<code>finally()</code> メソッドは役立ちます。</p>
+
+<p><code>finally()</code> メソッドは <code>.then(onFinally, onFinally)</code> の呼び出しとよく似ていますが、いくつかの点が異なります:</p>
+
+<ul>
+ <li>関数をインラインで作成する場合、関数を 2 度宣言するか、変数を作成するかのどちらかで、一度に渡すことができます。</li>
+ <li>promise が成功したか失敗したかを知る術がないため、<code>finally</code> コールバックは一切引数を受け取りません。このユースケースは、拒否された理由や履行された値などを提供する必要がなく、それらを<em>気にしない</em>ときに適しています。
+  <ul>
+   <li><code>Promise.resolve(2).then(() =&gt; {}, () =&gt; {})</code> (<code>undefined</code> で解決される) と異なり、<code>Promise.resolve(2).finally(() =&gt; {})</code> は <code>2</code> で解決される。</li>
+   <li>同様に、<code>Promise.reject(3).then(() =&gt; {}, () =&gt; {})</code> (<code>undefined</code> で解決される) と異なり、<code>Promise.reject(3).finally(() =&gt; {})</code> は <code>3</code> で拒否される。</li>
+  </ul>
+ </li>
+</ul>
+
+<div class="note">
+<p><strong>ノート:</strong> <code>finally</code> コールバック内で <code>throw</code> (または、拒否された promise を返す) 場合、<code>throw()</code> を呼び出すときに指定された拒否理由と共に新しい promise が拒否されます。</p>
+</div>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<pre class="brush: js">let isLoading = true;
+
+fetch(myRequest).then(function(response) {
+    var contentType = response.headers.get("content-type");
+    if(contentType &amp;&amp; contentType.includes("application/json")) {
+      return response.json();
+    }
+    throw new TypeError("Oops, we haven't got JSON!");
+  })
+  .then(function(json) { /* process your JSON further */ })
+  .catch(function(error) { console.log(error); })
+  .finally(function() { isLoading = false; });
+</pre>
+
+<div class="hidden">
+<p>Please do not add polyfills on MDN pages. For more details, refer to: <a href="https://discourse.mozilla.org/t/mdn-rfc-001-mdn-wiki-pages-shouldnt-be-a-distributor-of-polyfills/24500">https://discourse.mozilla.org/t/mdn-rfc-001-mdn-wiki-pages-shouldnt-be-a-distributor-of-polyfills/24500</a></p>
+</div>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">ステータス</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-promise.prototype.finally', 'Promise.prototype.finally')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td></td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザー実装状況</h2>
+
+<p class="hidden">To contribute to this compatibility data, please write a pull request against this repository: <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a>.</p>
+
+<p>{{Compat("javascript.builtins.Promise.finally")}}</p>
+
+<h2 id="See_also" name="See_also">関連項目</h2>
+
+<ul>
+ <li>{{jsxref("Promise")}}</li>
+ <li>{{jsxref("Promise.prototype.then()")}}</li>
+ <li>{{jsxref("Promise.prototype.catch()")}}</li>
+</ul>

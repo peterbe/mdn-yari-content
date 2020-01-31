@@ -1,0 +1,162 @@
+<div>{{APIRef("Fetch API")}}</div>
+
+<p>{{domxref("GlobalFetch")}} インターフェイスの <code><strong>fetch()</strong></code> メソッドはネットワークからリソースの fetch (取得) を開始します。このメソッドはリクエストのレスポンスを表す {{domxref("Response")}} オブジェクトの Promise を返します 。</p>
+
+<p><code>WorkerOrGlobalScope</code> は {{domxref("Window")}} と {{domxref("WorkerGlobalScope")}} の両方で実装されています。これはつまり fetch() メソッドはあなたがリソースを fetch したいと思うような大半のコンテキストで使用可能ということです。</p>
+
+<p>{{domxref("WindowOrWorkerGlobalScope.fetch","fetch()")}} の promise はネットワークエラーの場合 {{jsxref("TypeError")}} として reject 状態になるでしょう。しかし、{{jsxref("TypeError")}} は普通パーミッションの問題やそれに似た問題で発生します。<code>fetch()</code> が成功かどうかの精密なチェックとして promise が resolved かどうかを確認しその後 {{domxref("Response.ok")}} プロパティがtrue かどうかを確認します。HTTP status コードが 404 の場合ネットワークエラーには含まれません。</p>
+
+<p><code>fetch()</code> メソッドは取得するリソースのディレクティブではなく <a href="/docs/Security/CSP/CSP_policy_directives">Content Security Policy</a> の <code>connect-src</code> ディレクティブによって制御されます。</p>
+
+<div class="note">
+<p><strong>注</strong>: <code>fetch()</code> メソッドの引数は {{domxref("Request.Request","Request()")}} コンストラクタと全く同じです。</p>
+</div>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox">Promise&lt;Response&gt; fetch(input[, init]);</pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<dl>
+ <dt><em>input</em></dt>
+ <dd>fetch したいリソースを定義します。以下の 2 つが使用出来ます。
+ <ul>
+  <li>fetch したい URL を含む {{domxref("USVString")}} いくつかのブラウザーでは、スキームとして <code>blob:</code> と <code>data:</code> を受け入れます</li>
+  <li>{{domxref("Request")}} オブジェクト。</li>
+ </ul>
+ </dd>
+ <dt><em>init</em> {{optional_inline}}</dt>
+ <dd>リクエストに適用したい設定を含むオプションの (必須ではない) オブジェクトです。以下のオプションが使用できます。
+ <ul>
+  <li><code>method</code>: リクエストするメソッド、<code>GET</code>、<code>POST</code> など。</li>
+  <li><code>headers</code>: リクエストに追加したいヘッダー、{{domxref("Headers")}} オブジェクトか {{domxref("ByteString")}} 値を持つオブジェクトリテラルで指定してください。</li>
+  <li><code>body</code>: リクエストに追加したいボディ、{{domxref("Blob")}}、{{domxref("BufferSource")}}、{{domxref("FormData")}}、{{domxref("URLSearchParams")}} もしくは {{domxref("USVString")}} オブジェクトなどが使用できます。method が GET や HEAD の場合使用できないので注意してください。</li>
+  <li><code>mode</code>: リクエストで使いたいモードです。例: <code>cors</code>、<code>no-cors</code>, or <code>same-origin</code>。</li>
+  <li><code>credentials</code>: request に使用したい秘密情報: <code>omit</code>、<code>same-origin</code>、<code>include</code> が使用可能です。現在のドメインの Cookie を自動で送るためにはこのオプションを指定する必要があります。Chrome 50 から、このプロパティは{{domxref("FederatedCredential")}} インスタンスや {{domxref("PasswordCredential")}} インスタンスを受け付けるようになりました。</li>
+  <li><code>cache</code>: 使用したいリクエストのキャッシュのモードを指定できます: <code>default</code>、<code>no-store</code>、<code>reload</code>、<code>no-cache</code>、<code>force-cache</code>、<code>only-if-cached</code> などのモードが使用できます。</li>
+  <li><code>redirect</code>: リダイレクトをどう処理するかについて次の値を取ることができます: <code>follow</code> (自動でリダイレクトに従う)、<code>error</code> (リダイレクトが起こった場合エラーを伴って中止する)、<code>manual</code> (手動でリダイレクトを処理する)。Chrome のデフォルト値は follow です(バージョン 47 より前はデフォルト値は <code>manual</code> でした)。</li>
+  <li><code>referrer</code>: USVString の <code>no-referrer</code>、<code>client</code>、URL。デフォルトは <code>client</code> です。</li>
+  <li><code>referrerPolicy</code>: リファラー HTTP ヘッダーを指定します。次のオプションが使用可能です。<code>no-referrer</code>、<code>no-referrer-when-downgrade</code>、<code>origin</code>、<code>origin-when-cross-origin</code>、<code>unsafe-url</code>。</li>
+  <li><code>integrity</code>: リソースに <a href="https://developer.mozilla.org/docs/Web/Security/Subresource_Integrity">subresource integrity</a> 値を含ませることが出来ます (例：<code>sha256-BpfBw7ivV8q2jLiT13fxDYAe2tJllusRSZ273h2nFSE=</code>)。</li>
+  <li><code>keepalive</code>: <code>keepalive</code> オプションはページより長生きするリクエストを許可するのに使われます。<code>keepalive</code> フラグありのFetchは{{domxref("Navigator.sendBeacon()")}} APIの置き換えです。</li>
+  <li><code>signal</code>: {{domxref("AbortSignal")}} オブジェクトのインスタンスです。つまり {{domxref("AbortController")}} 経由で fetch リクエストと通信したり望む場合には中止したりできます。</li>
+ </ul>
+ </dd>
+</dl>
+
+<h3 id="Return_value" name="Return_value">返り値</h3>
+
+<p>解決時に {{domxref("Response")}} オブジェクトを取得できる {{domxref("Promise")}} オブジェクト。</p>
+
+<h3 id="Exceptions" name="Exceptions">例外</h3>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col"><strong>タイプ</strong></th>
+   <th scope="col"><strong>説明</strong></th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td><code>AbortError</code></td>
+   <td>リクエストは中止されました ({{domxref("AbortController.abort()")}} を使用)。</td>
+  </tr>
+  <tr>
+   <td><code>TypeError</code></td>
+   <td><a href="/docs/Mozilla/Firefox/Releases/43">Firefox 43</a> から、http://user:password@example.com のように URL に credentials を含む場合、<code>fetch()</code> は TypeError を投げます。</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Example" name="Example">例</h2>
+
+<p><a href="https://github.com/mdn/fetch-examples/tree/gh-pages/fetch-request">Fetch Request example</a> リポジトリー (デモ: <a href="http://mdn.github.io/fetch-examples/fetch-request/">Fetch Request live</a>) では {{domxref("Request")}} オブジェクトを関連するコンストラクターを使って作成しています。その後 <code>fetch()</code> を呼んで取得しています。画像を fetch している時から適切な MIME タイプを与えるために response の {{domxref("Body.blob")}} を実行し、適切に処理されます。そして ObjectURL を作成し {{htmlelement("img")}} 要素に追加して表示させています。</p>
+
+<pre class="brush: js">var myImage = document.querySelector('img');
+
+var myRequest = new Request('flowers.jpg');
+
+fetch(myRequest).then(function(response) {
+  return response.blob();
+}).then(function(response) {
+  var objectURL = URL.createObjectURL(response);
+  myImage.src = objectURL;
+});</pre>
+
+<p> <a href="https://github.com/mdn/fetch-examples/tree/gh-pages/fetch-with-init-then-request">Fetch with init then Request example</a> リポジトリー (デモ: <a href="http://mdn.github.io/fetch-examples/fetch-with-init-then-request/">Fetch Request init live</a>) では上記の内容に加えて、<code>fetch()</code> を呼び出すとき、初期化オブジェクト init を渡しています。</p>
+
+<pre class="brush: js">var myImage = document.querySelector('img');
+
+var myHeaders = new Headers();
+myHeaders.append('Content-Type', 'image/jpeg');
+
+var myInit = { method: 'GET',
+               headers: myHeaders,
+               mode: 'cors',
+               cache: 'default' };
+
+var myRequest = new Request('flowers.jpg');
+
+fetch(myRequest,myInit).then(function(response) {
+  ... 
+});</pre>
+
+<p>同様に初期化オブジェクトを Request コンストラクターに渡しても、同じ効果が得られます。例えば:</p>
+
+<pre class="brush: js">var myRequest = new Request('flowers.jpg', myInit);</pre>
+
+<p><code>init</code> 内に、オブジェクトリテラルをヘッダーとして使う事もできます。</p>
+
+<pre class="brush: js">var myInit = { method: 'GET',
+               headers: {
+                   'Content-Type': 'image/jpeg'
+               },
+               mode: 'cors',
+               cache: 'default' };
+
+var myRequest = new Request('flowers.jpg', myInit);
+</pre>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">状態</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('Fetch','#fetch-method','fetch()')}}</td>
+   <td>{{Spec2('Fetch')}}</td>
+   <td>最新の仕様では <code>WindowOrWorkerGlobalScope</code> の中で部分的に定義されています。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('Fetch','#dom-global-fetch','fetch()')}}</td>
+   <td>{{Spec2('Fetch')}}</td>
+   <td>初期定義</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('Credential Management')}}</td>
+   <td>{{Spec2('Credential Management')}}</td>
+   <td>{{domxref("FederatedCredential")}} または {{domxref("PasswordCredential")}} のインスタンスを <code>init.credentials</code> の値として追加します。</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザー実装状況</h2>
+
+<div class="hidden">このページの互換性一覧は、構造化されたデータから生成されました。このデータへの貢献は、<a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> をチェックアウトし、Pull Request を送ってください。</div>
+
+<p>{{Compat("api.WindowOrWorkerGlobalScope.fetch")}}</p>
+
+<h2 id="See_also" name="See_also">関連項目</h2>
+
+<ul>
+ <li><a href="/docs/Web/API/Fetch_API">Fetch API</a></li>
+ <li><a href="/docs/Web/API/ServiceWorker_API">ServiceWorker API</a></li>
+ <li><a href="/docs/Web/HTTP/Access_control_CORS">HTTP access control (CORS)</a></li>
+ <li><a href="/docs/Web/HTTP">HTTP</a></li>
+</ul>

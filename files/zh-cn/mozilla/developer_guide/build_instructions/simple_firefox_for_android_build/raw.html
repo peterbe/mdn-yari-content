@@ -1,0 +1,534 @@
+<div class="note">
+<p>这个页面只是介绍基础构建 Firefox (Android), 或称之为 Fennec.欢迎使用阅读  :)<br>
+ <br>
+ 如有任何问题,请直接联系 Nick Alexander ( <a class="link-mailto" href="mailto:nalexander@mozilla.com" rel="freelink">nalexander@mozilla.com</a> )，会尽快回答您的问题.</p>
+</div>
+
+<div class="note">
+<p>在Windows系统下构建 Firefox (Android), 需要系统版本 Windows 10 Creator Update 或以上。从Firefox 58以后,你可以使用Win10 自带的Bash( WSL , Windows under Windows Subsystem for Linux ) 进行构建,虽然跟在Linux环境一样，但是还是不推荐，因为不稳定和不支持Android Studio.</p>
+</div>
+
+<p>更多详细参考 <a href="https://wiki.mozilla.org/Mobile/Fennec/Android">Firefox for Android wiki</a> 和 <a class="internal" href="/en-US/docs/Mozilla/Developer_guide/Build_Instructions" title="Build Instructions">build documentation</a>.</p>
+
+<section id="step1">
+<div class="container">
+<h2 class="heading-tertiary" id="准备环境">准备环境</h2>
+
+<p>在折腾Firefox Android代码(代号:Fennec)之前,你需要准备几样东西:</p>
+
+<ul>
+ <li>一台电脑或虚拟机,运行 Linux 或 OSX ,至少 30Gb 储存空间.</li>
+ <li>一台Android设备(或者虚拟设备).</li>
+ <li>好用的网络.</li>
+</ul>
+
+<p>电脑需要是 64-bit 的 基于Unix的操作系统，你可以输入如下命令确认操作系统是否为 64-bit:</p>
+
+<pre class="brush: bash">uname -m</pre>
+
+<p>... 回车之后, 如果看到 "x86_64" ,说明你操作系统是 64-bit的.</p>
+
+<p>Fennec基本上可以在4年内生产的 Android 设备上运行. 旧的机器,如使用ARMv6 芯片或者更旧可能不被支持.</p>
+
+<p>OK，下一步</p>
+</div>
+</section>
+
+<section id="step2">
+<div class="container">
+<h3 class="heading-tertiary" id="Android_设备_的设置">Android 设备 的设置</h3>
+
+<p> </p>
+
+<p>你需要为Android设备 "开发者模式",请打开 "设置", 选择 "关于" ,为了激活 "开发者模式",点按 "版本号"7次 ,那么"开发者选项"就会出现在"设置" 菜单中 .</p>
+
+<p>在"开发者选项"中,勾选激活"USB调试",当然你可以随时关闭"USB调试".<br>
+ 电脑 的设置</p>
+
+<p> </p>
+</div>
+</section>
+
+<section id="step3">
+<h3 class="container" id="硬件需求">硬件需求</h3>
+</section>
+
+<p>一些硬件上的建议:</p>
+
+<ul>
+ <li>更新更好的 CPU. 推荐至少 8GB 内存, 如果硬件比较差推荐编译 <a href="#Artifact_mode">artifact mode</a>.</li>
+ <li>更快的网络. 因为源码提交很大.</li>
+ <li>64位的操作系统. 32位的操作系统不再被支持.</li>
+ <li>更新的Android设备,API &gt;=16.</li>
+ <li>或者使用Android模拟器，可以参考 <a href="https://wiki.mozilla.org/Mobile/Fennec/Android/Testing#Running_tests_on_the_Android_emulator">MozillaWiki</a> .</li>
+</ul>
+
+<h3 id="获取源码">获取源码</h3>
+
+<p>这里使用mercurial 版本控制工具从 Mozilla's <a href="https://www.mercurial-scm.org/wiki/Download">Mercurial</a> 下载源码</p>
+
+<p>If your Mercurial version is &lt; 1.5 we recommend that you add the progress extension to your Mercurial configuration. This will provide feedback during the lengthy clone process. See the documentation explaining how to <a href="https://www.mercurial-scm.org/wiki/ProgressExtension">enable the Mercurial progress extension</a>.</p>
+
+<p>如果网络快稳定的话</p>
+
+<pre class="brush: bash">hg clone https://hg.mozilla.org/mozilla-central
+</pre>
+
+<p>否则你可参考 <a href="/en-US/docs/Mozilla/Developer_guide/Source_Code/Mercurial/Bundles" title="Mercurial Bundles">Mercurial bundle</a> 这种下载方式.</p>
+
+<h3 id="编译依赖项">编译依赖项</h3>
+
+<div class="note">
+<p><strong>Note</strong>:<br>
+ 1. bootstrap also has a Rust dependency, which requires it to run twice to make the env setup complete. I suggest <a href="https://www.rust-lang.org/en-US/install.html">installing Rust</a> before you run the bootstrap once, then again a second time.<br>
+ 2. If you are a Mac user, you'll need to install Xcode. You'll also need to a) run <strong>sudo xcodebuild -license</strong> in your terminal or b) manually open Xcode to accept the license before you start the bootstrap process.<br>
+ 3. Please install Java 8 SDK before start the bootstrap. Since Java 9 may cause some error. See <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1418900">bug 1418900</a><br>
+ 4. Currently Fennec doesn't support instant run. Please disable it before you use Android Studio to build/install Fennec.</p>
+
+<p>5. If you run into proguard.jar related failures, see <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1408643">bug 1408643</a>.</p>
+</div>
+
+<p>下载好源码后,进入 <code>mozilla-central</code> 目录，执行下面命令(可能需要Python &gt;=2.7 和root 权限或sudo权限):</p>
+
+<pre class="brush: bash">./mach bootstrap
+</pre>
+
+<p>然后你可以看到下面结果</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/15211/bootstrap%20choose%20mode.png" style="height: 86px; width: 451px;"></p>
+
+<p><strong>如果你想修改Firefox 界面等前端工作, 选择3. Firefox for Android Artifact Mode;如果你想修改Firefox内核等后端工作（</strong> <a href="#Choose_what_parts_of_Firefox_for_Android_you_want_to_modify">the back-end</a> ）<strong>, </strong> 选择 <strong>4. Firefox for Android).</strong></p>
+
+<p>bootstrapping 脚本会自动帮你安装好需求包, Android SDK (NDK, 如有必要). 了解 Bootstrap.py 都做了什么事情，可以访问 <a href="https://wiki.mozilla.org/Mobile/Fennec/Android/Detailed_build_instructions">detailed setup instructions</a>.</p>
+
+<p>接下来根据控制台提示完成配置。</p>
+
+<p>当询问</p>
+
+<pre class="brush: bash">Would you like to run a configuration wizard to ensure Mercurial is
+optimally configured?
+
+  1. Yes
+  2. No</pre>
+
+<p>如果你想用 git, 可以选择 <strong>2. No.</strong></p>
+
+<p>最后bootstrap 脚本会打印出配置内容，如:</p>
+
+<pre class="brush: bash">Your system should be ready to build Firefox for Android Artifact Mode!
+
+
+Paste the lines between the chevrons (&gt;&gt;&gt; and &lt;&lt;&lt;) into your
+$topsrcdir/mozconfig file, or create the file if it does not exist:
+
+&gt;&gt;&gt;
+# Build Firefox for Android Artifact Mode:
+ac_add_options --enable-application=mobile/android
+ac_add_options --target=arm-linux-androideabi
+ac_add_options --enable-artifact-builds
+
+
+# With the following Android SDK:
+ac_add_options --with-android-sdk="/root/.mozbuild/android-sdk-linux"
+
+# Write build artifacts to:
+mk_add_options MOZ_OBJDIR=./objdir-frontend
+&lt;&lt;&lt;
+</pre>
+
+<p>更多参考下面主题。复制配置内容，如果你忘了(或更改选择)可以重新运行 bootstrap 脚本获取.</p>
+
+<p>Once you have all the dependencies installed, you need to clone the Firefox repository.</p>
+
+<h3 id="选择你想修改的部分">选择你想修改的部分</h3>
+
+<p>Firefox (Android）有两部分构建内容. 第一部分，称之为“前端” 部分,包括了主页, UI设置, 菜单, 等., Firefox 同步, 和大部分数据储存(用Java编写), Android Platform SDK, JavaScript, HTML, and CSS. 第二部分,后端，构建 Gecko 平台。 Gecko 是 Mozilla 的 网页解析内核, 相当于 Edge, Blink, 和WebKit, 用于解析网页内容 执行JavaScript 代码, 提供页面的 web APIs . Gecko 使用了C++, Rust 和JavaScript.</p>
+
+<p>下面表格是前后端的区别.</p>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">Configuration</th>
+   <th scope="col">Restrictions</th>
+   <th scope="col">Implementation languages</th>
+   <th scope="col">Build speed</th>
+   <th scope="col">Integrated development environment</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td><strong>front-end</strong></td>
+   <td>Can only modify main UI, not web platform</td>
+   <td>Java, JavaScript</td>
+   <td>Fast builds</td>
+   <td>Android Studio</td>
+  </tr>
+  <tr>
+   <td><strong>back-end</strong></td>
+   <td>None: can modify everything</td>
+   <td>C++, Rust, JavaScript</td>
+   <td>Slow builds</td>
+   <td>None: use your text editor<br>
+    (you can use Android Studio as a fancy text editor and for debugging, though)</td>
+  </tr>
+ </tbody>
+</table>
+
+<p>Do you want to modify just Firefox for Android, or do you want to modify the Gecko platform?</p>
+
+<ul>
+ <li><a href="#Artifact_mode">I want to work on the front-end: the look and feel of Firefox for Android. </a></li>
+ <li><a href="#Non_Artifact_Mode">I want to work on the back-end: Web APIs, HTML rendering or other parts of the Gecko platform.</a></li>
+</ul>
+
+<div class="note">
+<p><strong>Note: If you are not sure, start with just the Firefox for Android front-end</strong>: your build times will be much shorter if you don't build the Gecko back-end as well.</p>
+
+<p>But don't worry! You can always add the back-end configuration later, and it's easy to switch between the configurations.</p>
+</div>
+
+<h2 id="配置_mozconfig_文件">配置 mozconfig 文件</h2>
+
+<p>在 <code>mozilla-central</code> 目录下创建 <code>mozconfig </code>文件. 构建脚本会读取 <code>mozconfig</code> 文件来决定怎么构建代码, 更多参考 <a class="external text" href="/en-US/docs/Configuring_Build_Options" rel="nofollow">although you can configure this if you need to</a>. 必须使用 <code>$HOME</code> 替换 <code>~</code> 在 mozconfig 中，因为 <code>~</code> 不能被正常解析.</p>
+
+<p>By default, the build system creates a build of Firefox for Android roughly equivalent to the official Firefox for Android Nightly builds. If that's not exactly what you want, there are many build configuration options to choose from. It's <strong>strongly</strong> recommended that you only use options that you fully understand. Although you may already have your own Android path setup, we strongly recommended you use the version come with above steps (<a class="external free" href="https://hg.mozilla.org/mozilla-central/raw-file/default/python/mozboot/bin/bootstrap.py" rel="nofollow">bootstrap.py) . </a>This is will prevent Fennec from interfering with your original development environment.</p>
+
+<h3 id="I_want_to_work_on_the_front-end"><a id="Artifact_mode" name="Artifact_mode"></a>I want to work on the front-end</h3>
+
+<p>Firefox for Android supports a <strong>fast build mode</strong> called <em><a href="/en-US/docs/Artifact_builds">artifact mode</a></em>. (Some mobile team managers call it <em>manager mode </em>since it's particularly helpful if you only write code infrequently.) <em>Artifact mode</em> downloads pre-built C++ components rather than building them locally, trading bandwidth for time.</p>
+
+<p>To use <em>artifact mode</em>, paste the following into your <code>mozconfig</code> file:</p>
+
+<pre class="brush: bash"># Build Firefox for Android:
+ac_add_options --enable-application=mobile/android
+ac_add_options --target=arm-linux-androideabi
+
+# With the following Android SDK:
+ac_add_options --with-android-sdk="/absolute/path/to/.mozbuild/android-sdk"
+
+# Enable artifact building:
+ac_add_options --enable-artifact-builds
+
+# Write build artifacts to:
+mk_add_options MOZ_OBJDIR=./objdir-frontend</pre>
+
+<p>Make sure you edit the path for Android SDK accordingly in the above config.</p>
+
+<p>You should be ready to build with <em>artifact mode</em>!</p>
+
+<h3 id="I_want_to_work_on_the_back-end"><a id="Non_Artifact_Mode" name="Non_Artifact_Mode"></a>I want to work on the back-end</h3>
+
+<div class="warning">
+<p><strong>Important</strong>: mach bootstrap currently fails to install rust cross-compile dependencies. See <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1384231">bug 1384231</a> for updates and a workaround.</p>
+</div>
+
+<p>Paste the following into your <code>mozconfig</code> file:</p>
+
+<pre class="brush: bash"># Build Firefox for Android:
+ac_add_options --enable-application=mobile/android
+ac_add_options --target=arm-linux-androideabi
+
+# With the following Android SDK and NDK:
+ac_add_options --with-android-sdk="/absolute/path/to/.mozbuild/android-sdk"
+ac_add_options --with-android-ndk="/absolute/path/to/.mozbuild/android-ndk-r15c" 
+
+# Write build artifacts to:
+mk_add_options MOZ_OBJDIR=./objdir-droid</pre>
+
+<p>Ensure that the Android NDK you've specified (r15c in the example above) matches what you have installed locally.</p>
+
+<p>If you're planning on hacking the C/C++ code, you probably want to create a debug build instead of a release build. Add the following lines to your <code>mozconfig</code>:</p>
+
+<pre class="brush: bash">ac_add_options --enable-debug
+ac_add_options --enable-debug-symbols
+</pre>
+
+<h3 id="Configuration_options">Configuration options</h3>
+
+<h4 id="I_want_to_build_an_x86_version_of_Firefox_for_Android">I want to build an x86 version of Firefox for Android</h4>
+
+<div class="warning">
+<p><strong>Important</strong>: Only API versions 15+ are supported on x86 architecture.</p>
+</div>
+
+<div class="warning">
+<p><strong>Important</strong>: Hardware acceleration for Android emulators may not work within virtual machines even if nested virtualization is enabled.</p>
+</div>
+
+<p>Version 23 and later Android x86 emulators with hardware acceleration are fast enough for local development. They're an attractive alternative if you have recent hardware and an old Android device (or no Android device). Both artifact mode and regular mode support building APKs for x86 architectures. Just replace the line <code>ac_add_options --target=arm-linux-androideabi</code> with:</p>
+
+<pre class="brush: bash">ac_add_options --target=i386-linux-android</pre>
+
+<p>(You probably want to change the <code>MOZ_OBJDIR</code> directory, too.) Now when you build, you should produce an x86 version of Firefox for Android!</p>
+
+<p>For more configuration options, see the general Firefox documentation on <a href="/en-US/docs/Configuring_Build_Options" title="Configuring Build Options">configuring build options</a>.</p>
+
+<h2 id="Deploy_Firefox_to_an_Android_device">Deploy Firefox to an Android device</h2>
+
+<h3 id="Quick_start">Quick start</h3>
+
+<p>The bare minimum: run these commands to build, package, install, and run a fresh Firefox for Android on your Android device.</p>
+
+<pre class="brush: bash">./mach build
+./mach package
+./mach install
+./mach run</pre>
+
+<h3 id="Build">Build</h3>
+
+<p>Enter the <code>mozilla-central</code> subdirectory (created by the <code>hg clone</code> command).</p>
+
+<p>To build Firefox for Android (compile and link all C/C++, Java, and JavaScript source code), run:</p>
+
+<pre class="brush: bash">./mach build
+</pre>
+
+<p>Building can take a significant amount of time, depending on your hardware, OS, and chosen build options. Linux builds on a fast box may take under 15 minutes, but builds on a slow machine may take several hours. <strong>If you're using <em>artifact mode</em>, builds should take less than five minutes.</strong> See <a href="/en-US/docs/Developer_Guide/Mozilla_build_FAQ#Making_builds_faster" title="Making builds faster">tips for making builds faster</a>.</p>
+
+<div class="note">
+<p><strong>Note</strong>: The first time you run <code>mach build</code>, <code>mach</code> will ask you if you'd like to create a <code>.mozbuild</code> directory in your home folder and wait 20 seconds for your answer. This a good default location and you should allow it to create the directory.</p>
+</div>
+
+<h3 id="Rebuild">Rebuild</h3>
+
+<p>To build after making changes, run:</p>
+
+<pre class="brush: bash">./mach build
+</pre>
+
+<p>This will only rebuild what is necessary for these changes. It is also possible to use:</p>
+
+<pre class="brush: bash">./mach build mobile/android
+</pre>
+
+<p>This will build any altered Firefox for Android front-end code. If you are using <em>artifact mode</em>, this should always work. If you are building the Gecko back-end, this may yield incorrect results, so it is <strong>not recommended</strong>.</p>
+
+<h3 id="Package">Package</h3>
+
+<p>Running an Android application on a device is a little more involved than running a Desktop Firefox binary. First, we need to package everything into an Android package. To produce an APK, run:</p>
+
+<pre class="brush: bash">./mach package</pre>
+
+<p>The produced APK file can be found in your <code>$OBJDIR/dist</code> folder, and will be called something like <code>fennec-56.0a1.en-US.android-arm.apk</code>.</p>
+
+<h3 id="Install_and_run">Install and run</h3>
+
+<p>To install the Android package to your device and launch it, <a class="external text" href="https://developer.android.com/studio/run/device.html#device-developer-options" rel="nofollow">connect your Android device and enable USB debugging</a>, and then run the following:</p>
+
+<pre class="brush: bash">./mach install
+./mach run</pre>
+
+<p>The name of the App that appears on your Android device will be "Fennec $USER", where $USER is the username under which you built the code.</p>
+
+<div class="note">
+<p><strong>Note</strong>: You will need a device running Android Ice Cream Sandwich (API 15) or later.</p>
+</div>
+
+<section id="step6">
+<div class="container">
+<h2 class="heading-tertiary" id="While_Compiling....">While Compiling....</h2>
+
+<h3 class="heading-tertiary" id="Setting_yourself_up">Setting yourself up</h3>
+
+<p>The compilation step can take some time. While it’s finishing, you should take a moment to sign up for a Bugzilla account!</p>
+
+<p><a href="https://bugzilla.mozilla.org/">Bugzilla.mozilla.org</a> is Mozilla’s issue tracker. To comment on a bug or submit a patch you’ll need a Bugzilla account, so <a href="https://bugzilla.mozilla.org/createaccount.cgi">sign up for one now!</a></p>
+
+<p>As well as Bugzilla, much of Mozilla’s internal communication happens over IRC. You can <a href="http://limechat.net/mac/">download Limechat here</a>, and learn how to <a href="https://wiki.mozilla.org/IRC">connect to Mozilla with IRC here</a>. If you’re just getting started or have questions about getting set up you can join us in the #introduction channel, where some of our community members hang out to try and help new contributors get started.</p>
+</div>
+</section>
+
+<section id="step7">
+<div class="container">
+<h3 class="heading-tertiary" id="Join_Mozillians.org!">Join Mozillians.org!</h3>
+
+<p>There’s one more thing you can do for yourself while you’re waiting: create an account for yourself on <a href="https://mozillians.org/">Mozillians</a>.</p>
+
+<p>Mozillians is the Mozilla community directory, where you can connect with people who share your interests, projects or countries. This step is optional, but we think it will be worth your while.</p>
+</div>
+</section>
+
+<h3 class="heading-tertiary" id="Now_the_fun_starts">Now the fun starts</h3>
+
+<p>You’re ready to start hacking. You have the code, you’ve compiled Firefox, and it’s running on your phone. The next steps are up to you: join us on IRC in <em>#introduction</em> and find yourself a bug to work on!</p>
+
+<h3 class="heading-tertiary" id="Thank_you">Thank you</h3>
+
+<p>Mozilla's strength is the community behind it; Firefox is the product of a global development team working to <a href="https://www.mozilla.org/about/manifesto/">keep the Web free, open and participatory</a>, and your contributions will make Firefox and the Web better for hundreds of millions of people around the world.</p>
+
+<h2 id="Developing_Firefox_for_Android_in_Android_Studio">Developing Firefox for Android in Android Studio</h2>
+
+<p>Download Android Studio from developer.android.com. The Firefox for Android front-end team develop the product in Android Studio. There is a Gradle build configuration, parallel to the <code>mach build</code> configuration. Eventually, we intend to use Gradle in the <code>mach build</code> configuration.</p>
+
+<p>The Gradle configuration is now "in the source directory". To verify that everything is working, ensure that you've built and packaged successfully, and then run:</p>
+
+<pre>./mach gradle clean app:assembleLocalWithGeckoBinariesMinApi21PhotonDebug</pre>
+
+<p>Next, simply import the top source directory (<code>mozilla-central</code>, as produced by <code>hg clone</code>) into Android Studio. If Android Studio asks you whether you want to update the Gradle Plugin, choose <em>Don't remind me again for this project</em>, as changing to a newer Gradle version on your own may cause problems with your build. You should now have a shiny new Gradle-based project in Android Studio! Try it out by choosing<em> Build</em> &gt; <em>Rebuild project</em>.</p>
+
+<p>It should look something like:</p>
+
+<div class="threecolumns">
+<p><img alt='Choose "Import from Gradle".' src="https://mdn.mozillademos.org/files/12061/Screen%20Shot%202015-12-06%20at%201.58.14%20PM.png" style="height: 300px; width: 378px;"></p>
+
+<p><img alt="Choose the top source directory." src="https://mdn.mozillademos.org/files/12063/Screen%20Shot%202015-12-06%20at%201.59.14%20PM.png" style="height: 300px; width: 378px;"></p>
+
+<p><img alt="The IDE shows several projects after importing the top source directory." src="https://mdn.mozillademos.org/files/12065/Screen%20Shot%202015-12-06%20at%202.00.06%20PM.png" style="height: 300px; width: 507px;"></p>
+
+<p> </p>
+</div>
+
+<p><a id="Build_Variant" name="Build_Variant"></a>Setting the Run/Debug Configuration and Build Variant</p>
+
+<p>The Gradle build configuration may contain more than one Gradle module, which can define many Run/Debug Configurations. You want the "app" Run Configuration:</p>
+
+<p><img alt='Choose "app" from the Run Configurations list.' src="https://mdn.mozillademos.org/files/12431/IDE.Modules.png" style="display: block; height: 241px; margin: 0px auto; width: 600px;"></p>
+
+<p>See the <a href="https://www.jetbrains.com/idea/help/run-debug-configuration-android-application.html">documentation</a> for more.</p>
+
+<p>The configuration also defines multiple Product Flavors, which contribute to Build Variants. You want one of the following combinations, depending on the version of your test device:</p>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">Testing device or emulator Android API</th>
+   <th scope="col">Product Flavor</th>
+   <th scope="col">Build Variant</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>&gt;=21</td>
+   <td>localMinApi21</td>
+   <td>localWithGeckoBinariesMinApi21PhotonDebug</td>
+  </tr>
+  <tr>
+   <td>&lt;21</td>
+   <td>localNoMinApi</td>
+   <td>localWithGeckoBinariesNoMinApiPhotonDebug</td>
+  </tr>
+ </tbody>
+</table>
+
+<p><img alt='Choose "local" if you have an Android 21+ device; choose "localOld" if you have an Android &amp;lt;21 device.' src="https://mdn.mozillademos.org/files/15373/Build%20Variants.png" style="height: 1050px; width: 537px;"></p>
+
+<p>See the <a href="http://tools.android.com/tech-docs/new-build-system/user-guide#TOC-Build-Variants">Google build documentation</a> for more.</p>
+
+<h3 id="Things_that_are_supported_in_the_IDE">Things that are supported in the IDE</h3>
+
+<ul>
+ <li>Running, debugging, and profiling Firefox for Android in the IDE. The <em>app</em> project defines the Android Application.
+
+  <ul>
+   <li>This includes debugging native code through LLDB - under <em>Run / Edit Configurations…</em> on the <em>Debugger</em> tab, you can switch the <em>Debug type</em> to "Native", add your object directory to the <em>Symbol Directories</em> list, and then start debugging Firefox via <em>Run / Debug 'app'</em> (attaching to an already running Firefox instance might not work).</li>
+  </ul>
+ </li>
+ <li>Editing Java source code under <code>mobile/android</code>. Modifications to any of the Java code should prompt a fresh build and install.</li>
+ <li>Editing Android resources under <code>mobile/android</code>, including in <code>mobile/android/base/resources</code>. In many cases the Android Layout Editor is fully functional.</li>
+ <li>Modifying the Android string definitions in <code>mobile/android/base/strings.xml.in</code> and <code>mobile/android/base/locales/en-US/*.dtd</code>. Modifications should be picked up at the next build; they may not be noticed automatically. (This is because the Android <code>strings.xml</code> file is generated, and the generation only happens in response to a build.)</li>
+ <li>Editing "omnijar" JavaScript source code under <code>mobile/android</code>, including in <code>mobile/android/content</code>, <code>mobile/android/components</code>, and <code>mobile/android/modules</code>, and under <code>toolkit/</code>. Modifications to JavaScript code should be picked up at the next build. Such modifications should rebuild the omnijar and prompt a fresh build and install.</li>
+ <li>Editing "omnijar" chrome XHTML, CSS, and JS resources under <code>mobile/android</code>, including in <code>mobile/android/content</code>, and under <code>toolkit/</code>.</li>
+</ul>
+
+<h3 id="Things_that_are_not_supported_in_the_IDE">Things that are not supported in the IDE</h3>
+
+<ul>
+ <li>Modifying build system configuration and definitions and modifying <code>mobile/android/base/AndroidManifest.xml.in</code> or the sub-manifests. See <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1221344">bug 1221344</a> for an example of what can go wrong here.</li>
+ <li>Modifying generated Java code such as <code>mobile/android/base/java/org/mozilla/gecko/AppConstants.java.in</code>.</li>
+ <li>Modifying C++ source code anywhere in the tree.</li>
+ <li>Modifying "omnijar" JavaScript source code outside of <code>mobile/android</code>. (If you modify JavaScript outside of <code>mobile/android</code>, say under <code>dom/</code>, the changes will be recognized the next time "omnijar" files inside <code>mobile/android</code> are edited.)</li>
+ <li>Running Robocop tests. (Use <code>mach robocop</code> to run these tests locally.)</li>
+ <li>Running <code>mochitest-chrome</code> tests. (Use <code>mach test</code> to run these tests locally.)</li>
+</ul>
+
+<h3 id="Troubleshooting">Troubleshooting</h3>
+
+<ul>
+ <li>
+  <p>First, check if the Gradle configuration is working:</p>
+
+  <pre>./mach gradle clean app:assembleLocalWithGeckoBinariesMinApi21PhotonDebug</pre>
+
+  <p>That should complete successfully.</p>
+ </li>
+ <li>
+  <p>Second, check that you're building the correct Gradle module and the correct build variant. If you see a runtime error like</p>
+
+  <pre>A/GeckoLoader: Couldn't load mozglue. Trying native library dir.
+A/GeckoLoader: Library doesn't exist when it should.
+</pre>
+  then you are probably running the "automation" Build Variant. See the documentation on <a href="#Build_Variant">Build Variants</a> and the discussion in <a class="external text" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1246055" rel="nofollow">bug 1246055</a>.</li>
+ <li>
+  <p>Third, ensure that you can install the APK to your device:</p>
+
+  <pre>./gradlew clean app:installLocalWithGeckoBinaries{MinApi21,NoMinApi}PhotonDebug</pre>
+
+  <p>This should complete successfully, where you choose "MinApi21" or "NoMinApi" depending on your target device. See the documentation on <a href="#Build_Variant">Build Variants</a>.</p>
+ </li>
+ <li>It's possible to confuse the IDE about the state of the source directory. To recover, try the following:
+  <ul>
+   <li>Select the <em>root project</em> and refresh everything in the IDE.</li>
+   <li>Open the root <code>build.gradle</code> file. If the IDE warns that the Gradle configuration has changed, accept the offer to <em>Sync now</em>.</li>
+   <li>Refresh the Gradle model manually: select <em>View &gt; Tool Windows &gt; Gradle</em> and click the blue <em>Sync</em> button in the top left. In Android Studio, there's an icon to do this in the main toolbar -- it's labeled <em>Sync Project with Gradle Files</em>.</li>
+   <li>Clear the IDE cache manually: select <em>File &gt; Invalidate caches</em> and then restart the IDE. (This should never be necessary.)</li>
+  </ul>
+ </li>
+</ul>
+
+<div class="note" id="SDK_License_Agreements">
+<p>If you get an error about accepting license agreements during the build, like:</p>
+
+<pre>You have not accepted the license agreements of the following SDK components: [Android SDK Build-Tools 25.0.3].
+Before building your project, you need to accept the license agreements and complete the installation of the missing components using the Android Studio SDK Manager.
+</pre>
+
+<p>You can fix this error and accept the agreements by running <code>/absolute/path/to/.mozbuild/android-sdk/tools/bin/sdkmanager --licenses</code>. Look in the <code>--with-android-sdk</code> section of your <code>mozconfig</code> file to find the correct path.</p>
+</div>
+
+<h2 class="mw-headline" id="Required_Android_SDK_and_NDK_versions">Required Android SDK and NDK versions</h2>
+
+<p>The Fennec build system requires the following versions:</p>
+
+<p>If your build fails because you're missing one of the Android or Google requirements, your first step should be to run <code>mach bootstrap</code>. If you don't want to run the bootstrapper, you can manually install by running the Android SDK manager: try <code>mach android</code>, or <code>$ANDROID_SDK/tools/android</code>, or use the GUI through Android Studio's settings.</p>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">Requirement</th>
+   <th scope="col">Version required</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>Android SDK Platform</td>
+   <td><strong>Android 8.0 (API 26)</strong></td>
+  </tr>
+  <tr>
+   <td>SDK Build Tools</td>
+   <td><strong>26.0.2</strong></td>
+  </tr>
+  <tr>
+   <td>SDK Platform Tools</td>
+   <td><strong>current version </strong>(27.0.1)</td>
+  </tr>
+  <tr>
+   <td>Android SDK Tools</td>
+   <td><strong>current version </strong>(26.1.1)</td>
+  </tr>
+  <tr>
+   <td>Android Support Repository</td>
+   <td><strong>current version</strong> (47 or later)</td>
+  </tr>
+  <tr>
+   <td>Google Repository</td>
+   <td><strong>current version</strong> (58 or later)</td>
+  </tr>
+  <tr>
+   <td>Android NDK</td>
+   <td><strong>r15c</strong></td>
+  </tr>
+ </tbody>
+</table>
+
+<p><a class="external text" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1207680" rel="nofollow">bug 1207680</a> tracks listing these version requirements in one place in the source code.</p>

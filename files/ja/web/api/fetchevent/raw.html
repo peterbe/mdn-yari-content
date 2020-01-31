@@ -1,0 +1,95 @@
+<p>{{APIRef("Service Workers API")}}{{ SeeCompatTable() }}</p>
+
+<p><span class="seoSummary">これは {{domxref("ServiceWorkerGlobalScope", "service worker global scope", "", 1)}} にディスパッチされる <code>fetch</code> イベント用のイベントタイプです。これは fetch に関する情報、リクエストや受け手がどうレスポンスを扱うのかといったものを含みます。これは{{domxref("FetchEvent.respondWith", "event.respondWith()")}} メソッドを提供し、そこでは fetch へのレスポンスが提供できます。</span></p>
+
+<h2 id="Constructor" name="Constructor">コンストラクター</h2>
+
+<dl>
+ <dt>{{domxref("FetchEvent.FetchEvent()", "FetchEvent()")}}</dt>
+ <dd>新規の <code>FetchEvent</code> オブジェクトを作成します。このコンストラクターは通常は使われません。ブラウザーはこのオブジェクト自体を作成して<code>fetch</code> イベントのコールバックを提供します。</dd>
+</dl>
+
+<h2 id="Properties" name="Properties">プロパティ</h2>
+
+<p><em>先祖の {{domxref("Event")}} からプロパティを継承します。</em></p>
+
+<dl>
+ <dt>{{domxref("fetchEvent.clientId")}} {{readonlyInline}}</dt>
+ <dd>fetch を初期化する同一 {{domxref("Client", "クライアント")}} の {{domxref("Client.id", "id")}}。</dd>
+ <dt>{{domxref("fetchEvent.preloadResponse")}} {{readonlyinline}}</dt>
+ <dd>{{domxref("Response")}} への{{jsxref("Promise")}}、または navigation や {{domxref("NavigationPreloadManager", "navigation preload", "", 1)}} が有効化されていない場合は void。</dd>
+ <dt>{{domxref("fetchEvent.request")}} {{readonlyInline}}</dt>
+ <dd>ブラウザーが意図する{{domxref("Request", "リクエスト")}}。</dd>
+</dl>
+
+<h2 id="Methods" name="Methods">メソッド</h2>
+
+<p><em>親である {{domxref("ExtendableEvent")}}</em> からメソッドを継承します。</p>
+
+<dl>
+ <dt>{{domxref("fetchEvent.respondWith()")}}</dt>
+ <dd>ブラウザー既定の fetch 処理を抑止し、自身のレスポンス (の promise を) 提供します。</dd>
+ <dt>{{domxref("extendableEvent.waitUntil()")}}</dt>
+ <dd>
+ <p>イベントの生存期間を延長します。ブラウザーにレスポンスの返却を超えて延長するタスク、例えばストリーミングやキャッシングを通知します。</p>
+ </dd>
+</dl>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<p>fetch イベントはブラウザー既定の非-GET リクエストを使います。GET リクエストに対してはキャッシュからマッチするものを返そうとし、ネットワークに退却します。キャッシュにマッチするものが見つかった場合、非同期に次回のキャッシュを更新します。</p>
+
+<pre class="brush: js">addEventListener('fetch', event =&gt; {
+  // Let the browser do its default thing
+  // for non-GET requests.
+  if (event.request.method != 'GET') return;
+
+  // Prevent the default, and handle the request ourselves.
+  event.respondWith(async function() {
+    // Try to get the response from a cache.
+    const cache = await caches.open('dynamic-v1');
+    const cachedResponse = await cache.match(event.request);
+
+    if (cachedResponse) {
+      // If we found a match in the cache, return it, but also
+      // update the entry in the cache in the background.
+      event.waitUntil(cache.add(event.request));
+      return cachedResponse;
+    }
+
+    // If we didn't find a match in the cache, use the network.
+    return fetch(event.request);
+  }());
+});</pre>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">策定状況</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('Service Workers', '#fetch-event-section', 'FetchEvent')}}</td>
+   <td>{{Spec2('Service Workers')}}</td>
+   <td>初期定義</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザー実装状況</h2>
+
+<div>
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("api.FetchEvent")}}</p>
+</div>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li>{{jsxref("Promise")}}</li>
+ <li><a href="/ja/docs/Web/API/Fetch_API">Fetch API</a></li>
+</ul>

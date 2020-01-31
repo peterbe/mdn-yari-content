@@ -1,0 +1,372 @@
+<div>{{DefaultAPISidebar("Touch Events")}}</div>
+
+<p>Чтобы предоставить качественную поддержку touch-based пользовательского интерфейса, тач-события предлагают возможность интерпретации воздействия пальца (или стилуса) на тач-экраны или трекболы.</p>
+
+<p>Интерфейсы тач-событий являются относительно низкоуровневым API который может быть использован для поддержки приложений со специфическими мультитач взаимодействиями, например с жестом двух пальцев. Мультитач взаимодействие запускается когда палец (или стилус) впервые касается контакной поверхности. Другие пальцы могут затем нажать поверхность и опционально двигаться по ней. Взаимодействие заканчивается когда пальцы удаляются с поверхности. Во время взаимодействия, приложение получает тач события в начале, в ходе и конце фаз.</p>
+
+<p>Тач-события подобны событиям мыши за исключением что они поддерживают одновременные касания и различные расположения на поверхности касания. Интерфейс {{domxref("TouchEvent")}} инкапсулирует все точки касания которые сейчас активны. Интерфейс {{domxref("Touch")}}, который представляет одну точку касания, включает информацию такую как позиция точки касания относительно viewport браузера. </p>
+
+<h2 id="Определения">Определения</h2>
+
+<dl>
+ <dt>Поверхность (Surface)</dt>
+ <dd>Чувствительная к касаниям поверхность. Это может быть экран или трекпад.</dd>
+</dl>
+
+<dl>
+ <dt>Точка касания (Touch point)</dt>
+ <dd>Точка контакта с поверхностью. Это может быть палец (или локоть, ухо, нос, что угодно, но обычно это палец) или стилус. </dd>
+</dl>
+
+<h2 id="Интерфейсы">Интерфейсы</h2>
+
+<dl>
+ <dt>{{domxref("TouchEvent")}}</dt>
+ <dd>Представляет событие, происходящее при изменении состояния касания поверхности.</dd>
+ <dt>{{domxref("Touch")}}</dt>
+ <dd>Представляет одну точку контакта пользователя с поверхностью касания.</dd>
+ <dt>{{domxref("TouchList")}}</dt>
+ <dd>Представляет группу касаний; это используется, если пользователь, например, касается поверхности несколькими пальцами одновременно.</dd>
+</dl>
+
+<h2 id="Пример">Пример</h2>
+
+<p>В этом примере отслеживаются несколько касаний одновременно, позволяя пользователю рисовать в {{HTMLElement("canvas")}} несколькими пальцами одновременно. Это будет работать лишь в браузере, который поддерживает touch-события.</p>
+
+<div class="note"><strong>Примечание:</strong> В тексте для описания контакта с поверхностью используется понятие "палец", но это также может быть стилус или другой способ контакта.</div>
+
+<h3 id="Создай_canvas">Создай canvas</h3>
+
+<pre class="brush: html">&lt;canvas id="canvas" width="600" height="600" style="border:solid black 1px;"&gt;
+  Ваш браузер не поддерживает элемент canvas.
+&lt;/canvas&gt;
+&lt;br&gt;
+&lt;button onclick="startup()"&gt;Инициализировать&lt;/button&gt;
+&lt;br&gt;
+Log: &lt;pre id="log" style="border: 1px solid #ccc;"&gt;&lt;/pre&gt;
+</pre>
+
+<h3 id="Настройка_обработчиков_событий">Настройка обработчиков событий</h3>
+
+<p>После загрузки страницы, функция startup(), указанная ниже, должна вызываться в атрибуте <code>onload </code> элемента {{HTMLElement("body")}} (в примере мы используем кнопку для ее запуска, в связи с ограничениями MDN системы живых примеров).</p>
+
+<pre class="brush: js">function startup() {
+  var el = document.getElementsByTagName("canvas")[0];
+  el.addEventListener("touchstart", handleStart, false);
+  el.addEventListener("touchend", handleEnd, false);
+  el.addEventListener("touchcancel", handleCancel, false);
+  el.addEventListener("touchmove", handleMove, false);
+  log("initialized.");
+}
+</pre>
+
+<p>Эта функция настраивает все обработчики событий для нашего элемента {{HTMLElement("canvas")}}, таким образом, мы сможем управлять touch событиями при их возникновении.</p>
+
+<h4 id="Отслеживание_новых_касаний">Отслеживание новых касаний</h4>
+
+<p>Рассмотрим касания в действии.</p>
+
+<pre class="brush: js">var ongoingTouches = new Array();
+</pre>
+
+<p>Когда возникает событие {{event("touchstart")}}, свидетельствующее о новом касании к поверхности, вызывается рассматриваемая ниже функция <code>handleStart()</code>.</p>
+
+<pre class="brush: js">function handleStart(evt) {
+  evt.preventDefault();
+  log("touchstart.");
+  var el = document.getElementsByTagName("canvas")[0];
+  var ctx = el.getContext("2d");
+  var touches = evt.changedTouches;
+        
+  for (var i = 0; i &lt; touches.length; i++) {
+    log("touchstart:" + i + "...");
+    ongoingTouches.push(copyTouch(touches[i]));
+    var color = colorForTouch(touches[i]);
+    ctx.beginPath();
+    ctx.arc(touches[i].pageX, touches[i].pageY, 4, 0, 2 * Math.PI, false);  // a circle at the start
+    ctx.fillStyle = color;
+    ctx.fill();
+    log("touchstart:" + i + ".");
+  }
+}
+</pre>
+
+<p>Она вызывает {{domxref("event.preventDefault()")}} для того, чтобы предотвратить обработку браузером touch события (в том числе и событий мыши). Далее мы получаем контекст и вытягиваем список измененных точек касаний из свойства {{domxref("TouchEvent.changedTouches")}} события.</p>
+
+<p>После этого, мы перебираем все объекты {{domxref("Touch")}} в списке, добавляя их в массив активных точек касаний и, рисуя начальную точку для рисунка в виде маленького круга, мы используем линию толщиной 4 пикселя, таким образом, получая аккуратный круг радиусом 4 пикселя.</p>
+
+<h4 id="Рисование_как_касательное_движение">Рисование как касательное движение</h4>
+
+<p>Каждый раз движение одного или более пальцев определяется как событие  {{event("touchmove")}}, в результаете вызывая функцию <code>handleMove()</code>.В этом примере данная функция ответственна за обновление данных о касании и рисование линии от предыдущей позиции к текущей  каждого касания. </p>
+
+<pre class="brush: js">function handleMove(evt) {
+  evt.preventDefault();
+  var el = document.getElementsByTagName("canvas")[0];
+  var ctx = el.getContext("2d");
+  var touches = evt.changedTouches;
+
+  for (var i = 0; i &lt; touches.length; i++) {
+    var color = colorForTouch(touches[i]);
+    var idx = ongoingTouchIndexById(touches[i].identifier);
+
+    if (idx &gt;= 0) {
+      log("continuing touch "+idx);
+      ctx.beginPath();
+      log("ctx.moveTo(" + ongoingTouches[idx].pageX + ", " + ongoingTouches[idx].pageY + ");");
+      ctx.moveTo(ongoingTouches[idx].pageX, ongoingTouches[idx].pageY);
+      log("ctx.lineTo(" + touches[i].pageX + ", " + touches[i].pageY + ");");
+      ctx.lineTo(touches[i].pageX, touches[i].pageY);
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = color;
+      ctx.stroke();
+
+      ongoingTouches.splice(idx, 1, copyTouch(touches[i]));  // swap in the new touch record
+      log(".");
+    } else {
+      log("can't figure out which touch to continue");
+    }
+  }
+}
+</pre>
+
+<p>Этот цикл перебирает также измененные касания, но он просматривает в нашем массиве данных о касаниях предыдущие данные о каждом касании для определения начальной точки каждого отрезка линии, который должен быть нарисован с помощью касания.  Это реализовано путем отслеживания свойства {{domxref("Touch.identifier")}} каждого касания. Это свойство является уникальным числом для каждого касания, и остается  постоянным в течении  всей длительности контакта пальца с экраном. </p>
+
+<p>Это позволяет нам получать координаты предыдущей позиции каждого касания и использовать подходящий контекстный метод, чтобы рисовать отрезок линии соединяя две позиции вмете.</p>
+
+<p>После рисования линии, мы вызываем <code><a href="/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/splice">Array.splice()</a>, </code>чтобы заменить предыдущие данные точке касания с текущей информацией в массиве <code>ongoingTouches</code> .</p>
+
+<h4 id="Обработка_завершения_касания">Обработка завершения касания</h4>
+
+<p>Когда пользователь убирает палец с крана, срабатывает событие {{event("touchend")}}. Мы обрататываем его таким же способом: вызывая фунцию  <code>handleEnd()</code> , которая представлена ниже. Ее работа рисовать последний отрезок линии для каждого касания, которое завершилось, и удалять точку касания из списка текущих касаний.</p>
+
+<pre class="brush: js">function handleEnd(evt) {
+  evt.preventDefault();
+  log("touchend");
+  var el = document.getElementsByTagName("canvas")[0];
+  var ctx = el.getContext("2d");
+  var touches = evt.changedTouches;
+
+  for (var i = 0; i &lt; touches.length; i++) {
+    var color = colorForTouch(touches[i]);
+    var idx = ongoingTouchIndexById(touches[i].identifier);
+
+    if (idx &gt;= 0) {
+      ctx.lineWidth = 4;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(ongoingTouches[idx].pageX, ongoingTouches[idx].pageY);
+      ctx.lineTo(touches[i].pageX, touches[i].pageY);
+      ctx.fillRect(touches[i].pageX - 4, touches[i].pageY - 4, 8, 8);  // and a square at the end
+      ongoingTouches.splice(idx, 1);  // remove it; we're done
+    } else {
+      log("can't figure out which touch to end");
+    }
+  }
+}
+</pre>
+
+<p>Она очень похожа на предыдущюю функцию; единственная разница это то ,что мы рисуем маленький квадрат чтобы отметить конец и то, что мы вызываем  <code><a href="/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/splice">Array.splice()</a>. М</code>ы просто удаляем старые входы из списка текущих касаний без добавления обновленной информации. Результатом является окончание слежения за точкой касания.</p>
+
+<h4 id="Обработка_отмененных_касаний">Обработка отмененных касаний</h4>
+
+<p>Если палец пользователя перемещается в интерфейс браузера или  прикосновение должно быть отменено, событие {{event("touchcancel")}} отправлено, и мы вызываем функцию <code>handleCancel()</code> ниже.</p>
+
+<pre class="brush: js">function handleCancel(evt) {
+  evt.preventDefault();
+  log("touchcancel.");
+  var touches = evt.changedTouches;
+  
+  for (var i = 0; i &lt; touches.length; i++) {
+    ongoingTouches.splice(i, 1);  // remove it; we're done
+  }
+}
+</pre>
+
+<p>Since the idea is to immediately abort the touch, we simply remove it from the ongoing touch list without drawing a final line segment.</p>
+
+<h3 id="Convenience_functions">Convenience functions</h3>
+
+<p>This example uses two convenience functions that should be looked at briefly to help make the rest of the code more clear.</p>
+
+<h4 id="Выбор_цвета_для_каждого_прикосновения">Выбор цвета для каждого прикосновения</h4>
+
+<p>Для того чтобы рисунок каждого касания выглядел по-разному, функция colorForTouch() используется для выбора цвета на основе уникального идентификатора прикосновения. Этот идентификатор является скрытым числом, но мы можем опираться на него, для поиска отличий между активными в данный момент касаниями.</p>
+
+<pre class="brush: js">function colorForTouch(touch) {
+  var r = touch.identifier % 16;
+  var g = Math.floor(touch.identifier / 3) % 16;
+  var b = Math.floor(touch.identifier / 7) % 16;
+  r = r.toString(16); // make it a hex digit
+  g = g.toString(16); // make it a hex digit
+  b = b.toString(16); // make it a hex digit
+  var color = "#" + r + g + b;
+  log("color for touch with identifier " + touch.identifier + " = " + color);
+  return color;
+}
+</pre>
+
+<p>The result from this function is a string that can be used when calling {{HTMLElement("canvas")}} functions to set drawing colors. For example, for a {{domxref("Touch.identifier")}} value of 10, the resulting string is "#aaa".</p>
+
+<h4 id="Copying_a_touch_object">Copying a touch object</h4>
+
+<p>Some browsers (mobile Safari, for one) re-use touch objects between events, so it's best to copy the bits you care about, rather than referencing the entire object.</p>
+
+<pre class="brush: js">function copyTouch(touch) {
+  return { identifier: touch.identifier, pageX: touch.pageX, pageY: touch.pageY };
+}</pre>
+
+<h4 id="Finding_an_ongoing_touch">Finding an ongoing touch</h4>
+
+<p>The <code>ongoingTouchIndexById()</code> function below scans through the <code>ongoingTouches</code> array to find the touch matching the given identifier, then returns that touch's index into the array.</p>
+
+<pre class="brush: js">function ongoingTouchIndexById(idToFind) {
+  for (var i = 0; i &lt; ongoingTouches.length; i++) {
+    var id = ongoingTouches[i].identifier;
+    
+    if (id == idToFind) {
+      return i;
+    }
+  }
+  return -1;    // not found
+}
+</pre>
+
+<h4 id="Showing_whats_going_on">Showing what's going on</h4>
+
+<pre class="brush: js">function log(msg) {
+  var p = document.getElementById('log');
+  p.innerHTML = msg + "\n" + p.innerHTML;
+}</pre>
+
+<p>If your browser supports it, you can {{LiveSampleLink('Example', 'see it live')}}.</p>
+
+<p><a href="http://jsfiddle.net/Darbicus/z3Xdx/10/">jsFiddle example</a></p>
+
+<h2 id="Additional_tips">Additional tips</h2>
+
+<p>This section provides additional tips on how to handle touch events in your web application.</p>
+
+<h3 id="Handling_clicks">Handling clicks</h3>
+
+<p>Поскольку вызов <code>preventDefault()</code> на {{event("touchstart")}} или первом {{event("touchmove")}} событии серии предотвращает запуск соответствующих событий мыши, обычно вызов  <code>preventDefault()</code> на {{event("touchmove")}}, а не {{event("touchstart")}}. Таким образом, события с мышью могут продолжаться, и такие элементы, как ссылки, будут продолжать работать. В качестве альтернативы, некоторые платформы для этой же цели использовали перезапуск сенсорных событий в качестве событий мыши. (Этот пример слишком упрощен и может привести к странному поведению. Он предназначен только в качестве руководства.)</p>
+
+<pre class="brush: js">function onTouch(evt) {
+  evt.preventDefault();
+  if (evt.touches.length &gt; 1 || (evt.type == "touchend" &amp;&amp; evt.touches.length &gt; 0))
+    return;
+
+  var newEvt = document.createEvent("MouseEvents");
+  var type = null;
+  var touch = null;
+
+  switch (evt.type) {
+    case "touchstart": 
+      type = "mousedown";
+      touch = evt.changedTouches[0];
+      break;
+    case "touchmove":
+      type = "mousemove";
+      touch = evt.changedTouches[0];
+      break;
+    case "touchend":        
+      type = "mouseup";
+      touch = evt.changedTouches[0];
+      break;
+  }
+
+  newEvt.initMouseEvent(type, true, true, evt.originalTarget.ownerDocument.defaultView, 0,
+    touch.screenX, touch.screenY, touch.clientX, touch.clientY,
+    evt.ctrlKey, evt.altKey, evt.shiftKey, evt.metaKey, 0, null);
+  evt.originalTarget.dispatchEvent(newEvt);
+}
+</pre>
+
+<h3 id="Calling_preventDefault_only_on_a_second_touch">Calling preventDefault() only on a second touch</h3>
+
+<p>One technique for preventing things like <code>pinchZoom</code> on a page is to call <code>preventDefault()</code> on the second touch in a series. This behavior is not well defined in the touch events spec, and results in different behavior for different browsers (i.e., iOS will prevent zooming but still allow panning with both fingers; Android will allow zooming but not panning; Opera and Firefox currently prevent all panning and zooming.) Currently, it's not recommended to depend on any particular behavior in this case, but rather to depend on meta viewport to prevent zooming.</p>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('Touch Events 2', '#touch-interface', 'Touch')}}</td>
+   <td>{{Spec2('Touch Events 2')}}</td>
+   <td>Added <code>radiusX</code>, <code>radiusY</code>, <code>rotationAngle</code>, <code>force</code> properties</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('Touch Events', '#touch-interface', 'Touch')}}</td>
+   <td>{{Spec2('Touch Events')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<p>{{CompatibilityTable}}</p>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatChrome("22.0")}}</td>
+   <td>{{CompatGeckoDesktop("18.0")}}<sup>[1]</sup></td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Android Webview</th>
+   <th>Chrome for Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>Firefox OS</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatGeckoMobile("6.0")}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>11</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<p>[1] The <code>dom.w3c_touch_events.enabled</code> tri-state preference can be used to disable (0), enable (1), and auto-detect (2) support for standard touch events; by default, they're on auto-detect (2).</p>
+
+<p>Prior to Gecko 12 {{geckoRelease("12.0")}}, Gecko did not support multi-touch; only one touch at a time was reported.</p>
+
+<p>As of Gecko 24.0 {{geckoRelease("24.0")}}, the touch events support introduced with Gecko 18.0 {{geckoRelease("18.0")}} has been disabled on the desktop version of Firefox ({{bug(888304)}}), as some popular sites including Google and Twitter were not working properly. Once the bug is fixed, the API will be enabled again. To enable it anyway, open <code>about:config</code> and set the <code>dom.w3c_touch_events.enabled</code> preference to <code>2</code>. The mobile versions including <a href="/en-US/docs/Mozilla/Firefox_for_Android">Firefox for Android</a> and <a href="/en-US/docs/Mozilla/Firefox_OS">Firefox OS</a> are not affected by this change. Also, the API has been enabled on the Metro-style version of Firefox for Windows 8.</p>
+
+<p>Prior to Gecko 6.0 {{geckoRelease("6.0")}}, Gecko offered a <a href="/en-US/docs/Web/Guide/Events/Touch_events_(Mozilla_experimental)">proprietary touch event API</a>. That API is now deprecated; you should switch to this one.</p>

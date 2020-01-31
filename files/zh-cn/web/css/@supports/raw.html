@@ -1,0 +1,178 @@
+<p>{{ CSSRef() }} {{ SeeCompatTable() }}</p>
+
+<h2 id="概述">概述</h2>
+
+<p><code>@supports</code> <a href="/en/CSS" title="CSS">CSS</a> <a href="/en/CSS/At-rule" title="en/CSS/At-rule">at-rule</a> 关联了一组嵌套的CSS语句,这些语句被放置在一个CSS区块中,该区块以大括号分割, 还有一个由多个CSS声明检测组成的条件,它是一个键值组合, 由逻辑与,逻辑或,逻辑非组合而成. 这样的条件语句称为<strong>支持条件</strong>.</p>
+
+<p>该语句可以用来做特性查询.</p>
+
+<p><code>@supports</code> at-rule 不仅可以使用在CSS中的嵌套顶部语句中,也可以嵌在任意的 <a href="/en/CSS/At-rule#Conditional_Group_Rules" title="en/CSS/At-rule#Conditional_Group_Rules">CSS conditional-group at-rule</a>语句内部.</p>
+
+<h2 id="Syntax" name="Syntax">语法</h2>
+
+<pre class="eval">@supports <em>&lt;supports_condition&gt;</em> {
+  /* specific rules */
+}
+</pre>
+
+<p>一个支持条件是由一个或者多个由不同的逻辑操作符组成的表达式声明组合而成的.使用小括号可以调整这些表达式之间的运算优先级.</p>
+
+<h3 id="声明语法">声明语法</h3>
+
+<p>最简单的表达式就是CSS声明,也就是一个CSS属性后跟一个值,中间用冒号分开.如果{{ cssxref("transform-origin") }}的实现语法认为<code>5% 5%</code>是有效的,则下面的表达式会返回true.</p>
+
+<pre class="brush:css">( transform-origin: 5% 5% )</pre>
+
+<p>一个CSS声明总被包含在一组小括号中.</p>
+
+<h3 id="not操作符"><code>not操作符</code></h3>
+
+<p><code>not</code>操作符可以放在任何表达式的前面来产生一个新的表达式,新的表达式为原表达式的值的否定.如果{{ cssxref("transform-origin") }}的实现语法不认为<code>10em 10em 10em</code>是有效的.则下面的表达式会返回true.</p>
+
+<pre class="brush:css">not( transform-origin: 10em 10em 10em )</pre>
+
+<p>和其他操作符一样,<code>not</code>操作符可以应用在任意复杂度的表达式上.下面的几个例子中都是合法的表达式:</p>
+
+<pre class="brush:css">not( not( transform-origin: 2px ) )
+(display: flexbox) and ( not (display: inline-grid) )</pre>
+
+<div class="note style-wrap">
+<p><strong>注意:</strong> 如果<code>not</code>操作符位于表达式的最外层,则没有必要使用小括号将它括起来.但如果要将该表达式与其他表达式连接起来使用,比如<code>and</code>和<code>or</code>,则需要外面的小括号.</p>
+</div>
+
+<h3 id="and操作符"><code>and操作符</code></h3>
+
+<p><code>and</code>操作符用来将两个原始的表达式做逻辑与后生成一个新的表达式, 如果两个原始表达式的值都为真,则生成的表达式也为真.在下例中,当且仅当两个原始表达式同时为真时,整个表达式才为真:</p>
+
+<pre class="brush:css">(display: table-cell) and (display: list-item)</pre>
+
+<p>几个逻辑与可以并列成为一个表达式,而不需要使用更多的括号:</p>
+
+<pre class="brush:css">(display: table-cell) and (display: list-item) and (display:run-in)</pre>
+
+<p>等价于:</p>
+
+<pre class="brush:css">(display: table-cell) and ((display: list-item) and (display:run-in))</pre>
+
+<h3 id="or操作符"><code>or</code>操作符</h3>
+
+<p><code>or</code>操作符用来将两个原始的表达式做逻辑或后生成一个新的表达式, 如果两个原始表达式的值有一个为真或者都为真,则生成的表达式也为真.在下例中,当两个原始表达式中至少有一个为真时,整个表达式才为真:</p>
+
+<pre class="brush:css;">( transform-style: preserve ) or ( -moz-transform-style: preserve )</pre>
+
+<p>几个逻辑或可以并列成为一个表达式,而不需要使用更多的括号:</p>
+
+<pre class="brush:css">( transform-style: preserve ) or ( -moz-transform-style: preserve ) or 
+( -o-transform-style: preserve ) or ( -webkit-transform-style: preserve  )</pre>
+
+<p>等价于:</p>
+
+<pre class="brush:css">( transform-style: preserve-3d ) or (( -moz-transform-style: preserve-3d ) or 
+(( -o-transform-style: preserve-3d ) or ( -webkit-transform-style: preserve-3d  )))</pre>
+
+<div class="note style-wrap">
+<p><strong>注意</strong>: 在使用<code>and</code>和<code>or操作符</code>时,如果是为了定义多个表达式的执行顺序,则必须使用小括号.如果不这样做的话,该条件就是无效的,会导致整个at-rule失效.</p>
+</div>
+
+<h2 id="例子">例子</h2>
+
+<h3 id="检测是否支持指定的CSS属性">检测是否支持指定的CSS属性</h3>
+
+<pre class="brush:css;">@supports (animation-name: test) {
+    … /* 如果支持不带前缀的animation-name,则下面指定的CSS会生效 */
+    @keyframes { /* @supports是一个CSS条件组at-rule,它可以包含其他相关的at-rules */
+      …
+    }
+}
+</pre>
+
+<h3 id="检测是否支持指定的CSS属性或者其带前缀版本">检测是否支持指定的CSS属性或者其带前缀版本</h3>
+
+<pre class="brush:css;">@supports ( (perspective: 10px) or (-moz-perspective: 10px) or (-webkit-perspective: 10px) or
+            (-ms-perspective: 10px) or (-o-perspective: 10px) ) {
+    … /* 如果支持不带前缀以及带前缀的perspective属性,则下面指定的CSS会生效 */
+}
+</pre>
+
+<h3 id="检测是否不支持指定的CSS属性">检测是否不支持指定的CSS属性</h3>
+
+<pre class="brush:css;">@supports ( not ((text-align-last:justify) or (-moz-text-align-last:justify) ){
+    … /* 这里的CSS代码用来模拟text-align-last:justify */
+}</pre>
+
+<h2 id="规范">规范</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{ SpecName('CSS3 Conditional', '#at-supports', '@supports') }}</td>
+   <td>{{ Spec2('CSS3 Conditional') }}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">浏览器兼容性</h2>
+
+<p>{{ CompatibilityTable() }}</p>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{ CompatNo() }}</td>
+   <td>{{ CompatGeckoDesktop("17") }}[*]</td>
+   <td>{{ CompatNo() }}</td>
+   <td>{{ CompatNo() }}</td>
+   <td>{{ CompatNo() }}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{ CompatNo() }}</td>
+   <td>{{ CompatGeckoMobile("17") }}[*]</td>
+   <td>{{ CompatNo() }}</td>
+   <td>{{ CompatNo() }}</td>
+   <td>{{ CompatNo() }}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<p>[*] 号表示该at-rule默认为禁用状态, 只有当用户在about:config<code>中将</code><code>layout.css.supports-rule.enable设置为true时,</code><code>@supports</code> at-rule才可用.</p>
+
+<h2 id="相关链接">相关链接</h2>
+
+<ul>
+ <li>The CSSOM class {{ domxref("CSSSupportsRule") }}, and the {{ domxref("CSS.supports") }} method that allows to perform the same check via JavaScript.</li>
+</ul>

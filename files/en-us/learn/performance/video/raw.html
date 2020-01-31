@@ -1,0 +1,114 @@
+<div>{{LearnSidebar}}</div>
+
+<div>{{PreviousMenuNext("Learn/Performance/Multimedia", "Learn/Performance/javascript_performance", "Learn/Performance")}}</div>
+
+<p>As we learned in the previous section, media, namely images and video, account for over 70% of the bytes downloaded for the average website. We have already taken a look at optimizing images. <span class="seoSummary">This article looks at optimizing video to improve web performance.</span></p>
+
+<table class="learn-box standard-table">
+ <tbody>
+  <tr>
+   <th scope="row">Prerequisites:</th>
+   <td>Basic computer literacy, <a href="https://developer.mozilla.org/en-US/Learn/Getting_started_with_the_web/Installing_basic_software">basic software installed</a>, and basic knowledge of <a href="/en-US/docs/Learn/Getting_started_with_the_web">client-side web technologies</a>.</td>
+  </tr>
+  <tr>
+   <th scope="row">Objective:</th>
+   <td>To learn about the various video formats, their impact on performance, and how to reduce video impact on overall page load time while serving the smallest video file size based on each browsers file type support.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Why_optimize_your_multimedia">Why optimize your multimedia?</h2>
+
+<p>For the average website, <a href="https://discuss.httparchive.org/t/state-of-the-web-top-image-optimization-strategies/1367">25% of its bandwidth comes from video</a>. Sites have a greater number of images than video files, but video files are much larger than images, which is why the number is lower than images at 51%, but optimizing videos can lead to very large savings making it vital to address and optimize every video added to your content.</p>
+
+<h2 id="Optimizing_video_delivery">Optimizing video delivery</h2>
+
+<p>To ensure you don't send needlessly large files to the user, it's best to<a href="#compress"> compress all videos</a> you do deliver, <a href="#omptimize">optimize <code>&lt;source&gt;</code> order</a>, set <a href="https://developer.mozilla.org/en-US/docs/Learn/Performance/Multimedia#Video_autoplay">autoplay</a>, <a href="#muted">remove audio from muted heroes</a>, <a href="https://developer.mozilla.org/en-US/docs/Learn/Performance/Multimedia#Video_preload">optimize the video preload</a>, and <a href="https://developer.mozilla.org/en-US/docs/Learn/Performance/Multimedia#Consider_streaming">consider streaming</a> the video.</p>
+
+<h3 id="Compress_all_videos">Compress all videos</h3>
+
+<p>Most video compression efforts involve comparing adjacent frames within a video and removing details that are the same in the original and subsequent frame. You want to both compress the video and export it to multiple video formats, including WebM, MPEG-4/H.264, and Ogg/Theora.</p>
+
+<p>The software you used to create your video likely includes the ability to optimize the file size down. If not, there are several online tools, such as <a href="https://www.ffmpeg.org/">FFmpeg</a>, discussed in a later section, that can help encode, decode, convert, and perform other forms of magic.</p>
+
+<h3 id="Optimize_&lt;source>_order">Optimize <code>&lt;source&gt;</code> order</h3>
+
+<p>Order video source from smallest to largest.  For example, given three video compressions at 10MB, 12MB, and 13MB, put the smallest first and the largest last:</p>
+
+<pre>&lt;video width="400" height="300" controls="controls"&gt;
+  &lt;!-- WebM: 10 MB --&gt;
+  &lt;source src="video.webm" type="video/webm" /&gt;
+  &lt;!-- MPEG-4/H.264: 12 MB --&gt;
+  &lt;source src="video.mp4" type="video/mp4" /&gt;
+  &lt;!-- Ogg/Theora: 13 MB --&gt;
+  &lt;source src="video.ogv" type="video/ogv" /&gt;
+&lt;/video&gt;</pre>
+
+<p>In terms of the order, the browser downloads the first video source it understands, so let it load a smaller one first. In terms of “smallest”, do make sure that your most compressed video still looks good. There are some compression algorithms that can make your video look like an animated gif. While a 128 Kb video may seem like better user experience than having your users download a 10 MB video, putting a grainy gif-like video behind your content may also negatively impact your brand.</p>
+
+<p>See <a href="http://caniuse.com/#search=video">CanIUse.com</a> for current browser support of video and the various media types.  </p>
+
+<h3 id="Video_autoplay">Video autoplay</h3>
+
+<p>To ensure that your looping background video autoplays, you need to add several attributes to the video tag: <code>autoplay</code>, <code>muted</code>, and <code>playsinline.</code></p>
+
+<pre>&lt;video autoplay="" loop="" muted="true" playsinline="" src="backgroundvideo.mp4"&gt;</pre>
+
+<p>While the <code>loop</code> and <code>autoplay</code> make sense for a looping and autoplaying video, the <code>muted</code> attribute is required for autoplay in mobile browsers.</p>
+
+<p><code>Playsinline</code> is required for mobile Safari, allowing videos to play without forcing fullscreen mode.</p>
+
+<h3 id="Remove_audio_from_muted_hero_videos">Remove audio from muted hero videos</h3>
+
+<p>If you do have a <code>hero-video</code> or other video without audio, remove the audio from your video file. </p>
+
+<pre>&lt;video autoplay="" loop="" muted="true" playsinline="" id="hero-video"&gt;
+  &lt;source src="banner_video.webm" 
+          type='video/webm; codecs="vp8, vorbis"'&gt;
+  &lt;source src="web_banner.mp4" type="video/mp4"&gt;
+&lt;/video&gt;</pre>
+
+<p>This <code>hero-video</code> code, common to many conference websites and corporate home pages, includes a video that is auto-playing, looping, and muted. It contains no controls, so there is no way to hear the audio. The audio is often empty, but it's still present. It is still using bandwidth. There is no reason to serve the audio along with a video that is always muted. Removing the audio can save 20% of the bandwidth, which is 2 MB if your video is 10 MB.</p>
+
+<p>Depending on your video making software, you might be able to remove the audio during export and compression. If not, there is a free tool called <a href="https://www.ffmpeg.org/">FFmpeg</a> that can do it for you with the following command:</p>
+
+<pre><a href="https://www.ffmpeg.org/">ffmpeg</a> -i original.mp4 -an -c:v copy audioFreeVersion.mp4</pre>
+
+<p><code>FFmpeg</code> bills itself as the “complete, cross-platform solution to record, convert and stream audio and video,” which it pretty much is.</p>
+
+<h3 id="Video_preload">Video preload</h3>
+
+<p>The preload attribute has 3 available options: <code>auto</code>|<code>metadata</code>|<code>none</code>.  The default setting is <code>metadata</code>.</p>
+
+<p>Changing the setting to <code>auto</code> tells the browser to automatically download the entire video. This should only be done when playback is extremely likely, otherwise large amounts of bandwdith is wasted.</p>
+
+<p><code>preload="metadata"</code> can result in up to 3% of the video being downloaded on page load.  For larger videos this can be a significant amount of data.</p>
+
+<p><code>preload="none"</code> results in none of the video being downloaded until playback is requested.  This can delay video startup time, but also saves large amounts of data for videos with a low probability of playback.</p>
+
+<h3 id="Consider_streaming">Consider streaming</h3>
+
+<p><a href="https://www.smashingmagazine.com/2018/10/video-playback-on-the-web-part-2/">Video streaming allows the proper video size and bandwidth</a> (based on network speed) to be delivered to the end user.  Much like using responsive images, the correct size video is delivered to the browser, ensuring fast video startup, low buffering, and optimised playback to the end user.eason for using Progressive JPEG above-the-fold is that they render progressively (hence the name), meaning the user sees a low-resolution version that gains clarity as the image downloads, rather than the image loading at full resolution top-to-bottom or even only rendering once completely downloaded.</p>
+
+<h2 id="Conclusion">Conclusion</h2>
+
+<p>In this section we looked at optimizing videos: a feature not all sites have, but every site that has videos must optimize these bandwidth hogs. Up next we'll take a look at the fruit on the next tree limb up: JavaScript.</p>
+
+<p>{{PreviousMenuNext("Learn/Performance/Multimedia", "Learn/Performance/javascript_performance", "Learn/Performance")}}</p>
+
+<h2 id="In_this_module">In this module</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Learn/Performance/why_web_performance">The "why" of web performance</a></li>
+ <li><a href="/en-US/docs/Learn/Performance/What_is_web_performance">What is web performance?</a></li>
+ <li><a href="/en-US/docs/Learn/Performance/Perceived_performance">How do users perceive performance?</a></li>
+ <li><a href="/en-US/docs/Learn/Performance/Measuring_performance">Measuring performance</a></li>
+ <li><a href="/en-US/docs/Learn/Performance/Multimedia">Multimedia: images</a></li>
+ <li><a href="/en-US/docs/Learn/Performance/video">Multimedia: video</a></li>
+ <li><a href="/en-US/docs/Learn/Performance/JavaScript">JavaScript performance best practices</a>.</li>
+ <li><a href="/en-US/docs/Learn/Performance/HTML">HTML performance features</a></li>
+ <li><a href="/en-US/docs/Learn/Performance/CSS">CSS performance features</a></li>
+ <li><a href="/en-US/docs/Learn/Performance/Fonts">Fonts and performance</a></li>
+ <li><a href="/en-US/docs/Learn/Performance/Mobile">Mobile performance</a></li>
+ <li><a href="/en-US/docs/Learn/Performance/business_case_for_performance">Focusing on performance</a></li>
+</ul>

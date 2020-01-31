@@ -1,0 +1,371 @@
+<div>{{LearnSidebar}}</div>
+
+<div>{{PreviousMenuNext("Learn/Server-side/Django/Admin_site", "Learn/Server-side/Django/Generic_views", "Learn/Server-side/Django")}}</div>
+
+<p class="summary">我們現在可以添加代碼，來顯示我們的第一個完整頁面 - <a href="https://developer.mozilla.org/en-US/docs/Learn/Server-side/Django/Tutorial_local_library_website">LocalLibrary</a> 網站的主頁，顯示每個模型類型有多少條記錄，並提供我們其他頁面的側邊欄導航鏈接。一路上，我們將獲得編寫基本URL 地圖和視圖、從數據庫獲取記錄、以及使用模板的實踐經驗。</p>
+
+<table class="learn-box standard-table">
+ <tbody>
+  <tr>
+   <th scope="row">前提:</th>
+   <td>讀 the <a href="https://wiki.developer.mozilla.org/en-US/docs/Learn/Server-side/Django/Introduction">Django Introduction</a>. 完成上章節 (including <a href="/zh-TW/docs/Learn/Server-side/Django/Admin_site">Django Tutorial Part 4: Django admin site</a>).</td>
+  </tr>
+  <tr>
+   <th scope="row">目的:</th>
+   <td>了解如何創建簡單的URL映射和視圖（沒有數據編碼在URL中）以及如何從模型中獲取數據並創建模版。<br>
+    概要</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Overview">Overview</h2>
+
+<p>Now we have defined our models and created some initial library records to work with, it's time to write the code to present that information to users. The first thing we need to do is determine what information we want to be able to display in our pages, and then define appropriate URLs for returning those resources. Then we're going to need to create the url mapper, views, and templates to display those pages. </p>
+
+<p>The diagram below is provided as a reminder of the main flow of data and things that need to be implemented when handling an HTTP request/response. As we've already created the model, the main things we'll need to create are:</p>
+
+<ul>
+ <li>URL mappers to forward the supported URLs (and any information encoded in the URLs) to the appropriate view functions.</li>
+ <li>View functions to get the requested data from the models, create an HTML page displaying the data, and return it to the user to view in the browser.</li>
+ <li>Templates used by the views to render the data.</li>
+</ul>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/13931/basic-django.png" style="display: block; margin: 0px auto;"></p>
+
+<p>As you'll see in the next section, we're going to have 5 pages to display, which is a lot to document in one article. Therefore, most of this article will concentrate on showing you how to implement just the home page (we'll move onto the other pages in a subsequent article). This should give you a good end-to-end understanding of how URL mappers, views, and models work in practice.</p>
+
+<h2 id="Defining_the_resource_URLs">Defining the resource URLs</h2>
+
+<p>As this version of <em>LocalLibrary</em> is essentially read-only for end users, we just need to provide a landing page for the site (a home page), and pages that <em>display</em> list and detail views for books and authors. </p>
+
+<p>The URLs that we're going to need for our pages are:</p>
+
+<ul>
+ <li><code>catalog/</code> — The home/index page.</li>
+ <li><code>catalog/books/</code> — The list of all books.</li>
+ <li><code>catalog/authors/</code> — The list of all authors.</li>
+ <li><code>catalog/book/<em>&lt;id&gt;</em></code> — The detail view for the specific book with a field primary key of <code><em>&lt;id&gt;</em></code> (the default). So for example, <code>/catalog/book/3</code>, for the third book added.</li>
+ <li><code>catalog/author/<em>&lt;id&gt;</em></code><em> </em>— The detail view for the specific author with a primary key field named <em><code>&lt;id&gt;. </code></em>So for example, <code>/catalog/author/11</code>, for the 11th author added.</li>
+</ul>
+
+<p>The first three URLs are used to list the index, books, and authors. These don't encode any additional information, and while the results returned will depend on the content in the database, the queries run to get the information will always be the same.</p>
+
+<p>By contrast the final two URLs are used to display detailed information about a specific book or author — these encode the identity of the item to display in the URL (shown as <code><em>&lt;id&gt;</em></code> above). The URL mapper can extract the encoded information and pass it to the view, which will then dynamically determine what information to get from the database. By encoding the information in our URL we only need one url mapping, view, and template to handle every book (or author). </p>
+
+<div class="note">
+<p><strong>Note</strong>: Django allows you to construct your URLs any way you like — you can encode information in the body of the URL as shown above or use URL <code>GET</code> parameters (e.g. <code>/book/?id=6</code>). Whichever approach you use, the URLs should be kept clean, logical and readable (<a href="https://www.w3.org/Provider/Style/URI">check out the W3C advice here</a>).<br>
+ <br>
+ The Django documentation tends to recommend encoding information in the body of the URL, a practice that they feel encourages better URL design.</p>
+</div>
+
+<p>As discussed in the overview, the rest of this article describes how we construct the index page.</p>
+
+<h2 id="Creating_the_index_page">Creating the index page</h2>
+
+<p>The first page we'll create will be the index page (<code>catalog/</code>). This will display a little static HTML, along with some calculated "counts" of different records in the database. To make this work we'll have to create an URL mapping, view and template. </p>
+
+<div class="note">
+<p><strong>Note</strong>: It's worth paying a little extra attention in this section. Most of the material is common to all of the pages.</p>
+</div>
+
+<h3 id="URL_mapping">URL mapping</h3>
+
+<p>When we created the <a href="/en-US/docs/Learn/Server-side/Django/skeleton_website">skeleton website</a> we updated <strong>locallibrary/urls.py</strong> so that whenever an URL starting with <code>catalog/</code>  is received, the <em>URLConf </em><code>catalog.urls</code> is included to process the remainder of the string.</p>
+
+<pre>urlpatterns += [
+    path('catalog/', include('catalog.urls')),
+]
+</pre>
+
+<div class="note">
+<p><strong>Note</strong>: Whenever Django encounters <code><a href="https://docs.djangoproject.com/en/2.0/ref/urls/#django.urls.include" title="django.conf.urls.include">django.urls.include()</a></code>  it chops off whatever part of the URL matched up to that point and sends the remaining string to the included <em>URLconf</em> for further processing.</p>
+</div>
+
+<p>We also created a placeholder <em>URLConf</em>: <strong>/catalog/urls.py</strong>. Open this file and paste in the line shown in bold below. </p>
+
+<pre class="brush: python">urlpatterns = [
+<strong>    path('', views.index, name='index'),</strong>
+]</pre>
+
+<p>This <code>path()</code> function defines a URL pattern (in this case an empty string: <code>''</code> — we'll talk a lot more about URL patterns when discussing some of the other views), and a view function that will be called if the pattern is detected (<code>views.index</code> — a function named <code>index()</code> in <strong>views.py</strong>). </p>
+
+<p>This <code>path()</code> function also specifies a <code>name</code> parameter, which uniquely identifies <em>this</em> particular URL mapping. You can use this name to "reverse" the mapper — to dynamically create a URL pointing to the resource the mapper is designed to handle. For example, with this in place we can now link to our home page from any other page by creating the following link in a template:</p>
+
+<pre class="brush: html">&lt;a href="<strong>{% url 'index' %}</strong>"&gt;Home&lt;/a&gt;.</pre>
+
+<div class="note">
+<p><strong>Note</strong>: We could hard code the above link (e.g. <code>&lt;a href="<strong>/catalog/</strong>"&gt;Home&lt;/a&gt;</code>), but then if we changed the pattern for our home page (e.g. to <code>/catalog/index</code>) the templates would no longer link correctly. Using a reversed url mapping is much more flexible and robust!</p>
+</div>
+
+<h3 id="View_function-based">View (function-based)</h3>
+
+<p>A view is a function that processes an HTTP request, fetches data from the database as needed, generates an HTML page by rendering this data using an HTML template, and then returns the HTML in an HTTP response to be shown to the user. The index view follows this model — it fetches information about how many <code>Book</code>, <code>BookInstance</code>, available <code>BookInstance</code> and <code>Author</code> records we have in the database, and passes them to a template for display.</p>
+
+<p>Open <strong>catalog/views.py</strong>, and note that the file already imports the <a href="https://docs.djangoproject.com/en/2.0/topics/http/shortcuts/#django.shortcuts.render">render()</a> shortcut function which generates HTML files using a template and data. </p>
+
+<pre class="brush: python">from django.shortcuts import render
+
+# Create your views here.
+</pre>
+
+<p>Copy the following code at the bottom of the file. The first line imports the model classes that we will use to access data in all our views.</p>
+
+<pre class="brush: python">from .models import Book, Author, BookInstance, Genre
+
+def index(request):
+    """View function for home page of site."""
+
+    # Generate counts of some of the main objects
+    num_books = Book.objects.all().count()
+    num_instances = BookInstance.objects.all().count()
+    
+    # Available books (status = 'a')
+    num_instances_available = BookInstance.objects.filter(status__exact='a').count()
+    
+    # The 'all()' is implied by default.    
+    num_authors = Author.objects.count()
+    
+    context = {
+        'num_books': num_books,
+        'num_instances': num_instances,
+        'num_instances_available': num_instances_available,
+        'num_authors': num_authors,
+    }
+
+    # Render the HTML template index.html with the data in the context variable
+    return render(request, 'index.html', context=context)</pre>
+
+<p>The first part of the view function fetches counts of records using the <code>objects.all()</code> attribute on the model classes. It also gets a list of <code>BookInstance</code> objects that have a status field value of 'a' (Available). You can find out a little bit more about how to access from models in our previous tutorial (<a href="/en-US/docs/Learn/Server-side/Django/Models#Searching_for_records">Django Tutorial Part 3: Using models &gt; Searching for records</a>).</p>
+
+<p>At the end of the function we call the <code>render()</code> function to create and return an HTML page as a response (this shortcut function wraps a number of other functions, simplifying this very common use-case). This takes as parameters the original <code>request</code> object (an <code>HttpRequest</code>), an HTML template with placeholders for the data, and a <code>context</code> variable (a Python dictionary containing the data that will be inserted into those placeholders). </p>
+
+<p>We'll talk more about templates and the context variable in the next section; let's create our template so we can actually display something to the user!</p>
+
+<h3 id="Template">Template</h3>
+
+<p>A template is a text file defining the structure or layout of a file (such as an HTML page), with placeholders used to represent actual content. Django will automatically look for templates in a directory named '<strong>templates</strong>' in your application. So for example, in the index view we just added, the <code>render()</code> function will expect to be able to find the file <strong>/locallibrary/catalog/templates/<em>index.html</em></strong>, and will raise an error if the file cannot be found. You can see this if you save the previous changes and go back to your browser — accessing <code>127.0.0.1:8000</code> will now give you a fairly intuitive error message "<code>TemplateDoesNotExist at /catalog/</code>", plus other details.</p>
+
+<div class="note">
+<p><strong>Note</strong>: Django will look in a number of places for templates, based on your project's settings file (searching in your installed applications is a default setting!). You can find out more about how Django finds templates and what template formats it supports in <a href="https://docs.djangoproject.com/en/2.0/topics/templates/">Templates</a> (Django docs).</p>
+</div>
+
+<h4 id="Extending_templates">Extending templates</h4>
+
+<p>The index template is going to need standard HTML markup for the head and body, along with sections for navigation (to the other pages in the site that we haven't yet created) and for displaying some introductory text and our book data. Much of this text (the HTML and navigation structure) will be the same for every page on our site. Rather than forcing developers to duplicate this "boilerplate" in every page, the Django templating language allows you to declare a base template, and then extend it, replacing just the bits that are different for each specific page. </p>
+
+<p>For example, a base template <strong>base_generic.html</strong> might look like the text below. As you can see, this contains some "common" HTML and sections for title, sidebar and content marked up using named <code>block</code> and <code>endblock</code> template tags (shown in bold). The blocks can be empty, or contain content that will be used "by default" for derived pages.</p>
+
+<div class="note">
+<p><strong>Note</strong>: Template <em>tags</em> are like functions that you can use in a template to loop through lists, perform conditional operations based on the value of a variable, etc. In addition to template tags the template syntax allows you to reference template variables (that are passed into the template from the view) and use <em>template filters</em>, which reformat variables (for example, setting a string to lower case).</p>
+</div>
+
+<pre class="brush: html">&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+  <strong>{% block title %}</strong>&lt;title&gt;Local Library&lt;/title&gt;<strong>{% endblock %}</strong>
+&lt;/head&gt;
+
+&lt;body&gt;
+  <strong>{% block sidebar %}</strong>&lt;!-- insert default navigation text for every page --&gt;<strong>{% endblock %}</strong>
+  <strong>{% block content %}</strong>&lt;!-- default content text (typically empty) --&gt;<strong>{% endblock %}</strong>
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+
+<p>When we want to define a template for a particular view, we first specify the base template  (with the <code>extends</code> template tag — see the next code listing). If there are any sections that we want to replace in the template we declare these, using identical <code>block</code>/<code>endblock</code> sections as used in the base template. </p>
+
+<p>For example, the code fragment below shows how we use the <code>extends</code> template tag, and override the <code>content</code> block. The final HTML produced would have all the HTML and structure defined in the base template (including the default content you've defined inside the <code>title</code> block), but with your new <code>content</code> block inserted in place of the default one.</p>
+
+<pre class="brush: html">{% extends "base_generic.html" %}
+
+{% block content %}
+  &lt;h1&gt;Local Library Home&lt;/h1&gt;
+  &lt;p&gt;Welcome to LocalLibrary, a website developed by &lt;em&gt;Mozilla Developer Network&lt;/em&gt;!&lt;/p&gt;
+{% endblock %}</pre>
+
+<h4 id="The_LocalLibrary_base_template">The LocalLibrary base template</h4>
+
+<p>The base template we plan to use for the <em>LocalLibrary</em> website is listed below. As you can see, this contains some HTML and defined blocks for <code>title</code>, <code>sidebar</code>, and <code>content</code>. We have a default title (which we may want to change) and a default sidebar with links to lists of all books and authors (which we will probably not want to change, but we've allowed scope to do so if needed by putting this in a block).</p>
+
+<div class="note">
+<p><strong>Note</strong>: We also introduce two additional template tags: <code>url</code> and <code>load static</code>. These are discussed in following sections.</p>
+</div>
+
+<p>Create a new file — <strong>/locallibrary/catalog/templates/<em>base_generic.html</em></strong> — and give it the following contents:</p>
+
+<pre class="brush: html">&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+  {% block title %}&lt;title&gt;Local Library&lt;/title&gt;{% endblock %}
+  &lt;meta charset="utf-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;
+  &lt;link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous"&gt;
+ 
+  &lt;!-- Add additional CSS in static file --&gt;
+  {% load static %}
+  &lt;link rel="stylesheet" href="{% static 'css/styles.css' %}"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div class="container-fluid"&gt;
+    &lt;div class="row"&gt;
+      &lt;div class="col-sm-2"&gt;
+      {% block sidebar %}
+      &lt;ul class="sidebar-nav"&gt;
+        &lt;li&gt;&lt;a href="{% url 'index' %}"&gt;Home&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href=""&gt;All books&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href=""&gt;All authors&lt;/a&gt;&lt;/li&gt;
+      &lt;/ul&gt;
+     {% endblock %}
+      &lt;/div&gt;
+      &lt;div class="col-sm-10 "&gt;
+      {% block content %}{% endblock %}
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+
+<p>The template includes CSS from <a href="http://getbootstrap.com/">Bootstrap</a> to improve the layout and presentation of the HTML page. Using Bootstrap or another client-side web framework is a quick way to create an attractive page that can scale well on different browser sizes.</p>
+
+<p>The base template also references a local css file (<strong>styles.css</strong>) that provides a little additional styling. Create <strong>/locallibrary/catalog/static/css/styles.css</strong> and give it the following content:</p>
+
+<pre class="brush: css">.sidebar-nav {
+    margin-top: 20px;
+    padding: 0;
+    list-style: none;
+}</pre>
+
+<h4 id="The_index_template">The index template</h4>
+
+<p>Create the HTML file <strong>/locallibrary/catalog/templates/<em>index.html</em></strong> and give it the content shown below. As you can see we extend our base template in the first line, and then replace the default <code>content</code> block with a new one for this template. </p>
+
+<pre class="brush: html">{% extends "base_generic.html" %}
+
+{% block content %}
+  &lt;h1&gt;Local Library Home&lt;/h1&gt;
+  &lt;p&gt;Welcome to LocalLibrary, a website developed by &lt;em&gt;Mozilla Developer Network&lt;/em&gt;!&lt;/p&gt;
+
+  &lt;h2&gt;Dynamic content&lt;/h2&gt;
+  &lt;p&gt;The library has the following record counts:&lt;/p&gt;
+  &lt;ul&gt;
+    &lt;li&gt;&lt;strong&gt;Books:&lt;/strong&gt; <strong>\{{ num_books }}</strong>&lt;/li&gt;
+    &lt;li&gt;&lt;strong&gt;Copies:&lt;/strong&gt; <strong>\{{ num_instances }}</strong>&lt;/li&gt;
+    &lt;li&gt;&lt;strong&gt;Copies available:&lt;/strong&gt; <strong>\{{ num_instances_available }}</strong>&lt;/li&gt;
+    &lt;li&gt;&lt;strong&gt;Authors:&lt;/strong&gt; <strong>\{{ num_authors }}</strong>&lt;/li&gt;
+  &lt;/ul&gt;
+{% endblock %}</pre>
+
+<p>In the <em>Dynamic content </em>section we've declared placeholders (<em>template variables</em>) for the information we wanted to include from the view.  The variables are marked using the "double brace" or "handlebars" syntax (see in bold above).</p>
+
+<div class="note">
+<p><strong>Note:</strong> You can easily recognise whether you're dealling with template variables or template tags (functions) because the variables have double braces (<code>\{{ num_books }}</code>) while the tags are enclosed in single braces with percentage signs (<code>{% extends "base_generic.html" %}</code>).</p>
+</div>
+
+<p>The important thing to note here is that these variables are named with the <em>keys</em> that we passed into the <code>context</code> dictionary in our view's <code>render()</code> function (see below); these will be replaced by their associated <em>values</em> when the template is rendered.  </p>
+
+<pre class="brush: python">context = {
+    '<strong>num_books</strong>': num_books,
+    '<strong>num_instances</strong>': num_instances,
+    '<strong>num_instances_available</strong>': num_instances_available,
+    '<strong>num_authors</strong>': num_authors,
+}
+
+return render(request, 'index.html', context=context)</pre>
+
+<h4 id="Referencing_static_files_in_templates">Referencing static files in templates</h4>
+
+<p>Your project is likely to use static resources, including JavaScript, CSS, and images. Because the location of these files might not be known (or might change), Django allows you to specify the location of these files in your templates relative to the <code>STATIC_URL</code> global setting (the default skeleton website sets the value of <code>STATIC_URL</code> to '<code>/static/</code>', but you might choose to host these on a content delivery network or elsewhere).</p>
+
+<p>Within the template you first call the <code>load</code> template tag specifying "static" to add this template library (as shown below). After static is loaded, you can then use the <code>static</code> template tag, specifying the relative URL to the file of interest.</p>
+
+<pre class="brush: html">&lt;!-- Add additional CSS in static file --&gt; 
+{% load static %} 
+&lt;link rel="stylesheet" href="{% static 'css/styles.css' %}"&gt;</pre>
+
+<p>You could, if desired, add an image into the page in the same sort of fashion. For example:</p>
+
+<pre class="brush: html">{% load static %}
+&lt;img src="{% static 'catalog/images/local_library_model_uml.png' %}" alt="UML diagram" style="width:555px;height:540px;"&gt;
+</pre>
+
+<div class="note">
+<p><strong>Note</strong>: The changes above specify where the files are located, but Django does not serve them by default. While we enabled serving by the development web server in the global URL mapper (<strong>/locallibrary/locallibrary/urls.py</strong>) when we <a href="/en-US/docs/Learn/Server-side/Django/skeleton_website">created the website skeleton</a>, you will still need to arrange for them to be served in production. We'll look at this later.</p>
+</div>
+
+<p>For more information on working with static files see <a href="https://docs.djangoproject.com/en/2.0/howto/static-files/">Managing static files</a> (Django docs).</p>
+
+<h4 id="Linking_to_URLs">Linking to URLs</h4>
+
+<p>The base template above introduced the <code>url</code> template tag.</p>
+
+<pre class="brush: python">&lt;li&gt;&lt;a href="{% url 'index' %}"&gt;Home&lt;/a&gt;&lt;/li&gt; 
+</pre>
+
+<p>This tag takes the name of a <code>path()</code> function called in your <strong>urls.py</strong> and values for any arguments the associated view will receive from that function, and returns a URL that you can use to link to the resource.</p>
+
+<h2 id="What_does_it_look_like">What does it look like?</h2>
+
+<p>At this point we should have created everything needed to display the index page. Run the server (<code>python3 manage.py runserver</code>) and open your browser to <a href="http://127.0.0.1:8000/">http://127.0.0.1:8000/</a>. If everything is set up correctly, your site should look something like the following screenshot.</p>
+
+<p><img alt="Index page for LocalLibrary website" src="https://mdn.mozillademos.org/files/14045/index_page_ok.png" style="border-style: solid; border-width: 1px; display: block; height: 356px; margin: 0px auto; width: 874px;"></p>
+
+<div class="note">
+<p><strong>Note:</strong> You won't be able to use the <strong>All books</strong> and <strong>All authors</strong> links yet, because the paths, views, and templates for those pages haven't been defined (currently we've just inserted placeholders for those links in the <code>base_generic.html</code> template).</p>
+</div>
+
+<h2 id="Challenge_yourself">Challenge yourself</h2>
+
+<p>Here are a couple of tasks to test your familiarity with model queries, views and templates. </p>
+
+<ol>
+ <li>The LocalLibrary <a href="#The_LocalLibrary_base_template">base template</a> has a <code>title</code> block defined. Overide this block in the <a href="#The_index_template">index template</a> and create some new title for the page.
+
+  <div class="note">
+  <p><strong>Hint:</strong> The section<a href="#Extending_templates"> Extending templates</a> explains how to create blocks and extend them in another template.</p>
+  </div>
+ </li>
+ <li>Modify the <a href="#View_(function-based)">view</a> to generate a <em>count of genres</em> and a <em>count of books</em> that contain a particular word (case insensitive) and pass these to the <code>context</code> (this is done in much the same way as we create and use <code>num_books</code> and <code>num_instances_available</code>). Then update the <a href="#The_index_template">index template</a> to use these variables.<br>
+   </li>
+</ol>
+
+<ul>
+</ul>
+
+<h2 id="Summary">Summary</h2>
+
+<p>We've now created the home page for our site — an HTML page that displays some counts of records from the database and has links to our other still-to-be-created pages. Along the way we've learned a lot of fundamental information about url mappers, views, querying the database using our models, how to pass information to a template from your view, and how to create and extend templates.</p>
+
+<p>In our next article we'll build on our knowledge to create the other four pages.</p>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li><a href="https://docs.djangoproject.com/en/2.0/intro/tutorial03/">Writing your first Django app, part 3: Views and Templates</a>  (Django docs)</li>
+ <li><a href="https://docs.djangoproject.com/en/2.0/topics/http/urls/">URL dispatcher</a> (Django docs)</li>
+ <li><a href="https://docs.djangoproject.com/en/2.0/topics/http/views/">View functions</a> (DJango docs)</li>
+ <li><a href="https://docs.djangoproject.com/en/2.0/topics/templates/">Templates</a> (Django docs)</li>
+ <li><a href="https://docs.djangoproject.com/en/2.0/howto/static-files/">Managing static files</a> (Django docs)</li>
+ <li><a href="https://docs.djangoproject.com/en/2.0/topics/http/shortcuts/#django.shortcuts.render">Django shortcut functions</a> (Django docs)</li>
+</ul>
+
+<p>{{PreviousMenuNext("Learn/Server-side/Django/Admin_site", "Learn/Server-side/Django/Generic_views", "Learn/Server-side/Django")}}</p>
+
+<h2 id="In_this_module">In this module</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Learn/Server-side/Django/Introduction">Django introduction</a></li>
+ <li><a href="/en-US/docs/Learn/Server-side/Django/development_environment">Setting up a Django development environment</a></li>
+ <li><a href="/en-US/docs/Learn/Server-side/Django/Tutorial_local_library_website">Django Tutorial: The Local Library website</a></li>
+ <li><a href="/en-US/docs/Learn/Server-side/Django/skeleton_website">Django Tutorial Part 2: Creating a skeleton website</a></li>
+ <li><a href="/en-US/docs/Learn/Server-side/Django/Models">Django Tutorial Part 3: Using models</a></li>
+ <li><a href="/en-US/docs/Learn/Server-side/Django/Admin_site">Django Tutorial Part 4: Django admin site</a></li>
+ <li><a href="/en-US/docs/Learn/Server-side/Django/Home_page">Django Tutorial Part 5: Creating our home page</a></li>
+ <li><a href="/en-US/docs/Learn/Server-side/Django/Generic_views">Django Tutorial Part 6: Generic list and detail views</a></li>
+ <li><a href="/en-US/docs/Learn/Server-side/Django/Sessions">Django Tutorial Part 7: Sessions framework</a></li>
+ <li><a href="/en-US/docs/Learn/Server-side/Django/Authentication">Django Tutorial Part 8: User authentication and permissions</a></li>
+ <li><a href="/en-US/docs/Learn/Server-side/Django/Forms">Django Tutorial Part 9: Working with forms</a></li>
+ <li><a href="/en-US/docs/Learn/Server-side/Django/Testing">Django Tutorial Part 10: Testing a Django web application</a></li>
+ <li><a href="/en-US/docs/Learn/Server-side/Django/Deployment">Django Tutorial Part 11: Deploying Django to production</a></li>
+ <li><a href="/en-US/docs/Learn/Server-side/Django/web_application_security">Django web application security</a></li>
+ <li><a href="/en-US/docs/Learn/Server-side/Django/django_assessment_blog">DIY Django mini blog</a></li>
+</ul>

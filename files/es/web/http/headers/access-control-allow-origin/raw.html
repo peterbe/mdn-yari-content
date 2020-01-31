@@ -1,0 +1,133 @@
+<div>{{HTTPSidebar}}</div>
+
+<p>El encabezado de respuesta <code><strong>Access-Control-Allow-Origin</strong></code> indica si los recursos de la respuesta pueden ser compartidos con el {{glossary("origin", "origen")}} dado.</p>
+
+<table class="properties">
+ <tbody>
+  <tr>
+   <th scope="row">Tipo de encabezado</th>
+   <td>{{Glossary("Response header", "Encabezado de respuesta")}}</td>
+  </tr>
+  <tr>
+   <th scope="row">{{Glossary("Forbidden header name", "Nombre de encabezado prohibido")}}</th>
+   <td>no</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Sintaxis">Sintaxis</h2>
+
+<pre class="syntaxbox">Access-Control-Allow-Origin: *
+Access-Control-Allow-Origin: &lt;origen&gt;
+</pre>
+
+<h2 id="Directivas">Directivas</h2>
+
+<dl>
+ <dt>*</dt>
+ <dd>Para las peticiones <em>sin credenciales</em>, el servidor puede especificar el caracter "*" como un comodín, permitiendo a cualquier origen acceder al recurso. El acceso será permitido solamente para las peticiones hechas con el atributo {{htmlattrxref("crossorigin")}} definido como <code>"anonymous"</code>. Intentar usar el comodín con credenciales <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS/Errors/CORSNotSupportingCredentials">resultará en un error</a>.</dd>
+ <br>
+ <dt>&lt;origen&gt;</dt>
+ <dd>Especifica una URI que puede acceder al recurso. Puedes especificar uno o más orígenes separados por comas.</dd>
+</dl>
+
+<h2 id="Ejemplos">Ejemplos</h2>
+
+<p>Para permitir a cualquier origen el acceso a tus recursos, puedes especificar:</p>
+
+<pre>Access-Control-Allow-Origin: *</pre>
+
+<p>Para permitir a <code>https://developer.mozilla.org</code> acceder a tus recursos, puedes especificar:</p>
+
+<pre>Access-Control-Allow-Origin: https://developer.mozilla.org</pre>
+
+<h3 id="CORS_y_caché">CORS y caché</h3>
+
+<p>Si el servidor especifica un host de origen en lugar de "<code>*</code>", entonces éste puede incluir <code>Origin</code> en el encabezado de respuesta {{HTTPHeader("Vary")}} para indicar a los clientes que las respuestas del servidor serán diferentes en función del valor del encabezado de solicitud <code>Origin</code>.  </p>
+
+<pre>Access-Control-Allow-Origin: https://developer.mozilla.org
+Vary: Origin</pre>
+
+<p> </p>
+
+<h3 id="Manejo_de_CORS_en_el_servidor_(ejemplo_en_Java)">Manejo de CORS en el servidor (ejemplo en Java)</h3>
+
+<p>De esta manera puedo crear un filtro simple de CORS para permitir todo tipo de CORS usando Java en el servidor:</p>
+
+<pre class="brush: java" dir="rtl">import java.io.IOException;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+
+@component
+public class SimpleCORSFilter implements Filter {
+
+    private final Logger log = LoggerFactory.getLogger(SimpleCORSFilter.class);
+
+    public SimpleCORSFilter() {
+        log.info("SimpleCORSFilter init");
+    }
+
+    @override
+    public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {    
+    
+        HttpServletRequest request = (HttpServletRequest) req;
+        HttpServletResponse response = (HttpServletResponse) res;
+        response.setHeader("Access-Control-Allow-Origin", request.getHeader("Origin"));
+        response.setHeader("Access-Control-Allow-Credentials", "true");
+        response.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE");
+        response.setHeader("Access-Control-Max-Age", "3600");
+        response.setHeader("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With, remember-me");
+        chain.doFilter(req, res);
+    }
+
+
+    @Override
+    public void init(FilterConfig filterConfig) {
+    }
+
+    @Override
+    public void destroy() {
+    }
+
+}</pre>
+
+<h2 id="Especificaciones">Especificaciones</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Especificación</th>
+   <th scope="col">Estado</th>
+   <th scope="col">Comentario</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('Fetch','#http-access-control-allow-origin', 'Access-Control-Allow-Origin')}}</td>
+   <td>{{Spec2("Fetch")}}</td>
+   <td>Definición Inicial.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Compatibilidad_del_Navegador">Compatibilidad del Navegador</h2>
+
+<p class="hidden">La tabla de compatibilidad en esta página es generada a partir de datos estructurados. Si deseas contribuir a los datos, por favor mira <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> y mándanos un pull request.</p>
+
+<p>{{Compat("http.headers.Access-Control-Allow-Origin")}}</p>
+
+<h2 id="Veáse_también">Veáse también</h2>
+
+<ul>
+ <li>{{HTTPHeader("Origin")}}</li>
+ <li>{{HTTPHeader("Vary")}}</li>
+ <li><a href="https://gist.github.com/wildoctopus/3730b5c60f9d5224f6c2418d07708e21">¿Cómo solucionar problema con CORS?</a></li>
+</ul>

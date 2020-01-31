@@ -1,0 +1,112 @@
+<div>{{GamesSidebar}}</div>
+
+<div>{{IncludeSubnav("/ru/docs")}}</div>
+
+<p>{{PreviousNext("Games/Tutorials/Создание_2D_Breakout_игры_на_Phaser/Победа", "Games/Tutorials/Создание_2D_Breakout_игры_на_Phaser/Анимация")}}</p>
+
+<div class="summary">
+<p>Это <strong>12 </strong>из 16 уроков <a href="https://developer.mozilla.org/ru/docs/Games/Tutorials/%D0%A1%D0%BE%D0%B7%D0%B4%D0%B0%D0%BD%D0%B8%D0%B5_2D_Breakout_%D0%B8%D0%B3%D1%80%D1%8B_%D0%BD%D0%B0_Phaser">руководства разработки игры с помощью Phaser</a>. Исходный код этого урока вы можете найти здесь:  <a href="https://github.com/end3r/Gamedev-Phaser-Content-Kit/blob/gh-pages/demos/lesson13.html">Gamedev-Phaser-Content-Kit/demos/lesson13.html</a>.</p>
+</div>
+
+<p><span class="seoSummary">Мы можем растянуть удовольствие от игры, добавив жизни. Это позволит игроку сделать несколько попыток, а не одну.</span></p>
+
+<h2 id="Новый_переменные">Новый переменные</h2>
+
+<p>Добавьте следующие переменные сразу после всех наших текущих опеределений переменных:</p>
+
+<pre class="brush: js">var lives = 3;
+var livesText;
+var lifeLostText;
+</pre>
+
+<p>Эти переменные хранят, соответственно, количество жизней, надпись с количеством оставшихся жизней, и надпись, которая выведется на экран, если игрок потеряет жизнь.</p>
+
+<h2 id="Определяем_новые_надписи">Определяем новые надписи</h2>
+
+<p>Надписи мы уже определяли, когда реализовывали систему <a href="https://developer.mozilla.org/ru/docs/Games/Tutorials/%D0%A1%D0%BE%D0%B7%D0%B4%D0%B0%D0%BD%D0%B8%D0%B5_2D_Breakout_%D0%B8%D0%B3%D1%80%D1%8B_%D0%BD%D0%B0_Phaser/%D0%9E%D1%87%D0%BA%D0%B8">очков</a>. Добавьте следующие строки кода в после определения надписи <code>scoreText</code> в функции <code>create()</code>:</p>
+
+<pre class="brush: js">livesText = game.add.text(game.world.width-5, 5, 'Lives: '+lives, { font: '18px Arial', fill: '#0095DD' });
+livesText.anchor.set(1,0);
+lifeLostText = game.add.text(game.world.width*0.5, game.world.height*0.5, 'Life lost, click to continue', { font: '18px Arial', fill: '#0095DD' });
+lifeLostText.anchor.set(0.5);
+lifeLostText.visible = false;
+</pre>
+
+<p>Объекты <code>livesText</code> и<code>lifeLostText</code> очень похожи на <code>scoreText</code> — они определяют положение на экране, текст надписи и стилизацию шрифта. Чтобы всё выглядило должным образом, надпись с жизнями мы закрепляем в правом верхнем углу, а надпись о потере жизни, мы выводим в центре экрана. И всё это при помощи функции <code>anchor.set()</code>.</p>
+
+<p>Надпись <code>lifeLostText</code> появится только при потере жизни, поэтому её видимость мы выставляем в <code>false</code>.</p>
+
+<h3 id="Чистим_код_стилизирующий_надписи">Чистим код, стилизирующий надписи</h3>
+
+<p>Как вы могли заметить, мы используем одинаковые стили для всех надписей: <code>scoreText</code>, <code>livesText</code> и <code>lifeLostText</code>. Однако, налицо копирование кода и если мы, когда-либо, захотим изменить размер шрифта или цвет, то нам придётся делать это в нескольких местах. Чтобы избежать этого, мы вынесем стиль в отдельную переменную. Напишите следующую строку сразу после всех наших текущих опеределений переменных:</p>
+
+<pre class="brush: js">var textStyle = { font: '18px Arial', fill: '#0095DD' };
+</pre>
+
+<p>We can now use this variable when stlying our text labels — update your code so that the multiple instances of the text styling are replaced with the variable:</p>
+
+<pre class="brush: js">scoreText = game.add.text(5, 5, 'Points: 0', textStyle);
+livesText = game.add.text(game.world.width-5, 5, 'Lives: '+lives, textStyle);
+livesText.anchor.set(1,0);
+lifeLostText = game.add.text(game.world.width*0.5, game.world.height*0.5, 'Life lost, click to continue', textStyle);
+lifeLostText.anchor.set(0.5);
+lifeLostText.visible = false;
+</pre>
+
+<p>This way changing the font in one variable will apply the changes to every place it is used.</p>
+
+<h2 id="The_lives_handling_code">The lives handling code</h2>
+
+<p>To implement lives in our game, let's first change the ball's function bound to the <code>onOutOfBounds</code> event. Instead of executing an anonymous function and showing the alert right away :</p>
+
+<pre class="brush: js"><s>ball.events.onOutOfBounds.add(function(){
+    alert('Game over!');
+    location.reload();
+}, this);</s>
+</pre>
+
+<p>We will assign a new function called <code>ballLeaveScreen</code>; delete the previous event handler (shown above) and replace it with the following line:</p>
+
+<pre class="brush: js">ball.events.onOutOfBounds.add(ballLeaveScreen, this);
+</pre>
+
+<p>We want to decrease the number of lives every time the ball leaves the canvas. Add the <code>ballLeaveScreen()</code> function definition at the end of our code:</p>
+
+<pre class="brush: js">function ballLeaveScreen() {
+    lives--;
+    if(lives) {
+        livesText.setText('Lives: '+lives);
+        lifeLostText.visible = true;
+        ball.reset(game.world.width*0.5, game.world.height-25);
+        paddle.reset(game.world.width*0.5, game.world.height-5);
+        game.input.onDown.addOnce(function(){
+            lifeLostText.visible = false;
+            ball.body.velocity.set(150, -150);
+        }, this);
+    }
+    else {
+        alert('You lost, game over!');
+        location.reload();
+    }
+}
+</pre>
+
+<p>Instead of instantly printing out the alert when you lose a life, we first subtract one life from the current number and check if it's a non-zero value. If yes, then the player still has some lives left and can continue to play — they will see the life lost message, the ball and paddle positions will be reset on screen and on the next input (click or touch) the message will be hidden and the ball will start to move again.</p>
+
+<p>When the number of available lives reaches zero, the game is over and the game over alert message will be shown.</p>
+
+<h2 id="Events">Events</h2>
+
+<p>You have probably noticed the <code>add()</code> and <code>addOnce()</code> method calls in the above two code blocks and wondered how they differ. The difference is that the <code>add()</code> method binds the given function and causes it to be executed every time the event occurs, while <code>addOnce()</code> is useful when you want to have the bound function executed only once and then unbound so it is not executed again. In our case, on every <code>outOfBounds</code> event the <code>ballLeaveScreen</code> will be executed, but when the ball leaves the screen we only want to remove the message from the screen once.</p>
+
+<h2 id="Compare_your_code">Compare your code</h2>
+
+<p>You can check the finished code for this lesson in the live demo below, and play with it to understand better how it works:</p>
+
+<p>{{JSFiddleEmbed("https://jsfiddle.net/end3r/yk1c5n0b/","","400")}}</p>
+
+<h2 id="Next_steps">Next steps</h2>
+
+<p>Lives made the game more forgiving — if you lose one life, you still have two more left and can continue to play. Now let's expand the look and feel of the game by adding <a href="https://developer.mozilla.org/en-US/docs/Games/Workflows/2D_Breakout_game_Phaser/Animations_and_tweens">animations and tweens</a>.</p>
+
+<p>{{PreviousNext("Games/Workflows/2D_Breakout_game_Phaser/Win_the_game", "Games/Workflows/2D_Breakout_game_Phaser/Animations_and_tweens")}}</p>

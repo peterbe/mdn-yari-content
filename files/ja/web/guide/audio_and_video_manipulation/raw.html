@@ -1,0 +1,364 @@
+<div class="summary">
+<p>ウェブのよいところは、複数の技術をまとめて新しいものを作ることができる点です。ネイティブの音声や動画をブラウザー上で利用できるということは、これらのデータストリームを {{htmlelement("canvas")}}、<a href="/ja/docs/Web/WebGL">WebGL</a>、<a href="/ja/docs/Web/API/Web_Audio_API">Web Audio API</a> を利用して操作することで、音声や動画に直接変更を加えることができることを意味します。例えば音声にリバーブやコンプレッション効果をかけたり、動画にグレイスケールやセピアのフィルターをかけたりすることができます。この記事では、必要なことを説明するためのリファレンスを提供します。</p>
+</div>
+
+<h2 id="Video_Manipulation" name="Video_Manipulation">動画の加工</h2>
+
+<p>動画の各フレームからピクセルの値を読むことができることは、とても有用です。</p>
+
+<h3 id="Video_and_Canvas" name="Video_and_Canvas">動画と Canvas</h3>
+
+<p>{{htmlelement("canvas")}} はウェブページ上で描画を行うための有用な方法です。これは強力で、動画の処理にも有用です。</p>
+
+<p>一般的なテクニックは次のようになります。</p>
+
+<ol>
+ <li>{{htmlelement("video")}} 要素から取得される動画の各フレームを、{{htmlelement("canvas")}}要素に直接描画します。</li>
+ <li><code>&lt;canvas&gt;</code> 要素から間接的にデータを取得し、それを操作します。</li>
+ <li>操作したデータを「画面の」 <code>&lt;canvas&gt;</code> を通じて描画します。</li>
+ <li>これを繰り返します。</li>
+</ol>
+
+<p>動画プレーヤーと、 <code>&lt;canvas&gt;</code> 要素は次のように記述します。</p>
+
+<pre class="brush: html">&lt;video id="my-video" controls="true" width="480" height="270" crossorigin="anonymous"&gt;
+  &lt;source src="http://jplayer.org/video/webm/Big_Buck_Bunny_Trailer.webm" type="video/webm"&gt;
+  &lt;source src="http://jplayer.org/video/m4v/Big_Buck_Bunny_Trailer.m4v" type="video/mp4"&gt;
+&lt;/video&gt;
+
+&lt;canvas id="my-canvas" width="480" height="270"&gt;&lt;/canvas&gt;</pre>
+
+<p>操作は以下のように行います。この例では動画を白黒に変換しています。</p>
+
+<pre class="brush: js">var processor = {  
+  timerCallback: function() {  
+    if (this.video.paused || this.video.ended) {  
+      return;  
+    }  
+    this.computeFrame();  
+    var self = this;  
+    setTimeout(function () {  
+      self.timerCallback();  
+    }, 16); // roughly 60 frames per second  
+  },
+
+  doLoad: function() {
+    this.video = document.getElementById("my-video");
+    this.c1 = document.getElementById("my-canvas");
+    this.ctx1 = this.c1.getContext("2d");
+    var self = this;  
+
+    this.video.addEventListener("play", function() {
+      self.width = self.video.width;  
+      self.height = self.video.height;  
+      self.timerCallback();
+    }, false);
+  },  
+
+  computeFrame: function() {
+    this.ctx1.drawImage(this.video, 0, 0, this.width, this.height);
+    var frame = this.ctx1.getImageData(0, 0, this.width, this.height);
+    var l = frame.data.length / 4;  
+
+    for (var i = 0; i &lt; l; i++) {
+      var grey = (frame.data[i * 4 + 0] + frame.data[i * 4 + 1] + frame.data[i * 4 + 2]) / 3;
+
+      frame.data[i * 4 + 0] = grey;
+      frame.data[i * 4 + 1] = grey;
+      frame.data[i * 4 + 2] = grey;
+    }
+    this.ctx1.putImageData(frame, 0, 0);
+
+    return;
+  }
+};  </pre>
+
+<p>ページロード後に、次の関数を呼び出します。</p>
+
+<pre class="brush: js">processor.doLoad()</pre>
+
+<p>{{EmbedLiveSample("Video_and_Canvas", '100%', 550)}}</p>
+
+<div class="note">
+<p><strong>メモ</strong>: 潜在的なセキュリティ上の問題により、動画がコードと異なるドメインより配信されている場合、動画を配信しているサーバーで <a href="/ja/docs/Web/HTTP/Access_control_CORS">CORS (Cross Origin Resource Sharing)</a> を有効にする必要があります。</p>
+</div>
+
+<div class="note">
+<p><strong>メモ</strong>: 上記の例は、動画を canvas で操作するためだけのものです。対応しているブラウザーであれば、 setTimeout の代わりに requestAnimationFrame を利用することを効率のために検討したほうがよいでしょう。</p>
+</div>
+
+<h3 id="動画と_WebGL">動画と WebGL</h3>
+
+<p><a href="/ja/docs/Web/WebGL">WebGL</a> は canvas に三次元画像を描画できる強力な API です。 {{htmlelement("video")}} 要素と組み合わせることで、動画をテクチャとして利用できます。つまり三次元空間上に動画を配置し、再生できます。</p>
+
+<p>例:</p>
+
+<p>{{EmbedGHLiveSample('webgl-examples/tutorial/sample8/index.html', 670, 510) }}</p>
+
+<div class="note">
+<p><strong>メモ</strong>: <a href="https://github.com/mdn/webgl-examples/tree/gh-pages/tutorial/sample8">このデモのソースコードは GitHub</a> にあります (<a href="https://mdn.github.io/webgl-examples/tutorial/sample8/">ライブで表示</a>も)。</p>
+</div>
+
+<h3 id="Playback_Rate" name="Playback_Rate">再生レート</h3>
+
+<p>音声や動画の再生レートは {{htmlelement("audio")}} もしくは {{htmlelement("video")}} 要素の <code>playbackRate</code> 属性で指定できます ({{domxref("HTMLMediaElement")}} を参照のこと)。<code>playbackRate</code> には再生スピードの倍率を指定します。例えば 0.5 を指定すると半分のスピードで、 2 を指定すると倍速で再生されます。</p>
+
+<p>HTML:</p>
+
+<pre class="brush: html">&lt;video id="my-video" controls src="http://jplayer.org/video/m4v/Big_Buck_Bunny_Trailer.m4v"&gt;&lt;/video&gt;</pre>
+
+<p>JavaScript:</p>
+
+<pre class="brush: js">var myVideo = document.getElementById('my-video');
+myVideo.playbackRate = 2;</pre>
+
+<div class="hidden">
+<h6 id="Playable_code" name="Playable_code">Playable code</h6>
+
+<pre class="brush: html">&lt;video id="my-video" controls="true" width="480" height="270"&gt;
+  &lt;source src="http://jplayer.org/video/webm/Big_Buck_Bunny_Trailer.webm" type="video/webm"&gt;
+  &lt;source src="http://jplayer.org/video/m4v/Big_Buck_Bunny_Trailer.m4v" type="video/mp4"&gt;
+&lt;/video&gt;
+&lt;div class="playable-buttons"&gt;
+  &lt;input id="edit" type="button" value="Edit" /&gt;
+  &lt;input id="reset" type="button" value="Reset" /&gt;
+&lt;/div&gt;
+&lt;textarea id="code" class="playable-code"&gt;
+var myVideo = document.getElementById('my-video');
+myVideo.playbackRate = 2;&lt;/textarea&gt;
+</pre>
+
+<pre class="brush: js">var textarea = document.getElementById('code');
+var reset = document.getElementById('reset');
+var edit = document.getElementById('edit');
+var code = textarea.value;
+
+function setPlaybackRate() {
+  eval(textarea.value);
+}
+
+reset.addEventListener('click', function() {
+  textarea.value = code;
+  setPlaybackRate();
+});
+
+edit.addEventListener('click', function() {
+  textarea.focus();
+})
+
+textarea.addEventListener('input', setPlaybackRate);
+window.addEventListener('load', setPlaybackRate);
+</pre>
+</div>
+
+<p>{{ EmbedLiveSample('Playable_code', 700, 425) }}</p>
+
+<div class="note">
+<p><strong>メモ</strong>: <a href="http://jsbin.com/qomuvefu/2/edit">playbackRate の動作するデモはこちら</a></p>
+</div>
+
+<div class="note">
+<p><strong>メモ</strong>: <code>playbackRate</code> は &lt;audio&gt; 要素と &lt;video&gt; 要素で利用できます。ただし再生スピードを変更できますが、ピッチは変更できません。音声のピッチを変更は、Web Audio API を利用すると可能です。詳しくは {{domxref("AudioBufferSourceNode.playbackRate")}} 属性をご覧ください。</p>
+</div>
+
+<h2 id="Audio_Manipulation" name="Audio_Manipulation">音声の加工</h2>
+
+<p>音声を加工するためには、 <a href="/docs/Web/API/Web_Audio_API">Web Audio API</a> を利用することが一般的です。</p>
+
+<h3 id="Selecting_an_audio_source" name="Selecting_an_audio_source">音源の選択</h3>
+
+<p>{{htmlelement("audio")}} 要素、もしくは {{htmlelement("video")}} 要素の音声トラックを Web Audio API で操作する音源として利用できます。またオーディオバッファ、サイン波のようなオシレータからの出力、 <a href="/docs/Web/Guide/API/WebRTC">WebRTC</a> や <a href="/docs/NavigatorUserMedia.getUserMedia">getUserMedia</a> からの音声ストリームも音源とできます。具体的な方法については以下のページを参照してください。</p>
+
+<ul>
+ <li>{{domxref("MediaElementAudioSourceNode")}}</li>
+ <li>{{domxref("AudioBufferSourceNode")}}</li>
+ <li>{{domxref("OscillatorNode")}}</li>
+ <li>{{domxref("MediaStreamAudioSourceNode")}}</li>
+</ul>
+
+<h3 id="Audio_Filters" name="Audio_Filters">音声フィルター</h3>
+
+<p>Web Audio API では {{domxref("BiquadFilterNode")}} を利用することで様々なフィルターやエフェクトを利用できます。</p>
+
+<p>HTML:</p>
+
+<pre class="brush: html">&lt;video id="my-video" controls src="myvideo.mp4" type="video/mp4"&gt;&lt;/video&gt;</pre>
+
+<p>JavaScript:</p>
+
+<pre class="brush: js">var context     = new AudioContext(),
+    audioSource = context.createMediaElementSource(document.getElementById("my-video")),
+    filter      = context.createBiquadFilter();
+audioSource.connect(filter);
+filter.connect(context.destination);
+
+// Configure filter
+filter.type = "lowshelf";
+filter.frequency.value = 1000;
+filter.gain.value = 25;</pre>
+
+<div class="hidden">
+<h6 id="Playable_code_2" name="Playable_code_2">Playable code</h6>
+
+<pre class="brush: html">&lt;video id="my-video" controls="true" width="480" height="270" crossorigin="anonymous"&gt;
+  &lt;source src="http://jplayer.org/video/webm/Big_Buck_Bunny_Trailer.webm" type="video/webm"&gt;
+  &lt;source src="http://jplayer.org/video/m4v/Big_Buck_Bunny_Trailer.m4v" type="video/mp4"&gt;
+&lt;/video&gt;
+&lt;div class="playable-buttons"&gt;
+  &lt;input id="edit" type="button" value="Edit" /&gt;
+  &lt;input id="reset" type="button" value="Reset" /&gt;
+&lt;/div&gt;
+&lt;textarea id="code" class="playable-code"&gt;
+filter.type = "lowshelf";
+filter.frequency.value = 1000;
+filter.gain.value = 25;&lt;/textarea&gt;</pre>
+
+<pre class="brush: js">var context     = new AudioContext(),
+    audioSource = context.createMediaElementSource(document.getElementById("my-video")),
+    filter      = context.createBiquadFilter();
+audioSource.connect(filter);
+filter.connect(context.destination);
+
+var textarea = document.getElementById('code');
+var reset = document.getElementById('reset');
+var edit = document.getElementById('edit');
+var code = textarea.value;
+
+function setFilter() {
+  eval(textarea.value);
+}
+
+reset.addEventListener('click', function() {
+  textarea.value = code;
+  setFilter();
+});
+
+edit.addEventListener('click', function() {
+  textarea.focus();
+})
+
+textarea.addEventListener('input', setFilter);
+window.addEventListener('load', setFilter);
+</pre>
+</div>
+
+<p>{{ EmbedLiveSample('Playable_code_2', 700, 425) }}</p>
+
+<div class="note">
+<p><strong>メモ</strong>: <a href="/docs/Web/HTTP/Access_control_CORS">CORS</a> が有効になっていない環境では、動画はコードと同じドメイン上になければなりません。これはセキュリティ上の問題を避けるためです。</p>
+</div>
+
+<p>このノードでよく利用されるフィルターは以下の通りです。</p>
+
+<ul>
+ <li>ローパス: 閾値に指定された周波数より低い音は通過させ、高いものは減衰させます。</li>
+ <li>ハイパス: 閾値に指定された周波数より高い音は通過させ、低いものは減衰させます。</li>
+ <li>バンドパス: 指定された周波数帯の音は通過させ、それ以外は減衰させます。</li>
+ <li>ローシェルフ: 周波数に関わらず全ての音を通過させますが、閾値より低いものは増幅 (もしくは減衰) されます</li>
+ <li>ハイシェルフ: 周波数に関わらず全ての音を通過させますが、閾値より高いものは増幅 (もしくは減衰) されます</li>
+ <li>ピーキング: 周波数に関わらず全ての音を通過させますが、指定された周波数帯のものは増幅 (もしくは減衰) されます</li>
+ <li>ノッチ: 指定された周波数帯を除き、全ての音を通過させます</li>
+ <li>オールパス: 周波数に関わらず全ての音を通過させますが、幾つかの周波数間の相関係を変更します</li>
+</ul>
+
+<div class="note">
+<p><strong>メモ</strong>: 詳しくは {{domxref("BiquadFilterNode")}} を参照してください。</p>
+</div>
+
+<h3 id="Convolutions_and_Impulses" name="Convolutions_and_Impulses">たたみ込みとインパルス</h3>
+
+<p>{{domxref("ConvolverNode")}} を利用することで、音声にインパルス応答を適用できます。インパルス応答とはハンドクラッフのような短い音のインパルスから作成された音のことです。インパルス応答はインパルスが作られた環境、例えばトンネル内で手を叩くことでエコーが起きる、を示します。</p>
+
+<p>例:</p>
+
+<pre class="brush: js">var convolver = context.createConvolver();
+convolver.buffer = this.impulseResponseBuffer;
+// Connect the graph.
+source.connect(convolver);
+convolver.connect(context.destination);</pre>
+
+<div class="note">
+<p><strong>メモ</strong>: 詳しくは {{domxref("ConvolverNode")}} を参照してください。</p>
+</div>
+
+<div class="note">
+<p><strong>メモ</strong>: 詳しくは {{domxref("ConvolverNode")}} を参照してください。</p>
+</div>
+
+<h3 id="Spatial_Audio" name="Spatial_Audio">空間的な音</h3>
+
+<p>Panner ノードを利用することで、音源の位置を操作できます。ソースコーンの位置だけでなく、その方向も指定できます。位置や方向は三次元空間上で指定します。</p>
+
+<p>例:</p>
+
+<pre class="brush: js">var panner = context.createPanner();
+panner.coneOuterGain = 0.2;
+panner.coneOuterAngle = 120;
+panner.coneInnerAngle = 0;
+
+panner.connect(context.destination);
+source.connect(panner);
+source.start(0);
+ 
+// Position the listener at the origin.
+context.listener.setPosition(0, 0, 0);</pre>
+
+<div class="note">
+<p><strong>メモ</strong>: <a href="https://github.com/mdn/webaudio-examples/tree/master/panner-node">GitHub リポジトリに例</a>があります (<a href="https://mdn.github.io/webaudio-examples/panner-node/">ライブ版</a>も)。</p>
+</div>
+
+<div class="note">
+<p><strong>メモ</strong>: 詳細は {{domxref("ConvolverNode")}}を参照してください。</p>
+</div>
+
+<h2 id="JavaScript_によるコーデック">JavaScript によるコーデック</h2>
+
+<p>JavasCript でより低レベルでの音声操作が可能です。これを利用することで、オーディオコーデックを自作できます。</p>
+
+<p>以下にフォーマットとそのコーデックのリストを示します。</p>
+
+<ul>
+ <li>AAC: <a href="https://github.com/audiocogs/aac.js">AAC.js</a></li>
+ <li>ALAC: <a href="https://github.com/audiocogs/alac.js">alac.js</a></li>
+ <li>FLAC: <a href="https://github.com/audiocogs/flac.js">flac.js</a></li>
+ <li>MP3: <a href="https://github.com/audiocogs/mp3.js">mp3.js</a></li>
+ <li>Opus: <a href="https://github.com/audiocogs/opus.js">Opus.js</a></li>
+ <li>Vorbis: <a href="https://github.com/audiocogs/vorbis.js">vorbis.js</a></li>
+</ul>
+
+<div class="note">
+<p><strong>メモ</strong>: AudioCogs で<a href="http://audiocogs.org/codecs/">いくつかのデモ</a>を試せます。 AudioCogs は JavaScript でのコーデック実装を行うためのフレームワークである <a href="http://audiocogs.org/codecs/">Aurora.js</a> を提供しています。</p>
+</div>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<ul>
+ <li><a href="https://github.com/mdn/">様々な Web Audio API (及びその他) の例</a></li>
+ <li><a href="https://github.com/chrisdavidmills/threejs-video-cube">THREE.js Video Cube example</a></li>
+ <li><a href="http://chromium.googlecode.com/svn/trunk/samples/audio/convolution-effects.html">Convolution Effects in Real-Time</a></li>
+</ul>
+
+<h2 id="Tutorials" name="Tutorials">チュートリアル</h2>
+
+<ul>
+ <li><a href="/ja/docs/Web/HTML/Manipulating_video_using_canvas">キャンバスを使用した動画の加工</a></li>
+ <li><a href="/ja/Apps/Build/Manipulating_media/HTML5_playbackRate_explained">HTML5 playbackRate の解説</a></li>
+ <li><a href="/ja/docs/Web/API/Web_Audio_API/Using_Web_Audio_API">Web Audio API の利用</a></li>
+ <li><a href="/ja/docs/Web/API/Web_Audio_API/Web_audio_spatialisation_basics">Web audio spatialisation の基本</a></li>
+ <li><a href="/ja/docs/Web/WebGL/Animating_textures_in_WebGL#Using_the_video_frames_as_a_texture">動画フレームの WebGL テクスチャとしての利用</a> (<a href="http://threejs.org">THREE.js</a> WebGL ライブラリ (及びその他) と <a href="http://stemkoski.github.io/Three.js/Video.html">この効果の実現</a>)</li>
+ <li><a href="/ja/docs/Web/WebGL/Animating_textures_in_WebGL">WebGL におけるアニメーションテクスチャ</a></li>
+ <li><a href="http://www.html5rocks.com/en/tutorials/webaudio/games/#toc-room">Developing Game Audio with the Web Audio API (Room effects and filters)</a></li>
+</ul>
+
+<h2 id="Reference" name="Reference">リファレンス</h2>
+
+<ul>
+ <li>{{htmlelement("audio")}} および {{htmlelement("video")}} 要素</li>
+ <li>{{domxref("HTMLMediaElement")}} API</li>
+ <li>{{htmlelement("canvas")}} 要素</li>
+ <li><a href="/ja/docs/Web/API/Web_Audio_API">Web Audio API</a></li>
+ <li><a href="/ja/docs/Web/API/AudioContext">AudioContext</a></li>
+ <li>More info on <a href="/ja/docs/Web/API/AudioContext.createPanner">Spatial Audio</a></li>
+</ul>
+
+<div>{{QuickLinksWithSubpages("/ja/docs/Web/Apps/Fundamentals/")}}</div>

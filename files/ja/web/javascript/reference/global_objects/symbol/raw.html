@@ -1,0 +1,218 @@
+<div>{{JSRef}}</div>
+
+<p><code>Symbol()</code> 関数は、<strong>symbol</strong> 型の値を返します。これはビルトインオブジェクトを公開するための静的プロパティを持ち、グローバル symbol レジストリーを公開するための静的メソッドを持つので、ビルトインオブジェクトクラスのようにも見えますが、コンストラクタとしての機能を持たず、"<code>new Symbol()</code>" はサポートされていません。</p>
+
+<p><code>Symbol()</code> 関数は常に一意の値を返します。symbol 値はオブジェクトのプロパティ識別子として使われます。symbol 型はこの目的のためだけに使われます。目的や使用方法の詳細を知りたい場合、 <a href="https://developer.mozilla.org/ja/docs/Glossary/Symbol">MDN用語集：Symbol</a> を見てください。</p>
+
+<p><em>symbol データ型</em>は、{{Glossary("Primitive", "プリミティブデータ型")}}です。</p>
+
+<div>{{EmbedInteractiveExample("pages/js/symbol-constructor.html")}}</div>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox"><code>Symbol(<em>[description]</em>)</code></pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<dl>
+ <dt><code>description</code> {{optional_inline}}</dt>
+ <dd>任意で文字列を渡すことができます。デバック用に使われますが、シンボル自体にはアクセスしないシンボルの説明です。</dd>
+</dl>
+
+<h2 id="Description" name="Description">説明</h2>
+
+<p>新しいプリミティブ symbol を生成するために、説明のためのオプション文字列とともに <code>Symbol()</code> を記述します。</p>
+
+<pre class="brush: js">var sym1 = Symbol();
+var sym2 = Symbol("foo");
+var sym3 = Symbol("foo");
+</pre>
+
+<p>上述のコードは、新しい symbol を 3 つ生成しています。<code>Symbol("foo")</code> は、同一の symbol に文字列 "foo" を強制していません。毎回新しい symbol を生成しています。</p>
+
+<pre class="brush: js">Symbol("foo") === Symbol("foo"); // false</pre>
+
+<p>次の {{jsxref("Operators/new", "new")}} 演算子を用いた構文は、{{jsxref("TypeError")}} を生成するでしょう。</p>
+
+<pre class="brush: js">var sym = new Symbol(); // TypeError</pre>
+
+<p>これは、記述者が新しい symbol の値を生成する代わりに明示的な <code>Symbol</code> ラッパーオブジェクトを生成することを防ぎます。プリミティブデータ型の周りに明示的なラッパーオブジェクトを生成することは、もはや ECMAScript6 ではサポートされていません。しかし、<code>new Boolean</code> や <code>new String</code>、<code>new Number</code> のような既存のプリミティブラッパーオブジェクトは、歴史的な理由からまだ生成できます。</p>
+
+<p>そして、もし本当に <code>Symbol</code> ラッパーオブジェクトを生成したいなら、<code>Object()</code> 関数を使用できます。</p>
+
+<pre class="brush: js">var sym = Symbol("foo");
+typeof sym;     // "symbol" 
+var symObj = Object(sym);
+typeof symObj;  // "object"
+</pre>
+
+<h3 id="Shared_symbols_in_the_global_symbol_registry" name="Shared_symbols_in_the_global_symbol_registry">グローバル symbol レジストリの共有 symbol</h3>
+
+<p>上述の <code>Symbol()</code> 関数を使用した構文は、あなたのコード全体で使用できるグローバル symbol は生成しません。ファイルを跨いでグローバルスコープのような環境で使用できる symbol を生成するには、グローバル symbol レジストリから symbol を扱うための {{jsxref("Symbol.for()")}} と {{jsxref("Symbol.keyFor()")}} メソッドを使用します。</p>
+
+<h3 id="Finding_symbol_properties_on_objects" name="Finding_symbol_properties_on_objects">オブジェクトの symbol プロパティを探す</h3>
+
+<p>{{jsxref("Object.getOwnPropertySymbols()")}} メソッドは、symbol の配列を返し、与えられたオブジェクトの symbol プロパティを見つけられるようにしてくれます。すべてのオブジェクトは、symbol なしで初期化されます。そのため、オブジェクトに symbol プロパティを設定しないかぎり、この配列は空だということに注意してください。</p>
+
+<h2 id="Properties" name="Properties">プロパティ</h2>
+
+<dl>
+ <dt><code>Symbol.length</code></dt>
+ <dd>値が 0 の Length プロパティ</dd>
+ <dt>{{jsxref("Symbol.prototype")}}</dt>
+ <dd><code>Symbol</code> コンストラクターのためのプロトタイプを表します。</dd>
+</dl>
+
+<h3 id="Well-known_symbols" name="Well-known_symbols">予約された symbol</h3>
+
+<p>ユーザーの symbol に加えて、JavaScript は ECMAScript5 以前では開発者に公開されていなかった言語内部のふるまいを表すビルトイン symbol を持っています。これらは下記のプロパティを使用することでアクセスできます。</p>
+
+<h4 id="Iteration_symbols" name="Iteration_symbols">反復用途の symbol</h4>
+
+<dl>
+ <dt>{{jsxref("Symbol.iterator")}}</dt>
+ <dd>オブジェクトのための既定のイテレーターを返すメソッドです。<a href="/ja/docs/Web/JavaScript/Reference/Statements/for...of"><code>for...of</code></a> で使用されます。</dd>
+ <dt>{{jsxref("Symbol.asyncIterator")}} {{experimental_inline}}</dt>
+ <dd>A method that returns the default AsyncIterator for an object. <a href="/ja/docs/Web/JavaScript/Reference/Statements/for-await-of"><code>for await of</code></a> で使用されます。</dd>
+</dl>
+
+<h4 id="Regular_expression_symbols" name="Regular_expression_symbols">正規表現用途の symbol</h4>
+
+<dl>
+ <dt>{{jsxref("Symbol.match")}}</dt>
+ <dd>文字列にマッチするメソッドや、オブジェクトが正規表現として使用できるか決定するために使用されます。{{jsxref("String.prototype.match()")}} で使われます。</dd>
+ <dt>{{jsxref("Symbol.replace")}}</dt>
+ <dd>マッチした文字列の部分を置き換えるメソッドです。{{jsxref("String.prototype.replace()")}} で使われます。</dd>
+ <dt>{{jsxref("Symbol.search")}}</dt>
+ <dd>正規表現にマッチする文字列内のインデックスを返すメソッドです。{{jsxref("String.prototype.search()")}} で使われます。</dd>
+ <dt>{{jsxref("Symbol.split")}}</dt>
+ <dd>正規表現にマッチするインデックスで文字列を分割するメソッドです。{{jsxref("String.prototype.split()")}} で使われます。</dd>
+</dl>
+
+<h4 id="Other_symbols" name="Other_symbols">そのほかの symbol</h4>
+
+<dl>
+ <dt>{{jsxref("Symbol.hasInstance")}}</dt>
+ <dd>コンストラクターオブジェクトがオブジェクトをそのインスタンスか確認するために使用するメソッドです。{{jsxref("Operators/instanceof", "instanceof")}} で使用されます。</dd>
+ <dt>{{jsxref("Symbol.isConcatSpreadable")}}</dt>
+ <dd>オブジェクトが配列要素にフラット化できるかを示す真偽値です。{{jsxref("Array.prototype.concat()")}} で使用されます。</dd>
+ <dt>{{jsxref("Symbol.unscopables")}}</dt>
+ <dd>プロパティの値を示す文字列の配列です。これらは関連するオブジェクトをバインドする <code><a href="/ja/docs/Web/JavaScript/Reference/Statements/with">with</a></code> 環境から除外されます。</dd>
+ <dt>{{jsxref("Symbol.species")}}</dt>
+ <dd>派生オブジェクトを生成するために使われるコンストラクター関数です。</dd>
+ <dt>{{jsxref("Symbol.toPrimitive")}}</dt>
+ <dd>オブジェクトをプリミティブ値に変換する関数です。</dd>
+ <dt>{{jsxref("Symbol.toStringTag")}}</dt>
+ <dd>オブジェクトの既定の説明のために使われる文字列値です。{{jsxref("Object.prototype.toString()")}} で使用されます。</dd>
+</dl>
+
+<h2 id="Methods" name="Methods">メソッド</h2>
+
+<dl>
+ <dt>{{jsxref("Symbol.for()", "Symbol.for(key)")}}</dt>
+ <dd>与えられた key で存在するシンボルを検索し、見つかればそれを返します。もしくは、グローバル symbol レジストリーにこの key で新しい symbol を生成します。</dd>
+ <dt>{{jsxref("Symbol.keyFor", "Symbol.keyFor(sym)")}}</dt>
+ <dd>グローバル symbol レジストリーから、与えられた symbol のための共有 symbol Key を取得します。</dd>
+</dl>
+
+<h2 id="Symbol_prototype" name="Symbol_prototype"><code>Symbol</code> プロトタイプ</h2>
+
+<p>すべての Symbol は、{{jsxref("Symbol.prototype")}} を継承しています。</p>
+
+<h3 id="Properties_2" name="Properties_2">プロパティ</h3>
+
+<p>{{page('ja/Web/JavaScript/Reference/Global_Objects/Symbol/prototype','Properties')}}</p>
+
+<h3 id="Methods_2" name="Methods_2">メソッド</h3>
+
+<p>{{page('ja/Web/JavaScript/Reference/Global_Objects/Symbol/prototype','Methods')}}</p>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<h3 id="Using_the_typeof_operator_with_symbols" name="Using_the_typeof_operator_with_symbols">symbol と一緒に <code>typeof</code> 演算子を使用する</h3>
+
+<p>{{jsxref("Operators/typeof", "typeof")}} 演算子は、symbol を識別するために役立ちます。</p>
+
+<pre class="brush: js">typeof Symbol() === 'symbol'
+typeof Symbol('foo') === 'symbol'
+typeof Symbol.iterator === 'symbol'
+</pre>
+
+<h3 id="Symbol_type_conversions" name="Symbol_type_conversions">Symbol 型変換</h3>
+
+<p>symbol の型変換作業を行うとき、いくつかの点に注意してください。</p>
+
+<ul>
+ <li>symbol を number に変換しようとするとき, {{jsxref("TypeError")}} がスローされます（例： <code>+sym</code> 、 <code>sym | 0</code> ）。</li>
+ <li>緩い等価演算子を使うとき、<code>Object(sym) == sym</code> は <code>true</code> を返します。</li>
+ <li><code>Symbol("foo") + "bar"</code> は {{jsxref("TypeError")}} （ symbol を string に変換できません）をスローします。例えば、これは新しい string プロパティ名を暗黙的に生成することを防ぎます。</li>
+ <li><a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/String#String_conversion">"安全な" <code>String(sym)</code> 変換</a>は symbol とともに{{jsxref("Symbol.prototype.toString()")}} を呼び出したかのように動作しますが、<code>new String(sym)</code> は TypeError をスローすることに注意してください。</li>
+</ul>
+
+<h3 id="Symbols_and_for...in_iteration" name="Symbols_and_for...in_iteration">Symbols と <code>for...in</code> による反復</h3>
+
+<p>Symbol は <code><a href="/ja/docs/Web/JavaScript/Reference/Statements/for...in">for...in</a></code> よる反復からは取得できません。加えて、{{jsxref("Object.getOwnPropertyNames()")}} は symbol オブジェクトプロパティを返しません、それらを取得するために {{jsxref("Object.getOwnPropertySymbols()")}} を使うことができます。</p>
+
+<pre class="brush: js">var obj = {};
+
+obj[Symbol("a")] = "a";
+obj[Symbol.for("b")] = "b";
+obj["c"] = "c";
+obj.d = "d";
+
+for (var i in obj) {
+   console.log(i); // logs "c" and "d"
+}</pre>
+
+<h3 id="Symbols_and_JSON.stringify()" name="Symbols_and_JSON.stringify()">Symbol と <code>JSON.stringify()</code></h3>
+
+<p><code>JSON.stringify()</code> を使用するとき、Symbol をキーとしたプロパティは完全に無視されます。</p>
+
+<pre class="brush: js">JSON.stringify({[Symbol("foo")]: "foo"});                 
+// '{}'</pre>
+
+<p>詳しくは {{jsxref("JSON.stringify()")}} を見てください。</p>
+
+<h3 id="Symbol_wrapper_objects_as_property_keys" name="Symbol_wrapper_objects_as_property_keys">プロパティキーとしての Symbol ラッパーオブジェクト</h3>
+
+<p>プロパティキーとして symbol ラッパーオブジェクトを使うとき、このオブジェクトはラッパーされた symbol を強制されます。</p>
+
+<pre class="brush: js">var sym = Symbol("foo");
+var obj = {[sym]: 1};
+obj[sym];            // 1
+obj[Object(sym)];    // still 1
+</pre>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">状態</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-symbol-objects', 'Symbol')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td>初期定義</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザー実装状況</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.builtins.Symbol")}}</p>
+
+<h2 id="See_also" name="See_also">関連項目</h2>
+
+<ul>
+ <li><a href="/ja/docs/Glossary/Symbol">用語集: Symbol</a></li>
+ <li>{{jsxref("Operators/typeof", "typeof")}}</li>
+ <li><a href="/ja/docs/Web/JavaScript/Data_structures">データ型とデータ構造</a></li>
+ <li><a href="https://hacks.mozilla.org/2015/06/es6-in-depth-symbols/">"ES6 In Depth: Symbols" on hacks.mozilla.org</a></li>
+</ul>

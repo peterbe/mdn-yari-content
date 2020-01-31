@@ -1,0 +1,220 @@
+<div>{{jsSidebar("Operators")}}</div>
+
+<p>La parola chiave <strong>super</strong> viene usata per chiamare le funzioni dell'oggetto padre.</p>
+
+<p>Il <code>super.prop</code> ed espressioni con <code>super[expr]</code> sono valide in ogni  <a href="/en-US/docs/Web/JavaScript/Reference/Functions/Method_definitions">definizione di metodo</a> sia nelle <a href="/en-US/docs/Web/JavaScript/Reference/Classes">classi</a> e <a href="/en-US/docs/Web/JavaScript/Reference/Operators/Object_initializer">oggetti literals</a>.</p>
+
+<h2 id="Sintassi">Sintassi</h2>
+
+<pre class="syntaxbox">super([arguments]); // chiama il costruttore padre.
+super.functionOnParent([arguments]);
+</pre>
+
+<h2 id="Descrizione">Descrizione</h2>
+
+<p>Quando viene usata in un costruttore, la parola chiave super deve essere usata prima della parola chiave this. Super può essere usata anche per chiamare funzioni dell'oggetto padre.</p>
+
+<h2 id="Esempio">Esempio</h2>
+
+<h3 id="Usare_super_nelle_classi">Us<code>are super nelle classi</code></h3>
+
+<p>Questo pezzo di codice è preso da <a href="https://github.com/GoogleChrome/samples/blob/gh-pages/classes-es6/index.html">classes sample</a> (<a href="https://googlechrome.github.io/samples/classes-es6/index.html">live demo</a>).</p>
+
+<pre class="brush: js">class Polygon {
+  constructor(height, width) {
+    this.name = 'Polygon';
+    this.height = height;
+    this.width = width;
+  }
+  sayName() {
+    console.log('Hi, I am a ', this.name + '.');
+  }
+}
+
+class Square extends Polygon {
+  constructor(length) {
+    this.height; // ReferenceError, super deve essere chiamato per primo!
+    
+    // Chiama il costruttore della classe padre
+    super(length, length);
+    
+    // Nota: Nelle classi derivate super() deve essere chiamato prima
+    // dell'uso di 'this'.
+    this.name = 'Square';
+  }
+
+  get area() {
+    return this.height * this.width;
+  }
+
+  set area(value) {
+    this.area = value;
+  } 
+}</pre>
+
+<h3 id="Usare_super_per_metodi_statici">Usare super per metodi statici</h3>
+
+<p>Puoi usare super anche chiamare metodi <a href="/en-US/docs/Web/JavaScript/Reference/Classes/static">statici</a>.</p>
+
+<pre class="brush: js">class Human {
+  constructor() {}
+  static ping() {
+    return 'ping';
+  }
+}
+
+class Computer extends Human {
+  constructor() {}
+  static pingpong() {
+    return super.ping() + ' pong';
+  }
+}
+Computer.pingpong(); // 'ping pong'
+</pre>
+
+<h3 id="Cancellare_una_proprietà_del_super_causa_eccezione">Cancellare una proprietà del super causa eccezione</h3>
+
+<p>Non puoi cancellare una proprietà della classe padre usando l' <a href="/en-US/docs/Web/JavaScript/Reference/Operators/delete">operatore delete</a> e <code>uper.prop</code> o <code>super[esperssione]</code>, questo causerà un {{jsxref("ReferenceError")}}.</p>
+
+<pre class="brush: js">class Base {
+  constructor() {}
+  foo() {}
+}
+class Derived extends Base {
+  constructor() {}
+  delete() {
+    delete super.foo;
+  }
+}
+
+new Derived().delete(); // ReferenceError: uso della delete con 'super'. </pre>
+
+<h3 id="Super.prop_non_può_sovrascrivere_proprietà_non_scrivibili"><code>Super.prop</code> non può sovrascrivere proprietà non scrivibili</h3>
+
+<p>Quando si definisce una proprietà non riscrivibile con ad esempio {{jsxref("Object.defineProperty")}}, <code>super</code> non può modificarne il valore.</p>
+
+<pre class="brush: js">class X {
+  constructor() {
+    Object.defineProperty(this, "prop", {
+      configurable: true,
+      writable: false, 
+      value: 1
+    });
+  } 
+  f() { 
+    super.prop = 2;
+  }
+}
+
+var x = new X();
+x.f();
+console.log(x.prop); // 1
+</pre>
+
+<h3 id="Uso_di_super.prop_in_oggetti_literals">Uso di <code>super.prop</code> in oggetti literals</h3>
+
+<p>Super can also be used in the <a href="/en-US/docs/Web/JavaScript/Reference/Operators/Object_initializer">object initializer / literal</a> notation. In this example, two objects define a method. In the second object, <code>super</code> calls the first object's method. This works with the help of {{jsxref("Object.setPrototypeOf()")}} with which we are able to set the prototype of <code>obj2</code> to <code>obj1</code>, so that <code>super</code> is able to find <code>method1</code> on <code>obj1</code>.</p>
+
+<pre class="brush: js">var obj1 = {
+  method1() {
+    console.log("method 1");
+  }
+}
+
+var obj2 = {
+  method2() {
+   super.method1();
+  }
+}
+
+Object.setPrototypeOf(obj2, obj1);
+obj2.method2(); // logs "method 1"
+</pre>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-super-keyword', 'super')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-super-keyword', 'super')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibili">Browser compatibili</h2>
+
+<p>{{CompatibilityTable}}</p>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatChrome(42.0)}}</td>
+   <td>{{CompatGeckoDesktop(45)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Android Webview</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+   <th>Chrome for Android</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatChrome(42.0)}}</td>
+   <td>{{CompatGeckoMobile(45)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatChrome(42.0)}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="Gecko_specific_notes">Gecko specific notes</h2>
+
+<ul>
+ <li><code>super()</code> non funziona come previsto in prototipi built-in.</li>
+</ul>
+
+<h2 id="Vedi_anche">Vedi anche</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Web/JavaScript/Reference/Classes">Classi</a></li>
+</ul>

@@ -1,0 +1,212 @@
+<div>{{CSSRef}}</div>
+
+<p class="summary"><span class="seoSummary">CSS の<ruby><em>視覚整形モデル</em><rp> (</rp><rt>visual formatting model</rt><rp>) </rp></ruby>は、文書を処理して視覚メディアへ表示するアルゴリズムです。このモデルは CSS の基本概念です。</span></p>
+
+<p>視覚整形モデルは、文書のそれぞれの要素を変換して、 <a href="/ja/docs/Web/CSS/CSS_Box_Model/Introduction_to_the_CSS_box_model">CSS ボックスモデル</a>に従った0、1、または数個のボックスを生成します。それぞれのボックスの配置は、以下のように定義されています。</p>
+
+<ul>
+ <li>ボックスの寸法: 詳細な定義、制約あり、制約なし</li>
+ <li>ボックスの種類: インライン、インラインレベル、不可分なインラインレベル、ブロック</li>
+ <li><a href="/ja/docs/Web/CSS/Box_positioning_scheme" title="CSS/Box positioning scheme">位置決定方法</a>: 通常フロー、浮動、絶対位置指定</li>
+ <li>文書ツリー内の他の要素: 子要素や隣接要素</li>
+ <li>{{glossary("viewport", "ビューポート")}}の大きさや位置</li>
+ <li>含まれる画像の持つ固有の大きさ</li>
+ <li>その他外部からの情報</li>
+</ul>
+
+<p>このモデルでは、ボックスはその<em>包含ブロック</em>の辺を基準に描かれます。通常、ボックスはその子孫要素のために包含ブロックを作ります。しかし、ボックスは包含ブロック内に制約されるわけではありません。ボックスの配置が包含ブロックの外側にはみ出る状態を、<em>オーバーフロー</em>と言います。</p>
+
+<h2 id="Box_generation" name="Box_generation"><a name="Box_generation">ボックスの生成</a></h2>
+
+<p>ボックスの生成は CSS の視覚整形モデルの一部で、文書内の要素からボックスを作ることです。生成されたボックスはそれぞれ別個の種類を持ち、視覚整形モデルで行うことが変わります。生成されるボックスの種類は CSS の {{cssxref("display")}} プロパティによって決まります。</p>
+
+<h3 id="Block-level_elements_and_block_boxes" name="Block-level_elements_and_block_boxes">ブロックレベル要素とブロックボックス</h3>
+
+<p>CSS の {{cssxref("display")}} プロパティの計算値が <code>block</code>, <code>list-item</code>, <code>table</code> のいずれかであるとき、要素は<em>ブロックレベル</em>であると言います。ブロックレベル要素はブロックとして視覚整形され (例：段落)、縦方向に積み重ねられます。</p>
+
+<p>ブロックレベルボックス (block-level box) は、<a href="/ja/docs/Web/CSS/block_formatting_context" title="block formatting context">ブロック整形コンテキスト</a>に関わるボックスです。ブロックレベル要素はそれぞれ、<em>主ブロックレベルボックス (principal block-level box)</em> と呼ばれる、少なくとも1つのブロックレベルボックスを生成します。リスト項目要素のように、項目先頭の黒丸や他の文字要素用にさらにボックスを生成するものもあります。しかし、ほとんどは主ブロックレベルボックスだけを生成します。</p>
+
+<p>主ブロックレベルボックスは、子孫が作成したボックスや生成されたコンテンツを含みます。ボックスは<a href="/ja/docs/Web/CSS/Positioning_scheme" title="CSS/Positioning scheme">配置体系</a>に従うボックスでもあります。</p>
+
+<p><img alt="venn_blocks.png" class="internal lwrap" src="/@api/deki/files/5995/=venn_blocks.png" style="float: left;">ブロックレベルボックスは、<em>ブロックコンテナーボックス (block container box)</em> にもなり得ます。<em>ブロックコンテナーボックス</em>には、他のブロックレベルボックスだけを含むものと、<a href="/ja/docs/Web/CSS/Inline_formatting_context" title="CSS/Inline formatting context">インライン整形コンテキスト</a>を作るインラインボックスだけを含むものがあります。</p>
+
+<p>ブロックレベルボックスとブロックコンテナーボックスが別々の概念を表すことに留意して下さい。前者は、ボックスが、その外部 (親要素や兄弟要素) に対しどのようにふるまうかについてを述べる概念であり、後者は、ボックスが、その内部 (子孫要素) とどのように相互作用するかについてを述べる概念です。ブロックレベルボックスには、表 (テーブル) のように、ブロックコンテナーボックスではないものがあります。また、逆に一部のブロックコンテナーボックスには、非置換インラインブロックや非置換の表のセルのように、ブロックレベルボックスではないものがあります。</p>
+
+<p>ブロックコンテナーボックスでもあるブロックレベルボックスを、<em>ブロックボックス</em>と呼びます。</p>
+
+<h4 id="Anonymous_block_boxes" name="Anonymous_block_boxes">無名ブロックボックス</h4>
+
+<p>視覚整形アルゴリズムが、補助用のボックスを必要とする場合があります。これらのボックスを <em>無名ボックス (anonymous boxes)</em> と呼んでいます。</p>
+
+<p>セレクターは無名ボックスに対して働かないので、スタイルシートからスタイルを適用することができません。継承可能な CSS プロパティはすべて <code>inherit</code> 値を持ち、継承不能な CSS プロパティはすべて <code>initial</code> 値を持つことになります。</p>
+
+<p>ブロックコンテナーボックスには、インラインレベルボックスのみか、ブロックレベルボックスのみを入れられます。しかし文書は両方を含んでいることがよくあります。この場合、隣接するインラインレベルボックスを囲むように無名ブロックボックスが作られます。</p>
+
+<h3 id="Example" name="Example">例</h3>
+
+<p>次の HTML コードを見てみましょう (既定のスタイルシートが適用されており、 {{HTMLElement("div")}} と {{HTMLElement("p")}} 要素には<code>display: block</code> が適用されています)。</p>
+
+<pre class="syntaxbox"><code>&lt;div&gt;Some inline text &lt;p&gt;followed by a paragraph&lt;/p&gt; followed by more inline text.&lt;/div&gt;</code></pre>
+
+<p>2つの無名ブロックボックスが作られます。1つは p 要素の前にあるテキスト (<code>Some inline text</code>) 用で、もう1つは p 要素の後ろのテキスト (<code>followed by more inline text</code>) 用です。こうして次のブロック構造ができます。</p>
+
+<p style="text-align: center;"><img alt="anonymous_block-level_boxes.png" class="default internal" src="/@api/deki/files/5996/=anonymous_block-level_boxes.png"></p>
+
+<p>表示結果は次のとおりです。</p>
+
+<pre>Some inline text
+followed by a paragraph
+followed by more inline text.
+</pre>
+
+<p>{{HTMLElement("p")}} 要素のボックスと違って、ウェブ制作者はこの2つの無名ボックスのスタイルを制御できません。継承可能なプロパティについては {{HTMLElement("div")}} のプロパティ値から値が取られます。例えばテキストの色を定義する {{cssxref("color")}} は継承されます。それ以外のプロパティは <code>initial</code> 値に設定されます。例えば {{cssxref("background-color")}} は定義されておらず、このプロパティの <code>initial</code> 値である透明になります。したがって <code>&lt;div&gt;</code> の背景を透かして見ることができます。一方で、<code>&lt;p&gt;</code> ボックスには背景色を指定できます。同様に、2つの無名ボックスはそのテキストに、常に同じ色を使おうとします。</p>
+
+<p>無名ブロックボックスが作られるもう一つの場合は、インラインボックスが、1つまたは複数のブロックボックスを含む場合です。この場合、ブロックボックスを含むボックスは2つのインラインボックスに分けられ、ブロックボックスの前後に1つずつ置かれます。ブロックボックスより前にあるインラインボックスはすべて無名ブロックボックスに入れられます。ブロックボックスの後ろにあるものも同様です。この結果ブロックボックスは、インライン要素を含む2つの無名ブロックボックスの、兄弟要素になります。</p>
+
+<p>もしブロックボックスが複数あれば、その間にインラインコンテンツがなくても、一群のボックスの前後に無名ブロックボックスが作られます。</p>
+
+<h3 id="Example_2" name="Example_2">例</h3>
+
+<p>次の HTML コードのように、 {{ HTMLElement("p") }} には <code>display:inline</code> を、 {{ HTMLElement("span") }} には <code>display:block</code> を適用すると、以下のようになります。</p>
+
+<pre class="syntaxbox"><code>&lt;p&gt;Some &lt;em&gt;inline&lt;/em&gt; text &lt;span&gt;followed by a paragraph&lt;/span&gt; followed by more inline text.&lt;/p&gt;</code></pre>
+
+<p>2つの無名ボックスが作成され、1つは span 要素の前の文字列 (<code>Some <em>inline</em> text</code>)、もう1つは span 要素の後の文字列 (<code>followed by more inline text</code>) で、以下のようなブロック構造を構築します。</p>
+
+<p style="text-align: center;"><img alt="" src="https://mdn.mozillademos.org/files/13625/anonymous_block_box_break.png" style="height: 137px; width: 597px;"></p>
+
+<p>結果は以下のようになります。</p>
+
+<pre>Some inline text
+followed by a paragraph
+followed by more inline text.
+</pre>
+
+<h3 id="Inline-level_elements_and_inline_boxes" name="Inline-level_elements_and_inline_boxes">インラインレベル要素とインラインボックス</h3>
+
+<p>CSS の {{cssxref("display")}} プロパティの計算値が <code>inline</code>、 <code>inline-block</code>、 <code>inline-table</code> のいずれかであるとき、その要素は<em>インラインレベル</em>であると言います。外見的には、コンテンツのブロックを構成していませんが、他のインラインレベルのコンテンツといっしょに行内に配置されます。インラインレベル要素の典型例は、段落のコンテンツ、強調表示のような書式つきのテキスト、または画像です。</p>
+
+<p><img alt="venn_inlines.png" class="internal lwrap" src="/@api/deki/files/6008/=venn_inlines.png" style="float: left;"></p>
+
+<div class="warning">
+<p>この図は古い用語を使用しています。以下のメモを参照してください。その上、 CSS 2.2 の仕様書、 chapter 9.2.2 では「インラインレベル要素は、インライン整形コンテキストに加わるインラインレベルボックスを生成する」と定義されており、右側の黄色い楕円は、定義上、左側のものと同じか、それよりも大きい (数学的な上位集合) ので、この図は誤っています。</p>
+</div>
+
+<p>インラインレベル要素は、<em>インラインレベルボックス</em>を作ります。これは、インライン整形コンテキストに加わるために、ボックスとして定義されたものです。<em>インラインボックス</em> とは、インラインレベルボックスでもあり、それらのコンテナーのインライン整形コンテキストに加わるボックスでもあります。例えば <code>display:inline</code> である非置換ボックスはすべてこれに該当します。インライン整形コンテキストに加わらないインラインレベルボックスを、<em>不可分のインラインレベルボックス</em>と言います。これは、置換インラインレベル要素か、 {{cssxref("display")}} の計算値が <code>inline-block</code> または <code>inline-table</code> である要素によって生成されます。不可分のインラインレベルボックスは、インラインボックスと違い、ボックスに分けられません。</p>
+
+<div class="note"><strong>メモ:</strong> 不可分のインラインレベルボックス (atomic inline-level boxes) は始め、 不可分のインラインボックス と呼ばれていましたが、実際にはインラインボックスではないので、不適切でした。その後、これは仕様書の正誤表で訂正されました。とは言え、名前が変更されただけなので、文献に登場する不可分のインラインボックスと、不可分のインラインレベルボックスは読み誤りやすくなっています。</div>
+
+<div class="note">不可分のインラインボックスは、インライン整形コンテキスト内で複数の行にわけることができません。
+<div style="-moz-column-width: 30em;">
+<pre>&lt;style&gt;
+  span {
+    display:inline; /* 既定値 */
+  }
+&lt;/style&gt;
+&lt;div style="width:20em;"&gt;
+   The text in the span &lt;span&gt;can be split in several
+   lines as it&lt;/span&gt; is an inline box.
+&lt;/div&gt;
+</pre>
+
+<p>結果は以下の通りです。</p>
+
+<div style="width: 20em;">The text in the span <span>can be split into several lines as it</span> is an inline box.</div>
+
+<pre>&lt;style&gt;
+  span {
+    display:inline-block;
+  }
+&lt;/style&gt;
+&lt;div style="width:20em;"&gt;
+   The text in the span &lt;span&gt;cannot be split in several
+   lines as it&lt;/span&gt; is an inline-block box.
+&lt;/div&gt;
+</pre>
+
+<p>結果は以下の通りです。</p>
+
+<div style="width: 20em;">The text in the span <span style="display: inline-block;">cannot be split into several lines as it</span> is an inline-block box.</div>
+</div>
+</div>
+
+<h4 id="Anonymous_inline_boxes" name="Anonymous_inline_boxes">無名インラインボックス</h4>
+
+<p>ブロックボックスのように、 CSS エンジンによって自動的にインラインボックスが作られるケースがいくつかあります。このインラインボックスは無名で、セレクターで指定できません。無名インラインボックスのプロパティは、継承可能なものは継承された値を、それ以外は <code>initial</code> 値を持ちます。</p>
+
+<p>無名のインラインボックスが作られるよくあるケースは、インライン整形コンテキストを作るブロックボックス直下の子要素としてテキストがある場合です。この場合、テキストは可能な限り大きな無名インラインボックスに入れられます。また、最終的に CSS の {{cssxref("white-space")}} プロパティで指定された動作で取り除かれる空白のコンテンツは、空になるので無名インラインボックスを生成しません。</p>
+
+<div class="note">Example TBD</div>
+
+<h3 id="Other_types_of_boxes" name="Other_types_of_boxes">その他の種類のボックス</h3>
+
+<h4 id="Line_boxes" name="Line_boxes">行ボックス (line boxes)</h4>
+
+<p><em>行ボックス</em>は、<a href="/ja/docs/Web/CSS/Inline_formatting_context" title="block formatting context">インライン整形コンテキスト</a>において、行を表現するために生成されるボックスです。行ボックスは、包含するブロックボックスの境界から反対側の境界まで広がります。<a href="/ja/docs/Web/CSS/float" title="float">フロート</a>があれば、行ボックスは左側のフロートの一番右のボーダーから始まり、右側のフロートの一番左のボーダーで終わります。</p>
+
+<p>このボックスは技術的なもので、通常はウェブ製作者が頭を悩ます必要はありません。</p>
+
+<h4 id="Run-in_boxes" name="Run-in_boxes">ランインボックス (run-in boxes)</h4>
+
+<p><em>ランインボックス</em>は <code>display:run-in</code> で定義されるもので、次に来るボックスのタイプによってブロックボックスもしくはインラインボックスになります。これは、可能なときは最初の段落の内部にタイトルが入り込む (同行見出し) ようにさせたいときに使えます。</p>
+
+<div class="note"><strong>メモ:</strong> ランインボックスは、相互運用可能に実装できるほど十分な仕様に至らなかったため、CSS 2.1 標準から取り除かれました。ランインボックスは CSS 3 で復活する可能性はありますが、それまでは<em>試験的</em>機能と見なされています。制作に使うべきではありません。</div>
+
+<h4 id="Model-induced_boxes" name="Model-induced_boxes">モデル起因のボックス (model-induced boxes)</h4>
+
+<p>CSS では、インライン整形コンテキストやブロック整形コンテキストの他にも、要素に適用できるコンテンツモデルがあります。これらの追加のモデルは、特定のレイアウト定義に使われ、次のような種類のボックスを定義することもあります。</p>
+
+<ul>
+ <li><a href="/ja/docs/Web/CSS/table-layout" title="table-layout">表コンテンツモデル</a>は<em>表ラッパーボックス</em>や<em>表ボックス</em>のみならず、<em>キャプションボックス</em>などのより特化されたボックスも作ることがあります。</li>
+ <li><a href="/ja/docs/Web/CSS/Using_CSS_multi-column_layouts" title="Using CSS multi-column layouts">段組みコンテンツモデル</a>はコンテナーボックスとコンテンツの間に<em>段ボックス </em>を作ることがあります。</li>
+ <li>試験的な機能である、グリッドやフレックスボックスによるコンテンツモデルも、別の種類のボックス (別の仕組みで中身をレイアウトするボックス) を作ります。</li>
+</ul>
+
+<h4 id="Positioning_schemes" name="Positioning_schemes">配置スキーム (positioning schemes)</h4>
+
+<p>ボックスが生成されたなら、 CSS エンジンは それらのレイアウト上での位置を決める必要があります。そのためには、次のアルゴリズムのいずれかを使います:</p>
+
+<ul>
+ <li><em>通常フロー</em>。それぞれのボックスを他のボックスの後に並べます。</li>
+ <li><em>フロート</em> アルゴリズム。通常フローからボックスを引き抜いて、それを包含しているボックスの側方に置きます。</li>
+ <li><em>絶対位置指定</em>。ボックスは、それを包含している要素が確立する座標系の中で、絶対的な位置にされます。<em>絶対位置</em>にされた要素は、他の要素と重なり合い得るようになります。</li>
+</ul>
+
+<h3 id="Normal_flow" name="Normal_flow">通常フロー</h3>
+
+<p><em>通常フロー</em> においては、ボックスは他のボックスの後に配置されます。ブロック整形コンテキストの下では、垂直に並べられます。インライン整形コンテキストの下では、水平に並べられます。 {{cssxref("position")}} が <code>static</code> または <code>relative</code> に設定されていて、 {{cssxref("float")}} が <code>none</code> に設定されている場合、通常フローになります。</p>
+
+<h3 id="Example_3" name="Example_3">例</h3>
+
+<div class="note">通常フローのブロック整形コンテキスト内では、ボックスは他のボックスの後に垂直に配置されます。<br>
+<br>
+インライン整形コンテキスト内では、通常フローでは、ボックスは他のボックスの後に水平に配置されます。</div>
+
+<div class="note">
+<p>通常フローは、更に、静的位置指定と相対的位置指定の2つに分かれます。</p>
+
+<ul>
+ <li>静的位置指定 (<em>static positioning</em>)は、{{cssxref("position")}} プロパティに <code>static</code> 値が設定されたもので、通常フローによるレイアウトで定義された位置にそのまま、ボックスが描画されます。</li>
+ <li>相対位置指定 (<em>relative</em><em> positioning</em>) は、{{cssxref("position")}} プロパティに <code>relative</code> が設定されたもので、{{cssxref("top")}}、{{cssxref("bottom")}}、{{cssxref("left")}}、{{cssxref("right")}} の CSS プロパティで定義された移動量を使ってボックスが描かれます</li>
+</ul>
+</div>
+
+<h3 id="Floats" name="Floats">フロート</h3>
+
+<p><em>フロート位置決定スキーム</em>では、<em>フローティングボックス</em>、または単に<em>フロート</em>と呼ばれるボックスが、現在行の始めか終わりに置かれます。この結果、{{cssxref("clear")}} CSS プロパティが指定されない限りは、通常フローに含まれるテキストやその他のボックスが、フロートの周りを沿うように流し込まれます。</p>
+
+<p>フロート位置決定スキームは、{{cssxref("position")}} が <code>static</code> または <code>relative</code> であるときに、{{cssxref("float")}} を <code>none</code> 以外に設定すると選べます。{{cssxref("float")}} が <code>left</code> に設定されると、フロートは行ボックスの始めに置かれ、それを縮めます。<code>right</code> に設定されれば、フロートは行ボックスの最後に置かれ、それを縮めます。</p>
+
+<h3 id="Absolute_positioning" name="Absolute_positioning">絶対位置指定</h3>
+
+<p><em>絶対位置決定スキーム</em> では、ボックスは通常フローから完全に外され、通常フローの要素と相互作用しません。<a href="/ja/docs/Web/CSS/All_About_The_Containing_Block" title="CSS/Containing block">包含ブロック</a>を基準に、 {{cssxref("top")}}、 {{cssxref("bottom")}}、 {{cssxref("left")}}、 {{cssxref("right")}} の CSS プロパティを使って位置が決定されます。</p>
+
+<p>{{cssxref("position")}} が <code>absolute</code> または <code>fixed</code> である要素は、絶対位置で位置が決められます。</p>
+
+<p><em>固定位置指定要素 (fixed positioned element) </em>は、包含ブロックがビューポートである絶対位置指定要素です。スクロールしてもビューポートは動かないので、この要素もスクリーンに固定されます。</p>
+
+<h2 id="See_also" name="See_also">関連項目</h2>
+
+<ul>
+ <li>{{css_key_concepts}}</li>
+</ul>

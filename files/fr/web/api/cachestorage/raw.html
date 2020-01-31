@@ -1,0 +1,191 @@
+<p>{{APIRef("Service Workers API")}}{{SeeCompatTable}}</p>
+
+<p>L'interface <strong><code>CacheStorage</code></strong> de l'<a href="/en-US/docs/Web/API/ServiceWorker_API">API ServiceWorker</a> représente le stockage pour les objets {{domxref("Cache")}}. Elle fournit un répertoire général de tous les caches auquel un {{domxref("ServiceWorker")}} peut accéder, et maintient une correspondance entre les chaînes de noms et ces objets {{domxref("Cache")}}.</p>
+
+<p><code>CacheStorage</code> expose également {{domxref("CacheStorage.open()")}} et {{domxref("CacheStorage.match()")}}. {{domxref("CacheStorage.open()")}} permet d'obtenir une instance de {{domxref("Cache")}} tandis que {{domxref("CacheStorage.match()")}} détermine si une {{domxref("Request")}} donnée est une clé d'un des objets {{domxref("Cache")}} que <code>CacheStorage</code> maintient.</p>
+
+<p>Vous pouvez accéder à <code>CacheStorage</code> via la propriété globale {{domxref("WorkerGlobalScope.caches", "caches")}}.</p>
+
+<div class="note"><strong>Note</strong>: L'interface <code>CacheStorage</code> est exposée aux portées de fenêtres ainsi qu'aux workers; il n'est pas nécessaire de l'utiliser avec des service workers.</div>
+
+<div class="note"><strong>Note</strong>: CacheStorage échouera systématiquement avec une <code>SecurityError</code> sur les domaines non certifiés (i.e. ceux qui n'utilisent pas HTTPS, bien que cette définition risque de devenir plus complexe dans le future). Pendant vos tests vous pouvez contourner ce comportement en cochant l'option "Enable Service Workers over HTTP (when toolbox is open)" dans les options Firefox Devtools / le menu gear.</div>
+
+<div class="note"><strong>Note</strong>: {{domxref("CacheStorage.match()")}} est une méthode de convenance. Il est possible d'implémenter une fonctionnalité équivalente pour matcher une entrée de cache en appelant {{domxref("CacheStorage.open()")}}, puis en retournant {{domxref("CacheStorage.keys()")}}, et en matchant les entrées voulues avec {{domxref("CacheStorage.match()")}}.</div>
+
+<h2 id="Méthodes">Méthodes</h2>
+
+<dl>
+ <dt>{{domxref("CacheStorage.match()")}}</dt>
+ <dd>Cherche si une {{domxref("Request")}} donnée est la clé de n'importe lequel des objets {{domxref("Cache")}} maintenus par le {{domxref("CacheStorage")}}, et retourne une {{jsxref("Promise")}} résolue en cet objet {{domxref("Cache")}}.</dd>
+ <dt>{{domxref("CacheStorage.has()")}}</dt>
+ <dd>Retourne une {{jsxref("Promise")}} qui est résolue en <code>true</code> si un objet {{domxref("Cache")}} qui correspond au <code>cacheName</code> existe.</dd>
+ <dt>{{domxref("CacheStorage.open()")}}</dt>
+ <dd>Retourne une {{jsxref("Promise")}} qui est résolue en l'objet {{domxref("Cache")}} qui correspond au <code>cacheName</code> (si il n'existe pas, un nouveau cache est créé).</dd>
+ <dt>{{domxref("CacheStorage.delete()")}}</dt>
+ <dd>Trouve l'objet {{domxref("Cache")}} correspondant au <code>cacheName</code>, et si il est trouvé, supprime l'objet {{domxref("Cache")}} et retourne une {{jsxref("Promise")}} résolue à <code>true</code>. Si aucun objet {{domxref("Cache")}} n'est trouvé, la {{jsxref("Promise")}} est résolue à <code>false</code>.</dd>
+ <dt>{{domxref("CacheStorage.keys()")}}</dt>
+ <dd>Retourne une {{jsxref("Promise")}} qui est résolue en un tableau qui contient toutes les chaînes correspondantes aux objets {{domxref("Cache")}} maintenus par le {{domxref("CacheStorage")}}. Cette méthode peut s'utiliser pour itérer sur une liste de tous les objets {{domxref("Cache")}}.</dd>
+</dl>
+
+<h2 id="Exemples">Exemples</h2>
+
+<p>Cet extrait de code est tiré de l'<a href="https://github.com/mdn/sw-test/">exemple MDN sw-test</a> (lancer <a href="https://mdn.github.io/sw-test/">sw-test dans votre navigateur</a>). Ce service worker script attends le déclenchement d'un {{domxref("InstallEvent")}}, puis lance {{domxref("ExtendableEvent.waitUntil","waitUntil")}} pour gérer la phase d'installation de l'app. Cela consiste à appeler {{domxref("CacheStorage.open")}} pour créer un nouveau cache, puis {{domxref("Cache.addAll")}} pour y ajouter une série d'assets.</p>
+
+<p>Dans le second bloc de code, on attends le déclenchement d'un {{domxref("FetchEvent")}}. On construit ensuite une réponse spéciale comme suit :</p>
+
+<ol>
+ <li>Vérifier si il y a un match pour la requête dans le CacheStorage. Le cas échéant, servir ça.</li>
+ <li>Sinon, récupérer la requête sur le réseau, puis ouvrir le cache du premier bloc et y ajouter un clone de la requête grâce à {{domxref("Cache.put")}} (<code>cache.put(event.request, response.clone())</code>.)</li>
+ <li>En cas d'échec (e.g. car le réseau est inaccessible), retourner une réponse par défaut.</li>
+</ol>
+
+<p>Enfin, on retourne cette réponse en utilisant {{domxref("FetchEvent.respondWith")}}.</p>
+
+<pre class="brush: js">this.addEventListener('install', function(event) {
+  event.waitUntil(
+    caches.open('v1').then(function(cache) {
+      return cache.addAll([
+        '/sw-test/',
+        '/sw-test/index.html',
+        '/sw-test/style.css',
+        '/sw-test/app.js',
+        '/sw-test/image-list.js',
+        '/sw-test/star-wars-logo.jpg',
+        '/sw-test/gallery/',
+        '/sw-test/gallery/bountyHunters.jpg',
+        '/sw-test/gallery/myLittleVader.jpg',
+        '/sw-test/gallery/snowTroopers.jpg'
+      ]);
+    })
+  );
+});
+
+this.addEventListener('fetch', function(event) {
+  var cachedResponse = caches.match(event.request).catch(function() {
+    return fetch(event.request).then(function(response) {
+      return caches.open('v1').then(function(cache) {
+        cache.put(event.request, response.clone());
+        return response;
+      });  
+    });
+  }).catch(function() {
+    return caches.match('/sw-test/gallery/myLittleVader.jpg');
+  });
+    
+  event.respondWith(cachedResponse);
+});</pre>
+
+<h2 id="Spécifications">Spécifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Spécification</th>
+   <th scope="col">Statut</th>
+   <th scope="col">Commentaire</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('Service Workers', '#cache-storage', 'CacheStorage')}}</td>
+   <td>{{Spec2('Service Workers')}}</td>
+   <td>Définition initiale.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Compatibilités_des_navigateurs">Compatibilités des navigateurs</h2>
+
+<p>{{CompatibilityTable}}</p>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Fonctionnalité</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>Support de base</td>
+   <td>{{CompatChrome(40.0)}}</td>
+   <td>{{CompatGeckoDesktop(39)}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+  <tr>
+   <td>Accessible from {{domxref("Window")}}</td>
+   <td>{{CompatChrome(43.0)}}</td>
+   <td>{{CompatGeckoDesktop(39)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td>Accessible from {{domxref("WorkerGlobalScope")}}</td>
+   <td>{{CompatChrome(43.0)}}</td>
+   <td>{{CompatGeckoDesktop(39)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Fonctionnalité</th>
+   <th>Android</th>
+   <th>Android Webview</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+   <th>Chrome for Android</th>
+  </tr>
+  <tr>
+   <td>Support de base</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatGeckoMobile(39)}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatChrome(40.0)}}</td>
+  </tr>
+  <tr>
+   <td>Accessible from {{domxref("Window")}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatGeckoMobile(39)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatChrome(43.0)}}</td>
+  </tr>
+  <tr>
+   <td>Accessible from {{domxref("WorkerGlobalScope")}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatGeckoMobile(39)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatChrome(43.0)}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="Voir_aussi">Voir aussi</h2>
+
+<ul>
+ <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorker_API/Using_Service_Workers">Utilisation des Service Workers</a></li>
+ <li>{{domxref("Cache")}}</li>
+ <li>{{domxref("WorkerGlobalScope.caches")}}</li>
+</ul>

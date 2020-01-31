@@ -1,0 +1,123 @@
+<p>{{JSRef}}</p>
+
+<div class="warning">警告: <code>String.prototype.substr(…)</code> は（「Web標準からの削除」のように）厳密には推奨されていませんが、従来の関数と見なされているので可能な限り避けるべきです。これはコア JavaScript 言語の一部ではなく、将来削除される可能性があります。可能であれば、代わりに {{jsxref("string.prototype.substring()", "substring()")}} メソッドを使ってください。</div>
+
+<p><strong><code>substr()</code></strong> メソッドは、文字列内における文字を、指定した位置から指定した数だけ返します。</p>
+
+<div>{{EmbedInteractiveExample("pages/js/string-substr.html")}}</div>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox"><code><var>str</var>.substr(<var>start</var>[, <var>length</var>])</code></pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<dl>
+ <dt><code>start</code></dt>
+ <dd>文字を取り出す位置（ 0 から文字列の長さ以下までの整数）。負の数が与えられた場合、<code>strLength + start</code> のように扱われる。<code>strLength</code> は文字列の長さ（たとえば、<code>start</code> が -3 の場合、<code>strLength - 3</code> のように扱われる）。</dd>
+ <dt><code>length</code></dt>
+ <dd>任意です。取り出す文字の数です。</dd>
+</dl>
+
+<h3 id="Return_value" name="Return_value">戻り値</h3>
+
+<p>与えられた文字列の抽出されたセクションを含む新しい文字列です。<strong><code>length</code></strong> が <strong>0</strong> や負の数の場合、空文字列が返される。</p>
+
+<h2 id="Description" name="Description">詳細</h2>
+
+<p><code>start</code> は文字のインデックスです。一番最初の文字のインデックスは、0 で、最後の文字のインデックスは、文字列の長さから 1 を引いた数です。<code>substr</code> は、<code>start</code> から文字の取り出しを開始し、<code>length</code> 個の文字を集めます（<code>start</code> から文字列の最後までの長さが指定した <code>length</code> より短かった場合は、<code>length</code> より少ない数の文字を返すでしょう）。</p>
+
+<p><code>start</code> が正の数かつ文字列の長さ以上である場合、<code>substr</code> は空の文字列を返します。</p>
+
+<p><code>start</code> が負の数である場合、<code>substr</code> はそれを文字列の最後から数えた文字のインデックスとして使用します。<code>start</code> が負の数かつ <code>start</code> の絶対値が文字列の長さより大きい場合、<code>substr</code> は開始インデックスとして 0 を使用します。注: <code>start</code> の引数に負の数の値を指定することは、<a href="http://msdn2.microsoft.com/ja-jp/library/0esxc5wy.aspx">Microsoft JScript ではサポートされません</a>。<br>
+ JScript では start に負の数を指定した場合、正の数として扱われます</p>
+
+<p><code>length</code> が 0 あるいは負の数の場合、<code>substr</code> は空の文字列を返します。<code>length</code> が省略された場合、<code>start</code> から文字列の最後までの文字を取り出します。</p>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<h3 id="Using_substr()" name="Using_substr()"><code>substr()</code> を使う</h3>
+
+<pre class="brush: js">var aString = 'Mozilla';
+
+console.log(aString.substr(0, 1));   // 'M'
+console.log(aString.substr(1, 0));   // ''
+console.log(aString.substr(-1, 1));  // 'a'
+console.log(aString.substr(1, -1));  // ''
+console.log(aString.substr(-3));     // 'lla'
+console.log(aString.substr(1));      // 'ozilla'
+console.log(aString.substr(-20, 2)); // 'Mo'
+console.log(aString.substr(20, 2));  // ''
+</pre>
+
+<h2 id="Polyfill" name="Polyfill">ポリフィル</h2>
+
+<p>Microsoft の JScript は start インデックスとして負の数をサポートしません。この機能を使用したい場合、このバグを回避するために、次の互換コードを使用できます:</p>
+
+<pre class="brush: js">// only run when the substr() function is broken
+if ('ab'.substr(-1) != 'b') {
+  /**
+   *  Get the substring of a string
+   *  @param  {integer}  start   where to start the substring
+   *  @param  {integer}  length  how many characters to return
+   *  @return {string}
+   */
+  String.prototype.substr = function(substr) {
+    return function(start, length) {
+      // call the original method
+      return substr.call(this,
+      	// did we get a negative start, calculate how much it is from the beginning of the string
+        // adjust the start parameter for negative value
+        start &lt; 0 ? this.length + start : start,
+        length)
+    }
+  }(String.prototype.substr);
+}
+</pre>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">ステータス</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES3')}}</td>
+   <td>{{Spec2('ES3')}}</td>
+   <td>JavaScript 1.0 で実装。（参考）互換性の付録 B に定義されている。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-B.2.3', 'String.prototype.substr')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td>（参考）互換性の付録 B に定義されている。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-string.prototype.substr', 'String.prototype.substr')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td>（参考）ウェブブラウザーの ECMAScript 機能追加のための互換性の付録 B に定義されている。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-string.prototype.substr', 'String.prototype.substr')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td>（参考）ウェブブラウザーの ECMAScript 機能追加のための互換性の付録 B に定義されている。</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザー実装状況</h2>
+
+<p class="hidden">The compatibility table in this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</p>
+
+<p>{{Compat("javascript.builtins.String.substr")}}</p>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li>{{jsxref("String.prototype.slice()")}}</li>
+ <li>{{jsxref("String.prototype.substring()")}}</li>
+</ul>

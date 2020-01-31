@@ -1,0 +1,229 @@
+<div>{{JSRef}}</div>
+
+<p><strong><code>constructor</code></strong> プロパティは、インスタンスオブジェクトを生成した {{jsxref("Object")}} のコンストラクター関数への参照を返します。なお、このプロパティの値は関数そのものへの参照であり、関数名を含んだ文字列ではありません。値が <code>1</code>, <code>true</code>, <code>"test"</code> のようなプリミティブ値の場合は読み取り専用です。</p>
+
+<h2 id="Description" name="Description">説明</h2>
+
+<p>(<code>Object.create(null)</code> で生成されたオブジェクトを除いて) すべてのオブジェクトが <code>constructor</code> プロパティを持ちます。明示的にコンストラクター関数を用いることなく生成されたオブジェクト (つまり、オブジェクトや配列のリテラル) は、 <code>constructor</code> プロパティがそのオブジェクトの基礎オブジェクトのコンストラクター型を指します。</p>
+
+<pre class="brush: js">var o = {};
+o.constructor === Object; // true
+
+var o = new Object;
+o.constructor === Object; // true
+
+var a = [];
+a.constructor === Array; // true
+
+var a = new Array;
+a.constructor === Array; // true
+
+var n = new Number(3);
+n.constructor === Number; // true
+</pre>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<h3 id="Example:_Displaying_the_constructor_of_an_object" name="Example:_Displaying_the_constructor_of_an_object">例: オブジェクトのコンストラクターの表示</h3>
+
+<p>以下の例では、コンストラクターである <code>Tree</code> と、その方のオブジェクトである <code>theTree</code> を生成します。そして、 <code>theTree</code> オブジェクトの <code>constructor</code> プロパティを表示します。</p>
+
+<pre class="brush: js">function Tree(name) {
+  this.name = name;
+}
+
+var theTree = new Tree('Redwood');
+console.log('theTree.constructor is ' + theTree.constructor);
+</pre>
+
+<p>この例の出力は次のとおりです。</p>
+
+<pre class="brush: js">theTree.constructor is function Tree(name) {
+  this.name = name;
+}
+</pre>
+
+<h3 id="Example:_Changing_the_constructor_of_an_object" name="Example:_Changing_the_constructor_of_an_object">例: オブジェクトのコンストラクターの変更</h3>
+
+<p>次の例は、一般的なオブジェクトのコンストラクターの値を変更する方法を示しています。 <code>true</code>, <code>1</code>, <code>"test"</code> については、コンストラクターが読み取り専用のネイティブのものであるため影響を受けません。この例は、オブジェクトの <code>constructor</code> プロパティに頼ることが常に安全とは限らないことを示しています。</p>
+
+<pre class="brush:js">function Type () {}
+
+var types = [
+  new Array(),
+  [],
+  new Boolean(),
+  true,             // 変わらない
+  new Date(),
+  new Error(),
+  new Function(),
+  function () {},
+  Math,
+  new Number(),
+  1,                // 変わらない
+  new Object(),
+  {},
+  new RegExp(),
+  /(?:)/,
+  new String(),
+  'test'            // 変わらない
+];
+
+for (var i = 0; i &lt; types.length; i++) {
+  types[i].constructor = Type;
+  types[i] = [types[i].constructor, types[i] instanceof Type, types[i].toString()];
+}
+
+console.log(types.join('\n'));
+</pre>
+
+<p>この例の出力は次の通りです (参考にコメントを追加しています)。</p>
+
+<pre class="brush: js">function Type() {},false,                                     // new Array()
+function Type() {},false,                                     // []
+function Type() {},false,false                                // new Boolean()
+function Boolean() {
+    [native code]
+},false,true                                                  // true
+function Type() {},false,Mon Sep 01 2014 16:03:49 GMT+0600    // new Date()
+function Type() {},false,Error                                // new Error()
+function Type() {},false,function anonymous() {
+
+}                                                             // new Function()
+function Type() {},false,function () {}                       // function () {}
+function Type() {},false,[object Math]                        // Math
+function Type() {},false,0                                    // new Number()
+function Number() {
+    [native code]
+},false,1                                                     // 1
+function Type() {},false,[object Object]                      // new Object()
+function Type() {},false,[object Object]                      // {} 
+function Type() {},false,/(?:)/                               // new Regexp()
+function Type() {},false,/(?:)/                               // /(?:)/ 
+function Type() {},false,                                     // new String()
+function String() {
+    [native code]
+},false,test                                                  // 'test'
+</pre>
+
+<h3 id="Changing_the_constructor_of_a_function" name="Changing_the_constructor_of_a_function">関数のコンストラクターの変更</h3>
+
+<p>多くの場合、このプロパティは <strong>new</strong> およびプロトタイプ継承チェーンで将来の呼び出しに使われる<strong>関数コンストラクター</strong>としての関数の定義に使用されます。</p>
+
+<pre class="brush: js">function Parent() {}
+Parent.prototype.parentMethod = function parentMethod() {};
+
+function Child() {}
+Child.prototype = Object.create(Parent.prototype); // Child のプロトタイプを Parent のプロトタイプで再定義
+
+Child.prototype.constructor = Child; // Child の元のコンストラクターを復帰</pre>
+
+<p>しかし、いつこの最後の行を実行する必要があるのでしょうか。残念ながら、正しい答えは、場合によるということです。</p>
+
+<p>元のコンストラクターを再割り当てすることが重要である場合と、これがコードの未使用の一行になる場合を定義してみましょう。</p>
+
+<p>以下の場合を見てみてください。オブジェクトが自分自身を生成するために <strong>create</strong> メソッドを持っています。</p>
+
+<pre class="brush: js">function Parent() {};
+function CreatedConstructor() {}
+
+CreatedConstructor.prototype = Object.create(Parent.prototype);
+
+CreatedConstructor.prototype.create = function create() {
+  return new this.constructor();
+}
+
+new CreatedConstructor().create().create(); // TypeError undefined is not a function since constructor === Parent</pre>
+
+<p>上記の例では、コンストラクターが Parent にリンクしているため、例外が発生します。</p>
+
+<p>これを防ぐには、利用したいことに必要なコンストラクターを割り当てるだけです。</p>
+
+<pre class="brush: js">function Parent() {}; 
+function CreatedConstructor() {} 
+
+CreatedConstructor.prototype = Object.create(Parent.prototype); 
+CreatedConstructor.prototype.constructor = CreatedConstructor; // set right constructor for further using
+
+CreatedConstructor.prototype.create = function create() { 
+  return new this.constructor();
+} 
+
+new CreatedConstructor().create().create(); // it's pretty fine</pre>
+
+<p>これで、コンストラクターの変更が有用である理由が明確になりました。</p>
+
+<p>もう一つの例を考えてみましょう。</p>
+
+<pre class="brush: js">function ParentWithStatic() {}
+
+ParentWithStatic.startPosition = { x: 0, y:0 };
+ParentWithStatic.getStartPosition = function getStartPosition() {
+  return this.startPosition;
+} 
+
+function Child(x, y) {
+  this.position = {
+    x: x,
+    y: y
+  };
+}
+
+Child.prototype = Object.create(ParentWithStatic.prototype); 
+Child.prototype.constructor = Child;
+
+Child.prototype.getOffsetByInitialPosition = function getOffsetByInitialPosition() {
+  var position = this.position;
+  var startPosition = this.constructor.getStartPosition(); // error undefined is not a function, since the constructor is Child
+
+  return {
+    offsetX: startPosition.x - position.x,
+    offsetY: startPosition.y - position.y
+  }
+};</pre>
+
+<p>この例では、正しく動作を続けるために、親のコンストラクターを残す必要があります。</p>
+
+<p><strong>まとめ</strong>: コンストラクターを手動で更新したり設定したりすると、異なる結果や混乱する結果を導くことがあります。これを防ぐためには、それぞれの場合に応じてコンストラクターの役割を定義することが必要です。多くの場合、コンストラクター使用されず、再割り当ての必要はありません。</p>
+
+<h2 id="Specifications" name="Specifications">仕様書</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">状態</th>
+   <th scope="col">備考</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-object.prototype.constructor', 'Object.prototype.constructor')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-object.prototype.constructor', 'Object.prototype.constructor')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-15.2.4.1', 'Object.prototype.constructor')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES1')}}</td>
+   <td>{{Spec2('ES1')}}</td>
+   <td>初回定義。 JavaScript 1.1 で実装。</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザーの対応</h2>
+
+<div>
+<div class="hidden">このページの互換性一覧表は構造化データから生成されています。データに協力していただけるのであれば、 <a class="external" href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> をチェックアウトしてプルリクエストを送信してください。</div>
+
+<p>{{Compat("javascript.builtins.Object.constructor")}}</p>
+</div>

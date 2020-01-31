@@ -1,0 +1,110 @@
+<div>{{HTTPSidebar}}</div>
+
+<p class="summary">HTTP 範囲リクエストでは、サーバーからクライアントに HTTP メッセージの一部のみを送信できます。部分リクエストは、たとえば、大きなメディアや、一時停止や再開機能を持つファイルのダウンロードに役立ちます。</p>
+
+<h2 id="Checking_if_a_server_supports_partial_requests" name="Checking_if_a_server_supports_partial_requests">サーバーが部分リクエストに対応しているかどうかの確認</h2>
+
+<p>{{HTTPHeader("Accept-Ranges")}} が HTTP レスポンスに存在した場合 (そして値が "<code>none</code>" ではない場合)、サーバーは範囲リクエストに対応しています。これは例えば、 {{HTTPMethod("HEAD")}} リクエストを cURL で発行することで確認することができます。</p>
+
+<pre>curl -I http://i.imgur.com/z4d4kWk.jpg
+
+HTTP/1.1 200 OK
+...
+Accept-Ranges: bytes
+Content-Length: 146515
+</pre>
+
+<p>このレスポンスの中で、 <code>Accept-Ranges: bytes</code> は範囲を定義する単位としてバイト数が使えることを示しています。ここで {{HTTPHeader("Content-Length")}} ヘッダーも受け取る画像の全体の長さを示すので有用です。</p>
+
+<p>サイトが <code>Accept-Ranges</code> ヘッダーを省略した場合は、おそらく部分リクエストに対応していません。サイトにとっては値として明示的に "<code>none</code>" を送信して、対応がないことを示すこともあります。アプリによっては、このような場合にダウンロードマネージャーが一時停止ボタンを無効化します。</p>
+
+<pre>curl -I https://www.youtube.com/watch?v=EwTZ2xpQwpA
+
+HTTP/1.1 200 OK
+...
+Accept-Ranges: none
+</pre>
+
+<h2 id="Requesting_a_specific_range_from_a_server" name="Requesting_a_specific_range_from_a_server">サーバーからの特定の範囲のリクエスト</h2>
+
+<p>If the server supports range requests, you can issue such a request by using the {{HTTPHeader("Range")}} header. It indicates the part(s) of a document that the server should return.</p>
+
+<h3 id="Single_part_ranges" name="Single_part_ranges">単一部分のリクエスト</h3>
+
+<p>We can request a single range from a resource. Again, we can test a request by using cURL. The "<code>-H</code>" option will append a header line to the request, which in this case is the <code>Range</code> header requesting the first 1024 bytes.</p>
+
+<pre>curl http://i.imgur.com/z4d4kWk.jpg -i -H "Range: bytes=0-1023"</pre>
+
+<p>The issued request looks like this:</p>
+
+<pre>GET /z4d4kWk.jpg HTTP/1.1
+Host: i.imgur.com
+Range: bytes=0-1023</pre>
+
+<p>The server responses with the {{HTTPStatus("206")}} <code>Partial Content</code> status:</p>
+
+<pre>HTTP/1.1 206 Partial Content
+Content-Range: bytes 0-1023/146515
+Content-Length: 1024
+...
+(binary content)
+</pre>
+
+<p>The {{HTTPHeader("Content-Length")}} header now indicates the size of the requested range (and not the full size of the image). The {{HTTPHeader("Content-Range")}} response header indicates where in the full resource this partial message belongs.</p>
+
+<h3 id="Multipart_ranges" name="Multipart_ranges">複数部分のリクエスト</h3>
+
+<p>The {{HTTPHeader("Range")}} header also allows you to get multiple ranges at once in a multipart document. The ranges are separated by a comma.</p>
+
+<pre>curl http://www.example.com -i -H "Range: bytes=0-50, 100-150"</pre>
+
+<p>The server responses with the {{HTTPStatus("206")}} <code>Partial Content</code> status and a {{HTTPHeader("Content-Type")}}<code>: multipart/byteranges; boundary=3d6b6a416f9b5</code> header, indicating that a multipart byterange follows. Each part contains its own <code>Content-Type</code> and <code>Content-Range</code> fields and the required boundary parameter specifies the boundary string used to separate each body-part.</p>
+
+<pre>HTTP/1.1 206 Partial Content
+Content-Type: multipart/byteranges; boundary=3d6b6a416f9b5
+Content-Length: 282
+
+--3d6b6a416f9b5
+Content-Type: text/html
+Content-Range: bytes 0-50/1270
+
+&lt;!doctype html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;Example Do
+--3d6b6a416f9b5
+Content-Type: text/html
+Content-Range: bytes 100-150/1270
+
+eta http-equiv="Content-type" content="text/html; c
+--3d6b6a416f9b5--</pre>
+
+<h3 id="Conditional_range_requests" name="Conditional_range_requests">条件付き範囲リクエスト</h3>
+
+<p>When resuming to request more parts of a resource, you need to guarantee that the stored resource has not been modified since the last fragment has been received.</p>
+
+<p>The {{HTTPHeader("If-Range")}} HTTP request header makes a range request conditional: if the condition is fulfilled, the range request will be issued and the server sends back a {{HTTPStatus("206")}} <code>Partial Content</code> answer with the appropriate body. If the condition is not fulfilled, the full resource is sent back, with a {{HTTPStatus("200")}} <code>OK</code> status. This header can be used either with a {{HTTPHeader("Last-Modified")}} validator, or with an {{HTTPHeader("ETag")}}, but not with both.</p>
+
+<pre>If-Range: Wed, 21 Oct 2015 07:28:00 GMT </pre>
+
+<h2 id="Partial_request_responses" name="Partial_request_responses">部分的なリクエストのレスポンス</h2>
+
+<p>There are three relevant statuses, when working with range requests:</p>
+
+<ul>
+ <li>In case of a successful range request, the {{HTTPStatus("206")}} <code>Partial Content</code> status is sent back from a server.</li>
+ <li>In case of a range request that is out of bounds (range values overlap the extent of the resource), the server responds with a {{HTTPStatus("416")}} <code>Requested Range Not Satisfiable</code> status.</li>
+ <li>In case of no support of range requests, the {{HTTPStatus("200")}} <code>OK</code> status is sent back from a server.</li>
+</ul>
+
+<h2 id="Comparison_to_chunked_Transfer-Encoding" name="Comparison_to_chunked_Transfer-Encoding">チャンク <code>Transfer-Encoding</code> との比較</h2>
+
+<p>The {{HTTPHeader("Transfer-Encoding")}} header allows chunked encoding, which is useful when larger amounts of data are sent to the client and the total size of the response is not known until the request has been fully processed. The server sends data to the client straight away without buffering the response or determining the exact length, which leads to improved latency. Range requests and chunking are compatible and can be used with or without each other.</p>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li>関連するステータスコード {{HTTPStatus("200")}}, {{HTTPStatus("206")}}, {{HTTPStatus("416")}}.</li>
+ <li>関連するヘッダー: {{HTTPHeader("Accept-Ranges")}}, {{HTTPHeader("Range")}}, {{HTTPHeader("Content-Range")}}, {{HTTPHeader("If-Range")}}, {{HTTPHeader("Transfer-Encoding")}}.</li>
+ <li><a href="https://blogs.msdn.microsoft.com/ieinternals/2011/06/03/download-resumption-in-internet-explorer/">Download resumption in Internet Explorer</a></li>
+</ul>

@@ -1,0 +1,214 @@
+<div>{{JsSidebar("Advanced")}}</div>
+
+<p>JavaScript の型付き配列は配列状のオブジェクトであり、生のバイナリデータにアクセスする手段を提供します。すでにご存知のとおり、{{jsxref("Array")}} オブジェクトは動的に拡大または縮小され、任意の JavaScript 値を持つことができます。JavaScript エンジンは、これらの配列を高速化するために最適化を実施します。しかしながら、オーディオやビデオの操作、WebSocket を使った生データへのアクセスなどの機能が加わり、Web アプリケーションがどんどん強力になるにつれて、JavaScript コードで型付き配列を用いて生データを高速に簡単に操作できると便利な場面があることが分かってきました。</p>
+
+<p>ただし、型付き配列を通常の配列と混同してはいけません。型付き配列に対して {{jsxref("Array.isArray()")}} を呼び出すと <code>false</code> を返します。また、通常の配列では使用できるが型付き配列ではサポートされないメソッドがあります (例えば push や pop)。</p>
+
+<h2 id="Buffers_and_views_typed_array_architecture" name="Buffers_and_views_typed_array_architecture">バッファとビュー: 型付き配列の構造</h2>
+
+<p>最大限の柔軟性と効率性を達成するために、JavaScript の型付き配列では <strong>バッファ</strong> と <strong>ビュー</strong> に実装を分けています。バッファ ({{jsxref("ArrayBuffer")}} オブジェクトで実装) は、データの塊を表すオブジェクトです。これは特に形式がなく、またその中身にアクセスする手段を提供しません。バッファに格納されている情報にアクセスするには、ビューを使用することが必要です。ビューはコンテキスト (データの種類、開始位置のオフセット、要素の数) を提供し、データを実際の型付き配列に返します。</p>
+
+<p><img alt="Typed arrays in an ArrayBuffer" src="https://mdn.mozillademos.org/files/8629/typed_arrays.png" style="height: 278px; width: 666px;"></p>
+
+<h3 id="ArrayBuffer" name="ArrayBuffer">ArrayBuffer</h3>
+
+<p>{{jsxref("ArrayBuffer")}} は、一般的な固定長のバイナリデータのバッファを示すために使用するデータ型です。<code>ArrayBuffer</code> の内容物を直接操作することはできません。代わりにバッファを特定の形式で表現し、またバッファの内容物を読み書きするために使用する、型付き配列のビューまたは {{jsxref("DataView")}} を作成します。</p>
+
+<h3 id="Typed_array_views" name="Typed_array_views">型付き配列のビュー</h3>
+
+<p>型付き配列のビューは自身を表現する名称を持ち、<code>Int8</code>、<code>Uint32</code>、<code>Float64</code> などの一般的な数値型のビューを提供します。特別な型付き配列のビューとして <code>Uint8ClampedArray</code> があります。これは、値を 0 から 255 の間に制限します。例えば <a href="/ja/docs/Web/API/ImageData">Canvas のデータ処理</a>に役立ちます。</p>
+
+<p>{{page("/ja/docs/Web/JavaScript/Reference/Global_Objects/TypedArray", "TypedArray_objects")}}</p>
+
+<h3 id="DataView" name="DataView">DataView</h3>
+
+<p>{{jsxref("DataView")}} は、任意のデータをバッファに読み書きするための getter/setter API を提供する、ローレベルインターフェイスです。これは、例えばさまざまな型のデータを扱う場合に役立ちます。型付き配列のビューは、プラットフォームのネイティブのバイトオーダ ({{Glossary("Endianness")}}) になります。<code>DataView</code> では、バイトオーダを制御できます。デフォルトはビッグエンディアンですが、getter/setter メソッドでリトルエンディアンに設定できます。</p>
+
+<h2 id="Web_APIs_using_typed_arrays" name="Web_APIs_using_typed_arrays">型付き配列を使用する Web API</h2>
+
+<dl>
+ <dt><a href="/ja/docs/Web/API/FileReader#readAsArrayBuffer()" title="Web/API/FileReader#readAsArrayBuffer()"><code>FileReader.prototype.readAsArrayBuffer()</code></a></dt>
+ <dd><code>FileReader.prototype.readAsArrayBuffer()</code> メソッドは、指定した <a href="/ja/docs/Web/API/Blob" title="DOM/Blob"><code>Blob</code></a> または <a href="/ja/docs/Web/API/File" title="DOM/File"><code>File</code></a> の内容物の読み取りを開始します。</dd>
+ <dt><a href="/ja/docs/Web/API/XMLHttpRequest#send()" title="Web/API/XMLHttpRequest#send()"><code>XMLHttpRequest.prototype.send()</code></a></dt>
+ <dd><code>XMLHttpRequest</code> のインスタンスの <code>send()</code> メソッドが、型付き配列と {{jsxref("ArrayBuffer")}} オブジェクトを引数としてサポートしました。</dd>
+ <dt><code><a href="/ja/docs/Web/API/ImageData">ImageData.data</a></code></dt>
+ <dd>これは <code>0</code> から <code>255</code> の間の整数値である、RGBA データを持つ一次元配列を表す {{jsxref("Uint8ClampedArray")}} です。</dd>
+</dl>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<h3 id="Using_views_with_buffers" name="Using_views_with_buffers">バッファと合わせてビューを使用する</h3>
+
+<p>始めにバッファの作成が必要であり、ここでは 16 バイト固定長とします:</p>
+
+<pre class="brush:js">var buffer = new ArrayBuffer(16);
+</pre>
+
+<p>これで、全体が 0 で初期化されたメモリ領域ができました。しかし、そのバッファに対してできることはあまりありません。バッファが実際に 16 バイトの大きさであることを確認する程度のことはできます:</p>
+
+<pre class="brush:js">if (buffer.byteLength === 16) {
+  console.log("Yes, it's 16 bytes.");
+} else {
+  console.log("Oh no, it's the wrong size!");
+} 
+</pre>
+
+<p>このバッファで実際の作業を行う前に、ビューを作成しなければなりません。バッファ内のデータを 32 ビット符号付き整数値の配列として扱うビューを作成してみましょう:</p>
+
+<pre class="brush:js">var int32View = new Int32Array(buffer);
+</pre>
+
+<p>この時点で配列のフィールドへ、通常の配列と同じようにアクセスすることが可能になります:</p>
+
+<pre class="brush:js">for (var i = 0; i &lt; int32View.length; i++) {
+  int32View[i] = i * 2;
+}
+</pre>
+
+<p>これは配列を値 0, 2, 4, 6 の 4つのエントリ (4 つのエントリが各 4 バイトで、合計 16 バイト) で埋めます。</p>
+
+<h3 id="Multiple_views_on_the_same_data" name="Multiple_views_on_the_same_data">同一のデータに対する複数のビュー</h3>
+
+<p>同一のデータに対して複数のビューを作成できることを考えると、それらは実に興味深いものになります。例えば、前出のコードの続きを以下のようにします:</p>
+
+<pre class="brush:js">var int16View = new Int16Array(buffer);
+
+for (var i = 0; i &lt; int16View.length; i++) {
+  console.log("Entry " + i + ": " + int16View[i]);
+}
+</pre>
+
+<p>ここでは、同一のバッファを既存の 32 ビット値のビューと共有する 16 ビット整数値のビューを作成して、バッファ内の値すべてを 16 ビット整数値として出力しています。すると、0, 0, 2, 0, 4, 0, 6, 0 という出力を得ます。</p>
+
+<p>ここで一歩進みましょう。以下のコードについて考えてみてください:</p>
+
+<pre class="brush:js">int16View[0] = 32;
+console.log("Entry 0 in the 32-bit array is now " + int32View[0]);
+</pre>
+
+<p>このコードの出力は "Entry 0 in the 32-bit array is now 32" になります。言い換えると、2 つの配列は同じデータバッファを異なる形式で取り扱う単純なビューであるということです。同様のことを、任意の<a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/TypedArray#TypedArray_objects" title="JavaScript typed arrays/ArrayBufferView#Typed array subclasses">ビュー型</a>で行うことができます。</p>
+
+<h3 id="Working_with_complex_data_structures" name="Working_with_complex_data_structures">複合データ構造を扱う</h3>
+
+<p>1 つのバッファを、バッファ内において異なるオフセットで始まり、またタイプが異なる複数のビューと結びつけることで、複数の種類のデータを持つデータオブジェクトを取り扱うことが可能になります。これにより、例えば <a href="/ja/docs/Web/WebGL" title="WebGL">WebGL</a> の複合データ構造、データファイル、<a href="/ja/docs/Mozilla/js-ctypes" title="js-ctypes">js-ctypes</a> を使用する際に必要な C 構造体を取り扱うことが可能になります。</p>
+
+<p>以下の C 構造体について考えてみましょう:</p>
+
+<pre class="brush:cpp">struct someStruct {
+  unsigned long id;
+  char username[16];
+  float amountDue;
+};</pre>
+
+<p>このような形式のデータを含むバッファは、以下のようにアクセスできます:</p>
+
+<pre class="brush:js">var buffer = new ArrayBuffer(24);
+
+// ... read the data into the buffer ...
+
+var idView = new Uint32Array(buffer, 0, 1);
+var usernameView = new Uint8Array(buffer, 4, 16);
+var amountDueView = new Float32Array(buffer, 20, 1);</pre>
+
+<p>例えば、合計金額には <code>amountDueView[0]</code> でアクセスできます。</p>
+
+<div class="note"><strong>注記:</strong> C 構造体における<a href="http://en.wikipedia.org/wiki/Data_structure_alignment" title="http://en.wikipedia.org/wiki/Data_structure_alignment">データ構造の配置</a>は機種依存です。これらのデータ埋め込みの違いに注意および配慮してください。</div>
+
+<h3 id="Conversion_to_normal_arrays" name="Conversion_to_normal_arrays">通常の配列に転換する</h3>
+
+<p>型付き配列を処理した後は、{{jsxref("Array")}} プロトタイプの利点を享受するため通常の配列に変換することが、有用な場合があります。これは {{jsxref("Array.from")}} を使用する、あるいは <code>Array.from</code> がサポートされていなければ以下のコードを使用して実現できます。</p>
+
+<pre class="brush:js">var typedArray = new Uint8Array([1, 2, 3, 4]),
+    normalArray = Array.prototype.slice.call(typedArray);
+normalArray.length === 4;
+normalArray.constructor === Array;
+</pre>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">策定状況</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('Typed Array')}}</td>
+   <td>{{Spec2('Typed Array')}}</td>
+   <td>ECMAScript 6 に置き換え</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-typedarray-objects', 'TypedArray Objects')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td>ECMA 標準では最初の定義</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-typedarray-objects', 'TypedArray Objects')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザ実装状況</h2>
+
+<div>{{CompatibilityTable}}</div>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>機能</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>基本サポート</td>
+   <td>7.0</td>
+   <td>{{CompatGeckoDesktop("2")}}</td>
+   <td>10</td>
+   <td>11.6</td>
+   <td>5.1</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>機能</th>
+   <th>Android</th>
+   <th>Android 版 Chrome</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>基本サポート</td>
+   <td>4.0</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatGeckoMobile("2")}}</td>
+   <td>10</td>
+   <td>11.6</td>
+   <td>4.2</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li><a href="/ja/docs/Web/JavaScript/Base64_encoding_and_decoding#Appendix.3A_Decode_a_Base64_string_to_Uint8Array_or_ArrayBuffer" title="Web/JavaScript/Base64_encoding_and_decoding#Appendix.3A_Decode_a_Base64_string_to_Uint8Array_or_ArrayBuffer">Getting <code>ArrayBuffer</code>s or typed arrays from <em>Base64</em>-encoded strings</a></li>
+ <li><a href="/ja/docs/Code_snippets/StringView" title="Web/JavaScript/Typed_arrays/StringView"><code>StringView</code> – a C-like representation of strings based on typed arrays</a></li>
+ <li><a href="https://hacks.mozilla.org/2011/12/faster-canvas-pixel-manipulation-with-typed-arrays">Faster Canvas Pixel Manipulation with Typed Arrays</a></li>
+ <li><a href="http://www.html5rocks.com/en/tutorials/webgl/typed_arrays">Typed Arrays: Binary Data in the Browser</a></li>
+ <li>{{Glossary("Endianness")}}</li>
+</ul>

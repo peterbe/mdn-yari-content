@@ -1,0 +1,169 @@
+<div>
+<p>{{ APIRef("CSSOM") }}</p>
+</div>
+
+<div> </div>
+
+<div><strong style="font-size: 2.14285714285714rem; font-weight: 700; letter-spacing: -1px; line-height: 30px;">概述</strong></div>
+
+<p><strong>insertRule</strong>方法用来给当前样式表插入新的样式规则.</p>
+
+<h2 id="Syntax" name="Syntax">语法</h2>
+
+<pre class="syntaxbox"><var>stylesheet</var>.insertRule(<var>rule</var>, <var>index</var>)</pre>
+
+<h3 id="Parameters" name="Parameters">参数</h3>
+
+<p> </p>
+
+<dl>
+ <dt><code>rule</code></dt>
+ <dd>
+ <p>一个包含了将要插入的规则的 {{domxref("DOMString")}}。规则字符串必须包含的内容取决于它的类型：</p>
+
+ <ul>
+  <li><strong>For <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Syntax#CSS_statements">rule-sets</a></strong>, both a <a href="https://developer.mozilla.org/en-US/docs/Web/Guide/CSS/Getting_Started/Selectors">selector</a> and a style declaration.</li>
+  <li><strong>For <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/At-rule">at-rules</a></strong>, both an at-identifier and the rule content.</li>
+ </ul>
+ </dd>
+ <dt><code>index</code> {{optional_inline}}</dt>
+ <dd>A positive integer less than or equal to <code>stylesheet.cssRules.length</code>, representing the newly inserted rule's position in <code>{{domxref("CSSStyleSheet", "", "", "1")}}.cssRules</code>. The default is <code>0</code>. (In older implementations, this was required. See <a href="https://developer.mozilla.org/zh-CN/docs/Web/API/CSSStyleSheet/insertRule$edit#Browser_compatibility">Browser compatibility</a> for details.)</dd>
+</dl>
+
+<h3 id="返回值">返回值</h3>
+
+<p>The newly inserted rule's index within the stylesheet's rule-list.</p>
+
+<p> </p>
+
+<h3 id="Restrictions">Restrictions</h3>
+
+<p> </p>
+
+<p>CSS has some intuitive and not-so-intuitive restrictions affecting where rules can be inserted. Violating them will likely raise a {{domxref("DOMException")}}.</p>
+
+<p>If <code>index</code> &gt; <code>{{domxref("CSSRuleList", "", "", "1")}}.length</code>, the method aborts with an <code>IndexSizeError</code>. If <code>rule</code> cannot be inserted at <code>index</code> <code>0</code> due to some CSS constraint, the method aborts with a <code>HierarchyRequestError</code>. If more than one rule is given in the <code>rule</code> parameter, the method aborts with a <code>SyntaxError</code>. If trying to insert an {{cssxref("@import")}} at-rule after a style rule, the method aborts with a <code>HierarchyRequestError</code>. If <code>rule</code> is {{cssxref("@namespace")}} and the rule-list has more than just <code>@import</code> at-rules and/or <code>@namespace</code> at-rules, the method aborts with an <code>InvalidStateError</code>.</p>
+
+<p> </p>
+
+<h2 id="Example" name="Example">示例1</h2>
+
+<p>在样式表顶部插入新的规则</p>
+
+<pre class="brush: js"> myStyle.insertRule("#blanc { color: white }", 0); 
+</pre>
+
+<h2 id="Notes" name="Notes">示例2</h2>
+
+<pre class="brush: js">/**
+ * Add a stylesheet rule to the document (may be better practice, however,
+ *  to dynamically change classes, so style information can be kept in
+ *  genuine styesheets (and avoid adding extra elements to the DOM))
+ * Note that an array is needed for declarations and rules since ECMAScript does
+ * not afford a predictable object iteration order and since CSS is 
+ * order-dependent (i.e., it is cascading); those without need of
+ * cascading rules could build a more accessor-friendly object-based API.
+ * @param {Array} decls Accepts an array of JSON-encoded declarations
+ * @example
+addStylesheetRules([
+  ['h2', // Also accepts a second argument as an array of arrays instead
+    ['color', 'red'],
+    ['background-color', 'green', true] // 'true' for !important rules 
+  ], 
+  ['.myClass', 
+    ['background-color', 'yellow']
+  ]
+]);
+ */
+function addStylesheetRules (decls) {
+    var style = document.createElement('style');
+    document.getElementsByTagName('head')[0].appendChild(style);
+    if (!window.createPopup) { /* For Safari */
+       style.appendChild(document.createTextNode(''));
+    }
+    var s = document.styleSheets[document.styleSheets.length - 1];
+    for (var i=0, dl = decls.length; i &lt; dl; i++) {
+        var j = 1, decl = decls[i], selector = decl[0], rulesStr = '';
+        if (Object.prototype.toString.call(decl[1][0]) === '[object Array]') {
+            decl = decl[1];
+            j = 0;
+        }
+        for (var rl=decl.length; j &lt; rl; j++) {
+            var rule = decl[j];
+            rulesStr += rule[0] + ':' + rule[1] + (rule[2] ? ' !important' : '') + ';\n';
+        }
+
+        if (s.insertRule) {
+            s.insertRule(selector + '{' + rulesStr + '}', s.cssRules.length);
+        }
+        else { /* IE */
+            s.addRule(selector, rulesStr, -1);
+        }
+    }
+}</pre>
+
+<h2 id="Notes" name="Notes">兼容垫片</h2>
+
+<p>The below polyfill will correct the input of the arguments of <code>insertRule()</code> to standardize them in Internet Explorer 5–8. It supplements <code>insertRule()</code> with a function that separates the selector from the rules before sending the arguments to the default native <code>insertRule</code></p>
+
+<pre><code>(function(Sheet_proto){
+  var originalInsertRule = Sheet_proto.insertRule;
+
+  if (originalInsertRule.length === 2){ // 2 mandatory arguments: (selector, rules)
+    Sheet_proto.insertRule = function(selectorAndRule){
+      // First, separate the selector from the rule
+      a: for (var i=0, Len=selectorAndRule.length, isEscaped=0, newCharCode=0; i !== Len; ++i) {
+        newCharCode = selectorAndRule.charCodeAt(i);
+        if (!isEscaped &amp;&amp; (newCharCode === 123)) { // 123 = "{".charCodeAt(0)
+          // Secondly, find the last closing bracket
+          var openBracketPos = i, closeBracketPos = -1;
+
+          for (; i !== Len; ++i) {
+            newCharCode = selectorAndRule.charCodeAt(i);
+            if (!isEscaped &amp;&amp; (newCharCode === 125)) { // 125 = "}".charCodeAt(0)
+              closeBracketPos = i;
+            }
+            isEscaped ^= newCharCode===92?1:isEscaped; // 92 = "\\".charCodeAt(0)
+          }
+
+          if (closeBracketPos === -1) break a; // No closing bracket was found!
+            /*else*/ return originalInsertRule.call(
+            this, // the sheet to be changed
+            selectorAndRule.substring(0, openBracketPos), // The selector
+            selectorAndRule.substring(closeBracketPos), // The rule
+            arguments[3] // The insert index
+          );
+        }
+
+        // Works by if the char code is a backslash, then isEscaped
+        // gets flipped (XOR-ed by 1), and if it is not a backslash
+        // then isEscaped gets XORed by itself, zeroing it
+        isEscaped ^= newCharCode===92?1:isEscaped; // 92 = "\\".charCodeAt(0)
+      }
+      // Else, there is no unescaped bracket
+      return originalInsertRule.call(this, selectorAndRule, "", arguments[2]);
+    };
+  }
+})(CSSStyleSheet.prototype);</code></pre>
+
+<p> </p>
+
+<h2 id="Notes" name="Notes">附注</h2>
+
+<p>对于普通样式规则来说,要插入的字符串应该包含选择器和样式声明.对于@规则来说,要插入的字符串应该包含@标识符和样式规则的内容.</p>
+
+<h2 id="相关链接">相关链接</h2>
+
+<ul>
+ <li><a href="/en/DOM/CSSStyleSheet/deleteRule" title="en/DOM/CSSStyleSheet/deleteRule">deleteRule</a></li>
+</ul>
+
+<h2 id="Specification" name="Specification">规范</h2>
+
+<ul>
+ <li><a class="external" href="http://www.w3.org/TR/2000/REC-DOM-Level-2-Style-20001113/css.html#CSS-CSSStyleSheet-insertRule">insertRule </a></li>
+</ul>
+
+<p>
+ <audio style="display: none;"> </audio>
+</p>

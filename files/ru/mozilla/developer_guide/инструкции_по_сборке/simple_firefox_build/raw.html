@@ -1,0 +1,106 @@
+<p>В этой статье поэтапно описано как собрать Firefox из самых последних исходников в репозитории. Для дополнительной информации, перейдите на <a class="internal" href="/en-US/docs/Developer_Guide/Build_Instructions" title="/en-US/docs/Developer_Guide/Build_Instructions">build documentation</a>.</p>
+
+<h2 id="Необходимые_требования_для_сборки">Необходимые требования для сборки</h2>
+
+<h3 id="Требования_к_аппаратуре">Требования к аппаратуре:</h3>
+
+<ul>
+ <li>Вы можете собрать Firefox на старом оборудовании, но компиляция займет достаточно много времени, поэтому рекомендуется иметь хотя бы 8Гб оперативной памяти.</li>
+ <li>Высокоскоростной интернет тоже рекомендован. Окружение разработчика и репозиторий с исходным кодом большие.</li>
+ <li>У вас должна быть 64 битная операционная система. С начала 2015 года больше не возможно собрать Firefox на большинстве 32 битных машинах.</li>
+</ul>
+
+<h3 id="Установка">Установка:</h3>
+
+<p>В зависимости от вашей операционной системы, вам может потребоваться выполнение различных инструкций для подготовки машины. Так что сначала выполните следующие инструкции для вашей операционной системы, а потом возвращайтесь к инструкциям по сборке.</p>
+
+<ul>
+ <li><a href="/en-US/docs/Developer_Guide/Build_Instructions/Windows_Prerequisites">Windows build prerequisites [en-US] </a></li>
+ <li><a href="/en-US/docs/Simple_Firefox_build/Linux_and_MacOS_build_preparation">Linux Build Prerequisites [en-US]</a></li>
+ <li><a href="/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Mac_OS_X_Prerequisites">Mac OS X Build Prerequisites [en-US]</a></li>
+</ul>
+
+<p>Подказка: После завершения установки для своей операционной системы и до того, как вы загрузите исходный код, вы можете добавить progressExtension в ваш mercurial.ini (для Windows) или .hgrc (для *Nix / Mac) файлы. После этого вы можете наблюдать за прогрессом загрузки кода. См. больше: <a href="http://mercurial.selenic.com/wiki/ProgressExtension">Configure Mercurial .hgrc file for Progress Extension [en-US]</a>.</p>
+
+<h2 id="Загрузка_исходников">Загрузка исходников</h2>
+
+<p>Загрузите самые свежие исходники из Mercurial репозитория сообщества Mozilla. Это может занять некоторое время, там <em>очень много</em> кода!</p>
+
+<pre>hg clone https://hg.mozilla.org/mozilla-central
+</pre>
+
+<div class="warning"><span style="color: #ffffff;">Если у Вас медленное соединение с интернетом, то "hg clone" может аварийно завершитcя. В таком случае мы всячески рекомендуем Вам скачать </span><a href="/en-US/docs/Developer_Guide/Source_Code/Mercurial/Bundles" title="/en-US/docs/Developer_Guide/Source_Code/Mercurial/Bundles"><span style="color: #ffff00;">Mercurial bundle</span></a><span style="color: #ffffff;"> и не ждать "hg clone".</span></div>
+
+<h2 id="Конфигурирование_сборки_(по_желанию)">Конфигурирование сборки (по желанию)</h2>
+
+<p>По-умолчанию, система сборки создает оптимизированную версию Firefox, эквивалентную официальному релизу. Если это не то, что вы хотите, то есть множество конфигурационных опций, с помощью которых можно изменять конфигурацию билда, но мы <strong>крайне</strong> рекомендуем использовать их только в том случае, если вы полностью понимаете чего хотите добиться.</p>
+
+<p>Стандартный способ настроить сборку - это переопределить опции в файле  <code>mozconfig</code>, расположенного в корне исходников mozilla, т.е. в каталоге  <code>mozilla-central</code>, созданном командой "<code>hg clone"</code>. Под Windows файл можно создать командой в командной строке MozillaBuild:</p>
+
+<pre>cd /path/to/mozilla-central
+touch .mozconfig</pre>
+
+<p>Например, если вы планируете заняться C/C++ кодом, вы возможно хотите собрать debug вместо release, путем добавление следующих строк в <code>mozconfig</code>:</p>
+
+<pre>ac_add_options --enable-debug
+ac_add_options --disable-optimize</pre>
+
+<p>Более подробно опции конфигурирования описаны в <a href="/en-US/docs/Configuring_Build_Options" title="/en-US/docs/Configuring_Build_Options">configuring build options</a>.</p>
+
+<h2 id="Cборка">Cборка</h2>
+
+<p>Для того, чтобы сконфигурировать mercurial для <code>mach</code>, запустите:</p>
+
+<pre>./mach mercurial-setup</pre>
+
+<p>Если у вас установлен антивирус, вам возможно придется добавить объектную директорию (по умолчанию, <code>mozilla-central/ </code>с префиксом <strong><code>obj-</code></strong>, например, <strong><code>obj-i686-pc-mingw32</code></strong>) в список исключений. Программы вроде Norton Security Suite (на Windows) иногда идентифицируют исполняемые файлы или файлы, сгенерированные в процессе сборки, как угрозу безопасности и в результате удаляют их или останавливают их выполнение. Обычно, это приводит к ошибке сборки. Даже если сборка не прекратится, ее время увеличится.</p>
+
+<p>Для того, чтобы запустить процесс сборки, перейдите в подкаталог  <code>mozilla-central </code>(автоматически созданный командой "<code>hg clone</code>") и запустите:</p>
+
+<pre>./mach build
+</pre>
+
+<p>mach является нашим собственным инструментом, упрощающим общие задачи. Более подробно про mach читайте в статье <a href="/en-US/docs/Developer_Guide/mach" title="/en-US/docs/Developer_Guide/mach">mach</a> .</p>
+
+<p>При первом запуске "./mach build", mach спросит вас, хотите ли вы создать директорию ".mozbuild" в вашем домашнем каталоге и будет ждать 20 секунд вашего ответа. Это хорошая настройка по умолчанию, так что вы должны позволить mach закончить.</p>
+
+<p>Сборка может занять много времени, которое <strong>зависит</strong> от мощности вашей машины, операционной системы, и выбранных опций сборки. Сборка под Linux на мощных машинах может пройти быстрее 15 минут, но, например, на слабой Windows машине  может занять несколько часов. Смотрите рекомендации как ускорить сборку здесь: <strong><a href="/en-US/docs/Developer_Guide/Mozilla_build_FAQ#Making_builds_faster" title="/en-US/docs/Developer_Guide/Mozilla_build_FAQ#Making_builds_faster">tips for making builds faster</a></strong>.</p>
+
+<h2 id="Запуск">Запуск</h2>
+
+<p>В <strong>объектном каталоге </strong>вы можете увидеть множество временных файлов, библиотек, и сам исполнимый файл Firefox. Этот подкаталог будет находиться внутри <code>mozilla-central</code> и именоваться с префиксом <strong><code>obj-</code></strong>. Конкретное имя будет зависеть от вашей системы и ОС. Например, под Mac ыы можете найти объектный каталог именованный <strong><code>obj-x86_64-apple-darwin10.7.3/</code></strong>.</p>
+
+<p>Для запуска только что собранного экземпляра Firefox используйте следующую команду <code>mach</code></p>
+
+<pre>./mach run</pre>
+
+<p>Исполняемый файл Firefox и все зависимые библиотеки расположены в каталоге <code>dist/bin</code> внутри объектного каталога. В частности, в зависимости от ОС, Firefox будет расположен в</p>
+
+<ul>
+ <li><strong>Windows:</strong> <code>obj-.../dist/bin/firefox.exe</code></li>
+ <li><strong>Linux:</strong> <code>obj-.../dist/bin/firefox</code></li>
+ <li><strong>OS X:</strong> <code>obj-.../dist/Nightly.app/Contents/MacOS/firefox</code></li>
+</ul>
+
+<h2 id="Повторная_сборка">Повторная сборка</h2>
+
+<p>Если вы внесли изменения в код, то пересобрать проект можно командой</p>
+
+<pre>./mach build
+</pre>
+
+<p>Эта команда будет пересобирать только измененные файлы. Также возможно использовать команду</p>
+
+<pre>./mach build <var>path/to/dir</var>
+</pre>
+
+<p>для сборки только части дерева исходников. Тем не менее, будьте осторожны, данный подход может привести к некорректным результатам, т.о. его использование <strong>не рекомендуется.</strong></p>
+
+<h2 id="Как_обновить_исходники">Как обновить исходники</h2>
+
+<p>Для того, чтобы получить последние изменения и обновить код рабочего каталога <code>mozilla-central</code> запустите команду:</p>
+
+<pre>hg pull -u
+</pre>
+
+<p>и запустите <code>./mach build</code>. Т.к. скорость внесения изменений в Firefox очень большая, то повторная сборка может занять много времени.</p>

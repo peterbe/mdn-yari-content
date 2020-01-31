@@ -1,0 +1,199 @@
+<div>{{jsSidebar("Statements")}}</div>
+
+<p><code><strong>function*</strong></code> 宣言 (末尾にアスタリスクが付いた<code>function</code>キーワード)は、 {{jsxref("Global_Objects/Generator","Generator")}} オブジェクトを返すジェネレーター関数を定義します。</p>
+
+<div>{{EmbedInteractiveExample("pages/js/statement-functionasterisk.html")}}</div>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<div class="noinclude">
+<p>ジェネレーター関数は、 {{jsxref("GeneratorFunction")}} コンストラクターを使用して定義することもできます。</p>
+</div>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre>function* <em>name</em>([<em>param</em>[, <em>param</em>[, ... <em>param</em>]]]) {
+   <em>statements</em>
+}
+</pre>
+
+<dl>
+ <dt><code>name</code></dt>
+ <dd>関数名。</dd>
+</dl>
+
+<dl>
+ <dt><code>param</code></dt>
+ <dd>関数に渡される引数名。引数は255個までもつことが可能。</dd>
+</dl>
+
+<dl>
+ <dt><code>statements</code></dt>
+ <dd>関数本体に含まれる命令文。</dd>
+</dl>
+
+<h2 id="解説">解説</h2>
+
+<p>ジェネレーターは処理を抜け出すことも後から復帰することもできる関数です。ジェネレーターのコンテキスト (変数の値)は復帰しても保存されます。</p>
+
+<p>ジェネレーター関数を呼び出しても関数は直ぐには実行されません。代わりに、関数のための<a href="/ja/docs/Web/JavaScript/Guide/The_Iterator_protocol">iterator</a> オブジェクトが返されます。iterator の <code>next()</code> メソッドが呼ばれると、ジェネレーター関数の処理は、イテレーターから返された値を特定する最初の{{jsxref("Operators/yield", "yield")}}演算子か、ほかのジェネレーター関数に委任する {{jsxref("Operators/yield*", "yield*")}}に達するまで実行されます。<code style="line-height: 1.5; font-style: normal;">next()</code> メソッドはyieldされた値を含む <code>value</code> プロパティと、ジェネレーターが最後の値を持つかを真偽値で示す <code>done</code> プロパティを持つオブジェクトを返します。 引数つきで<code>next()</code> を呼ぶとジェネレーター関数の実行が再開され、処理が停止していた <code>yield</code> 式を <code>next()</code> の引数で置き換えます。</p>
+
+<p><code>return</code> 文はジェネレーターで、実行された時、ジェネレーターを <code>done</code> にします。値が <code>return</code>(返却)されたら、<code>value</code> として返されます。値を返されたジェネレーターは、それ以降は値をyieldしません。</p>
+
+<h2 id="例">例</h2>
+
+<h3 id="単純な例">単純な例</h3>
+
+<pre class="brush: js">function* idMaker(){
+  var index = 0;
+  while (index &lt; <code class="language-js">index<span class="operator token">+</span><span class="number token">1</span><span class="punctuation token">)</span></code>
+    yield index++;
+}
+
+var gen = idMaker();
+
+console.log(gen.next().value); // 0
+console.log(gen.next().value); // 1
+console.log(gen.next().value); // 2
+<code class="language-js">console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(</span>gen<span class="punctuation token">.</span><span class="function token">next</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">.</span>value<span class="punctuation token">)</span><span class="punctuation token">;</span> <span class="comment token">// 3</span></code>
+// ...</pre>
+
+<h3 id="yield*_を使用した例">yield* を使用した例</h3>
+
+<pre class="brush: js">function* anotherGenerator(i) {
+  yield i + 1;
+  yield i + 2;
+  yield i + 3;
+}
+function* generator(i){
+  yield i;
+  yield* anotherGenerator(i);
+  yield i + 10;
+}
+
+var gen = generator(10);
+
+console.log(gen.next().value); // 10
+console.log(gen.next().value); // 11
+console.log(gen.next().value); // 12
+console.log(gen.next().value); // 13
+console.log(gen.next().value); // 20
+</pre>
+
+<h3 id="Passing_arguments_into_Generators" name="Passing_arguments_into_Generators">引数をジェネレーターにパースさせる</h3>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js"><span class="keyword token">function</span><span class="operator token">*</span> <span class="function token">logGenerator</span><span class="punctuation token">(</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+  console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(</span><span class="number token">0</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+  console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(</span><span class="number token">1</span><span class="punctuation token">,</span> <span class="keyword token">yield</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+  console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(</span><span class="number token">2</span><span class="punctuation token">,</span> <span class="keyword token">yield</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+  console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(</span><span class="number token">3</span><span class="punctuation token">,</span> <span class="keyword token">yield</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+<span class="punctuation token">}</span>
+
+<span class="keyword token">var</span> gen <span class="operator token">=</span> <span class="function token">logGenerator</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+
+<span class="comment token">// 最初の next の呼び出しで、関数の最初から、</span>
+<span class="comment token">// 最初の yield 文の前まで実行される。</span>
+gen<span class="punctuation token">.</span><span class="function token">next</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">;</span>             <span class="comment token">// 0</span>
+gen<span class="punctuation token">.</span><span class="function token">next</span><span class="punctuation token">(</span><span class="string token">'pretzel'</span><span class="punctuation token">)</span><span class="punctuation token">;</span>    <span class="comment token">// 1 pretzel</span>
+gen<span class="punctuation token">.</span><span class="function token">next</span><span class="punctuation token">(</span><span class="string token">'california'</span><span class="punctuation token">)</span><span class="punctuation token">;</span> <span class="comment token">// 2 california</span>
+gen<span class="punctuation token">.</span><span class="function token">next</span><span class="punctuation token">(</span><span class="string token">'mayonnaise'</span><span class="punctuation token">)</span><span class="punctuation token">;</span> <span class="comment token">// 3 mayonnaise</span></code></pre>
+
+<h3 id="Return_statement_in_a_generator" name="Return_statement_in_a_generator">ジェネレーターにおけるreturn文</h3>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js"><span class="keyword token">function</span><span class="operator token">*</span> <span class="function token">yieldAndReturn</span><span class="punctuation token">(</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+  <span class="keyword token">yield</span> <span class="string token">"Y"</span><span class="punctuation token">;</span>
+  <span class="keyword token">return</span> <span class="string token">"R"</span><span class="punctuation token">;</span>
+  <span class="keyword token">yield</span> <span class="string token">"unreachable"</span><span class="punctuation token">;</span>
+<span class="punctuation token">}</span>
+
+<span class="keyword token">var</span> gen <span class="operator token">=</span> <span class="function token">yieldAndReturn</span><span class="punctuation token">(</span><span class="punctuation token">)</span>
+console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(</span>gen<span class="punctuation token">.</span><span class="function token">next</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">)</span><span class="punctuation token">;</span> <span class="comment token">// { value: "Y", done: false }</span>
+console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(</span>gen<span class="punctuation token">.</span><span class="function token">next</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">)</span><span class="punctuation token">;</span> <span class="comment token">// { value: "R", done: true }</span>
+console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(</span>gen<span class="punctuation token">.</span><span class="function token">next</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">)</span><span class="punctuation token">;</span> <span class="comment token">// { value: undefined, done: true }</span></code></pre>
+
+<h3 id="ジェネレータをコンストラクタにすることはできません。">ジェネレータをコンストラクタにすることはできません。</h3>
+
+<pre class="brush: js example-bad line-numbers  language-js"><code class="language-js"><span class="keyword token">function</span><span class="operator token">*</span> <span class="function token">f</span><span class="punctuation token">(</span><span class="punctuation token">)</span> <span class="punctuation token">{</span><span class="punctuation token">}</span>
+<span class="keyword token">var</span> obj <span class="operator token">=</span> <span class="keyword token">new</span> <span class="class-name token">f</span><span class="punctuation token">;</span> <span class="comment token">// throws "TypeError: f is not a constructor"</span></code></pre>
+
+<h3 id="式中で定義されたジェネレーター">式中で定義されたジェネレーター</h3>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js"><span class="keyword token">const</span> foo <span class="operator token">=</span> <span class="keyword token">function</span><span class="operator token">*</span> <span class="punctuation token">(</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+  <span class="keyword token">yield</span> <span class="number token">10</span><span class="punctuation token">;</span>
+  <span class="keyword token">yield</span> <span class="number token">20</span><span class="punctuation token">;</span>
+<span class="punctuation token">}</span><span class="punctuation token">;</span>
+
+<span class="keyword token">const</span> bar <span class="operator token">=</span> <span class="function token">foo</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+<span class="comment token">// {value: 10, done: false}</span>
+bar<span class="punctuation token">.</span><span class="function token">next</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">;</span></code></pre>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">仕様</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">状況</th>
+   <th scope="col">コメント</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName('ES2015', '#', 'function*')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td>初期定義</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2016', '#', 'function*')}}</td>
+   <td>{{Spec2('ES2016')}}</td>
+   <td>ジェネレーターは [[Construct]] トラップを持ってはならず、<code>new</code> と併用された場合は例外を送出するように変更されました。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#', 'function*')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザー実装状況</h2>
+
+<div>
+<div>
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.statements.generator_function")}}</p>
+</div>
+</div>
+
+<h3 id="Firefox特有のメモ">Firefox特有のメモ</h3>
+
+<h4 id="Firefox26以前のジェネレーターとイテレーター">Firefox26以前のジェネレーターとイテレーター</h4>
+
+<p>旧バージョンのFirefoxは旧仕様のジェネレーターを実装しています。旧バージョンでは、 ジェネレーターは大きな違いとして通常の <code>function</code> キーワード（アスタリスクを用いない）を使用して定義されます。 更なる情報は<a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Statements/Legacy_generator_function">レガシージェネレーター関数</a>を見てください。</p>
+
+<h4 id="スローの代わりにIteratorResultオブジェクトが返される">スローの代わりに<code>IteratorResult</code>オブジェクトが返される</h4>
+
+<p>Gecko 29 {{geckoRelease(29)}}からは、完了したジェネレーター関数は {{jsxref("TypeError")}}"ジェネレーターはすでに完了しました"をもはやスローしません。かわりに、<font face="Consolas">{ value: undefined, done: true }</font>のような <code>IteratorResult</code> を返します ({{bug(958951)}})｡</p>
+
+<h2 id="関連項目">関連項目</h2>
+
+<ul>
+ <li>{{jsxref("Operators/function*", "function* 式")}}</li>
+ <li>{{jsxref("GeneratorFunction")}} オブジェクト</li>
+ <li><a href="/ja/docs/Web/JavaScript/Guide/The_Iterator_protocol">The Iterator protocol</a></li>
+ <li>{{jsxref("Operators/yield", "yield")}}</li>
+ <li>{{jsxref("Operators/yield*", "yield*")}}</li>
+ <li>{{jsxref("Function")}} オブジェクト</li>
+ <li>{{jsxref("Statements/function", "function 宣言")}}</li>
+ <li>{{jsxref("Operators/function", "function 式")}}</li>
+ <li>{{jsxref("Functions_and_function_scope", "関数と関数スコープ")}}</li>
+ <li>Other web resources:
+  <ul>
+   <li><a href="http://facebook.github.io/regenerator/">Regenerator</a> an ES2015 generator compiler to ES5</li>
+   <li><a href="http://www.youtube.com/watch?v=qbKWsbJ76-s">Forbes Lindesay: Promises and Generators: control flow utopia -- JSConf EU 2013</a></li>
+   <li><a href="https://www.youtube.com/watch?v=ZrgEZykBHVo&amp;list=PLuoyIZT5fPlG44bPq50Wgh0INxykdrYX7&amp;index=1">Hemanth.HM: The New gen of *gen(){}</a></li>
+   <li><a href="https://github.com/mozilla/task.js">Task.js</a></li>
+  </ul>
+ </li>
+</ul>

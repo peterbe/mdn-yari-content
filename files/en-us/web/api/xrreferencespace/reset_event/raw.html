@@ -1,0 +1,87 @@
+<p>{{APIRef("WebXR Device API")}}{{secureContext_header}}{{draft}}</p>
+
+<p><span class="seoSummary">The <code><strong>reset</strong></code> event is sent to an {{domxref("XRReferenceSpace")}} object when a discontinuity is detected in either the native origin or the effective origin, causing a jump in the position or orientation of objects oriented using the reference space.</span> This is common when the user calibrates or recalibrates an XR device, or if the device automatically changes its origin after losing tracking of the user, then re-gaining it.</p>
+
+<p>In the case of {{domxref("XRBoundedReferenceSpace")}} objects, the <code>reset</code> event can also be fired when the {{domxref("XRBoundedReferenceSpace.boundsGeometry", "boundsGeometry")}} changes.</p>
+
+<p>In either case, the event is sent before any WebXR animation frames which make use of the new origin are executed.</p>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="row">Bubbles</th>
+   <td>Yes</td>
+  </tr>
+  <tr>
+   <th scope="row">Cancelable</th>
+   <td>No</td>
+  </tr>
+  <tr>
+   <th scope="row">Interface</th>
+   <td>{{domxref("XRReferenceSpaceEvent")}}</td>
+  </tr>
+  <tr>
+   <th scope="row">Event handler property</th>
+   <td>{{domxref("XRReferenceSpace/onreset", "onreset")}}</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Usage_notes">Usage notes</h2>
+
+<h3 id="Handling_discontinuities">Handling discontinuities</h3>
+
+<p>You can handle jumps in the viewer's position by watching the Boolean {{domxref("XRPose")}} property {{domxref("XRPose.emulatedPosition", "emulatedPosition")}}. If a jump in the viewer's position coincides with <code>emulatedPosition</code> toggling from <code>true</code> to <code>false</code>, the viewer has regained tracking, and that their new position represents a correction from the previously emulated values. This is typically the desired behavior if your site or app doesn't simulate motion through the space by expressly changing the position and/or orientation of the viewer (rather than the user's physical movements being used by the XR device to introduce movement).</p>
+
+<p>However, if that kind of "teleportation" is being used, you actually want to avoid jumping the user's position after tracking recovery, this can introduce additional and potentially jarring jumping. Instead of allowing this to happen, you can integrate the <code>emulatedPosition</code> into the teleportation offset calculated prior to calling {{domxref("XRReferenceSpace.getOffsetReferenceSpace", "getOffsetReferenceSpace()")}} to create a new reference space whose updated effective origin is adjusted by the distance the viewer's position jumped since the previous frame. This way, the user's position only changes once rather than twice.</p>
+
+<h3 id="The_effect_of_discontinuity_size">The effect of discontinuity size</h3>
+
+<p>The <code>reset</code> event won't be fired when the discontinuity is small enough that the device is able to regain tracking within the same tracking area. Nor will be be fired at an unbounded reference space as it makes small adjustments to its native origin over time to maintain the space's stability in the vicinity of the user; only large discontinuities will trigger a reset.</p>
+
+<h2 id="Examples">Examples</h2>
+
+<p>To add a handler for the <code>reset</code> event, you can use either of two approaches. First, you can use the {{domxref("EventTarget.addEventListener", "addEventListener()")}} method:</p>
+
+<pre class="brush: js">viewerRefSpace.addEventListener("reset", (event) =&gt; {
+  /* perform reset related tasks */
+});
+</pre>
+
+<p>The second option is to set the <code>XRReferenceSpace</code> object's {{domxref("XRReferenceSpace.onreset", "onreset")}} event handler property:</p>
+
+<pre class="brush: js">viewerRefSpace.onreset = (event) =&gt; {
+  /* perform reset related tasks */
+};
+</pre>
+
+<p><strong>&lt;&lt;&lt;&lt;---- Need a more useful example ----&gt;&gt;&gt;&gt;</strong></p>
+
+<div class="hidden">
+<p>[I've looked and looked for existing code that does something with this event and so far have found nothing. I'll keep looking. --Sheppy (11 Nov 2019)]</p>
+</div>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('WebXR','#eventdef-xrreferencespace-reset','reset event')}}</td>
+   <td>{{Spec2('WebXR')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<div class="hidden">
+<p>The compatibility table in this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</p>
+</div>
+
+<p>{{Compat("api.XRReferenceSpace.onreset")}}</p>

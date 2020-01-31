@@ -1,0 +1,184 @@
+<div>{{APIRef("Canvas API")}} {{SeeCompatTable}}</div>
+
+<p><strong><code>OffscreenCanvas提供了一个可以脱离屏幕渲染的canvas对象。它在窗口环境和<a href="https://developer.mozilla.org/zh-CN/docs/Web/API/Web_Workers_API">web worker</a>环境均有效。</code></strong></p>
+
+<div class="note">
+<p><span style="font-size: 14px;"><strong>注意</strong></span>：这个API仅在 <a href="/en-US/docs/Web/API/WebGLRenderingContext">WebGL1</a>和<a href="/en-US/docs/Web/API/WebGL2RenderingContext">WebGL2</a>的环境中实现。查看{{bug(801176)}}来了解workers对<a href="/en-US/docs/Web/API/Canvas_API">Canvas 2D API</a> 的支持情况。</p>
+</div>
+
+<h2 id="构造函数">构造函数</h2>
+
+<dl>
+ <dt>{{domxref("OffscreenCanvas.OffscreenCanvas", "OffscreenCanvas()")}}</dt>
+ <dd><code>OffscreenCanvas构造函数。创建一个新的</code><code>OffscreenCanvas对象。</code></dd>
+</dl>
+
+<h2 id="属性">属性</h2>
+
+<dl>
+ <dt>{{domxref("OffscreenCanvas.height")}}</dt>
+ <dd>offscreen canvas对象的高度。</dd>
+ <dt>{{domxref("OffscreenCanvas.width")}}</dt>
+ <dd>offscreen canvas对象的宽度。</dd>
+</dl>
+
+<h2 id="方法">方法</h2>
+
+<dl>
+ <dt>{{domxref("OffscreenCanvas.getContext()")}}</dt>
+ <dd>为offscreen canvas对象返回一个渲染画布。</dd>
+</dl>
+
+<dl>
+ <dt>{{domxref("OffscreenCanvas.toBlob()")}}</dt>
+ <dd>创建一个代表canvas中的图像的{{domxref("Blob")}}对象。</dd>
+</dl>
+
+<dl>
+ <dt>{{domxref("OffscreenCanvas.transferToImageBitmap()")}}</dt>
+ <dd>从<code>OffscreenCanvas最近渲染的图像</code>创建一个 {{domxref("ImageBitmap")}} 对象。</dd>
+</dl>
+
+<h2 id="例子">例子</h2>
+
+<h3 id="同步显示OffscreenCanvas中的帧">同步显示<code>OffscreenCanvas中的帧</code></h3>
+
+<p><code>一种方式是使用OffscreenCanvas</code> API，也就是用已经包含<code>OffscreenCanvas对象的</code>{{domxref("RenderingContext")}} 来生成新的帧。 每次一个新的帧在画布中完成渲染，{{domxref("OffscreenCanvas.transferToImageBitmap", "transferToImageBitmap()")}} 方法都会被调用来保存最近渲染的图像。该方法返回一个{{domxref("ImageBitmap")}}对象， 该对象可以被用在各种Web APIs中，也可以用在下一个canvas中，并且不需要转换备份。</p>
+
+<p><code>为了显示<a href="/en-US/docs/https://developer.mozilla.org/zh-CN/docs/Web/API/ImageBitmap">ImageBitmap</a></code>，你可以用{{domxref("ImageBitmapRenderingContext")}}画布，该画布可以通过一个canvas（可见的）元素调用<code>canvas.getContext("bitmaprenderer")方法来创建</code>。该画布只提供用<code>ImageBitmap</code>替换canvas的内容的功能.。调用{{domxref("ImageBitmapRenderingContext.transferImageBitmap()")}} 以前的渲染结果并且通过OffscreenCanvas保存<code>ImageBitmap</code> ，会在canvas里显示<code>ImageBitmap</code>并且转换其所有权到canvas。 一个单独的OffscreenCanvas可以将帧转换到任意数量的其他<a href="https://developer.mozilla.org/zh-CN/docs/Web/API/ImageBitmapRenderingContext">ImageBitmapRenderingContext</a>对象。</p>
+
+<p>提供两个 {{HTMLElement("canvas")}} 元素</p>
+
+<pre class="brush: html">&lt;canvas id="one"&gt;&lt;/canvas&gt;
+&lt;canvas id="two"&gt;&lt;/canvas&gt;</pre>
+
+<p>下面的代码会用<code>OffscreenCanva提供渲染结果，就像上面描述的一样。</code></p>
+
+<pre class="brush: js">var one = document.getElementById("one").getContext("bitmaprenderer"); 
+var two = document.getElementById("two").getContext("bitmaprenderer");
+
+var offscreen = new OffscreenCanvas(256, 256);
+var gl = offscreen.getContext('webgl');
+
+// ... some drawing for the first canvas using the gl context ...
+
+// Commit rendering to the first canvas
+var bitmapOne = offscreen.transferToImageBitmap();
+one.transferImageBitmap(bitmapOne);
+
+// ... some more drawing for the second canvas using the gl context ...
+
+// Commit rendering to the second canvas 
+var bitmapTwo = offscreen.transferToImageBitmap();
+two.transferImageBitmap(bitmapTwo);
+</pre>
+
+<h3 id="异步显示OffscreenCanvas生成的帧"> 异步显示<code>OffscreenCanvas生成的帧</code></h3>
+
+<p><code>另一种使用 OffscreenCanvas</code> API的方式, 是在一个{{HTMLElement("canvas")}}元素上调用{{domxref("HTMLCanvasElement.transferControlToOffscreen", "transferControlToOffscreen()")}}， 也可以在<a href="/en-US/docs/Web/API/Web_Workers_API">worker</a>或主线程,上调用，这将从主线程的{{domxref("HTMLCanvasElement")}}对象返回一个<code>OffscreenCanvas对象。调用</code>{{domxref("OffscreenCanvas.getContext", "getContext()")}} 会从这个<code>OffscreenCanvas获取一个<a href="https://developer.mozilla.org/zh-CN/docs/Web/API/RenderingContext">RenderingContext </a>。</code></p>
+
+<p>为了让帧可见，你可以在<code>RenderingContext上</code>调用<code>commit()，然后这些帧会被推回原始的</code>{{HTMLElement("canvas")}}元素。</p>
+
+<p>请注意，在Firefox中，此API目前仅针对<a href="/en-US/docs/Web/API/WebGL_API">WebGL context</a> ({{domxref("WebGLRenderingContext.commit()")}})。web work中对<a href="/en-US/docs/Web/API/Canvas_API">Canvas 2D API</a> 的支持， 参照{{bug(801176)}}。</p>
+
+<p>main.js (主线程代码):</p>
+
+<pre class="brush: js">var htmlCanvas = document.getElementById("canvas");
+var offscreen = htmlCanvas.transferControlToOffscreen();
+
+var worker = new Worker("offscreencanvas.js"); 
+worker.postMessage({canvas: offscreen}, [offscreen]);
+</pre>
+
+<p>offscreencanvas.js (web work代码):</p>
+
+<pre class="brush: js">onmessage = function(evt) {
+  var canvas = evt.data.canvas.
+  var gl = canvas.getContext("webgl");
+
+  // ... some drawing using the gl context ...
+
+  // Push frames back to the original HTMLCanvasElement
+  gl.commit();
+};
+</pre>
+
+<h2 id="规范">规范</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('HTML WHATWG', "scripting.html#the-offscreencanvas-interface", "OffscreenCanvas")}}</td>
+   <td>{{Spec2('HTML WHATWG')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="浏览器兼容性">浏览器兼容性</h2>
+
+<div>{{CompatibilityTable}}</div>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatGeckoDesktop(44)}} [1]</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatGeckoMobile(44)}} [1]</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<p>[1] 该特性需要在偏好设置里开启。在关于 -&gt; 设置里，将<code>gfx.offscreencanvas.enabled</code> 选项设置为true。</p>
+
+<h2 id="另请参见">另请参见</h2>
+
+<ul>
+ <li><a href="https://hacks.mozilla.org/2016/01/webgl-off-the-main-thread/">WebGL Off the Main Thread – Mozilla Hacks</a></li>
+ <li>{{domxref("CanvasRenderingContext2D")}}</li>
+ <li>{{domxref("ImageBitmap")}}</li>
+ <li>{{domxref("ImageBitmapRenderingContext")}}</li>
+ <li>{{domxref("HTMLCanvasElement.transferControlToOffscreen()")}}</li>
+ <li>{{domxref("WebGLRenderingContext.commit()")}}</li>
+</ul>

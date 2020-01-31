@@ -1,0 +1,231 @@
+<p>{{DefaultAPISidebar("App Cache")}}{{deprecated_header}}</p>
+<div class="warning">
+<p>Using the <em>application caching</em> feature described here is at this point highly discouraged; it’s <a href="https://html.spec.whatwg.org/multipage/browsers.html#offline">in the process of being removed from the Web platform</a>. Use <a href="/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers">Service Workers</a> instead. In fact as of Firefox 44, when <a href="/en-US/docs/Web/HTML/Using_the_application_cache">AppCache</a> is used to provide offline support for a page a warning message is now displayed in the console advising developers to use <a href="/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers">Service workers</a> instead ({{bug("1204581")}}).</p>
+</div>
+
+<p>{{ gecko_minversion_header("1.9.1") }}</p>
+
+<p>Firefox 3.5 wspiera standard HTML 5 umożliwiający zbieranie podręcznej pamięci zasobów internetowych offline. Dzieje się tak dzięki <em>pamięci podręcznej aplikacji</em> (pochodzącej z <strong>manifestu zasobów</strong> dostarczonego przez przeglądarkę internetową).</p>
+
+<p>{{ fx_minversion_note(3, "Pewne części standardu HTML 5 były wspierane przez Firefox 3. Jednkaże, od czasu publikacji Firefox 3, standard zmienił się, dlatego też na tej stronie nie uwzględniliśmy współpracy z tą wersją przeglądarki.") }}</p>
+
+<h2 id="Terminologia">Terminologia</h2>
+
+<p>W tej sekcji zostało zdefiniowane kilka terminów, które ułatwią zrozumienie dokumentacji.</p>
+
+<dl>
+ <dt>manifest pamięci podręcznej</dt>
+ <dd>Plik opisujący zasoby, które powinny być zachowane do użytku w trybie offline.</dd>
+ <dt>ID klienta</dt>
+ <dd>ID klienta używane przez interfejs {{ interface("nsICacheService") }} podczas zarządzania pamięcią podręczną aplikacji. Jest to nieprzezroczysty łańcuch znaków, tworzony podczas powstawania pamięci podręcznej nowej aplikacji.</dd>
+ <dt>grupa pamięci podręcznej</dt>
+ <dd>Zestaw różnych wersji dla tego samego manifestu pamięci podręcznej.</dd>
+ <dt>ID grupy</dt>
+ <dd>URI pliku manifestu pamięci podręcznej. Wszystkie pamięci podręczne współdzielące tą samą pamięć, są w tej samej grupie pamięci podręcznej.</dd>
+</dl>
+
+<h2 id="Pamięć_podręczna_aplikacji">Pamięć podręczna aplikacji</h2>
+
+<p>Wszystkie manifesty zasobów aplikacji internetowych posiadają własną pamięć podręczną aplikacji. Od czasu gdy programy zaczynają współdzielić zasoby (mogą także posiadać takie same manifesty URI), pamięć podręczna aplikacji oddziela kopie wszystkich dzielonych zasobów. Wersje pamięci podręcznych są zapisywane - za każdym razem, gdy dana strona jest odwiedzana online, aplikacji dołącza nową wersję do pamięci podręcznej. Powstała wersja jest używana przy kolejnej wizycie na stronie.</p>
+
+<h3 id="Sposób_działania_pamięci_podręcznej">Sposób działania pamięci podręcznej</h3>
+
+<p>Pamięć podręczna aplikacji modyfikuje proces wczytywania dokumentu. Elementy z pamięci podręcznej są wykorzystywane bez łączenia się z internetem (inaczej niż w przypadku aktualizacji kopii aplikacji internetowej w pamięci podręcznej - przebiega to w tle i nie ma dużego wpływu na szybkość).</p>
+
+<p>Niektóre elementy pamięci podręcznej mogą być nieaktualne. Gdy manifest został usunięty z sewera, Firefox usuwa wszystkie składniki pamięci podręcznej używające tego manifestu, po czym wysyła "przestarzałe" zdarzenie do obiektu pamięci podręcznej aplikacji. Następnie, status pamięci podręcznej zyskuje wartość <code>OBSOLETE</code>.</p>
+
+<h4 id="Przykład_działania">Przykład działania</h4>
+
+<p>This section offers an example of the work flow of how loading a page works with the cache.  If you're an end user of the caching mechanism, you don't really need to know this, but it's useful if you're developing Firefox or embedding Gecko.</p>
+
+<p>Let's assume you have a cache manifest located at <a class="external" href="http://www.foo.com/cache.manifest" rel="freelink">http://www.foo.com/cache.manifest</a>, which includes two resources: <code>test.html</code> and <code>test.png</code>.  Loading <code>test.html</code> results in the following steps being taken:</p>
+
+<p>The HTTP channel calls the {{ interface("nsIApplicationCacheService") }} method {{ ifmethod("nsIApplicationCacheService", "chooseApplicationCache") }} to select the appropriate group ID for the requested resource:</p>
+
+<pre>appCache = nsIApplicationCacheService::ChooseApplicationCache("http://www.foo.com/test.html");
+</pre>
+
+<p>This returns the most recent application cache in the group identified by group ID "<a class="external" href="http://www.foo.com/cache.manifest" rel="freelink">http://www.foo.com/cache.manifest</a>".  Then, the HTTP channel does something similar to the following:</p>
+
+<pre>cacheSession = nsICacheSerivce::CreateSession(appCache.clientID, STORAGE_OFFLINE, true);
+cacheEntry = cacheSession.openCacheEntry("http://www.foo.com/test.html");
+</pre>
+
+<p>This creates a cache session and opens the requested resource from within the cache.  From this point on, it loads the data from <code>cacheEntry</code>, but without validation.</p>
+
+<p>When <code>test.html</code> is loading, the docshell tells sub-loads to use the same application cache that was found by the call to <code>chooseApplicationCache()</code>, so that any resources loaded by <code>test.html</code> will also be loaded from the same cache.</p>
+
+<h3 id="Pami.C4.99.C4.87_podr.C4.99czna_aplikacji" name="Pami.C4.99.C4.87_podr.C4.99czna_aplikacji">Pamięć podręczna aplikacji</h3>
+
+<p>Każda pamięć podręczna aplikacji posiada <strong>status</strong>, który definiuje aktualny stan pamięci. Pamięci, które wspóldzielą ten sam manifest URI, współdzielą także ten sam status. Rodzaje statusów:</p>
+
+<dl>
+ <dt><code>UNCACHED</code></dt>
+ <dd>Specjalny znacznik oznaczający, że obiekt pamięci podręcznej nie jest w pełni zainicjowany.</dd>
+ <dt><code>IDLE</code></dt>
+ <dd>Pamięć podręczna nie jest w trakcie procedury aktualizacji.</dd>
+ <dt><code>CHECKING</code></dt>
+ <dd>Manifest sprawdza bądź pobiera aktualizacje.</dd>
+ <dt><code>DOWNLOADING</code></dt>
+ <dd>Zasoby są pobierane, towarzyszy temu dodanie do pamięci podręćznej i zmiana manifestu zasobu.</dd>
+ <dt><code>UPDATEREADY</code></dt>
+ <dd>Dostępna jest nowa wersja podręcznej pamięci. Odebrano zdarzenie <code>updateready</code>, które jest wywoływane nawet gdy pojawi się zdarzenie <code>cached</code> podczas gdy aktualizacja została pobrana, lecz jeszcze nie zaaktywowana metodą <code>swapCache()</code>.</dd>
+ <dt><code>OBSOLETE</code></dt>
+ <dd>Grupa pamięci podręcznej jest nieaktualna.</dd>
+ <dd>
+ <h3 id="Zasoby_w_pamięci_podręcznej">Zasoby w pamięci podręcznej</h3>
+
+ <p>Pamięć podręczna zawsze dołącza najmniejszy zasób, identyfikowany przez URI. Wszystkie zasoby dzielą się na poniższe kategorie:</p>
+ </dd>
+ <dt>Główne elementy</dt>
+ <dd>These are resources added to the cache because a browsing context visited by the user included a document that indicated that it was in this cache using its <code>manifest</code> attribute.</dd>
+ <dt>Manifest</dt>
+ <dd>This is the resource manifest itself, loaded from the URI specified in an implicit entry's <code>html</code> element's <code>manifest</code> attribute. The manifest is downloaded and processed during the application cache update process. Implicit entries must have the same scheme, host, and port as the manifest.</dd>
+ <dt>Lista elementów</dt>
+ <dd>These are resources listed in the cache's manifest.</dd>
+ <dt>Fallback entries</dt>
+ <dd>These are resources that were listed in the cache's manifest as fallback entries. {{ fx_minversion_inline(3.1) }}</dd>
+</dl>
+
+<div class="note"><strong>Uwaga:</strong> Zasoby mogą być oznaczone wieloma kategoriami, a także same mogą być wieloma elementami. Na przykład, element może być zarówno listą jak i fallback entry.</div>
+
+<h4 id="Główne_elementy">Główne elementy</h4>
+
+<p>Są to wszelkie pliki HTML zawierające atrybut manifestu wewnątrz elementu <code>&lt;html&gt;</code>. Przykładowo, załóżmy, że mamy plik HTML <code><a class="external" href="http://www.foo.bar/entry.html" rel="freelink">http://www.foo.bar/entry.html</a></code>, który wygląda następująco:</p>
+
+<pre>&lt;html manifest="foo.manifest"&gt;
+&lt;h1&gt;Entry&lt;/h1&gt;
+&lt;/html&gt;
+</pre>
+
+<p>Jeśli <code>entry.html</code> nie jest dołączony do manifestu, odwiedzenie strony <code>entry.html</code> spowoduje dodanie pliku <code>entry.html</code> do pamięci podręcznej jako główny element.</p>
+
+<h4 id="Fallback_entries">Fallback entries</h4>
+
+<p>Fallback entries are used when an attempt to load a resource fails.  For example, imagine that there is a cache manifest located at <code><a class="external" href="http://www.foo.bar/test.manifest" rel="freelink">http://www.foo.bar/test.manifest</a></code>, with the following contents:</p>
+
+<pre>CACHE MANIFEST
+FALLBACK:
+foo/bar/ foo.html
+</pre>
+
+<p>Any request to <code><a class="external" href="http://www.foo.bar/foo/bar/" rel="freelink">http://www.foo.bar/foo/bar/</a></code> or its subdirectories and their contents will cause a network request to attempt to load the requested resource.  If the attempt fails, either due to a network failure or a server error of some kind, the contents of the file <code>foo.html</code> are loaded instead.</p>
+
+<h4 id="Biała_lista_online">Biała lista online</h4>
+
+<p>The online whitelist may contain zero or more URIs of resources that the web application will need to access off the server rather than the offline cache. This lets the browser's security model protect the user from potential security breaches by limiting access only to approved resources.</p>
+
+<div class="note"><strong>Uwaga:</strong> Biała lista online jest ignorowana w wersjach Firefox wcześniejszych niż 3.1.</div>
+
+<p>This lets you ensure that, for example, scripts and other code is loaded and executed from the server instead of the cache:</p>
+
+<pre>CACHE MANIFEST
+NETWORK:
+/api
+</pre>
+
+<p>This ensures that requests to load resources contained in the <code><a class="external" href="http://www.foo.bar/api/" rel="freelink">http://www.foo.bar/api/</a></code> subtree will always go to the network without attempting to access them from the cache.</p>
+
+<h2 id="Manifest_pamięci_podręcznej">Manifest pamięci podręcznej</h2>
+
+<p>Cache manifest files must be served with the <code>text/cache-manifest</code> MIME type, and all resources served using this MIME type must follow the syntax for an application cache manifest, as defined here. Cache manifests are UTF-8 format text files and may, optionally, include a BOM character. Newlines may be represented by line feed (U+000A), carriage return (U+000D), or carriage return and line feed both.</p>
+
+<p>The first line of the cache manifest must consist of the string "CACHE MANIFEST" (with a single U+0020 space between the two words), followed by zero or more space or tab characters. Any other text on the line will be ignored.</p>
+
+<p>The remainder of the cache manifest must be comprised of zero or more of the following lines:</p>
+
+<dl>
+ <dt>Pusta linia</dt>
+ <dd>Możesz użyć pustej linii zawierającej zero bądź tzw. "białe znaki" (spacje, tabulatory).</dd>
+ <dt>Komentarz</dt>
+ <dd>Comments consist of zero or more tabs or spaces followed by a single "#" character, followed by zero or more characters of comment text. Comments may only be used on their own lines, and cannot be appended to other lines.</dd>
+ <dt>Nagłówek sekcji</dt>
+ <dd>Section headers specify which section of the cache manifest is being manipulated. There are three possible section headers:</dd>
+</dl>
+
+<blockquote>
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th>Sekcja nagłówkowa</th>
+   <th>Opis</th>
+  </tr>
+  <tr>
+   <td><code>CACHE:</code></td>
+   <td>Zmienia na sekcję list. To jest domyślna sekcja.</td>
+  </tr>
+  <tr>
+   <td><code>FALLBACK:</code></td>
+   <td>Switches to the fallback section.
+    <p>{{ fx_minversion_note(3.1, "The fallback section is ignored by versions of Firefox prior to 3.1.") }}</p>
+   </td>
+  </tr>
+  <tr>
+   <td><code>NETWORK:</code></td>
+   <td>Zmienia na sekcję białą listę online.
+    <p>{{ fx_minversion_note(3.1, "Biała lista online jest ignorowana w wersjach Firefox wcześniejszych od 3.1.") }}</p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+</blockquote>
+
+<dl>
+ <dd>Linia nagłówka sekcji może zawierać białe znaki, ale musi także posiadać dwukropek w nazwie sekcji.</dd>
+ <dt>Dane dla bieżącej sekcji</dt>
+ <dd>The format of data lines varies from section to section. In the explicit section, each line is a valid URI or IRI reference to a resource to cache. Whitespace is allowed before and after the URI or IRI on each line.</dd>
+</dl>
+
+<p>Cache manifests may switch back and forth from section to section at will (so each section header can be used more than once), and sections are allowed to be empty.</p>
+
+<div class="note"><strong>Uwaga: </strong>Relative URIs are relative to the cache manifest's URI, not to the URI of the document referencing the manifest.</div>
+
+<h4 id="A_sample_cache_manifest" name="A_sample_cache_manifest">Przykład manifestu pamięci podręcznej</h4>
+
+<p>Przykład dla wymyślonej strony internetowej <span class="nowiki">foo.com</span>.</p>
+
+<pre class="eval">CACHE MANIFEST
+# v1
+# To jest komentarz.
+<span class="nowiki">http://www.foo.com/index.html</span>
+<span class="nowiki">http://www.foo.com/header.png</span>
+<span class="nowiki">http://www.foo.com/blah/blah</span>
+</pre>
+
+<p>In this example, there is no section header, so all data lines are assumed to be in the explicit section.</p>
+
+<p>The "v1" comment is there for a good reason. Because the cache is only updated when the manifest changes, if you change the resources (for example, updating the <code>header.png</code> image with new content), you need to change the manifest file in order to let the browser know that it needs to refresh the cache. You can do this by any tweak to the manifest, but having a version number is a good way to do it.</p>
+
+<h2 id="Specyfikacja_manifestu_pamięci_podręcznej">Specyfikacja manifestu pamięci podręcznej</h2>
+
+<p>Aby poinformować Firefoksa o używaniu pamięci podręcznej offline dla danej strony internetowej, strona ta musi posiadać atrybut <code>manifest</code> wewnątrz znaczników <code>html</code>:</p>
+
+<pre class="eval"><span class="nowiki">&lt;html manifest="http://www.foo.com/cache-manifest"&gt;</span>
+  ...
+&lt;/html&gt;
+</pre>
+
+<h2 id="Procedura_aktualizacji">Procedura aktualizacji</h2>
+
+<ol>
+ <li>When Firefox visits a document that includes a <code>manifest</code> attribute, it sends a <code>checking</code> event to the <code><a href="/en/DOM/window.applicationCache" title="en/DOM/window.applicationCache">window.applicationCache</a></code> object, then fetches the manifest file, following the appropriate HTTP caching rules. If the currently-cached copy of the manifest is up-to-date, the <code>noupdate</code> event is sent to the <code>applicationCache</code>, and the update process is complete.</li>
+ <li>If the manifest file hasn't changed since the last update check, again, the <code>noupdate</code> event is sent to the <code>applicationCache</code>, and the update process is complete. Again, this is why if you change the resources, you need to change the manifest file so Firefox knows it needs to re-cache the resources.</li>
+ <li>If the manifest file has changed, all files in the manifest -- as well as those added to the cache by calling <code><a href="/en/nsIDOMOfflineResourceList#add.28.29" title="en/nsIDOMOfflineResourceList#add.28.29">applicationCache.add()</a></code> -- are fetched into a temporary cache, following the appropriate HTTP caching rules. For each file fetched into the cache, a <code>progress</code> event is sent to the <code>applicationCache</code> object. If any errors occur, an <code>error</code> event is sent, and the update halts.</li>
+ <li>Once all the files have been successfully retrieved, they are moved into the real offline cache atomically, and a <code>cached</code> event is sent to the <code>applicationCache</code> object.</li>
+</ol>
+
+<h2 id="Zobacz_również">Zobacz również</h2>
+
+<ul>
+ <li><a class="external" href="http://www.whatwg.org/specs/web-apps/current-work/#offline" title="http://www.whatwg.org/specs/web-apps/current-work/#offline">HTML 5 working draft: Offline web applications</a> </li>
+ <li>{{ interface("nsIApplicationCache") }}</li>
+ <li>{{ interface("nsIApplicationCacheNamespace") }}</li>
+ <li>{{ interface("nsIApplicationCacheContainer") }}</li>
+ <li>{{ interface("nsIApplicationCacheChannel") }}</li>
+ <li>{{ interface("nsIApplicationCacheService") }}</li>
+ <li>{{ interface("nsIDOMOfflineResourceList") }}</li>
+ <li><a class="external" href="http://www.ibm.com/developerworks/web/library/wa-ffox3/">Get ready for Firefox 3.0 - A Web developer's guide to the many new features in this popular browser, especially the offline application features</a> (IBM developerWorks)</li>
+</ul>
+
+<dl>
+</dl>

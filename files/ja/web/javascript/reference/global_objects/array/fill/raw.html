@@ -1,0 +1,145 @@
+<div>{{JSRef}}</div>
+
+<p><code><strong>fill()</strong></code> メソッドは、配列中の開始位置から終了位置までの要素を固定値で設定します。その際、終了位置は含まれません。</p>
+
+<div>{{EmbedInteractiveExample("pages/js/array-fill.html")}}</div>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox"><code><var>arr</var>.fill(<var>value</var>[, <var>start<var>[, <var>end</var>]])</var></var></code></pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<dl>
+ <dt><code>value</code></dt>
+ <dd>配列に設定する値です。</dd>
+ <dt><code>start</code> {{optional_inline}}</dt>
+ <dd>開始する位置です。既定値は 0 です。</dd>
+ <dt><code>end</code> {{optional_inline}}</dt>
+ <dd>終了する位置です。既定値は <code>this.length</code> です。</dd>
+</dl>
+
+<h3 id="Return_value" name="Return_value">戻り値</h3>
+
+<p>変更された配列です。</p>
+
+<h2 id="Description" name="Description">説明</h2>
+
+<p><code>fill</code> メソッドは最大 3 つの引数 <code>value</code>、<code>start</code>、<code>end</code> をとります。<code>start</code> と <code>end</code> はオプションの引数で、既定値はそれぞれ <code>0</code> と <code>this</code> オブジェクトの <code>length</code> です。</p>
+
+<p><code>start</code> が負の値の場合、<code>length+start</code> として扱われます (<code>length</code> は配列の長さ)。<code>end</code> が負の値の場合、<code>length+end</code> として扱われます。</p>
+
+<p><code>fill</code> 関数はジェネリック関数であり、<code>this</code> が配列オブジェクトである必要はありません。</p>
+
+<p><code>fill</code> メソッドは可変メソッドで、<code>this</code> オブジェクト自身を変更し、オブジェクト自身のコピーではなく、オブジェクト自身を返します。</p>
+
+<p><code>fill</code> にオブジェクトを渡した場合、そのオブジェクトへの参照がコピーされ、配列に参照が書き込まれます。</p>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<pre class="brush: js">[1, 2, 3].fill(4);               // [4, 4, 4]
+[1, 2, 3].fill(4, 1);            // [1, 4, 4]
+[1, 2, 3].fill(4, 1, 2);         // [1, 4, 3]
+[1, 2, 3].fill(4, 1, 1);         // [1, 2, 3]
+[1, 2, 3].fill(4, 3, 3);         // [1, 2, 3]
+[1, 2, 3].fill(4, -3, -2);       // [4, 2, 3]
+[1, 2, 3].fill(4, NaN, NaN);     // [1, 2, 3]
+[1, 2, 3].fill(4, 3, 5);         // [1, 2, 3]
+Array(3).fill(4);                // [4, 4, 4]
+[].fill.call({ length: 3 }, 4);  // {0: 4, 1: 4, 2: 4, length: 3}
+
+// Objects by reference.
+var arr = Array(3).fill({}) // [{}, {}, {}];
+arr[0].hi = "hi"; // [{ hi: "hi" }, { hi: "hi" }, { hi: "hi" }]
+</pre>
+
+<h2 id="Polyfill" name="Polyfill">Polyfill</h2>
+
+<p>{{訳注("Polyfill とは、ある機能をサポートしていないブラウザーで相当機能を実装するための各種テクニックのことです。")}}</p>
+
+<pre class="brush: js">if (!Array.prototype.fill) {
+  Object.defineProperty(Array.prototype, 'fill', {
+    value: function(value) {
+
+      // Steps 1-2.
+      if (this == null) {
+        throw new TypeError('this is null or not defined');
+      }
+
+      var O = Object(this);
+
+      // Steps 3-5.
+      var len = O.length &gt;&gt;&gt; 0;
+
+      // Steps 6-7.
+      var start = arguments[1];
+      var relativeStart = start &gt;&gt; 0;
+
+      // Step 8.
+      var k = relativeStart &lt; 0 ?
+        Math.max(len + relativeStart, 0) :
+        Math.min(relativeStart, len);
+
+      // Steps 9-10.
+      var end = arguments[2];
+      var relativeEnd = end === undefined ?
+        len : end &gt;&gt; 0;
+
+      // Step 11.
+      var final = relativeEnd &lt; 0 ?
+        Math.max(len + relativeEnd, 0) :
+        Math.min(relativeEnd, len);
+
+      // Step 12.
+      while (k &lt; final) {
+        O[k] = value;
+        k++;
+      }
+
+      // Step 13.
+      return O;
+    }
+  });
+}
+</pre>
+
+<p><code><a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty">Object.defineProperty</a></code> が利用できないとても古い JavaScript エンジンをサポートする必要がある場合、<code>Array.prototype</code> のメソッドを polyfill するのは避けたほうがよいでしょう。それらを列挙不可にすることができないからです。</p>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">ステータス</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-array.prototype.fill', 'Array.prototype.fill')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td>初期定義</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-array.prototype.fill', 'Array.prototype.fill')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザー実装状況</h2>
+
+<div>
+<div class="hidden">The compatibility table in this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.builtins.Array.fill")}}</p>
+</div>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li>{{jsxref("Array")}}</li>
+ <li>{{jsxref("TypedArray.prototype.fill()")}}</li>
+</ul>

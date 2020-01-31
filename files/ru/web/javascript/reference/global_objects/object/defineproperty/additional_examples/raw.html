@@ -1,0 +1,279 @@
+<p>На этой странице представлены дополнительные примеры использования метода {{jsxref("Object.defineProperty()")}}.</p>
+
+<h2 id="Using_binary_flags_instead_of_a_property_descriptor_object" name="Using_binary_flags_instead_of_a_property_descriptor_object">Использование бинарных флагов вместо объекта дескриптора свойства</h2>
+<p>Если вы хотите определить множество свойств через метод {{jsxref("Object.defineProperty()")}}, вы можете использовать один и тот же объект дескриптора для каждого свойства, переопределяя его время от времени через {{jsxref("Operators/Bitwise_Operators", "бинарные флаги", "Signed_32-bit_integers", 1)}}.</p>
+<pre class="brush: js">var oDesc = {};
+function setProp (nMask, oObj, sKey, vVal_fGet, fSet) {
+  if (nMask &amp; 8) {
+    // дескриптор доступа
+    if (vVal_fGet) {
+      oDesc.get = vVal_fGet;
+    } else {
+      delete oDesc.get;
+    }
+    if (fSet) {
+      oDesc.set = fSet;
+    } else {
+      delete oDesc.set;
+    }
+    delete oDesc.value;
+    delete oDesc.writable;
+  } else {
+    // дескриптор данных
+    if (arguments.length &gt; 3) {
+      oDesc.value = vVal_fGet;
+    } else {
+      delete oDesc.value;
+    }
+    oDesc.writable = Boolean(nMask &amp; 4);
+    delete oDesc.get;
+    delete oDesc.set;
+  }
+  oDesc.enumerable = Boolean(nMask &amp; 1);
+  oDesc.configurable = Boolean(nMask &amp; 2);
+  Object.defineProperty(oObj, sKey, oDesc);
+  return oObj;
+}
+
+/*
+* :: function setProp ::
+*
+* nMask является битовой маской:
+*  флаг 0x1: свойство является перечисляемым,
+*  флаг 0x2: свойство является настраиваемым,
+*  флаг 0x4: свойство является записываемым,
+*  флаг 0x8: свойство является дескриптором доступа.
+* oObj - объект, на котором определяется свойство;
+* sKey - имя определяемого или изменяемого свойства;
+* vVal_fGet - значение, присваиваемое дескриптору данных, либо функция геттера, присваиваемая дескриптору доступа (в зависимости от битовой маски);
+* fSet - функция сеттера, присваиваемая дескриптору доступа;
+*
+* Возможные значения битовой маски:
+*
+*  0  : дескриптор данных только для чтения - не настраиваемый, не перечисляемый (0000).
+*  1  : дескриптор данных только для чтения - не настраиваемый, перечисляемый (0001).
+*  2  : дескриптор данных только для чтения - настраиваемый, не перечисляемый (0010).
+*  3  : дескриптор данных только для чтения - настраиваемый, перечисляемый (0011).
+*  4  : записываемый дескриптор данных - не настраиваемый, не перечисляемый (0100).
+*  5  : записываемый дескриптор данных - не настраиваемый, перечисляемый (0101).
+*  6  : записываемый дескриптор данных - настраиваемый, не перечисляемый (0110).
+*  7  : записываемый дескриптор данных - настраиваемый, перечисляемый (0111).
+*  8  : дескриптор доступа - не настраиваемый, не перечисляемый (1000).
+*  9  : дескриптор доступа - не настраиваемый, перечисляемый (1001).
+*  10 : дескриптор доступа - настраиваемый, не перечисляемый (1010).
+*  11 : дескриптор доступа - настраиваемый, перечисляемый (1011).
+*
+*  Обратите внимание: если установлен флаг 0x8 (дескриптор доступа), флаг 0x4 (записываемый)
+*  будет проигнорирован. Если же нет, будет проигнорирован аргумент fSet.
+*/
+
+// создаём новый пустой объект
+var myObj = {};
+
+// добавляем записываемый дескриптор данных - не настраиваемый, не перечисляемый
+setProp(4, myObj, 'myNumber', 25);
+
+// добавляем дескриптор данных только для чтения - не настраиваемый, перечисляемый
+setProp(1, myObj, 'myString', 'Привет, мир!');
+
+// добавляем дескриптор доступа - не настраиваемый, перечисляемый
+setProp(9, myObj, 'myArray', function() {
+  for (var iBit = 0, iFlag = 1, aBoolArr = [false];
+    iFlag &lt; this.myNumber + 1 || (this.myNumber &amp; iFlag);
+    iFlag = iFlag &lt;&lt; 1
+  ) {
+    aBoolArr[iBit++] = Boolean(this.myNumber &amp; iFlag);
+  }
+  return aBoolArr;
+}, function(aNewMask) {
+  for (var nNew = 0, iBit = 0; iBit &lt; aNewMask.length; iBit++) {
+    nNew |= Boolean(aNewMask[iBit]) &lt;&lt; iBit;
+  }
+  this.myNumber = nNew;
+});
+
+// добавляем записываемый дескриптор данных (со значением undefined) - настраиваемый, перечисляемый
+setProp(7, myObj, 'myUndefined');
+
+// добавляем дескриптор доступа (только геттер) - настраиваемый, перечисляемый
+setProp(11, myObj, 'myDate', function() { return new Date(); });
+
+// добавляем дескриптор доступа (только сеттер) - не настраиваемый, не перечисляемый
+setProp(8, myObj, 'myAlert', null, function(sTxt) { alert(sTxt); });
+
+myObj.myAlert = myObj.myDate.toLocaleString() + '\n\n' + myObj.myString +
+  '\nЧисло ' + myObj.myNumber + ' представляет следующую битовую маску: ' +
+  myObj.myArray.join(', ') + '.';
+
+// выводим все перечисляемые свойства
+var sList = 'Перечисляемые свойства объекта myObj:\n';
+for (var sProp in myObj) {
+  sList += '\nmyObj.' + sProp + ' =&gt; ' + myObj[sProp] + ';'
+}
+
+alert(sList);
+</pre>
+
+<h2 id="Create_a_new_non-native_Object.setProperty()_method" name="Create_a_new_non-native_Object.setProperty()_method">Создание нового неродного метода <code>Object.setProperty()</code></h2>
+<p>Вы можете проделать ту же вещь с дескриптором объекта, полученным из анонимного конструктора и пользовательский метод <code>setProperty()</code> объекта {{jsxref("Global_Objects/Object", "Object")}}:</p>
+<pre class="brush: js">// создаём в объекте Object новый метод Object.setProperty()
+
+new (function() {
+  var oDesc = this;
+  Object.setProperty = function(nMask, oObj, sKey, vVal_fGet, fSet) {
+    if (nMask &amp; 8) {
+      // дескриптор доступа
+      if (vVal_fGet) {
+        oDesc.get = vVal_fGet;
+      } else {
+        delete oDesc.get;
+      }
+      if (fSet) {
+        oDesc.set = fSet;
+      } else {
+        delete oDesc.set;
+      }
+      delete oDesc.value;
+      delete oDesc.writable;
+    } else {
+      // дескриптор данных
+      if (arguments.length &gt; 3) {
+        oDesc.value = vVal_fGet;
+      } else {
+        delete oDesc.value;
+      }
+      oDesc.writable = Boolean(nMask &amp; 4);
+      delete oDesc.get;
+      delete oDesc.set;
+    }
+    oDesc.enumerable = Boolean(nMask &amp; 1);
+    oDesc.configurable = Boolean(nMask &amp; 2);
+    Object.defineProperty(oObj, sKey, oDesc);
+    return oObj;
+  };
+})();
+
+// создаём новый пустой объект
+var myObj = {};
+
+// добавляем записываемый дескриптор данных - не настраиваемый, не перечисляемый
+Object.setProperty(4, myObj, 'myNumber', 25);
+
+// добавляем дескриптор данных только для чтения - не настраиваемый, перечисляемый
+Object.setProperty(1, myObj, 'myString', 'Привет, мир!');
+
+// и т.д.
+</pre>
+<div class="note">
+ <strong>Обратите внимание:</strong> Метод <code>Object.setProperty()</code> также предложен в качестве возможного нового родного метода JavaScript (смотрите <a class="external" href="https://bugs.ecmascript.org/show_bug.cgi?id=335" rel="external">баг ECMAScript номер 335</a>).
+</div>
+
+<h3 id="Syntax" name="Syntax">Синтаксис</h3>
+<pre class="syntaxbox"><code>Object.setProperty(<var>bitmask</var>, <var>obj</var>, <var>prop</var>[, <var>value/getter</var>[, <var>setter</var>]])</code></pre>
+
+<h3 id="Parameters" name="Parameters">Параметры</h3>
+<dl>
+ <dt><code>bitmask</code></dt>
+ <dd>Дескриптор битовой маски (смотрите ниже).</dd>
+ <dt><code>obj</code></dt>
+ <dd>Объект, на котором определяется свойство.</dd>
+ <dt><code>prop</code></dt>
+ <dd>Имя определяемого или изменяемого свойства.</dd>
+ <dt><code>value/getter</code></dt>
+ <dd>Необязательный параметр. Значение, присваиваемое дескриптору данных, либо функция геттера, присваиваемая дескриптору доступа (в зависимости от битовой маски).</dd>
+ <dt><code>setter</code></dt>
+ <dd>Необязательный параметр. Функция сеттера, присваиваемая дескриптору доступа. Если установлен флаг <code>0x8</code> (<em>дескриптор данных</em>), этот аргумент будет проигнорирован.</dd>
+</dl>
+
+<h3 id="Description" name="Description">Описание</h3>
+<p>Не родной метод <code>Object.setProperty()</code> работает подобно родному методу <code>Object.defineProperty()</code>, за исключением того, что объект дескриптора заменён битовой маской дескриптора. Аргумент <code>bitmask</code> имеет следующую структуру:</p>
+<dl>
+ <dt>флаг <code>0x1</code></dt>
+ <dd>Cвойство является перечисляемым.</dd>
+ <dt>флаг <code>0x2</code></dt>
+ <dd>Cвойство является настраиваемым.</dd>
+ <dt>флаг <code>0x4</code></dt>
+ <dd>Cвойство является записываемым.</dd>
+ <dt>флаг <code>0x8</code></dt>
+ <dd>Cвойство является дескриптором доступа.</dd>
+</dl>
+<p>Таким образом, битовая маска дескриптора может принимать следующие числовые значения:</p>
+<ul>
+ <li><strong><code>0</code></strong>: Битовая маска представляет дескриптор <em>данных</em> только для чтения — не настраиваемый, не перечисляемый (<code>0000</code>).</li>
+ <li><strong><code>1</code></strong>: Битовая маска представляет дескриптор <em>данных</em> только для чтения — не настраиваемый, перечисляемый (<code>0001</code>).</li>
+ <li><strong><code>2</code></strong>: Битовая маска представляет дескриптор <em>данных</em> только для чтения — настраиваемый, не перечисляемый (<code>0010</code>).</li>
+ <li><strong><code>3</code></strong>: Битовая маска представляет дескриптор <em>данных</em> только для чтения — настраиваемый, перечисляемый (<code>0011</code>).</li>
+ <li><strong><code>4</code></strong>: Битовая маска представляет записываемый дескриптор <em>данных</em> — не настраиваемый, не перечисляемый (<code>0100</code>).</li>
+ <li><strong><code>5</code></strong>: Битовая маска представляет записываемый дескриптор <em>данных</em> — не настраиваемый, перечисляемый (<code>0101</code>).</li>
+ <li><strong><code>6</code></strong>: Битовая маска представляет записываемый дескриптор <em>данных</em> — настраиваемый, не перечисляемый (<code>0110</code>).</li>
+ <li><strong><code>7</code></strong>: Битовая маска представляет записываемый дескриптор <em>данных</em> — настраиваемый, перечисляемый (<code>0111</code>).</li>
+ <li><strong><code>8</code></strong>: Битовая маска представляет дескриптор <em>доступа</em> — не настраиваемый, не перечисляемый (<code>1000</code>).</li>
+ <li><strong><code>9</code></strong>: Битовая маска представляет дескриптор <em>доступа</em> — не настраиваемый, перечисляемый (<code>1001</code>).</li>
+ <li><strong><code>10</code></strong>: Битовая маска представляет дескриптор <em>доступа</em> — настраиваемый, не перечисляемый (<code>1010</code>).</li>
+ <li><strong><code>11</code></strong>: Битовая маска представляет дескриптор <em>доступа</em> — настраиваемый, перечисляемый (<code>1011</code>).</li>
+</ul>
+<div class="note">
+ <strong>Обратите внимание:</strong> Если установлен флаг <code>0x8</code> (<em>дескриптор доступа</em>), флаг <code>0x4</code> (<em>записываемый</em>) будет проигнорирован. Если же нет, будет проигнорирован аргумент <code>setter</code>.
+</div>
+
+<h2 id="HTMLSelectElement.selectedIndex_implementation" name="HTMLSelectElement.selectedIndex_implementation">Реализация HTMLSelectElement.selectedIndex</h2>
+<p>Также вы можете использовать метод <code>Object.defineProperty()</code> с родными объектами. Следующий пример показывает, как реализовать свойство {{domxref("HTMLSelectElement.selectedIndex", "selectedIndex")}} элемента  {{domxref("HTMLSelectElement")}} для группы радиокнопок.</p>
+<pre class="brush: html">&lt;!doctype html&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /&gt;
+&lt;title&gt;Пример реализации свойства selectedIndex для группы радиокнопок&lt;/title&gt;
+&lt;script type="text/javascript"&gt;
+Object.defineProperty(NodeList.prototype, 'selectedIndex', {
+  get: function() {
+    var nIndex = this.length - 1;
+    while (nIndex &gt; -1 &amp;&amp; !this[nIndex].checked) {
+      nIndex--;
+    }
+    return nIndex;
+  },
+
+  set: function(nNewIndex) {
+    if (isNaN(nNewIndex)) {
+      return;
+    }
+    var nOldIndex = this.selectedIndex;
+    if (nOldIndex &gt; -1) {
+      this[nOldIndex].checked = false;
+    }
+    if (nNewIndex &gt; -1) {
+      this[nNewIndex].checked = true;
+    }
+  },
+
+  enumerable: true,
+  configurable: false
+});
+
+// Попробуем!
+function checkForm() {
+  var nSelectedIndex = document.myForm.myRadioGroup.selectedIndex;
+  if (nSelectedIndex &lt; 0) {
+    alert('Выберите гаджет!!');
+    return false;
+  }
+  alert('Поздравляем!! Вы выбрали ' + document.myForm.myRadioGroup[nSelectedIndex].value + '.');
+  return true;
+}
+&lt;/script&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+  &lt;form name="myForm" onsubmit="return(checkForm());"&gt;
+    &lt;fieldset&gt;&lt;legend&gt;Выберите гаджет&lt;/legend&gt;
+      &lt;p&gt;&lt;input type="radio" name="myRadioGroup" id="ourShirt" value="рубашка" /&gt; &lt;label for="ourShirt"&gt;рубашка&lt;/label&gt;&lt;br /&gt;
+      &lt;input type="radio" name="myRadioGroup" id="ourPants" value="брюки" /&gt; &lt;label for="ourPants"&gt;брюки&lt;/label&gt;&lt;br /&gt;
+      &lt;input type="radio" name="myRadioGroup" id="ourBelt" value="пояс" /&gt; &lt;label for="ourBelt"&gt;пояс&lt;/label&gt;&lt;br /&gt;
+      &lt;input type="radio" name="myRadioGroup" id="ourShoes" value="обувь" /&gt; &lt;label for="ourShoes"&gt;обувь&lt;/label&gt;&lt;/p&gt;
+      &lt;p&gt;&lt;span style="cursor: pointer; text-decoration: underline; color: #0000ff;" onclick="document.myForm.myRadioGroup.selectedIndex=2;"&gt;Выберите ваш любимый гаджет ;-)&lt;/span&gt;&lt;/p&gt;
+      &lt;p&gt;&lt;input type="submit" value="Купить!" /&gt;
+    &lt;/fieldset&gt;
+  &lt;/form&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>

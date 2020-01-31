@@ -1,0 +1,292 @@
+<div>{{JSRef}}</div>
+
+<p>このページでは、{{jsxref("Object.defineProperty()")}} の追加の使用例を提供します。</p>
+
+<h2 id="プロパティ記述子オブジェクトの代わりにバイナリフラグを使用する">プロパティ記述子オブジェクトの代わりにバイナリフラグを使用する</h2>
+
+<p>{{jsxref("Object.defineProperty()")}} メソッドを通して多くのプロパティを定義する必要がある場合、各プロパティに対して同じ記述子オブジェクトを使用し、{{jsxref("Operators/Bitwise_Operators", "binary flags", "Signed_32-bit_integers", 1)}} を通して随時それを再定義してください。</p>
+
+<pre class="brush: js">var oDesc = {};
+function setProp (nMask, oObj, sKey, vVal_fGet, fSet) {
+  if (nMask &amp; 8) {
+    // accessor descriptor
+    if (vVal_fGet) {
+      oDesc.get = vVal_fGet;
+    } else {
+      delete oDesc.get;
+    }
+    if (fSet) {
+      oDesc.set = fSet;
+    } else {
+      delete oDesc.set;
+    }
+    delete oDesc.value;
+    delete oDesc.writable;
+  } else {
+    // data descriptor
+    if (arguments.length &gt; 3) {
+      oDesc.value = vVal_fGet;
+    } else {
+      delete oDesc.value;
+    }
+    oDesc.writable = Boolean(nMask &amp; 4);
+    delete oDesc.get;
+    delete oDesc.set;
+  }
+  oDesc.enumerable = Boolean(nMask &amp; 1);
+  oDesc.configurable = Boolean(nMask &amp; 2);
+  Object.defineProperty(oObj, sKey, oDesc);
+  return oObj;
+}
+
+/*
+* :: function setProp ::
+*
+* nMask is a bitmask:
+*  flag 0x1: property is enumerable,
+*  flag 0x2: property is configurable,
+*  flag 0x4: property is writable,
+*  flag 0x8: property is accessor descriptor.
+* oObj is the object on which to define the property;
+* sKey is the name of the property to be defined or modified;
+* vVal_fGet is the value to assign to a data descriptor or the getter function
+* to assign to an accessor descriptor (depending on the bitmask);
+* fSet is the setter function to assign to an accessor descriptor;
+*
+* Bitmask possible values:
+*
+*  0  : readonly data descriptor - not configurable, not enumerable (0000).
+*  1  : readonly data descriptor - not configurable, enumerable (0001).
+*  2  : readonly data descriptor - configurable, not enumerable (0010).
+*  3  : readonly data descriptor - configurable, enumerable (0011).
+*  4  : writable data descriptor - not configurable, not enumerable (0100).
+*  5  : writable data descriptor - not configurable, enumerable (0101).
+*  6  : writable data descriptor - configurable, not enumerable (0110).
+*  7  : writable data descriptor - configurable, enumerable (0111).
+*  8  : accessor descriptor - not configurable, not enumerable (1000).
+*  9  : accessor descriptor - not configurable, enumerable (1001).
+*  10 : accessor descriptor - configurable, not enumerable (1010).
+*  11 : accessor descriptor - configurable, enumerable (1011).
+*
+*  Note: If the flag 0x8 is setted to "accessor descriptor" the flag 0x4 (writable)
+*  will be ignored. If not, the fSet argument will be ignored.
+*/
+
+// creating a new empty object
+var myObj = {};
+
+// adding a writable data descriptor - not configurable, not enumerable
+setProp(4, myObj, 'myNumber', 25);
+
+// adding a readonly data descriptor - not configurable, enumerable
+setProp(1, myObj, 'myString', 'Hello world!');
+
+// adding an accessor descriptor - not configurable, enumerable
+setProp(9, myObj, 'myArray', function() {
+  for (var iBit = 0, iFlag = 1, aBoolArr = [false];
+    iFlag &lt; this.myNumber + 1 || (this.myNumber &amp; iFlag);
+    iFlag = iFlag &lt;&lt; 1
+  ) {
+    aBoolArr[iBit++] = Boolean(this.myNumber &amp; iFlag);
+  }
+  return aBoolArr;
+}, function(aNewMask) {
+  for (var nNew = 0, iBit = 0; iBit &lt; aNewMask.length; iBit++) {
+    nNew |= Boolean(aNewMask[iBit]) &lt;&lt; iBit;
+  }
+  this.myNumber = nNew;
+});
+
+// adding a writable data descriptor (undefined value) - configurable, enumerable
+setProp(7, myObj, 'myUndefined');
+
+// adding an accessor descriptor (only getter) - configurable, enumerable
+setProp(11, myObj, 'myDate', function() { return new Date(); });
+
+// adding an accessor descriptor (only setter) - not configurable, not enumerable
+setProp(8, myObj, 'myAlert', null, function(sTxt) { alert(sTxt); });
+
+myObj.myAlert = myObj.myDate.toLocaleString() + '\n\n' + myObj.myString +
+  '\nThe number ' + myObj.myNumber + ' represents the following bitmask: ' +
+  myObj.myArray.join(', ') + '.';
+
+// listing the enumerable properties
+var sList = 'Here are the enumerable properties of myObj object:\n';
+for (var sProp in myObj) {
+  sList += '\nmyObj.' + sProp + ' =&gt; ' + myObj[sProp] + ';'
+}
+
+alert(sList);
+</pre>
+
+<h2 id="新しい非ネイティブ_Object.setProperty()_メソッドを生成する">新しい非ネイティブ <code>Object.setProperty()</code> メソッドを生成する</h2>
+
+<p>匿名のコンストラクタと {{jsxref("Global_Objects/Object", "Object")}} の <code>setProperty()</code> という名前のカスタムメソッドを通して取得した記述子オブジェクトにより同じことができます:</p>
+
+<pre class="brush: js">// creating a new Object method named Object.setProperty()
+
+new (function() {
+  var oDesc = this;
+  Object.setProperty = function(nMask, oObj, sKey, vVal_fGet, fSet) {
+    if (nMask &amp; 8) {
+      // accessor descriptor
+      if (vVal_fGet) {
+        oDesc.get = vVal_fGet;
+      } else {
+        delete oDesc.get;
+      }
+      if (fSet) {
+        oDesc.set = fSet;
+      } else {
+        delete oDesc.set;
+      }
+      delete oDesc.value;
+      delete oDesc.writable;
+    } else {
+      // data descriptor
+      if (arguments.length &gt; 3) {
+        oDesc.value = vVal_fGet;
+      } else {
+        delete oDesc.value;
+      }
+      oDesc.writable = Boolean(nMask &amp; 4);
+      delete oDesc.get;
+      delete oDesc.set;
+    }
+    oDesc.enumerable = Boolean(nMask &amp; 1);
+    oDesc.configurable = Boolean(nMask &amp; 2);
+    Object.defineProperty(oObj, sKey, oDesc);
+    return oObj;
+  };
+})();
+
+// creating a new empty object
+var myObj = {};
+
+// adding a writable data descriptor - not configurable, not enumerable
+Object.setProperty(4, myObj, 'myNumber', 25);
+
+// adding a readonly data descriptor - not configurable, enumerable
+Object.setProperty(1, myObj, 'myString', 'Hello world!');
+
+// etc. etc.
+</pre>
+
+<div class="note"><strong>注記:</strong> <code>Object.setProperty()</code> メソッドも JavaScript の新しいネイティブメソッドとして提案される可能性があります (<a class="external" href="https://bugs.ecmascript.org/show_bug.cgi?id=335" rel="external">ECMAScript bug 335</a> を参照)。</div>
+
+<h3 id="Syntax" name="Syntax">構文</h3>
+
+<pre class="syntaxbox">Object.setProperty(<var>bitmask</var>, <var>obj</var>, <var>prop</var>[, <var>value/getter</var>[, <var>setter</var>]])</pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<dl>
+ <dt><code>bitmask</code></dt>
+ <dd>記述子ビットマスク (下記参照)。</dd>
+ <dt><code>obj</code></dt>
+ <dd>プロパティが定義されるオブジェクト。</dd>
+ <dt><code>prop</code></dt>
+ <dd>定義または修正されるプロパティの名前。</dd>
+ <dt><code>value/getter</code></dt>
+ <dd>任意。データ記述子に割り当てる値、または、(ビットマスクに依存した) アクセサ記述子に割り当てる getter 関数 (bitmask に依存)。</dd>
+ <dt><code>setter</code></dt>
+ <dd>任意。アクセサ記述子に割り当てる setter 関数。フラグ <code>0x8</code> が <em>データ記述子</em> に設定されている場合、この引数は無視されます。</dd>
+</dl>
+
+<h3 id="説明">説明</h3>
+
+<p>非ネイティブの <code>Object.setProperty()</code> メソッドは、記述子ビットマスクで置き換えられた記述子オブジェクトに対するもの除き、ネイティブの <code>Object.defineProperty()</code> メソッドのように動作します。<code>bitmask</code> 引数は次の構造を持ちます:</p>
+
+<dl>
+ <dt>flag <code>0x1</code></dt>
+ <dd>プロパティは列挙可です。</dd>
+ <dt>flag <code>0x2</code></dt>
+ <dd>プロパティは設定可です。</dd>
+ <dt>flag <code>0x4</code></dt>
+ <dd>プロパティは書込可です。</dd>
+ <dt>flag <code>0x8</code></dt>
+ <dd>プロパティはアクセサ記述子です。</dd>
+</dl>
+
+<p>そのため、記述子ビットマスクは下記の可能な数値を持ちます:</p>
+
+<ul>
+ <li><strong><code>0</code></strong>: 読取専用の <em>データ</em> 記述子を表します。設定不可、列挙不可 (<code>0000</code>)</li>
+ <li><strong><code>1</code></strong>: 読取専用の <em>データ</em> 記述子を表します。設定不可、列挙可 (<code>0001</code>)</li>
+ <li><strong><code>2</code></strong>: 読取専用の <em>データ</em> 記述子を表します。設定可、列挙不可 (<code>0010</code>)</li>
+ <li><strong><code>3</code></strong>: 読取専用の <em>データ</em> 記述子を表します。設定可、列挙可 (<code>0011</code>)</li>
+ <li><strong><code>4</code></strong>: 書込可能な <em>データ</em> 記述子を表します。設定不可、列挙不可 (<code>0100</code>)</li>
+ <li><strong><code>5</code></strong>: 書込可能な <em>データ</em> 記述子を表します。設定不可、列挙可 (<code>0101</code>).</li>
+ <li><strong><code>6</code></strong>: 書込可能な <em>データ</em> 記述子を表します。設定可、列挙不可 (<code>0110</code>).</li>
+ <li><strong><code>7</code></strong>: 書込可能な <em>データ</em> 記述子を表します。設定可、列挙可 (<code>0111</code>).</li>
+ <li><strong><code>8</code></strong>: <em>アクセサ</em> 記述子を表します。設定不可、列挙不可 (<code>1000</code>).</li>
+ <li><strong><code>9</code></strong>: <em>アクセサ</em> 記述子を表します。設定不可、列挙可 (<code>1001</code>).</li>
+ <li><strong><code>10</code></strong>: <em>アクセサ</em> 記述子を表します。設定可、列挙不可 (<code>1010</code>).</li>
+ <li><strong><code>11</code></strong>: <em>アクセサ</em> 記述子を表します。設定可、列挙可 (<code>1011</code>).</li>
+</ul>
+
+<div class="note"><strong>注記:</strong> フラグ <code>0x8</code> が <em>アクセサ記述子</em> に設定されている場合、フラグ <code>0x4</code> (<em>書込可能</em>) は無視されます。設定されていない場合、<code>setter</code> 引数は無視されます。</div>
+
+<h2 id="HTMLSelectElement.selectedIndex_実装">HTMLSelectElement.selectedIndex 実装</h2>
+
+<p>ネイティブオブジェクトとともに <code>Object.defineProperty()</code> メソッドを使用することもできます。次の例では、ラジオボタングループで {{domxref("HTMLSelectElement")}} の {{domxref("HTMLSelectElement.selectedIndex", "selectedIndex")}} を実装する方法を示します。</p>
+
+<pre class="brush: html">&lt;!doctype html&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /&gt;
+&lt;title&gt;Radio group selectedIndex example&lt;/title&gt;
+&lt;script type="text/javascript"&gt;
+Object.defineProperty(NodeList.prototype, 'selectedIndex', {
+  get: function() {
+    var nIndex = this.length - 1;
+    while (nIndex &gt; -1 &amp;&amp; !this[nIndex].checked) {
+      nIndex--;
+    }
+    return nIndex;
+  },
+
+  set: function(nNewIndex) {
+    if (isNaN(nNewIndex)) {
+      return;
+    }
+    var nOldIndex = this.selectedIndex;
+    if (nOldIndex &gt; -1) {
+      this[nOldIndex].checked = false;
+    }
+    if (nNewIndex &gt; -1) {
+      this[nNewIndex].checked = true;
+    }
+  },
+
+  enumerable: true,
+  configurable: false
+});
+
+// try it!
+function checkForm() {
+  var nSelectedIndex = document.myForm.myRadioGroup.selectedIndex;
+  if (nSelectedIndex &lt; 0) {
+    alert('Select a gadget!!');
+    return false;
+  }
+  alert('Congratulations!! You selected the ' + document.myForm.myRadioGroup[nSelectedIndex].value + '.');
+  return true;
+}
+&lt;/script&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+  &lt;form name="myForm" onsubmit="return(checkForm());"&gt;
+    &lt;fieldset&gt;&lt;legend&gt;Select a gadget&lt;/legend&gt;
+      &lt;p&gt;&lt;input type="radio" name="myRadioGroup" id="ourShirt" value="shirt" /&gt; &lt;label for="ourShirt"&gt;shirt&lt;/label&gt;&lt;br /&gt;
+      &lt;input type="radio" name="myRadioGroup" id="ourPants" value="pants" /&gt; &lt;label for="ourPants"&gt;pants&lt;/label&gt;&lt;br /&gt;
+      &lt;input type="radio" name="myRadioGroup" id="ourBelt" value="belt" /&gt; &lt;label for="ourBelt"&gt;belt&lt;/label&gt;&lt;br /&gt;
+      &lt;input type="radio" name="myRadioGroup" id="ourShoes" value="shoes" /&gt; &lt;label for="ourShoes"&gt;shoes&lt;/label&gt;&lt;/p&gt;
+      &lt;p&gt;&lt;span style="cursor:pointer;text-decoration:underline;color:#0000ff;" onclick="document.myForm.myRadioGroup.selectedIndex=2;"&gt;Select our favorite gadget ;-)&lt;/span&gt;&lt;/p&gt;
+      &lt;p&gt;&lt;input type="submit" value="Order!" /&gt;
+    &lt;/fieldset&gt;
+  &lt;/form&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>

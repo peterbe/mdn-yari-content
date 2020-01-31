@@ -1,0 +1,221 @@
+<div>{{JSRef}}</div>
+
+<div>Method <code><strong>find()</strong></code> mengembalikan <strong>nilai</strong> dari <strong>elemen pertama</strong> yang ditemukan pada sebuah array. Jika tidak {{jsxref("undefined")}} yang dikembalikan.</div>
+
+<div>{{EmbedInteractiveExample("pages/js/array-find.html")}}</div>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<p>Perhatikan juga pada {{jsxref("Array.findIndex", "findIndex()")}} method, yang mengembalikan <strong>index</strong> yank menemukan elemen dari array bukan nilainya.</p>
+
+<p>Jika kamu ingin menemukan posisi dari elemen yang ada pada array, gunakan method {{jsxref("Array.prototype.indexOf()")}} or {{jsxref("Array.prototype.includes()")}}.</p>
+
+<h2 id="Syntax">Syntax</h2>
+
+<pre class="syntaxbox"><var>arr</var>.find(callback[, thisArg])</pre>
+
+<h3 id="Parameters">Parameters</h3>
+
+<dl>
+ <dt><code>callback</code></dt>
+ <dd>Fungsi untuk mengeksekusi pada masing-masing nilai array, mengambil tiga argument:
+ <dl>
+  <dt><code>element</code></dt>
+  <dd>Elemen saat ini yang sedang diproses didalam array.</dd>
+  <dt><code>index</code> {{optional_inline}}</dt>
+  <dd>Index saat ini yang sedang diproses didalam array.</dd>
+  <dt><code>array</code> {{optional_inline}}</dt>
+  <dd>array find terpanggil.</dd>
+ </dl>
+ </dd>
+ <dt><code>thisArg</code> {{optional_inline}}</dt>
+ <dd>Object to use as <code>this</code> when executing <code>callback</code>.</dd>
+</dl>
+
+<h3 id="Return_value">Return value</h3>
+
+<p>The <strong>value</strong> of the <strong>first element</strong> in the array that satisfies the provided testing function; otherwise, {{jsxref("undefined")}} is returned.</p>
+
+<h2 id="Description">Description</h2>
+
+<p>The <code>find</code> method executes the <code>callback</code> function once for each index of the array until it finds one where <code>callback</code> returns a true value. If such an element is found, <code>find</code> immediately returns the value of that element. Otherwise, <code>find</code> returns {{jsxref("undefined")}}. <code>callback</code> is invoked for every index of the array from <code>0</code> to <code>length - 1</code> and is invoked for all indexes, not just those that have been assigned values. This may mean that it's less efficient for sparse arrays than other methods that only visit indexes that have been assigned a value.</p>
+
+<p><code>callback</code> is invoked with three arguments: the value of the element, the index of the element, and the Array object being traversed.</p>
+
+<p>If a <code>thisArg</code> parameter is provided to <code>find</code>, it will be used as the <code>this</code> for each invocation of the <code>callback</code>. If it is not provided, then {{jsxref("undefined")}} is used.</p>
+
+<p><code>find</code> does not mutate the array on which it is called.</p>
+
+<p>The range of elements processed by <code>find</code> is set before the first invocation of <code>callback</code>. Elements that are appended to the array after the call to <code>find</code> begins will not be visited by <code>callback</code>. If an existing, unvisited element of the array is changed by <code>callback</code>, its value passed to the visiting <code>callback</code> will be the value at the time that <code>find</code> visits that element's index; elements that are deleted are still visited.</p>
+
+<h2 id="Examples">Examples</h2>
+
+<h3 id="Find_an_object_in_an_array_by_one_of_its_properties">Find an object in an array by one of its properties</h3>
+
+<pre class="brush: js">var inventory = [
+    {name: 'apples', quantity: 2},
+    {name: 'bananas', quantity: 0},
+    {name: 'cherries', quantity: 5}
+];
+
+function isCherries(fruit) { 
+    return fruit.name === 'cherries';
+}
+
+console.log(inventory.find(isCherries)); 
+// { name: 'cherries', quantity: 5 }</pre>
+
+<h4 id="Using_ES2015_arrow_function">Using ES2015 arrow function</h4>
+
+<pre class="brush: js">const inventory = [
+    {name: 'apples', quantity: 2},
+    {name: 'bananas', quantity: 0},
+    {name: 'cherries', quantity: 5}
+];
+
+const result = inventory.find( fruit =&gt; fruit.name === 'cherries' );
+
+console.log(result) // { name: 'cherries', quantity: 5 }</pre>
+
+<h3 id="Find_a_prime_number_in_an_array">Find a prime number in an array</h3>
+
+<p>The following example finds an element in the array that is a prime number (or returns {{jsxref("undefined")}} if there is no prime number).</p>
+
+<pre class="brush: js">function isPrime(element, index, array) {
+  var start = 2;
+  while (start &lt;= Math.sqrt(element)) {
+    if (element % start++ &lt; 1) {
+      return false;
+    }
+  }
+  return element &gt; 1;
+}
+
+console.log([4, 6, 8, 12].find(isPrime)); // undefined, not found
+console.log([4, 5, 8, 12].find(isPrime)); // 5
+</pre>
+
+<p>The following examples show that non-existent and deleted elements are visited and that the value passed to the callback is their value when visited.</p>
+
+<pre class="brush: js">// Declare array with no element at index 2, 3 and 4
+var array = [0,1,,,,5,6];
+
+// Shows all indexes, not just those that have been assigned values
+array.find(function(value, index) {
+  console.log('Visited index ' + index + ' with value ' + value); 
+});
+
+// Shows all indexes, including deleted
+array.find(function(value, index) {
+
+  // Delete element 5 on first iteration
+  if (index == 0) {
+    console.log('Deleting array[5] with value ' + array[5]);
+    delete array[5];
+  }
+  // Element 5 is still visited even though deleted
+  console.log('Visited index ' + index + ' with value ' + value); 
+});
+// expected output:
+// Deleting array[5] with value 5 
+// Visited index 0 with value 0 
+// Visited index 1 with value 1 
+// Visited index 2 with value undefined 
+// Visited index 3 with value undefined 
+// Visited index 4 with value undefined 
+// Visited index 5 with value undefined 
+// Visited index 6 with value 6
+</pre>
+
+<h2 id="Polyfill">Polyfill</h2>
+
+<p>This method has been added to the ECMAScript 2015 specification and may not be available in all JavaScript implementations yet. However, you can polyfill <code>Array.prototype.find</code> with the following snippet:</p>
+
+<pre class="brush: js">// https://tc39.github.io/ecma262/#sec-array.prototype.find
+if (!Array.prototype.find) {
+  Object.defineProperty(Array.prototype, 'find', {
+    value: function(predicate) {
+     // 1. Let O be ? ToObject(this value).
+      if (this == null) {
+        throw new TypeError('"this" is null or not defined');
+      }
+
+      var o = Object(this);
+
+      // 2. Let len be ? ToLength(? Get(O, "length")).
+      var len = o.length &gt;&gt;&gt; 0;
+
+      // 3. If IsCallable(predicate) is false, throw a TypeError exception.
+      if (typeof predicate !== 'function') {
+        throw new TypeError('predicate must be a function');
+      }
+
+      // 4. If thisArg was supplied, let T be thisArg; else let T be undefined.
+      var thisArg = arguments[1];
+
+      // 5. Let k be 0.
+      var k = 0;
+
+      // 6. Repeat, while k &lt; len
+      while (k &lt; len) {
+        // a. Let Pk be ! ToString(k).
+        // b. Let kValue be ? Get(O, Pk).
+        // c. Let testResult be ToBoolean(? Call(predicate, T, « kValue, k, O »)).
+        // d. If testResult is true, return kValue.
+        var kValue = o[k];
+        if (predicate.call(thisArg, kValue, k, o)) {
+          return kValue;
+        }
+        // e. Increase k by 1.
+        k++;
+      }
+
+      // 7. Return undefined.
+      return undefined;
+    },
+    configurable: true,
+    writable: true
+  });
+}
+</pre>
+
+<p>If you need to support truly obsolete JavaScript engines that don't support <code><a href="/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty">Object.defineProperty</a></code>, it's best not to polyfill <code>Array.prototype</code> methods at all, as you can't make them non-enumerable.</p>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-array.prototype.find', 'Array.prototype.find')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-array.prototype.find', 'Array.prototype.find')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<div>
+<div class="hidden">The compatibility table in this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.builtins.Array.find")}}</p>
+</div>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li>{{jsxref("Array.prototype.findIndex()")}} – find and return an index</li>
+ <li>{{jsxref("Array.prototype.includes()")}} – test whether a value exists in the array</li>
+ <li>{{jsxref("Array.prototype.filter()")}} – find all matching elements</li>
+ <li>{{jsxref("Array.prototype.every()")}} – test all elements together</li>
+</ul>

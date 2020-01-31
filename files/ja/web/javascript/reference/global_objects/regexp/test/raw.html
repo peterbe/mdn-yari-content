@@ -1,0 +1,136 @@
+<div>{{JSRef}}</div>
+
+<p><strong><code>test()</code></strong> メソッドは、正規表現と指定された文字列の一致を調べるための検索を実行します。 <code>true</code> または <code>false</code> を返します。</p>
+
+<div>{{EmbedInteractiveExample("pages/js/regexp-prototype-test.html", "taller")}}</div>
+
+<p class="hidden">このデモのソースファイルは GitHub リポジトリに格納されています。デモプロジェクトに協力したい場合は、 <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> をクローンしてプルリクエストを送信してください。</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox"><code><var>regexObj</var>.test(<var>str</var>)</code></pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<dl>
+ <dt><code>str</code></dt>
+ <dd>正規表現にマッチさせる文字列。</dd>
+</dl>
+
+<h3 id="Return_value" name="Return_value">返値</h3>
+
+<p>正規表現と指定した文字列に一致するものがあった場合は、<code>true</code>。そうでない場合は、<code>false</code>。</p>
+
+<h2 id="Description" name="Description">説明</h2>
+
+<p>あるパターンがある文字列内で見つかるかどうか調べたいときは、 <code>test()</code> を使用してください。 {{jsxref("String.prototype.search()")}} メソッドがインデックス番号 (または見つからない場合は -1) を返すのとは異なり、 <code>test()</code> は boolean を返します。より多くの情報を得るためには (実行が遅くなりますが)、 {{jsxref("RegExp.prototype.exec()", "exec()")}} メソッドを使用してください ({{jsxref("String.prototype.match()")}} メソッドと同様)。 <code>exec()</code> と同様に (またはその組み合わせで)、 <code>test()</code> は同じグローバル正規表現インスタンスで複数回呼び出されると、前回の一致の先に進むことになります。</p>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<h3 id="Using_test()" name="Using_test()"><code>test()</code> の使用</h3>
+
+<p>"hello" が文字列の最初に含まれているかを真偽値で確認する簡単な例です。</p>
+
+<pre class="brush: js">var str = 'hello world!';
+var result = /^hello/.test(str);
+console.log(result); // true
+</pre>
+
+<p>次の例では、テストの成否によってメッセージを表示します。</p>
+
+<pre class="brush: js">function testinput(re, str) {
+  var midstring;
+  if (re.test(str)) {
+    midstring = ' contains ';
+  } else {
+    midstring = ' does not contain ';
+  }
+  console.log(str + midstring + re.source);
+}
+</pre>
+
+<h3 id="Using_test()_on_a_regex_with_the_global_flag" name="Using_test()_on_a_regex_with_the_global_flag">グローバルフラグを持つ regex の <code>test()</code> の使用</h3>
+
+<p>regex がグローバルフラグを持つ場合、 <code>test()</code> は regex が所有する {{jsxref("RegExp.lastIndex", "lastIndex")}} の値を加算します。その後に続けて <code>test()</code> を呼ぶと、 <code>lastIndex</code> から続く <code>str</code> の 部分文字列を検索します ({{jsxref("RegExp.prototype.exec()", "exec()")}} も同様に <code>lastIndex</code> プロパティの値を加算します)。注目すべきは、別な文字列で検索しても <code>lastIndex</code> がリセットされないことです。</p>
+
+<p>次の例はその挙動を示しています。</p>
+
+<pre class="brush: js">var regex = /foo/g;
+
+// regex.lastIndex は 0 です。
+regex.test('foo'); // true
+
+// regex.lastIndex は 3 です。
+regex.test('foo'); // false
+
+// regex.lastIndex は 0 です。
+regex.test('barfoo') // true
+
+// regex.lastIndex は 6 です。
+regex.test('foobar') //false</pre>
+
+<p>次の例では、その挙動を利用して文字列内の英単語の総数を割り出します。</p>
+
+<pre class="brush: js">function countWords (sText) {
+
+  for (var rWord = /\w+/g, nCount = 0; rWord.test(sText); nCount++);
+
+  return nCount;
+
+}
+
+console.log(countWords("What a beautiful day!")); // 4
+</pre>
+
+<p class="note">【訳注: このサンプルコードで割り出せるのは ASCII 文字で表現できる単語だけです。詳しくは<a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/RegExp#Regular_expression_and_Unicode_characters">正規表現と Unicode 文字</a>を参照してください。】</p>
+
+<h2 id="Specifications" name="Specifications">仕様書</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">状態</th>
+   <th scope="col">備考</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName('ES3')}}</td>
+   <td>{{Spec2('ES3')}}</td>
+   <td>初回定義。 JavaScript 1.2 で実装。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-15.10.6.3', 'RegExp.test')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-regexp.prototype.test', 'RegExp.test')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-regexp.prototype.test', 'RegExp.test')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザーの対応</h2>
+
+<div class="hidden">このページの互換性一覧表は構造化データから生成されています。データに協力していただけるのであれば、 <a class="external" href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> をチェックアウトしてプルリクエストを送信してください。</div>
+
+<p>{{Compat("javascript.builtins.RegExp.test")}}</p>
+
+<h2 id="Firefox-specific_note" name="Firefox-specific_note">Firefox 特有のメモ</h2>
+
+<p>Firefox 8 以前では、<code>test()</code> メソッドは正しく実装されていませんでした。引数無しで呼び出された場合には以前の入力 (<code>RegExp.input</code> プロパティ) の値に基づく返値が返されなくてはなりませんが、文字列 <code>"undefined"</code> に対するテスト結果を返していました。これは現行バージョンでは修正されており、現在 <code>/undefined/.test()</code> の返値はエラーでなく <code>true</code> となっています。</p>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li><a href="/ja/docs/Web/JavaScript/Guide">JavaScript ガイド</a>の<a href="/ja/docs/Web/JavaScript/Guide/Regular_Expressions">正規表現</a></li>
+ <li>{{jsxref("RegExp")}}</li>
+</ul>

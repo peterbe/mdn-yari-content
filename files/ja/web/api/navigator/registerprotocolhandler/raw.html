@@ -1,0 +1,113 @@
+<div>{{APIRef("HTML DOM")}}{{securecontext_header}}</div>
+
+<p><span class="seoSummary"><strong>{{domxref("Navigator")}}</strong> の <code><strong>registerProtocolHandler()</strong></code> メソッドは、ウェブサイトが自身を特定のプロトコルのハンドラー候補として登録できるようにします。</span></p>
+
+<p>ブラウザーはハンドラーのドメインとプロトコルが現在のサイトと一致する場合のみ、プロトコルハンドラーの登録を許可します。加えて、 <code>registerProtocolHandler()</code> の使用にあたり、安全なコンテキスト (つまり {{Glossary("HTTPS")}} で読み込まれたページ) を要求するようになりつつあります。</p>
+
+<p>ブラウザーによってはこれらの制限を上書きする方法が提供されるかもしれません。</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox">navigator.registerProtocolHandler(<var>protocol</var>, <var>url</var>, <var>title</var>);
+</pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<dl>
+ <dt><code><var>protocol</var></code></dt>
+ <dd>サイトが処理したいプロトコルを指定する文字列。例えば SMS のテキストメッセージリンクを処理するには、 "sms" スキームを処理するように登録します。</dd>
+ <dt><code><var>url</var></code></dt>
+ <dd>ハンドラーの URL を指定する文字列。この文字列には、処理される文書の URL をエスケープした者で置き換えられるプレイスホルダー "%s" を含めてください。この URL は本物の URL のほか、電話番号、メールアドレスなどにすることもできます。
+ <div class="note"><strong>メモ:</strong> ハンドラー URL のスキームは "http" もしくは "https" でなければなりません。ブラウザーによってはセキュリティのため、 HTTPS の URL であることを求めるため、<em>そうするべきです</em>。</div>
+ </dd>
+ <dt><code><var>title</var></code></dt>
+ <dd>ユーザーが読むことができるプロトコルハンドラーのタイトル。これは必要に応じて、インターフェイスオブジェクトでユーザーに表示されます。</dd>
+</dl>
+
+<h3 id="Exceptions" name="Exceptions">例外</h3>
+
+<dl>
+ <dt><code>SecurityError</code></dt>
+ <dd>ユーザーエージェントがプロトコルハンドラーの登録をブロックした。無効なスキームが指定された場合、例えば "http" が指定されているが、明白なセキュリティ上の問題があり登録させられない、またはブラウザーがこの関数を安全なコンテキストから呼び出すことを要求している、あるいはハンドラーの URL が HTTPS であることを要求している、といった場合にこの例外が発生します。</dd>
+ <dt><code>SyntaxError</code></dt>
+ <dd>指定されたハンドラー URL に "%s" が含まれていない。</dd>
+</dl>
+
+<h2 id="Permitted_schemes" name="Permitted_schemes">許可されたスキーム</h2>
+
+<p>セキュリティ上の理由により <code>registerProtocolHandler()</code> は登録可能なスキームに制限を設けています。カスタムスキームの場合、 "web+" で始まり、 "web+" を含め5文字以上であり、小文字の ASCII 文字のみで構成されているものが登録可能です。例えば下の {{anch("Example", "例")}} で使われている "web+burger" などが挙げられます。</p>
+
+<p>もしくは、以下のホワイトリストに挙げられているスキームでなければなりません:</p>
+
+<div class="threecolumns">
+<ul>
+ <li><code>bitcoin</code></li>
+ <li><code>geo</code></li>
+ <li><code>im</code></li>
+ <li><code>irc</code></li>
+ <li><code>ircs</code></li>
+ <li><code>magnet</code></li>
+ <li><code>mailto</code></li>
+ <li><code>mms</code></li>
+ <li><code>news</code></li>
+ <li><code>nntp</code></li>
+ <li><code>sip</code></li>
+ <li><code>sms</code></li>
+ <li><code>smsto</code></li>
+ <li><code>ssh</code></li>
+ <li><code>tel</code></li>
+ <li><code>urn</code></li>
+ <li><code>webcal</code></li>
+ <li><code>wtai</code></li>
+ <li><code>xmpp</code></li>
+</ul>
+</div>
+
+<h2 id="Example" name="Example">例</h2>
+
+<p>ウェブアプリケーションが <code>http://burgers.example.com</code> にある場合、次のようにして "web+burger" リンクを処理するプロトコルハンドラーを登録できます:</p>
+
+<pre class="brush: js">navigator.registerProtocolHandler("web+burger",
+                                  "https://burgers.example.com/?burger=%s",
+                                  "Burger handler");
+</pre>
+
+<p>このようにハンドラーを登録することで、<code>web+burger://</code> リンクを通してユーザーをあなたのウェブアプリケーションに移動させることができます。リンクに含まれていたハンバーガーの情報はURLへ埋め込む形で渡されます。このスクリプトは同じドメイン (ここでは <code>burgers.example.com</code> 内のページ) で実行されなければならず、第 2 引数のスキームは <code>http</code> と <code>https</code> のどちらか (ここでは <code>https</code>) でなければならないことを思い出してください。</p>
+
+<p>あなたのコードがプロトコルハンドラーを登録しようとしていることはユーザーに通知され、ユーザーは登録を許可するかどうか決めることができます。以下のスクリーンショットは google.co.uk での例です。</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/9683/protocolregister.png"></p>
+
+<h2 id="Specifications" name="Specifications">仕様書</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">状態</th>
+   <th scope="col">備考</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName('HTML WHATWG', 'system-state.html#custom-handlers', 'registerProtocolHandler()')}}</td>
+   <td>{{Spec2('HTML WHATWG')}}</td>
+   <td>初回定義</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザーの互換性</h2>
+
+<div class="hidden">このページの互換性一覧表は構造化データから生成されています。データに協力していただけるのであれば、 <a class="external" href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> をチェックアウトしてプルリクエストを送信してください。</div>
+
+<p>{{Compat("api.Navigator.registerProtocolHandler")}}</p>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li><a href="/ja/docs/Web-based_protocol_handlers">ウェブベースのプロトコルハンドラー</a></li>
+ <li>{{domxref("Navigator.registerContentHandler()")}}</li>
+ <li>Mozilla Webdev の <a href="http://blog.mozilla.com/webdev/2010/07/26/registerprotocolhandler-enhancing-the-federated-web/">RegisterProtocolHandler Enhancing the Federated Web</a></li>
+ <li><a href="https://html.spec.whatwg.org/multipage/system-state.html#custom-handlers">Web Application APIs - Custom scheme and content handlers</a></li>
+</ul>

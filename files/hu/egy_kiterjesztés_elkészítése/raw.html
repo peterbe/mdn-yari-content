@@ -1,0 +1,255 @@
+<p> </p>
+<h4 id="Bevezet.C5.91" name="Bevezet.C5.91">Bevezető</h4>
+<p>Ez a tutoriál lépésröl lépésre elmagyarázza hogyan készíts egy alapvető <a href="/hu/Kiterjesztések" title="hu/Kiterjesztések">kiterjesztést</a> - ez a kiterjesztés egy "Hello, World!" feliratú státussávval bővíti a Firefox-ot.</p>
+<div class="note">
+ <p><strong>Megjegyzés</strong> Ez a tutoriál a Firefox 1.5-ös vagy 2.0-ás verziójára vonatkozik. A korábbi verziókra más tutoriálok vonatkoznak.</p>
+</div>
+<h4 id="A_fejlesz.C5.91i_k.C3.B6rnyezet_l.C3.A9tes.C3.ADt.C3.A9se" name="A_fejlesz.C5.91i_k.C3.B6rnyezet_l.C3.A9tes.C3.ADt.C3.A9se">A fejleszői környezet létesítése</h4>
+<p>Kibocsátásra kijelölt kiterjestéseket ZIP fájlokba, vagy <code>xpi</code> (<em>ejtsd “zippy”</em>) végződésü <a href="/hu/Köteg" title="hu/Köteg">Köteg</a>-ekbe csomagold. Az XPI fájl szerkezete a következő:</p>
+<pre class="eval">extension.xpi:
+              /<a href="/hu/Install.rdf" title="hu/Install.rdf">install.rdf</a>                   
+              <a href="#XPCOM_Components">/components/*</a>  
+              <a href="#Application_Command_Line">/components/cmdline.js</a>                   
+              <a href="#Defaults_Files">/defaults/</a>
+              <a href="#Defaults_Files">/defaults/preferences/*.js</a>     
+              /plugins/*                        
+              /<a href="/hu/Chrome.manifest" title="hu/Chrome.manifest">chrome.manifest</a>                
+              /<a href="/hu/Chrome_window_icons" title="hu/Chrome_window_icons">chrome/icons/default/*</a>       
+              /chrome/
+              /chrome/content/
+     
+</pre>
+<p>Ezért az a legkönnyebb, ha ezen a módon tárolod a forráskódot, ha nem akarsz egy Makefájlt vagy egy shell skriptet írni ezek csomagolásához. Sőt, még akkor is, ha az utóbbi modszert választod, így könnyebbé válik a tesztelés, a Firefox 1.5-ösel kiszálított Add-on rendszer egyik tulajdonsága miatt.</p>
+<p>Tehát, akkor kezdhetjünk is. Hozz létre egy mappát a lemezen, pl. <code>C:\extensions\my_extension\</code> vagy <code>~/extensions/my_extension/</code> (Megjegyzés: használj kisbetüket) Ebben a mappában hozz létre egy <code>chrome</code> nevüt, amelyik egy <code>content</code> nevüt tartalmazzon. (Unix-féle rendszereken ezt könnyen el lehet érni a gyökérmappában végrehajtott <code>mkdir -p chrome/content</code> parancssal.)</p>
+<p><br>
+ <span class="comment">angol szöveg So let's get started. Create a folder for your extension somewhere on your hard disk, e.g. &lt;tt&gt;C:\extensions\my_extension\&lt;/tt&gt; or &lt;tt&gt;~/extensions/my_extension/&lt;/tt&gt;. (note: use all lower case) Inside this folder create another folder called &lt;tt&gt;chrome&lt;/tt&gt;, inside the &lt;tt&gt;chrome&lt;/tt&gt; folder create a folder called &lt;tt&gt;content&lt;/tt&gt;. (On Unix-like systems you can usually create both directories just by running &lt;tt&gt;mkdir -p chrome/content&lt;/tt&gt; from within the extension's root directory.)</span></p>
+<p>A kiterjesztés <strong>gyökérmappájában</strong>, a <code>chrome</code> mappa mellett, hozz létre két üres szövegfájlt. Az egyiket nevezd <code>chrome.manifest</code>-nek, a másikat <code>install.rdf</code>-nek.</p>
+<p><span class="comment">angol szöveg Inside the '''root''' of your extension folder, alongside the &lt;tt&gt;chrome&lt;/tt&gt; folder, create two new empty text files, one called &lt;tt&gt;chrome.manifest&lt;/tt&gt; and the other called &lt;tt&gt;install.rdf&lt;/tt&gt;.</span></p>
+<p>Példa:</p>
+<pre>#!/bin/sh
+h=$HOME/moExt
+mkdir -p $h/my_extension/chrome/content
+touch $h/my_extension/chrome.manifest $h/my_extension/install.rdf
+</pre>
+<p>További tancsokkal szolgál a <a href="/hu/Kiterjesztés_fejlesztői_környezet_létesítése" title="hu/Kiterjesztés_fejlesztői_környezet_létesítése">Kiterjesztés fejlesztői környezet létesítése</a> című cikk. <span class="comment">angol szöveg More tips on setting up the development environment can be found in the article <a href="/hu/Setting_up_extension_development_environment">Setting up extension development environment</a>.</span></p>
+<h4 id="A_Manifest_l.C3.A9trehoz.C3.A1sa_.C3.A9s_.C3.BCzembe_helyez.C3.A9se" name="A_Manifest_l.C3.A9trehoz.C3.A1sa_.C3.A9s_.C3.BCzembe_helyez.C3.A9se">A Manifest létrehozása és üzembe helyezése</h4>
+<p><span class="comment">Create the Install Manifest</span></p>
+<p>Nyisd meg a gyökérmappában előzőleg létrehozott <code><a href="/hu/Install_Manifests" title="hu/Install_Manifests">install.rdf</a></code> fájlt és másold bele a következőt:</p>
+<p><span class="comment">angol szöveg Open the file called &lt;tt&gt;<a href="/hu/Install_Manifests">install.rdf</a>&lt;/tt&gt; that you created at the top of your extension's folder hierarchy and put this inside:</span></p>
+<pre class="eval">&lt;?xml version="1.0"?&gt;
+
+&lt;RDF xmlns="<span class="nowiki">http://www.w3.org/1999/02/22-rdf-syntax-ns#</span>"
+     xmlns:em="<span class="nowiki">http://www.mozilla.org/2004/em-rdf#</span>"&gt;
+
+  &lt;Description about="urn:mozilla:install-manifest"&gt;
+    &lt;em:id&gt;<strong><a class="link-mailto" href="mailto:sample@foo.net" rel="freelink">sample@foo.net</a></strong>&lt;/em:id&gt;
+    &lt;em:version&gt;<strong>1.0</strong>&lt;/em:version&gt;
+    &lt;em:type&gt;2&lt;/em:type&gt;
+   
+    &lt;!-- Target Application this extension can install into, 
+         with minimum and maximum supported versions. --&gt; 
+    &lt;em:targetApplication&gt;
+      &lt;Description&gt;
+        &lt;em:id&gt;<strong>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</strong>&lt;/em:id&gt;
+        &lt;em:minVersion&gt;<strong>1.5</strong>&lt;/em:minVersion&gt;
+        &lt;em:maxVersion&gt;<strong>2.0.0.*</strong>&lt;/em:maxVersion&gt;
+      &lt;/Description&gt;
+    &lt;/em:targetApplication&gt;
+   
+    &lt;!-- Front End MetaData --&gt;
+    &lt;em:name&gt;<strong>Sample!</strong>&lt;/em:name&gt;
+    &lt;em:description&gt;<strong>A test extension</strong>&lt;/em:description&gt;
+    &lt;em:creator&gt;<strong>Your Name Here</strong>&lt;/em:creator&gt;
+    &lt;em:homepageURL&gt;<strong><span class="nowiki">http://www.foo.com/</span></strong>&lt;/em:homepageURL&gt;
+  &lt;/Description&gt;      
+&lt;/RDF&gt;
+</pre>
+<ul>
+ <li><strong><a class="link-mailto" href="mailto:sample@foo.net" rel="freelink">sample@foo.net</a></strong> - a kiterjesztés azonosítója. Ez egy érték, mely egyértelmüen azonosítja a kiterjesztést. Ennek az értéknek email formája van (ne a <em>te</em> email címed legyen). Egyértelmü legyen. Használhatsz egy GUID-et is. FIGYELEM: Ennek a paraméternek email formájúnak KELL lennie, de nem kell, hogy egy érvényes cím legyen. (<a class="link-mailto" href="mailto:valami@valami.valami" rel="freelink">valami@valami.valami</a>)</li>
+</ul>
+<p><span class="comment">This is some value you come up with to identify your extension in email address format (note that it should not be ''your'' email). Make it unique. You could also use a GUID. NOTE: This parameter MUST be in the format of an email address, although it does NOT have to be a valid email address. (<a class="link-mailto" href="mailto:something@something.something" rel="freelink">something@something.something</a>)</span></p>
+<ul>
+ <li><code>&lt;em:type&gt;2&lt;/em:type&gt;</code> Az érték azt határozza meg, hogy ez (a 2.-es) egy kiterjesztést helyez üzembe. Ha egy témát szeretnél üzembe helyezni, ez az érték egy 4.-es. (lásd a <a href="/hu/Install_Manifest#type" title="hu/Install_Manifest#type">Install Manifest#type</a>-ot a többi kód gyanánt).</li>
+</ul>
+<p><span class="comment">anglo szöveg declares that it is installing an extension. If you were to install a theme it would be 4 (see <a href="/hu/Install_Manifests#type">Install_Manifests#type</a> for other type codes).</span></p>
+<ul>
+ <li><strong>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</strong> - a Firefox alkalmazás azonosítója.</li>
+ <li><strong>1.5</strong> - a Firefox legkisseb verziója, amelyel ez a kiterjesztés müködőképes. Ide a legkisseb verziót írd, amelyel teszeled és amelyhez javításokat írsz.</li>
+</ul>
+<p><span class="comment">angol szöveg the minimum version of Firefox you're saying this extension will work with. Set this as the minimum version you're going to commit to testing and fixing bugs with.</span></p>
+<ul>
+ <li><strong>2.0.0.*</strong> - a legnagyobb Firefox verzió, amelyel a kiterjesztésed müködőképes. Ez maximum a legújabb verzió legyen! Ebben az esetben a "2.0.0.*" azt jelenti, hogy a kiterjesztés a Firefox 2.0.0.0-tól a 2.0.0.x-ig működőképes.</li>
+</ul>
+<p><span class="comment">the maximum version of Firefox you're saying this extension will work with. Set this to be no newer than the newest currently available version! In this case, "2.0.0.*" indicates that the extension works with versions of Firefox 2.0.0.0 through 2.0.0.x. Azok a kiterjesztések, melyek a Firefox 1.5.0.x-es verziójára terveztettek, itt maximumként "1.5.0.*"-ot tartalmazzanak. &lt;!-- Extensions designed to work with Firefox 1.5.0.x at the latest should set the maximum version to "1.5.0.*".</span></p>
+<p>Lásd az <a href="/hu/Install_Manifests" title="hu/Install_Manifests">Install Manifests</a> címü cikket további tulajdonságok gyanánt. <span class="comment">See <a href="/hu/Install_Manifests">Install Manifests</a> for a complete listing of the required and optional properties.</span></p>
+<p>Tárold a fájlt. <span class="comment">Save the file.</span></p>
+<h4 id="A_b.C3.B6ng.C3.A9sz.C5.91_XUL-al_val.C3.B3_b.C3.B6v.C3.ADt.C3.A9se" name="A_b.C3.B6ng.C3.A9sz.C5.91_XUL-al_val.C3.B3_b.C3.B6v.C3.ADt.C3.A9se">A böngésző XUL-al való bövítése</h4>
+<p>A Firefox felhasználói felülete egy XUL és JavaScript-keverékben íródott. A <a href="/hu/XUL" title="hu/XUL">XUL</a> egy XML nyelvtan, amely a kezedbe adja a felhasználói felületet elemeit, azaz a gombokat, menüket, eszköztárakat, stb. Ezek müködőképességét pedig a JavaScript bisztosíja.</p>
+<p>Ahoz, hogy a browser möködőképességét növeljed, a felhasználói felületet elemeit módosítanod kell. Tehát vagy hozzáadsz vagy megváltoztatsz egy elemet. Ahoz, hogy egy új elemet adj a felhasználói felületethez egy új XUL DOM elemet kell behelyettesítened a böngésző felületébe. A Scripttel pedig módosítod és event handler-ekkel (esemény kezelőkkel) bővíted ezeket.</p>
+<p>A böngésző a <code>browser.xul</code> nevü XUL fajlba található (a <code>$FIREFOX_INSTALL_DIR/chrome/browser.jar</code> tartalmazza a <code>content/browser/browser.xul</code>-t) A browser.xul-ba megtalálhatjuk a státussávot, mely körülbelül igy néz ki:</p>
+<pre class="eval">&lt;statusbar id="status-bar"&gt;
+ ... &lt;statusbarpanel&gt;s ...
+&lt;/statusbar&gt;
+</pre>
+<p>A <code>&lt;statusbar id="status-bar"&gt;</code> egy "merge point" (azaz "egyesítő pont") a XUL Overlay számára.</p>
+<p><span class="comment">angol szöveg === Extending the Browser with XUL === Firefox's user interface is written in XUL and JavaScript. <a href="/hu/XUL">XUL</a> is an XML grammar that provides user interface widgets like buttons, menus, toolbars, trees etc. User actions are bound to functionality using JavaScript. To extend the browser, we modify parts of the browser UI by adding or modifying widgets. We add widgets by inserting new XUL DOM elements into the browser window, and modify them by using script and attaching event handlers. The browser is implemented in a XUL file called &lt;tt&gt;browser.xul&lt;/tt&gt; (&lt;tt&gt;$FIREFOX_INSTALL_DIR/chrome/browser.jar&lt;/tt&gt; contains &lt;tt&gt;content/browser/browser.xul&lt;/tt&gt;). In browser.xul we can find the status bar, which looks something like this: &amp;lt;statusbar id="status-bar"&amp;gt; ... &amp;lt;statusbarpanel&amp;gt;s ... &amp;lt;/statusbar&amp;gt; &lt;tt&gt;&amp;lt;statusbar id="status-bar"&amp;gt;&lt;/tt&gt; is a "merge point" for a XUL Overlay.</span></p>
+<h5 id="XUL_Overlays" name="XUL_Overlays">XUL Overlays</h5>
+<p><a href="/hu/XUL_Overlays" title="hu/XUL_Overlays">XUL Overlays</a> are a way of attaching other UI widgets to a XUL document at run time. A XUL Overlay is a .xul file that specifies XUL fragments to insert at specific merge points within a "master" document. These fragments can specify widgets to be inserted, removed, or modified.</p>
+<p><strong>Example XUL Overlay Document</strong></p>
+<pre class="eval">&lt;?xml version="1.0"?&gt;
+&lt;overlay id="sample" 
+         xmlns="<span class="nowiki">http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul</span>"&gt;
+ &lt;statusbar id="<strong>status-bar</strong>"&gt;
+  &lt;statusbarpanel id="my-panel" label="Hello, World"/&gt;
+ &lt;/statusbar&gt;
+&lt;/overlay&gt;
+</pre>
+<p>The <code>&lt;statusbar&gt;</code> called <code><strong>status-bar</strong></code> specifies the "merge point" within the browser window that we want to attach to.</p>
+<p>The <code>&lt;statusbarpanel&gt;</code> child is a new widget that we want to insert within the merge point.</p>
+<p>Take this sample code above and save it into a new file called <code><strong>sample.xul</strong></code> inside the <code>chrome/content</code> folder you created.</p>
+<p>For more information about merging widgets and modifying the user interface using Overlays, see below.</p>
+<h4 id="Chrome_URIs" name="Chrome_URIs">Chrome URIs</h4>
+<p>XUL files are part of "<a href="/hu/Chrome_Registration" title="hu/Chrome_Registration">Chrome Packages</a>" - bundles of user interface components which are loaded via <code>chrome://</code> URIs. Rather than load the browser from disk using a <code>file://</code> URI (since the location of Firefox on the system can change from platform to platform and system to system), Mozilla developers came up with a solution for creating URIs to XUL content that the installed application knows about.</p>
+<p>The browser window is: <code><a class="external" rel="freelink">chrome://browser/content/browser.xul</a></code> Try typing this URL into the location bar in Firefox!</p>
+<p>Chrome URIs consist of several components:</p>
+<ul>
+ <li>Firstly, the <strong>URI scheme</strong> (<code>chrome</code>) which tells Firefox's networking library that this is a Chrome URI. It indicates that the content of the URI should be handled as a (<code>chrome</code>). Compare (<code>chrome</code>) to (<code>http</code>) which tells Firefox to treat the URI as a web page.</li>
+ <li>Secondly, a package name (in the example above, <code><strong>browser</strong></code>) which identifies the bundle of user interface components. This should be as unique to your application as possible to avoid collisions between extensions.</li>
+ <li>Thirdly, the type of data being requested. There are three types: <code>content</code> (XUL, JavaScript, XBL bindings, etc. that form the structure and behavior of an application UI), <code>locale</code> (DTD, .properties files etc that contain strings for the UI's <a href="/hu/Localization" title="hu/Localization">localization</a>), and <code>skin</code> (CSS and images that form the <a href="/hu/Theme" title="hu/Theme">theme</a> of the UI)</li>
+ <li>Finally, the path of a file to load.</li>
+</ul>
+<p>So, <code><a class="external" rel="freelink">chrome://foo/skin/bar.png</a></code> loads the file <code>bar.png</code> from the <code>foo</code> theme's <code>skin</code> section.</p>
+<p>When you load content using a Chrome URI, Firefox uses the Chrome Registry to translate these URIs into the actual source files on disk (or in JAR packages).</p>
+<h4 id="Create_a_Chrome_Manifest" name="Create_a_Chrome_Manifest">Create a Chrome Manifest</h4>
+<p>For more information on Chrome Manifests and the properties they support, see the <a href="/hu/Chrome_Manifest" title="hu/Chrome_Manifest">Chrome Manifest</a> Reference.</p>
+<p>Open the file called <strong>chrome.manifest</strong> that you created alongside the <code>chrome</code> directory at the root of your extension's source folder hierarchy.</p>
+<p>Add in this code:</p>
+<pre class="eval">content     sample    chrome/content/
+</pre>
+<p>(<strong>Don't forget the trailing slash, "<code>/</code>"!</strong> Without it, the package won't be registered.)</p>
+<p>This specifies the:</p>
+<ol>
+ <li>type of material within a chrome package</li>
+ <li>name of the chrome package (make sure you use all lowercase characters for the package name ("sample") as Firefox/Thunderbird doesn't support mixed/camel case in version 2 and earlier - {{ Bug(132183) }})</li>
+ <li>location of the chrome packages' files</li>
+</ol>
+<p>So, this line says that for a chrome package <strong>sample</strong>, we can find its <strong>content</strong> files at the location <code>chrome/content</code> which is a path relative to the location of <code>chrome.manifest</code>.</p>
+<p>Note that content, locale and skin files must be kept inside folders called content, locale and skin within your <code>chrome</code> subdirectory.</p>
+<p>Save the file. When you launch Firefox with your extension, (later in this tutorial), this will register the chrome package.</p>
+<h4 id="Register_an_Overlay" name="Register_an_Overlay">Register an Overlay</h4>
+<p>You need Firefox to merge your overlay with the browser window whenever it displays one. So add this line to your <code>chrome.manifest</code> file:</p>
+<pre class="eval">overlay <a class="external" rel="freelink">chrome://browser/content/browser.xul</a> <a class="external" rel="freelink">chrome://sample/content/sample.xul</a>
+</pre>
+<p>This tells Firefox to merge <code>sample.xul</code> into <code>browser.xul</code> when <code>browser.xul</code> loads.</p>
+<h4 id="Test" name="Test">Test</h4>
+<p>First, we need to tell Firefox about your extension. In the bad old days of Firefox 1.0 this meant packaging your extension as a XPI and installing it through the user interface, which was a real pain. Now, it's much simpler.</p>
+<ol>
+ <li>Open your <a class="external" href="http://kb.mozillazine.org/Profile_folder">Profile Folder</a></li>
+ <li>Open the <strong>extensions</strong> folder (create it if it doesn't exist)</li>
+ <li>Create a new text file, and put the path to your extension folder inside, e.g. <code>C:\extensions\my_extension\</code> or <code>~/extensions/my_extension/</code>. Save the file with the id of your extension as its name, e.g. <code><a class="link-mailto" href="mailto:sample@foo.net" rel="freelink">sample@foo.net</a></code></li>
+</ol>
+<p>(<strong>Don't forget the trailing slash, "<code>/</code>"!</strong> Without it, the extension won't get registered.)</p>
+<p>Now you're ready to test your extension!</p>
+<p>Start Firefox. Firefox will detect the text link to your extension directory and install the Extension. When the browser window appears you should see the text "Hello, World!" on the right side of the status bar panel.</p>
+<p>You can now go back and make changes to the .xul file, close and restart Firefox and they should appear.</p>
+<p><span class="comment">These don't actually match the described extension and confuse people. -Nickolay CENTER&gt; Image:Helloworld_tools_menu.PNG Image:Helloworld_extensions_wnd.PNG &lt;/CENTER</span></p>
+<div class="note">
+ <p><strong>Important</strong> For those of you who are just just starting out with programming, please note that the files "chrome.manifest", "sample.xul" and "install.rdf" are usually default saved with ANSI encoding. THIS WILL NOT WORK, you have to change the encoding to Unicode because if you save it with ANSI encoding, it will save the file as, "install.rdf.txt".</p>
+</div>
+<h4 id="Package" name="Package">Package</h4>
+<p>Now that your extension works, you can <a href="/hu/Extension_Packaging" title="hu/Extension_Packaging">package</a> it for deployment and installation.</p>
+<p>Zip up the <strong>contents</strong> of your extension's folder (not the extension folder itself), and rename the zip file to have a .xpi extension. In Windows XP, you can do this easily by selecting all the files and subfolders in your extension folder, right click and choose "Send To -&gt; Compressed (Zipped) Folder". A .zip file will be created for you. Just rename it and you're done!</p>
+<p>On Mac OS X, you can right-click on the <strong>contents</strong> of the extension's folder and choose "Create Archive of..." to make the zip file. However, since Mac OS X adds hidden files to folders in order to track file metadata, you should instead use the Terminal, delete the hidden files (whose names begin with a period), and then use the <code>zip</code> command on the command line to create the zip file.</p>
+<p>On Linux, you would likewise use the command-line Zip tool.</p>
+<p>If you have the 'Extension Builder' extension installed it can compile the .xpi file for you (Tools -&gt; Extension Developer -&gt; Extension Builder). Merely navigate to the directory where your extension is (install.rdf etc.), and hit the Build Extension button. This extension has a slew of tools to make development easier.</p>
+<p>Now upload the .xpi file to your server, making sure it's served as <code>application/x-xpinstall</code>. You can link to it and allow people to download and install it in Firefox. For the purposes of just testing our .xpi file we can just drag it into the extensions window via Tools -&gt; Extensions, or Tools -&gt; Add-ons in FireFox 2.</p>
+<h5 id="Installing_from_a_web_page" name="Installing_from_a_web_page">Installing from a web page</h5>
+<p>There are a variety of ways you can install extensions from web pages, including direct linking to the XPI files and using the InstallTrigger object. Extension and web authors are encouraged to use the <a href="/hu/Installing_Extensions_and_Themes_From_Web_Pages" title="hu/Installing_Extensions_and_Themes_From_Web_Pages"> InstallTrigger method</a> to install XPIs, as it provides the best experience to users.</p>
+<h5 id="Using_addons.mozilla.org" name="Using_addons.mozilla.org">Using addons.mozilla.org</h5>
+<p>Mozilla Update is a distribution site where you can host your extension for free. Your extension will be hosted on Mozilla's mirror network to guarantee your download even though it might be very popular. Mozilla's site also provides users easier installation, and will automatically make your newer versions available to users of your existing versions when you upload them. In addition Mozilla Update allows users to comment and provide feedback on your extension. It is highly recommended that you use Mozilla Update to distribute your extensions!</p>
+<p>Visit <a class="external" href="http://addons.mozilla.org/developers/" rel="freelink">http://addons.mozilla.org/developers/</a> to create an account and begin distributing your extensions!</p>
+<p><em>Note:</em> Your Extension will be passed faster and downloaded more if you have a good description and some screenshots of the extension in action.</p>
+<h5 id="Registering_Extensions_in_the_Windows_Registry" name="Registering_Extensions_in_the_Windows_Registry">Registering Extensions in the Windows Registry</h5>
+<p>On Windows, information about extensions can be added to the registry, and the extensions will automatically be picked up the next time the applications starts. This allows application installers to easily add integration hooks as extensions. See <a href="/hu/Adding_Extensions_using_the_Windows_Registry" title="hu/Adding_Extensions_using_the_Windows_Registry">Adding Extensions using the Windows Registry</a> for more information.</p>
+<h4 id="More_on_XUL_Overlays" name="More_on_XUL_Overlays">More on XUL Overlays</h4>
+<p>In addition to appending UI widgets to the merge point, you can use XUL fragments within Overlays to:</p>
+<ul>
+ <li>Modify attributes on the merge point, e.g. <code>&lt;statusbar id="status-bar" hidden="true"/&gt;</code> (hides the status bar)</li>
+ <li>Remove the merge point from the master document, e.g. <code>&lt;statusbar id="status-bar" removeelement="true"/&gt;</code></li>
+ <li>Control the position of the inserted widgets:</li>
+</ul>
+<pre class="eval">&lt;statusbarpanel position="1" .../&gt;
+
+&lt;statusbarpanel insertbefore="other-id" .../&gt;
+
+&lt;statusbarpanel insertafter="other-id" .../&gt;
+</pre>
+<h4 id="Creating_New_User_Interface_Components" name="Creating_New_User_Interface_Components">Creating New User Interface Components</h4>
+<p>You can create your own windows and dialog boxes as separate .xul files, provide functionality by implementing user actions in .js files, using DOM methods to manipulate UI widgets. You can use style rules in .css files to attach images, set colors etc.</p>
+<p>View the <a href="/hu/XUL" title="hu/XUL">XUL</a> documentation for more resources for XUL developers.</p>
+<h4 id="Defaults_Files" name="Defaults_Files">Defaults Files</h4>
+<p>Defaults files that you use to seed a user's profile with should be placed in <code>defaults/</code> under the root of your extension's folder hierarchy. Default preferences .js files should be stored in <code>defaults/preferences/</code> - when you place them here they will be automatically loaded by Firefox's preferences system when it starts so that you can access them using the <a href="/hu/Preferences_API" title="hu/Preferences_API">Preferences API</a>.</p>
+<p>An example default preference file:</p>
+<pre class="eval">pref("extensions.sample.username", "Joe"); //a string pref
+pref("extensions.sample.sort", 2); //an int pref
+pref("extensions.sample.showAdvanced", true); //a boolean pref
+</pre>
+<h4 id="XPCOM_Components" name="XPCOM_Components">XPCOM Components</h4>
+<p>Firefox supports <a href="/hu/XPCOM" title="hu/XPCOM">XPCOM</a> components in extensions. You can create your own components easily in JavaScript or in C++ (using the <a href="/hu/Gecko_SDK" title="hu/Gecko_SDK">Gecko SDK</a>).</p>
+<p>Place all of your .js or .dll files in the <code>components/</code> directory - they are automatically registered the first time Firefox runs after your extension is installed.</p>
+<p>For more information see <a href="/hu/How_to_Build_an_XPCOM_Component_in_Javascript" title="hu/How_to_Build_an_XPCOM_Component_in_Javascript">How to Build an XPCOM Component in Javascript</a>, <a href="/hu/How_to_build_a_binary_XPCOM_component_using_Visual_Studio" title="hu/How_to_build_a_binary_XPCOM_component_using_Visual_Studio">How to build a binary XPCOM component using Visual Studio</a> and the <a href="/hu/Creating_XPCOM_Components" title="hu/Creating_XPCOM_Components">Creating XPCOM Components</a> book.</p>
+<h5 id="Application_Command_Line" name="Application_Command_Line">Application Command Line</h5>
+<p>One of the possible uses of custom XPCOM components is adding a command line handler to Firefox or Thunderbird. You can use this technique to run your extension as an application:</p>
+<pre class="eval"> firefox.exe -myapp
+</pre>
+<p><span class="comment">I should move the useful parts of this to the Command Line page. -Nickolay This is done by adding a component containing the function... function NSGetModule(comMgr, fileSpec) { return myAppHandlerModule; } This function is run by firefox each time firefox is started. Firefox registers the myAppHandlerModule's by calling its 'registerSelf()'. Then it obtains the myAppHandlerModule's handler factory via 'getClassObject()'. The handler factory is then used to create the handle using its 'createInstance(). Finally, the handle's 'handle(cmdline)' processes the command line cmdline's handleFlagWithParam() and handleFlag().</span> See <a href="/hu/Chrome/Command_Line" title="hu/Chrome/Command_Line">Chrome: Command Line</a> and a <a class="external" href="http://forums.mozillazine.org/viewtopic.php?t=365297">forum discussion</a> for details.</p>
+<h4 id="Localization" name="Localization">Localization</h4>
+<p>To support more than one language, you should separate strings from your content using <a href="/hu/XUL_Tutorial/Localization" title="hu/XUL_Tutorial/Localization">entities</a> and <a href="/hu/XUL_Tutorial/Property_Files" title="hu/XUL_Tutorial/Property_Files">string bundles</a>. It is much easier to do this while you are developing your extension, rather than come back and do it later!</p>
+<p>Localization information is stored in the locale directory for the extension. For example, to add a locale to our sample extension, create a directory named "locale" in chrome (where the "content" directory is located) and add the following line to the chrome.manifest file:</p>
+<pre class="eval">locale sample en-US chrome/locale/en-US/
+</pre>
+<p>To create localizable attribute values in XUL, you put the values in a <code>.ent</code> (or a <code>.dtd</code>) file, which should be placed in the locale directory and looks like this:</p>
+<pre class="eval">&lt;!ENTITY  button.label     "Click Me!"&gt;
+&lt;!ENTITY  button.accesskey "C"&gt;
+</pre>
+<p>And then include it at the top of your XUL document (but underneath the "&lt;?xml version"1.0"?&gt;") like so:</p>
+<pre class="eval">&lt;!DOCTYPE <strong>window</strong> SYSTEM "<a class="external" rel="freelink">chrome://packagename/locale/filename.ent</a>"&gt;
+</pre>
+<p>where <code><strong>window</strong></code> is the <code><a href="/hu/DOM/element.localName" title="hu/DOM/element.localName">localName</a></code> value of the root element of the XUL document, and the value of the <code>SYSTEM</code> property is the chrome URI to the entity file. For our sample extension, the root element is <code><strong>overlay</strong></code>.</p>
+<p>To use the entities, modify your XUL to look like this:</p>
+<pre class="eval">&lt;button label="&amp;button.label;" accesskey="&amp;button.accesskey;"/&gt;
+</pre>
+<p>The Chrome Registry will make sure the entity file is loaded from the localization bundle corresponding to the selected locale.</p>
+<p>For strings that you use in script, create a .properties file, a text file that has a string on each line in this format:</p>
+<pre class="eval">key=value
+</pre>
+<p>and then use <code><a href="/hu/NsIStringBundleService" title="hu/NsIStringBundleService">nsIStringBundleService</a></code>/<code><a href="/hu/NsIStringBundle" title="hu/NsIStringBundle">nsIStringBundle</a></code> or the <code><a class="external" href="http://xulplanet.com/references/elemref/ref_stringbundle.html">&lt;stringbundle&gt;</a></code> tag to load the values into script.</p>
+<h4 id="Understanding_the_Browser" name="Understanding_the_Browser">Understanding the Browser</h4>
+<p>Use the <a href="/hu/DOM_Inspector" title="hu/DOM_Inspector">DOM Inspector</a> (not part of the <strong>Standard</strong> Firefox installation, you must reinstall with the Custom install path and choose <strong>Developer Tools</strong> if there is not a "DOM Inspector" item in your browser's Tools menu) to inspect the browser window or any other XUL window you want to extend.</p>
+<p>Use the point-and-click node finder button at the top left of the DOM Inspector's toolbar to click on a node in the XUL window visually to select it. When you do this the DOM inspector's DOM hierarchy tree view will jump to the node you clicked on.</p>
+<p>Use the DOM Inspector's right side panel to discover merge points with ids that you can use to insert your elements from overlays. If you cannot discover an element with an id that you can merge into, you may need to attach a script in your overlay and insert your elements when the <code>load</code> event fires on the master XUL window.</p>
+<h4 id="Debugging_Extensions" name="Debugging_Extensions">Debugging Extensions</h4>
+<p><strong>Analytical Tools for Debugging</strong></p>
+<ul>
+ <li>The <a href="/hu/DOM_Inspector" title="hu/DOM_Inspector">DOM Inspector</a> - inspect attributes, DOM structure, CSS style rules that are in effect (e.g. find out why your style rules don't seem to be working for an element - an invaluable tool!)</li>
+ <li><a href="/hu/Venkman" title="hu/Venkman">Venkman</a> - set breakpoints in JavaScript and inspect call stacks</li>
+ <li><code><a href="/hu/Core_JavaScript_1.5_Reference/Objects/Function/arguments/callee" title="hu/Core_JavaScript_1.5_Reference/Objects/Function/arguments/callee">arguments.callee</a>.<a href="/hu/Core_JavaScript_1.5_Reference/Objects/Function/caller" title="hu/Core_JavaScript_1.5_Reference/Objects/Function/caller">caller</a></code> in JavaScript - access a function's call stack</li>
+</ul>
+<p><strong>printf debugging</strong></p>
+<ul>
+ <li>Run Firefox with <code>-console</code> at the command line and use <code><a href="/hu/DOM/window.dump" title="hu/DOM/window.dump">dump</a>("string")</code> (see the link for details)</li>
+ <li>Use <code><a href="/hu/NsIConsoleService" title="hu/NsIConsoleService">nsIConsoleService</a></code> to log to the JavaScript console</li>
+</ul>
+<p><strong>Advanced debugging</strong></p>
+<ul>
+ <li>Run a debug Firefox build and set breakpoints in Firefox itself, or your C++ components. For the experienced developer, this is often the fastest way to diagnose a problem. See <a href="/hu/Build_Documentation" title="hu/Build_Documentation">Build Documentation</a> and <a href="/hu/Developing_Mozilla" title="hu/Developing_Mozilla">Developing Mozilla</a> for more information.</li>
+ <li>See <a href="/hu/Debugging_a_XULRunner_Application" title="hu/Debugging_a_XULRunner_Application">Debugging a XULRunner Application</a> for more helpful tips.</li>
+</ul>
+<h3 id="Quick_Start" name="Quick_Start">Quick Start</h3>
+<p>You can use the <a class="external" href="http://ted.mielczarek.org/code/mozilla/extensionwiz/">Extension Wizard</a> online tool to generate a simple extension to work with.</p>
+<p>A <a class="external" href="http://mozilla.doslash.org/stuff/helloworld.zip">Hello World extension</a> similar to what you can generate with the Extension Wizard is explained line-by-line in <a class="external" href="http://kb.mozillazine.org/Getting_started_with_extension_development">another tutorial from MozillaZine Knowledge Base</a>.</p>
+<h3 id="Further_information" name="Further_information">Further information</h3>
+<ul>
+ <li><a href="/hu/Extension_FAQ" title="hu/Extension_FAQ">Extension FAQ</a></li>
+ <li><a href="/hu/Extensions" title="hu/Extensions">Extensions</a></li>
+</ul>

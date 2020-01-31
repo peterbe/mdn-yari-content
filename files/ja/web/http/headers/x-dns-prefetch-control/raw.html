@@ -1,0 +1,87 @@
+<div>{{HTTPSidebar}}</div>
+
+<p><strong><code>X-DNS-Prefetch-Control</code></strong> は HTTP のレスポンスヘッダーで、 DNS 先読み、つまりユーザーが進むことができるリンクと、画像、 CSS、 JavaScript などの文書から参照される項目の両方で、ブラウザーが事前にドメイン名の解決を実行する機能を制御します。</p>
+
+<p>この先読みはバックグラウンドで行われるので、参照されている項目が必要になった時に {{glossary("DNS")}} が解決されている可能性が高くなります。これによって、ユーザーがリンクをクリックしたときに遅延が短縮されます。</p>
+
+<table class="properties">
+ <tbody>
+  <tr>
+   <th scope="row">ヘッダー種別</th>
+   <td>{{Glossary("Response header", "レスポンスヘッダー")}}</td>
+  </tr>
+  <tr>
+   <th scope="row">{{Glossary("Forbidden header name", "禁止ヘッダー名")}}</th>
+   <td>いいえ</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox">X-DNS-Prefetch-Control: on
+X-DNS-Prefetch-Control: off
+</pre>
+
+<h3 id="Directives" name="Directives">ディレクティブ</h3>
+
+<dl>
+ <dt>on</dt>
+ <dd>DNS 先読みを有効にします。この機能に対応しているブラウザーは、このヘッダーが存在しない場合はこの動作をします。</dd>
+ <dt>off</dt>
+ <dd>DNS 先読みを無効にします。これはページのリンクを制御しない場合や、ドメインに情報漏洩させたくないと分かる場合に有用です。</dd>
+</dl>
+
+<h2 id="Description" name="Description">解説</h2>
+
+<p>DNS リクエストは帯域で見ればとても小さいものですが、遅延は、特にモバイルネットワークではとても大きいものです。 DNS の先読みを投機的に行うと、ユーザーがリンクをクリックするときなど特定の場面の遅延を著しく短縮することができます。場合によっては、遅延を秒単位で短縮することができます。</p>
+
+<p>ブラウザーによってはこの先読みの実装で、ドメイン名の解決が実際のページのコンテンツの読み込みと (直後ではなく) 並列で行うことができます。これを行うことで、遅延の大きい名前解決プロセスがコンテンツの読み込みを遅らせないようにします。</p>
+
+<p>ページの読み込み時間は – 特にモバイルネットワークにおいては – この方法で著しく改善できます。画像のドメイン名がリクエストに先立って解決できれば、多数の画像を読み込むページの読み込み時間に 5% 以上の改善が見られることがあります。</p>
+
+<h3 id="Configuring_prefetching_in_the_browser" name="Configuring_prefetching_in_the_browser">ブラウザーの先読みの構成</h3>
+
+<p>一般に、先読みを管理することを考える必要はありません。しかし、ユーザーは先読みを無効にしたいと思うかもしれません。 Firefox では、設定の <code>network.dns.disablePrefetch</code> を <code>true</code> にすることで実現できます。</p>
+
+<p>また、既定では、埋め込みリンクのホスト名の先読みは {{glossary("HTTPS")}} で読み込まれた文書では実行されません。 Firefox では、設定の <code>network.dns.disablePrefetchFromHTTPS</code> を <code>false</code> に設定することでこれを変更することができます。</p>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<h3 id="Turning_on_and_off_prefetching" name="Turning_on_and_off_prefetching">先読みの有効化と無効化</h3>
+
+<p>You can either send the <code>X-DNS-Prefetch-Control</code> header server-side, or from individual documents, using the {{ htmlattrxref("http-equiv", "meta") }} attribute on the {{ HTMLElement("meta") }} element, like this:</p>
+
+<pre class="brush: html">&lt;meta http-equiv="x-dns-prefetch-control" content="off"&gt;
+</pre>
+
+<p>You can reverse this setting by setting <code>content</code> to "<code>on</code>".</p>
+
+<h3 id="Forcing_lookup_of_specific_hostnames" name="Forcing_lookup_of_specific_hostnames">特定のホスト名へのルックアップの強制</h3>
+
+<p>You can force the lookup of specific hostnames without providing specific anchors using that hostname by using the {{ htmlattrxref("rel","link") }} attribute on the {{ HTMLElement("link") }} element with a <a href="/en-US/docs/Web/HTML/Link_types">link type</a> of <code>dns-prefetch</code>:</p>
+
+<pre class="brush: html">&lt;link rel="dns-prefetch" href="http://www.spreadfirefox.com/"&gt;
+</pre>
+
+<p>In this example, the domain name "<a class="linkification-ext external" href="http://www.spreadfirefox.com" title="Linkification: http://www.spreadfirefox.com">www.spreadfirefox.com</a>" will be pre-resolved.</p>
+
+<p>Similarly, the link element can be used to resolve hostnames without providing a complete URL, but only, by preceding the hostname with two slashes:</p>
+
+<pre class="brush: html">&lt;link rel="dns-prefetch" href="//www.spreadfirefox.com"&gt;
+</pre>
+
+<p>Forced prefetching of hostnames might be useful, for example, on the homepage of a site to force pre-resolution of domain names that are referenced frequently throughout the site even though they are not used on the home page itself. This will improve the overall performance of site even though the performance of the home page may not be affected.</p>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザーの互換性</h2>
+
+<div class="hidden">このページの互換性一覧表は構造化データから生成されています。データに協力していただけるのであれば、 <a class="external" href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> をチェックアウトしてプルリクエストを送信してください。</div>
+
+<p>{{Compat("http.headers.X-DNS-Prefetch-Control")}}</p>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li><a class="external" href="http://bitsup.blogspot.com/2008/11/dns-prefetching-for-firefox.html">DNS Prefetching for Firefox (blog post)</a></li>
+ <li><a class="external" href="http://dev.chromium.org/developers/design-documents/dns-prefetching">Google Chrome handles DNS prefetching control</a></li>
+</ul>

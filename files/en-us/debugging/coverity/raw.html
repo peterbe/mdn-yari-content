@@ -1,0 +1,116 @@
+<p>Coverity is a static analysis tool that can detect many kinds of defects.</p>
+
+<h2 id="Getting_Access">Getting Access</h2>
+
+<p>Coverity results for Firefox are available at <a href="https://scan.coverity.com/projects/firefox/">https://scan.coverity.com/projects/firefox/</a> or <a href="https://scan.coverity.com/projects/firefox-mobile/">https://scan.coverity.com/projects/firefox-mobile/</a>. That page shows high-level statistics about the number of issues in the project. To view individual issues, you will need to <a href="https://scan.coverity.com/memberships/new?project_id=firefox">request permissions</a>.</p>
+
+<h2 id="Viewing_Issues">Viewing Issues</h2>
+
+<p>There are numerous ways to view the issues found by Coverity. Click on the "hamburger" menu at the top left to see them.</p>
+
+<p><img alt="Screenshot of the contents of the Coverity hamburger menu" src="https://mdn.mozillademos.org/files/13386/coverity-hamburger-menu.png" style="height: 702px; width: 301px;"></p>
+
+<p>The "COMPONENTS - All In Project" link is a good place to start. It shows issues grouped by component, where components are defined by directories. This lets you focus first on parts of the code that you know well.</p>
+
+<p>Note that loading of issues can be slow.</p>
+
+<p>Once you select a component, the window will show three sections:</p>
+
+<ul>
+ <li>Top left: a list of issues.</li>
+ <li>Bottom left: a source code window that contains an explanation of the selected issues.</li>
+ <li>Right: additional information about this issue.</li>
+</ul>
+
+<p>Navigation through the list of issues is straightforward.</p>
+
+<h2 id="Dealing_with_issues">Dealing with issues</h2>
+
+<p>Each issue is initially given the "Unclassified" classification and an "Undecided" action. Issues fall into four common categories.</p>
+
+<ul>
+ <li>False positive. These most often occur when Coverity incorrectly thinks that a code path is possible when it actually isn't due to some condition or constraint.</li>
+ <li>Intentional. Coverity's analysis is correct, but what it detects is not a problem. For example, it often complains about the use of the <code>rand()</code> function because it is not a source of high-quality random numbers, but many parts of the code do not need high quality random numbers. Also, it often complains about uninitialized scalar values in constructors, but there are many case where this is reasonable, especially for classes that have an <code>Init()</code> function that is always called on newly-constructed objects.</li>
+ <li>Bug. Coverity's analysis is correct, and what it detects is a genuine defect.</li>
+ <li>Unknown. This is when you can't decide which of the above three categories applies. Issues can be subtle, and not knowing is common, especially when looking at issues in parts of the code you don't know well. If you are uncertain, it is better to leave an issue alone than to wrongly mark is as ignorable.</li>
+</ul>
+
+<p>If you decide an issue is not worth addressing, do the following steps.</p>
+
+<ul>
+ <li>Change the "Classification" to "False Positive" or "Intentional".</li>
+ <li>Change the "Action" to "Ignore".</li>
+ <li>Put your email address in the "Owner" field.</li>
+ <li>Write a brief explanation in the comment box.</li>
+</ul>
+
+<p>If you decide an issue is worth addressing, do the following steps.</p>
+
+<ul>
+ <li>File a bug report in Bugzilla.
+  <ul>
+   <li>Mark it as blocking <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1230156">bug 1230156</a>, which is the Coverity meta-bug. (The bug nickname is "coverity-analysis".)</li>
+   <li>Put the CID number(s) in the whiteboard field.</li>
+   <li>Set the "coverity" keyword.</li>
+   <li>Attach a fix if you are able to write one. Otherwise, make a needinfo request of an appropriate person.</li>
+  </ul>
+ </li>
+ <li>Change the "Classification" to "Bug". (Usually, though "False Positive" or "Intentional" is possible if you decide the code should be rewritten for clarity even if it is not buggy per se.)</li>
+ <li>Change the "Action" to "Fix Required" or "Fix Submitted", depending on whether you have written a fix.</li>
+ <li class="ng-scope">Put a link to the bug in the "<label>Ext. Reference</label>" field.</li>
+ <li>Put your email address in the "Owner" field.</li>
+</ul>
+
+<p>The following screenshot shows the Triage pane for an issue that has been filed in Bugzilla and fixed.</p>
+
+<p><img alt="Screenshot of the Triage pane for an issue with an associated bug report." src="https://mdn.mozillademos.org/files/13388/coverity-example-triage.png" style="height: 198px; width: 421px;"></p>
+
+<p>We generally do not use the "Severity" field.</p>
+
+<h2 id="Odds_and_Ends">Odds and Ends</h2>
+
+<h3 id="How_are_new_analysis_runs_triggered_How_often_does_that_happen">How are new analysis runs triggered? How often does that happen?</h3>
+
+<p>Because the code base it huge, Coverity limits the number of analysis. However, analysis are triggered every day for Firefox Desktop, Fennec (Java code only) and Thunderbird.<br>
+ This is managed by release management using a Jenkins instance.</p>
+
+<h3 id="How_to_use_modelling_to_decrease_the_false-positive_rate">How to use modelling to decrease the false-positive rate</h3>
+
+<p>The best approach to decrease the false positive rate is to use a model that Coverity uses  to determine the desired behavior of an implementation. The model should consist of specifying behaviors for those interfaces that are linked in from code, but are not compiled or analyzed.</p>
+
+<p>The <a href="https://hg.mozilla.org/mozilla-central/file/tip/tools/coverity/model.cpp">model file</a> is stored in Mozilla central in tools/coverity/.<br>
+ <br>
+ For example if we want to sanitize the tainted data from the following code:</p>
+
+<pre>uint32_t HeaderParser::ChunkHeader::ChunkSize() const
+{
+  return ((mRaw[7] &lt;&lt; 24) | (mRaw[6] &lt;&lt; 16) |
+          (mRaw[5] &lt;&lt; 8 ) | (mRaw[4]));
+}
+</pre>
+
+<p>The model would look like:</p>
+
+<pre>uint32_t HeaderParser::ChunkHeader::ChunkSize() const
+{
+  __coverity_tainted_data_sanitize__(&amp;mRaw[4]);
+  __coverity_tainted_data_sanitize__(&amp;mRaw[5]);
+  __coverity_tainted_data_sanitize__(&amp;mRaw[6]);
+  __coverity_tainted_data_sanitize__(&amp;mRaw[7]);
+
+  return ((mRaw[7] &lt;&lt; 24) | (mRaw[6] &lt;&lt; 16) |           
+          (mRaw[5] &lt;&lt; 8 ) | (mRaw[4]));
+}
+</pre>
+
+<p>A simple and more common scenario is when we want to break execution when a condition is false, just like an assert:</p>
+
+<pre>void AssertExample(const bool expr) 
+{
+  if (!expr)
+  {
+    __coverity_panic__();
+  }
+}</pre>
+
+<p>To access the Modeling menu you must go to <a href="https://scan.coverity.com/projects/firefox?tab=analysis_settings">Analysis Settings</a> tab from <a href="https://scan.coverity.com/projects/firefox?tab=overview">Project Overview</a> and then scroll down to the bottom of the page to category Modeling File. Once there you can <a href="https://scan.coverity.com/projects/firefox/model_file">View</a> or Upload a new model. If a new modeling file is uploaded the scan will be <u>retriggered</u>. </p>

@@ -1,0 +1,404 @@
+<div>{{jsSidebar("Operators")}}</div>
+
+<p><strong>解構賦值</strong>語法是一種 JavaScript 運算式，可以將陣列或物件中的資料取出成獨立變數。</p>
+
+<div>{{EmbedInteractiveExample("pages/js/expressions-destructuringassignment.html")}}</div>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<h2 id="語法">語法</h2>
+
+<pre class="brush:js">var a, b, rest;
+[a, b] = [10, 20];
+console.log(a); // 10
+console.log(b); // 20
+
+[a, b, ...rest] = [10, 20, 30, 40, 50];
+console.log(a); // 10
+console.log(b); // 20
+console.log(rest); // [30, 40, 50]
+
+({ a, b } = { a: 10, b: 20 });
+console.log(a); // 10
+console.log(b); // 20
+
+
+// Stage 4(finished) proposal
+({a, b, ...rest} = {a: 10, b: 20, c: 30, d: 40});
+console.log(a); // 10
+console.log(b); // 20
+console.log(rest); // {c: 30, d: 40}
+</pre>
+
+<h2 id="描述">描述</h2>
+
+<p>物件與陣列運算式提供了簡單的方式，建立特定的資料組。</p>
+
+<pre class="brush: js">var x = [1, 2, 3, 4, 5];</pre>
+
+<p>解構賦值使用類似語法，但在賦值的左側是宣告要從來源變數接收解開的值之變數。</p>
+
+<pre class="brush: js">var x = [1, 2, 3, 4, 5];
+var [y, z] = x;
+console.log(y); // 1
+console.log(z); // 2
+</pre>
+
+<p>Perl 和 Python 也有類似的語法和功能。</p>
+
+<h2 id="陣列解構">陣列解構</h2>
+
+<h3 id="基本變數指派">基本變數指派</h3>
+
+<pre class="brush: js">var foo = ['one', 'two', 'three'];
+
+var [one, two, three] = foo;
+console.log(one); // "one"
+console.log(two); // "two"
+console.log(three); // "three"
+</pre>
+
+<h3 id="從宣告解構指派">從宣告解構指派</h3>
+
+<p>變數可以透過解構指派式個別指派。</p>
+
+<pre class="brush:js">var a, b;
+
+[a, b] = [1, 2];
+console.log(a); // 1
+console.log(b); // 2
+</pre>
+
+<h3 id="預設值">預設值</h3>
+
+<p>變數可以被設定預設值，當在陣列對應的元素是 undefined 時會被使用。</p>
+
+<pre class="brush: js">var a, b;
+
+[a=5, b=7] = [1];
+console.log(a); // 1
+console.log(b); // 7
+</pre>
+
+<h3 id="變數交換">變數交換</h3>
+
+<p>兩個變數可以透過一個解構指派式交換。</p>
+
+<p>沒有解構指派式時，這需要一個暫存變數來達成（或者某些像 <a class="external" href="https://en.wikipedia.org/wiki/XOR_swap_algorithm">XOR-swap trick</a> 這樣的低階語言）。</p>
+
+<pre class="brush:js">var a = 1;
+var b = 3;
+
+[a, b] = [b, a];
+console.log(a); // 3
+console.log(b); // 1
+</pre>
+
+<h3 id="解析自函式回傳的陣列">解析自函式回傳的陣列</h3>
+
+<p>一直以來函式都可以回傳陣列，而解構指派式可以讓回傳的值更為簡潔。</p>
+
+<p>在這個例子， <code>f()</code> 回傳 <code>[1, 2]</code> ，接著透過一個解構指派式解析。</p>
+
+<pre class="brush:js">function f() {
+  return [1, 2];
+}
+
+var a, b; 
+[a, b] = f(); 
+console.log(a); // 1
+console.log(b); // 2
+</pre>
+
+<h3 id="忽略某些回傳值">忽略某些回傳值</h3>
+
+<p>你可以忽略某些回傳值：</p>
+
+<pre class="brush:js">function f() {
+  return [1, 2, 3];
+}
+
+var [a, , b] = f();
+console.log(a); // 1
+console.log(b); // 3
+</pre>
+
+<p>當然你也可以全部忽略：</p>
+
+<pre class="brush:js">[,,] = f();
+</pre>
+
+<h3 id="將剩餘部分解構到一個變數">將剩餘部分解構到一個變數</h3>
+
+<p>解構一個陣列時，你可以透過其餘模式（rest pattern）將剩餘的部分指派到一個變數：</p>
+
+<pre class="brush: js">var [a, ...b] = [1, 2, 3];
+console.log(a); // 1
+console.log(b); // [2, 3]</pre>
+
+<p>Note that a {{jsxref("SyntaxError")}} will be thrown if a trailing comma is used on the left-hand side with a rest element:</p>
+
+<pre class="brush: js example-bad">var [a, ...b,] = [1, 2, 3];
+// SyntaxError: rest element may not have a trailing comma</pre>
+
+<h3 id="從正則運算式的比對結果取值">從正則運算式的比對結果取值</h3>
+
+<p>當正則運算式的方法 <code><a href="/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/exec">exec()</a></code> 比對到一個值，回傳的一個陣列中第一個值是符合整個運算式的字串，其他的則是比對到括號的部分。解構指派式讓你更簡單的取出這部分，並可以忽略第一個。</p>
+
+<pre class="brush:js">var url = 'https://developer.mozilla.org/en-US/Web/JavaScript';
+
+var parsedURL = /^(\w+)\:\/\/([^\/]+)\/(.*)$/.exec(url);
+console.log(parsedURL); // ["https://developer.mozilla.org/en-US/Web/JavaScript", "https", "developer.mozilla.org", "en-US/Web/JavaScript"]
+
+var [, protocol, fullhost, fullpath] = parsedURL;
+
+console.log(protocol); // "https"
+</pre>
+
+<h2 id="物件解構">物件解構</h2>
+
+<h3 id="基本指派">基本指派</h3>
+
+<pre class="brush: js">var o = {p: 42, q: true};
+var {p, q} = o;
+
+console.log(p); // 42
+console.log(q); // true 
+</pre>
+
+<h3 id="無宣告指派">無宣告指派</h3>
+
+<p>變數可以透過解構指派式個別指派。</p>
+
+<pre class="brush:js">var a, b;
+
+({a, b} = {a:1, b:2});</pre>
+
+<div class="note">
+<p><strong>注</strong>：使用物件表示解構法，而不宣告時，指派語法外的大括號 <code>( .. )</code> 是必要的。</p>
+
+<p><code>{a, b} = {a: 1, b: 2}</code> 不是有效的獨立語法，因為左邊的 <code>{a, b}</code> 被視為程式碼區塊而非物件。</p>
+
+<p>然而 <code>({a, b} = {a: 1, b: 2})</code> 有效，如同 <code>var {a, b} = {a: 1, b: 2}</code></p>
+
+<p><code>( ... )</code> 表達式需要冠上分號（preceded by a semicolon），否則，在上一行可能會執行之。</p>
+</div>
+
+<h3 id="指派到新的變數">指派到新的變數</h3>
+
+<p>變數可以從物件中提出到另一個不同名稱的變數。</p>
+
+<pre class="brush: js">var o = {p: 42, q: true};
+var {p: foo, q: bar} = o;
+ 
+console.log(foo); // 42 
+console.log(bar); // true  </pre>
+
+<h3 id="預設值_2">預設值</h3>
+
+<p>變數可以設定預設值，當物件中對應的值是 <code>undefined</code> 時使用。</p>
+
+<pre class="brush: js">var {a=10, b=5} = {a: 3};
+
+console.log(a); // 3
+console.log(b); // 5</pre>
+
+<h3 id="指定新的變數名稱及預設值">指定新的變數名稱及預設值</h3>
+
+<p>屬性 1) 可以從物件中被解開，且被指定一個不同名稱的變數及 2) 同時指定一個預設值，當解開的值為 <code>undefined</code> 時使用。</p>
+
+<pre class="brush: js">var {a:aa = 10, b:bb = 5} = {a: 3};
+
+console.log(aa); // 3
+console.log(bb); // 5
+</pre>
+
+<h3 id="設定函式的預設值">設定函式的預設值</h3>
+
+<h4 id="ES5_版本">ES5 版本</h4>
+
+<pre class="brush: js">function drawES5Chart(options) {
+  options = options === undefined ? {} : options;
+  var size = options.size === undefined ? 'big' : options.size;
+  var cords = options.cords === undefined ? {x: 0, y: 0} : options.cords;
+  var radius = options.radius === undefined ? 25 : options.radius;
+  console.log(size, cords, radius);
+  // 終於畫了東西
+}
+
+drawES5Chart({
+  cords: {x: 18, y: 30},
+  radius: 30
+});</pre>
+
+<h4 id="ES2015_version">ES2015 version</h4>
+
+<pre class="brush: js">function drawES2015Chart({size = 'big', cords = {x: 0, y: 0}, radius = 25} = {}) {
+  console.log(size, cords, radius);
+  // 這樣就畫了東西
+}
+
+drawES2015Chart({
+  cords: {x: 18, y: 30},
+  radius: 30
+});</pre>
+
+<div class="note">
+<p>In the function signature for <strong><code>drawES2015Chart</code></strong> above, the destructured left-hand side is assigned to an empty object literal on the right-hand side: <code>{size = 'big', cords = {x: 0, y: 0}, radius = 25} = {}</code>. You could have also written the function without the right-hand side assignment. However, if you leave out the right-hand side assignment, the function will look for at least one argument to be supplied when invoked, whereas in its current form, you can simply call <code><strong>drawES2015Chart()</strong></code> without supplying any parameters. The current design is useful if you want to be able to call the function without supplying any parameters, the other can be useful when you want to ensure an object is passed to the function.</p>
+</div>
+
+<h3 id="巢狀物件或陣列的解構">巢狀物件或陣列的解構</h3>
+
+<pre class="brush:js">const metadata = {
+    title: 'Scratchpad',
+    translations: [
+       {
+        locale: 'de',
+        localization_tags: [],
+        last_edit: '2014-04-14T08:43:37',
+        url: '/de/docs/Tools/Scratchpad',
+        title: 'JavaScript-Umgebung'
+       }
+    ],
+    url: '/en-US/docs/Tools/Scratchpad'
+};
+
+let {
+    title: englishTitle,// rename
+    translations: [
+        {
+            title: localeTitle,// rename
+        },
+    ],
+} = metadata;
+
+console.log(englishTitle); // "Scratchpad"
+console.log(localeTitle);  // "JavaScript-Umgebung"</pre>
+
+<h3 id="循環取出的解構">循環取出的解構</h3>
+
+<pre class="brush: js">var people = [
+  {
+    name: 'Mike Smith',
+    family: {
+      mother: 'Jane Smith',
+      father: 'Harry Smith',
+      sister: 'Samantha Smith'
+    },
+    age: 35
+  },
+  {
+    name: 'Tom Jones',
+    family: {
+      mother: 'Norah Jones',
+      father: 'Richard Jones',
+      brother: 'Howard Jones'
+    },
+    age: 25
+  }
+];
+
+for (var {name: n, family: {father: f}} of people) {
+  console.log('Name: ' + n + ', Father: ' + f);
+}
+
+// "Name: Mike Smith, Father: Harry Smith"
+// "Name: Tom Jones, Father: Richard Jones"</pre>
+
+<h3 id="從做為函式參數的物件中提出某屬性的值">從做為函式參數的物件中提出某屬性的值</h3>
+
+<pre class="brush:js">function userId({id}) {
+  return id;
+}
+
+function whois({displayName, fullName: {firstName: name}}) {
+  console.log(displayName + ' is ' + name);
+}
+
+var user = { 
+  id: 42, 
+  displayName: 'jdoe',
+  fullName: { 
+      firstName: 'John',
+      lastName: 'Doe'
+  }
+};
+
+console.log('userId: ' + userId(user)); // "userId: 42"
+whois(user); // "jdoe is John"</pre>
+
+<p>這樣從 user 物件中提出了 <code>id</code>, <code>displayName</code> 和 <code>firstName 並且印出。</code></p>
+
+<h3 id="以物件演算屬性名稱解構">以物件演算屬性名稱解構</h3>
+
+<p>物件演算屬性名稱（像是在 <a href="/en-US/docs/Web/JavaScript/Reference/Operators/Object_initializer#Computed_property_names">object literals</a>）可以在解構指派式使用。<br>
+ （物件演算屬性名稱指——母物件["子物件名稱"]——的表示方式）</p>
+
+<pre class="brush: js">let key = 'z';
+let {[key]: foo} = {z: 'bar'};
+
+console.log(foo); // "bar"
+</pre>
+
+<h3 id="Rest_in_Object_Destructuring">Rest in Object Destructuring</h3>
+
+<p>The <a class="external external-icon" href="https://github.com/tc39/proposal-object-rest-spread">Rest/Spread Properties for ECMAScript</a> proposal (stage 3) adds the <a href="/en-US/docs/Web/JavaScript/Reference/Functions/rest_parameters">rest</a> syntax to destructuring. Rest properties collect the remaining own enumerable property keys that are not already picked off by the destructuring pattern.</p>
+
+<pre class="brush: js">let {a, b, ...rest} = {a: 10, b: 20, c: 30, d: 40}
+a; // 10 
+b; // 20 
+rest; // { c: 30, d: 40 }</pre>
+
+<h3 id="Invalid_JavaScript_identifier_as_a_property_name">Invalid JavaScript identifier as a property name</h3>
+
+<p>Destructuring can be used with property names that are not valid JavaScript <a href="/en-US/docs/Glossary/Identifier">identifiers</a> by providing an alternative identifer that is valid.</p>
+
+<pre class="brush: js">const foo = { 'fizz-buzz': true };
+const { 'fizz-buzz': fizzBuzz } = foo;
+
+console.log(fizzBuzz); // "true"
+</pre>
+
+<h2 id="規範">規範</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">規範</th>
+   <th scope="col">狀態</th>
+   <th scope="col">標記</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-destructuring-assignment', 'Destructuring assignment')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td>初定義</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-destructuring-assignment', 'Destructuring assignment')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td></td>
+  </tr>
+  <tr>
+   <td><a href="https://github.com/tc39/proposal-object-rest-spread">Rest/Spread Properties for ECMAScript</a></td>
+   <td>Draft</td>
+   <td>Stage 3 draft.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="瀏覽器相容性">瀏覽器相容性</h2>
+
+<div>{{CompatibilityTable}}</div>
+
+<div>
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.operators.destructuring")}}</p>
+</div>
+
+<h2 id="參見">參見</h2>
+
+<ul>
+ <li><a href="/zh-TW/docs/Web/JavaScript/Reference/Operators/Assignment_Operators">Assignment operators</a></li>
+ <li><a href="https://hacks.mozilla.org/2015/05/es6-in-depth-destructuring/">"ES6 in Depth: Destructuring" on hacks.mozilla.org</a></li>
+</ul>

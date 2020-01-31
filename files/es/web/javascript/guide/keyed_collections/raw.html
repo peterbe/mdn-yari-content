@@ -1,0 +1,140 @@
+<div>{{jsSidebar("JavaScript Guide")}} {{PreviousNext("Web/JavaScript/Guide/Indexed_Collections", "Web/JavaScript/Guide/Working_with_Objects")}}</div>
+
+<p class="summary">Este capítulo introduce las colecciones de datos las cuales son ordenadas mediante una clave; los objetos Map y Set contienen elementos cuya iteración se da conforme al orden de inserción.</p>
+
+<h2 id="Maps">Maps</h2>
+
+<h3 id="El_objeto_Map"><code>El objeto Map</code></h3>
+
+<p>ECMAScript 6 introduce una nueva estructura de datos para mapear valores a valores. Un objeto {{jsxref("Map")}} es un simple mapeo clave/valor y puede iterar sobre sus elementos en el orden de inserción.</p>
+
+<p>El siguiente código muestra algunas operaciones básicas con un <code>Map</code>. Para ver más ejemplos,  y la referencia de la API completa, mira la página de referencia {{jsxref("Map")}} . Puedes usar un bucle {{jsxref("Statements/for...of","for...of")}} para devolver un array de <code>[ clave, valor]</code> en cada iteración.</p>
+
+<pre class="brush: js">var sonidos = new Map();
+sonidos.set("perro", "guau");
+sonidos.set("gato", "miau");
+sonidos.set("oveja", "beee");
+sonidos.size; // 3
+sonidos.get("zorro"); // undefined
+sonidos.has("pájaro"); // false
+sonidos.delete("perro");
+
+for (var [clave, valor] of sonidos) {
+  console.log(clave + " hace " + valor);
+}
+// "gato hace miau"
+// "oveja hace beee"
+</pre>
+
+<h3 id="Comparación_de_Object_y_Map"><code>Comparación de Object</code> y <code>Map</code></h3>
+
+<p>Tradicionalmente, {{jsxref("Object", "objects", "", 1)}} ha sido usado para mapear strings a valores. Los objetos te permiten establecer claves con valores, recuperar esos valores, borrar las claves, y detectar si algo es almacenado como una clave. Los objetos <code>Map</code>, sin embargo, poseen ciertas ventajas sobre los objectos <code>Object</code> que los hacen mejores.</p>
+
+<ul>
+ <li>Las claves de un <code>Object</code> son {{jsxref("Global_Objects/String","Strings")}}, mientras que en un  <code>Map</code> las claves pueden ser de cualquier tipo.</li>
+ <li>Se puede obtener el tamaño de un <code>Map</code> fácilmente mientras en un <code>Object</code> se debe realizar un registro manual para obtenerlo.</li>
+ <li>La iteración sobre mapas se produce en el orden en que se insertaron los elementos en el mapa.</li>
+ <li>Un <code>Object</code> tiene un prototipo, por eso existen claves por defecto en el map. Esto puede evitarse haciendo  <code>map = Object.create(null)</code>).</li>
+</ul>
+
+<p>Estos dos consejos pueden guiarte a la hora de decidir si usar un <code>Map</code> o un <code>Object</code>:</p>
+
+<ul>
+ <li>Usa mapas preferiblemente cuando las claves son desconocidas hasta el tiempo de ejecución, o cuando todas las claves son del mismo tipo y todos los valores son del mismo tipo.</li>
+ <li>Usa objetos cuando sea lógico operar sobre elementos individuales.</li>
+</ul>
+
+<h3 id="El_objeto_WeakMap"><code>El objeto WeakMap</code></h3>
+
+<p>El objeto {{jsxref("WeakMap")}} es una colección de pares clave/valor en la cual <strong>sólamente las claves son objetos</strong> y los valores pueden ser valores arbitrarios. La referencia a los objetos en las claves se mantienen <em>débilmente, </em>lo que significa que son objetivo del recolector de basura si no hay otra referencia al objeto. La API de <code>WeakMap </code>es la misma que la API de <code>Map.</code></p>
+
+<p>Una diferencia con los objetos <code>Map</code>, es que las claves de <code>WeakMap</code> no son enumerables (no existe un método que devuelva una lista con las claves). Si lo fuesen, la lista dependería del estado de la recolección de basura, introduciendo no-determinismo.</p>
+
+<p>Para más información y códigos de ejemplo, veáse también "¿Por qué <code>WeakMap</code>?" en la página de referencia {{jsxref("WeakMap")}}.</p>
+
+<p>Un caso de uso de los objetos <code>WeakMap</code> es almacenar datos privados para un objeto u ocultar detalles de implementación. El siguiente ejemplo es del artículo de Nick Fitzgerald <a href="http://fitzgeraldnick.com/weblog/53/">"Hiding Implementation Details with ECMAScript 6 WeakMaps"</a>. Los datos y métodos privados son almacenados en el objeto <code>WeakMap</code> denominado <code>privates</code>. Todo lo expuesto en la instancia y el prototipo es público; todo lo demás es inaccesible desde el mundo exterior ya que <code>privates</code> no es exportado junto al módulo.</p>
+
+<pre class="brush: js">const privates = new WeakMap();
+
+function Public() {
+  const me = {
+    // Private data goes here
+  };
+  privates.set(this, me);
+}
+
+Public.prototype.method = function () {
+  const me = privates.get(this);
+  // Do stuff with private data in `me`...
+};
+
+module.exports = Public;
+</pre>
+
+<h2 id="Sets">Sets</h2>
+
+<h3 id="Objeto_Set"><font face="Consolas, Liberation Mono, Courier, monospace">Objeto Set</font></h3>
+
+<p>Los objetos {{jsxref("Set")}} son colecciones de valores. Puedes iterar sus elementos en el orden de inserción. Un valor en un <code>Set</code> sólo puede tener lugar una vez; es único en la colección del <code>Set</code>.</p>
+
+<p>El código siguiente muestra algunas operaciones básicas con un <code>Set</code>. Consulte también la página de referencia de {{jsxref("Set")}}  para ver más ejemplos y la API completa.</p>
+
+<pre class="brush: js">var mySet = new Set();
+mySet.add(1);
+mySet.add("some text");
+mySet.add("foo");
+
+mySet.has(1); // true
+mySet.delete("foo");
+mySet.size; // 2
+
+for (let item of mySet) console.log(item);
+// 1
+// "some text"
+</pre>
+
+<h3 id="Conversión_entre_Array_y_Set">Conversión entre Array y Set</h3>
+
+<p>Puedes crear un {{jsxref("Array")}} desde un <code>Set</code> usando {{jsxref("Array.from")}} o el <a href="/en-US/docs/Web/JavaScript/Reference/Operators/Spread_operator">operador de propagación</a> (spread operator). Además, el constructor de <code>Set</code> acepta un <code>Array</code> para convertirlo en la otra dirección. Note nuevamente que los objetos <code><font face="Consolas, Liberation Mono, Courier, monospace">Set</font></code> almacenan valores únicos, así que cualquier elemento duplicado de un <code>Array</code> es eliminado cuando se realiza la conversión.</p>
+
+<pre class="brush: js">Array.from(mySet);
+[...mySet2];
+
+mySet2 = new Set([1,2,3,4]);
+</pre>
+
+<h3 id="Array_y_Set_comparados"><code>Array</code> y <code>Set</code> comparados</h3>
+
+<p>Tradicionalmente - en Javascript - un conjunto de elementos han sido almacenados en arrays en un gran número de circuntancias. El nuevo objeto <code>Set</code>, sin embargo, tiene algunas ventajas:</p>
+
+<ul>
+ <li>Comprobar si un elemento existe en una colección usando {{jsxref("Array.indexOf", "indexOf")}} en arrays es lento.</li>
+ <li>Los objetos <code>Set</code> te permiten eliminar elementos por su valor. Con un array tendrías que usar <code>splice</code> basado en el índice de un elemento.</li>
+ <li>El valor {{jsxref("NaN")}} no puede encontrarse con <code>indexOf</code> en un array.</li>
+ <li>Los objetos <code>Set</code> almacenan valores únicos, no tienes que controlar duplicados por ti mismo.</li>
+</ul>
+
+<h3 id="Objeto_WeakSet">Objeto <code>WeakSet</code></h3>
+
+<p>Los objetos {{jsxref("WeakSet")}} son colecciones de objetos. Un objeto en el <code>WeakSet</code> sólo puede tener lugar una vez; es único en la colección. Los objectos del <code>WeakSet</code> no son enumerables.</p>
+
+<p>Las principales diferencias con los objetos {{jsxref("Set")}} son:</p>
+
+<ul>
+ <li>En contraste a los <code>Sets,</code> los <code>WeakSets</code> son <strong>colecciones de objetos únicamente</strong> y no de tipos de datos arbitrarios.</li>
+ <li>El <code>WeakSet</code> es <em>débil</em>: Las referencias a objetos en la colección se mantienen débilmente. De no haber otra diferencia a un objeto almacenado en el <code>WeakSet</code>, éste puede ser eliminado por el recolector de basura, lo que significa que no hay una lista de los objetos actualmente almacenados en la colección. Los <code>WeakSets</code> no son enumerables.</li>
+</ul>
+
+<p>Los casos de uso de <code>WeakSet</code> son limitados. No provocarán fugas de memoria, así que - por ejemplo - puede ser seguro usar elementos DOM como clave y marcarlos para fines de seguimiento.</p>
+
+<h2 id="Igualdad_Clave_y_valor_de_Map_y_Set">Igualdad Clave y valor de <code>Map</code> y <code>Set</code></h2>
+
+<p>Tanto la igualdad de clave en objetos <code>Map</code> como la igualdad de valor en objetos <code>Set</code>, están basados en "<a href="https://people.mozilla.org/~jorendorff/es6-draft.html#sec-samevaluezero">same-value-zero algorithm</a>":</p>
+
+<ul>
+ <li>La igualdad funciona igual que el operador de comparación de identidad: <code>===</code></li>
+ <li><code>-0</code> y <code>+0</code> son considerados iguales.</li>
+ <li>{{jsxref("NaN")}} es considerado igual a sí mismo (al contrario que <code>===</code>).</li>
+</ul>
+
+<p>{{PreviousNext("Web/JavaScript/Guide/Indexed_Collections", "Web/JavaScript/Guide/Working_with_Objects")}}</p>

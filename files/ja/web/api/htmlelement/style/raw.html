@@ -1,0 +1,76 @@
+<div>
+<div>{{ APIRef("HTML DOM") }}</div>
+</div>
+
+<p><code><strong>HTMLElement.style</strong></code>プロパティは、要素の<strong>インライン</strong> style と同様に取得されます。取得時には要素の<strong>インライン</strong> <a href="/ja/docs/Web/HTML/Global_attributes#style"><code>style</code> 属性</a>で定義されたすべてのスタイルプロパティを表す <a href="/ja/docs/DOM/CSSStyleDeclaration"><code>CSSStyleDeclaration</code></a> オブジェクトを返します。<code>style</code> 経由でアクセス可能な CSS プロパティのリストについては、<a href="/ja/docs/Web/CSS/CSS_Properties_Reference">CSS プロパティリファレンス</a>を参照してください。<code>style</code> プロパティは CSS カスケードで <code>style</code> 属性によるインラインスタイル宣言と同じ（かつ最高）優先順位を持ちます。</p>
+
+<h3 id="Setting_styles" name="Setting_styles"><code>style</code>を設定する</h3>
+
+<p>Styles は <code>style</code> プロパティに文字列を直接代入してセットすべきではありません (<code>elt.style = "color: blue;"</code> のように)、なぜならこれは style 属性が読み取り専用の <a href="https://developer.mozilla.org/ja/docs/DOM/CSSStyleDeclaration" title="DOM/CSSStyleDeclaration"><code>CSSStyleDeclaration</code></a> オブジェクトを返すので、読み取り専用と考えられています。その代わりに、styles は <code>style</code>. のプロパティに値を代入してセットできます。要素に対して特定のスタイルを他のスタイル値を変えずに追加するため、<code>style</code> の個々のプロパティを使うのが好ましいです(<code>elt.style.color = '...'</code>のように)。なぜなら <code>elt.style.cssText = '...'</code> や <code>elt.setAttribute('style', '...')</code> では要素のインラインスタイルを、既存のインラインスタイルを上書きすることでセットするからです。<code>elt.style.&lt;property&gt;</code>を使ってスタイルをセットする時、プロパティ名はキャメルケースであって、ケバブケースでないのに注意してください  (つまり <code>elt.style.fontSize</code>となり、 <code>elt.style.font-size</code>ではありません)。</p>
+
+<p>スタイル宣言は <code>null</code> をセットしてリセットします。例、<code>elt.style.color = null</code></p>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<pre class="brush:js"><code>// Set multiple styles in a single statement
+elt.style.cssText = "color: blue; border: 1px solid black"; 
+// Or
+elt.setAttribute("style", "color:red; border: 1px solid blue;");</code>
+
+
+elt.style.color = "blue"; // Set specific style while leaving other inline style values untouched
+</pre>
+
+<h3 id="Getting_style_information" name="Getting_style_information">スタイル情報を取得する</h3>
+
+<p><code>style</code> プロパティは、要素のインライン <code>style</code> 属性で設定された CSS 宣言のみを表し、&gt;{{HTMLElement("head")}} セクションのスタイルルールまたは外部スタイルシートなどの、他のスタイルルールからのスタイル宣言を表さないため、一般に要素のスタイルに関する学習には役立ちません。 要素のすべてのCSSプロパティの値を取得するには、代わりに {{domxref("window.getComputedStyle()")}} を使用する必要があります。</p>
+
+<p>次のコード断片は要素の <code>style</code> プロパティで取得する値と、<code>getComputedStyle()</code> で取得するものの違いを実演します。</p>
+
+<pre class="brush: html line-numbers  language-html"><code class="language-html"><span class="doctype token">&lt;!DOCTYPE HTML&gt;</span>
+<span class="tag token"><span class="tag token"><span class="punctuation token">&lt;</span>html</span><span class="punctuation token">&gt;</span></span>
+ <span class="tag token"><span class="tag token"><span class="punctuation token">&lt;</span>body</span><span class="language-css style-attr token"><span class="attr-name token"> <span class="attr-name token">style</span></span><span class="punctuation token">="</span><span class="attr-value token"><span class="property token">font-weight</span><span class="punctuation token">:</span>bold<span class="punctuation token">;</span></span><span class="punctuation token">"</span></span><span class="punctuation token">&gt;</span></span>
+
+    <span class="tag token"><span class="tag token"><span class="punctuation token">&lt;</span>div</span><span class="language-css style-attr token"><span class="attr-name token"> <span class="attr-name token">style</span></span><span class="punctuation token">="</span><span class="attr-value token"><span class="property token">color</span><span class="punctuation token">:</span>red</span><span class="punctuation token">"</span></span> <span class="attr-name token">id</span><span class="attr-value token"><span class="punctuation token">=</span><span class="punctuation token">"</span>myElement<span class="punctuation token">"</span></span><span class="punctuation token">&gt;</span></span>..<span class="tag token"><span class="tag token"><span class="punctuation token">&lt;/</span>div</span><span class="punctuation token">&gt;</span></span>
+
+ <span class="tag token"><span class="tag token"><span class="punctuation token">&lt;/</span>body</span><span class="punctuation token">&gt;</span></span>
+<span class="tag token"><span class="tag token"><span class="punctuation token">&lt;/</span>html</span><span class="punctuation token">&gt;</span></span></code></pre>
+
+<pre class="brush:js line-numbers  language-js"><code class="language-js"><span class="keyword token">var</span> element <span class="operator token">=</span> document<span class="punctuation token">.</span><span class="function token">getElementById</span><span class="punctuation token">(</span><span class="string token">"myElement"</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+<span class="keyword token">var</span> out <span class="operator token">=</span> <span class="string token">""</span><span class="punctuation token">;</span>
+<span class="keyword token">var</span> elementStyle <span class="operator token">=</span> element<span class="punctuation token">.</span>style<span class="punctuation token">;</span>
+<span class="keyword token">var</span> computedStyle <span class="operator token">=</span> window<span class="punctuation token">.</span><span class="function token">getComputedStyle</span><span class="punctuation token">(</span>element<span class="punctuation token">,</span> <span class="keyword token">null</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+
+<span class="keyword token">for</span> <span class="punctuation token">(</span>prop <span class="keyword token">in</span> elementStyle<span class="punctuation token">)</span> <span class="punctuation token">{</span>
+  <span class="keyword token">if</span> <span class="punctuation token">(</span>elementStyle<span class="punctuation token">.</span><span class="function token">hasOwnProperty</span><span class="punctuation token">(</span>prop<span class="punctuation token">)</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+    out <span class="operator token">+</span><span class="operator token">=</span> <span class="string token">"  "</span> <span class="operator token">+</span> prop <span class="operator token">+</span> <span class="string token">" = '"</span> <span class="operator token">+</span> elementStyle<span class="punctuation token">[</span>prop<span class="punctuation token">]</span> <span class="operator token">+</span> <span class="string token">"' &gt; '"</span> <span class="operator token">+</span> computedStyle<span class="punctuation token">[</span>prop<span class="punctuation token">]</span> <span class="operator token">+</span> <span class="string token">"'\n"</span><span class="punctuation token">;</span>
+  <span class="punctuation token">}</span>
+<span class="punctuation token">}</span>
+console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(</span>out<span class="punctuation token">)</span></code></pre>
+
+<p>出力されるコードは次のようなものです:</p>
+
+<pre class="line-numbers  language-html"><code class="language-html">...
+fontWeight = '' &gt; 'bold'
+color = 'red' &gt; 'rgb(255, 0, 0)'
+...</code></pre>
+
+<p>font-weight の計算されたスタイルに "bold" の値があって、要素のスタイルプロパティにはないことに注意してください。</p>
+
+<h2 id="Specification" name="Specification">仕様</h2>
+
+<p><a class="external" href="http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-ElementCSSInlineStyle">DOM Level 2 Style: ElementCSSInlineStyle.style</a></p>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザ実装状況</h2>
+
+<div class="note">
+<p><strong>注:</strong> Starting in {{Gecko("2.0")}}, you can set SVG properties' values using the same shorthand syntax. For example:</p>
+
+<pre><code>element.style.fill = 'lime';</code></pre>
+</div>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li><a href="/ja/docs/DOM/Using_dynamic_styling_information">動的なスタイル情報の利用</a></li>
+</ul>

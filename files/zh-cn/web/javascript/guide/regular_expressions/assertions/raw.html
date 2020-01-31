@@ -1,0 +1,115 @@
+<p>{{jsSidebar("JavaScript Guide")}}{{draft}}</p>
+
+<p><ruby>断言<rt>assertions</rt></ruby>表明以某种方式会存在匹配，包括<ruby>先行断言<rt>look-ahead</rt></ruby>、<ruby>后行断言<rt>look-behind</rt></ruby>、以及<ruby>条件表达式<rt>conditional expressions</rt></ruby>．</p>
+
+<h2 id="类型">类型</h2>
+
+<div class="blockIndicator note">
+<p><code> ? </code>也可以当作量词.</p>
+</div>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">字符</th>
+   <th scope="col">含义</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>x(?=y)</td>
+   <td>
+    <table>
+     <tbody>
+      <tr>
+       <td><strong>先行断言:</strong> y紧跟x的情况下匹配x。例如，对于/<code>Jack(?=Sprat)</code>/，“Jack”在跟有“Sprat”的情况下才会得到匹配．<code>/Jack(?=Sprat)/</code> “Jack”后跟有“Sprat”或“Frost”的情况下才会得到匹配。不过， 匹配结果不包括“Sprat”或“Frost”。</td>
+      </tr>
+     </tbody>
+    </table>
+   </td>
+  </tr>
+  <tr>
+   <td>x(?!y)</td>
+   <td>
+    <table>
+     <tbody>
+      <tr>
+       <td><strong>负向先行断言:</strong> x后无y紧随的情况下匹配x。例如，对于<code>/\d+(?!\。)/</code>，数字后没有跟随小数点的情况下才会得到匹配。对于<code>/\d+(?!\.)/.exec(3.141)</code>，“3”得到匹配，“141”则无。</td>
+      </tr>
+     </tbody>
+    </table>
+   </td>
+  </tr>
+  <tr>
+   <td>(?&lt;=y)x</td>
+   <td>
+    <table>
+     <tbody>
+      <tr>
+       <td><strong>后行断言:</strong> x紧随y的情况下匹配x。例如，对于<code>/(?&lt;=Jack)Sprat/</code>，“Sprat”紧随“Jack”时才会得到匹配。对于<code>/(?&lt;=Jack)Sprat</code>，“Sprat”在紧随“Jack”或“Tom”的情况下才会得到匹配。不过，匹配结果中不包括“Jack”或“Tom”。</td>
+      </tr>
+     </tbody>
+    </table>
+   </td>
+  </tr>
+  <tr>
+   <td>(?&lt;!y)x</td>
+   <td>
+    <table>
+     <tbody>
+      <tr>
+       <td><strong>负向后行断言:</strong> x不紧随y的情况下匹配x。例如，对于<code>/(?&lt;!-)\d+/</code>，数字紧随-符号的情况下才会得到匹配。对于<code>/(?&lt;!-)\d+/.exec(3)</code> ，“3”得到匹配。 而<code>/(?&lt;!-)\d+/.exec(-3)</code>的结果无匹配，这是由于数字之前有-符号。</td>
+      </tr>
+     </tbody>
+    </table>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="示例">示例</h2>
+
+<h3 id="先行断言">先行断言</h3>
+
+<pre class="brush: js">// JS Lookahead assertion x(?=y)
+
+let regex = /First(?= test)/g;
+
+console.log('First test'.match(regex)); // [ 'First' ]
+console.log('First peach'.match(regex)); // null
+console.log('This is a First test in a year.'.match(regex)); // [ 'First' ]
+console.log('This is a First peach in a month.'.match(regex)); // null
+</pre>
+
+<h3 id="负向先行断言">负向先行断言</h3>
+
+<p>For example, <code style="font-size: 1rem; letter-spacing: -0.00278rem;">/\d+(?!\.)/</code><span style="font-size: 1rem; letter-spacing: -0.00278rem;"> matches a number only if it is not followed by a decimal point. </span><code>/\d+(?!\.)/.exec('3.141')</code> matches "141" but not "3.</p>
+
+<pre class="brush: js">console.log(/\d+(?!\.)/g.exec('3.141')); // [ '141', index: 2, input: '3.141' ]
+</pre>
+
+<h3 id="断言与范围组合使用情况下其中“!”的不同含义">断言与范围组合使用情况下其中“?!”的不同含义</h3>
+
+<p>Different meaning of <code>?!</code> combination usage in <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions/Assertions">Assertions</a> <code>/x(?!y)/ </code>and <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions/Groups_and_Ranges">Ranges</a> <code>[^?!]</code>.</p>
+
+<pre class="brush: js">let orangeNotLemon = "Do you want to have an orange? Yes, I do not want to have a lemon!";
+
+// Different meaning of '?!' combination usage in Assertions /x(?!y)/ and  Ranges /[^?!]/
+let selectNotLemonRegex = /[^?!]+have(?! a lemon)[^?!]+[?!]/gi
+console.log(orangeNotLemon.match(selectNotLemonRegex)); // [ 'Do you want to have an orange?' ]
+
+let selectNotOrangeRegex = /[^?!]+have(?! an orange)[^?!]+[?!]/gi
+console.log(orangeNotLemon.match(selectNotOrangeRegex)); // [ ' Yes, I do not want to have a lemon!' ]
+</pre>
+
+<h3 id="后行断言">后行断言</h3>
+
+<pre class="brush: js">let oranges = ['ripe orange A ', 'green orange B', 'ripe orange C',];
+
+let ripe_oranges = oranges.filter( fruit =&gt; fruit.match(/(?&lt;=ripe )orange/));
+console.log(ripe_oranges); // [ 'ripe orange A ', 'ripe orange C' ]
+</pre>
+
+<h2 id="Browser_support">Browser support</h2>
+
+<h2 id="See_also">See also</h2>

@@ -1,0 +1,353 @@
+<p>{{LearnSidebar}}{{PreviousMenuNext("Learn/HTML/Forms/The_native_form_widgets", "Learn/HTML/Forms/Form_validation", "Learn/HTML/Forms")}}</p>
+
+<p dir="rtl" id="tw-target-text">تتناول هذه المقالة ما يحدث عندما يقوم المستخدم بإرسال نموذج - أين تذهب البيانات ، وكيف نتعامل معها عندما تصل إلى هناك؟ نحن أيضًا نلقي نظرة على بعض مخاوف الأمان المرتبطة بإرسال بيانات النموذج.</p>
+
+
+
+<table class="learn-box standard-table">
+ <tbody>
+  <tr>
+   <th scope="row">Prerequisites:</th>
+   <td>Basic computer literacy, an <a href="/en-US/docs/Learn/HTML/Introduction_to_HTML">understanding of HTML</a>, and basic knowledge of <a href="/en-US/docs/Web/HTTP/Basics_of_HTTP">HTTP</a> and <a href="/en-US/docs/Learn/Server-side/First_steps">server-side programming</a>.</td>
+  </tr>
+  <tr>
+   <th scope="row">Objective:</th>
+   <td>To understand what happens when form data is submitted, including getting a basic idea of how data is processed on the server</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Where_does_the_data_go">Where does the data go?</h2>
+
+<p>Here we'll discuss what happens to the data when a form is submitted.</p>
+
+<h3 id="About_clientserver_architecture">About client/server architecture</h3>
+
+<p>The web is based on a very basic client/server architecture that can be summarized as follows: a client (usually a Web browser) sends a request to a server (most of the time a web server like <a href="https://httpd.apache.org/" rel="external">Apache</a>, <a href="https://www.nginx.com/" rel="external">Nginx</a>, <a href="https://www.iis.net/" rel="external">IIS</a>, <a href="https://tomcat.apache.org/" rel="external">Tomcat</a>, etc.), using the <a href="/en-US/docs/HTTP">HTTP protocol</a>. The server answers the request using the same protocol.</p>
+
+<p><img alt="A basic schema of the Web client/server architecture" src="/files/4291/client-server.png" style="display: block; height: 141px; margin: 0px auto; width: 400px;"></p>
+
+<p>On the client side, an HTML form is nothing more than a convenient user-friendly way to configure an HTTP request to send data to a server. This enables the user to provide information to be delivered in the HTTP request.</p>
+
+<div class="note">
+<p><strong>Note</strong>: To get a better idea of how client-server architectures work, read our <a href="/en-US/docs/Learn/Server-side/First_steps">Server-side website programming first steps</a> module.</p>
+</div>
+
+<h3 id="On_the_client_side_defining_how_to_send_the_data">On the client side: defining how to send the data</h3>
+
+<p>The {{HTMLElement("form")}} element defines how the data will be sent. All of its attributes are designed to let you configure the request to be sent when a user hits a submit button. The two most important attributes are {{htmlattrxref("action","form")}} and {{htmlattrxref("method","form")}}.</p>
+
+<h4 id="The_htmlattrxrefactionform_attribute">The {{htmlattrxref("action","form")}} attribute</h4>
+
+<p>This attribute defines where the data gets sent. Its value must be a valid URL. If this attribute isn't provided, the data will be sent to the URL of the page containing the form.</p>
+
+<p>In this example, the data is sent to an absolute URL — <code>http://example.com</code>:</p>
+
+<pre class="brush: html">&lt;form action="http://example.com"&gt;</pre>
+
+<p>Here, we use a relative URL — the data is sent to a different URL on the server:</p>
+
+<pre class="brush: html">&lt;form action="/somewhere_else"&gt;</pre>
+
+<p>When specified with no attributes, as below, the {{HTMLElement("form")}} data is sent to the same page that the form is present on:</p>
+
+<pre class="brush: html">&lt;form&gt;</pre>
+
+<p>Many older pages use the following notation to indicate that the data should be sent to the same page that contains the form; this was required because until HTML5, the {{htmlattrxref("action", "form")}} attribute was required. This is no longer needed.</p>
+
+<pre class="brush: html">&lt;form action="#"&gt;</pre>
+
+<div class="note">
+<p><strong>Note:</strong> It's possible to specify a URL that uses the HTTPS (secure HTTP) protocol. When you do this, the data is encrypted along with the rest of the request, even if the form itself is hosted on an insecure page accessed using HTTP. On the other hand, if the form is hosted on a secure page but you specify an insecure HTTP URL with the {{htmlattrxref("action","form")}} attribute, all browsers display a security warning to the user each time they try to send data because the data will not be encrypted.</p>
+</div>
+
+<h4 id="The_htmlattrxrefmethodform_attribute">The {{htmlattrxref("method","form")}} attribute</h4>
+
+<p>This attribute defines how data is sent. The <a href="/en-US/docs/HTTP">HTTP protocol</a> provides several ways to perform a request; HTML form data can be transmitted via a number of different ones, the most common of which are the <code>GET</code> method and the <code>POST</code> method.</p>
+
+<p>To understand the difference between those two methods, let's step back and examine how HTTP works. Each time you want to reach a resource on the Web, the browser sends a request to a URL. An HTTP request consists of two parts: a header that contains a set of global metadata about the browser's capabilities, and a body that can contain information necessary for the server to process the specific request.</p>
+
+<h5 id="The_GET_method">The GET method</h5>
+
+<p>The <code>GET</code> method is the method used by the browser to ask the server to send back a given resource: "Hey server, I want to get this resource." In this case, the browser sends an empty body. Because the body is empty, if a form is sent using this method the data sent to the server is appended to the URL.</p>
+
+<p>Consider the following form:</p>
+
+<pre class="brush: html">&lt;form action="http://example.com" method="get"&gt;
+  &lt;div&gt;
+    &lt;label for="say"&gt;What greeting do you want to say?&lt;/label&gt;
+    &lt;input name="say" id="say" value="Hi"&gt;
+  &lt;/div&gt;
+  &lt;div&gt;
+    &lt;label for="to"&gt;Who do you want to say it to?&lt;/label&gt;
+    &lt;input name="to" id="to" value="Mom"&gt;
+  &lt;/div&gt;
+  &lt;div&gt;
+    &lt;button&gt;Send my greetings&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/form&gt;</pre>
+
+<p>Since the <code>GET</code> method has been used, you'll see the URL <code>www.example.com/?say=Hi&amp;to=Mom</code> appear in the browser address bar when you submit the form.</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/14685/url-parameters.png" style="display: block; margin: 0 auto;">The data is appended to the URL as a series of name/value pairs. After the URL web address has ended, we include a question mark (<code>?</code>) followed by the name/value pairs, each one separated by an ampersand (<code>&amp;</code>). In this case we are passing two pieces of data to the server:</p>
+
+<ul>
+ <li><code>say</code>, which has a value of <code>Hi</code></li>
+ <li><code>to</code>, which has a value of <code>Mom</code></li>
+</ul>
+
+<p>The HTTP request looks like this:</p>
+
+<pre>GET /?say=Hi&amp;to=Mom HTTP/2.0
+Host: example.com</pre>
+
+<div class="note">
+<p><strong>Note</strong>: You can find this example on GitHub — see <a href="https://github.com/mdn/learning-area/blob/master/html/forms/sending-form-data/get-method.html">get-method.html</a> (<a href="https://mdn.github.io/learning-area/html/forms/sending-form-data/get-method.html">see it live also</a>).</p>
+</div>
+
+<h5 id="The_POST_method">The POST method</h5>
+
+<p>The <code>POST</code> method is a little different. It's the method the browser uses to talk to the server when asking for a response that takes into account the data provided in the body of the HTTP request: "Hey server, take a look at this data and send me back an appropriate result." If a form is sent using this method, the data is appended to the body of the HTTP request.</p>
+
+<p>Let's look at an example — this is the same form we looked at in the <code>GET</code> section above, but with the {{htmlattrxref("method","form")}} attribute set to <code>post</code>.</p>
+
+<pre class="brush: html">&lt;form action="http://example.com" method="post"&gt;
+  &lt;div&gt;
+    &lt;label for="say"&gt;What greeting do you want to say?&lt;/label&gt;
+    &lt;input name="say" id="say" value="Hi"&gt;
+  &lt;/div&gt;
+  &lt;div&gt;
+    &lt;label for="to"&gt;Who do you want to say it to?&lt;/label&gt;
+    &lt;input name="to" id="to" value="Mom"&gt;
+  &lt;/div&gt;
+  &lt;div&gt;
+    &lt;button&gt;Send my greetings&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/form&gt;</pre>
+
+<p>When the form is submitted using the <code>POST</code> method, you get no data appended to the URL, and the HTTP request looks like so, with the data included in the request body instead:</p>
+
+<pre>POST / HTTP/2.0
+Host: example.com
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 13
+
+say=Hi&amp;to=Mom</pre>
+
+<p>The <code>Content-Length</code> header indicates the size of the body, and the <code>Content-Type</code> header indicates the type of resource sent to the server. We'll discuss these headers later on.</p>
+
+<div class="note">
+<p><strong>Note</strong>: You can find this example on GitHub — see <a href="https://github.com/mdn/learning-area/blob/master/html/forms/sending-form-data/post-method.html">post-method.html</a> (<a href="https://mdn.github.io/learning-area/html/forms/sending-form-data/post-method.html">see it live also</a>).</p>
+</div>
+
+<h4 id="Viewing_HTTP_requests">Viewing HTTP requests</h4>
+
+<p>HTTP requests are never displayed to the user (if you want to see them, you need to use tools such as the <a href="/en-US/docs/Tools/Network_Monitor">Firefox Network Monitor</a> or the <a href="https://developers.google.com/chrome-developer-tools/">Chrome Developer Tools</a>). As an example, your form data will be shown as follows in the Chrome Network tab. After submitting the form:</p>
+
+<ol>
+ <li>Press F12</li>
+ <li>Select "Network"</li>
+ <li>Select "All"</li>
+ <li>Select "example.com" in the "Name" tab</li>
+ <li>Select "Headers"</li>
+</ol>
+
+<p>You can then get the form data, as shown in the image below.</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/14691/network-monitor.png" style="border-style: solid; border-width: 1px; display: block; margin: 0px auto;"></p>
+
+<p>The only thing displayed to the user is the URL called. As we mentioned above, with a <code>GET</code> request the user will see the data in their URL bar, but with a <code>POST</code> request they won't. This can be very important for two reasons:</p>
+
+<ol>
+ <li>If you need to send a password (or any other sensitive piece of data), never use the <code>GET</code> method or you risk displaying it in the URL bar, which would be very insecure.</li>
+ <li>If you need to send a large amount of data, the <code>POST</code> method is preferred because some browsers limit the sizes of URLs. In addition, many servers limit the length of URLs they accept.</li>
+</ol>
+
+<h3 id="On_the_server_side_retrieving_the_data">On the server side: retrieving the data</h3>
+
+<p>Whichever HTTP method you choose, the server receives a string that will be parsed in order to get the data as a list of key/value pairs. The way you access this list depends on the development platform you use and on any specific frameworks you may be using with it. The technology you use also determines how duplicate keys are handled; often, the most recently received value for a given key is given priority.</p>
+
+<h4 id="Example_Raw_PHP">Example: Raw PHP</h4>
+
+<p><a href="https://php.net/">PHP</a> offers some global objects to access the data. Assuming you've used the <code>POST</code> method, the following example just takes the data and displays it to the user. Of course, what you do with the data is up to you. You might display it, store it into a database, send it by email, or process it in some other way.</p>
+
+<pre class="brush: php">&lt;?php
+  // The global $_POST variable allows you to access the data sent with the POST method by name
+  // To access the data sent with the GET method, you can use $_GET
+  $say = htmlspecialchars($_POST['say']);
+  $to  = htmlspecialchars($_POST['to']);
+
+  echo  $say, ' ', $to;
+?&gt;</pre>
+
+<p>This example displays a page with the data we sent. You can see this in action in our example <a href="https://github.com/mdn/learning-area/blob/master/html/forms/sending-form-data/php-example.html">php-example.html</a> file — which contains the same example form as we saw before, with a <code>method</code> of <code>post</code> and an <code>action</code> of <code>php-example.php</code>. When it is submitted, it sends the form data to <a href="https://github.com/mdn/learning-area/blob/master/html/forms/sending-form-data/php-example.php">php-example.php</a>, which contains the PHP code seen in the above block. When this code is executed, the output in the browser is <code>Hi Mom</code>.</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/14693/php-result.png" style="display: block; margin: 0 auto;"></p>
+
+<div class="note">
+<p><strong>Note</strong>: This example won't work when you load it into a browser locally — browsers cannnot interpret PHP code, so when the form is submitted the browser will just offer to download the PHP file for you. To get it to work, you need to run the example through a PHP server of some kind. Good options for local PHP testing are <a href="https://www.mamp.info/en/downloads/">MAMP</a> (Mac and Windows) and <a href="http://ampps.com/download">AMPPS</a> (Mac, Windows, Linux).</p>
+</div>
+
+<h4 id="Example_Python">Example: Python</h4>
+
+<p>This example shows how you would use Python to do the same thing — display the submitted data on a web page. This uses the <a href="http://flask.pocoo.org/">Flask framework</a> for rendering the templates, handling the form data submission, etc (see <a href="https://github.com/mdn/learning-area/blob/master/html/forms/sending-form-data/python-example.py">python-example.py</a>).</p>
+
+<pre class="brush: python">from flask import Flask, render_template, request
+
+app = Flask(__name__)
+
+@app.route('/', methods=['GET', 'POST'])
+def form():
+    return render_template('form.html')
+
+@app.route('/hello', methods=['GET', 'POST'])
+def hello():
+    return render_template('greeting.html', say=request.form['say'], to=request.form['to'])
+
+if __name__ == "__main__":
+    app.run()</pre>
+
+<p>The two templates referenced in the above code are as follows:</p>
+
+<ul>
+ <li><a href="https://github.com/mdn/learning-area/blob/master/html/forms/sending-form-data/templates/form.html">form.html</a>: The same form as we saw above in the {{anch("The POST method")}} section but with the <code>action</code> set to <code>\{{ url_for('hello') }}</code>. (This is a <a href="http://jinja.pocoo.org/docs/2.9/">Jinja2</a> template, which is basically HTML but can contain calls to the Python code that is running the web server contained in curly braces. <code>url_for('hello')</code> is basically saying "redirect to <code>/hello</code> when the form is submitted".)</li>
+ <li><a href="https://github.com/mdn/learning-area/blob/master/html/forms/sending-form-data/templates/greeting.html">greeting.html</a>: This template just contains a line that renders the two bits of data passed to it when it is rendered. This is done via the <code>hello()</code> function seen above, which runs when the <code>/hello</code> URL is navigated to.</li>
+</ul>
+
+<div class="note">
+<p><strong>Note</strong>: Again, this code won't work if you just try to load it into a browser directly. Python works a bit differently to PHP — to run this code locally you'll need to <a href="/en-US/docs/Learn/Server-side/Django/development_environment#Installing_Python_3">install Python/PIP</a>, then install Flask using <code>pip3 install flask</code>. At this point you should be able to run the example using <code>python3 python-example.py</code>, then navigating to <code>localhost:5000</code> in your browser.</p>
+</div>
+
+<h4 id="Other_languages_and_frameworks">Other languages and frameworks</h4>
+
+<p>There are many other server-side technologies you can use for form handling, including Perl, Java, .Net, Ruby, etc. Just pick the one you like best. That said, it's worth noting that it's very uncommon to use these technologies directly because this can be tricky. It's more common to use one of the many nice frameworks that make handling forms easier, such as:</p>
+
+<ul>
+ <li><a href="/en-US/docs/Learn/Server-side/Django" rel="external">Django</a> for Python (a bit more heavyweight than <a href="http://flask.pocoo.org/">Flask</a>, but with more tools and options)</li>
+ <li><a href="/en-US/docs/Learn/Server-side/Express_Nodejs">Express</a> for Node.js</li>
+ <li><a href="https://laravel.com/">Laravel</a> for PHP</li>
+ <li><a href="https://rubyonrails.org/" rel="external">Ruby On Rails</a> for Ruby</li>
+ <li><a href="https://phoenixframework.org/">Phoenix</a> for Elixir</li>
+</ul>
+
+<p>It's worth noting that even using these frameworks, working with forms isn't necessarily <em>easy</em>. But it's much easier than trying to write all the functionality yourself from scratch, and will save you a lot of time.</p>
+
+<div class="note">
+<p><strong>Note</strong>: It is beyond the scope of this article to teach you any server-side languages or frameworks. The links above will give you some help, should you wish to learn them.</p>
+</div>
+
+<h2 id="A_special_case_sending_files">A special case: sending files</h2>
+
+<p>Sending files with HTML forms is a special case. Files are binary data — or considered as such — whereas all other data is text data. Because HTTP is a text protocol, there are special requirements for handling binary data.</p>
+
+<h3 id="The_htmlattrxrefenctypeform_attribute">The {{htmlattrxref("enctype","form")}} attribute</h3>
+
+<p>This attribute lets you specify the value of the <code>Content-Type</code> HTTP header included in the request generated when the form is submitted. This header is very important because it tells the server what kind of data is being sent. By default, its value is <code>application/x-www-form-urlencoded</code>. In human terms, this means: "This is form data that has been encoded into URL parameters."</p>
+
+<p>If you want to send files, you need to take three extra steps:</p>
+
+<ul>
+ <li>Set the {{htmlattrxref("method","form")}} attribute to <code>POST</code> because file content can't be put inside URL parameters.</li>
+ <li>Set the value of {{htmlattrxref("enctype","form")}} to <code>multipart/form-data</code> because the data will be split into multiple parts, one for each file plus one for the text data included in the form body (if text is also entered into the form).</li>
+ <li>Include one or more <a href="/en-US/docs/Learn/HTML/Forms/The_native_form_widgets#File_picker">File picker</a> widgets to allow your users to select the file(s) that will be uploaded.</li>
+</ul>
+
+<p>For example:</p>
+
+<pre class="brush: html">&lt;form method="post" enctype="multipart/form-data"&gt;
+  &lt;div&gt;
+    &lt;label for="file"&gt;Choose a file&lt;/label&gt;
+    &lt;input type="file" id="file" name="myFile"&gt;
+  &lt;/div&gt;
+  &lt;div&gt;
+    &lt;button&gt;Send the file&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/form&gt;</pre>
+
+<div class="note">
+<p><strong>Note:</strong> Some browsers support the {{htmlattrxref("multiple","input")}} attribute on the {{HTMLElement("input")}} element, which allows more than one file to be chosen for uploading with only one <code>&lt;input&gt;</code> element. How the server handles those files really depends on the technology used on the server.</p>
+</div>
+
+<div class="note">
+<p><strong>Note:</strong> Servers can be configured with a size limit for files and HTTP requests in order to prevent abuse.</p>
+</div>
+
+<h2 id="Common_security_concerns">Common security concerns</h2>
+
+<p>Each time you send data to a server, you need to consider security. HTML forms are by far the most common server attack vectors (places where attacks can occur). The problems never come from the HTML forms themselves — they come from how the server handles data.</p>
+
+<p>There are some very well-known security issues that you'll come up against:</p>
+
+<h3 id="XSS_and_CSRF">XSS and CSRF</h3>
+
+<p>Cross-Site Scripting (XSS) and Cross-Site Request Forgery (CSRF) are common types of attacks that can occur when you display data sent by a user back to the user or to another user.</p>
+
+<p>XSS lets attackers inject client-side script into Web pages viewed by other users. A cross-site scripting vulnerability may be used by attackers to bypass access controls such as the <a href="/en-US/docs/JavaScript/Same_origin_policy_for_JavaScript">same origin policy</a>. The effect of these attacks may range from a petty nuisance to a significant security risk.</p>
+
+<p>CSRF attacks are similar to XSS attacks in that they start the same way — by injecting client-side script into Web pages — but their target is different. CSRF attackers try to escalate privileges to those of a higher-privileged user (such as a site administrator) to perform an action they shouldn't be able to do (for example, sending data to an untrusted user).</p>
+
+<p>XSS attacks exploit the trust a user has for a web site, while CSRF attacks exploit the trust a web site has for its users.</p>
+
+<p>To prevent these attacks, you should always check the data a user sends to your server and (if you need to display it) try not to display HTML content as provided by the user. Instead, you should process the user-provided data so you don't display it verbatim. Almost all server side frameworks on the market today implement a minimal filter that removes the HTML {{HTMLElement("script")}}, {{HTMLElement("iframe")}} and {{HTMLElement("object")}} elements from data sent by any user. This helps to mitigate the risk, but doesn't necessarily eradicate it.</p>
+
+<h3 id="SQL_injection">SQL injection</h3>
+
+<p>SQL injection is a type of attack that tries to perform actions on a database used by the target web site. This typically involves sending a SQL request in the hope that the server will execute it (usually when the application server tries to store data sent by a user). Examples of SQL injection attacks include deleting a table on a server side table or attempting to access other users's data. This is actually <a href="https://www.owasp.org/index.php/Category:OWASP_Top_Ten_Project" rel="external">one of the main vector attacks against web sites</a>.</p>
+
+<p>The consequences can be terrible, ranging from data loss to attacks taking control of a whole website infrastructure by using privilege escalation. This is a very serious threat and you should never store data sent by a user without performing some sanitization (for example, by using <code><a href="http://us1.php.net/manual/en/mysqli.real-escape-string.php">mysqli_real_escape_string()</a></code>.</p>
+
+<h3 id="HTTP_header_injection_and_email_injection">HTTP header injection and email injection</h3>
+
+<p>These kinds of attacks can occur when your application builds HTTP headers or emails based on the data input by a user on a form. These won't directly damage your server or affect your users, but they are an open door to deeper problems such as session hijacking or phishing attacks.</p>
+
+<p>These attacks are mostly silent, and can turn your server into a <a href="http://en.wikipedia.org/wiki/Zombie_(computer_science)" rel="exernal">zombie</a>.</p>
+
+<h3 id="Be_paranoid_Never_trust_your_users">Be paranoid: Never trust your users</h3>
+
+<p>So, how do you fight these threats? This is a topic far beyond this guide, but there are a few rules to keep in mind. The most important rule is: never ever trust your users, including yourself; even a trusted user could have been hijacked.</p>
+
+<p>All data that comes to your server must be checked and sanitized. Always. No exception.</p>
+
+<ul>
+ <li>Escape potentially dangerous characters. The specific characters you should be cautious with vary depending on the context in which the data is used and the server platform you employ, but all server-side languages have functions for this.</li>
+ <li>Limit the incoming amount of data to allow only what's necessary.</li>
+ <li>Sandbox uploaded files (store them on a different server and allow access to the file only through a different subdomain or even better through a fully different domain name).</li>
+</ul>
+
+<p>You should avoid many/most problems if you follow these three rules, but it's always a good idea to get a security review performed by a competent third party. Don't assume that you've seen all the possible problems.</p>
+
+<div class="note">
+<p><strong>Note</strong>: The <a href="/en-US/docs/Learn/Server-side/First_steps/Website_security">Website security</a> article of our <a href="/en-US/docs/Learn/Server-side">server-side</a> learning topic discusses the above threats and potential solutions in more detail.</p>
+</div>
+
+<h2 id="Conclusion">Conclusion</h2>
+
+<p>As you can see, sending form data is easy, but securing an application can be tricky. Just remember that a front-end developer is not the one who should define the security model of the data. Yes, as we'll see, it's possible to <a href="/en-US/docs/HTML/Forms/Data_form_validation">perform client side data validation</a> but the server can't trust this validation because it has no way to truly know what really happens on the client side.</p>
+
+<h2 id="See_also">See also</h2>
+
+<p>If you want to learn more about securing a web application, you can dig into these resources:</p>
+
+<ul>
+ <li><a href="/en-US/docs/Learn/Server-side/First_steps">Server-side website programming first steps</a></li>
+ <li><a href="https://www.owasp.org/index.php/Main_Page" rel="external">The Open Web Application Security Project (OWASP)</a></li>
+ <li><a href="https://infosec.mozilla.org/guidelines/web_security">Web Security by Mozilla</a></li>
+</ul>
+
+<p>{{PreviousMenuNext("Learn/HTML/Forms/The_native_form_widgets", "Learn/HTML/Forms/Form_validation", "Learn/HTML/Forms")}}</p>
+
+<h2 id="In_this_module">In this module</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Learn/HTML/Forms/Your_first_HTML_form">Your first HTML form</a></li>
+ <li><a href="/en-US/docs/Learn/HTML/Forms/How_to_structure_an_HTML_form">How to structure an HTML form</a></li>
+ <li><a href="/en-US/docs/Learn/HTML/Forms/The_native_form_widgets">The native form widgets</a></li>
+ <li><a href="/en-US/docs/Learn/HTML/Forms/Sending_and_retrieving_form_data">Sending form data</a></li>
+ <li><a href="/en-US/docs/Learn/HTML/Forms/Form_validation">Form data validation</a></li>
+ <li><a href="/en-US/docs/Learn/HTML/Forms/How_to_build_custom_form_widgets">How to build custom form widgets</a></li>
+ <li><a href="/en-US/docs/Learn/HTML/Forms/Sending_forms_through_JavaScript">Sending forms through JavaScript</a></li>
+ <li><a href="/en-US/docs/Learn/HTML/Forms/HTML_forms_in_legacy_browsers">HTML forms in legacy browsers</a></li>
+ <li><a href="/en-US/docs/Learn/HTML/Forms/Styling_HTML_forms">Styling HTML forms</a></li>
+ <li><a href="/en-US/docs/Learn/HTML/Forms/Advanced_styling_for_HTML_forms">Advanced styling for HTML forms</a></li>
+ <li><a href="/en-US/docs/Learn/HTML/Forms/Property_compatibility_table_for_form_widgets">Property compatibility table for form widgets</a></li>
+</ul>

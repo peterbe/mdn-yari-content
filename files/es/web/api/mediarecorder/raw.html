@@ -1,0 +1,228 @@
+<div>{{APIRef("Media Recorder API")}}</div>
+
+<p>La interfaz <strong>MediaRecorder</strong> del <a href="https://developer.mozilla.org/en-US/docs/Web/API/MediaStream_Recording_API">API MediaStream Recording</a> provee funcionalidad para grabar media fácilmente. Se crea invocando al constructor {{domxref("MediaRecorder.MediaRecorder", "MediaRecorder()")}}.</p>
+
+<h2 id="Constructor">Constructor</h2>
+
+<dl>
+ <dt>{{domxref("MediaRecorder.MediaRecorder()")}}</dt>
+ <dd>Creates a new <code>MediaRecorder</code> object, given a {{domxref("MediaStream")}} to record. Options are available to do things like set the container's MIME type (such as <code>"video/webm"</code> or <code>"video/mp4"</code>) and the bit rates of the audio and video tracks or a single overall bit rate.</dd>
+</dl>
+
+<h2 id="Properties">Properties</h2>
+
+<dl>
+ <dt>{{domxref("MediaRecorder.mimeType")}} {{readonlyInline}}</dt>
+ <dd>Returns the MIME type that was selected as the recording container for the <code>MediaRecorder</code> object when it was created.</dd>
+ <dt>{{domxref("MediaRecorder.state")}} {{readonlyInline}}</dt>
+ <dd>Returns the current state of the <code>MediaRecorder</code> object (<code>inactive</code>, <code>recording</code>, or <code>paused</code>.)</dd>
+ <dt>{{domxref("MediaRecorder.stream")}} {{readonlyInline}}</dt>
+ <dd>Returns the stream that was passed into the constructor when the <code>MediaRecorder</code> was created.</dd>
+ <dt>{{domxref("MediaRecorder.ignoreMutedMedia")}}</dt>
+ <dd>Indicates whether the <code>MediaRecorder</code> instance will record input when the input {{domxref("MediaStreamTrack")}} is muted. If this attribute is <code>false</code>, <code>MediaRecorder</code> will record silence for audio and black frames for video. The default is <code>false</code>.</dd>
+ <dt>{{domxref("MediaRecorder.videoBitsPerSecond")}} {{readonlyInline}}</dt>
+ <dd>Returns the video encoding bit rate in use. This may differ from the bit rate specified in the constructor (if it was provided).</dd>
+ <dt>{{domxref("MediaRecorder.audioBitsPerSecond")}} {{readonlyInline}}</dt>
+ <dd>Returns the audio encoding bit rate in use. This may differ from the bit rate specified in the constructor (if it was provided).</dd>
+</dl>
+
+<h2 id="Methods">Methods</h2>
+
+<dl>
+ <dt>{{domxref("MediaRecorder.canRecordMimeType()", "MediaRecorder.isTypeSupported()")}}</dt>
+ <dd> Returns a {{domxref("Boolean")}} value indicating if the given MIME type is supported by the current user agent . </dd>
+ <dt>{{domxref("MediaRecorder.pause()")}}</dt>
+ <dd>Pauses the recording of media.</dd>
+ <dt>{{domxref("MediaRecorder.requestData()")}}</dt>
+ <dd>Requests a {{domxref("Blob")}} containing the saved data received thus far (or since the last time <code>requestData()</code> was called. After calling this method, recording continues, but in a new <code>Blob</code>.</dd>
+ <dt>{{domxref("MediaRecorder.resume()")}}</dt>
+ <dd>Resumes recording of media after having been paused.</dd>
+ <dt>{{domxref("MediaRecorder.start()")}}</dt>
+ <dd>Begins recording media; this method can optionally be passed a <code>timeslice</code> argument with a value in milliseconds. If this is specified, the media will be captured in separate chunks of that duration, rather than the default behavior of recording the media in a single large chunk.</dd>
+ <dt>{{domxref("MediaRecorder.stop()")}}</dt>
+ <dd>Stops recording, at which point a {{event("dataavailable")}} event containing the final <code>Blob</code> of saved data is fired. No more recording occurs.</dd>
+</dl>
+
+<h2 id="Event_Handlers">Event Handlers</h2>
+
+<dl>
+ <dt>{{domxref("MediaRecorder.ondataavailable")}}</dt>
+ <dd>Called to handle the {{event("dataavailable")}} event, which can be used to grab the recorded media (which is made available as a {{domxref("Blob")}} object in the event's <code>data</code> attribute.)</dd>
+ <dt>{{domxref("MediaRecorder.onerror")}}</dt>
+ <dd>An {{domxref("EventHandler")}} called to handle the {{event("recordingerror")}} event, including reporting errors that arise with media recording. These are fatal errors that stop recording.</dd>
+ <dt>{{domxref("MediaRecorder.onpause")}}</dt>
+ <dd>An {{domxref("EventHandler")}} called to handle the {{event("pause")}} event, which occurs when media recording is paused.</dd>
+ <dt>{{domxref("MediaRecorder.onresume")}}</dt>
+ <dd>An {{domxref("EventHandler")}} called to handle the {{event("resume")}} event, which occurs when media recording resumes after being paused.</dd>
+ <dt>{{domxref("MediaRecorder.onstart")}}</dt>
+ <dd>An {{domxref("EventHandler")}} called to handle the {{event("start")}} event, which occurs when media recording starts.</dd>
+ <dt>{{domxref("MediaRecorder.onstop")}}</dt>
+ <dd>An {{domxref("EventHandler")}} called to handle the {{event("stop")}} event, which occurs when media recording ends, either when the {{domxref("MediaStream")}} ends — or after the {{domxref("MediaRecorder.stop()")}} method is called.</dd>
+</dl>
+
+<h2 id="Example">Example</h2>
+
+<pre>if (navigator.mediaDevices) {
+  console.log('getUserMedia supported.');
+
+  var constraints = { audio: true };
+  var chunks = [];
+
+  navigator.mediaDevices.getUserMedia(constraints)
+  .then(function(stream) {
+
+    var mediaRecorder = new MediaRecorder(stream);
+
+    visualize(stream);
+
+    record.onclick = function() {
+      mediaRecorder.start();
+      console.log(mediaRecorder.state);
+      console.log("recorder started");
+      record.style.background = "red";
+      record.style.color = "black";
+    }
+
+    stop.onclick = function() {
+      mediaRecorder.stop();
+      console.log(mediaRecorder.state);
+      console.log("recorder stopped");
+      record.style.background = "";
+      record.style.color = "";
+    }
+
+    mediaRecorder.onstop = function(e) {
+      console.log("data available after MediaRecorder.stop() called.");
+
+      var clipName = prompt('Enter a name for your sound clip');
+
+      var clipContainer = document.createElement('article');
+      var clipLabel = document.createElement('p');
+      var audio = document.createElement('audio');
+      var deleteButton = document.createElement('button');
+     
+      clipContainer.classList.add('clip');
+      audio.setAttribute('controls', '');
+      deleteButton.innerHTML = "Delete";
+      clipLabel.innerHTML = clipName;
+
+      clipContainer.appendChild(audio);
+      clipContainer.appendChild(clipLabel);
+      clipContainer.appendChild(deleteButton);
+      soundClips.appendChild(clipContainer);
+
+      audio.controls = true;
+      var blob = new Blob(chunks, { 'type' : 'audio/ogg; codecs=opus' });
+      chunks = [];
+      var audioURL = URL.createObjectURL(blob);
+      audio.src = audioURL;
+      console.log("recorder stopped");
+
+      deleteButton.onclick = function(e) {
+        evtTgt = e.target;
+        evtTgt.parentNode.parentNode.removeChild(evtTgt.parentNode);
+      }
+    }
+
+    mediaRecorder.ondataavailable = function(e) {
+      chunks.push(e.data);
+    }
+  })
+  .catch(function(err) {
+    console.log('The following error occured: ' + err);
+  })
+}
+
+</pre>
+
+<div class="note">
+<p>This code sample is inspired by the Web Dictaphone demo. Some lines have been omitted for brevity; <a href="https://github.com/mdn/web-dictaphone/">refer to the source</a> for the complete code.</p>
+</div>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName("MediaStream Recording", "#MediaRecorderAPI")}}</td>
+   <td>{{Spec2("MediaStream Recording")}}</td>
+   <td>Initial definition</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<p>{{CompatibilityTable}}</p>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari (WebKit)</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatChrome(47.0)}}</td>
+   <td>{{CompatGeckoDesktop("25.0")}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Android Webview</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>Firefox OS</th>
+   <th>IE Phone</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+   <th>Chrome for Android</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatChrome(47.0)}}</td>
+   <td>{{CompatGeckoDesktop("25.0")}}</td>
+   <td>1.3<sup>[1]</sup></td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatChrome(47.0)}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<ul>
+ <li>[1] The initial Firefox OS implementation only supported audio recording.</li>
+</ul>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Web/API/MediaRecorder_API/Using_the_MediaRecorder_API">Using the MediaRecorder API</a></li>
+ <li><a href="https://mdn.github.io/web-dictaphone/">Web Dictaphone</a>: MediaRecorder + getUserMedia + Web Audio API visualization demo, by <a href="https://twitter.com/chrisdavidmills">Chris Mills</a> (<a href="https://github.com/mdn/web-dictaphone/">source on Github</a>.)</li>
+ <li><a href="/en-US/docs/Web/API/MediaStream_Recording_API/Recording_a_media_element">Recording a media element</a></li>
+ <li><a href="https://simpl.info/mediarecorder/">simpl.info MediaStream Recording demo</a>, by <a href="https://twitter.com/sw12">Sam Dutton</a>.</li>
+ <li>{{domxref("navigator.mediaDevices.getUserMedia")}}</li>
+ <li><a href="https://github.com/chrisjohndigital/OpenLang">OpenLang</a>: HTML5 video language lab web application using MediaDevices and the MediaStream Recording API for video recording (<a href="https://github.com/chrisjohndigital/OpenLang">source on GitHub</a>)</li>
+</ul>

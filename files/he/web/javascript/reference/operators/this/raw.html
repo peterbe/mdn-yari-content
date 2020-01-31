@@ -1,0 +1,423 @@
+<div>{{jsSidebar("Operators")}}</div>
+
+<p>ה"קי-וורד" <strong><code>this</code> </strong> מתנהג טיפה שונה בjs בהשוואה לשפות אחרות. יש לציין כי קיים הבדל בין <a href="/en-US/docs/Web/JavaScript/Reference/Functions_and_function_scope/Strict_mode">strict mode</a> ו- non-strict mode.</p>
+
+<p>ברוב המקרים, הערך של <strong><code>this</code> </strong>נקבע לפי הקריאה לפונקציה. לא ניתן לבצע השמה תוך הרצה, והערך עלול להיות שונה בכל קריאה לפונקציה. בES5 הוצג לראשונה <code><a href="/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind">bind</a></code> לקביעת ערך ל<code>this</code> בפונקציה ללא קשר לקריאה, ובES2015 הוצג <a href="../Functions/Arrow_functions">arrow functions</a>.</p>
+
+<div>{{EmbedInteractiveExample("pages/js/expressions-this.html")}}</div>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<h2 id="Syntax">Syntax</h2>
+
+<pre class="syntaxbox" style="direction: rtl;">this</pre>
+
+<h2 id="Global_Context">Global Context</h2>
+
+<p>In the global execution context (outside of any function), <code>this</code> refers to the global object whether in strict mode or not.</p>
+
+<pre class="brush:js"> </pre>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">// In web browsers, the window object is also the global object:</span></div>
+
+<p>console.log(this === window); // true a = 37;</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">console.log(window.b) // "MDN"</span></div>
+
+<p>console.log(window.a); // 37 this.b = "MDN";</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">console.log(b) // "MDN"</span></div>
+
+<h2 id="Function_context">Function context</h2>
+
+<p>Inside a function, the value of <code>this</code> depends on how the function is called.</p>
+
+<h3 id="Simple_call">Simple call</h3>
+
+<p>Since the following code is not in <a href="/en-US/docs/Web/JavaScript/Reference/Strict_mode">strict mode</a>, and because the value of <code>this</code> is not set by the call, <code>this</code> will default to the global object, which is <code>window</code> in a browser. </p>
+
+<pre class="brush:js"> </pre>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">function f1() {</span></div>
+
+<p>return this;</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">// In a browser:</span></div>
+
+<p>}</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">f1() === window; // true </span></div>
+
+<p>// In Node:</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">f1() === global; // true</span></div>
+
+<p>In strict mode, however, the value of <code>this</code> remains at whatever it was set to when entering the execution context, so, in the following case, <code>this</code><strong> </strong>will default to <code>undefined</code><strong>:</strong></p>
+
+<pre class="brush:js"> </pre>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">function f2() {</span></div>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">'use strict'; // see strict mode</span></div>
+
+<p>return this; }</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">f2() === undefined; // true</span></div>
+
+<p>So, in <strong>strict mode,</strong> if <code>this</code> was not defined by the execution context, it remains undefined.</p>
+
+<div class="note">In the second example, <code>this</code> should be <a href="/en-US/docs/Web/JavaScript/Reference/Global_Objects/undefined"><code>undefined</code></a>, because <code>f2</code> was called directly and not as a method or property of an object (e.g. <code>window.f2()</code>). This feature wasn't implemented in some browsers when they first started to support <a href="/en-US/docs/Web/JavaScript/Reference/Functions_and_function_scope/Strict_mode" title="Strict mode">strict mode</a>. As a result, they incorrectly returned the <code>window</code> object.</div>
+
+<p>To pass the value of <code>this</code> from one context to another, use <a href="/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call">call</a>, or <a href="/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/apply">apply</a><strong>:</strong></p>
+
+<pre class="brush:js" dir="rtl"> </pre>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">// An object can be passed as the first argument to call or apply and this will be bound to it.</span></div>
+
+<p>var obj = {a: 'Custom'}; // This property is set on the global object var a = 'Global';</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">return this.a; // The value of this is dependent on how the function is called</span></div>
+
+<p>function whatsThis(arg) { } whatsThis(); // 'Global' whatsThis.call(obj); // 'Custom'</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">whatsThis.apply(obj); // 'Custom'</span></div>
+
+<p>Where a function uses the <code>this</code> keyword in its body, its value can be bound to a particular object in the call using the <code><a href="/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call">call</a></code> or <code><a href="/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/apply">apply</a></code> methods which all functions inherit from <code>Function.prototype</code>.</p>
+
+<pre class="brush:js"> </pre>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">function add(c, d) {</span></div>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">return this.a + this.b + c + d;</span></div>
+
+<p>} var o = {a: 1, b: 3};</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">// The first parameter is the object to use as</span></div>
+
+<p>// 'this', subsequent parameters are passed as</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">// The first parameter is the object to use as</span></div>
+
+<p>// arguments in the function call add.call(o, 5, 7); // 16</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">// members are used as the arguments in the function call</span></div>
+
+<p>// 'this', the second is an array whose</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">add.apply(o, [10, 20]); // 34</span></div>
+
+<p>Note that with <code>call</code> and <code>apply</code>, if the value passed as <code>this</code> is not an object, an attempt will be made to convert it to an object using the internal <code>ToObject</code> operation. So if the value passed is a primitive like <code>7</code> or <code>'foo'</code>, it will be converted to an Object using the related constructor, so the primitive number <code>7</code> is converted to an object as if by <code>new Number(7)</code> and the string <code>'foo'</code> to an object as if by <code>new String('foo')</code>, e.g.</p>
+
+<pre class="brush:js"> </pre>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">function bar() {</span></div>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">console.log(Object.prototype.toString.call(this));</span></div>
+
+<p>} bar.call(7); // [object Number]</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">bar.call('foo'); // [Object String]</span></div>
+
+<p> </p>
+
+<h3 id="The_bind_method">The <code>bind</code> method</h3>
+
+<p>ECMAScript 5 introduced <code><a href="/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind">Function.prototype.bind</a></code>. Calling <code>f.bind(someObject)</code> creates a new function with the same body and scope as <code>f</code>, but where <code>this</code> occurs in the original function, in the new function it is permanently bound to the first argument of <code>bind</code>, regardless of how the function is being used.</p>
+
+<pre class="brush:js"> </pre>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">function f() {</span></div>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">  return this.a;</span></div>
+
+<p>}</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">var g = f.bind({a: 'azerty'});</span></div>
+
+<p>console.log(g()); // azerty</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">var h = g.bind({a: 'yoo'}); // bind only works once!</span></div>
+
+<p>console.log(h()); // azerty var o = {a: 37, f: f, g: g, h: h};</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">console.log(o.f(), o.g(), o.h()); // 37, azerty, azerty</span></div>
+
+<h3 id="Arrow_functions">Arrow functions</h3>
+
+<p>In <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions">arrow functions</a>, <code>this</code> retains the value of the enclosing lexical context's <code>this</code>. In global code, it will be set to the global object:</p>
+
+<pre class="brush: js"> </pre>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">var globalObject = this;</span></div>
+
+<p>var foo = (() =&gt; this);</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">console.log(foo() === globalObject); // true</span></div>
+
+<div class="note">
+<p>Note: if this arg is passed to call, bind, or apply on invocation of an arrow function it will be ignored. You can still prepend arguments to the call, but the first argument (thisArg) should be set to null.</p>
+</div>
+
+<pre class="brush: js"> </pre>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">// Call as a method of an object</span></div>
+
+<p>var obj = {func: foo};</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">console.log(obj.func() === globalObject); // true</span></div>
+
+<p>// Attempt to set this using call</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">// Attempt to set this using bind</span></div>
+
+<p>console.log(foo.call(obj) === globalObject); // true foo = foo.bind(obj);</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">console.log(foo() === globalObject); // true</span></div>
+
+<p>No matter what, <code>foo</code>'s <code>this</code> is set to what it was when it was created (in the example above, the global object). The same applies to arrow functions created inside other functions: their <code>this</code> remains that of the enclosing lexical context.</p>
+
+<pre class="brush: js"> </pre>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">// Create obj with a method bar that returns a function that</span></div>
+
+<p>// returns its this. The returned function is created as</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">// an arrow function, so its this is permanently bound to the</span></div>
+
+<p>// this of its enclosing function. The value of bar can be set // in the call, which in turn sets the value of the</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">return x;</span></div>
+
+<p>// returned function. var obj = {bar: function() { var x = (() =&gt; this); } };</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">// Call fn without setting this, would normally default</span></div>
+
+<p>// Call bar as a method of obj, setting its this to obj // Assign a reference to the returned function to fn var fn = obj.bar(); // to the global object or undefined in strict mode</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">// Then calling the arrow function this is equals to window because it follows the this from bar.</span></div>
+
+<p>console.log(fn() === obj); // true // But caution if you reference the method of obj without calling it var fn2 = obj.bar;</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">console.log(fn2()() == window); // true</span></div>
+
+<p>In the above, the function(call it anonymous function A) assigned to <code>obj.bar</code> returns another function(call it anonymous function B) that is created as an arrow function. As a result, function B's  <code>this</code> is permanently set to the <code>this</code> of <code>obj.bar</code> (function A)when called. When the returned function(function B) is called, its <code>this</code> will always be what it was set to initially. In the above code example, function B's <code>this</code> is set to function A's <code>this</code> which is obj, so it remains set to <code>obj</code> even when called in a manner that would normally set its <code>this</code> to <code>undefined</code> or the global object (or any other method as in the previous example in the global execution context).</p>
+
+<h3 id="As_an_object_method">As an object method</h3>
+
+<p>When a function is called as a method of an object, its <code>this</code> is set to the object the method is called on.</p>
+
+<p>In the following example, when <code>o.f()</code> is invoked, inside the function <code>this</code> is bound to the <code>o</code> object.</p>
+
+<pre class="brush:js"> </pre>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">var o = {</span></div>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">prop: 37,</span></div>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">f: function() {</span></div>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">return this.prop;</span></div>
+
+<p>} };</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">console.log(o.f()); // 37</span></div>
+
+<p>Note that this behavior is not at all affected by how or where the function was defined. In the previous example, we defined the function inline as the <code>f</code> member during the definition of <code>o</code>. However, we could have just as easily defined the function first and later attached it to <code>o.f</code>. Doing so results in the same behavior:</p>
+
+<pre class="brush:js"> </pre>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">var o = {prop: 37};</span></div>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">function independent() {</span></div>
+
+<p>return this.prop; }</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">console.log(o.f()); // 37</span></div>
+
+<p>o.f = independent;</p>
+
+<div style="direction: rtl;"> </div>
+
+<p>This demonstrates that it matters only that the function was invoked from the <code>f</code> member of <code>o</code>.</p>
+
+<p>Similarly, the <code>this</code> binding is only affected by the most immediate member reference. In the following example, when we invoke the function, we call it as a method <code>g</code> of the object <code>o.b</code>. This time during execution, <code>this</code> inside the function will refer to <code>o.b</code>. The fact that the object is itself a member of <code>o</code> has no consequence; the most immediate reference is all that matters.</p>
+
+<pre class="brush:js"> </pre>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">o.b = {g: independent, prop: 42};</span></div>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">console.log(o.b.g()); // 42</span></div>
+
+<h4 id="this_on_the_object's_prototype_chain"><code>this</code> on the object's prototype chain</h4>
+
+<p>The same notion holds true for methods defined somewhere on the object's prototype chain. If the method is on an object's prototype chain, <code>this</code> refers to the object the method was called on, as if the method were on the object.</p>
+
+<pre class="brush:js"> </pre>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">var o = {f: function() { return this.a + this.b; }};</span></div>
+
+<p>var p = Object.create(o); p.a = 1; p.b = 4;</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">console.log(p.f()); // 5</span></div>
+
+<p>In this example, the object assigned to the variable <code>p</code> doesn't have its own <code>f</code> property, it inherits it from its prototype. But it doesn't matter that the lookup for <code>f</code> eventually finds a member with that name on <code>o</code>; the lookup began as a reference to <code>p.f</code>, so <code>this</code> inside the function takes the value of the object referred to as <code>p</code>. That is, since <code>f</code> is called as a method of <code>p</code>, its <code>this</code> refers to <code>p</code>. This is an interesting feature of JavaScript's prototype inheritance.</p>
+
+<h4 id="this_with_a_getter_or_setter"><code>this</code> with a getter or setter</h4>
+
+<p>Again, the same notion holds true when a function is invoked from a getter or a setter. A function used as getter or setter has its <code>this</code> bound to the object from which the property is being set or gotten.</p>
+
+<pre class="brush:js"> </pre>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">function sum() {</span></div>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">return this.a + this.b + this.c;</span></div>
+
+<p>} var o = { a: 1, b: 2,</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">return (this.a + this.b + this.c) / 3;</span></div>
+
+<p>c: 3, get average() { } };</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">get: sum, enumerable: true, configurable: true});</span></div>
+
+<p>Object.defineProperty(o, 'sum', {</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">console.log(o.average, o.sum); // 2, 6</span></div>
+
+<h3 id="As_a_constructor">As a constructor</h3>
+
+<p>When a function is used as a constructor (with the <code><a href="/en-US/docs/Web/JavaScript/Reference/Operators/new">new</a></code> keyword), its <code>this</code> is bound to the new object being constructed.</p>
+
+<div class="note">
+<p>While the default for a constructor is to return the object referenced by <code>this</code>, it can instead return some other object (if the return value isn't an object, then the <code>this</code> object is returned).</p>
+</div>
+
+<pre class="brush:js"> </pre>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">/*</span></div>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">* Constructors work like this:</span></div>
+
+<p>* * function MyConstructor(){</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">* // Actual function body code goes here. </span></div>
+
+<p>* // Create properties on |this| as</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">* // et cetera...</span></div>
+
+<p>* // desired by assigning to them. E.g., * this.fum = "nom"; *</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">* // returns an object, that object will be the</span></div>
+
+<p>* // If the function has a return statement that * // result of the |new| expression. Otherwise,</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">* // (i.e., the common case most usually seen).</span></div>
+
+<p>* // the result of the expression is the object * // currently bound to |this| * } */ function C() { this.a = 37; } var o = new C();</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">console.log(o.a); // 38</span></div>
+
+<p>console.log(o.a); // 37 function C2() { this.a = 37; return {a: 38}; }</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">o = new C2();</span></div>
+
+<p>In the last example (<code>C2</code>), because an object was returned during construction, the new object that <code>this</code> was bound to simply gets discarded. (This essentially makes the statement "<code>this.a = 37;</code>" dead code. It's not exactly dead because it gets executed, but it can be eliminated with no outside effects.)</p>
+
+<h3 id="As_a_DOM_event_handler">As a DOM event handler</h3>
+
+<p>When a function is used as an event handler, its <code>this</code> is set to the element the event fired from (some browsers do not follow this convention for listeners added dynamically with methods other than <code>addEventListener</code>).</p>
+
+<pre class="brush:js"> </pre>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">// When called as a listener, turns the related element blue</span></div>
+
+<p>function bluify(e) { // Always true</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">// true when currentTarget and target are the same object</span></div>
+
+<p>console.log(this === e.currentTarget); console.log(this === e.target);</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">// Get a list of every element in the document</span></div>
+
+<p>this.style.backgroundColor = '#A5D9F3'; } var elements = document.getElementsByTagName('*');</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">for (var i = 0; i &lt; elements.length; i++) {</span></div>
+
+<p>// Add bluify as a click listener so when the // element is clicked on, it turns blue elements[i].addEventListener('click', bluify, false);</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">}</span></div>
+
+<h3 id="In_an_inline_event_handler">In an inline event handler</h3>
+
+<p>When the code is called from an inline <a href="/en-US/docs/Web/Guide/Events/Event_handlers">on-event handler</a>, its <code>this</code> is set to the DOM element on which the listener is placed:</p>
+
+<pre class="brush:js"> </pre>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">&lt;button onclick="alert(this.tagName.toLowerCase());"&gt;</span></div>
+
+<p>Show this</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">&lt;/button&gt;</span></div>
+
+<p>The above alert shows <code>button</code>. Note however that only the outer code has its <code>this</code> set this way:</p>
+
+<pre class="brush:js"> </pre>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">&lt;button onclick="alert((function() { return this; })());"&gt;</span></div>
+
+<p>Show inner this</p>
+
+<div style="direction: rtl;"><span style="font-size: 1rem;">&lt;/button&gt;</span></div>
+
+<p>In this case, the inner function's <code>this</code> isn't set so it returns the global/window object (i.e. the default object in non–strict mode where <code>this</code> isn't set by the call).</p>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-this-keyword', 'The this keyword')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-this-keyword', 'The this keyword')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-11.1.1', 'The this keyword')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES3', '#sec-11.1.1', 'The this keyword')}}</td>
+   <td>{{Spec2('ES3')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES1', '#sec-11.1.1', 'The this keyword')}}</td>
+   <td>{{Spec2('ES1')}}</td>
+   <td>Initial definition. Implemented in JavaScript 1.0.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.operators.this")}}</p>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Web/JavaScript/Reference/Functions_and_function_scope/Strict_mode">Strict mode</a></li>
+ <li><a href="http://rainsoft.io/gentle-explanation-of-this-in-javascript/">Gentle explanation of 'this' keyword in JavaScript</a></li>
+</ul>

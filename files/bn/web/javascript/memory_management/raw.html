@@ -1,0 +1,174 @@
+<div>{{JsSidebar("Advanced")}}</div>
+
+<h2 id="পরিচিতি">পরিচিতি</h2>
+
+<p>লো-লেভেলের ভাষা, যেমন C, তে প্রাচীন আমলের মেমোরি ব্যবস্থাপনা ব্যবহার করা হয়। যেমনঃ <code>malloc()</code> এবং <code>free()</code>। অন্যদিকে, জাভাস্ক্রিপ্টের ভ্যালু (অবজেক্ট, স্ট্রিং ইত্যাদি) তৈরির সময় "স্বয়ংক্রিয়" ভাবে মেমোরি দখল করে এবং যখন বাবহৃত হয়না, তখন স্থান ছেড়ে দেয়। অব্যবহৃত মেমোরি ছেড়ে দেয়ার প্রক্রিয়াটিকে বলা হয় <em>আবর্জনা সংগ্রহ বা garbage collection</em>। এই "স্বয়ংক্রিয়" ব্যাপারটি একটি বিভ্রান্তির উৎস এবং এটি জাভাস্ক্রিপ্ট (এবং অন্যান্য হাই-লেভেলের ভাষার) ডেভেলপারদের এমন অনুভূত হয় যে, মেমোরি ম্যানেজমেন্ট নিয়ে চিন্তা করার দরকার নেই। এটা ভুল।</p>
+
+<h2 id="মেমোরির_জীবনচক্র">মেমোরির জীবনচক্র</h2>
+
+<p>প্রোগ্রামিং ভাষা যাই হোক না কেন, মেমোরির জীবনচক্র সবসময় প্রায় একইঃ</p>
+
+<ol style="list-style-type: bengali;">
+ <li>প্রয়োজনীয় মেমোরি বরাদ্দ করে</li>
+ <li>ব্যবহার করে (লেখা, পড়া)</li>
+ <li>প্রয়োজন শেষ হলে বরাদ্দকৃত মেমোরি ছেড়ে দেয়।</li>
+</ol>
+
+<p>প্রথম এবং দ্বিতীয় অংশ প্রত্যেকটি ভাষায় স্পষ্ট। শেষ অংশটি শুধুমাত্র লো-লেভেল ভাষার ক্ষেত্রে দৃশ্যমান, কিন্তু জাভাস্ক্রিপ্টের মত হাইলেভেল ভাষার ক্ষেত্রে এটি অদৃশ্য ভাবে কাজ করে।</p>
+
+<h3 id="জাভাস্ক্রিপ্টে_মেমোরি_বিতরণ_ব্যবস্থা">জাভাস্ক্রিপ্টে মেমোরি বিতরণ ব্যবস্থা</h3>
+
+<h4 id="ভ্যালু_ইনিশিয়ালাইজেশন">ভ্যালু ইনিশিয়ালাইজেশন</h4>
+
+<p>বরাদ্দ নিয়ে প্রোগ্রামারকে বিরক্ত না করার জন্য, ভ্যালু ঘোষণার পাশাপাশি জাভাস্ক্রিপ্ট বরাদ্দের কাজটি করে ফেলে।</p>
+
+<div style="overflow: hidden;">
+<pre class="brush: js">var n = 123; // allocates memory for a number
+var s = "azerty"; // allocates memory for a string 
+
+var o = {
+  a: 1,
+  b: null
+}; // allocates memory for an object and contained values
+
+var a = [1, null, "abra"]; // (like object) allocates memory for the array and contained values
+
+function f(a){
+  return a + 2;
+} // allocates a function (which is a callable object)
+
+// function expressions also allocate an object
+someElement.addEventListener('click', function(){
+  someElement.style.backgroundColor = 'blue';
+}, false);
+</pre>
+</div>
+
+<h4 id="ফাংশন_কল_করার_মাধ্যমে_বিতরণ">ফাংশন কল করার মাধ্যমে বিতরণ</h4>
+
+<p>কিছু ফাংশন অবজেক্ট বরাদ্দের সময় ফলাফল কল করে।</p>
+
+<pre class="brush: js">var d = new Date();
+var e = document.createElement('div'); // allocates an DOM element
+</pre>
+
+<p>কিছু পদ্ধতি (মেথড) নতুন ভ্যালু বা অবজেক্ট বরাদ্দ করেঃ</p>
+
+<pre class="brush: js">var s = "azerty";
+var s2 = s.substr(0, 3); // s2 is a new string
+// Since strings are immutable value, JavaScript may decide to not allocate memory, but just store the [0, 3] range.
+
+var a = ["ouais ouais", "nan nan"];
+var a2 = ["generation", "nan nan"];
+var a3 = a.concat(a2); // new array with 4 elements being the concatenation of a and a2 elements
+</pre>
+
+<h3 id="ভ্যালু_ব্যবহার_করা">ভ্যালু ব্যবহার করা</h3>
+
+<p>সাধারণত ভ্যালু ব্যবহার করার মানে হচ্ছে বরাদ্দকৃত মেমোরির মধ্যে লেখা এবং পড়া। এটা একটি ভ্যারিয়েবল বা অবজেক্ট প্রপার্টির ভ্যালু পড়ে অথবা লিখে, এমনকি ফাংশনে আর্গুমেন্ট হস্তান্তর করেও করা যায়।</p>
+
+<h3 id="প্রয়োজন_শেষ_হলে_মেমোরি_ছেড়ে_দেয়া">প্রয়োজন শেষ হলে মেমোরি ছেড়ে দেয়া</h3>
+
+<p>মেমোরি ব্যবস্থাপনার বেশিরভাগ সমস্যা এই পর্যায়ে এসে তৈরি হয়। এখানে সবচেয়ে কঠিন কাজ হচ্ছে কখন "বরাদ্দকৃত মেমোরির আর প্রয়োজন নেই" নির্ধারণ করা। প্রায়-ই ডেভেলপারের বলে দিতে হয় যে, প্রোগ্রামের কোন জায়গায় মেমোরির কোন অংশের আর প্রয়োজন নেই এবং সেটা খালি করে দিতে হবে।</p>
+
+<p>হাই-লেভেল ভাষাগুলো "garbage collector" নামক একটুকরো সফটওয়্যার এম্বেড করে দেয়, যার কাজ হচ্ছে মেমোরি বরাদ্দের খবর রাখা এবং বরাদ্দকৃত মেমোরির কোন অংশটুকু এখন আর প্রয়োজন নেই তা খুঁজে বের করা, এবং স্বয়ংক্রিয়ভাবে তা খালি করা। This process is an approximation since the general problem of knowing whether some piece of memory is needed is <a class="external" href="http://en.wikipedia.org/wiki/Decidability_%28logic%29">undecidable</a> (can't be solved by an algorithm).</p>
+
+<h2 id="আবর্জনা_সংগ্রহ">আবর্জনা সংগ্রহ</h2>
+
+<p>As stated above the general problem of automatically finding whether some memory "is not needed anymore" is undecidable. As a consequence, garbage collections implement a restriction of a solution to the general problem. This section will explain the necessary notions to understand the main garbage collection algorithms and their limitations.</p>
+
+<h3 id="রেফারেন্স_সমূহ">রেফারেন্স সমূহ</h3>
+
+<p>The main notion garbage collection algorithms rely on is the notion of <em>reference</em>. Within the context of memory management, an object is said to reference another object if the former has an access to the latter (either implicitly or explicitly). For instance, a JavaScript object has a reference to its <a href="/en/JavaScript/Guide/Inheritance_and_the_prototype_chain" title="en/JavaScript/Guide/Inheritance_and_the_prototype_chain">prototype</a> (implicit reference) and to its properties values (explicit reference).</p>
+
+<p>In this context, the notion of "object" is extended to something broader than regular JavaScript objects and also contains function scopes (or the global lexical scope)</p>
+
+<h3 id="রেফারেন্স-কাউন্টিং_আবর্জনা_সংগ্রহ">রেফারেন্স-কাউন্টিং আবর্জনা সংগ্রহ</h3>
+
+<p>This is the most naive garbage collection algorithm. This algorithm reduces the definition of "an object is not needed anymore" to "an object has no other object referencing to it". An object is considered garbage-collectable if there is zero reference pointing at this object.</p>
+
+<h4 id="উদাহরণ">উদাহরণ</h4>
+
+<pre class="brush: js">var o = { 
+  a: {
+    b:2
+  }
+}; // 2 objects are created. One is referenced by the other as one of its property.
+// The other is referenced by virtue of being assigned to the 'o' variable.
+// Obviously, none can be garbage-collected
+
+
+var o2 = o; // the 'o2' variable is the second thing that has a reference to the object
+o = 1; // now, the object that was originally in 'o' has a unique reference embodied by the 'o2' variable
+
+var oa = o2.a; // reference to 'a' property of the object.
+// This object has now 2 references: one as a property, the other as the 'oa' variable
+
+o2 = "yo"; // The object that was originally in 'o' has now zero references to it.
+// It can be garbage-collected.
+// However what was its 'a' property is still referenced by the 'oa' variable, so it cannot be free'd
+
+oa = null; // what was the 'a' property of the object originally in o has zero references to it.
+// it can be garbage collected.
+</pre>
+
+<h4 id="সীমাবদ্ধতাঃ_চক্র">সীমাবদ্ধতাঃ চক্র</h4>
+
+<p>This naive algorithm has the limitation that if objects reference one another (and form a cycle), they may be "not needed anymore" and yet not garbage-collectable.</p>
+
+<pre class="brush: js">function f(){
+  var o = {};
+  var o2 = {};
+  o.a = o2; // o references o2
+  o2.a = o; // o2 references o
+
+  return "azerty";
+}
+
+f();
+// Two objects are created and reference one another thus creating a cycle.
+// They will not get out of the function scope after the function call, so they
+// are effectively useless and could be free'd.
+// However, the reference-counting algorithm considers that since each of both object is referenced
+// at least once, none can be garbage-collected
+</pre>
+
+<h4 id="বাস্তব_উদাহরণ">বাস্তব উদাহরণ</h4>
+
+<p>Internet Explorer 6, 7 are known to have a reference-counting garbage collector for DOM objects. For them, a common pattern is known to generate memory leaks systematically:</p>
+
+<pre class="brush: js">var div = document.createElement("div");
+div.onclick = function(){
+  doSomething();
+}; // The div has a reference to the event handler via its 'onclick' property
+// The handler also has a reference to the div since the 'div' variable can be accessed within the function scope
+// This cycle will cause both objects not to be garbage-collected and thus a memory leak.
+</pre>
+
+<h3 id="মার্ক-অ্যান্ড-সুইপ_অ্যালগরিদম">মার্ক-অ্যান্ড-সুইপ অ্যালগরিদম</h3>
+
+<p>This algorithm reduces the definition of "an object is not needed anymore" to "an object is unreachable".</p>
+
+<p>This algorithm assumes the knowledge of a set of objects called <em>roots</em> (In JavaScript, the root is the global object). Periodically, the garbage-collector will start from these roots, find all objects that are referenced from these roots, then all objects referenced from these, etc. Starting from the roots, the garbage collector will thus find all <em>reachable</em> objects and collect all non-reachable objects.</p>
+
+<p>This algorithm is better than the previous one since "an object has zero reference" leads to this object being unreachable. The opposite is not true as we have seen with cycles.</p>
+
+<p>As of 2012, all modern browsers ship a mark-and-sweep garbage-collector. All improvements made in the field of JavaScript garbage collection (generational/incremental/concurrent/parallel garbage collection) over the last few years are implementation improvements of this algorithm, but not improvements over the garbage collection algorithm itself nor its reduction of the definition of when "an object is not needed anymore".</p>
+
+<h4 id="চক্র_এখন_আর_কোন_সমস্যা_নয়">চক্র এখন আর কোন সমস্যা নয়</h4>
+
+<p>In the first above example, after the function call returns, the 2 objects are not referenced anymore by something reachable from the global object. Consequently, they will be found unreachable by the garbage collector.</p>
+
+<p>The same thing goes with the second example. Once the div and its handler are made unreachable from the roots, they can both be garbage-collected despite referencing each other.</p>
+
+<h4 id="সীমাবদ্ধতাঃ_অবজেক্ট_গুলোকে_স্পষ্টভাবে_দুর্লভ_করে_তুলতে_হবে">সীমাবদ্ধতাঃ অবজেক্ট গুলোকে স্পষ্টভাবে দুর্লভ করে তুলতে হবে</h4>
+
+<p>Although this is marked as a limitation, it is one that is rarely reached in practice which is why no one usually cares that much about garbage collection.</p>
+
+<h2 id="আরও_দেখুন">আরও দেখুন</h2>
+
+<ul>
+ <li><a class="external" href="http://www.ibm.com/developerworks/web/library/wa-memleak/">IBM article on "Memory leak patterns in JavaScript" (2007)</a></li>
+ <li><a class="external" href="http://msdn.microsoft.com/en-us/magazine/ff728624.aspx">Kangax article on how to register event handler and avoid memory leaks (2010)</a></li>
+ <li><a href="https://wiki.mozilla.org/Performance:Leak_Tools" title="https://wiki.mozilla.org/Performance:Leak_Tools">Performance:Leak Toolsab</a></li>
+</ul>

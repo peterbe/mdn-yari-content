@@ -1,0 +1,70 @@
+<div>{{AddonSidebar}}</div>
+
+<p><span class="seoSummary">Если вы разработали дополнение для Firefox, используя технологии XUL/XPCOM или Add-on SDK, то эта страница поможет вам в миграции дополнения в формат WebExtensions. </span><a class="external text" href="https://developer.mozilla.org/en-US/Add-ons/WebExtensions" rel="nofollow">WebExtensions</a> сейчас является стандартом разработки дополнений в Firefox. Это будет единственный тип дополнений, поддерживаемых Firefox, начиная с конца 2017 года с релиза <a class="external text" href="https://wiki.mozilla.org/RapidRelease/Calendar" rel="nofollow">Firefox 57</a>.</p>
+
+<h2 id="Быстрый_старт">Быстрый старт</h2>
+
+<ol>
+ <li>Для начала нужно понять общее представление основных моментов в переработке дополнения:
+  <ul>
+   <li>Знакомство с <a href="/en-US/Add-ons/WebExtensions/Anatomy_of_a_WebExtension">форматом и структурой WebExtensions</a> и создание <a href="/en-US/Add-ons/WebExtensions/Your_first_WebExtension">простого примера</a>.</li>
+   <li>Если ваше дополнение основано на технологии XUL и XPCOM, или <a href="https://developer.mozilla.org/en-US/Add-ons/Overlay_Extensions">overlay extension</a> или <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/Bootstrapped_extensions">bootstrapped extension</a>, то изучите страницу <a href="/en-US/docs/Mozilla/Add-ons/WebExtensions/Comparison_with_XUL_XPCOM_extensions">Comparison with XUL/XPCOM extensions</a> чтобы найти, какие WebExtensions API соответствуют старому API, который у вас используется.</li>
+   <li>Если ваше дополнение основано на Add-on SDK, то посмотрите <a href="/en-US/docs/Mozilla/Add-ons/WebExtensions/Comparison_with_the_Add-on_SDK">Comparison with the Add-on SDK</a>, для поиска отличий WebExtensions API от используемого вами старого SDK API.</li>
+  </ul>
+ </li>
+ <li>Перепишите код дополнения. Ниже приведёны варианты миграции различных типов дополнений. Начиная с Firefox 51 и далее, вы можете встроить WebExtensions в загружаемое (bootstrapped) дополнение или дополнение на SDK add-on, и таким образом частично портировать старое дополнение в течении некоторого времени и иметь рабочее дополнение на каждом шаге миграции. Сморите <a href="/en-US/docs/Mozilla/Add-ons/WebExtensions/Embedded_WebExtensions">Embedded WebExtensions</a>.</li>
+ <li>Когда вы будете готовы представить WebExtension-версию дополнения на AMO... подождите минуту... Вы действительно готовы? Из-за модели разрешений вы не сможете вернуться от WebExtensions обратно к старому формату дополнения. <em>Тщательно </em>протестируйте, потому что это необратимый однонаправленный путь. Также посмотрите гибридный пример, приведёный ниже. Если вы ещё не готовы, то можете встроить WebExtension-дополнение внутрь контейнера старого формата, который позволит протестировать миграцию на WebExtension, а также вернуться в случае необходимости.</li>
+ <li>Когда вы действительно готовы представить и загрузить WebExtension-версию дополнения в AMO, то сначала портируйте свой старый ID дополнения в новый файл манифеста manifest.json WebExtension-дополнения. Ваше дополнение должно иметь тот же ID как и предыдущая версия. Скопируйте значение поля "id" из файла package.json в поле "id" секции <a href="/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/applications">applications</a> файла manifest.json WebExtension-дополнения. Затем вы можете залить дополнение на сервер AMO как делали обычно.</li>
+</ol>
+
+<div class="note">
+<p>Учтите, что это однонаправленная конвертация: Вы <strong>не сможете </strong>обновить WebExtension-дополнение на старую технологию. Это значит, что вы должны быть полностью уверены, что готовы влиться в WebExtensions до того как обновите дополнение в AMO.</p>
+</div>
+
+<h2 id="Способы_миграции">Способы миграции</h2>
+
+<h3 id="SDK_Add-ons"><br>
+ SDK Add-ons</h3>
+
+<p>Диаграмма сравнения, показывающая <a href="https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Comparison_with_the_Add-on_SDK">SDK API и его аналоги из WebExtensions</a>. Если вы не видите API, которые вам нужно портировать в WebExtensions, то посмотрите ниже для изучения возможности запросить API, а также, как их реализовать.</p>
+
+<h3 id="XULXPCOM_Add-ons">XUL/XPCOM Add-ons</h3>
+
+<p>Диаграмма сравнения, показывающая <a href="/en-US/Add-ons/WebExtensions/Comparison_with_XUL_XPCOM_extensions">XUL/XPCOM API и его аналоги из WebExtensions</a>. Если вы не видите API, которые вам нужно портировать в WebExtensions, то посмотрите ниже для изучения возможности запросить API, а также, как их реализовать.</p>
+
+<h3 id="Частичная_миграция">Частичная миграция</h3>
+
+<p><a href="https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Embedded_WebExtensions">Встроенное WebExtensions</a> - Сейчас вы можете встроить WebExtensions-дополнение внутрь существующего SDK-дополнения или загружаемoго дополнения. Этот вопрос особенно актуален для разработчиков SDK или загружаемых дополнений, кто хочет мигрировать на WebExtensions и получить все преимущества нового API, например, такого как Native Messaging, но пока ещё полностью не мигрировал. Это также полезно тем разработчикам, кто хочет провести полную миграцию данных на WebExtensions, и кто хочет переработать части своего дополнения несовместимые с <a href="https://developer.mozilla.org/en-US/Firefox/Multiprocess_Firefox">мультипроцессным Firefox</a> и сделать их совместимыми.</p>
+
+<p>Не все дополнения будут мигрированы на WebExtensions без каких-либо потерь возможностей функционала. Но мы хотим работать с вами так, чтобы как можно больше дополнений было мигрировано, и как можно больше функций осталось нетронутыми. Мы приглашаем вас внести свой вклад в развитие этого проекта и желаем работать с вами в дальнейшем.</p>
+
+<h2 id="Не_увидели_нужного_в_WebExtensions_API">Не увидели нужного в WebExtensions API?</h2>
+
+<p><strong>Разработка WebExtension APIs для Firefox</strong> - Если вы знакомы с инфраструктурой Mozilla и хотели бы развивать WebExtensions API непосредственно для Firefox, вот <a href="https://mzl.la/2dVs5Ys">список одобренных API</a>, в которые вы можете внести вклад.</p>
+
+<p><strong>Поэкспериментируйте с новыми WebExtension API</strong> - Если вы хотите поэкспериментировать и повозиться с функциями WebExtensions API без необходимости без создания новых функций в Firefox, то для вас есть раздел <a href="http://webextensions-experiments.readthedocs.io/en/latest/index.html">WebExtensions Experiments</a>!</p>
+
+<p><strong>Запрос новой фунции в WebExtensions API</strong> - Если вы хотите попросить создать новую функцию в WebExtensions API, пожалуйста <a href="https://bugzilla.mozilla.org/enter_bug.cgi?product=Toolkit&amp;component=WebExtensions:%20Untriaged">заполните запрос через багтрекер</a>. Эти запросы проверяются и обрабатываются <a href="https://wiki.mozilla.org/Add-ons/Contribute/Triage">дважды в неделю на открытом совещании</a>.</p>
+
+<h2 id="Инструменты">Инструменты</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Mozilla/Add-ons/WebExtensions/Getting_started_with_web-ext">web-ext</a> утилита командной строки, созданая для ускорения процесса разработки WebExtension, делающая разработку быстрее и проще.</li>
+ <li><a href="https://compatibility-lookup.services.mozilla.com/">Lookup tool</a> для определения типа вашего дополнения и описания рекомендуемых ресурсов для миграции</li>
+ <li><a href="https://github.com/mi-g/weh">WebExtensions Helper</a> ускоряет разработку браузерных дополнений посредством предоставления утилит для дополнений, основанных на WebExtensions (Firefox, Chrome, Opera and Edge).</li>
+ <li><a href="https://github.com/yeoman/generator-chrome-extension">Chrome Extension generator </a>создаёт всё необходимое для разработки дополнений. Вы можете выбрать тип элемента Browser UI(Browser, Page Action, Omnibox) и выбрать необходимые разрешения.</li>
+ <li><a href="http://extensionizr.com/">Extensionizr</a> это помощник в создании основы дополнения.</li>
+ <li><a href="https://github.com/mahemoff/chrome-boilerplate">Chrome Boilerplate</a> шаблоны исходного кода для Chrome WebE<span class="col-11 mr-2 text-gray-dark">xtension.</span></li>
+ <li><a href="https://github.com/sitepoint/ChromeSkel_a">Skeleton Chrome Extension</a> расширение, предоставляющее шаблон для быстрого старта разработки дополнения</li>
+</ul>
+
+<h2 id="Документация">Документация</h2>
+
+<ul>
+ <li><a href="https://wiki.mozilla.org/Add-ons/developer/communication">WebExtensions Project Page</a> на портале Mozilla Wiki</li>
+ <li><a href="/en-US/Add-ons/WebExtensions">How-to руководства</a> по конвертации, охватывающие общие случаи разработки дополнений, например, такие как <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Intercept_HTTP_requests">перехват web-запросов</a> и <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Add_a_button_to_the_toolbar">добавление кнопок на панель инструментов</a></li>
+ <li><a href="https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Comparison_with_the_Add-on_SDK">Сравнение с Add-on SDK</a></li>
+ <li><a href="https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Comparison_with_XUL_XPCOM_extensions">Сравнение с XUL/XPCOM-расширениями</a></li>
+ <li><a href="https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Browser_support_for_JavaScript_APIs">Таблица совместимости с браузерами</a> для всех WebExtensions APIs</li>
+ <li><a href="https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Examples">Примеры WebExtensions</a></li>
+</ul>

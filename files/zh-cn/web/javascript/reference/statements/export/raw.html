@@ -1,0 +1,181 @@
+<div>{{jsSidebar("Statements")}}</div>
+
+<p><span class="seoSummary">在创建JavaScript模块时，<code><strong>export</strong></code> 语句用于从模块中导出函数、对象或原始值，以便其他程序可以通过 {{jsxref("Statements/import", "import")}} 语句使用它们。</span></p>
+
+<p dir="ltr" id="tw-target-text">无论您是否声明，导出的模块都处于{{jsxref("Strict_mode","严格模式")}}。 export语句不能用在嵌入式脚本中。</p>
+
+<h2 id="语法">语法</h2>
+
+<pre class="brush: js">// 导出单个特性
+export let <var>name1</var>, <var>name2</var>, …, <var>nameN</var>; // also var, const
+export let <var>name1</var> = …, <var>name2</var> = …, …, <var>nameN</var>; // also var, const
+export function FunctionName(){...}
+export class ClassName {...}
+
+// 导出列表
+export { <var>name1</var>, <var>name2</var>, …, <var>nameN</var> };
+
+// 重命名导出
+export { <var>variable1</var> as <var>name1</var>, <var>variable2</var> as <var>name2</var>, …, <var>nameN</var> };
+
+// 默认导出
+export default <em>expression</em>;
+export default function (…) { … } // also class, function*
+export default function name1(…) { … } // also class, function*
+export { <var>name1</var> as default, … };
+
+// Aggregating modules
+export * from …;
+export { <var>name1</var>, <var>name2</var>, …, <var>nameN</var> } from …;
+export { <var>import1</var> as <var>name1</var>, <var>import2</var> as <var>name2</var>, …, <var>nameN</var> } from …;
+export { default } from …;</pre>
+
+<dl>
+ <dt><code>nameN</code></dt>
+ <dd>要导出的标识符（以便其他脚本通过 {{jsxref("Statements/import", "import")}} 语句进行导入）.</dd>
+</dl>
+
+<h2 id="描述">描述</h2>
+
+<p>有两种不同的导出方式，命名导出和默认导出。你能够在每一个模块中定义多个命名导出，但是只允许有一个默认导出。每种方式对应于上述的一种语法：</p>
+
+<ul>
+ <li>命名导出：
+  <pre class="brush: js">// 导出早前定义的函数
+export { myFunction }; 
+
+// 导出常量
+export const foo = Math.sqrt(2);</pre>
+ </li>
+</ul>
+
+<ul>
+ <li>默认导出（函数）：
+  <pre class="brush: js">export default function() {} </pre>
+ </li>
+ <li>默认导出（类）：
+  <pre class="brush: js">export default class {} </pre>
+ </li>
+</ul>
+
+<p>在导出多个值时，命名导出非常有用。在导入期间，必须使用相应对象的相同名称。但是，可以使用任何名称导入默认导出，例如：</p>
+
+<pre class="brush: js">let k; export default k = 12; // 在 test.js文件中定义导出
+
+import m from './test' // 由于k 是默认导出，所以可以自由使用import m 替代import k
+
+console.log(m);        // 输出为 12
+</pre>
+
+<p> 下面的语法不能从导入的模块导出默认导出值：</p>
+
+<pre class="brush: js">export * from …;</pre>
+
+<p>如果需要导出默认值，请使用下列代码：</p>
+
+<pre class="brush: js">export {default} from 'mod';</pre>
+
+<h2 id="示例">示例</h2>
+
+<h3 id="使用命名导出">使用命名导出</h3>
+
+<p>在模块中，我们可以使用以下代码：</p>
+
+<pre class="brush: js">// module "my-module.js"
+function cube(x) {
+  return x * x * x;
+}
+const foo = Math.PI + Math.SQRT2;
+var graph = {
+    options: {
+        color:'white',
+        thickness:'2px'
+    },
+    draw: function() {
+        console.log('From graph draw function');
+    }
+}
+export { cube, foo, graph };
+</pre>
+
+<p>这样的话，在其它脚本中，我们可以这样使用它：</p>
+
+<pre class="brush: js">// 在html中应使用带有module类型的script。
+// 示例:
+//   &lt;script type="module" src="./demo.js"&gt;&lt;/script&gt;
+//
+// 在http服务器上访问，否则将会有一个CORS保护报错。
+//
+// script demo.js
+
+import { cube, foo, graph } from 'my-module.js';
+graph.options = {
+    color:'blue',
+    thickness:'3px'
+}; 
+graph.draw();
+console.log(cube(3)); // 27
+console.log(foo);    // 4.555806215962888</pre>
+
+<h3 id="使用默认导出">使用默认导出</h3>
+
+<p>如果我们要导出一个值或模块中的返回值，就可以使用默认导出：</p>
+
+<pre class="brush: js">// module "my-module.js"
+export default function cube(x) {
+  return x * x * x;
+}
+</pre>
+
+<p>然后，在另一个脚本中，可以直接导入默认导出：</p>
+
+<pre class="brush: js line-numbers  language-js">// module "my-module.js"
+import cube from 'my-module.js';
+console.log(cube(3)); // 27​​​​​</pre>
+
+<p>注意，不能使用 <code>var</code>、<code>let</code> 或 <code>const</code> 用于导出默认值 <code>export default</code>。</p>
+
+<h3 id="模块重定向">模块重定向</h3>
+
+<p>如果我们想要在当前模块中，导出指定导入模块的默认导出（等于是创建了一个“重定向”）：</p>
+
+<pre class="brush: js">// module "redirect-module.js"
+export {default} from './other-module';
+export * from './other-module';</pre>
+
+<h2 id="规范">规范</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">规范</th>
+   <th scope="col">状态</th>
+   <th scope="col">备注</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-exports', 'Exports')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td>初版</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-exports', 'Exports')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td></td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="浏览器兼容性">浏览器兼容性</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.statements.export")}}</p>
+
+<h2 id="参见">参见</h2>
+
+<ul>
+ <li>{{jsxref("Statements/import", "import")}}</li>
+ <li><a href="https://hacks.mozilla.org/2015/08/es6-in-depth-modules/">ES6 in Depth: Modules</a>, Hacks blog post by Jason Orendorff</li>
+ <li><a href="https://hacks.mozilla.org/2018/03/es-modules-a-cartoon-deep-dive/">ES modules: A cartoon deep-dive</a>, Hacks blog post by Lin Clark</li>
+ <li><a href="http://exploringjs.com/es6/ch_modules.html">Axel Rauschmayer's book: "Exploring JS: Modules"</a></li>
+</ul>

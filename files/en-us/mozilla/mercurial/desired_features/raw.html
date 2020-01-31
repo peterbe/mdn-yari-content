@@ -1,0 +1,131 @@
+<h3 id="Improve_the_hgweb_viewer" name="Improve_the_hgweb_viewer">Improve the hgweb viewer</h3>
+<h4 id="Add_HTML_anchors_to_many_elements" name="Add_HTML_anchors_to_many_elements">Add HTML anchors to many elements</h4>
+<p>Provide named anchors for various elements so that users may post links to them in bug reports, etc.</p>
+<ul>
+  <li><strike>line numbers in "file" and "annotate" view</strike> Already done in hg 1.0</li>
+  <li><strike>files and hunks in "revision" view</strike>, e.g. link to a particular hunk of <a class="external" href="http://hg.mozilla.org/mozilla-central/?rev/1b97a74034d1" rel="freelink">http://hg.mozilla.org/mozilla-centra...v/1b97a74034d1</a> (In Mercurial 1.0, each line number is a link.)</li>
+</ul>
+<h4 id="Allow_marking_lines_of_.22file.22_and_.22annotate.22_view" name="Allow_marking_lines_of_.22file.22_and_.22annotate.22_view">Allow marking lines of "file" and "annotate" view</h4>
+<p>In bonsai, you can use a magic &amp;mark=line-line,line-line URL parameter to mark interesting lines, e.g.: <a class="external" href="http://bonsai.mozilla.org/cvsblame.cgi?file=/mozilla/tools/tinderbox-configs/firefox/win32/mozconfig&amp;rev=1.1.2.2&amp;mark=8-12" rel="freelink">http://bonsai.mozilla.org/cvsblame.c....2.2&amp;mark=8-12</a></p>
+<ol>
+  <li>Reimplement the mark parameter in hg "file" and "annotate" view</li>
+  <li>Add marking UI so that users can create a marked-up URI without hand-editing the URI</li>
+</ol>
+<h4 id="Make_annotate_fast_and_useful" name="Make_annotate_fast_and_useful">Make annotate fast and useful</h4>
+<p>Missing features compared to bonsai blame for CVS are ability to load in seconds instead of minutes (for nsCSSFrameConstructor, say) and the ability to see checkin comments with linkified bug numbers by hovering a revision. A bonus would be only having a link at the start of a "chunk" for a revision; right now hgweb anno is about twice as many bytes as bonsai cvsblame, even though the latter includes all checkin comments for the file.  Most of those bytes are anchor href values.</p>
+<h4 id="Add_basic_searching" name="Add_basic_searching">Add basic searching</h4>
+<p>From the <a class="external" href="http://hg.mozilla.org/mozilla-central/">root view</a> or <a class="external" href="http://hg.mozilla.org/mozilla-central/?rev/1b97a74034d1">revision view</a> of the hg viewer, give the ability for users to type "cssframeconstructor" and find nsCSSFrameConstructor.h/cpp in the default revision (root view) or the current revision (revision view).</p>
+<h4 id="Add_graphical_history_viewing" name="Add_graphical_history_viewing">Add graphical history viewing</h4>
+<p>Add the ability to get a graphical changelog of a particular file, and perhaps of the entire repository, similar to the <a class="external" href="http://bonsai.mozilla.org/cvsgraph.cgi?file=/mozilla/tools/tinderbox-configs/firefox/win32/mozconfig">bonsai functionality</a>.</p>
+<p>Because complete history is so large, it may make sense for this to be a dynamically-expandable view, using SVG, instead of a generated image.</p>
+<p>This is somewhat like a web version of <code>hg glog</code> or <code>hg view</code>.</p>
+<h4 id="Improvements_to_give_better_overview_of_changes" name="Improvements_to_give_better_overview_of_changes">Improvements to give better overview of changes</h4>
+<p>It's hard to get a good summary of what has happened without checking the detailed log of every commit. This is something bonsai manages pretty well. Here's a small list of some of the problems:</p>
+<ul>
+  <li>Ideally the summary, or at the very least the shortlog or changelog, should also specify which files have been edited. This is how bonsai works.</li>
+  <li>Differentiate (with colors for example, or another column?) the author of a changeset from its commit message, for readability.</li>
+  <li>It would be nice to be able to see the diff of a changeset without going to a new page. For example, clicking "diff" could retrieve this data and show it inline AJAX-style?</li>
+  <li>In the shortlog/changelog: "(0) -10000 -3000 -1000 -300 -100 -60 tip" -- these links are unintelligible and confusing. How about something simpler like next page, or page 1,2 - 100 instead?</li>
+  <li>I find it unintuitive to know the difference between "summary", "shortlog" and "changelog". Even after trying all of them, they really seem to be the same view with very minor differences.</li>
+</ul>
+<h4 id="Show_file-mode_changes" name="Show_file-mode_changes">Show file-mode changes</h4>
+<p>Currently, if you change a file's mode (e.g. from executuable to non-executable), <code>hg diff</code> will output a reasonable and concise summary of the change -- something like:</p>
+<pre class="eval">diff --git a/path/to/file b/path/to/file
+old mode 100755
+new mode 100644
+</pre>
+<p>It'd be great if hgweb showed something like this, too. Right now, it shows no diffs, though it does still list the modified files (but with the wrong "diff" link next to each file -- this diff link shows you the last <em>content</em> change, rather than the file-mode change).</p>
+<p>For example, <a class="external" href="http://hg.mozilla.org/mozilla-central/index.cgi/rev/8a99db3f8680">changeset 8a99db3f8680</a> simply removed the executable bit for a lot of non-executable files, and hgweb doesn't have a good way of showing the change.</p>
+<h3 id="Feature:_linear_history_according_to_a_particular_repository" name="Feature:_linear_history_according_to_a_particular_repository">Feature: linear history according to a particular repository</h3>
+<p>Because mercurial history can get very branch-y, we would like the ability to navigate through history linearly as it appears in a particular repository:</p>
+<p>Step 1: mozilla-central</p>
+<p><img alt="Image:step1.png" class="internal" src="/@api/deki/files/865/=Step1.png"></p>
+<p>Step 2: local user clones m-c and adds commits</p>
+<p><img alt="Image:Step2.png" class="internal" src="/@api/deki/files/374/=Step2.png"></p>
+<p>Step 3: new revisions in m-c</p>
+<p><img alt="Image:Step3.png" class="internal" src="/@api/deki/files/375/=Step3.png"></p>
+<p>Step 4: user merges</p>
+<p><img alt="Image:Step4.png" class="internal" src="/@api/deki/files/376/=Step4.png"></p>
+<p>Step 5: user pushes</p>
+<p><img alt="Image:Step5.png" class="internal" src="/@api/deki/files/377/=Step5.png"></p>
+<p>So, the linear history of mozilla-central (the mainline) should be recorded somehow as A -&gt; B -&gt; E -&gt; F. However, we should not require this information to be known at <em>commit</em>-time. It should be recorded when a changeset is <em>pushed to mozilla-central</em>.</p>
+<p>Doing this should not impose special requirements on users: they should not have to create a special named branch for their intermediate changes, nor should they have to follow special rules about which direction a particular merge happens.</p>
+<p>Possible implementation may include some kind of named-branch, or a datastore recording in which direction merges should be followed.</p>
+<p>This implementation should work for multiple ancestries: e.g. a user should be able to follow either mozilla-central or actionmonkey history if they wish.</p>
+<h4 id="Client-side_requirements" name="Client-side_requirements">Client-side requirements</h4>
+<p>Add the ability to diff an arbitrary revision against its last ancestor in mozilla-central. So after step 4, the user should be able to do something like:</p>
+<pre class="eval">hg diff -rF --ancestor=mozilla-central
+</pre>
+<p>Add the ability for <code>annotate</code> and <code>log</code> to follow the history of mozilla-central:</p>
+<pre class="eval">$ hg log --follow=mozilla-central
+changeset: F
+changeset: E
+changeset: B
+changeset: A
+</pre>
+<h4 id="Server_requirements" name="Server_requirements">Server requirements</h4>
+<p>none in particular, though I presume this will involve a post-push hook</p>
+<h4 id="hgweb_requirements" name="hgweb_requirements">hgweb requirements</h4>
+<p>In the web interface, the shortlog, changelog, file revisions, and annotate views should show a specific repository's linear history by default, and only note branch histories when explicitly requested by the user.</p>
+<p>For example, mozilla-central's shortlog should show the mozilla-central repo's linear history.</p>
+<p>In the shortlog and changelog views, each merge changeset in the linear history should appear with extra information. For example, as of this writing <a class="external" href="http://hg.mozilla.org/actionmonkey/?shortlog/10929">actionmonkey repo's shortlog</a> shows hundreds of changes that were actually checked into CVS, then imported to <code>cvs-trunk-mirror</code>, then merged to <code>mozilla-central</code>, then merged to <code>actionmonkey</code>. Instead, it should show:</p>
+<blockquote>
+  <table class="fullwidth-table">
+    <tbody>
+      <tr>
+        <td>at Wed Feb 20 08:16:46 2008 -0800</td>
+        <td><em>jorendorff</em></td>
+        <td><strong>Merge from mozilla-central</strong>
+          <p><em>←Merges 1 changeset by bhearsum. <u>expand</u></em></p>
+        </td>
+      </tr>
+      <tr>
+        <td>at Wed Jan 30 14:31:55 2008 -0800</td>
+        <td><em>jorendorff</em></td>
+        <td><strong>Merge from mozilla-central to actionmonkey branch.</strong>
+          <p><em>←Merges 468 changesets by 160 different committers. <u>expand</u></em></p>
+        </td>
+      </tr>
+      <tr>
+        <td>at Wed Jan 23 13:02:44 2008 -0600</td>
+        <td><em>jorendorff</em></td>
+        <td><strong>Bug 392883 - ActionMonkey: remove gcThingFlags (r=igor)</strong></td>
+      </tr>
+      <tr>
+        <td>at Fri Jan 18 17:18:30 2008 -0600</td>
+        <td><em>jorendorff</em></td>
+        <td><strong>Remove some JSAutoTempValueRooters inadvertently introduced during the merge (they break the build).</strong></td>
+      </tr>
+      <tr>
+        <td>at Fri Jan 18 16:15:16 2008 -0600</td>
+        <td><em>jorendorff</em></td>
+        <td><strong>Merge from mozilla-central to actionmonkey branch.</strong>
+          <p><em>←Merges 373 changesets by 97 different committers. <u>expand</u></em></p>
+        </td>
+      </tr>
+      <tr>
+        <td>at Thu Jan 17 12:11:06 2008 -0600</td>
+        <td><em>jorendorff</em></td>
+        <td><strong>Bug 392602 - ActionMonkey: implement a new heuristic for JS_MaybeGC (r=igor)</strong></td>
+      </tr>
+      <tr>
+        <td>at Fri Jan 11 15:55:36 2008 -0600</td>
+        <td><em>jorendorff</em></td>
+        <td><strong>Fixes to make actionmonkey compile without JS_THREADSAFE again. All tests pass. (Rearranging the order of JSGC's data members is to silence a GCC warning about initializer order.)</strong></td>
+      </tr>
+      <tr>
+        <td>at Fri Jan 11 10:14:34 2008 -0600</td>
+        <td><em>jorendorff</em></td>
+        <td><strong>Bug 404879 - ActionMonkey: Modify js/src to use new thread-safe MMgc APIs (r=brendan) - Changeset 4, make gcPendingContext per-GC instead of global.</strong></td>
+      </tr>
+      <tr>
+        <td>...</td>
+        <td> </td>
+        <td> </td>
+      </tr>
+    </tbody>
+  </table>
+</blockquote>
+<p>This gives a much more accurate view of what's going on in a given repository than the current view, which treats all changesets as equals.</p>
+<p>The expanded view should look like <code>hg glog</code> or <code>hg view</code>, illustrating the branch and merge points visually.</p>
+<p>For bonus points, if a merge only merges one changeset, like the first change shown in the above example, expand it by default.</p>

@@ -1,0 +1,61 @@
+<p>{{DefaultAPISidebar("Fetch API")}}{{draft}}</p>
+
+<div class="summary">
+<p>A <a href="/en-US/docs/Web/API/Fetch_API">Fetch API</a> fornece uma interface para buscar recursos (inclusive pela rede). Parecerá familiar para alguém que já tenha usado {{domxref("XMLHttpRequest")}}, mas ela fornece um conjunto de recursos mais poderoso e flexível . Este artigo expõe alguns conceitos básicos da API Fetch.</p>
+</div>
+
+<div class="note">
+<p>Este artigo será incrementado ao longo do tempo. Se você achar um conceito em Fetch que parece precisar de uma explicação melhor, informe alguém em <a href="https://discourse.mozilla-community.org/c/mdn">fórum de discussãMDN</a>, or <a href="https://wiki.mozilla.org/IRC">Mozilla IRC</a> (#mdn room.)</p>
+</div>
+
+<h2 id="Em_poucas_palavras">Em poucas palavras</h2>
+
+<p>O coração do Fetch são as abstrações da Interface do HTTP {{domxref("Request")}}, {{domxref("Response")}}, {{domxref("Headers")}}, e {{domxref("Body")}} payloads, juntamente com {{domxref("GlobalFetch.fetch","global fetch")}} método para iniciar requisições de recursos assíncronos. Como os componentes principais do HTTP são abstraidos como objetos de JavaScript, torna-se fácil APIs fazer uso das funcionalidades.</p>
+
+<p><a href="/en-US/docs/Web/API/ServiceWorker_API">Service Workers</a> é um exemplo de iuma API que faz um grande uso de Fecth.</p>
+
+<p>Fetch leva a assincronicidade um passo além. A API é completamente baseada em {{jsxref("Promise")}}.</p>
+
+<h2 id="Guard">Guard</h2>
+
+<p>Guard é uma novidade de objetos {{domxref("Headers")}}, podendo assumir os valores de <code>immutable</code>, <code>request</code>, <code>request-no-cors</code>, <code>response</code>, ou <code>none</code>, dependendo de onde o cabeçalho é utilizado.</p>
+
+<p>Quando um novo objeto {{domxref("Headers")}} é criado usando o {{domxref("Headers.Headers","Headers()")}} {{glossary("constructor")}}, seu guard é configurado como <code>none</code> (o padrão). Quando um objeto {{domxref("Request")}} ou {{domxref("Response")}} é criado, tem um objeto {{domxref("Headers")}}  associado cuja proteção é resumida a seguir:</p>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="row">new object's type</th>
+   <th scope="col">creating constructor</th>
+   <th scope="col">guard setting of associated {{domxref("Headers")}} object</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td rowspan="2">{{domxref("Request")}}</td>
+   <td>{{domxref("Request.Request","Request()")}}</td>
+   <td><code>request</code></td>
+  </tr>
+  <tr>
+   <td>{{domxref("Request.Request","Request()")}} with {{domxref("Request.mode","mode")}} of <code>no-cors</code></td>
+   <td><code>request-no-cors</code></td>
+  </tr>
+  <tr>
+   <td rowspan="2">{{domxref("Response")}}</td>
+   <td>{{domxref("Response.Response","Response()")}}</td>
+   <td><code>response</code></td>
+  </tr>
+  <tr>
+   <td>{{domxref("Response.error","error()")}} or {{domxref("Response.redirect","redirect()")}} methods</td>
+   <td><code>immutable</code></td>
+  </tr>
+ </tbody>
+</table>
+
+<p>Um protetor de cabeçalho afeta os métodos {{domxref("Headers.set","set()")}}, {{domxref("Headers.delete","delete()")}}, e {{domxref("Headers.append","append()")}} os quais mudam o conteudo do cabeçalho. Um<code>TypeError</code> é lançado de você tentar modificar um objeto {{domxref("Headers")}} objeto cuja "guard" é <code>immutable</code>. De qualquer maneira, a operação vai funcionar se</p>
+
+<ul>
+ <li>guard é um <code title="">request</code> e o <var>name</var> de cabeçalho não é {{Glossary("forbidden header name")}} .</li>
+ <li>guard é <code title="">request-no-cors</code> e os <var>name</var>/<var>value</var> de cabeçalho é {{Glossary("simple header")}} .</li>
+ <li>guard é <code title="">response</code> e o <var>name</var> de cabeçalho não é {{Glossary("forbidden response header name")}} .</li>
+</ul>

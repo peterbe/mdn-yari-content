@@ -1,0 +1,604 @@
+<div>{{LearnSidebar}}</div>
+
+<div>{{PreviousMenuNext("Learn/CSS/CSS_layout/Flexbox", "Learn/CSS/CSS_layout/Floats", "Learn/CSS/CSS_layout")}}</div>
+
+<p class="summary">Las rejillas (o grids) son una herramienta establecida de diseño, y los layouts de muchos sitios web modernos están basados en ellas. En este artículo vamos a echar un vistazo al diseño basado en grids y cómo podemos usar CSS para crearlos, así como las herramientas y las nuevas tecnologías que ya están a nuestra disposición en los navegadores</p>
+
+<table class="learn-box standard-table">
+ <tbody>
+  <tr>
+   <th scope="row">Prerequisitos:</th>
+   <td>Nociones básicas de HTML (ver <a href="/en-US/docs/Learn/HTML/Introduction_to_HTML">Introduction to HTML</a>), y sobre cómo funciona CSS (estudiar <a href="/en-US/docs/Learn/CSS/Introduction_to_CSS">Introduction to CSS</a> y <a href="/en-US/docs/Learn/CSS/Styling_boxes">Styling boxes</a>.)</td>
+  </tr>
+  <tr>
+   <th scope="row">Objetivo:</th>
+   <td>Entender los conceptos fundamentales sobre los sistemas de grid layout y cómo implementar uno en una página web.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="¿Qué_es_un_grid_layout">¿Qué es un grid layout?</h2>
+
+<p>Un grid es, simplemente, una colección de líneas horizontales y verticales que crean un patrón en el que podemos alinear nuestros elementos. Nos ayudan a crear diseños en donde los elementos no cambian de tamaño cuando nos movemos de una página a otra, proporcionando una mayor consistencia a nuestros sitios web.</p>
+
+<p>Un grid, generalmente, consta de filas, columnas y huecos entre filas y columnas, también llamadas "gutters" (canaletas??)</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/13899/grid.png" style="display: block; height: 553px; margin: 0px auto; width: 1196px;"></p>
+
+<p>[Esquema provisional, pronto lo reemplazará uno mejor]</p>
+
+<div class="note">
+<p><strong>Nota</strong>: Puede resultar sorprendente, a cualquiera que tenga formación sobre diseño, el hecho de que CSS no disponga de un sistema de rejillas incorporado y que para crear un grid haya que utilizar una gran variedad de métodos (poco optimizados). Como descubrirás en la última parte de este artículo esto está cambiando, aunque es probable que tengas que conocer dichos métodos existentes para crear grids mientras tanto.</p>
+</div>
+
+<h2 id="Usando_un_“grid_system”_en_tus_proyectos">Usando un “grid system” en tus proyectos</h2>
+
+<p>Para garantizar una experiencia consistente en tu sitio web o aplicación basada en un sistema de grid no necesitas pensar en el ancho que ocupa un elemento respecto a los demás. Sólo te limitas a decidir "cuántas columnas del grid ocupa dicho elemento".</p>
+
+<p>Tu “grid system” consitirá en decidir, en el proceso de diseño, qué grid utilizar. Si diseñas tu aplicación en Photoshop puedes hacerlo basandote en el post de Elliot Jay Stocks "<a href="http://www.elliotjaystocks.com/blog/a-better-photoshop-grid-for-responsive-web-design/">A better Photoshop grid for responsive web design</a>".</p>
+
+<p>También puedes usar un framework CSS (puedes crearlo tú mismo o usar cualquiera de los disponibles) .</p>
+
+<h2 id="Creando_un_framework_sencillo">Creando un framework sencillo</h2>
+
+<p>Vamos a empezar construyendo un simple framework de grid para tu proyecto</p>
+
+<p>Actualmente la mayor parte de los grids se crean usando bloques flotantes. Si ya has leido <a href="/en-US/docs/Learn/CSS/CSS_layout/Floats">nuestro anterior artículo sobre bloques flotantes</a> ya conocerás la técnica para crear un layout con varias columnas (que es la base de cualquier sistema de grid).</p>
+
+<p>El framework de grid más fácil de crear es el de ancho fijo — sólo necesitamos decidir el ancho total que queremos dar a nuestro diseño, elegir cuántas columnas queremos y el tamaño de los espacios entre columnas (carriles). Si por el contrario decidimos que nuestro diseño es un grid con columnas que crecen y decrecen según el tamaño del navegador, necesitamos definir el ancho de las columnas y carriles por medio de porcentajes.</p>
+
+<p>Más adelante iremos viendo cómo crear ambos tipos. Crearemos un grid con 12 columnas — el tipo más común ya que se adapta muy bien a múltiples situaciones y por ser divisible entre 6, 4, 3 y 2.</p>
+
+<h3 id="Un_grid_sencillo_con_ancho_fijo">Un grid sencillo con ancho fijo</h3>
+
+<p>Vamos a crear primero un grid con ancho fijo.</p>
+
+<p>Empieza haciendo una copia local del fichero de ejemplo <a href="https://github.com/mdn/learning-area/blob/master/css/css-layout/grids/simple-grid.html">simple-grid.html</a> , que contiene el siguiente código en el "body".</p>
+
+<pre class="brush: html">&lt;div class="wrapper"&gt;
+  &lt;div class="row"&gt;
+    &lt;div class="col"&gt;1&lt;/div&gt;
+    &lt;div class="col"&gt;2&lt;/div&gt;
+    &lt;div class="col"&gt;3&lt;/div&gt;
+    &lt;div class="col"&gt;4&lt;/div&gt;
+    &lt;div class="col"&gt;5&lt;/div&gt;
+    &lt;div class="col"&gt;6&lt;/div&gt;
+    &lt;div class="col"&gt;7&lt;/div&gt;
+    &lt;div class="col"&gt;8&lt;/div&gt;
+    &lt;div class="col"&gt;9&lt;/div&gt;
+    &lt;div class="col"&gt;10&lt;/div&gt;
+    &lt;div class="col"&gt;11&lt;/div&gt;
+    &lt;div class="col"&gt;12&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class="row"&gt;
+    &lt;div class="col span1"&gt;13&lt;/div&gt;
+    &lt;div class="col span6"&gt;14&lt;/div&gt;
+    &lt;div class="col span3"&gt;15&lt;/div&gt;
+    &lt;div class="col span2"&gt;16&lt;/div&gt;    
+  &lt;/div&gt;
+&lt;/div&gt;</pre>
+
+<p>El objtetivo es visualizar una demostración de nuestro grid mediante dos filas de doce columnas — la fila superior muestra el tamaño de cada columna, y la segunda áreas de diferente tamaño en el grid.</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/13901/simple-grid-finished.png" style="display: block; height: 50px; margin: 0px auto; width: 952px;"></p>
+
+<p>En el elemento {{htmlelement("style")}}, debes añadir el siguiente código, que primero hace que el tamaño de todos los elementos de la página <a href="/en-US/docs/Learn/CSS/Styling_boxes/Box_model_recap#Changing_the_box_model_completely">incluyan el tamaño de su borde</a> y le da un tamaño de 980 píxeles al contenedor "wrapper", con un padding a la derecha de 20 píxeles. Esto nos deja un ancho de 960 píxeles por columna.</p>
+
+<pre>* { box-sizing: border-box; }
+    
+.wrapper {
+  width: 980px;
+  margin: 0 auto;
+  padding-right: 20px;
+}</pre>
+
+<p>Ahora usaremos un contenedor "row" para envolver cada fila del grid separándola del resto. Para ello añade la siguiente regla a la anterior:</p>
+
+<pre class="brush: js">.row {
+  clear: both;
+}</pre>
+
+<p>De esta forma conseguimos no tener que rellenar completamente una fila con las doce columnas. Cada fila queda separada del resto y no interfiere a las demás.</p>
+
+<p>Los carriles entre columnas son de 20 píxeles de ancho. Los crearemos como un margen a la izquierda de cada columna — incluyendo la primera, para corregir los 20 píxeles de padding a la derecha que le dimos al contenedor "wrapper". Así conseguimos 12 carriles — 12 x 20 = 240.</p>
+
+<p>Tenemos que restar los 240 pixeles al ancho total de 960 píxeles, con lo que nos quedan 720 para usar con nuestras columnas. Como tenemos 12, cada columna medirá 60 píxeles de ancho.</p>
+
+<p>El siguiente paso es crear la clase <code>.col</code>,  flotando a la izquierda, con un  {{cssxref("margin-left")}} de 20 píxeles para crear el carril y un {{cssxref("width")}} de 60px. Añade la siguiente regla al final de tu CSS:</p>
+
+<pre class="brush: css">.col {
+  float: left;
+  margin-left: 20px;
+  width: 60px;
+  background: rgb(255,150,150);
+}</pre>
+
+<p>La fila superior con las columnas individuales se mostrará claramente como un grid.</p>
+
+<div class="note">
+<p><strong>Nota</strong>: Hemos dado también un color de fondo rojo a cada columna para que se pueda ver perfectamente cuánto espacio ocupa cada una.</p>
+</div>
+
+<p>Los contenedores que deben ocupan más de una columna necesitan reglas especiales para ajustar su {{cssxref("width")}} al número de columnas requeridas (más los correspondientes carriles). Necesitamos crear una clase adicional para permitir tamaños de 2 hasta 12 columnas. El tamaño de cada una de elllas es el resultado de sumar el ancho del número de columnas que ocupan más los carriles entre ellas (los carriles serán siempre un número menos que el número de columnas).</p>
+
+<p>Añade el siguiente código al final de tu CSS:</p>
+
+<pre class="brush: css">/* Dos columnas de ancho (120px) y un carril (20px) */
+.col.span2 { width: 140px; }
+/* Tres columnas de ancho (180px) y dos carriles (40px) */
+.col.span3 { width: 220px; }
+/* Y asi sucesivamente ... */
+.col.span4 { width: 300px; }
+.col.span5 { width: 380px; }
+.col.span6 { width: 460px; }
+.col.span7 { width: 540px; }
+.col.span8 { width: 620px; }
+.col.span9 { width: 700px; }
+.col.span10 { width: 780px; }
+.col.span11 { width: 860px; }
+.col.span12 { width: 940px; }</pre>
+
+<p>Con estas clases ahora podemos conseguir columnas con distinto ancho en nuestro grid. Guarda el código y carga la página en tu navegador para verlo en acción.</p>
+
+<div class="note">
+<p><strong>Nota</strong>: Si tienes problemas para ver el ejemplo correctamete, intenta compararlo con la <a href="https://github.com/mdn/learning-area/blob/master/css/css-layout/grids/simple-grid-finished.html">versión final</a> en GitHub (o en el <a href="http://mdn.github.io/learning-area/css/css-layout/grids/simple-grid-finished.html">ejemplo en vivo</a>).</p>
+</div>
+
+<p>Prueba a modificar las clases de los elementos del ejemplo, o añade o elimina algunos contenedores para ver cómo va variando su disposición. Por ejemplo, puedes cambiar el aspecto de la segunda fila de esta forma:</p>
+
+<pre class="brush: css">&lt;div class="row"&gt;
+  &lt;div class="col span8"&gt;13&lt;/div&gt;
+  &lt;div class="col span4"&gt;14&lt;/div&gt;
+&lt;/div&gt;</pre>
+
+<p>Ahora ya tenemos un sistema de grid funcionando, simplemente define las filas y el número de columnas en cada una de ellas y rellena cada contenedor con su propio contenido. ¡Fantástico!</p>
+
+<h3 id="Creando_un_grid_fluido">Creando un grid fluido</h3>
+
+<p>Nuestro grid funciona perfectamente, pero tiene un ancho fijo. Ahora queremos un grid flexible (fluido) cuyo tamaño crezca y disminuya según el espacio disponible en el navegador. Para conseguirlo podemos usar como referencia los píxeles de ancho actuales y convertirlos en porcentajes.</p>
+
+<p>La ecuación que convierte el ancho fijo en uno flexible basado en porcentajes es la siguiente.</p>
+
+<pre>objetivo / contexto = resultado</pre>
+
+<p>Para nuestro grid fijo, nuetro "objetivo" es 60 píxeles (el ancho de una columna) y nuestro "contexto" es el ancho del contenedor principal, es decir 960 píxeles. Sustituyendo los valores en la ecuación podemos calcular el porcentaje.</p>
+
+<pre>60 / 960 = 0.0625</pre>
+
+<p>Para conseguir el porcentaje, multiplicamos por 100 (para mover el decimal dos posiciones) y obtenemos el valor 6.25%. En nuestro CSS, reemplazamos los 60 píxeles del ancho de la columna por 6.25%.</p>
+
+<p>Hacemos lo mismo con el ancho de los carriles:</p>
+
+<pre>20 / 960 = 0.02083333333</pre>
+
+<p>Tenemos que reemplazar los 20 píxeles del {{cssxref("margin-left")}} de la clase <code>.col</code>, y los 20 píxeles de {{cssxref("padding-right")}} del <code>.wrapper</code>, por 2.08333333%.</p>
+
+<h4 id="Actualizando_nuestro_grid">Actualizando nuestro grid</h4>
+
+<p>Para comenzar, haz una copia de los ficheros del ejemplo anterior (o haz una copia local del siguiente fichero <a href="https://github.com/mdn/learning-area/blob/master/css/css-layout/grids/simple-grid-finished.html">simple-grid-finished.html</a>). Usaremos ese código como punto de partida.</p>
+
+<p>Cambia el código CSS (de la clase <code>.wrapper</code>) por el siguiente:</p>
+
+<pre class="brush: css">.wrapper {
+  width: 90%;
+  max-width: 980px;
+  margin: 0 auto;
+  padding-right: 2.08333333%;
+}</pre>
+
+<p>No sólo hemos cambiado el {{cssxref("width")}} fijo por un porcentaje, también hemos añadido la propiedad {cssxref("max-width")}} para impedir que el ancho del layout sea demasiado grande.</p>
+
+<p>Después, cambia el CSS de la cuarta regla (la clase <code>.col</code>) por este:</p>
+
+<pre class="brush: css">.col {
+  float: left;
+  margin-left: 2.08333333%;
+  width: 6.25%;
+  background: rgb(255,150,150);
+}</pre>
+
+<p>Ahora llega una parte un poco más laboriosa — hay que actualizar todas las reglas <code>.col.span</code> para cambiar los anchos en píxeles por porcentajes. Esto lleva un poca más de tiempo con la calculadora; para ahorrarte este esfuerzo, hemos hecho el trabajo por ti.</p>
+
+<p>Actualiza el bloque de CSS del final por el siguiente:</p>
+
+<pre class="brush: css">/* Dos columnas de ancho (12.5%) y un carril (2.08333333%) */
+.col.span2 { width: 14.58333333%; }
+/* Tres columnas de ancho (18.75%) y dos carriles (4.1666666) */
+.col.span3 { width: 22.91666666%; }
+/* Y así sucesivamente... */
+.col.span4 { width: 31.24999999%; }
+.col.span5 { width: 39.58333332%; }
+.col.span6 { width: 47.91666665%; }
+.col.span7 { width: 56.24999998%; }
+.col.span8 { width: 64.58333331%; }
+.col.span9 { width: 72.91666664%; }
+.col.span10 { width: 81.24999997%; }
+.col.span11 { width: 89.5833333%; }
+.col.span12 { width: 97.91666663%; }</pre>
+
+<p>Guarda tu código, ábrelo en un navegador y cambia el tamaño de la pantalla — verás cómo el ancho de las columnas se ajustan perfectamente. ¡Genial!</p>
+
+<div class="note">
+<p><strong>Note</strong>: If you are having trouble getting the above example to work, try comparing it against our <a href="https://github.com/mdn/learning-area/blob/master/css/css-layout/grids/fluid-grid.html">finished version on GitHub</a> (<a href="http://mdn.github.io/learning-area/css/css-layout/grids/fluid-grid.html">see it running live</a> also).</p>
+</div>
+
+<h3 id="Easier_calculations_using_the_calc()_function">Easier calculations using the calc() function</h3>
+
+<p>You could use the <code><a href="/en-US/docs/Web/CSS/calc">calc()</a></code> function to do the math right inside your CSS — this allows you to insert simple mathematical equations into your CSS values, to calculate what a value should be. It is especially useful when there is complex math to be done, and you can even compute a calculation that uses different units, for example "I want this element's height to always be 100% of its parent's height, minus 50px". See <a href="/en-US/docs/Web/API/MediaRecorder_API/Using_the_MediaRecorder_API#Keeping_the_interface_constrained_to_the_viewport_regardless_of_device_height_with_calc()">this example from a MediaRecorder API tutorial</a>.</p>
+
+<p>Anyway, back to our grids! Any column that spans more than one column of our grid has a total width of 6.25% multiplied by the number of columns spanned plus 2.08333333% multiplied by the number of gutters (which will always be the number of columns minus 1). The <code>calc()</code> function allows us to do this calculation right inside the width value, so for any item spanning 4 columns we can do this, for example:</p>
+
+<pre class="brush: css">.col.span4 {
+  width: calc((6.25%*4) + (2.08333333%*3));
+}</pre>
+
+<p>Try replacing your bottom block of rules with the following, then reload it in the browser to see if you get the same result:</p>
+
+<pre class="brush: css">.col.span2 { width: calc((6.25%*2) + 2.08333333%); }
+.col.span3 { width: calc((6.25%*3) + (2.08333333%*2)); }
+.col.span4 { width: calc((6.25%*4) + (2.08333333%*3)); }
+.col.span5 { width: calc((6.25%*5) + (2.08333333%*4)); }
+.col.span6 { width: calc((6.25%*6) + (2.08333333%*5)); }
+.col.span7 { width: calc((6.25%*7) + (2.08333333%*6)); }
+.col.span8 { width: calc((6.25%*8) + (2.08333333%*7)); }
+.col.span9 { width: calc((6.25%*9) + (2.08333333%*8)); }
+.col.span10 { width: calc((6.25%*10) + (2.08333333%*9)); }
+.col.span11 { width: calc((6.25%*11) + (2.08333333%*10)); }
+.col.span12 { width: calc((6.25%*12) + (2.08333333%*11)); }</pre>
+
+<div class="note">
+<p><strong>Note</strong>: You can see our finished version in <a href="https://github.com/mdn/learning-area/blob/master/css/css-layout/grids/fluid-grid-calc.html">fluid-grid-calc.html</a> (also <a href="http://mdn.github.io/learning-area/css/css-layout/grids/fluid-grid-calc.html">see it live</a>).</p>
+</div>
+
+<div class="note">
+<p><strong>Note</strong>: If you can't get this to work, it might be because your browser does not support the <code>calc()</code> function, although it is fairly well supported across browsers — as far back as IE9.</p>
+</div>
+
+<h3 id="Semantic_versus_“un-semantic”_grid_systems">Semantic versus “un-semantic” grid systems</h3>
+
+<p>Adding classes to your markup to define layout means that your content and markup becomes tied to its visual presentation. You will sometimes hear this use of CSS classes described as being “un-semantic” — describing how the content looks — rather than a semantic use of classes that describes the content. This is the case with our <code>span2</code>, <code>span3</code>, etc., classes.</p>
+
+<p>These are not the only approach. You could instead decide on your grid and then add the sizing information to the rules for existing semantic classes. For example, if you had a {{htmlelement("div")}} with a class of <code>content</code> on it that you wanted to span 8 columns, you could copy across the width from the <code>span8</code> class, giving you a rule like so:</p>
+
+<pre class="brush: css">.content {
+  width: calc((6.25%*8) + (2.08333333%*7));
+}</pre>
+
+<div class="note">
+<p><strong>Note</strong>: If you were to use a preprocessor such as <a href="http://sass-lang.com/">Sass</a>, you could create a simple mixin to insert that value for you.</p>
+</div>
+
+<h3 id="Enabling_offset_containers_in_our_grid">Enabling offset containers in our grid</h3>
+
+<p>The grid we have created works well as long as we want to start all of the containers flush with the left hand side of the grid. If we wanted to leave a gap before the first container — or between containers — we would need to create an offset class to add a left margin to our site to push it across the grid visually. More math!</p>
+
+<p>Let's try this out.</p>
+
+<p>Start with your previous code, or use our <a href="https://github.com/mdn/learning-area/blob/master/css/css-layout/grids/fluid-grid.html">fluid-grid.html</a> file as a starting point.</p>
+
+<p>Let's create a class in our CSS that will offset a container element by one column width. Add the following to the bottom of your CSS:</p>
+
+<pre class="brush: css">.offset-by-one {
+  margin-left: calc(6.25% + (2.08333333%*2));
+}</pre>
+
+<p>Or if you are prefer to calculate the percentages yourself, use this one:</p>
+
+<pre class="brush: css">.offset-by-one {
+  margin-left: 10.41666666%;
+}</pre>
+
+<p>You can now add this class to any container you want, to leave a one column width gap on the left hand side of it. For example, if you have this in your HTML:</p>
+
+<pre class="brush: html">&lt;div class="col span6"&gt;14&lt;/div&gt;</pre>
+
+<p>Try replacing it with</p>
+
+<pre class="brush: html">&lt;div class="col span5 offset-by-one"&gt;14&lt;/div&gt;</pre>
+
+<div class="note">
+<p><strong>Note</strong>: Notice that you need to reduce the number of columns spanned, to make room for the offset!</p>
+</div>
+
+<p>Try loading and refreshing to see the difference, or check out our <a href="https://github.com/mdn/learning-area/blob/master/css/css-layout/grids/fluid-grid-offset.html">fluid-grid-offset.html</a> example (see it <a href="http://mdn.github.io/learning-area/css/css-layout/grids/fluid-grid-offset.html">running live</a> also). The finished example should look like this:</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/13903/offset-grid-finished.png" style="display: block; height: 47px; margin: 0px auto; width: 944px;"></p>
+
+<div class="note">
+<p><strong>Note</strong>: As an extra exercise, can you implement an <code>offset-by-two</code> class?</p>
+</div>
+
+<h3 id="Floated_grid_limitations">Floated grid limitations</h3>
+
+<p>When using a system like this you do need to take care that your total widths add up correctly, and that you don’t include elements in a row that span more columns than the row can contain. Due to the way floats work, if your total width becomes wider than 100% the excess items will drop onto the next line.</p>
+
+<p>If the content of the elements pushes them to become wider this will also make the total width more than 100% and the same thing will happen.</p>
+
+<p>The container {{htmlelement("div")}} with a class of <code>row</code> helps to prevent our design falling into chaos should our lines not add up neatly to 100% but you do need to do a fair amount of managing of the grid when using this method. Commonly you would use <a href="/en-US/docs/Web/CSS/Media_Queries">media queries</a> to create a different layout at narrower breakpoints to ensure that you don’t have the issue of the grid pushing too wide.</p>
+
+<p>An additional limitation of this system is that it is essentially one dimensional. We are dealing with columns, and spanning elements across columns, but not rows. It is very difficult with these older layout methods to control the height of elements without explicitly setting a height, and this is a very inflexible approach too — it only works if you can guarantee that your content will be a certain height.</p>
+
+<h2 id="Flexbox_grids">Flexbox grids?</h2>
+
+<p>If you read our previous article about <a href="/en-US/docs/Learn/CSS/CSS_layout/Flexbox">flexbox</a> you might think that flexbox is the ideal solution for creating a grid system. There are currently any number of flexbox-based grid systems available and flexbox can solve many of the issues that we’ve already discovered when creating our grid above.</p>
+
+<p>However, flexbox was never designed as a grid system and poses a new set of challenges when used as one. As a simple example of this, we can take the same example markup we used above and use the following CSS to style the <code>wrapper</code>, <code>row</code>, and <code>col</code> classes:</p>
+
+<pre class="brush: css">.wrapper {
+  width: 90%;
+  max-width: 980px;
+  margin: 0 auto;
+  padding-right: 2.08333333%;
+}
+
+.row {
+  display: flex;
+}
+
+.col {
+  margin-left: 2.08333333%;
+  margin-bottom: 1em;
+  width: 6.25%;
+  flex: 1 1 auto;
+  background: rgb(255,150,150);
+}</pre>
+
+<p>You can try making these replacements in your own example, or look at our <a href="https://github.com/mdn/learning-area/blob/master/css/css-layout/grids/flexbox-grid.html">flexbox-grid.html</a> example code (see it <a href="http://mdn.github.io/learning-area/css/css-layout/grids/flexbox-grid.html">running live</a> also).</p>
+
+<p>Here we are turning each row into a flex container. With a flexbox-based grid we still need rows in order to allow us to have elements that add up to less than 100%. We set that container to <code>display: flex</code>.</p>
+
+<p>On <code>.col</code> we set the {{cssxref("flex")}} property's first value ({{cssxref("flex-grow")}}) to 1 so our items can grow, the second value ({{cssxref("flex-shrink")}}) to 1 so the items can shrink, and the third value ({{cssxref("flex-basis")}}) to <code>auto</code>. As our element has a {{cssxref("width")}} set, <code>auto</code> will use that width as the <code>flex-basis</code> value.</p>
+
+<p>On the top line we get twelve neat boxes on the grid and they grow and shrink equally as we change the viewport width. On the next line however we only have four items and these also grow and shrink from that 60px basis. With only four of them they can grow a lot more than the items in the row above, the result being that they all occupy the same width on the second row.</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/13905/flexbox-grid-incomplete.png" style="display: block; height: 71px; margin: 0px auto; width: 944px;"></p>
+
+<p>To fix this we still need to include our <code>span</code> classes to provide a width that will replace the value used by <code>flex-basis</code> for that element.</p>
+
+<p>They also don’t respect the grid used by the items above because they don’t know anything about it.</p>
+
+<p>Flexbox is <strong>one-dimensional</strong> by design. It deals with a single dimension, that of a row or a column. We can’t create a strict grid for columns and rows, meaning that if are to use flexbox for our grid we still need to calculate percentages as for the floated layout.</p>
+
+<p>In your project you might still choose to use a flexbox ‘grid’ due to the additional alignment and space distribution capabilities flexbox provides over floats. You should however be aware that you are still using a tool for something other than what it was designed for. So you may feel like it is making you jump through additional hoops to get the end result you want.</p>
+
+<h2 id="Third_party_grid_systems">Third party grid systems</h2>
+
+<p>Now that we understand the math behind our grid calculations, we are in a good place to look at some of the third party grid systems in common use. If you search for "CSS Grid framework" on the Web you will find a huge list of options to choose from. Popular frameworks such as <a href="http://getbootstrap.com/">Bootstrap</a> and <a href="http://foundation.zurb.com/">Foundation</a> include a grid system. There are also standalone grid systems, either developed using CSS or using preprocessors.</p>
+
+<p>Let's take a look at one of these standalone systems as it demonstrates common techniques for working with a grid framework. The grid we will be using is part of Skeleton, a simple CSS framework.</p>
+
+<p>To get started visit the <a href="http://getskeleton.com/">Skeleton website</a>, and choose "Download" to download the ZIP file. Unzip this, and copy the skeleton.css and normalize.css files into a new directory.</p>
+
+<p>Make a copy of our <a href="https://github.com/mdn/learning-area/blob/master/css/css-layout/grids/html-skeleton.html">html-skeleton.html</a> file and save it in the same directory as the skeleton and normalize CSS.</p>
+
+<p>Include the skeleton and normalize CSS in the HTML page, by adding the following to its head:</p>
+
+<pre class="brush: html">&lt;link href="normalize.css" rel="stylesheet"&gt;
+&lt;link href="skeleton.css" rel="stylesheet"&gt;</pre>
+
+<p>Skeleton includes more than a grid system — it also contains CSS for typography and other page elements that you can use as a starting point. We’ll leave these at the defaults for now however — it’s the grid we are really interested in here.</p>
+
+<div class="note">
+<p><strong>Note</strong>: normalize is a really useful little CSS library written by Nicolas Gallagher, which automatically does some useful basic layout fixes and makes default element styling more consistent across browsers.</p>
+</div>
+
+<p>We will use similar HTML to our earlier example. Add the following into your HTML body:</p>
+
+<pre class="brush: html">&lt;div class="container"&gt;
+  &lt;div class="row"&gt;
+    &lt;div class="col"&gt;1&lt;/div&gt;
+    &lt;div class="col"&gt;2&lt;/div&gt;
+    &lt;div class="col"&gt;3&lt;/div&gt;
+    &lt;div class="col"&gt;4&lt;/div&gt;
+    &lt;div class="col"&gt;5&lt;/div&gt;
+    &lt;div class="col"&gt;6&lt;/div&gt;
+    &lt;div class="col"&gt;7&lt;/div&gt;
+    &lt;div class="col"&gt;8&lt;/div&gt;
+    &lt;div class="col"&gt;9&lt;/div&gt;
+    &lt;div class="col"&gt;10&lt;/div&gt;
+    &lt;div class="col"&gt;11&lt;/div&gt;
+    &lt;div class="col"&gt;12&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class="row"&gt;
+    &lt;div class="col"&gt;13&lt;/div&gt;
+    &lt;div class="col"&gt;14&lt;/div&gt;
+    &lt;div class="col"&gt;15&lt;/div&gt;
+    &lt;div class="col"&gt;16&lt;/div&gt;   
+  &lt;/div&gt;
+&lt;/div&gt;</pre>
+
+<p><br>
+ To start using Skeleton we need to give the wrapper {{htmlelement("div")}} a class of <code>container</code> — this is already included in our HTML. This centers the content with a maximum width of 960 pixels. You can see how the boxes now never become wider than 960 pixels.</p>
+
+<p>You can take a look in the skeleton.css file to see the CSS that is used when we apply this class. The <code>&lt;div&gt;</code> is centred using auto left and right margins, and a padding of 20 pixels is applied left and right. Skeleton also sets the {{cssxref("box-sizing")}} property to <code>border-box</code> like we did earlier, so the padding and borders of this element will be included in the total width.</p>
+
+<pre class="brush: css">.container {
+  position: relative;
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 20px;
+  box-sizing: border-box;
+}</pre>
+
+<p>Elements can only be part of the grid if they are inside a row, so as with our earlier example we need an additional <code>&lt;div&gt;</code> or other element with a class of <code>row</code> nested between the <code>content</code> <code>&lt;div&gt;</code> and our actual content container <code>&lt;div&gt;</code>s. We've done this already as well.</p>
+
+<p>Now let's lay out the container boxes. Skeleton is based on a 12 column grid. The top line boxes all need classes of <code>one column</code> to make them span one column.</p>
+
+<p>Add these now, as shown in the following snippet:</p>
+
+<pre class="brush: html">&lt;div class="container"&gt;
+  &lt;div class="row"&gt;
+    &lt;div class="col one column"&gt;1&lt;/div&gt;
+    &lt;div class="col one column"&gt;2&lt;/div&gt;        
+    &lt;div class="col one column"&gt;3&lt;/div&gt;
+    /* and so on */
+  &lt;/div&gt;
+&lt;/div&gt;</pre>
+
+<p>Next, give the containers on the second row classes explaining the number of columns they should span, like so:</p>
+
+<pre class="brush: html">&lt;div class="row"&gt;
+  &lt;div class="col one column"&gt;13&lt;/div&gt;
+  &lt;div class="col six columns"&gt;14&lt;/div&gt;
+  &lt;div class="col three columns"&gt;15&lt;/div&gt;
+  &lt;div class="col two columns"&gt;16&lt;/div&gt;   
+&lt;/div&gt;</pre>
+
+<p>Try saving your HTML file and loading it in your browser to see the effect.</p>
+
+<div class="note">
+<p><strong>Note</strong>: If you are having trouble getting this example to work, try comparing it to our <a href="https://github.com/mdn/learning-area/blob/master/css/css-layout/grids/html-skeleton-finished.html">html-skeleton-finished.html</a> file (see it <a href="http://mdn.github.io/learning-area/css/css-layout/grids/html-skeleton-finished.html">running live</a> also).</p>
+</div>
+
+<p>If you look in the skeleton.css file you can see how this works. For example, Skeleton has the following defined to style elements with “three columns” classes added to them.</p>
+
+<pre class="brush: css">.three.columns { width: 22%; }</pre>
+
+<p>All Skeleton (or any other grid framework) is doing is setting up predefined classes that you can use by adding them to your markup. It’s exactly the same as if you did the work of calculating these percentages yourself.</p>
+
+<p>As you can see, we need to write very little CSS when using Skeleton. It deals with all of the floating for us when we add classes to our markup. It is this ability to hand responsibility for layout over to something else that makes using a framework for a grid system a compelling choice!</p>
+
+<p>Skeleton is a simpler grid system than some of the frameworks you may come across. The grids in large frameworks such as Bootstrap and Foundation offer more functionality and additional breakpoints for various screen widths. However they all work in a similar way — by adding specific classes to your markup you can control how the element is laid out using the predefined grid.</p>
+
+<h2 id="Native_CSS_Grids_with_Grid_Layout">Native CSS Grids with Grid Layout</h2>
+
+<p>We said at the beginning of this article that CSS has not previously had a real system for creating grid layouts, but this is set to change. While we can’t use a native CSS grid system yet, in the coming year we should see browser support appear for the <a href="/en-US/docs/Web/CSS/CSS_Grid_Layout">CSS Grid Layout Module</a>.</p>
+
+<p>Currently you can only use the technique we’ll be showing you in browsers that are implementing CSS Grid Layout “behind a flag” — meaning it is currently implemented, but in an experimental state that you need to switch on to use.</p>
+
+<p>In Firefox, for example, you need to navigate to a URL of <code>about:config</code>, search for the <code>layout.css.grid.enabled</code> preference, and double click it to enable CSS Grids. You cna find out how to use it in other browsers by visiting <a href="http://gridbyexample.com/browsers">Grid by Example</a>.</p>
+
+<p>We looked at the Skeleton Grid framework above — like other third party Grids and even hand-built grids, it requires that you add <code>&lt;div&gt;</code>s to form rows, and then specify the number of columns the items in these rows will span.  </p>
+
+<p>With CSS Grid Layout you can specify your grid entirely in CSS, without needing to add these helper classes to the markup at all. Let’s take our simple example and see how we would create that same layout using CSS Grid Layout.</p>
+
+<h3 id="Building_a_native_grid">Building a native grid</h3>
+
+<p>First, get started by making a local copy of the <a href="https://github.com/mdn/learning-area/blob/master/css/css-layout/grids/css-grid.html">css-grid.html</a> file. It contains the following markup:</p>
+
+<pre class="brush: html">&lt;div class="wrapper"&gt;
+  &lt;div class="col"&gt;1&lt;/div&gt;
+  &lt;div class="col"&gt;2&lt;/div&gt;
+  &lt;div class="col"&gt;3&lt;/div&gt;
+  &lt;div class="col"&gt;4&lt;/div&gt;
+  &lt;div class="col"&gt;5&lt;/div&gt;
+  &lt;div class="col"&gt;6&lt;/div&gt;
+  &lt;div class="col"&gt;7&lt;/div&gt;
+  &lt;div class="col"&gt;8&lt;/div&gt;
+  &lt;div class="col"&gt;9&lt;/div&gt;
+  &lt;div class="col"&gt;10&lt;/div&gt;
+  &lt;div class="col"&gt;11&lt;/div&gt;
+  &lt;div class="col"&gt;12&lt;/div&gt;
+  &lt;div class="col"&gt;13&lt;/div&gt;
+  &lt;div class="col span6"&gt;14&lt;/div&gt;
+  &lt;div class="col span3"&gt;15&lt;/div&gt;
+  &lt;div class="col span2"&gt;16&lt;/div&gt;       
+&lt;/div&gt;</pre>
+
+<p>This time we have a parent <code>&lt;div&gt;</code> with a class of <code>wrapper</code>, and then all of the child elements just appear directly inside the wrapper — no row elements. We have added a class to the items that should span more than one column.</p>
+
+<p>Now add the following into the {{htmlelement("style")}} element:</p>
+
+<pre class="brush: css">.wrapper {
+  width: 90%;
+  max-width: 960px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-gap: 20px;
+}
+
+.col {
+  background: rgb(255,150,150);
+}</pre>
+
+<p>Here we set the <code>.wrapper</code> rule so it is 90% of the body width, centered, and has a {{cssxref("max-width")}} of 960px.</p>
+
+<p>Now for the CSS grid properites. We can declare a grid using the <code>grid</code> value of the {{cssxref("display")}} property, set up a gutter with the {{cssxref("grid-gap")}} property and then create a grid of 12 equal width columns using {{cssxref("grid-template-columns")}}, the new <code>repeat()</code> function, and a new unit defined for grid layout — the <code>fr</code> unit.</p>
+
+<p>The <code>fr</code> unit is a fraction unit — it describes a fraction of the available space in the grid container. If all columns are <code>1fr</code>, they will each take up an equal amount of space. This removes the need to figure out percentages to create a flexible grid.</p>
+
+<p>Having created a grid, the grid auto-placement rules will immediately lay out our boxes on this grid and we get a twelve column flexible grid layout.</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/13907/css-grid-incomplete.png" style="display: block; height: 70px; margin: 0px auto; width: 971px;"></p>
+
+<p>To style the containers that span multiple column tracks on the grid we can use the grid-column property. To span 6 columns for example:</p>
+
+<pre class="brush: css">.span6 {
+  grid-column: auto / span 6;
+}</pre>
+
+<p>To span 3:</p>
+
+<pre class="brush: css">.span3 {
+  grid-column: auto / span 3;
+}</pre>
+
+<p>The value before the forward slash is the start line — in this case we are not explicitly setting that and allowing the browser to place the item on the next available line. We can then set it to span 6, 3 or however many lines we want.</p>
+
+<p>Add the following at the bottom of your CSS:</p>
+
+<pre class="brush: css">.span2 { grid-column: auto / span 2;}
+.span3 { grid-column: auto / span 3;}
+.span4 { grid-column: auto / span 4;}
+.span5 { grid-column: auto / span 5;}
+.span6 { grid-column: auto / span 6;}
+.span7 { grid-column: auto / span 7;}
+.span8 { grid-column: auto / span 8;}
+.span9 { grid-column: auto / span 9;}
+.span10 { grid-column: auto / span 10;}
+.span11 { grid-column: auto / span 11;}
+.span12 { grid-column: auto / span 12;}</pre>
+
+<p>Try saving and refreshing, and you'll see that the containers span multiple columns as appropriate. Cool!</p>
+
+<p>CSS grids are <strong>two-dimensional</strong>, so as the layout grows and shrinks the elements remain lined up horizontally and vertically.</p>
+
+<p>You can test this by replacing your last 4 col <code>&lt;div&gt;</code>s with the following:</p>
+
+<pre class="brush: css">&lt;div class="col"&gt;13some&lt;br&gt;content&lt;/div&gt;
+&lt;div class="col span6"&gt;14this&lt;br&gt;is&lt;br&gt;more&lt;br&gt;content&lt;/div&gt;
+&lt;div class="col span3"&gt;15this&lt;br&gt;is&lt;br&gt;less&lt;/div&gt;
+&lt;div class="col span2"&gt;16&lt;/div&gt;</pre>
+
+<p>Here we've deliberately added in some line break ({{htmlelement("br")}}) tags to force some of the columns to become taller than others. If you try saving and refreshing, you'll see that the columns adjust their height to be as tall as the tallest container, so everything stays neat and tidy.</p>
+
+<p>The final layout looks like so:</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/13909/css-grid-finished.png" style="display: block; height: 130px; margin: 0px auto; width: 972px;"></p>
+
+<div class="note">
+<p><strong>Note</strong>: If you are having trouble getting this example to work, you can check your code against our <a href="https://github.com/mdn/learning-area/blob/master/css/css-layout/grids/css-grid-finished.html">finished version</a> (also see it <a href="http://mdn.github.io/learning-area/css/css-layout/grids/css-grid-finished.html">running live</a>).</p>
+</div>
+
+<h3 id="Other_nice_CSS_grid_features">Other nice CSS grid features</h3>
+
+<p>With CSS grids, we don’t need to push things along by way of margins to offset them. Trying making these changes in your CSS:</p>
+
+<pre class="brush: css">.content {
+  grid-column: 2 / 8;
+}</pre>
+
+<pre class="brush: html">&lt;div class="col span2 content"&gt;16&lt;/div&gt;</pre>
+
+<p>Container 16 will now span columns 2 to 8, on the next available row where it can fit.</p>
+
+<p>We can span rows just as easily as columns:</p>
+
+<pre class="brush: css">.content {
+  grid-column: 2 / 8;
+  grid-row: 3 / 5;
+}</pre>
+
+<p>Container 16 will now span rows 3 to 5, as well as columns 2 to 8.</p>
+
+<p>We also don’t need to use a margin to fake gutters or calculate their widths explicitly — CSS grid has this functionality built right in with the <code>grid-gap</code> property.</p>
+
+<p>We’re just touching the surface of what is possible with CSS Grid Layout, but the key thing to understand in the context of this article is that you don’t need to create a grid system with grid - it is one. You can write CSS that places an item directly onto a predefined grid. This is the first time it has been possible with CSS, and this will get a lot more use once browser support solidifies.</p>
+
+<h2 id="Summary">Summary</h2>
+
+<p>Having read this article you should now have an understanding of how grid layouts, and grid frameworks work in CSS. You have also had a peek into the future off CSS grids, and should now understand that the grid frameworks we use today are essentially a stopgap solution until we have a widely supported native way of achieving this in CSS.</p>
+
+<p>{{PreviousMenuNext("Learn/CSS/CSS_layout/Flexbox", "Learn/CSS/CSS_layout/Floats", "Learn/CSS/CSS_layout")}}</p>

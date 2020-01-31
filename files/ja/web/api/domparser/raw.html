@@ -1,0 +1,200 @@
+<div>{{APIRef("DOM")}}</div>
+
+<p><span class="seoSummary"><strong><code>DOMParser</code></strong> インターフェイスは、{{Glossary("XML")}} / {{Glossary("HTML")}}ソースコードを文字列から DOM {{domxref("Document")}} にパースする機能を提供します。</span></p>
+
+<div class="note">
+<p><strong>Note:</strong> {{domxref("XMLHttpRequest")}} は URL アドレスに指定可能な情報から直接 XML や HTML のパースを行えます。 returning a <code>Document</code> in its {{domxref("XMLHttpRequest.response", "response")}} property.</p>
+</div>
+
+<p>You can perform the opposite operation—converting a DOM tree into XML or HTML source—using the {{domxref("XMLSerializer")}} interface.</p>
+
+<p>In the case of an HTML document, you can also replace portions of the DOM with new DOM trees built from HTML by setting the value of the {{domxref("Element.innerHTML")}} and {{domxref("Element.outerHTML", "outerHTML")}} properties. These properties can also be read to fetch HTML fragments corresponding to the corresponding DOM subtree.</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="brush: js">var <em>domparser </em>= new DOMParser();​​​​​​</pre>
+
+<h2 class="brush: js" id="メソッド">メソッド </h2>
+
+<p>{{domxref("DOMParser.parseFromString()")}}</p>
+
+<h3 id="Syntax_2" name="Syntax_2">Syntax</h3>
+
+<pre class="brush: js"><em>var </em><strong>doc</strong><em><strong> </strong>= domparser.</em>parseFromString(<em>string</em>, <em>mimeType</em>)</pre>
+
+<h3 id="Return" name="Return">戻り値</h3>
+
+<p>Either {{domxref("Document")}} or {{domxref("XMLDocument")}} depending on the <strong><code><a href="#Argument02">mimeType</a></code></strong> argument.</p>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<p>The method accepts 2 arguments (both are required):</p>
+
+<dl>
+ <dt><code>string</code></dt>
+ <dd>The {{domxref("DOMString")}} to be parsed. It must contain either {{Glossary("HTML")}}, {{Glossary("xml")}}, {{Glossary("xhtml+xml")}} or {{Glossary("svg")}} document.</dd>
+ <dt><a id="Argument02" name="Argument02"></a></dt>
+ <dt><code>mimeType</code></dt>
+</dl>
+
+<dl>
+ <dd>A {{domxref("DOMString")}}. This string determines a class of the the method's return value. The possible values are the following:</dd>
+</dl>
+
+<table class="standard-table" style="max-width: 50%;">
+ <thead>
+  <tr>
+   <th scope="col"><code>mimeType</code></th>
+   <th scope="col">doc.constructor</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td><code>text/html</code></td>
+   <td><code>{{domxref("Document")}}</code></td>
+  </tr>
+  <tr>
+   <td><code>text/xml</code></td>
+   <td><code>{{domxref("XMLDocument")}}</code></td>
+  </tr>
+  <tr>
+   <td><code>application/xml</code></td>
+   <td><code>{{domxref("XMLDocument")}}</code></td>
+  </tr>
+  <tr>
+   <td><code>application/xml</code></td>
+   <td><code>{{domxref("XMLDocument")}}</code></td>
+  </tr>
+  <tr>
+   <td><code>application/xhtml+xml</code></td>
+   <td><code>{{domxref("XMLDocument")}}</code></td>
+  </tr>
+  <tr>
+   <td><code>image/svg+xml</code></td>
+   <td><code>{{domxref("XMLDocument")}}</code></td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Examples">Examples</h2>
+
+<h3 id="Parsing_XML" name="Parsing_XML">XML のパース</h3>
+
+<p>パーサーオブジェクトを作成すると、<code>parseFromString()</code> メソッドを用いて 文字列から XML をパースすることができます。</p>
+
+<pre class="brush:js">var parser = new DOMParser();
+var doc = parser.parseFromString(stringContainingXMLSource, "application/xml");
+</pre>
+
+<h4 id="Error_handling" name="Error_handling">エラーのハンドリング</h4>
+
+<p>現在は、パース処理に失敗した場合、<code>DOMParser</code> は例外をスローせず、代わりにエラー文書を返すという点に注意して下さい (※参照: {{Bug(45566)}})</p>
+
+<pre class="brush:xml;autolinks:false;">&lt;parsererror xmlns="http://www.mozilla.org/newlayout/xml/parsererror.xml"&gt;
+(error description)
+&lt;sourcetext&gt;(a snippet of the source XML)&lt;/sourcetext&gt;
+&lt;/parsererror&gt;
+</pre>
+
+<p>パースエラーは<a href="/ja/docs/Error_Console">エラーコンソール</a> にもエラーの発生した文書の URI (※後述) とともに表示されます。</p>
+
+<h3 id="Parsing_an_SVG_or_HTML_document" name="Parsing_an_SVG_or_HTML_document">SVG および HTML 文書のパース</h3>
+
+<p><code>DOMParser</code> は SVG 文書のパース {{geckoRelease("10.0")}}、そして HTML 文書のパース {{geckoRelease("12.0")}} にも用いることができます。指定された MIME type によって動作は異なります。MIME type が <code>text/xml</code> の場合は <code>XMLDocument</code> 、<code>image/svg+xml</code> の場合は <code>SVGDocument</code> 、<code>text/html</code> の場合は <code>HTMLDocument</code> が返されます。</p>
+
+<pre class="brush:js">var parser = new DOMParser();
+var doc = parser.parseFromString(stringContainingXMLSource, "application/xml");
+// SVGDocument でも HTMLDocument でもなく、Document が返る
+
+parser = new DOMParser();
+doc = parser.parseFromString(stringContainingXMLSource, "image/svg+xml");
+// SVGDocument (Document) が返る
+
+parser = new DOMParser();
+doc = parser.parseFromString(stringContainingHTMLSource, "text/html");
+// HTMLDocument (Document) が返る
+</pre>
+
+<h2 id="DOMParser_HTML_extension_for_other_browsers" name="DOMParser_HTML_extension_for_other_browsers">DOMParser 未実装ブラウザーへの対応</h2>
+
+<pre class="brush:js">/*
+ * DOMParser HTML extension
+ * 2012-09-04
+ * 
+ * By Eli Grey, http://eligrey.com
+ * Public domain.
+ * NO WARRANTY EXPRESSED OR IMPLIED. USE AT YOUR OWN RISK.
+ */
+
+/*! @source https://gist.github.com/1129031 */
+/*global document, DOMParser*/
+
+(function(DOMParser) {
+	"use strict";
+
+	var
+	  proto = DOMParser.prototype
+	, nativeParse = <span style="font-size: 1rem;">proto</span><span style="font-size: 1rem;">.parseFromString</span>
+	;
+
+	// Firefox/Opera/IE throw errors on unsupported types
+	try {
+		// WebKit returns null on unsupported types
+		if ((new DOMParser()).parseFromString("", "text/html")) {
+			// text/html parsing is natively supported
+			return;
+		}
+	} catch (ex) {}
+
+	<span style="font-size: 1rem;">proto</span><span style="font-size: 1rem;">.parseFromString = function(markup, type) {</span>
+		if (/^\s*text\/html\s*(?:;|$)/i.test(type)) {
+			var
+			  doc = document.implementation.createHTMLDocument("")
+			;
+	      		if (markup.toLowerCase().indexOf('&lt;!doctype') &gt; -1) {
+        			doc.documentElement.innerHTML = markup;
+      			}
+      			else {
+        			doc.body.innerHTML = markup;
+      			}
+			return doc;
+		} else {
+			return <span style="font-size: 1rem;">nativeParse</span><span style="font-size: 1rem;">.apply(this, arguments);</span>
+		}
+	};
+}(DOMParser));
+</pre>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">策定状況</th>
+   <th scope="col">コメント</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName('DOM Parsing', '#the-domparser-interface', 'DOMParser')}}</td>
+   <td>{{Spec2('DOM Parsing')}}</td>
+   <td>初期定義</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザー実装状況</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("api.DOMParser", 3)}}</p>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li><a href="/ja/docs/Parsing_and_serializing_XML">XML のパースとシリアライズ</a></li>
+ <li>{{domxref("XMLHttpRequest")}}</li>
+ <li>{{domxref("XMLSerializer")}}</li>
+ <li><a href="/ja/Add-ons/Code_snippets/HTML_to_DOM">Parsing HTML to DOM</a></li>
+</ul>

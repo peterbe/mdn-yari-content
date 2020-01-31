@@ -1,0 +1,255 @@
+<div>{{JSRef}}</div>
+
+<div><code><strong>reduceRight()</strong></code>は、隣り合う 2 つの配列要素に対して（右から左へ）同時に関数を適用し、単一の値にします。</div>
+
+<div> </div>
+
+<div>{{EmbedInteractiveExample("pages/js/array-reduce-right.html")}}</div>
+
+<div> </div>
+
+<div>左から右へ適用する際は {{jsxref("Array.prototype.reduce()")}} を参照してください。</div>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox"><var>result</var> = <var>array</var>.reduceRight(<var>callback</var>[, <var>initialValue</var>]);
+</pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<dl>
+ <dt><code>callback</code></dt>
+ <dd>4 つの引数を取って、配列内の各値に対し実行するコールバック関数
+ <dl>
+  <dt><code>accumulator</code></dt>
+  <dd>現在処理されている配列要素の 1 つ前の要素。もしくは、<code>initialValue</code>。<code>initialValue</code> については、以下に記述します。</dd>
+  <dt><code>currentValue</code></dt>
+  <dd>現在処理されている配列要素</dd>
+  <dt><code>index</code>{{optional_inline}}</dt>
+  <dd>現在処理されている配列要素のインデックス</dd>
+  <dt><code>array</code>{{optional_inline}}</dt>
+  <dd><code>reduceRight</code> によって呼ばれる配列</dd>
+ </dl>
+ </dd>
+ <dt><code>initialValue</code>{{optional_inline}}</dt>
+ <dd><code>callback</code> の最初の呼び出しのときに、最初の実引数として用いるためのオブジェクト。initialValueが渡されなかった際は、配列の最後の要素が適用されます。また、空の配列に対して、初期値なしで呼び出すとエラーとなります。</dd>
+ <dt>
+ <h3 id="戻り値">戻り値</h3>
+
+ <p>The value that results from the reduction.</p>
+ </dt>
+</dl>
+
+<h2 id="Description" name="Description">詳細</h2>
+
+<p><code>reduceRight</code> は、配列に存在するおのおのの要素に対して、<code>callback</code> 関数を一度だけ実行します。配列における穴は対象からはずされ、また <code>callback</code> 関数は、「初期値（あるいは、直前の <code>callback</code> 呼び出し）」、「現在の要素の値」、「現在のインデックス」、「繰り返しが行われる配列」 の 4 つの引数を受け取ります。</p>
+
+<p>reduceRight の <code>callback</code> の呼び出しは、以下のように見えるでしょう。</p>
+
+<pre class="brush: js">array.reduceRight(function(previousValue, currentValue, index, array){
+  // ...
+})</pre>
+
+<p>関数が呼び出される初回は、<code>accumulator</code>と <code>currentValue</code> は 2 つの値のうちの 1 つを取り得ます。<code>reduce</code> 呼び出し時に、<code>initialValue</code> が与えられた場合、<code>accumulator</code> は <code>initialValue</code> と等しくなり、<code>currentValue</code> は、配列の最後の値と等しくなります。 <code>initialValue</code> が与えられなかった場合、<code>accumulator</code> は配列の最後の値と等しくなり、<code>currentValue</code> は、最後から数えて 2 番目の値と等しくなります。</p>
+
+<p>関数の実行を追った様子の例は、以下のようになるでしょう。</p>
+
+<pre class="brush: js">[0,1,2,3,4].reduceRight(function(accumulator, currentValue, index, array){
+  return accumulator + currentValue;
+});
+
+// 最初の呼び出し
+accumulator = 4, currentValue = 3, index = 3
+
+// 2 回目の呼び出し
+accumulator = 7, currentValue = 2, index = 2
+
+// 3 回目の呼び出し
+accumulator = 9, currentValue = 1, index = 1
+
+// 4 回目の呼び出し
+accumulator = 10, currentValue = 0, index = 0
+
+// array は、常に、reduce が呼び出された [0,1,2,3,4] というオブジェクトです。
+
+// 戻り値: 10
+</pre>
+
+<p><code>initialValue</code> を与えた場合、その結果は、以下のようになるでしょう。</p>
+
+<pre class="brush: js">[0,1,2,3,4].reduceRight(function(accumulator, currentValue, index, array){
+  return accumulator + currentValue;
+}, 10);
+
+// 最初の呼び出し
+accumulator = 10, currentValue = 4, index = 4
+
+// 2 回目の呼び出し
+accumulator = 14, currentValue = 3, index = 3
+
+// 3 回目の呼び出し
+accumulator = 17, currentValue = 2, index = 2
+
+// 4 回目の呼び出し
+accumulator = 19, currentValue = 1, index = 1
+
+// 5 回目の呼び出し
+accumulator = 20, currentValue = 0, index = 0
+
+// array は、常に、reduce が呼び出された [0,1,2,3,4] というオブジェクトです。
+
+// 戻り値: 20</pre>
+
+<h2 id="Compatibility" name="Compatibility">例</h2>
+
+<h3 id="Example.3A_Sum_up_all_values_within_an_array" name="Example.3A_Sum_up_all_values_within_an_array">例: 配列内の値を全て足す</h3>
+
+<pre class="brush: js">var total = [0, 1, 2, 3].reduceRight(function(a, b) {
+    return a + b;
+});
+// total == 6</pre>
+
+<h3 id="Example.3A_Flatten_an_array_of_arrays" name="Example.3A_Flatten_an_array_of_arrays">例: 多次元配列を平坦化する</h3>
+
+<pre class="brush: js">var flattened = [[0, 1], [2, 3], [4, 5]].reduceRight(function(a, b) {
+    return a.concat(b);
+}, []);
+// flattened is [4, 5, 2, 3, 0, 1]
+</pre>
+
+<p> </p>
+
+<h3 id="Run_a_list_of_asynchronous_functions_with_callbacks_in_series_each_passing_their_results_to_the_next">Run a list of asynchronous functions with callbacks in series each passing their results to the next</h3>
+
+<pre><code>const waterfall = (...functions) =&gt; (callback, ...args) =&gt;
+  functions.reduceRight(
+    (composition, fn) =&gt; (...results) =&gt; fn(composition, ...results),
+    callback
+  )(...args);
+
+const randInt = max =&gt; Math.floor(Math.random() * max)
+
+const add5 = (callback, x) =&gt; {
+  setTimeout(callback, randInt(1000), x + 5);
+};
+const mult3 = (callback, x) =&gt; {
+  setTimeout(callback, randInt(1000), x * 3);
+};
+const sub2 = (callback, x) =&gt; {
+  setTimeout(callback, randInt(1000), x - 2);
+};
+const split = (callback, x) =&gt; {
+  setTimeout(callback, randInt(1000), x, x);
+};
+const add = (callback, x, y) =&gt; {
+  setTimeout(callback, randInt(1000), x + y);
+};
+const div4 = (callback, x) =&gt; {
+  setTimeout(callback, randInt(1000), x / 4);
+};
+
+const computation = waterfall(add5, mult3, sub2, split, add, div4);
+computation(console.log, 5) // -&gt; 14
+
+// same as:
+
+const computation2 = (input, callback) =&gt; {
+  const f6 = x=&gt; div4(callback, x);
+  const f5 = (x, y) =&gt; add(f6, x, y);
+  const f4 = x =&gt; split(f5, x);
+  const f3 = x =&gt; sub2(f4, x);
+  const f2 = x =&gt; mult3(f3, x);
+  add5(f2, input);
+}</code></pre>
+
+<h3 id="Difference_between_reduce_and_reduceRight">Difference between <code>reduce</code> and <code>reduceRight</code></h3>
+
+<pre><code>var a = ['1', '2', '3', '4', '5']; 
+var left  = a.reduce(function(prev, cur)      { return prev + cur; }); 
+var right = a.reduceRight(function(prev, cur) { return prev + cur; }); 
+
+console.log(left);  // "12345"
+console.log(right); // "54321"</code></pre>
+
+<p> </p>
+
+<p> </p>
+
+<h2 id="Compatibility" name="Compatibility">互換性</h2>
+
+<p><code>reduceRight</code> は、ECMA-262 第 5 版に追加された仕様であり、他の標準の実装には存在しない場合があります。以下のコードをスクリプトの先頭に挿入することにより、ネイティブでの実装の如何に関わらず<code>reduceRight</code>を動作させる事ができます。</p>
+
+<pre class="brush: js"><code>// Production steps of ECMA-262, Edition 5, 15.4.4.22
+// Reference: http://es5.github.io/#x15.4.4.22
+if ('function' !== typeof Array.prototype.reduceRight) {
+  Array.prototype.reduceRight = function(callback /*, initialValue*/) {
+    'use strict';
+    if (null === this || 'undefined' === typeof this) {
+      throw new TypeError('Array.prototype.reduce called on null or undefined');
+    }
+    if ('function' !== typeof callback) {
+      throw new TypeError(callback + ' is not a function');
+    }
+    var t = Object(this), len = t.length &gt;&gt;&gt; 0, k = len - 1, value;
+    if (arguments.length &gt;= 2) {
+      value = arguments[1];
+    } else {
+      while (k &gt;= 0 &amp;&amp; !(k in t)) {
+        k--;
+      }
+      if (k &lt; 0) {
+        throw new TypeError('Reduce of empty array with no initial value');
+      }
+      value = t[k--];
+    }
+    for (; k &gt;= 0; k--) {
+      if (k in t) {
+        value = callback(value, t[k], k, t);
+      }
+    }
+    return value;
+  };
+}</code></pre>
+
+<h2 id="策定">策定</h2>
+
+<table>
+ <thead>
+  <tr>
+   <th scope="col">策定</th>
+   <th scope="col">状況</th>
+   <th scope="col">備考</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-15.4.4.22', 'Array.prototype.reduceRight')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td>初期定義。JavaScript 1.8にて実装。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-array.prototype.reduceright', 'Array.prototype.reduceRight')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-array.prototype.reduceright', 'Array.prototype.reduceRight')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザ実装状況</h2>
+
+<p> </p>
+
+<p>{{Compat("javascript.builtins.Array.reduceRight")}}</p>
+
+<h2 id="関連情報"><span style='font-family: x-locale-heading-primary,zillaslab,Palatino,"Palatino Linotype",x-locale-heading-secondary,serif; font-size: 2.5rem;'>関連情報</span></h2>
+
+<ul>
+ <li>{{jsxref("Array.prototype.reduce()")}} </li>
+</ul>
+
+<p> </p>

@@ -1,0 +1,47 @@
+
+<p><strong>注意：</strong>Gaia 主系統 App (用以載入其他所有 App) 目前已無法用於 Firefox。因此只能直接鍵入其子網域 (如：app://browser.gaiamobile.org:8080)，才能個別使用獨立的 App。請參閱 Bug <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=796768">796768</a>。</p>
+<p>若要在 Firefox 15 或更高版本中測試 B2G，則必須提取 (Fetch) Gaia 的使用者介面，再於瀏覽器中將之開啟。本篇文章將說明相關方式。</p>
+<p>另必須注意，若在實際的行動裝置上使用 Boot to Gecko，則無法精確呈現相關的使用經驗。其中仍將存在多項差異，包含：</p>
+<ul>
+  <li>無法使用多項硬體介面的功能</li>
+  <li>將各自於固定的分頁中啟動 App；而不是以主要的 UI 分頁開啟 App</li>
+  <li>若使用 Firefox Nightly 版本，則其穩定度可能仍嫌不足</li>
+</ul>
+<p>當然，你稍後亦可透過 Firefox 開發工具，進一步評估可能的配置與更多事項。</p>
+<h2 id="必要條件">必要條件</h2>
+<p>若要於 Firefox 中使用 Gaia，必先準備下列：</p>
+<ul>
+  <li>Firefox 15 或更高版本</li>
+  <li>git 套件 ─ 你可用自己最熟悉的套件管理 (Package manager) 功能安裝之；而 Mac 上的 Xcode 4 亦已具備</li>
+  <li>軟體建置 (Build) 系統；請參閱「<a href="/en/Mozilla/Boot_to_Gecko/B2G_build_prerequisites" title="en/Mozilla/Boot_to_Gecko/B2G_build_prerequisites">建置 B2G 的必要條件</a>」以進一步了解</li>
+  <li>一組終端 (可為 Windows 的 cmd.exe，或為 Linux 的 term 等等)</li>
+</ul>
+<h2 id="取得_Gaia">取得 Gaia</h2>
+<div class="note">
+  <strong>注意：</strong>若你已經將 Gaia 拉 (Pull) 入實際的 B2G 版本之中使用，則只要續用現有的複製版本即可。不需另外再抓一次。</div>
+<p>若要取得 Gaia 並用於 Firefox 中，只要完成下列程式碼即可。此程式碼將略過所有裝置中的特定要件，只提取 Gaia UI 與預設的 App。</p>
+<pre>git clone https://github.com/mozilla-b2g/gaia
+cd gaia
+DEBUG=1 make
+</pre>
+<p>上列將正確提取程式碼並設定 Gaia。</p>
+<h2 id="於_Firefox_中開啟_Gaia">於 Firefox 中開啟 Gaia</h2>
+<p>有 2 個方法。第一種方法比較簡單，但後續作業將有某些限制。第二種方法比較複雜，但在模擬執行 Boot to Gecko 時的效果較佳。</p>
+<h3 id="簡單的方法">簡單的方法</h3>
+<p>用終端發出下列指令，即可於 Firefox 中開啟首頁畫面。當然，你必須指定 Firefox 所要執行的正確路徑。指令如下：</p>
+<pre>/path/to/firefox index.html
+</pre>
+<p>你也可以直接把「<code>gaia/index.html</code>」檔案拖曳到 Firefox 中。</p>
+<h3 id="效果較佳的方法">效果較佳的方法</h3>
+<p>若使用客製設定檔 (Profile)，即可獲得較佳的 Gaia 模擬執行效果 (當然需有較佳的 API 從旁支援)。此指令中所指定 URL 其實是攔截 (Intercepted) 而得，再導向本端網路伺服器 (且該伺服器透過此設定檔所啟動)。而在使用此設定檔時，另有客製的 Firefox extension 將執行本端伺服器。</p>
+<pre>/path/to/firefox -profile /Volumes/Mozilla/b2g/B2G/gaia/profile http://system.gaiamobile.org:8080
+</pre>
+<p>在 Mac OS X 上的範例則為：</p>
+<pre>/Applications/Minefield.app/Contents/MacOS/firefox -profile /path/to/B2G/gaia/profile http://system.gaiamobile.org:8080</pre>
+<h2 id="深入測試與開發">深入測試與開發</h2>
+<p>另有其他方法可測試並開發 B2G 和網頁 App：</p>
+<ul>
+  <li><a href="/en/Mozilla/Boot_to_Gecko/Using_the_B2G_desktop_client" title="en/Mozilla/Boot_to_Gecko/Using_the_B2G_desktop_client">B2G 桌面用戶端</a></li>
+  <li><a href="/en/Mozilla/Boot_to_Gecko/Using_the_B2G_emulators" title="en/Mozilla/Boot_to_Gecko/Using_the_B2G_emulators">B2G 模擬器</a></li>
+  <li><a href="/en/Mozilla/Boot_to_Gecko/B2G_build_prerequisites" title="en/Mozilla/Boot_to_Gecko/B2G_build_prerequisites">在行動裝置上執行 B2G</a></li>
+</ul>

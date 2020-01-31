@@ -1,0 +1,144 @@
+<p>这篇文档阐述了如何使用 Linux 作为开发平台来构建 Windows 版本的 Mozilla。尽管这篇文章仅涵盖了编译 Firefox 的方法，但是编译其他的 Mozilla 项目，例如 Thunderbird 采用了相同的技术手段。</p>
+
+<p>在你能运行 Windows 平台上代码的静态分析之前构建一个交叉编译器并编译 Mozilla 是很关键的。</p>
+
+<h3 id="Build_a_GCC_mingw_cross-compiler" name="Build_a_GCC_mingw_cross-compiler">构建一个 GCC + mingw 的交叉编译器</h3>
+
+<h4 id="Prerequisites" name="Prerequisites">需求</h4>
+
+<ul>
+ <li><a class="external" href="http://www.gnu.org/software/binutils/">GNU Binutils</a> 2.23.1 是最低需求。更早的版本将不会正常工作。</li>
+ <li><a class="external" href="http://gcc.gnu.org/">GCC</a> 4.9.0 作为 GCC 的版本。任何高于 4.5.1 版本的 GCC 都应该可以使用。</li>
+ <li><a class="external" href="http://downloads.sourceforge.net/mingw/mingw-runtime-3.14.tar.gz?modtime=1198749088&amp;big_mirror=1">mingw-w64</a> 是必须的，最好使用主干（trunk）版本。<strong>正如其名，这是一个支持 32 位和 64 位目标的 mingw 复刻。</strong>我们需要使用这个复刻是因为当前它比原始的 mingw 更好，也包含了构建 Firefox 所必须的很多补丁。Mozilla 的代码基经常添加不存在于 mingw-w64 中的新的头文件和库文件依赖。它们很快就会被上游所修复。这就是为什么最好使用主干版本来确保所有的补丁都能用。</li>
+</ul>
+
+<p>下面的命令将确保所有必须的包都可用：</p>
+
+<pre class="brush: bash">$ mkdir $HOME/mingw-w64-build
+$ cd $HOME/mingw-w64-build
+$ wget http://ftp.gnu.org/gnu/binutils/binutils-2.24.tar.bz2
+$ tar -jxf binutils-2.24.tar.bz2
+$ wget http://gcc.fyxm.net/releases/gcc-4.9.0/gcc-4.9.0.tar.bz2
+$ tar -jxf gcc-4.9.0.tar.bz2
+$ git clone git://git.code.sf.net/p/mingw-w64/mingw-w64
+</pre>
+
+<h4 id="Build_Binutils" name="Build_Binutils">构建 Binutils</h4>
+
+<p>首先，交叉编译 binutils：</p>
+
+<pre class="brush: bash">$ mkdir binutils-2.24-build32 &amp;&amp; cd binutils-2.24-build32
+$ ../binutils-2.24/configure --prefix=/usr/local/ --target=i686-w64-mingw32
+$ make
+# make install</pre>
+
+<p>当 binutils 安装完毕以后，将会有很多目录出现在 /usr/local 之中。其中有一个 <code>bin/</code> 目录来存放二进制程序，比如 <code>i686-w64-mingw32-as</code>, <code>i686-w64-mingw32-ld</code> 等等。 值得注意的是你可以将 /usr/local 替换为你想要的位置（但是你必须在整个教程提到的地方都使用相同的位置）。同时也要确保 $PREFIX/bin 目录在你的 PATH 变量中。</p>
+
+<h4 id="Copy_the_Windows_bootstrap_files" name="Copy_the_Windows_bootstrap_files">安装 mingw-w64-headers</h4>
+
+<p>现在，你需要将 mingw 头文件安装到正确的地方。</p>
+
+<pre class="brush: bash">$ mkdir mingw-w64-headers32 &amp;&amp; cd mingw-w64-headers32
+$ ../mingw-w64/mingw-w64-headers/configure --host=i686-w64-mingw32 --prefix=/usr/local/i686-w64-mingw32/ --enable-sdk=all --enable-secure-api --enable-idl
+# make install</pre>
+
+<h4 id="Build_GCC_itself" name="Build_GCC_itself">构建 GCC 本身</h4>
+
+<p>现在我们能够配置并构建 GCC 了。</p>
+
+<pre class="brush: bash">$ mkdir gcc-4.9.0-mingw32 &amp;&amp; cd gcc-4.9.0-mingw32
+$ ../gcc-4.9.0/configure --prefix=/usr/local/ --target=i686-w64-mingw32 --with-gnu-ld --with-gnu-as --enable-languages=c,c++ --disable-multilib
+$ make all-gcc
+# make install-gcc
+</pre>
+
+<p>当 GCC 安装完毕以后，<code>/usr/local/bin</code> 中就会有更多的二进制程序。但是现在我们并没有得到一个完整的 GCC。</p>
+
+<h4 id="Prepare_wintools" name="Prepare_wintools">安装 mingw-w64-crt</h4>
+
+<p>我们需要在现在安装 mingw-w64 crt 包：</p>
+
+<pre class="brush: bash">$ mkdir mingw-w64-crt32 &amp;&amp; cd mingw-w64-crt32
+$ ../mingw-w64/mingw-w64-crt/configure --host=i686-w64-mingw32 --prefix=/usr/local/i686-w64-mingw32/
+$ make
+# make install
+</pre>
+
+<h4 id="Configure_Mozilla" name="Configure_Mozilla">完成 GCC 的安装</h4>
+
+<p>由于现在我们安装了 crt，我们就可以完成 GCC 的安装了：</p>
+
+<pre class="brush: bash">$ cd gcc-4.9.0-mingw32
+$ make
+# make install</pre>
+
+<h4 id="安装_widl（可选）">安装 widl（可选）</h4>
+
+<p>widl 是一款由 Wine 项目开发，并由 mingw-w64 提供的作为替代微软的 MIDL 的 IDL 编译器。这是构建 Mozilla 的辅助模块所必须的程序。你可以通过在你的 mozconfig 中添加 --disable-accessibility 来跳过这个步骤。</p>
+
+<pre class="brush: bash">$ mkdir widl32
+$ ../mingw-w64/mingw-w64-tools/widl/configure --prefix=/usr/local --target=i686-w64-mingw32
+$ make
+# make install
+</pre>
+
+<h3 id="Configure_Mozilla" name="Configure_Mozilla">配置 Mozilla</h3>
+
+<p>你可以根据<a href="/En/Developer_Guide/Build_Instructions#Get_the_source" title="en/Build_Documentation#Get_the_source">这里</a>的说明来获得源代码。当你获得源代码之后，请在代码顶层目录创建一个 <code>.mozconfig</code> 文件。</p>
+
+<p>这有一份 <code>.mozconfig</code> 文件的范例：</p>
+
+<pre class="eval">#指出是在交叉编译
+export CROSS_COMPILE=1
+ac_add_options --enable-application=browser
+ac_add_options --target=i686-w64-mingw32
+ac_add_options --enable-default-toolkit=cairo-windows
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/../mozilla-mingw
+
+ac_add_options  --enable-debug
+ac_add_options  --disable-optimize
+
+ac_add_options --disable-crashreporter
+ac_add_options --disable-maintenance-service
+ac_add_options --disable-webrtc
+ac_add_options --without-intl-api
+ac_add_options --disable-sandbox
+
+# ac_add_options --disable-accessibility # 如果你没有安装 widl 的话，请去掉注释符
+
+# 使用并行构建。根据你安装的处理器个数调整数字。
+mk_add_options MOZ_MAKE_FLAGS=-j8
+</pre>
+
+<h3 id="Build" name="Build">构建</h3>
+
+<p>去吧小宝贝：</p>
+
+<pre class="brush: bash">./mach build
+</pre>
+
+<p>它很可能会出现失败。这是因为 mingw 构建的版本是 Tier-3 等级的，这意味着它们一直以来是没有任何担保可以正常工作的。这些问题通常会被很快的修复。你可能会在 Bugzilla 搜索这些包含了准备合并到 mozilla-central 的补丁的 bug。而且有时候也需要对 mingw-w64 进行修补。如果遇到了这种情况，请确保你在使用最新的主干版本。应对这种情况更新 Git 树并重新安装 mingw-w64 头文件和 crt 包（见上文）应该足够了， 一般来说没有必要重新安装整个 GCC 及 binutils 包。</p>
+
+<h3 id="生成_64_位程序">生成 64 位程序</h3>
+
+<p>为了编译出 64 位的 Mozilla，操作步骤几乎是完全一致的。在上述构建工具链的说明中替换 i686-w64-mingw32 为 x86_64-w64-mingw32 作为 host 及 target 的选项并且修改 mozconfig 来构建 64 位的 Mozilla。</p>
+
+<h3 id="Questions" name="Questions">问题</h3>
+
+<h4 id="How_can_I_debug_the_result_Firefox.3F" name="How_can_I_debug_the_result_Firefox.3F">我怎么调试编译出的 Firefox 呢？</h4>
+
+<p>你可以使用 Mingw 的 GDB 来在 Windows 的机器上调试编译出的 Firefox。可以从<a class="external" href="http://sourceforge.net/project/showfiles.php?group_id=2435">这里</a>下载。</p>
+
+<p>你同样也需要在你的用来调试的机器上下载 Mozilla 的源代码来进行代码级的调试。</p>
+
+<p> </p>
+
+<h4 id="Why_the_build_system_not_take_my_i686-mingw32-gcc_as_a_cross-compiler.3F" name="Why_the_build_system_not_take_my_i686-mingw32-gcc_as_a_cross-compiler.3F">为什么构建系统并不把我的 i686-w64-mingw32-gcc 作为交叉编译器来使用呢？</h4>
+
+<p>配置脚本用来判断一个编译器是否是一个交叉编译器的方法是：它能编译一个简单的 c 程序并且能够在 shell 中执行。如果结果程序是可以运行的，那么配置系统会认为这个编译器不是一个交叉编译器。但是在一些例如 Ubuntu 的 Linux 发行版上，当你安装 wine 之后，你可以直接在 shell 上运行 Windows 程序，而这会导致配置测试的失败。</p>
+
+<p> </p>
+
+<h4 id="Other_troubles" name="Other_troubles">其他问题</h4>
+
+<p>请在新闻组 mozilla.dev.builds 中提问。</p>

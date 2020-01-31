@@ -1,0 +1,223 @@
+<div dir="rtl">{{JSRef("Global_Objects", "JSON")}}</div>
+
+<h2 dir="rtl" id="Summary" name="Summary">خلاصة موجزة</h2>
+
+<p dir="rtl">تقوم الدالة <strong><code>JSON.stringify()</code></strong><code> بتحويل قيم JavaScript إلى نص على طريقة JSON. يمكن </code>اختياريا إما استبدال القيم إذا تم تحديد دالة الاستبدال (replacer)، أو إدراج خصائص معينة  إذا تم تحديد لها جدولا في دالة الإستبدال. </p>
+
+<h2 dir="rtl" id="Syntax" name="Syntax">بناء التركيب</h2>
+
+<pre class="syntaxbox" dir="rtl"><code>JSON.stringify(<var>value</var>[, <var>replacer</var>[, <var>space</var>]])</code></pre>
+
+<h3 dir="rtl" id="Parameters" name="Parameters">الوسائط</h3>
+
+<dl>
+ <dt dir="rtl"><code>value</code></dt>
+ <dd dir="rtl">القيم المراد تحويلها إلى نص JSON.</dd>
+ <dt dir="rtl"><code>replacer</code> {{optional_inline}}</dt>
+ <dd dir="rtl">If a function, transforms values and properties encountered while stringifying; if an array, specifies the set of properties included in objects in the final string.<br>
+ A detailed description of the <code>replacer</code> function is provided in the JavaScript guide article <a href="/en-US/docs/Web/JavaScript/Guide/Using_native_JSON#The_replacer_parameter">Using native <code>JSON</code></a>.</dd>
+ <dt dir="rtl"><code>space</code> {{optional_inline}}</dt>
+ <dd dir="rtl">Causes the resulting string to be pretty-printed.</dd>
+</dl>
+
+<h2 dir="rtl" id="Description" name="Description">Description</h2>
+
+<p dir="rtl"><code>JSON.stringify()</code> converts a value to JSON notation representing it:</p>
+
+<ul dir="rtl">
+ <li>Properties of non-array objects are not guaranteed to be stringified in any particular order. Do not rely on ordering of properties within the same object within the stringification.</li>
+ <li>{{jsxref("Boolean")}}, {{jsxref("Number")}}, and {{jsxref("String")}} objects are converted to the corresponding primitive values during stringification, in accord with the traditional conversion semantics.</li>
+ <li>If {{jsxref("undefined")}}, a function, or a symbol is encountered during conversion it is either omitted (when it is found in an object) or censored to {{jsxref("null")}} (when it is found in an array).</li>
+ <li>All symbol-keyed properties will be completely ignored, even when using the <code>replacer</code> function.</li>
+</ul>
+
+<pre class="brush: js" dir="rtl">JSON.stringify({});                  // '{}'
+JSON.stringify(true);                // 'true'
+JSON.stringify('foo');               // '"foo"'
+JSON.stringify([1, 'false', false]); // '[1,"false",false]'
+JSON.stringify({ x: 5 });            // '{"x":5}'
+
+JSON.stringify({ x: 5, y: 6 });
+// '{"x":5,"y":6}' or '{"y":6,"x":5}'
+JSON.stringify([new Number(1), new String('false'), new Boolean(false)]);
+// '[1,"false",false]'
+
+// Symbols:
+JSON.stringify({ x: undefined, y: Object, z: Symbol('') });
+// '{}'
+JSON.stringify({ [Symbol('foo')]: 'foo' });
+// '{}'
+JSON.stringify({ [Symbol.for('foo')]: 'foo' }, [Symbol.for('foo')]);
+// '{}'
+JSON.stringify({ [Symbol.for('foo')]: 'foo' }, function(k, v) {
+  if (typeof k === 'symbol') {
+    return 'a symbol';
+  }
+});
+// '{}'
+</pre>
+
+<h3 dir="rtl" id="space_argument" name="space_argument"><code>space</code> argument</h3>
+
+<p dir="rtl">The <code>space</code> argument may be used to control spacing in the final string. If it is a number, successive levels in the stringification will each be indented by this many space characters (up to 10). If it is a string, successive levels will indented by this string (or the first ten characters of it).</p>
+
+<pre class="brush: js" dir="rtl">JSON.stringify({ a: 2 }, null, ' ');
+// '{
+//  "a": 2
+// }'
+</pre>
+
+<p dir="rtl">Using a tab character mimics standard pretty-print appearance:</p>
+
+<pre class="brush: js" dir="rtl">JSON.stringify({ uno: 1, dos: 2 }, null, '\t');
+// returns the string:
+// '{
+//     "uno": 1,
+//     "dos": 2
+// }'
+</pre>
+
+<h3 dir="rtl" id="toJSON_behavior" name="toJSON_behavior"><code>toJSON()</code> behavior</h3>
+
+<p dir="rtl">If an object being stringified has a property named <code>toJSON</code> whose value is a function, then the <code>toJSON()</code> method customizes JSON stringification behavior: instead of the object being serialized, the value returned by the <code>toJSON()</code> method when called will be serialized. For example:</p>
+
+<pre class="brush: js" dir="rtl">var obj = {
+  foo: 'foo',
+  toJSON: function() {
+    return 'bar';
+  }
+};
+JSON.stringify(obj);        // '"bar"'
+JSON.stringify({ x: obj }); // '{"x":"bar"}'
+</pre>
+
+<h3 dir="rtl" id="Example_of_using_JSON.stringify_with_localStorage" name="Example_of_using_JSON.stringify_with_localStorage">Example of using <code>JSON.stringify()</code> with <code>localStorage</code></h3>
+
+<p dir="rtl">In a case where you want to store an object created by your user and allowing it to be restored even after the browser has been closed, the following example is a model for the applicability of <code>JSON.stringify()</code>:</p>
+
+<div class="warning" dir="rtl">
+<p>Functions are not a valid JSON data type so they will not work. Also some objects like {{jsxref("Date")}} will be a string after {{jsxref("JSON.parse()")}}.</p>
+</div>
+
+<pre class="brush: js" dir="rtl">// Creating an example of JSON
+var session = {
+  'screens': [],
+  'state': true
+};
+session.screens.push({ 'name': 'screenA', 'width': 450, 'height': 250 });
+session.screens.push({ 'name': 'screenB', 'width': 650, 'height': 350 });
+session.screens.push({ 'name': 'screenC', 'width': 750, 'height': 120 });
+session.screens.push({ 'name': 'screenD', 'width': 250, 'height': 60 });
+session.screens.push({ 'name': 'screenE', 'width': 390, 'height': 120 });
+session.screens.push({ 'name': 'screenF', 'width': 1240, 'height': 650 });
+
+// Converting the JSON string with JSON.stringify()
+// then saving with localStorage in the name of session
+localStorage.setItem('session', JSON.stringify(session));
+
+// Example of how to transform the String generated through 
+// JSON.stringify() and saved in localStorage in JSON object again
+var restoredSession = JSON.parse(localStorage.getItem('session'));
+
+// Now restoredSession variable contains the object that was saved
+// in localStorage
+console.log(restoredSession);
+</pre>
+
+<h3 dir="rtl" id="Example_of_using_replacer_parameter" name="Example_of_using_replacer_parameter">Example of using <code>replacer</code> parameter</h3>
+
+<pre class="brush: js" dir="rtl">var foo = { foundation: 'Mozilla', model: 'box', week: 45, transport: 'car', month: 7 };
+
+JSON.stringify(foo, function(key, value) {
+  if (typeof value === 'string') {
+    return undefined; // remove all properties whose value is a string.
+  }
+  return value;
+});  // '{"week":45,"month":7}'
+
+JSON.stringify(foo, ['week', 'month']);  
+// '{"week":45,"month":7}', only keep "week" and "month" properties
+</pre>
+
+<h2 dir="rtl" id="Specifications" name="Specifications">Specifications</h2>
+
+<table class="standard-table" dir="rtl">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-15.12.3', 'JSON.stringify')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td>Initial definition. Implemented in JavaScript 1.7.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-json.stringify', 'JSON.stringify')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 dir="rtl" id="Browser_compatibility" name="Browser_compatibility">Browser compatibility</h2>
+
+<div dir="rtl">{{CompatibilityTable}}</div>
+
+<div dir="rtl" id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatGeckoDesktop("1.9.1")}}</td>
+   <td>{{CompatIE("8.0")}}</td>
+   <td>{{CompatOpera("10.5")}}</td>
+   <td>{{CompatSafari("4.0")}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div dir="rtl" id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Chrome for Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatGeckoMobile("1.0")}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<p dir="rtl">Based on <a class="external" href="http://kangax.github.com/es5-compat-table/">Kangax's compat table</a>.</p>
+
+<h2 dir="rtl" id="See_also" name="See_also">See also</h2>
+
+<ul>
+ <li dir="rtl"><a href="/en-US/docs/Web/JavaScript/Guide/Using_native_JSON">Using native <code>JSON</code></a></li>
+ <li dir="rtl">{{jsxref("JSON.parse()")}}</li>
+</ul>

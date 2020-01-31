@@ -1,0 +1,271 @@
+<div>{{JSRef}}</div>
+
+<p><code><strong>bind()</strong></code> メソッドは新しい関数を生成し、その関数が呼び出された時の一連の引数の前に、提供された値が設定された <code>this</code> キーワードが追加されて呼び出されます。</p>
+
+<div>{{EmbedInteractiveExample("pages/js/function-bind.html")}}</div>
+
+<p class="hidden">このデモのソースファイルは GitHub リポジトリに格納されています。デモプロジェクトに協力したい場合は、 <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> をクローンしてプルリクエストを送信してください。</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox"><code><var>function</var></code>.bind(<var>thisArg</var>[, <var>arg1</var>[, <var>arg2</var>[, ...]]])</pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<dl>
+ <dt><code>thisArg</code></dt>
+ <dd>バインドされた関数が呼び出される際、ターゲット関数に <code>this</code> 引数として渡される値です。バインドされた関数が {{jsxref("Operators/new", "new")}} 演算子によって構築された場合、この引数は無視されます。 <code>setTimeout</code> の中で <code>bind</code> を使用して (コールバックとして提供する) 関数を生成する場合、 <code>thisArg</code> として渡されるプリミティブ値はオブジェクトに変換されます。 <code>bind</code> に引数が提供されない場合は、実行スコープの <code>this</code> は新しい関数のための <code>thisArg</code> として扱われます。</dd>
+ <dt><code>arg1, arg2, ...</code></dt>
+ <dd>ターゲット関数を呼び出す時、バインドされた関数に与えられる引数の前に付けてターゲット関数に渡す引数。</dd>
+</dl>
+
+<h3 id="Return_value" name="Return_value">返値</h3>
+
+<p><strong><code>this</code></strong> の値と初期の引数を指定された関数のコピーです。</p>
+
+<h2 id="Description" name="Description">説明</h2>
+
+<p><strong>bind()</strong> 関数は、新しい<strong>バインドされた関数</strong> <strong>(BF)</strong> を生成します。 <strong>BF</strong> は<strong>特殊関数オブジェクト</strong> (<strong>exotic function object</strong>; <strong>ECMAScript 2015</strong>からの用語) であり、元の関数オブジェクトをラップします。<strong>BF</strong> を呼び出すと<strong>ラップされた関数</strong>が実行されます。<br>
+ <strong>BF</strong> は下記の内部プロパティを持ちます。</p>
+
+<ul>
+ <li><strong>[[BoundTargetFunction]] </strong>- ラップされた関数オブジェクト;</li>
+ <li><strong>[[BoundThis]]</strong> - ラップされた関数を呼び出す時に常に <strong>this</strong> に渡される値。</li>
+ <li><strong>[[BoundArguments]]</strong> - ラップされた関数を呼び出す時に、その要素が第1引数として使われる値のリスト。</li>
+ <li><strong>[[Call]]</strong> - オブジェクトに関連する実行コード。関数呼び出し式を通じて実行される。内部メソッドへの引数は <strong>this</strong> 値と呼び出し式によって関数に渡される引数を含むリスト。</li>
+</ul>
+
+<p>バインドされた関数が呼ばれるとき、<strong>[[BoundTargetFunction]]</strong>上の内部メソッド<strong> [[Call]]</strong> を、次の引数とともに呼び出します: <strong>Call(<em>boundThis</em>, <em>args</em>)</strong>。ここで <strong><em>boundThis </em></strong> は <strong>[[BoundThis]]</strong>、<em><strong>args </strong></em>は <strong>[[BoundArguments]]</strong> で、後に関数呼び出しで渡された引数が続きます。</p>
+
+<p>バインドされた関数は {{jsxref("Operators/new", "new")}} 演算子でも生成されます。これを行うとターゲット関数が代わりに生成されたようになります。与えられた <strong><code>this</code></strong> の値は無視され、追加された引数はエミュレートされた関数に提供されます。</p>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<h3 id="Creating_a_bound_function" name="Creating_a_bound_function">バインドされた関数の生成</h3>
+
+<p>最もシンプルな <code>bind()</code> の使い方は、どのように呼び出された場合でも特定の <code>this</code> 値を持つ関数を生成することです。初心者の JavaScript プログラマーがよくやる間違いは、あるオブジェクトからメソッドを取り出し、後でその関数を呼び出すとき、その内側の <code>this</code> 値が元のオブジェクトになると考えてしまうことです (例えば、そのメソッドをコールバック関数に使うケース)。特に配慮しなければ、元のオブジェクトは失われてしまいます {{訳注("取り出した関数内の <code>this</code> としては使えなくなる")}}。その関数に元々のオブジェクトを <code>bind()</code> して束縛された関数を生成すれば、この問題をきちんと解決することができます。</p>
+
+<pre class="brush: js">this.x = 9;    // this はここではブラウザーのグローバルな "window" オブジェクト
+var module = {
+  x: 81,
+  getX: function() { return this.x; }
+};
+
+module.getX(); // 81
+
+var retrieveX = module.getX;
+retrieveX(); 
+// この関数はグローバルスコープで呼び出されるため9を返します。
+
+// 'this' を module に結びつけた新しい関数を生成
+// 初心者のプログラマーはグローバル変数の x と
+// モジュールプロパティの x とを混同するかもしれません。
+var boundGetX = retrieveX.bind(module);
+boundGetX(); // 81
+</pre>
+
+<h3 id="Partially_applied_functions" name="Partially_applied_functions">部分的に適用された関数</h3>
+
+<p>次にシンプルな <code>bind()</code> の使い方は、あらかじめ引数が指定された関数を生成することです。これらの引数は、<code>this</code> 値の後に続けます (指定しないことも可能)。すると、束縛された関数がいつ呼ばれても、この指定された引数を先頭にして束縛された関数の引数がターゲット関数に渡されます。</p>
+
+<pre class="brush: js">function list() {
+  return Array.prototype.slice.call(arguments);
+}
+
+var list1 = list(1, 2, 3); // [1, 2, 3]
+
+// 先頭の引数がプリセットされた関数をつくる
+var leadingThirtysevenList = list.bind(null, 37);
+
+var list2 = leadingThirtysevenList(); 
+// [37]
+
+var list3 = leadingThirtysevenList(1, 2, 3);
+// [37, 1, 2, 3]
+</pre>
+
+<h3 id="With_setTimeout" name="With_setTimeout"><code>setTimeout</code> とともに</h3>
+
+<p>既定では、 {{domxref("window.setTimeout()")}} 内部の <code>this</code> キーワードは {{ domxref("window") }} (あるいは <code>global</code> オブジェクト) に設定されます。クラスインスタンスを参照する <code>this</code> が必要なクラスメソッドを使う場合、 <code>this</code> をコールバック関数と明確に結びつけて(バインドして)、インスタンスを維持することができます。</p>
+
+<pre class="brush: js">function LateBloomer() {
+  this.petalCount = Math.floor(Math.random() * 12) + 1;
+}
+
+// 1 秒遅延させてから bloom を宣言する
+LateBloomer.prototype.bloom = function() {
+  window.setTimeout(this.declare.bind(this), 1000);
+};
+
+LateBloomer.prototype.declare = function() {
+  console.log('I am a beautiful flower with ' +
+    this.petalCount + ' petals!');
+};
+
+var flower = new LateBloomer();
+flower.bloom();  
+// after 1 second, triggers the 'declare' method</pre>
+
+<h3 id="Bound_functions_used_as_constructors" name="Bound_functions_used_as_constructors">コンストラクターとして使用するバインドされた関数</h3>
+
+<div class="warning">
+<p><strong>警告</strong>: このセクションでは、JavaScript の性能 (capabilities) を実演して <code>bind()</code> メソッドの極端な例を説明していますが、以下の方法がベストなわけではなく、むしろ本番環境では推奨されない方法です。</p>
+</div>
+
+<p>バインドされた関数は自動的に、 {{jsxref("Operators/new", "new")}} 演算子を使ってターゲット関数の新しいインスタンスを構築できるようになっています。新たな値を構築するために束縛された関数を使った場合、 <code>this</code> を与えても無視されます。しかし、同時に与える引数はコンストラクター呼び出しの先頭部分に挿入されます:</p>
+
+<pre class="brush: js">function Point(x, y) {
+  this.x = x;
+  this.y = y;
+}
+
+Point.prototype.toString = function() { 
+  return this.x + ',' + this.y; 
+};
+
+var p = new Point(1, 2);
+p.toString(); // '1,2'
+
+// not supported in the polyfill below,
+
+// works fine with native bind:
+
+var YAxisPoint = Point.bind(null, 0/*x*/);
+
+
+var emptyObj = {};
+var YAxisPoint = Point.bind(emptyObj, 0/*x*/);
+
+var axisPoint = new YAxisPoint(5);
+axisPoint.toString(); // '0,5'
+
+axisPoint instanceof Point; // true
+axisPoint instanceof YAxisPoint; // true
+new Point(17, 42) instanceof YAxisPoint; // true
+</pre>
+
+<p>バインドされた関数を {{jsxref("Operators/new", "new")}} で使えるように生成するのに特別なことをする必要は無いので注意してください。当然、普通に呼び出されるバインドされた関数を生成する際も特別なことは必要ありません。もしその関数を {{jsxref("Operators/new", "new")}} 演算子とともに呼び出すことにしか使いたくないと思っても、普通に呼び出すことはできてしまいます。</p>
+
+<pre class="brush: js">// この例は JavaScript コンソールで直接実行できます
+// ...上の例のつづき
+
+// 普通の関数としても実行できます
+// (あまり必要にはなりませんが)
+YAxisPoint(13);
+
+emptyObj.x + ',' + emptyObj.y;
+// &gt;  '0,13'
+</pre>
+
+<p>バインドされた関数を {{jsxref("Operators/new", "new")}} でしか使えないように制限したい場合、または通常の呼び出しだけに制限したい場合には、ターゲット関数がその制限を強制するようにしなければなりません。</p>
+
+<h3 id="Creating_shortcuts" name="Creating_shortcuts">ショートカットを作成する</h3>
+
+<p><code>bind()</code> は、特定の <code>this</code> を必須とするような関数のショートカットを作成するのにも便利です。</p>
+
+<p>例として、{{jsxref("Array.prototype.slice")}} を取り上げます。この関数は、配列に似たオブジェクトを本物の配列へ変換するために使えます。まず、次のようにショートカットを作成するとします。</p>
+
+<pre class="brush: js">var slice = Array.prototype.slice;
+
+// ...
+
+slice.apply(arguments);
+</pre>
+
+<p><code>bind()</code> を使うと、さらにシンプルにできます。次のコードでは、 <code>slice</code> が {{jsxref("Function.prototype")}} の {{jsxref("Function.prototype.apply()", "apply()")}} 関数に結びつけられた関数になり、その内側の <strong><code>this</code></strong> 値は {{jsxref("Array.prototype")}} の{{jsxref("Array.prototype.slice()", "slice()")}} 関数にセットされます。こうすると、いちいち <code>apply()</code> を呼び出す必要がなくなります。</p>
+
+<pre class="brush: js">// ひとつ前の例の "slice" と同じ
+var unboundSlice = Array.prototype.slice;
+var slice = Function.prototype.apply.bind(unboundSlice);
+
+// ...
+
+slice(arguments);
+</pre>
+
+<h2 id="Polyfill">Polyfill</h2>
+
+<p>以下のコードをあなたのスクリプトの先頭に挿入すれば、その状況をいくらか変えることができます。ネイティブで対応されていない実装において、 <code>bind()</code> の多くの機能を使えるようになります。</p>
+
+<pre class="brush: js">if (!Function.prototype.bind) {
+  Function.prototype.bind = function(oThis) {
+    if (typeof this !== 'function') {
+      // closest thing possible to the ECMAScript 5
+      // internal IsCallable function
+      throw new TypeError('Function.prototype.bind - what is trying to be bound is not callable');
+    }
+
+    var aArgs   = Array.prototype.slice.call(arguments, 1),
+        fToBind = this,
+        fNOP    = function() {},
+        fBound  = function() {
+          return fToBind.apply(this instanceof fNOP
+                 ? this
+                 : oThis,
+                 aArgs.concat(Array.prototype.slice.call(arguments)));
+        };
+
+    if (this.prototype) {
+      // Function.prototype doesn't have a prototype property
+      fNOP.prototype = this.prototype; 
+    }
+    fBound.prototype = new fNOP();
+
+    return fBound;
+  };
+}
+</pre>
+
+<p>このアルゴリズムと仕様上のアルゴリズムとの間には、いくつか大きな違いがあります (真剣に網羅することを目指したわけではないので、他にも差はあるかもしれません)。</p>
+
+<ul>
+ <li>この部分的な実装は、 {{jsxref("Array.prototype.slice()")}}, {{jsxref("Array.prototype.concat()")}}, {{jsxref("Function.prototype.call()")}}, {{jsxref("Function.prototype.apply()")}} という、それぞれオリジナルの値を持つ組み込みメソッドに依存している。</li>
+ <li>この不完全な実装がつくり出す関数は、不変の (immutable) "poison pill" {{jsxref("Function.caller", "caller")}} プロパティと <code>arguments</code> プロパティ (get, set, delete の際に {{jsxref("Global_Objects/TypeError", "TypeError")}} を投げる{{訳注("strict mode での話をしているようだ")}}) を持たない ({{jsxref("Object.defineProperty")}} をサポートする実装の上ではこれを追加することができる。あるいは {{jsxref("Object.defineGetter", "__defineGetter__")}} と {{jsxref("Object.defineSetter", "__defineSetter__")}} に対応する実装上でも部分的に実装可能だが、 delete の際に例外を投げるようにはできない)。</li>
+ <li>この不完全な実装は <code>prototype</code> プロパティを持つ関数をつくり出す (正規の束縛された関数には存在しない)。</li>
+ <li>この不完全な実装でつくられた束縛された関数の <code>length</code> プロパティは、 ECMA-262 で示されているものと一致しない。この実装がつくる関数の <code>length</code> は常に 0 だが、完全な実装においては、ターゲット関数と先行定義引数の長さ次第で、0 ではない長さになりうる。</li>
+</ul>
+
+<p>この不完全な実装を使うことを選ぶ場合は、 <strong>ECMA-262 第5版の定義から外れる挙動に依存しないように！</strong> ただし、いくらか気をつければ（特定の要望に適するような追加修正も必要かもしれません）、この不完全な実装は、<code>bind()</code> が広く仕様通りに実装されるまでの悪くないつなぎとして使えるでしょう {{訳注("Prototype.js の <code>Function#bind</code>、jQuery の <code>jQeury.proxy()</code>、 Underscore.js の <code>_.bind()</code> など多数のライブラリでも提供されています")}}。</p>
+
+<p>もっと完全な解決法は <a href="https://github.com/Raynos/function-bind">https://github.com/Raynos/function-bind</a> を確認してください</p>
+
+<h2 id="Specifications" name="Specifications">仕様書</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">状態</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-15.3.4.5', 'Function.prototype.bind')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td>初回定義。 JavaScript 1.8.5 で実装。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-function.prototype.bind', 'Function.prototype.bind')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-function.prototype.bind', 'Function.prototype.bind')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザーの対応</h2>
+
+<p class="hidden">このページの互換性一覧表は構造化データから生成されています。データに協力していただけるのであれば、 <a class="external" href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> をチェックアウトしてプルリクエストを送信してください。</p>
+
+<p>{{Compat("javascript.builtins.Function.bind")}}</p>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li>{{jsxref("Function.prototype.apply()")}}</li>
+ <li>{{jsxref("Function.prototype.call()")}}</li>
+ <li>{{jsxref("Functions", "Functions", "", 1)}}</li>
+</ul>

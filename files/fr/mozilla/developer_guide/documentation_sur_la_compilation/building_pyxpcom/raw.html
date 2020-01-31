@@ -1,0 +1,134 @@
+<p>Instructions pour la construction de <a href="/fr/PyXPCOM" title="/en/PyXPCOM"> PyXPCOM </a>.</p>
+
+<div class="note"><strong>Note: </strong> Pour ceux qui veulent utiliser PyXPCOM au sein de Firefox et/ou <a href="/fr/XULRunner" title="/en/XULRunner"> XULRunner </a>, l'extension <a href="http://pyxpcomext.mozdev.org/" title="http://pyxpcomext.mozdev.org/"> PythonExt </a> fournit des liaisons de PyXPCOM prédéfinis pour Firefox/XULRunner.</div>
+
+<h3 id="Installing_Python" name="Installing_Python">Installation de Python</h3>
+
+<h4 id="PyXPCOM_Requirements" name="PyXPCOM_Requirements">Exigences PyXPCOM</h4>
+
+<ul>
+ <li>PyXPCOM nécessite Python 2.3 ou ultérieure (Python 2.3 et 2.4 ont tous deux été récemment testé).</li>
+ <li>PyXPCOM nécessite l'accès à une bibliothèque Python partagé.</li>
+</ul>
+
+<h4 id="Linux" name="Linux">Linux</h4>
+
+<p>Pour les utilisateurs de Linux, le script de compilation devrait vérifier si vous avez une version adaptée de la bibliothèque partagée de Python. Aller au <a href="/fr/Building_PyXPCOM#Compiling_Mozilla" title="/en/Building_PyXPCOM#Compiling_Mozilla"> Compiler Mozilla </a>, et si vous recevez une erreur qui vous dit un partage Python ne peut pas être localisé, alors vous aurez besoin de compiler Python avec <a href="/fr/Building_PyXPCOM#Other_systems" title="/en/Building_PyXPCOM#Other_systems"><code>--enable-shared</code></a>.</p>
+
+<h5 id="Recent_Fedora_and_Ubuntu_builds" name="Recent_Fedora_and_Ubuntu_builds">Recent Fedora and Ubuntu builds</h5>
+
+<p>These distributions generally have a shared Python already available.</p>
+
+<h5 id="Gentoo_systems" name="Gentoo_systems">Gentoo systems</h5>
+
+<p>Building a shared Python library seems to only be possible with <code>python-2.3*</code> or later, so you'll need to upgrade if you're using <code>python-2.2*</code> or earlier. For ebuilds <code>python-2.3*</code> and later the shared library is built and installed by default.</p>
+
+<h4 id="FreeBSD" name="FreeBSD">FreeBSD</h4>
+
+<p>Python built from ports (<code>lang/python24</code>) already provides a shared Python library.</p>
+
+<h4 id="Mac_OS_X" name="Mac_OS_X">Mac OS X</h4>
+
+<p>For OS X 10.3 and 10.4 users, the Python 2.3 Framework is already available. If you want to build against Python 2.4, you will need to build your own from <a class="external" href="http://www.python.org/download/">source</a>, build via <a class="external" href="http://darwinports.opendarwin.org/">DarwinPorts</a> or <a class="external" href="http://fink.sourceforge.net/">Fink</a>, or install either <a class="external" href="http://undefined.org/python/">MacPython</a> or <a class="external" href="http://www.ActiveState.com/">ActivePython</a>. You can then skip to <a href="/en/Building_PyXPCOM#Compiling_Mozilla" title="en/Building_PyXPCOM#Compiling_Mozilla">Compiling Mozilla</a>. If you want to distribute your application, you might prefer to use the built-in Python 2.3 Framework at first, since embedding the Python Framework into an application bundle may take some non-standard customizations to the Python build scripts.</p>
+
+<h4 id="Windows" name="Windows">Windows</h4>
+
+<p>L'installateur officiel de Python pour Windows installe la version partagée de la bibliothèque automatiquement, afin que les utilisateurs de Windows puissent simplement installer Python et passez à <a href="/fr/Building_PyXPCOM#Compiling_Mozilla" title="/en/Building_PyXPCOM#Compiling_Mozilla"> Compiler Mozilla </a>.</p>
+
+<h4 id="Other_systems" name="Other_systems">Other systems</h4>
+
+<p>If you <em>don't</em> use any of the above systems, get the latest stable Python source tarball from <a class="external" href="http://python.org/download/">python.org</a> and do:</p>
+
+<pre>tar xjf Python-2.4.2.tar.bz2
+cd Python-2.4.2
+./configure --enable-shared --prefix=/usr  # Adjust --prefix to install over your current Python
+make
+sudo make install
+</pre>
+
+<h3 id="Compiling_Mozilla" name="Compiling_Mozilla">Compilation PyXPCOM</h3>
+
+<p>Vous devez être familier avec le <a href="https://developer.mozilla.org/fr/docs/Documentation_sur_la_compilation" title="/En/Developer_Guide/Build_Instructions"> Mozilla Build Instructions </a>.</p>
+
+<ul>
+ <li>Télécharger ou construire le <a href="/en/Gecko_SDK" title="/en/Gecko_SDK"> XULRunner SDK </a> (nécessite la version 10.0.2 XULRunner SDK).</li>
+ <li>Créez un répertoire de PyXPCOM et y accéder : mkdir PyXPCOM; cd PyXPCOM</li>
+ <li>Obtenez le code source PyXPCOM utilisant Mercurial: <a href="http://hg.mozilla.org/pyxpcom" title="http://hg.mozilla.org/pyxpcom"><code>hg clone src</code></a></li>
+ <li><code>Generate the src configure script: cd src; </code> autoconf2.13; cd ..</li>
+ <li>Créez un répertoire PyXPCOM de construction: <code>mkdir build; cd <span style="font-family: verdana,tahoma,sans-serif;">build</span></code></li>
+ <li>Configurer: <code>../src/configure --with-libxul-sdk=/path/to/libxul-sdk</code></li>
+ <li>executer : <code>make</code></li>
+</ul>
+
+<h4 id="Note">Note</h4>
+
+<p>Les nouveaux compilateurs semble avoir quelques problèmes, ajouter CXXFLAGS='-std=c++0x' peut vous aider. Travaille actuellement sur les compilateurs gcc 4.4.3 et g++ 4.4.3.</p>
+
+<p>Dernière instruction semble avoir quelques problèmes avec PYTHON_SO, résolu en ajoutant-DPYTHON_SO=\"libpythondotted.version.so"\ à CXXFLAGS.</p>
+
+<p>Certains distribution Linux nécessite un --prefix=/usr.</p>
+
+<p>Certains pythons nécessitent installer les modules dans dist-packages au lieu de site-packages, faire <code>sed -i -e 's/site-packages/dist-packages/' xpcom/Makefile</code>, avant make install.</p>
+
+<h4 id="Quelle_version_Python">Quelle version Python</h4>
+
+<p>Le script de configuration va essayer de trouver une version de Python à utiliser. Vous devez veiller à la version de Python que vous souhaitez utiliser est dans votre PATH avant de configurer Mozilla.</p>
+
+<p>Vous pouvez également définir une variable d'environnement <code>PYTHON</code> qui pointe vers un exécutable Python (pas un répertoire - ce doit être un exécutable Python). Si elle est définie, le script de configuration va utiliser le Python pointé par la variable.</p>
+
+<p>Vous pouvez confirmer quel version de Python est utilisé en regardant attentivement le processus de configuration. Vous devriez voir un message semblable à :</p>
+
+<pre class="eval">Building PyXPCOM using Python-2.4 from c:/Python24
+</pre>
+
+<p>Pour les utilisateurs de Windows/MSVC: assurez-vous de ne pas utiliser Python de Cygwin. Il est susceptible de causer des erreurs de compilation plus tard.</p>
+
+<h3 id="Testing_PyXPCOM" name="Testing_PyXPCOM">Test PyXPCOM</h3>
+
+<p>Première tester pour votre nouvelle PyXPCOM construite à partir de l'environnement d'exécution de Mozilla.</p>
+
+<p><em>Linux et OS X :</em></p>
+
+<pre>cd suite-debug/dist/bin
+export PYTHONPATH=$PYTHONPATH:$HOME/mozilla/suite-debug/dist/bin/python # Adjust this to your PyXPCOM build path
+./run-mozilla.sh ./seamonkey -chrome chrome://pyxultest/content </pre>
+
+<p><em>Windows :</em></p>
+
+<pre>cd dist\bin
+set PYTHONPATH=%PYTHONPATH%;C:\mozilla\dist\bin\python
+seamonkey.exe -chrome chrome://pyxultest/content </pre>
+
+<p>Une fenêtre avec des contrôles devrait apparaître. Exécutez les tests qu'il contient.</p>
+
+<p>Dans le même répertoire, vous pouvez également effectuer un test simple du module Python <code>xpcom</code> dans environnement Python autonome.</p>
+
+<p><em>Linux et OS X :</em></p>
+
+<pre>export MOZILLA_FIVE_HOME=$HOME/mozilla/suite-debug/dist/bin # Adjust this to your Mozilla build path
+export LD_LIBRARY_PATH=$MOZILLA_FIVE_HOME
+python -c 'from xpcom import components; print components.classes{{mediawiki.external('\"@mozilla.org/file/local;1\"')}}' </pre>
+
+<p><em>Windows :</em></p>
+
+<pre>set PATH=%PATH%;C:\mozilla\dist\bin
+set MOZILLA_FIVE_HOME=C:\mozilla\dist\bin
+set LD_LIBRARY_PATH=%MOZILLA_FIVE_HOME%
+python -c "from xpcom import components; print components.classes{{mediawiki.external('\'@mozilla.org/file/local;1\'')}}" </pre>
+
+<p>Vous devriez voir une sortie similaire à ce qui suit:</p>
+
+<pre>Type Manifest File: /home/you/mozilla/suite-debug/dist/bin/components/xpti.dat
+&lt;xpcom.components._Class instance at 0xb7c1be8c&gt;
+nsStringStats
+ =&gt; mAllocCount:            431
+ =&gt; mReallocCount:          270
+ =&gt; mFreeCount:             423  --  LEAKED 8 !!!
+ =&gt; mShareCount:            450
+ =&gt; mAdoptCount:              0
+ =&gt; mAdoptFreeCount:          0
+</pre>
+
+<p>Si vous voyez des messages d'erreur Python à la place, assurez-vous que <code>$PYTHONPATH</code> est toujours la même valeur que dans le premier test.</p>
+
+<p>{{ languages( { "ja": "ja/Building_PyXPCOM" } ) }}</p>

@@ -1,0 +1,287 @@
+<div>{{jsSidebar("Advanced")}}</div>
+
+<p>JavaScript confonde un po' gli sviluppatori che hanno esperienza di linguaggi basati sulle classi (come Java o C++), siccome è un linguaggio dinamico e non fornisce un'implementazione di <code>class</code> (la keyword <code>class</code> è introdotto in ES2015, ma è zucchero sintattico, Javascript rimarrà basato sui prototipi).</p>
+
+<p>In termini di ereditarietà, Javascript ha solo un costrutto: gli oggetti. Ogni oggetto ha un link interno ad un altro oggetto chiamato <strong>prototype.</strong> Questo oggetto prototype ha a sua volta un suo prototype, e così via finché si raggiunge un oggetto con property <code>null</code>. <code>null</code>, per definizione, non ha un prototype, ed agisce come link finale nella <strong>catena di prototipi</strong>.</p>
+
+<p>Quasi tutti gli oggetti in Javascript sono istanze di {{jsxref("Object")}}, che risiede in cima alla catena dei prototipi.</p>
+
+<p>Nonostante questo sia considerato spesso come una debolezza di Javascript, il modello di ereditarietà prototipale è invece più potente del modello classico. Per esempio, è banale costruire un classico modello sul modello prototipale, mentre il contrario è molto più difficile.</p>
+
+<h2 id="Ereditarietà_con_la_catena_di_prototipi">Ereditarietà con la catena di prototipi</h2>
+
+<h3 id="Ereditare_properties">Ereditare properties</h3>
+
+<p>Gli oggetti javaScript sono "contenitori" dinamici di proprietà (<strong>own properties</strong>). Gli oggetti JavaScript hanno un link ad un oggetto prototype. Provando ad accedere ad una proprietà di un oggetto, la proprietà sarà ricercata sia sull'oggett, sia sul prototipo, sul prototipo del protitpo e così via fino a trovare una proprietà con il nome specificato fino alla fine della catena stessa.</p>
+
+<div class="note">
+<p>Seguendo lo standard ECMAScript, la notazione <code>someObject.[[Prototype]]</code> viene usata per designare il prototype di <code>someObject</code>. Dall'introduzione di ECMAScript 2015, per accedere a <code>[[Protoype]]</code> si utilizzano i metodi {{jsxref("Object.getPrototypeOf()")}} e {{jsxref("Object.setPrototypeOf()")}}. Questo è equivalente ad utilizzare la property <code>__proto__</code>, proprietà non-standard di JavaScript ma di fatto implementata da svaritati browser.</p>
+
+<p>Non dev'essere confusa con la proprietà delle funzioni <code><em>func</em>.prototype</code>, la quale invece specifica il [[Prototype]] da assegnare a tutte le <em>istanze</em> di oggetti creati dalla funzione data quando si usa un costruttore. La proprietà <strong>Object.prototype </strong> rappresenta il prototipo oggetto  {{jsxref("Object")}} .</p>
+</div>
+
+<p>Di seguito viene mostrato cosa succede quando si tenta l'accesso ad una proprietà:</p>
+
+<pre class="brush: js">// Assumiamo di avere un oggetto o, con le sue properties a and b:
+// {a: 1, b: 2}
+// o.[[Prototype]] ha le properties b and c:
+// {b: 3, c: 4}
+// Infine, o.[[Prototype]].[[Prototype]] é null.
+// Questa è la fine della catena di prototipi poiché null, per defini// zione, non ha [[Prototype]].
+// Così, l'intera catena di prototipi sarà:
+// {a:1, b:2} ---&gt; {b:3, c:4} ---&gt; null
+
+console.log(o.a); // 1
+// C'è una property 'a' su o? Si, e il suo valore è 1.
+
+console.log(o.b); // 2
+// C'è una property 'b' su o? Si, e il suo valore è 2.
+// Il prototype ha anche una property 'b', ma non è visitata. 
+// Questa è chiamata "property shadowing"
+
+console.log(o.c); // 4
+// C'è una propria property 'c' su o? No, verifica il suo prototype.
+// C'è una propria property 'c' su o.[[Prototype]]? si, il suo valore// è 4.
+
+console.log(o.d); // undefined
+// C'è una propria property 'd' su o? No, verifica il suo prototype.
+// C'è una propria property 'd' su o.[[Prototype]]? No, verifica il suo prototype.
+// o.[[Prototype]].[[Prototype]] è null, stop alla ricerca,
+// nessuna property trovata, return undefined
+</pre>
+
+<p>Impostando una property su un oggetto viene creata una own property. La sola eccezione alle regole di comportamento setting e getting è quando c'è una property ereditata con un <a href="/en-US/docs/Web/JavaScript/Guide/Working_with_Objects#Defining_getters_and_setters" title="Defining Getters and Setters">getter or a setter</a>.</p>
+
+<h3 id="Metodi_ereditati">"Metodi" ereditati</h3>
+
+<p>JavaScript non ha "metodi" nella forma tipica dei linguaggi basati sulle classi. In JavaScript, qualunque funzione può essere aggiunta ad un oggetto come fosse property. Una funzione ereditata agisce come ogni altra property, incluse le  property shadowing come mostrato di seguito (in questo caso, una forma di <em>sovrascrittura di metodi</em>).</p>
+
+<p>Quando viene eseguita una funzione ereditata, il valore del <a href="/en-US/docs/Web/JavaScript/Reference/Operators/this" title="this"><code>this</code></a> punta all'oggetto ereditante, non all'oggetto prototype dove la funzione è una property proprietaria (own property).</p>
+
+<pre class="brush: js">var o = {
+  a: 2,
+  m: function(b){
+    return this.a + 1;
+  }
+};
+
+console.log(o.m()); // 3
+// Chiamando o.m in questo caso, 'this' si riferisce a o
+
+var p = Object.create(o);
+// p è un oggeto che eredita da o
+
+p.a = 12; // crea una propria property 'a' su p
+console.log(p.m()); // 13
+// quando p.m è chiamata, 'this' si riferisce a p.
+// Così quando p eredita la funzione m di o, 
+// 'this.a' significa p.a, the propria property 'a' di p
+</pre>
+
+<h2 id="Differenti_modi_di_creare_oggetti_e_la_risultante_catena_di_prototype">Differenti modi di creare oggetti e la risultante catena di prototype</h2>
+
+<h3 id="Oggetti_creati_con_i_costrutti_sintattici">Oggetti creati con i costrutti sintattici</h3>
+
+<pre class="brush: js">var o = {a: 1};
+
+// L'oggetto o appena creato ha Object.prototype come proprio [[Prototype]]
+// o non ha una propria property chamata 'hasOwnProperty'
+// hasOwnProperty è una property propria di Object.prototype. 
+// Quindi o eredita hasOwnProperty da Object.prototype
+// Object.prototype ha null come suo prototype.
+// o ---&gt; Object.prototype ---&gt; null
+
+var a = ["yo", "whadup", "?"];
+
+// Arrays ereditato da Array.prototype 
+// (che metodi come indexOf, forEach, ecc.)
+// La catena di prototype si presenta così:
+// a ---&gt; Array.prototype ---&gt; Object.prototype ---&gt; null
+
+function f(){
+  return 2;
+}
+
+// Le funzioni ereditano da Function.prototype 
+// (che ha metodi come call, bind, ecc.)
+// f ---&gt; Function.prototype ---&gt; Object.prototype ---&gt; null
+</pre>
+
+<h3 id="Con_un_constructor">Con un constructor</h3>
+
+<p>Un "constructor" (costruttore) in JavaScript è semplicemente una funzione che è stata chiamata con  <a href="/en-US/docs/Web/JavaScript/Reference/Operators/new" title="new">l'operatore new</a>.</p>
+
+<pre class="brush: js">function Graph() {
+  this.vertices = [];
+  this.edges = [];
+}
+
+Graph.prototype = {
+  addVertex: function(v){
+    this.vertices.push(v);
+  }
+};
+
+var g = new Graph();
+// g è un oggetto con proprie properties 'vertices' ed 'edges'.
+// g.[[Prototype]] è il valore di Graph.prototype quando viene eseguito new Graph().
+</pre>
+
+<h3 id="Con_Object.create">Con <code>Object.create</code></h3>
+
+<p>ECMAScript 5 introduce un nuovo metodo: {{jsxref("Object.create()")}}. Chiamando questo metodo viene creato un nuovo oggetto. Il prototype di questo oggetto è il primo argomento della funzione:</p>
+
+<pre class="brush: js">var a = {a: 1}; 
+// a ---&gt; Object.prototype ---&gt; null
+
+var b = Object.create(a);
+// b ---&gt; a ---&gt; Object.prototype ---&gt; null
+console.log(b.a); // 1 (ereditato)
+
+var c = Object.create(b);
+// c ---&gt; b ---&gt; a ---&gt; Object.prototype ---&gt; null
+
+var d = Object.create(null);
+// d ---&gt; null
+console.log(d.hasOwnProperty); 
+// undefined, perché d non eredita da Object.prototype
+</pre>
+
+<div>
+<h3 id="Con_la_parola_chiave_class">Con la parola chiave <code>class</code></h3>
+
+<p>ECMAScript 2015 introduce un nuovo gruppo di parole chiave per implementare le <a href="/en-US/docs/Web/JavaScript/Reference/Classes">classi</a>. Sebbene questi costrutti assomiglino a quelli familiari agli sviluppatori di linguaggi basati su classi, in realtà non cambia molto. JavaScript continua ad essere basato su prototype. Le nuove parole chiave includono {{jsxref("Statements/class", "class")}}, {{jsxref("Classes/constructor", "constructor")}}, {{jsxref("Classes/static", "static")}}, {{jsxref("Classes/extends", "extends")}}, e {{jsxref("Operators/super", "super")}}.</p>
+
+<pre class="brush: js">"use strict";
+
+class Polygon {
+  constructor(height, width) {
+    this.height = height;
+    this.width = width;
+  }
+}
+
+class Square extends Polygon {
+  constructor(sideLength) {
+    super(sideLength, sideLength);
+  }
+  get area() {
+    return this.height * this.width;
+  }
+  set sideLength(newLength) {
+    this.height = newLength;
+    this.width = newLength;
+  }
+}
+
+var square = new Square(2);
+</pre>
+
+<h3 id="Prestazioni">Prestazioni</h3>
+
+<p>Il tempo impiegato per la ricerca di proprietá che sono in alto nella catena dei prototype può avere un impatto negativo sulle prestazioni e questo può essere significativo in codice in cui le prestazioni sono critiche. Inoltre il tentativo di accedere a properties non esistenti esamina sempre la catena completa dei prototype.</p>
+
+<p>In più, quando si itera sulle proprietà di un oggetto, <strong>tutte</strong> le properties enumerabili che si trovano nella sua catena dei prototype verranno enumerate.</p>
+
+<p>Per controllare se un oggetto ha una property definata da se stesso e non da qualche parte nella catena di prototype<span id="result_box" lang="it"><span>,</span> <span class="hps">è necessario</span> <span class="hps">utilizzare</span> <span class="hps">il metodo</span> </span><a href="/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/hasOwnProperty" title="/ru/docs/JavaScript/Reference/Global_Objects/Object/hasOwnProperty"><code>hasOwnProperty</code></a><span lang="it"> che<span class="hps"> tutti gli oggetti</span> <span class="hps">ereditano da</span> <span class="hps">Object.prototype</span><span>.</span></span></p>
+
+<p><a href="/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/hasOwnProperty" title="/ru/docs/JavaScript/Reference/Global_Objects/Object/hasOwnProperty"><code>hasOwnProperty</code></a> è la sola cosa in JavaScript che opera con le properties <strong>senza</strong> traversare la catena dei prototype.</p>
+
+<p>Nota: non è sufficiente controllare se una property è <a href="/en-US/docs/Web/JavaScript/Reference/Global_Objects/undefined" title="/en-US/docs/Web/JavaScript/Reference/Global_Objects/undefined"><code>undefined</code></a>. La property può essere presente comunque e questo capita se il suo valore è stato assegnato <code>undefined.</code></p>
+</div>
+
+<h3 id="Cattiva_pratica_Estensione_di_prototypes_nativi">Cattiva pratica: Estensione di prototypes nativi</h3>
+
+<p>Una caratteristica mancante che viene spesso utilizzata è quella di estendere <code>Object.prototype o uno degli altri</code> prototype built-in.</p>
+
+<p>Questa tecnica viene chiamata "monkey patching" e rompe l'<em>incapsulazione</em>. Nonostante sia utilizzata da frameworks popolari come ad esempio Prototype.js, non esistono comunque buone ragioni per appesantire i tipi built-in con funzionalità <em>non-standard</em> aggiuntive.</p>
+
+<p>La <strong>sola</strong> buona ragione per estendere un prototype built-in è per dotare vecchie versioni di JavaScript con funzionalità presenti in quelle nuove; per esempio <code>Array.forEach</code>, etc.</p>
+
+<h2 id="Example" name="Example">Esempio</h2>
+
+<p><code>B</code> erediterà da <code>A</code>:</p>
+
+<pre class="brush: js">function A(a){
+  this.varA = a;
+}
+
+// Qual è la ragione per includere varA nel prototype considerando che A.prototype.varA verrà <em>sempre</em>
+// nascosto da this.varA, inserito nella definizione di funzione soprastante?
+A.prototype = {
+  varA : null,  // Dovremmo togliere varA dal prototype visto che non fa niente?
+      // forse serve come ottimizzazione per allocare spazio nelle classi nascoste?
+      // https://developers.google.com/speed/articles/optimizing-javascript#Initializing instance variables
+      // sarà valido se varA non viene inizializzato in modo unico per ogni istanza
+  doSomething : function(){
+    // ...
+  }
+}
+
+function B(a, b){
+  A.call(this, a);
+  this.varB = b;
+}
+B.prototype = Object.create(A.prototype, {
+  varB : {
+    value: null, 
+    enumerable: true, 
+    configurable: true, 
+    writable: true 
+  },
+  doSomething : { 
+    value: function(){ // sovrascritto
+      A.prototype.doSomething.apply(this, arguments); // chiama la classe superiore
+      // ...
+    },
+    enumerable: true,
+    configurable: true, 
+    writable: true
+  }
+});
+B.prototype.constructor = B;
+
+var b = new B();
+b.doSomething();
+</pre>
+
+<p>Le parti importanit sono:</p>
+
+<ul>
+ <li>I tipi sono definiti in <code>.prototype</code></li>
+ <li>Si usa <code>Object.create()</code> per ereditare</li>
+</ul>
+
+<h2 id="prototype_e_Object.getPrototypeOf"><code>prototype</code> e <code>Object.getPrototypeOf</code></h2>
+
+<p>JavaScript confonde un po' gli sviluppatori che provengono da Java o C++, essendo completamente dinamico, valutato tutto a runtime e non avendo classi in senso stretto. Sono tutte istanze di oggetti. Persino le "classi" che simuliamo sono semplicemente degli oggetti funzione.</p>
+
+<p><span lang="it"><span class="hps">Probabilmente hai già</span> <span class="hps">notato</span> <span class="hps">che la nostra</span> <span class="hps">funzione A</span> <span class="hps">ha una propery</span> <span class="hps">speciale chiamata</span> <span class="hps">prototype.</span> <span class="hps">Questa speciale property</span> <span class="hps">funziona con</span> <span class="hps">l'operatore new</span> di <span class="hps">JavaScript</span><span>.</span> <span class="hps">Il riferimento</span> <span class="hps">all'oggetto prototype</span> <span class="hps">viene copiato nella property</span><span class="atn hps"> [</span><span class="atn">[</span><span>Prototype</span><span>]</span><span>] interna alla</span><span class="hps"> nuova istanza</span><span>.</span></span><span lang="it"> <span class="hps">Ad esempio, quando</span> <span class="hps">si fa</span> <span class="hps">var</span> <span class="hps">a1</span> <span class="hps">= new</span> <span class="atn hps">A(</span><span>)</span><span>,</span> <span class="atn hps">JavaScript (</span><span>dopo aver creato</span> <span class="hps">l'oggetto</span> <span class="hps">in memoria</span> <span class="hps">e</span> <span class="hps">prima di eseguire</span> <span class="hps">la funzione</span> <span class="atn hps">A(</span><span>) con this</span> <span class="hps">definito</span> <span class="hps">ad esso</span><span>) imposta</span> <span class="hps">a1</span><span>.</span> <span class="atn hps">[</span><span class="atn">[</span><span>Prototype</span><span>]</span><span>]</span> <span class="hps">=</span> <span class="hps">A.prototype</span><span>.</span></span><span lang="it"> <span class="hps">Quando si</span> <span class="hps">accede</span> <span class="hps">poi</span> alle properties<span class="hps"> dell'istanza</span><span>, </span><span class="hps">JavaScript</span></span> prima controlla se esiste nell'oggetto direttamente e se non c'è guarda in <span lang="it"><span class="atn hps">[</span><span class="atn">[</span><span>Prototype</span><span>]]. Questo significa che tutto ciò che viene definito in prototype viene effettivamente condiviso con tutte le istanze</span></span> ed è possibile anche in seguito cambiare parti del prototype facendo comparire i cambiamenti in tutte le istanze esistenti, se è questo che si desidera.</p>
+
+<p>Se, nell'esempio soprastante, si fa <code>var a1 = new A(); var a2 = new A();</code> <code>a1.doSomething</code> farà riferimento a <code>Object.getPrototypeOf(a1).doSomething</code>, che è il medesimo di <code>A.prototype.doSomething che è stato definito, perciò </code><code>Object.getPrototypeOf(a1).doSomething == Object.getPrototypeOf(a2).doSomething == A.prototype.doSomething</code>.</p>
+
+<p>In breve, prototype è per i tipi, mentre <code>Object.getPrototypeOf() da lo stesso risultato per le istanze.</code></p>
+
+<p><code>[[Prototype]]</code> viene esaminato <em>ricursivamente</em>, ad esempio <code>a1.doSomething</code>, <code>Object.getPrototypeOf(a1).doSomething</code>, <code>Object.getPrototypeOf(Object.getPrototypeOf(a1)).doSomething</code> ecc., finché viene trovato oppure<code> Object.getPrototypeOf </code>restituisce null.</p>
+
+<p>Così, quando si chiama</p>
+
+<pre class="brush: js">var o = new Foo();</pre>
+
+<p>JavaScript in realtà esegue</p>
+
+<pre class="brush: js">var o = new Object();
+o.[[Prototype]] = Foo.prototype;
+Foo.call(o);</pre>
+
+<p>(o qualcosa di simile) e quando successivamente si esegue</p>
+
+<pre class="brush: js">o.someProp;</pre>
+
+<p>controlla se o ha pa property someProp. Se non c'è controlla <code>Object.getPrototypeOf(o).someProp</code> e se non c'è ancora controlla <code>Object.getPrototypeOf(Object.getPrototypeOf(o)).someProp e via di seguito.</code></p>
+
+<div>
+<h2 id="In_conclusione">In conclusione</h2>
+
+<p>è <strong>essenziale</strong> capire il funzionamento dell'ereditarietà basata sul modello dei prototype prima di scrivere codice complesso che ne fa uso. Bisogna anche fare attenzione alla lunghezza della catena di prototype nel proprio codice ed accorciarla in caso di necessità per evitare possibili problemi di prestazioni. Infine, i prototype nativi non dovrebbero <strong>mai</strong> venire estesi per evitare problemi di compatibilità con nuove funzionalità JavaScript che potrebbero essere introdotte.</p>
+</div>

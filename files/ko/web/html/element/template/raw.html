@@ -1,0 +1,154 @@
+<p>{{HTMLRef}}<br>
+ <strong>HTML 컨텐츠 템플릿 (<code>&lt;template&gt;</code>) 엘리먼트</strong>는 페이지에 로드될 때 렌더링되지 않지만 JavaScript 를 사용하는 런타임동안에 후속적으로 인스턴트화되는 클라이언트 사이드 컨텐츠를 유지하기 위한 메커니즘입니다.</p>
+
+<p>이는 다큐먼트에서 나중에 사용하기 위해 저장하는 컨텐츠 조각으로 생각하시면 됩니다. 페이지가 로딩되는 동안 파서가 <strong><code>&lt;template&gt;</code></strong> 엘리먼트의 컨텐츠를 처리하지만, 컨텐츠가 유효한지만 확인합니다. 엘리먼트의 컨텐츠는 렌더링되지 않습니다.</p>
+
+<ul class="htmlelt">
+ <li>
+  <table>
+   <tbody>
+    <tr>
+     <th scope="row"><a href="https://developer.mozilla.org/ko/docs/Web/Guide/HTML/%EC%BB%A8%ED%85%90%ED%8A%B8_%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC">컨텐츠 카테고리</a></th>
+     <td><a href="https://developer.mozilla.org/ko/docs/Web/Guide/HTML/%EC%BB%A8%ED%85%90%ED%8A%B8_%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC#%EB%A9%94%ED%83%80%EB%8D%B0%EC%9D%B4%ED%84%B0_%EC%BB%A8%ED%85%90%EC%B8%A0">메타데이터 컨텐츠</a>, <a href="https://developer.mozilla.org/ko/docs/Web/Guide/HTML/%EC%BB%A8%ED%85%90%ED%8A%B8_%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC#%ED%94%8C%EB%A1%9C%EC%9A%B0_%EC%BB%A8%ED%85%90%EC%B8%A0">플로우 컨텐츠</a>, <a href="https://developer.mozilla.org/ko/docs/Web/Guide/HTML/%EC%BB%A8%ED%85%90%ED%8A%B8_%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC#%EA%B5%AC%EB%AC%B8_%EC%BB%A8%ED%85%90%EC%B8%A0">파싱 컨텐츠</a>, 스크립트 지원 엘리먼트</td>
+    </tr>
+    <tr>
+     <th scope="row">허용된 컨텐츠</th>
+     <td>제한 없음</td>
+    </tr>
+    <tr>
+     <th scope="row">태그 생략</th>
+     <td>{{no_tag_omission}}</td>
+    </tr>
+    <tr>
+     <th scope="row">허용된 부모</th>
+     <td>{{HTMLElement("body")}}, {{HTMLElement("frameset")}}, {{HTMLElement("head")}}, {{HTMLElement("dl")}} 및 <code>span</code> 어트리뷰트가 없는 {{HTMLElement("colgroup")}}</td>
+    </tr>
+    <tr>
+     <th scope="row">허용된 ARIA 역할</th>
+     <td>없음</td>
+    </tr>
+    <tr>
+     <th scope="row">DOM 인터페이스</th>
+     <td>
+      <p>{{domxref("HTMLTemplateElement")}}</p>
+     </td>
+    </tr>
+   </tbody>
+  </table>
+ </li>
+</ul>
+
+<h2 id="어트리뷰트">어트리뷰트</h2>
+
+<p>이 엘리먼트는 <a href="https://developer.mozilla.org/ko/docs/Web/HTML/Global_attributes">전역 어트리뷰트</a>만 포함합니다.</p>
+
+<h2 id="Examples" name="Examples">예제</h2>
+
+<p>먼저 예제의 HTML 일부를 통해 시작하겠습니다.</p>
+
+<pre class="brush: html">&lt;table id="producttable"&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;td&gt;UPC_Code&lt;/td&gt;
+      &lt;td&gt;Product_Name&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;!-- 존재하는 데이터는 선택적으로 여기에 포함됩니다 --&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;template id="productrow"&gt;
+  &lt;tr&gt;
+    &lt;td class="record"&gt;&lt;/td&gt;
+    &lt;td&gt;&lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/template&gt; 
+</pre>
+
+<p>먼저, 나중에 JavaScript 코드를 사용해 컨텐츠를 삽입할 테이블이 있습니다. 그 다음 테이블의 열을 표현하는 HTML 조각의 구조를 설명하는 템플릿이 옵니다.</p>
+
+<p>이제 테이블이 생성되었고 템플릿이 정의되었으므로, JavaScript 를 사용해 템플릿을 사용해 구성된 열을 기반으로 각 열을 테이블로 삽입합니다.</p>
+
+<pre class="brush: js">// 템플릿 엘리먼트의 컨텐츠 존재 유무를 통해
+// 브라우저가 HTML 템플릿 엘리먼트를 지원하는지 확인합니다
+if ('content' in document.createElement('template')) {
+
+    <code>// 기존 HTML tbody 와 템플릿 열로 테이블을 인스턴스화합니다
+    var t = document.querySelector('#productrow');
+
+    // 새로운 열을 복제하고 테이블에 삽입합니다
+    var tb = document.querySelector("tbody");
+    var clone = document.importNode(t.content, true);
+    td = clone.querySelectorAll("td");
+    td[0].textContent = "1235646565";
+    td[1].textContent = "Stuff";
+
+    tb.appendChild(clone);
+
+    // 새로운 열을 복제하고 테이블에 삽입합니다
+    var clone2 = document.importNode(t.content, true);
+    td = clone2.querySelectorAll("td");
+    td[0].textContent = "0384928528";
+    td[1].textContent = "Acme Kidney Beans 2";
+
+    tb.appendChild(clone2);
+
+} else {
+  // HTML 템플릿 엘리먼트를 지원하지 않으므로
+  // 테이블에 열을 추가하는 다른 방법을 찾습니다.
+}</code></pre>
+
+<p>결과는 JavaScript 를 통해 추가된 두 개의 새로운 열을 포함하는 기존 HTML 테이블입니다.</p>
+
+<div class="hidden">
+<pre><code>table {
+  background: #000;
+}
+table td {
+  background: #fff;
+}</code></pre>
+</div>
+
+<p>{{EmbedLiveSample("Example", 500, 120)}}</p>
+
+<h2 id="Specifications" name="Specifications">명세</h2>
+
+<table>
+ <thead>
+  <tr>
+   <th scope="col">명세</th>
+   <th scope="col">상태</th>
+   <th scope="col">코멘트</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName('HTML WHATWG','scripting.html#the-template-element','template element')}}</td>
+   <td>{{Spec2('HTML WHATWG')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('HTML5 W3C','/scripting-1.html#the-template-element','template element')}}</td>
+   <td>{{Spec2('HTML5 W3C')}}</td>
+   <td>초기 정의</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="브라우저_호환성">브라우저 호환성</h2>
+
+<div class="hidden">
+<p>The compatibility table in this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</p>
+</div>
+
+<p>{{Compat("html.elements.template")}}</p>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">함께 보기</h2>
+
+<ul>
+ <li>웹 컴포넌트: {{HTMLElement("slot")}} (그리고 역사적으로: {{HTMLElement("shadow")}})</li>
+ <li><a href="https://developer.mozilla.org/ko/docs/Web/Web_Components/Using_templates_and_slots">템플릿과 슬롯 사용하기</a></li>
+</ul>
+
+<div> </div>

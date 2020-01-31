@@ -1,0 +1,433 @@
+<p>ฟังก์ชันเป็นหนึ่งในส่วนประกอบหลักของจาวาสคริปต์ หนึ่งฟังก์ชันคือหนึ่งกระบวนการของจาวาสคริปต์ ซึ่งก็คือชุดคำสั่งที่ทำงานหรือคำนวณค่า โดยคุณต้องประกาศใช้ฟังก์ชันที่ใดก็ได้ภายในขอบเขตที่คุณเรียกใช้</p>
+
+<h2 id="การประกาศใช้ฟังก์ชัน">การประกาศใช้ฟังก์ชัน</h2>
+
+<p><strong>คำจำกัดความของฟังก์ชัน</strong> (หรือเรียกได้ว่า <strong>การประกาศใช้ฟังก์ชัน</strong>) ประกอบด้วยคำสั่ง <a href="/en-US/docs/JavaScript/Reference/Statements/function" title="function"><code>function</code></a> และตามด้วย</p>
+
+<ul>
+ <li>ชื่อของฟังก์ชัน</li>
+ <li>รายชื่อตัวแปรทั้งหมดที่ส่งเข้าฟังก์ชัน อยู่ในวงเล็บและคั่นด้วยคอมมา</li>
+ <li>คำสั่งจาวาสคริปต์ของฟังก์ชัน อยู่ในวงเล็บปีกกา, <code>{ }</code></li>
+</ul>
+
+<p>ตัวอย่าง, ในโค้ดนี้ประกาศใช้ฟังก์ชันอย่างง่ายชื่อ <code>square</code>:</p>
+
+<div style="margin-right: 270px;">
+<pre class="brush: js">function square(number) {
+  return number * number;
+}
+</pre>
+</div>
+
+<p>ฟังก์ชัน <code>square</code> จะรับตัวแปรเข้าหนึ่งตัวชื่อ <code>number</code> ฟังก์ชันนี้มีคำสั่งเดียว ทำหน้าที่คืนค่าผลลัพธ์ของตัวแปรที่รับเข้ามา (<code>number</code>) คูณกับตัวมันเอง โดยคำสั่ง <a href="/en-US/docs/JavaScript/Reference/Statements/return" title="return"><code>return</code></a> ใช้คืนค่าจากฟังก์ชัน</p>
+
+<pre class="brush: js">return number * number;
+</pre>
+
+<p>ตัวแปรที่ส่งเข้าฟังก์ชัน ที่มีค่าเป็นข้อมูลพื้นฐาน (เช่น ตัวเลข) จะถูกส่งเข้าฟังก์ชันในแบบ <strong>by value</strong>, หมายความได้ว่า เมื่อค่านี้ถูกส่งเข้าฟังก์ชัน และฟังก์ชันมีการเปลี่ยนแปลงค่า การเปลี่ยนแปลงนี้จะไม่ส่งผลต่อค่าของตัวแปรนอกฟังก์ชัน (ในขอบเขตส่วนกลาง หรือในโค้ดที่เรียกใช้ฟังก์ชัน)</p>
+
+<p>ถ้าคุณส่งอ็อบเจกต์ (ที่ไม่ใช่ค่าข้อมูลพื้นฐาน <a href="/en-US/docs/JavaScript/Glossary" title="en-US/docs/JavaScript/Glossary">non-primitive value</a>, เช่น อาร์เรย์ หรืออ็อบเจกต์ที่กำหนดเอง) เป็นตัวแปรที่ส่งเข้าฟังก์ชัน, และฟังก์ชันทำการเปลี่ยนค่าคุณสมบัติของอ็อบเจกต์นั้น ค่าที่เปลี่ยนแปลงนั้นจะปรากฎนอกฟังก์ชันด้วย ดังแสดงในตัวอย่างต่อไปนี้:</p>
+
+<pre class="brush: js">function myFunc(theObject) {
+  theObject.make = "Toyota";
+}
+
+var mycar = {make: "Honda", model: "Accord", year: 1998},
+    x,
+    y;
+
+x = mycar.make;     // x gets the value "Honda"
+
+myFunc(mycar);
+y = mycar.make;     // y gets the value "Toyota"
+                    // (the make property was changed by the function)
+</pre>
+
+<p>สังเกตุว่า การกำหนดให้ตัวแปรที่ส่งเข้าฟังก์ชัน มีค่าเป็นอ็อบเจกต์ใหม่ จะไม่มีผลนอกฟังก์ชัน เพราะเป็นการเปลี่ยนค่าของตัวแปร ไม่ใช่การเปลี่ยนค่าคุณสมบัติของอ็อบเจกต์</p>
+
+<pre class="brush: js">function myFunc(theObject) {
+  theObject = {make: "Ford", model: "Focus", year: 2006};
+}
+
+var mycar = {make: "Honda", model: "Accord", year: 1998},
+    x,
+    y;
+
+x = mycar.make;     // x gets the value "Honda"
+
+myFunc(mycar);
+y = mycar.make;     // y still gets the value "Honda" </pre>
+
+<p>ในขณะที่การประกาศฟังก์ชันด้านบนเขียนเหมือนการใช้คำสั่ง, ฟังก์ชันยังสามารถถูกสร้างได้จาก<strong> นิพจน์ฟังก์ชัน</strong> (function expression) ซึ่งเป็น <strong>ฟังก์ชันนิรนาม</strong> (anonymous) ที่ไม่ต้องมีชื่อ จากตัวอย่าง, เราสามารถประกาศฟังก์ชัน <code>square</code> ได้ดังนี้:</p>
+
+<pre class="brush: js" style="font-size: 14px;">var square = function(number) {return number * number};
+var x = square(4) //x gets the value 16</pre>
+
+<p>อย่างไรก็ตาม, เรายังสามารถใส่ชื่อในนิพจน์ฟังก์ชัน และเรียกใช้ได้จากภายในฟังก์ชันเอง หรือเพื่อให้ดีบักเกอร์แสดงชื่อฟังก์ชันใน stack traces ได้:</p>
+
+<pre class="brush: js" style="font-size: 14px;">var factorial = function fac(n) {return n&lt;2 ? 1 : n*fac(n-1)};
+
+console.log(factorial(3));
+</pre>
+
+<p>นิพจน์ฟังก์ชันอำนวยความสะดวกเมื่อเราส่งฟังก์ชันเป็นตัวแปรไปให้อีกฟังก์ชัน โดยตัวอย่างต่อไปนี้แสดง การสร้างฟังก์ชัน map และเรียกใช้โดยส่งตัวแปรเข้าตัวแรกเป็นฟังก์ชันนิรนาม:</p>
+
+<pre class="brush: js" style="font-size: 14px;">function map(f,a) {
+  var result = [], // Create a new Array
+      i;
+  for (i = 0; i != a.length; i++)
+    result[i] = f(a[i]);
+  return result;
+}
+</pre>
+
+<p>โค้ดต่อไปนี้:</p>
+
+<pre class="brush: js" style="font-size: 14px;">map(function(x) {return x * x * x}, [0, 1, 2, 5, 10]);
+</pre>
+
+<p>จะคืนค่า [0, 1, 8, 125, 1000].</p>
+
+<p>ในจาวาสคริปต์ ฟังก์ชันสามารถถูกสร้างขึ้นตามเงื่อนไขได้ โดยตัวอย่าง, การประกาศฟังก์ชันต่อไปนี้สร้างฟังก์ชัน <code>myFunc</code> ถ้าตัวแปร <code>num</code> มีค่าเป็น <code>0</code>:</p>
+
+<pre class="brush: js">var myFunc;
+if (num == 0){
+  myFunc = function(theObject) {
+    theObject.make = "Toyota"
+  }
+}</pre>
+
+<p><span style="line-height: 1.572;">นอกจากการประกาศฟังก์ชันในแบบที่กล่าวมาแล้ว, คุณยังสามารถใช้ตัวสร้างฟังก์ชัน (<a href="/en-US/docs/JavaScript/Guide/Predefined_Core_Objects#Function_Object" style="line-height: 1.572;" title="en-US/docs/JavaScript/Guide/Predefined Core Objects#Function Object"><code>Function</code> constructor</a>)</span> เพื่อสร้างฟังก์ชันจากสตริงตอนที่โปรแกรมกำลังทำงาน คล้ายกับการใช้ <a href="/en-US/docs/JavaScript/Guide/Functions#eval_Function" style="line-height: 1.572;" title="en-US/docs/JavaScript/Guide/Functions#eval_Function"><code>eval()</code></a></p>
+
+<p><strong>เมธอด</strong> ก็คือฟังก์ชันที่เป็นคุณสมบัติของอ็อบเจกต์ อ่านเพิ่มเติมเรื่องอ็อบเจกต์และเมธอดได้ที่ <a href="/en-US/docs/JavaScript/Guide/Working_with_Objects" title="en-US/docs/JavaScript/Guide/Working with Objects">Working with Objects</a></p>
+
+<h2 id="การเรียกใช้ฟังก์ชัน">การเรียกใช้ฟังก์ชัน</h2>
+
+<p>การประกาศฟังก์ชันไม่ทำให้เกิดการทำงานใดๆ เป็นเพียงการตั้งชื่อและกำหนดว่าฟังก์ชันต้องทำอะไรเมื่อถูกเรียกใช้ <strong>การเรียกใช้</strong>ฟังก์ชันเป็นการสั่งให้ฟังก์ชันทำงานด้วยค่าที่ระบุให้ ตัวอย่างเช่น, ถ้าคุณประกาศฟังก์ชัน <code>square</code> คุณสามารถเรียกใช้งานได้ดังนี้:</p>
+
+<pre class="brush: js">square(5);
+</pre>
+
+<p>การเรียกใช้ฟังก์ชันข้างต้นด้วยค่า 5, ฟังก์ชันจะทำงานตามคำสั่งของมันและคืนค่า 25</p>
+
+<p>ฟังก์ชันต้องอยู่ในขอบเขตที่สามารถเรียกใช้ได้ แต่การประกาศฟังก์ชันสามารถทำได้หลังจากการเรียกใช้  เช่นในตัวอย่าง:</p>
+
+<pre>console.log(square(5));
+/* ... */
+function square(n){return n*n} 
+</pre>
+
+<p>ขอบเขตของฟังก์ชันคือ บริเวณที่มีการประกาศใช้ หรือทั้งโปรแกรมถ้าประกาศฟังก์ชันไว้ที่ชั้นนอกสุด โดยใช้ได้กับกรณีที่ประกาศฟังก์ชันด้วยรูปแบบข้างบนเท่านั้น (รูปแบบ <code>function funcName(){}</code>) ซึ่งทำให้โค้ดด้านล่างใช้งานไม่ได้</p>
+
+<pre class="brush: js">console.log(square(5));
+square = function (n) {
+  return n * n;
+}
+</pre>
+
+<p>ตัวแปรที่ส่งเข้าฟังก์ชันไม่ได้จำกัดอยู่แค่สตริงและตัวเลขเท่านั้น คุณสามารถส่งทั้งอ็อบเจกต์เข้าฟังก์ชันได้ด้วย โดยฟังก์ชัน <code>show_props</code> (ประกาศใช้ใน <a href="/en-US/docs/JavaScript/Guide/Working_with_Objects#Objects_and_Properties" title="https://developer.mozilla.org/en-US/docs/JavaScript/Guide/Working_with_Objects#Objects_and_Properties">Working with Objects</a>) คือตัวอย่างการใช้ฟังก์ชันที่รับค่าเป็นอ็อบเจกต์</p>
+
+<p>ฟังก์ชันสามารถทำงานแบบซ้ำได้ คือเรียกใช้ตัวเองได้ ตัวอย่างเช่น, ฟังก์ชันที่คำนวณค่าแฟกตอเรียลดังนี้:</p>
+
+<pre class="brush: js">function factorial(n){
+  if ((n == 0) || (n == 1))
+    return 1;
+  else
+    return (n * factorial(n - 1));
+}
+</pre>
+
+<p>คุณสามารถคำนวณค่าแฟกตอเรียลของหนึ่งถึงห้าได้ดังนี้:</p>
+
+<pre class="brush: js">var a, b, c, d, e;
+a = factorial(1); // a gets the value 1
+b = factorial(2); // b gets the value 2
+c = factorial(3); // c gets the value 6
+d = factorial(4); // d gets the value 24
+e = factorial(5); // e gets the value 120
+</pre>
+
+<p>ยังมีอีกหลายวิธีในการเรียกใช้ฟังก์ชัน เช่น บ่อยครั้งฟังก์ชันถูกเรียกใช้แบบ dynamic, หรือตัวแปรที่ส่งเข้าฟังก์ชันมีจำนวนไม่แน่นอน, หรือในกรณีที่บริบทของการเรียกใช้ฟังก์ชันจำเป็นต้องกำหนดด้วยอ็อบเจกต์ตอนที่โปรแกรมทำงาน และฟังก์ชันก็ยังใช้งานได้หลายรูปแบบคือ แบบฟังก์ชัน, แบบอ็อบเจกต์, และแบบที่เป็นเมธอดในออบเจกต์ (ดูที่ <a href="/en-US/docs/JavaScript/Guide/Obsolete_Pages/Predefined_Core_Objects/Function_Object" title="Function Object"><code>Function</code> object</a>)  ซึ่งหนึ่งในรูปแบบที่กล่าวมานี้ สามารถใช้เมธอด <a href="/en-US/docs/JavaScript/Reference/Global_Objects/Function/apply" title="apply"><code>apply()</code></a>เรียกใช้ฟังก์ชันในแบบที่ต้องการได้</p>
+
+<h2 class="deki-transform" id="ขอบเขตของฟังก์ชัน">ขอบเขตของฟังก์ชัน</h2>
+
+<p>ตัวแปรที่กำหนดภายในฟังก์ชันไม่สามารถใช้งานได้จากนอกฟังก์ชัน เพราะตัวแปรถูกสร้างในฟังก์ชัน อย่างไรก็ตามฟังก์ชันสามารถใช้งานตัวแปรและฟังก์ชันที่อยู่ในขอบเขตเดียวกับที่ตัวมันถูกสร้างขึ้นได้ ในทำนองเดียวกัน, ฟังก์ชันที่ถูกสร้างขึ้นในขอบเขตส่วนกลาง ก็สามารถใช้งานตัวแปรที่สร้างขึ้นในขอบเขตส่วนกลางได้ ส่วนฟังก์ชันที่ถูกสร้างขึ้นในฟังก์ชันอื่น ก็สามารถใช้งานตัวแปรที่สร้างขึ้นในฟังก์ชันแม่ และตัวแปรที่ฟังก์ชันแม่สามารถใช้งานได้ด้วย</p>
+
+<pre class="brush: js">// The following variables are defined in the global scope
+var num1 = 20,
+    num2 = 3,
+    name = "Chamahk";
+
+// This function is defined in the global scope
+function multiply() {
+  return num1 * num2;
+}
+
+multiply(); // Returns 60
+
+// A nested function example
+function getScore () {
+  var num1 = 2,
+      num2 = 3;
+  
+  function add() {
+    return name + " scored " + (num1 + num2);
+  }
+  
+  return add();
+}
+
+getScore(); // Returns "Chamahk scored 5"
+</pre>
+
+<h2 id="Closures">Closures</h2>
+
+<p>Closures คือหนึ่งในคุณสมบัติเด่นของจาวาสคริปต์ โดยจาวาสคริปต์ยอมให้มีฟังก์ชันซ้อนกันได้ และให้ฟังก์ชันตัวในเรียกใช้ตัวแปรและฟังก์ชันที่สร้างในฟังก์ชันตัวนอกได้ (รวมทั้งตัวแปรและฟังก์ชันอื่นที่ฟังก์ชันตัวนอกเข้าถึงได้) อย่างไรก็ตาม, ฟังก์ชันตัวนอกไม่มีสิทธิใช้งานตัวแปรและฟังก์ชันที่สร้างขึ้นภายในฟังก์ชันตัวใน ซึ่งช่วยป้องกันการเข้าถึงตัวแปรของฟังก์ชันตัวในได้ ด้วยเหตุที่ฟังก์ชันตัวในเข้าถึงขอบเขตของฟังก์ชันตัวนอกได้, เมื่อฟังก์ชันตัวในถูกเรียกใช้ในขณะที่ฟังก์ชันตัวนอกทำงานจบแล้ว ตัวแปรและฟังก์ชันที่สร้างขึ้นในขอบเขตของฟังก์ชันตัวนอกจะยังคงเรียกใช้งานได้จากฟังก์ชันตัวใน นั่นคือ closure จะถูกสร้างขึ้นเมื่อฟังก์ชันตัวในถูกใช้งานในขอบเขตอื่นข้างนอกฟังก์ชันตัวนอก</p>
+
+<pre class="brush: js">var pet = function(name) {          // The outer function defines a variable called "name"
+      var getName = function() {
+        return name;                // The inner function has access to the "name" variable of the outer function
+      }
+
+      return getName;               // Return the inner function, thereby exposing it to outer scopes
+    },
+    myPet = pet("Vivie");
+    
+myPet();                            // Returns "Vivie"
+</pre>
+
+<p>อาจจะดูซับซ้อนมากกว่าโค้ดด้านบน ถ้าอ็อบเจกต์มีเมธอด (ฟังก์ชันตัวใน) ที่จัดการกับตัวแปรภายในอ็อบเจกต์ (ฟังก์ชันตัวนอก) และคืนค่าตัวแปรภายในออกมาได้</p>
+
+<pre class="brush: js">var createPet = function(name) {
+  var sex;
+  
+  return {
+    setName: function(newName) {
+      name = newName;
+    },
+    
+    getName: function() {
+      return name;
+    },
+    
+    getSex: function() {
+      return sex;
+    },
+    
+    setSex: function(newSex) {
+      if(typeof newSex == "string" &amp;&amp; (newSex.toLowerCase() == "male" || newSex.toLowerCase() == "female")) {
+        sex = newSex;
+      }
+    }
+  }
+}
+
+var pet = createPet("Vivie");
+pet.getName();                  // Vivie
+
+pet.setName("Oliver");
+pet.setSex("male");
+pet.getSex();                   // male
+pet.getName();                  // Oliver
+</pre>
+
+<p>ในโค้ดด้านบน, ตัวแปร <code>name</code> ของฟังก์ชันตัวนอกถูกเรียกใช้ได้จากฟังก์ชันตัวในทุกตัว และไม่มีทางอื่นที่จะเข้าถึงตัวแปรนี้ นอกจากจะเรียกผ่านฟังก์ชันตัวใน โดยตัวแปรภายในของฟังก์ชัน<u>ตัวนอก</u> (เช่น <code>name</code>, <code>sex</code>) ทำหน้าที่เป็นแหล่งเก็บข้อมูลที่ปลอดภัยให้ฟังก์ชันตัวใน โดยมันจะเก็บค่าข้อมูลอย่างถาวรและปลอดภัยเพื่อเรียกใช้งานได้จากฟังก์ชันตัวในเท่านั้น โดยฟังก์ชันตัวในเหล่านี้ไม่จำเป็นต้องมีชื่อ หรือถูกกำหนดค่าให้กับตัวแปรใดๆ</p>
+
+<pre class="brush: js">var getCode = (function(){
+  var secureCode = "0]Eal(eh&amp;2";    // A code we do not want outsiders to be able to modify...
+  
+  return function () {
+    return secureCode;
+  };
+})();
+
+getCode();    // Returns the secret code
+</pre>
+
+<p>แต่ก็ยังมีข้อควรระวังอยู่บ้างเมื่อใช้งาน closures โดยถ้าฟังก์ชันตัวในสร้างตัวแปรชื่อเดียวกับชื่อตัวแปรในขอบเขตของฟังก์ชันตัวนอกแล้ว, จะไม่มีทางที่จะเรียกใช้ตัวแปรนี้จากฟังก์ชันตัวในได้อีกเลย</p>
+
+<pre class="brush: js">var createPet = function(name) {  // Outer function defines a variable called "name"
+  return {
+    setName: function(name) {    // Enclosed function also defines a variable called "name"
+      name = name;               // ??? How do we access the "name" defined by the outer function ???
+    }
+  }
+}
+</pre>
+
+<p>ตัวแปร this มีประโยชน์มากใน closures แต่ต้องใช้อย่างระมัดระวัง, เนื่องจากสิ่งที่ this อ้างถึง จะขึ้นอยู่กับตำแหน่งที่ฟังก์ชันถูกเรียกใช้งาน มากกว่าตำแหน่งที่มันถูกสร้างขึ้น สำหรับรายละเอียดเพิ่มเติมเรื่อง closures มีบทความที่น่าสนใจ<a class="external" href="http://jibbering.com/faq/notes/closures/">อยู่ที่นี่</a></p>
+
+<h2 id="การใช้งานอ็อบเจกต์_arguments">การใช้งานอ็อบเจกต์ arguments</h2>
+
+<p>คุณสามารถเรียกใช้ตัวแปรที่ส่งเข้าฟังก์ชันจากอ็อบเจกต์ <code>arguments</code> ซึ่งทำงานคล้ายอาร์เรย์ โดยใช้รูปแบบดังนี้:</p>
+
+<pre class="brush: js">arguments[i]
+</pre>
+
+<p>โดยที่ <code>i</code> คือหมายเลขของตัวแปรมีค่าเริ่มต้นที่ศูนย์ ดังนั้นตัวแปรตัวแรกที่ส่งเข้าฟังก์ชั่นคือ <code>arguments[0]</code> และจำนวนตัวแปรทั้งหมดแทนด้วย <code>arguments.length</code></p>
+
+<p>การใช้งานอ็อบเจกต์ <code>arguments</code> ทำให้คุณสามารถเรียกใช้ฟังก์ชันด้วยจำนวนตัวแปรมากกว่าตอนที่ประกาศไว้ ซึ่งช่วยได้ในกรณีที่คุณไม่รู้จำนวนตัวแปรก่อนเรียกใช้ฟังก์ชัน โดยคุณสามารถใช้ <code>arguments.length</code> เพื่อหาจำนวนตัวแปรที่ส่งเข้าฟังก์ชัน และเข้าถึงตัวแปรแต่ละตัวด้วยอ็อบเจกต์ <code>arguments</code></p>
+
+<p>ในตัวอย่าง, ฟังก์ชันหนึ่งทำหน้าที่เชื่อมสตริงหลายตัวเข้าด้วย มีตัวแปรที่ส่งเข้าฟังก์ชันตามที่ประกาศไว้หนึ่งตัว (<code>separator</code>) มีค่าเป็นสตริงและถูกใช้เป็นอักษรคั่นสตริงที่จะนำมาเชื่อมต่อกัน โดยฟังก์ชันนี้ถูกสร้างขึ้นดังนี้</p>
+
+<pre class="brush: js">function myConcat(separator) {
+   var result = "", // initialize list
+       i;
+   // iterate through arguments
+   for (i = 1; i &lt; arguments.length; i++) {
+      result += arguments[i] + separator;
+   }
+   return result;
+}
+</pre>
+
+<p>คุณสามารถส่งค่าตัวแปรเข้าไปในฟังก์ชันนี้ได้หลายตัว โดยจะได้ผลลัพธ์เป็นสตริงที่มีค่าตัวแปรแต่ละตัวมาเชื่อมต่อกัน</p>
+
+<pre class="brush: js">// returns "red, orange, blue, "
+myConcat(", ", "red", "orange", "blue");
+
+// returns "elephant; giraffe; lion; cheetah; "
+myConcat("; ", "elephant", "giraffe", "lion", "cheetah");
+
+// returns "sage. basil. oregano. pepper. parsley. "
+myConcat(". ", "sage", "basil", "oregano", "pepper", "parsley");
+</pre>
+
+<p>สังเกตุด้วยว่า, อ็อบเจกต์ <code>arguments</code> คล้ายอาร์เรย์ แต่ไม่ใช่อาร์เรย์ โดยคล้ายอาร์เรย์ตรงที่มีหมายเลขดัชนี และคุณสมบัติ <code>length</code> แต่อย่างไรก็ตาม, มันไม่สามารถใช้เมธอดที่จัดการกับอาร์เรย์ได้ทั้งหมด</p>
+
+<p>ดูข้อมูลเพิ่มเติมเรื่อง <a href="/en-US/docs/JavaScript/Reference/Global_Objects/Function" title="en-US/docs/JavaScript/Reference/Global Objects/Function"><code>Function</code> object</a> ในบทอ้างอิงจาวาสคริปต์</p>
+
+<h2 id="ฟังก์ชันพื้นฐาน">ฟังก์ชันพื้นฐาน</h2>
+
+<p>จาวาสคริปต์ มีฟังก์ชันพื้นฐานในระดับชั้นนอกสุดให้ใช้หลายตัว</p>
+
+<ul>
+ <li>{{ web.link("#eval_function", "eval") }}</li>
+ <li>{{ web.link("#isFinite_function", "isFinite") }}</li>
+ <li>{{ web.link("#isNaN_function", "isNaN") }}</li>
+ <li>{{ web.link("#parseInt_and_parseFloat_functions", "parseInt and parseFloat") }}</li>
+ <li>{{ web.link("#Number_and_String_functions", "Number and String") }}</li>
+ <li>{{ web.link("#escape_and_unescape_functions", "encodeURI, decodeURI, encodeURIComponent, and decodeURIComponent") }} (all available with Javascript 1.5 and later).</li>
+</ul>
+
+<p>เนื้อหาในส่วนต่อไปจะแนะนำการใช้งานฟังก์ชันเหล่านี้ โดยสามารถดูรายละเอียดเพิ่มเติมของฟังก์ชันเหล่านี้ได้ที่ <a href="/en-US/docs/JavaScript/Reference" title="en-US/docs/JavaScript/Reference">JavaScript Reference</a></p>
+
+<h3 id="ฟังก์ชัน_eval">ฟังก์ชัน eval</h3>
+
+<p>ฟังก์ชัน <code>eval</code> ทำหน้าที่ประมวลผล โค้ดจาวาสคริปต์ที่อยู่ในสตริง โดยไม่ต้องอ้างถึงอ็อบเจกต์ใดๆ มีรูปแบบการใช้งานดังนี้:</p>
+
+<pre class="brush: js">eval(expr);
+</pre>
+
+<p>เมื่อ <code>expr</code> คือสตริงที่จะทำการประมวลผล</p>
+
+<p>ถ้าในสตริงเป็นนิพจน์, <code>eval</code> จะประมวลผลนิพจน์นั้น แต่ถ้าในสตริงเป็นคำสั่งจาวาสคริปต์อย่างน้อยหนึ่งคำสั่ง, <code>eval</code> จะประมวลคำสั่งนั้น โดยขอบเขตของโค้ด <code>eval</code> จะเหมือนกับขอบเขตของโค้ดที่เรียกใช้ และไม่จำเป็นต้องเรียกใช้ <code>eval</code> เพื่อประมวลผลนิพจน์คณิตศาสตร์ เพราะจาวาสคริปต์จะประมวลผลนิพจน์คณิตศาสตร์โดยอัตโนมัติให้อยู่แล้ว</p>
+
+<h3 id="ฟังก์ชัน_isFinite">ฟังก์ชัน isFinite</h3>
+
+<p>ฟังก์ชัน <code>isFinite</code> ประมวลผลตัวแปรที่ส่งเข้ามา เพื่อพิจารณาว่าเป็นค่าตัวเลขจำกัดหรือไม่ โดยมีรูปแบบการใช้ดังนี้:</p>
+
+<pre class="brush: js">isFinite(number);
+</pre>
+
+<p>เมื่อ <code>number</code> เป็นค่าตัวเลขที่ใช้ในการประมวลผล</p>
+
+<p>ถ้าค่า <code>number</code> เป็น <code>Nan</code>, ค่าบวกอนันต์, หรือค่าลบอนันต์ เมธอดนี้จะคืนค่า <code>false,</code> นอกเหนือจากนี้จะคืนค่า <code>true</code></p>
+
+<p>โค้ดต่อไปนี้ตรวจสอบการป้อนข้อมูล เพื่อพิจารณาว่าข้อมูลเป็นตัวเลขจำกัดหรือไม่</p>
+
+<pre class="brush: js">if(isFinite(ClientInput)){
+   /* take specific steps */
+}
+</pre>
+
+<h3 id="ฟังก์ชัน_isNaN">ฟังก์ชัน isNaN</h3>
+
+<p>ฟังก์ชัน <code>isNan</code> ประมวลผลตัวแปรที่ส่งเข้ามา เพื่อพิจารณาว่าเป็น <code>NaN</code> (not a number -- ไม่ใช่ตัวเลข) หรือไม่ โดยมีรูปแบบการใช้ดังนี้</p>
+
+<pre class="brush: js">isNaN(testValue);
+</pre>
+
+<p>โดยที่ <code>testValue</code> เป็นค่าที่คุณต้องการประมวลผล</p>
+
+<p>ทั้งฟังก์ชัน <code>parseFloat</code> และ <code>parseInt</code> จะคืนค่า <code>NaN</code> เมื่อประมวลผลแล้วได้ค่าที่ไม่ใช่ตัวเลข และ <code>isNaN</code> จะคืนค่า <code>true</code> ถ้าค่าที่รับเข้ามาเป็น <code>NaN</code>, และคืนค่า <code>false</code> ถ้าไม่ใช่</p>
+
+<p>โค้ดต่อไปนี้ทำการประมวลค่า <code>floatValue</code> เพื่อพิจารณาว่าเป็นตัวเลขหรือไม่ และเรียกใช้ฟังก์ชันที่เหมาะสมดำเนินการต่อไป:</p>
+
+<pre class="brush: js">var floatValue = parseFloat(toFloat);
+
+if (isNaN(floatValue)) {
+   notFloat();
+} else {
+   isFloat();
+}
+</pre>
+
+<h3 id="ฟังก์ชัน_parseInt_และ_parseFloat">ฟังก์ชัน parseInt และ parseFloat</h3>
+
+<p>ทั้งสองฟังก์ชัน <code>parse</code>, <code>parseInt</code> และ <code>parseFloat</code>, จะคืนค่าตัวเลข เมื่อค่าตัวแปรที่รับเข้ามาเป็นสตริง</p>
+
+<p>รูปแบบการใช้งานของ <code>parseFloat</code> เป็นดังนี้:</p>
+
+<pre class="brush: js">parseFloat(str);
+</pre>
+
+<p>โดยที่ <code>parseFloat</code> จะแปลงค่าที่รับเข้ามาคือ สตริง str และพยายามคืนค่าเป็นตัวเลขทศนิยม, ถ้ามันพบตัวอักษรอื่นที่ไม่ใช่เครื่องหมาย (<code>+</code> หรือ <code>-</code>), ตัวเลข (<code>0-9</code>), จุดทศนิยม, หรือตัวยกกำลัง, ก็จะคืนค่าข้อมูลถึงแค่ตำแหน่งนั้น ละทิ้งตัวอักษรนั้นกับตัวอักษรที่ตามมาทั้งหมด และถ้าตัวอักษรตัวแรกไม่สามารถแปลงเป็นตัวเลขได้, ก็จะคืนค่าเป็น <code>NaN</code> (not a number)</p>
+
+<p>รูปแบบการใช้งานของ <code>parseInt</code> เป็นดังนี้:</p>
+
+<pre class="brush: js">parseInt(str [, radix]);
+</pre>
+
+<p><code>parseInt</code> จะแปลงค่าที่รับเข้ามาตัวแรกคือ สตริง <code>str</code> และพยายามคืนค่าเป็นตัวเลขจำนวนเต็มตามฐานเลขใน <code>radix</code> ซึ่งกำหนดโดยค่าที่รับเข้ามาตัวที่สอง <code>radix</code> (ที่ไม่ระบุก็ได้) ตัวอย่าง เช่น, ค่าฐานเป็นสิบ แสดงว่าต้องการให้แปลงเป็นเลขฐานสิบ, แปด คือฐานแปด, สิบหก คือฐานสิบหก, และอื่นๆ โดยค่าฐานที่มากกว่าสิบ จะใช้ตัวอักษรแทนค่าเลขที่มากกว่าเก้า เช่น, เลขฐานสิบหก จะใช้ <code>A-F</code> แทน <code>10-15</code></p>
+
+<p>ถ้า <code>parseInt</code> พบตัวอักษรที่ไม่ใช่ตัวเลขในฐานเลขที่ระบุ, มันจะละทิ้งตัวอักษรตัวนั้นและที่ตามมาทั้งหมด และคืนค่าจำนวนเต็มจนถึงตำแหน่งนั้น แต่ถ้าไม่สามารถแปลงตัวอักษรตัวแรกให้เป็นตัวเลขในฐานที่ระบุได้, ก็จะคืนค่า <code>NaN</code> โดย <code>parseInt</code> จะปัดค่าที่ได้จากสตริงให้เป็นเลขจำนวนเต็ม</p>
+
+<h3 id="ฟังก์ชัน_Number_และ_String">ฟังก์ชัน Number และ String</h3>
+
+<p>ฟังก์ชัน <code>Number</code> และ <code>String</code> ช่วยให้คุณแปลงอ็อบเจกต์ไปเป็นตัวเลขหรือสตริงได้ โดยมีรูปแบบการใช้งานของฟังก์ชันทั้งสองดังนี้:</p>
+
+<pre class="brush: js">var objRef;
+objRef = Number(objRef);
+objRef = String(objRef);
+</pre>
+
+<p>เมื่อ <code>objRef</code> เป็นตัวแปรอ็อบเจกต์ โดย <code>Number</code> ใช้เมธอด <code>valueOf()</code> ของอ็อบเจกต์ และ <code>String</code> จะใช้เมธอด <code>toString()</code> ของอ็อบเจกต์</p>
+
+<p>ตัวอย่างต่อไปนี้ แปลงอ็อบเจกต์ <code><a href="/en-US/docs/JavaScript/Reference/Global_Objects/Date" title="en-US/docs/JavaScript/Reference/Global Objects/Date">Date</a></code> <code>ให้เป็นข้อความที่อ่านได้</code></p>
+
+<pre class="brush: js">var D = new Date(430054663215),
+    x;
+x = String(D); // x equals "Thu Aug 18 04:37:43 GMT-0700 (Pacific Daylight Time) 1983"
+</pre>
+
+<p>ตัวอย่างต่อไปนี้ แปลงอ็อบเจกต์ <code><a class="internal" href="/en-US/docs/JavaScript/Reference/Global_Objects/String" title="en-US/docs/JavaScript/Reference/Global Objects/String">String</a></code> ให้เป็นอ็อบเจกต์ <code><a class="internal" href="/en-US/docs/JavaScript/Reference/Global_Objects/Number" title="en-US/docs/JavaScript/Reference/Global Objects/Number">Number</a></code></p>
+
+<pre class="brush: js">var str = "12",
+    num;
+num = Number(str);
+</pre>
+
+<p>คุณสามารถลองดูได้, โดยใช้เมธอด <code>write()</code> ของ DOM และตัวดำเนินการ <code>typeOf</code> ของจาวาสคริปต์</p>
+
+<pre class="brush: js">var str = "12",
+    num;
+document.write(typeof str);
+document.write("&lt;br/&gt;");
+num = Number(str);
+document.write(typeof num);
+</pre>
+
+<h3 id="ฟังก์ชัน_escape_และ_unescape_(ยกเลิกใช้แล้วในจาวาสคริปต์ที่สูงกว่า_1.5)">ฟังก์ชัน escape และ unescape (ยกเลิกใช้แล้วในจาวาสคริปต์ที่สูงกว่า 1.5)</h3>
+
+<p>ฟังก์ชัน <code>escape</code> และ <code>unescape</code> จะทำงานไม่ถูกต้องกับอักขระที่ไม่ใช่ ASCII และถูกยกเลิกการใช้แล้ว ในจาวาสคริปต์ตั้งแต่ 1.5 ขึิ้นไปให้ใช้ฟังก์ชันต่อไปนี้แทน <code><a href="/en-US/docs/JavaScript/Reference/Global_Objects/encodeURI" title="en-US/docs/JavaScript/Reference/Global_Functions/encodeURI">encodeURI</a></code>, <code><a href="/en-US/docs/JavaScript/Reference/Global_Objects/decodeURI" title="en-US/docs/JavaScript/Reference/Global_Functions/decodeURI">decodeURI</a></code>, <code><a href="/en-US/docs/JavaScript/Reference/Global_Objects/encodeURIComponent" title="en-US/docs/JavaScript/Reference/Global_Functions/encodeURIComponent">encodeURIComponent</a></code>, และ <code><a href="/en-US/docs/JavaScript/Reference/Global_Objects/decodeURIComponent" title="en-US/docs/JavaScript/Reference/Global_Functions/decodeURIComponent">decodeURIComponent</a></code></p>
+
+<p>โดยฟังก์ชัน <code>escape</code> และ <code>unescape</code> ช่วยให้คุณเข้ารหัสและถอดรหัสสตริงได้ ซึ่ง ฟังก์ชัน <code>escape</code> จะคืนค่าการเข้ารหัสฐานสิบหกของค่าที่รับเข้ามาในชุดอักขระ ISO Latin ส่วนฟังก์ชัน <code>unescape</code> จะคืนค่าสตริง ASCII ของค่าข้อมูลที่เข้ารหัสฐานสิบหกนั้น</p>
+
+<p>โดยมีรูปแบบการใช้งานดังนี้:</p>
+
+<pre class="brush: js">escape(string);
+unescape(string);
+</pre>
+
+<p>ฟังก์ชันเหล่านี้ใช้กับจาวาสคริปต์บน server เป็นหลัก  เพื่อเข้ารหัสและถอดรหัสคู่ข้อมูล (ชื่อ/ค่าข้อมูล) ใน URL</p>

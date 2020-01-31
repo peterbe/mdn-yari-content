@@ -1,0 +1,274 @@
+<p>« <a href="/en-US/docs/CSS" title="CSS">CSS</a> « <a href="/en-US/docs/CSS/Understanding_z-index" title="Understanding CSS z-index">Understanding CSS z-index</a></p>
+
+<h2 id="O_contexto_de_empilhamento">O contexto de empilhamento</h2>
+
+<h2 id="In_the_previous_example_Adding_z-index_the_rendering_order_of_certain_DIVs_is_influenced_by_their_z-index_value._This_occurs_because_these_DIVs_have_special_properties_which_cause_them_to_form_a_stacking_context."><span style="font-size: 14px; font-weight: normal; line-height: 1.5;">In the previous example, </span><a href="/en-US/docs/CSS/Understanding_z-index/Adding_z-index" style="font-size: 14px; font-weight: normal; line-height: 1.5;" title="Adding z-index">Adding z-index</a><span style="font-size: 14px; font-weight: normal; line-height: 1.5;">, the rendering order of certain DIVs is influenced by their z-index value. This occurs because these DIVs have special properties which cause them to form a </span><em>stacking context</em><span style="font-size: 14px; font-weight: normal; line-height: 1.5;">.</span></h2>
+
+<p>A stacking context is formed, anywhere in the document, by any element which is either</p>
+
+<ul>
+ <li>the root element (HTML),</li>
+ <li>positioned (absolutely or relatively) with a z-index value other than "auto",</li>
+ <li>a flex item with a z-index value other than "auto",</li>
+ <li>elements with an {{cssxref("opacity")}} value less than 1. (See <a href="http://www.w3.org/TR/css3-color/#transparency" title="http://www.w3.org/TR/css3-color/#transparency">the specification for opacity</a>),</li>
+ <li>elements with a {{cssxref("transform")}} value other than "none",</li>
+ <li>elements with a {{cssxref("mix-blend-mode")}} value other than "normal",</li>
+ <li>elements with {{cssxref("isolation")}} set to "isolate",</li>
+ <li>on mobile WebKit and Chrome 22+, <code>position: fixed</code> always creates a new stacking context, even when z-index is "auto" (See <a href="http://updates.html5rocks.com/2012/09/Stacking-Changes-Coming-to-position-fixed-elements" title="http://updates.html5rocks.com/2012/09/Stacking-Changes-Coming-to-position-fixed-elements">this post</a>)</li>
+ <li>specifing any attribute above in <code>{{cssxref("will-change")}}</code> even you don't write themselves directly (See <a href="http://dev.opera.com/articles/css-will-change-property/">this post</a>)</li>
+ <li>elements with {{cssxref("-webkit-overflow-scrolling")}} set to "touch"</li>
+</ul>
+
+<p>Within a stacking context, child elements are stacked according to the same rules previously explained. Importantly, the z-index values of its child stacking contexts only have meaning in this parent. Stacking contexts are treated atomically as a single unit in the parent stacking context.</p>
+
+<p>In summary:</p>
+
+<ul>
+ <li>Positioning and assigning a z-index value to an HTML element creates a stacking context, (as does assigning non-full opacity).</li>
+ <li>Stacking contexts can be contained in other stacking contexts, and together create a hierarchy of stacking contexts.</li>
+ <li>Each stacking context is completely independent from its siblings: only descendant elements are considered when stacking is processed.</li>
+ <li>Each stacking context is self-contained: after the element's contents are stacked, the whole element is considered in the stacking order of the parent stacking context.</li>
+</ul>
+
+<div class="note"><strong>Note:</strong> The hierarchy of stacking contexts is a subset of the hierarchy of HTML elements, because only certain elements create stacking contexts. We can say that elements that do not create their own stacking contexts are <em>assimilated</em> by the parent stacking context.</div>
+
+<h2 id="The_example"><strong>The example</strong></h2>
+
+<p><img alt="Example of stacking rules modified using z-index" src="/@api/deki/files/913/=Understanding_zindex_04.png"></p>
+
+<p>In this example every positioned element creates its own stacking context, because of their positioning and z-index values. The hierarchy of stacking contexts is organized as follows:</p>
+
+<ul>
+ <li>Root
+  <ul>
+   <li>DIV #1</li>
+   <li>DIV #2</li>
+   <li>DIV #3
+    <ul>
+     <li>DIV #4</li>
+     <li>DIV #5</li>
+     <li>DIV #6</li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+<p>It is important to note that DIV #4, DIV #5 and DIV #6 are children of DIV #3, so stacking of those elements is completely resolved within DIV#3. Once stacking and rendering within DIV #3 is completed, the whole DIV #3 element is passed for stacking in the root element with respect to its sibling's DIV.</p>
+
+<div class="note">
+<p><strong>Notes:</strong></p>
+
+<ul>
+ <li>DIV #4 is rendered under DIV #1 because DIV #1's z-index (5) is valid within the stacking context of the root element, while DIV #4's z-index (6) is valid within the stacking context of DIV #3. So, DIV #4 is under DIV #1, because DIV #4 belongs to DIV #3, which has a lower z-index value.</li>
+ <li>For the same reason DIV #2 (z-index 2) is rendered under DIV#5 (z-index 1) because DIV #5 belongs to DIV #3, which has an higher z-index value.</li>
+ <li>DIV #3's z-index is 4, but this value is independent from z-index of DIV #4, DIV #5 and DIV #6, because it belongs to a different stacking context.</li>
+ <li>An easy way to figure out the <em>rendering order</em> of stacked elements along the Z axis is to think of it as a "version number" of sorts, where child elements are minor version numbers underneath their parent's major version numbers. This way we can easily see how an element with a z-index of 1 (DIV #5) is stacked above an element with a z-index of 2 (DIV #2), and how an element with a z-index of 6 (DIV #4) is stacked below an element with a z-index of 5 (DIV #1). In our example (sorted according to the final rendering order):
+  <ul>
+   <li>Root
+    <ul>
+     <li>DIV #2 - z-index is 2</li>
+     <li>DIV #3 - z-index is 4
+      <ul>
+       <li>DIV #5 - z-index is 1, stacked under an element with a z-index of 4, which results in a rendering order of 4.1</li>
+       <li>DIV #6 - z-index is 3, stacked under an element with a z-index of 4, which results in a rendering order of 4.3</li>
+       <li>DIV #4 - z-index is 6, stacked under an element with a z-index of 4, which results in a rendering order of 4.6</li>
+      </ul>
+     </li>
+     <li>DIV #1 - z-index is 5</li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+</ul>
+</div>
+
+<h2 id="Example_Source_Code"><strong>Example Source Code</strong></h2>
+
+<pre class="brush: html">&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"&gt;
+
+&lt;html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"&gt;
+  &lt;head&gt;
+
+    &lt;title&gt;Understanding CSS z-index: The Stacking Context: Example Source&lt;/title&gt;
+
+    &lt;style type="text/css"&gt;
+      * {
+        margin: 0;
+        }
+      html {
+        padding: 20px;
+        font: 12px/20px Arial, sans-serif;
+        }
+      div {
+        opacity: 0.7;
+        position: relative;
+        }
+      h1 {
+        font: inherit;
+        font-weight: bold;
+        }
+      #div1, #div2 {
+        border: 1px dashed #696;
+        padding: 10px;
+        background-color: #cfc;
+        }
+      #div1 {
+        z-index: 5;
+        margin-bottom: 190px;
+        }
+      #div2 {
+        z-index: 2;
+        }
+      #div3 {
+        z-index: 4;
+        opacity: 1;
+        position: absolute;
+        top: 40px;
+        left: 180px;
+        width: 330px;
+        border: 1px dashed #900;
+        background-color: #fdd;
+        padding: 40px 20px 20px;
+        }
+      #div4, #div5 {
+        border: 1px dashed #996;
+        background-color: #ffc;
+        }
+      #div4 {
+        z-index: 6;
+        margin-bottom: 15px;
+        padding: 25px 10px 5px;
+        }
+      #div5 {
+        z-index: 1;
+        margin-top: 15px;
+        padding: 5px 10px;
+        }
+      #div6 {
+        z-index: 3;
+        position: absolute;
+        top: 20px;
+        left: 180px;
+        width: 150px;
+        height: 125px;
+        border: 1px dashed #009;
+        padding-top: 125px;
+        background-color: #ddf;
+        text-align: center;
+        }
+    &lt;/style&gt;
+
+  &lt;/head&gt;
+  &lt;body&gt;
+
+    &lt;div id="div1"&gt;
+      &lt;h1&gt;Division Element #1&lt;/h1&gt;
+      &lt;code&gt;position: relative;&lt;br/&gt;
+      z-index: 5;&lt;/code&gt;
+    &lt;/div&gt;
+
+    &lt;div id="div2"&gt;
+      &lt;h1&gt;Division Element #2&lt;/h1&gt;
+      &lt;code&gt;position: relative;&lt;br/&gt;
+      z-index: 2;&lt;/code&gt;
+    &lt;/div&gt;
+
+    &lt;div id="div3"&gt;
+
+      &lt;div id="div4"&gt;
+        &lt;h1&gt;Division Element #4&lt;/h1&gt;
+        &lt;code&gt;position: relative;&lt;br/&gt;
+        z-index: 6;&lt;/code&gt;
+      &lt;/div&gt;
+
+      &lt;h1&gt;Division Element #3&lt;/h1&gt;
+      &lt;code&gt;position: absolute;&lt;br/&gt;
+      z-index: 4;&lt;/code&gt;
+
+      &lt;div id="div5"&gt;
+        &lt;h1&gt;Division Element #5&lt;/h1&gt;
+        &lt;code&gt;position: relative;&lt;br/&gt;
+        z-index: 1;&lt;/code&gt;
+      &lt;/div&gt;
+   
+      &lt;div id="div6"&gt;
+        &lt;h1&gt;Division Element #6&lt;/h1&gt;
+        &lt;code&gt;position: absolute;&lt;br/&gt;
+        z-index: 3;&lt;/code&gt;
+      &lt;/div&gt;
+
+    &lt;/div&gt;
+
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+
+<h3 id="Division_Element_.231" name="Division_Element_.231">Division Element #1</h3>
+
+<pre class="brush:css">position: relative;
+z-index: 5;
+</pre>
+
+<div id="div2">
+<h3 id="Division_Element_.232" name="Division_Element_.232">Division Element #2</h3>
+
+<pre class="brush:css">position: relative;
+z-index: 2;
+</pre>
+</div>
+
+<div id="div3">
+<h3 id="Division_Element_.233" name="Division_Element_.233">Division Element #3</h3>
+
+<pre class="brush:css">position: absolute;
+z-index: 4;
+</pre>
+</div>
+
+<div id="div4">
+<h3 id="Division_Element_.234" name="Division_Element_.234">Division Element #4</h3>
+
+<pre class="brush:css">position: relative;
+z-index: 6;
+</pre>
+</div>
+
+<div id="div5">
+<h3 id="Division_Element_.235" name="Division_Element_.235">Division Element #5</h3>
+
+<pre class="brush:css">position: relative;
+z-index: 1;
+</pre>
+</div>
+
+<div id="div6">
+<h3 id="Division_Element_.236" name="Division_Element_.236">Division Element #6</h3>
+
+<pre class="brush:css">position: absolute;
+z-index: 3;
+</pre>
+</div>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li><a href="/en-US/docs/CSS/Understanding_z-index/Stacking_without_z-index" title="CSS/Understanding_z-index/Stacking_without_z-index">Stacking without z-index</a> : Default stacking rules</li>
+ <li><a href="/en-US/docs/CSS/Understanding_z-index/Stacking_and_float" title="CSS/Understanding_z-index/Stacking_and_float">Stacking and float</a> : How floating elements are handled</li>
+ <li><a href="/en-US/docs/CSS/Understanding_z-index/Adding_z-index" title="CSS/Understanding_z-index/Adding_z-index">Adding z-index</a> : Using z-index to change default stacking</li>
+ <li><a href="/en-US/docs/CSS/Understanding_z-index/Stacking_context_example_1" title="CSS/Understanding_z-index/Stacking_context_example_1">Stacking context example 1</a> : 2-level HTML hierarchy, z-index on the last level</li>
+ <li><a href="/en-US/docs/CSS/Understanding_z-index/Stacking_context_example_2" title="CSS/Understanding_z-index/Stacking_context_example_2">Stacking context example 2</a> : 2-level HTML hierarchy, z-index on all levels</li>
+ <li><a href="/en-US/docs/CSS/Understanding_z-index/Stacking_context_example_3" title="CSS/Understanding_z-index/Stacking_context_example_3">Stacking context example 3</a> : 3-level HTML hierarchy, z-index on the second level</li>
+</ul>
+
+<div class="originaldocinfo">
+<h2 id="Original_Document_Information" name="Original_Document_Information">Original Document Information</h2>
+
+<ul>
+ <li>Author(s): Paolo Lombardi</li>
+ <li>This article is the english translation of an article I wrote in italian for <a href="http://www.yappy.it">YappY</a>. I grant the right to share all the content under <a href="http://creativecommons.org/licenses/by-sa/2.0/">Creative Commons: Attribution-Sharealike license</a></li>
+ <li>Last Updated Date: July 9th, 2005</li>
+</ul>
+</div>

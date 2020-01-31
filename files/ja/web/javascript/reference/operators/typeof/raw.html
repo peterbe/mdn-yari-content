@@ -1,0 +1,268 @@
+<div>{{jsSidebar("Operators")}}</div>
+
+<p><strong><code>typeof</code></strong> 演算子は、未評価のオペランドの型を示す文字列を返します。</p>
+
+<div>{{EmbedInteractiveExample("pages/js/expressions-typeof.html")}}</div>
+
+<p class="hidden">このデモのソースファイルは GitHub リポジトリに格納されています。デモプロジェクトに協力したい場合は、 <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> をクローンしてプルリクエストを送信してください。</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<p><code>typeof</code> 演算子の後に、オペランドを続けて書きます。</p>
+
+<pre class="syntaxbox">typeof <var>operand</var>
+</pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<p><code><var>operand</var></code> は、オブジェクトもしくは {{Glossary("Primitive", "primitive")}} 型を返す式を表します。</p>
+
+<p>かっこはオプションです。</p>
+
+<h2 id="Description" name="Description">解説</h2>
+
+<p>以下は <code>typeof</code> が返す事が出来る値 (文字列) の一覧表です。 型とプリミティブの詳細については、<a href="/ja/docs/Web/JavaScript/Data_structures">JavaScript のデータ構造</a>のページも参照してください。</p>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">型</th>
+   <th scope="col">返値</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>未定義</td>
+   <td><code>"undefined"</code></td>
+  </tr>
+  <tr>
+   <td>Null</td>
+   <td><code>"object"</code> (下記参照)</td>
+  </tr>
+  <tr>
+   <td>真偽値</td>
+   <td><code>"boolean"</code></td>
+  </tr>
+  <tr>
+   <td>数値</td>
+   <td><code>"number"</code></td>
+  </tr>
+  <tr>
+   <td>{{glossary("BigInt")}}</td>
+   <td><code>"bigint"</code></td>
+  </tr>
+  <tr>
+   <td>文字列</td>
+   <td><code>"string"</code></td>
+  </tr>
+  <tr>
+   <td>シンボル (ECMAScript6 で新しく導入)</td>
+   <td><code>"symbol"</code></td>
+  </tr>
+  <tr>
+   <td>ホストオブジェクト (provided by the JS environment)</td>
+   <td><em>実装に依存</em></td>
+  </tr>
+  <tr>
+   <td>関数オブジェクト (implements <span class="nowiki">[[Call]]</span> in ECMA-262 terms)</td>
+   <td><code>"function"</code></td>
+  </tr>
+  <tr>
+   <td>その他のオブジェクト</td>
+   <td><code>"object"</code></td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<pre class="brush:js">// Numbers
+typeof 37 === 'number';
+typeof 3.14 === 'number';
+typeof(42) === 'number';
+typeof Math.LN2 === 'number';
+typeof Infinity === 'number';
+typeof NaN === 'number'; // Despite being "Not-A-Number"
+typeof Number('1') === 'number'; // Number tries to parse things into numbers
+
+typeof 42n === 'bigint';
+
+// Strings
+typeof '' === 'string';
+typeof 'bla' === 'string';
+typeof `template literal` === 'string';
+typeof '1' === 'string'; // note that a number within a string is still typeof string
+typeof (typeof 1) === 'string'; // typeof always returns a string
+typeof String(1) === 'string'; // String converts anything into a string, safer than toString
+
+
+// Booleans
+typeof true === 'boolean';
+typeof false === 'boolean';
+typeof Boolean(1) === 'boolean'; // Boolean() will convert values based on if they're truthy or falsy
+typeof !!(1) === 'boolean'; // two calls of the ! (logical NOT) operator are equivalent to Boolean()
+
+
+// Symbols
+typeof Symbol() === 'symbol'
+typeof Symbol('foo') === 'symbol'
+typeof Symbol.iterator === 'symbol'
+
+
+// Undefined
+typeof undefined === 'undefined';
+typeof declaredButUndefinedVariable === 'undefined';
+typeof undeclaredVariable === 'undefined'; 
+
+
+// Objects
+typeof {a: 1} === 'object';
+
+// 通常のオブジェクトと配列を区別するには <a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/Array/isArray">Array.isArray</a>
+// または Object.prototype.toString.call を使用してください
+typeof [1, 2, 4] === 'object';
+
+typeof new Date() === 'object';
+typeof /regex/ === 'object'; // 過去の結果は正規表現の節を見てください
+
+
+// 以下のものは紛らわしく、危険で、意味がありません。使用しないでください。
+typeof new Boolean(true) === 'object'; 
+typeof new Number(1) === 'object'; 
+typeof new String('abc') === 'object';
+
+
+// 関数
+typeof function() {} === 'function';
+typeof class C {} === 'function';
+typeof Math.sin === 'function';
+</pre>
+
+<h2 id="Additional_information" name="Additional_information">追加情報</h2>
+
+<h3 id="null"><code>null</code></h3>
+
+<pre class="brush:js">// JavaScript の初期からの実装に基づく
+typeof null === 'object';
+</pre>
+
+<p>JavaScript の最初の実装では、 JavaScript の値は型タグと値として表現されていました。オブジェクトの型タグは 0 でした。 <code>null</code> は NULL ポインタ (ほとんどのプラットフォームで 0x00) として表されていました。その結果、 null は型タグとして 0 を持ち、偽の typeof 返値を返します。(<a href="http://www.2ality.com/2013/10/typeof-null.html">リファレンス</a>)</p>
+
+<p>ECMAScript の修正案が (オプトインを使用して) 提案されましたが、<a href="https://web.archive.org/web/20160331031419/http://wiki.ecmascript.org:80/doku.php?id=harmony:typeof_null">却下されました</a>。それは <code>typeof null === 'null'</code> という結果になるものでした。</p>
+
+<h3 id="Using_new_operator" name="Using_new_operator"><code>new</code> 演算子の使用</h3>
+
+<pre class="brush:js">// コンストラクター関数はすべて、関数コンストラクターを除いて、常に typeof 'object' になります
+var str = new String('String');
+var num = new Number(100);
+
+typeof str; // 'object' を返す
+typeof num; // 'object' を返す
+
+var func = new Function();
+
+typeof func; // 'function' を返す
+</pre>
+
+<h3 id="Need_for_parentheses_in_Syntax" name="Need_for_parentheses_in_Syntax">構文で括弧が必要な場合</h3>
+
+<pre class="brush:js">// 式のデータ型を特定するために、かっこを使用することができます。
+var iData = 99;
+
+typeof iData + ' Wisen'; // 'number Wisen'
+typeof (iData + ' Wisen'); // 'string'
+
+
+</pre>
+
+<h3 id="Regular_expressions" name="Regular_expressions">正規表現</h3>
+
+<p>呼び出し可能な正規表現は、一部のブラウザーでは非標準的なものでした。</p>
+
+<pre class="brush:js">typeof /s/ === 'function'; // Chrome 1-12 Non-conform to ECMAScript 5.1
+typeof /s/ === 'object';   // Firefox 5+  Conform to ECMAScript 5.1
+</pre>
+
+<h3 id="Errors" name="Errors">エラー</h3>
+
+<p>ECMAScript 2015 より前では、 <code>typeof</code> は常にそれが供給されたオペランドの文字列を返すことが保証されていました。宣言されていない識別子があっても、<code>typeof</code> は <code>'undefined'</code> を返します。<code>typeof</code> を使用すると、エラーは発生しません。</p>
+
+<p>しかしブロックされていない <code><a href="/ja/docs/Web/JavaScript/Reference/Statements/let">let</a></code> と <code><a href="/ja/docs/Web/JavaScript/Reference/Statements/const">const</a></code> を追加することで、<code>let</code> と <code>const</code> 変数で <code>typeof</code> を使用するか (またはクラスの <code>typeof</code> を使用する)、それらが宣言される前にブロック内で <code><a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/ReferenceError">ReferenceError</a></code> がスローされます。ブロックスコープされた変数は、ブロックの開始から初期化が処理されるまでの「<a href="/ja/docs/Web/JavaScript/Reference/Statements/let#Temporal_Dead_Zone_and_errors_with_let">一時的な不感地帯</a>」にあり、その間にアクセスされるとエラーになります。</p>
+
+<pre class="brush: js">typeof undeclaredVariable === 'undefined';
+
+typeof newLetVariable; // ReferenceError
+typeof newConstVariable; // ReferenceError
+typeof newClass; // ReferenceError
+
+let newLetVariable;
+const newConstVariable = 'hello';
+class newClass{};</pre>
+
+<h3 id="Exceptions" name="Exceptions">例外</h3>
+
+<p>現在のブラウザーではすべて、標準外のホストオブジェクト {{domxref("document.all")}} は <code>undefined</code> 型になります。</p>
+
+<pre class="brush:js">typeof document.all === 'undefined';
+</pre>
+
+<p>この仕様書では、非標準エキゾチックオブジェクトのカスタムタイプタグが可能ですが、事前に定義されたタイプタグとは異なるタイプタグが必要です。<code>'undefined'</code> タイプの <code>document.all</code> のケースは、元の ECMA JavaScript 標準の「故意の違反」としてウェブ標準に分類されています。</p>
+
+<h2 id="Specifications" name="Specifications">仕様書</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">状態</th>
+   <th scope="col">備考</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-typeof-operator', 'The typeof Operator')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td></td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-typeof-operator', 'The typeof Operator')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td></td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-11.4.3', 'The typeof Operator')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td></td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES3', '#sec-11.4.3', 'The typeof Operator')}}</td>
+   <td>{{Spec2('ES3')}}</td>
+   <td></td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES1', '#sec-11.4.3', 'The typeof Operator')}}</td>
+   <td>{{Spec2('ES1')}}</td>
+   <td>初回定義。 JavaScript 1.1 で実装</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザーの対応</h2>
+
+<div class="hidden">このページの互換性一覧表は構造化データから生成されています。データに協力していただけるのであれば、 <a class="external" href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> をチェックアウトしてプルリクエストを送信してください。</div>
+
+<p>{{Compat("javascript.operators.typeof")}}</p>
+
+<h2 id="IE-specific_notes" name="IE-specific_notes">IE 特有のメモ</h2>
+
+<p>IE 6、7、8 では、以下のように多くのホストオブジェクトがオブジェクト型であり、関数ではありません。</p>
+
+<pre class="brush: js">typeof alert === 'object'</pre>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li><code><a href="/ja/docs/Web/JavaScript/Reference/Operators/instanceof">instanceof</a></code></li>
+ <li><a href="http://es-discourse.com/t/why-typeof-is-no-longer-safe/15">Why typeof is no longer "safe"</a></li>
+ <li><a href="https://github.com/tc39/ecma262/issues/668">document.all willful violation of the standard</a></li>
+</ul>

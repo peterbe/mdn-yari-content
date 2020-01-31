@@ -1,0 +1,245 @@
+<div>{{ToolsSidebar}}</div><div class="geckoVersionNote">
+<p>This tool is new in Firefox 34.</p>
+
+<p>The columns in the sampling profiler were expanded and renamed in Firefox 35: this page describes the new column names.</p>
+</div>
+
+<p>The Performance tool is the replacement for the <a href="/en-US/docs/Tools/Profiler">JavaScript sampling profiler</a>. It includes an updated version of the sampling profiler, but adds a frame rate timeline to help gauge responsiveness. We intend to add more features in future releases.</p>
+
+<h2 id="Opening_the_Performance_tool">Opening the Performance tool</h2>
+
+<p>You can launch the Performance tool by selecting "Performance" from the "Web Developer" menu. You'll find the "Web Developer" menu under the "Tools" menu on Linux and OS X, and directly under the "Firefox" menu on Windows. Alternatively, Shift + F5 will open the tool.</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/8575/performance-open.png" style="display: block; margin-left: auto; margin-right: auto;"></p>
+
+<h2 id="Creating_profiles">Creating profiles</h2>
+
+<p>To start recording a new profile click the stopwatch icon. Click it again to finish recording. The profile will immediately be opened. You can save the profile as a JSON file and import saved profiles. The sidebar on the left lets you switch between multiple open profiles.</p>
+
+<h2 id="Analysing_profiles">Analysing profiles</h2>
+
+<p>A profile looks something like this:</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/8823/performance-open.png" style="display: block; margin-left: auto; margin-right: auto;"></p>
+
+<p>It consists of four main sections layered horizontally:</p>
+
+<ol>
+ <li><a href="/en-US/docs/Tools/Performance#Zooming_in">a set of breadcrumbs that you can use to zoom in and out<img alt="" src="https://mdn.mozillademos.org/files/8825/performance-breadcrumbs.png" style="display: block; margin-left: auto; margin-right: auto;"></a></li>
+ <li><a href="/en-US/docs/Tools/Performance#The_frame_rate_timeline">a frame rate timeline</a><img alt="" src="https://mdn.mozillademos.org/files/8827/performance-framerate.png" style="display: block; margin-left: auto; margin-right: auto;"></li>
+ <li><a href="https://developer.mozilla.org/en-US/docs/Tools/Performance#The_sampling_profiler_timeline">a timeline for platform code execution</a><img alt="" src="https://mdn.mozillademos.org/files/8841/performance-js-timeline.png" style="display: block; margin-left: auto; margin-right: auto;"></li>
+ <li><a href="/en-US/docs/Tools/Performance#The_sampling_profiler_details">the detailed output of the JavaScript sampling profiler</a><img alt="" src="https://mdn.mozillademos.org/files/8845/performance-js-profiler.png" style="display: block; margin-left: auto; margin-right: auto;"></li>
+</ol>
+
+<h3 id="The_frame_rate_timeline">The frame rate timeline</h3>
+
+<p>The frame rate timeline gives you an overview of the browser's responsiveness in the period covered by the profile.</p>
+
+<p>A frame encapsulates the work the browser needs to do in order to repaint in response to some event. For example, if moving the mouse over some page element triggers some JavaScript that changes the element's appearance, and that triggers a reflow and a repaint, then all this work needs to be completed in that frame. If it takes too long for the browser to process the frame, then the browser will appear unresponsive (<a href="/en-US/docs/Glossary/Jank">janky</a>).</p>
+
+<p>The Performance tool takes a timestamp when the browser finishes a frame, and uses this to keep track of the frame rate:</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/8827/performance-framerate.png" style="display: block; margin-left: auto; margin-right: auto;">The x-axis is time over the profile period, and there are three annotations: the target frame rate (always 60 frames per second), the average frame rate, and the lowest frame rate.</p>
+
+<h3 id="Platform_code_execution">Platform code execution</h3>
+
+<p>This gives you an overview of code execution in the period covered by the profile. As with the frame rate timeline, the x-axis represents time over the profiling period, and the samples are laid out as vertical bars in the order they were taken, left to right:</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/8841/performance-js-timeline.png" style="display: block; margin-left: auto; margin-right: auto;">The height of each bar represents the depth of the call stack at this point.</p>
+
+<p>The Performance tool examines the call stack and figures out the sorts of things the JavaScript code is doing, and divides the bar into colors accordingly:</p>
+
+<table class="fullwidth-table standard-table">
+ <tbody>
+  <tr>
+   <td>Network</td>
+   <td>Sending and processing network requests and responses</td>
+  </tr>
+  <tr>
+   <td>JIT</td>
+   <td>JavaScript code compilation</td>
+  </tr>
+  <tr>
+   <td>GC</td>
+   <td>Garbage collection</td>
+  </tr>
+  <tr>
+   <td>Inputs &amp; events</td>
+   <td>Events such as mouse or DOM events</td>
+  </tr>
+  <tr>
+   <td>Styles</td>
+   <td>Parsing CSS</td>
+  </tr>
+  <tr>
+   <td>Graphics</td>
+   <td>Includes handling reflows and repaints as well as WebGL</td>
+  </tr>
+  <tr>
+   <td>Storage</td>
+   <td>Most often this is IndexedDB</td>
+  </tr>
+  <tr>
+   <td>Gecko</td>
+   <td>Everything that doesn't fit into any of the other categories</td>
+  </tr>
+ </tbody>
+</table>
+
+<p>Hovering over the color key for a given category fades all the other categories:<img alt="" src="https://mdn.mozillademos.org/files/8843/performance-js-timeline-category-selected.png" style="display: block; margin-left: auto; margin-right: auto;"></p>
+
+<p>This view lines up with the frame rate timeline, so you may be able to correlate slow frame rates with particular JavaScript operations.</p>
+
+<div class="note">
+<p>Note that this shows everything the platform is doing, not just your own code.</p>
+</div>
+
+<h3 id="JavaScript_sampling_profiler">JavaScript sampling profiler</h3>
+
+<p>The profiler periodically samples the state of the JavaScript engine, and records the stack for the code executing at the time the sample was taken. Statistically, the number of samples taken in which we were executing a particular function corresponds to the amount of time the browser is spending executing it, so you can identify bottlenecks in your code.<br>
+ <br>
+ <a name="profiling-example">For example, consider a program like this:</a></p>
+
+<pre class="brush: js">function doSomething() {
+  var x = getTheValue();
+  x = x + 1;                // -&gt; A (from the top level)
+  logTheValue(x);
+}
+
+function getTheValue() {
+  return 5;                 // -&gt; B (from doSomething())
+}
+
+function logTheValue(x) {
+                            // -&gt; C (from doSomething())
+                            // -&gt; D (from doSomething())
+                            // -&gt; E (from the top level)
+ console.log(x);
+}
+
+doSomething();
+
+logTheValue(6);</pre>
+
+<p>Suppose we run this program with the profiler active, and in the time it takes to run, the profiler takes five samples, as indicated in the inline comments above.</p>
+
+<p>Four are taken from inside <code>doSomething()</code>. Of those, <code>A</code> is directly inside <code>doSomething()</code>. <code>B</code> is inside <code>getTheValue()</code>, and <code>C</code> and <code>D</code> are inside <code>logTheValue()</code>. Finally, the program makes a call to <code>logTheValue()</code> from the top level, and we get a sample there, too. So the profile would consist of five stack traces, like this:</p>
+
+<pre>Sample A: doSomething()
+Sample B: doSomething() &gt; getTheValue()
+Sample C: doSomething() &gt; logTheValue()
+Sample D: doSomething() &gt; logTheValue()
+Sample E: logTheValue()</pre>
+
+<p>This obviously isn't enough data to tell us anything, but with a lot more samples we might be able to conclude that <code>logTheValue()</code> is the bottleneck in our code.</p>
+
+<h4 id="Profile_structure">Profile structure</h4>
+
+<p>The sampling profiler's details pane looks something like this:<img alt="" src="https://mdn.mozillademos.org/files/8845/performance-js-profiler.png" style="display: block; margin-left: auto; margin-right: auto;">It presents the samples collected as a table.</p>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <td>Samples</td>
+   <td>
+    <p>The number of samples that were taken in which the corresponding "Function" appeared in the call stack. For example, given the profiling example above, the corresponding "Samples" and "Functions" columns would look like:</p>
+
+    <pre>
+4  doSomething()
+2  &gt; logTheValue()
+1  &gt; getTheValue()
+1  logTheValue()</pre>
+
+    <p>Note that <code>logTheValue()</code> appears twice, because it's called from two different places.</p>
+   </td>
+  </tr>
+  <tr>
+   <td>Function</td>
+   <td>This includes the function name, source file, line number and domain that served the file. Clicking on the file name takes you to that file in the <a href="/en-US/docs/Tools/Debugger">Debugger</a>.</td>
+  </tr>
+  <tr>
+   <td>Total Cost</td>
+   <td>A direct translation of the "Samples" column into a percentage.</td>
+  </tr>
+  <tr>
+   <td>Self Cost</td>
+   <td>
+    <p>The "Samples" column includes not only samples that were taken while the JavaScript engine was executing this function, but also samples taken while executing functions called by this function.</p>
+
+    <p>For example, in the example above we record 4 samples for <code>doSomething()</code>, but 3 of those samples were taken while the JavaScript engine was executing functions called by <code>doSomething()</code>.</p>
+
+    <p>"Self Cost" is the number of samples taken while the JavaScript engine was actually executing this function, translated into a percentage. In the example above, the "Self Cost" for <code>doSomething()</code> is 20% (1 sample out of 5 in total was taken while actually executing the function).</p>
+   </td>
+  </tr>
+  <tr>
+   <td>Total Time</td>
+   <td>
+    <p>A statistical estimate of the amount of time spent inside the function, given the number of samples that were taken in it.</p>
+
+    <p>This value is derived from "Samples" but is not a direct translation, because we don't always take samples at exactly the right time, so we attempt to correct for this irregularity.</p>
+   </td>
+  </tr>
+  <tr>
+   <td>Self Time</td>
+   <td>
+    <p>A statistical estimate of the amount of time spent executing the function, exclusive of any functions called by this function.</p>
+
+    <p>Just as "Total Time" is not a direct translation of  "Samples", so "Self Time" is not a direct translation of "Self Cost".</p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+<p>For a deeper look into the way the sampling profiler presents data, see this <a href="/en-US/docs/Tools/Performance/Profiler_walkthrough">walkthrough of a profile</a>.</p>
+
+<h4 id="Inverting_the_call_tree">Inverting the call tree</h4>
+
+<div class="geckoVersionNote">
+<p>New in Firefox 36</p>
+</div>
+
+<p>By default, the profiler shows you the call tree from the root to the leaves, like a normal call stack. That is, from each top-level function to the functions it calls, then to the functions they call, and so on:</p>
+
+<pre>4  doSomething()
+2  &gt; logTheValue()
+1  &gt; getTheValue()
+1  logTheValue()</pre>
+
+<p>This seems logical as it's the temporal order in which the stack is built up, and it's also conventional to represent a call stack in that way. However, often the places where you're spending time are deep in the call tree. So when you look at a profile you'll often click through many higher-level functions with a low "Self Cost", and it can be hard to see the places you're actually spending most of the time.</p>
+
+<p>From Firefox 36 there's a new checkbox in the profiler labeled "Invert Call Tree". If you select this option, the profiler:</p>
+
+<ul>
+ <li>makes a list of all functions with a <em>Self Cost</em> greater than zero: that is, functions which were actually executing when the sample was taken</li>
+ <li>orders the list by the number of samples taken while in that function</li>
+ <li>for each entry in the list, shows the call stack backwards to the top-level function.</li>
+</ul>
+
+<p>This is usually a more effective way to highlight where your code is spending its time.</p>
+
+<h4 id="Zooming_in">Zooming in</h4>
+
+<p>Clicking on a row highlights all the samples in the <a href="/en-US/docs/Tools/Performance#The_sampling_profiler_timeline">timeline view</a> in which this function appears:<img alt="" src="https://mdn.mozillademos.org/files/8835/performance-js-profiler-frame-selected.png" style="display: block; margin-left: auto; margin-right: auto;">If you hover over a row you'll see a magnifying glass at the right-hand end of it. Clicking the magnifying glass makes that row the root: that is, it presents the entire profile as if only that row and the rows underneath it exist:<br>
+ <img alt="" src="https://mdn.mozillademos.org/files/8833/performance-js-profiler-frame-made-root.png" style="display: block; margin-left: auto; margin-right: auto;"></p>
+
+<p>Note that this also <a href="/en-US/docs/Tools/Performance#Zooming_in">zooms in</a> on the section of the profile in which these samples were taken.</p>
+
+<h3 id="Zooming_in_2">Zooming in</h3>
+
+<p>If you click and drag in either the frame rate timeline or the sampling profiler timeline, then:</p>
+
+<ul>
+ <li>a section of the timeline is highlighted</li>
+ <li>the sampling profiler details view now shows only samples that were recorded in that section</li>
+ <li>you'll see a "+" appear in the toolbar at the top:</li>
+</ul>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/8839/performance-js-profiler-timeslice-selected.png" style="display: block; margin-left: auto; margin-right: auto;">Click the "+", and the highlighted section is expanded to fill the timeline. The toolbar at the top now shows the section as a separate breadcrumb:</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/8837/performance-js-profiler-timeslice-open.png" style="display: block; margin-left: auto; margin-right: auto;">You can switch between the complete profile and the section using the breadcrumbs. You can also zoom in on a subsection within the section, and that will then appear as a third breadcrumb in the toolbar:</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/8829/performance-js-profiler-2nd-timeslice-open.png" style="display: block; margin-left: auto; margin-right: auto;"></p>
+
+<p> </p>
+
+<p> </p>

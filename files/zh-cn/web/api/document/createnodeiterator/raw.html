@@ -1,0 +1,131 @@
+<p>{{APIRef("DOM")}}</p>
+
+<p>返回一个新的 <a class="internal" href="/en/DOM/NodeIterator" title="En/DOM/NodeIterator"><code>NodeIterator</code></a> 对象.</p>
+
+<p>译注：该函数的作用是用来筛选元素（节点）的。</p>
+
+<h2 id="Syntax" name="Syntax">语法</h2>
+
+<pre class="eval script">var nodeIterator = document.createNodeIterator(root, whatToShow, filter);
+</pre>
+
+<h3 id="参数">参数</h3>
+
+<dl>
+ <dt><code>root</code></dt>
+ <dd> {{ domxref("NodeIterator") }}的起点，也就是筛选的范围，筛选root元素内的节点。</dd>
+ <dt><code>whatToShow</code> {{ optional_inline() }}</dt>
+ <dd>是一个可选的无符号长整形（<code>unsigned long</code>）数字去代表筛选的类型，也可是使用 <code><a href="http://www.w3.org/TR/DOM-Level-2-Traversal-Range/traversal.html#Traversal-NodeFilter" title="http://www.w3.org/TR/DOM-Level-2-Traversal-Range/traversal.html#Traversal-NodeFilter">NodeFilter</a> 对象的常量来表示</code>他表示筛选的元素类型。 默认值是 <code>0xFFFFFFFF</code> 代表 <code>SHOW_ALL</code> 常量.
+ <table class="standard-table">
+  <tbody>
+   <tr>
+    <td class="header">常量</td>
+    <td class="header">数字值</td>
+    <td class="header">描述</td>
+   </tr>
+   <tr>
+    <td><code>NodeFilter.SHOW_ALL</code></td>
+    <td><code>-1</code> (that is the max value of <code>unsigned long</code>)</td>
+    <td>Shows all nodes.</td>
+   </tr>
+   <tr>
+    <td><code>NodeFilter.SHOW_ATTRIBUTE</code> {{deprecated_inline}}</td>
+    <td><code>2</code></td>
+    <td>Shows attribute {{ domxref("Attr") }} nodes. This is meaningful only when creating a {{ domxref("TreeWalker") }} with an {{ domxref("Attr") }} node as its root; in this case, it means that the attribute node will appear in the first position of the iteration or traversal. Since attributes are never children of other nodes, they do not appear when traversing over the document tree.</td>
+   </tr>
+   <tr>
+    <td><code>NodeFilter.SHOW_CDATA_SECTION</code> {{deprecated_inline}}</td>
+    <td><code>8</code></td>
+    <td>Shows {{ domxref("CDATASection") }} nodes.</td>
+   </tr>
+   <tr>
+    <td><code>NodeFilter.SHOW_COMMENT</code></td>
+    <td><code>128</code></td>
+    <td>Shows {{ domxref("Comment") }} nodes.</td>
+   </tr>
+   <tr>
+    <td><code>NodeFilter.SHOW_DOCUMENT</code></td>
+    <td><code>256</code></td>
+    <td>Shows {{ domxref("Document") }} nodes.</td>
+   </tr>
+   <tr>
+    <td><code>NodeFilter.SHOW_DOCUMENT_FRAGMENT</code></td>
+    <td><code>1024</code></td>
+    <td>Shows {{ domxref("DocumentFragment") }} nodes.</td>
+   </tr>
+   <tr>
+    <td><code>NodeFilter.SHOW_DOCUMENT_TYPE</code></td>
+    <td><code>512</code></td>
+    <td>Shows {{ domxref("DocumentType") }} nodes.</td>
+   </tr>
+   <tr>
+    <td><code>NodeFilter.SHOW_ELEMENT</code></td>
+    <td><code>1</code></td>
+    <td>Shows {{ domxref("Element") }} nodes.</td>
+   </tr>
+   <tr>
+    <td><code>NodeFilter.SHOW_ENTITY</code> {{deprecated_inline}}</td>
+    <td><code>32</code></td>
+    <td>Shows {{ domxref("Entity") }} nodes. This is meaningful only when creating a {{ domxref("TreeWalker") }} with an {{ domxref("Entity") }} node as its root; in this case, it means that the {{ domxref("Entity") }} node will appear in the first position of the traversal. Since entities are not part of the document tree, they do not appear when traversing over the document tree.</td>
+   </tr>
+   <tr>
+    <td><code>NodeFilter.SHOW_ENTITY_REFERENCE</code> {{deprecated_inline}}</td>
+    <td><code>16</code></td>
+    <td>Shows {{ domxref("EntityReference") }} nodes.</td>
+   </tr>
+   <tr>
+    <td><code>NodeFilter.SHOW_NOTATION</code> {{deprecated_inline}}</td>
+    <td><code>2048</code></td>
+    <td>Shows {{ domxref("Notation") }} nodes. This is meaningful only when creating a {{ domxref("TreeWalker") }} with a {{ domxref("Notation") }} node as its root; in this case, it means that the {{ domxref("Notation") }} node will appear in the first position of the traversal. Since entities are not part of the document tree, they do not appear when traversing over the document tree.</td>
+   </tr>
+   <tr>
+    <td><code>NodeFilter.SHOW_PROCESSING_INSTRUCTION</code></td>
+    <td><code>64</code></td>
+    <td>Shows {{ domxref("ProcessingInstruction") }} nodes.</td>
+   </tr>
+   <tr>
+    <td><code>NodeFilter.SHOW_TEXT</code></td>
+    <td><code>4</code></td>
+    <td>Shows {{ domxref("Text") }} nodes.</td>
+   </tr>
+  </tbody>
+ </table>
+ </dd>
+ <dt><code>filter</code> {{ optional_inline() }}</dt>
+ <dd>是一个实现了 {{ domxref("NodeFilter") }} 接口的对象; its <code>acceptNode()</code> method will be called for each node in the subtree based at root which is accepted as included by the whatToShow flag to determine whether or not to include it in the list of iterable nodes (你可以使用一个简单的回掉函数代替该方法). 该方法必须返回下列常量之一： <code>NodeFilter.FILTER_ACCEPT</code>, <code>NodeFilter.FILTER_REJECT</code>, or <code>NodeFilter.FILTER_SKIP</code>. See the {{ anch("Example") }}.</dd>
+</dl>
+
+<div class="note"><strong>Note:</strong> Prior to Gecko 12.0 {{ geckoRelease("12.0") }}, this method accepted an optional fourth parameter (<code>entityReferenceExpansion</code>) that is not part of the DOM4 specification, and has therefore been removed. This parameter indicated whether or not the children of entity reference nodes were visible to the iterator. Since such nodes were never created in browsers, this paramater had no effect.</div>
+
+<h2 id="Example" name="Example">实例</h2>
+
+<pre class="brush: js">// 用于返回body元素下的所有p标签，并保存在pars列表中
+var nodeIterator = document.createNodeIterator(
+    document.body,
+    NodeFilter.SHOW_ELEMENT,
+    function(node) {
+        return node.nodeName.toLowerCase() === 'p' ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+    }
+);
+var pars = [];
+var currentNode;
+
+while (currentNode = nodeIterator.nextNode()) {
+  pars.push(currentNode);
+}
+
+</pre>
+
+<h3 id="Specification" name="Specification">浏览器兼容性</h3>
+
+<p>Supported in FF 3.5+, Chrome 1+, Opera 9+, Safari 3+, IE9+</p>
+
+<h2 id="Specification" name="Specification">参见</h2>
+
+<ul>
+ <li><a class="external" href="http://msdn.microsoft.com/en-us/library/ie/ff975301(v=vs.85).aspx" title="http://msdn.microsoft.com/en-us/library/ie/ff975301(v=vs.85).aspx">createNodeIterator on MSDN</a></li>
+</ul>
+
+<h2 id="Specification" name="Specification">规范</h2>
+
+<p><a class="external" href="http://www.w3.org/TR/DOM-Level-2-Traversal-Range/traversal.html#Traversal-NodeIterator" title="http://www.w3.org/TR/DOM-Level-2-Traversal-Range/traversal.html#Traversal-NodeIterator">DOM Level 2 Traversal: NodeIterator</a></p>

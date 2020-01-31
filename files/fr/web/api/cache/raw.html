@@ -1,0 +1,267 @@
+<p>{{APIRef("Service Workers API")}}{{SeeCompatTable}}</p>
+
+<p>L'interface <strong><code>Cache</code></strong> de l' <a href="/en-US/docs/Web/API/ServiceWorker_API">API ServiceWorker</a> représente le stockage pour les paires d'objet <code><a href="http://fetch.spec.whatwg.org/#request">Request</a></code> / <code><a href="http://fetch.spec.whatwg.org/#response">Response</a></code> object qui sont mises en cache dans le cadre du cycle de vie d'un {{domxref("ServiceWorker")}}.</p>
+
+<p>Un domaine peut avoir de multiples objets <code>Cache</code> nommés, dont les contenus sont entièrement sous le contrôle des service workers.</p>
+
+<p>Vous avez la responsabilité d'implémenter la façon dont le script du {{domxref("ServiceWorker")}} gère les mises à jour du <code>Cache</code>. Les éléments dans un <code>Cache</code> ne sont pas mis à jour à moins d'une requête explicite; ils n'expirent pas non plus à moins d'être supprimés. Utiliser {{domxref("CacheStorage.open", "CacheStorage.open(cacheName)")}} pour ouvrir un objet <code>Cache</code> nommé spécifique et appeler ensuite toute méthode de l'objet <code>Cache</code> pour faire la maintenance du <code>Cache</code>.</p>
+
+<p>Vous avez également la responsabilité de la purge périodique des entrées du cache. Chaque navigateur dispose d'une limite physique quant à la capacité de stockage qu'un service worker donné peut utiliser. Le navigateur fait de son mieux pour gérer l'espace disque, mais il peut supprimer le stockage du Cache pour une origine.  Le navigateur supprimera généralement toutes les données d'une origine ou rien. Il faut s'assurer de versionner les caches par nom et d'utiliser seulement les caches à partir de la version du {{domxref("ServiceWorker")}} avec lequel ils peuvent correctement fonctionner. Voir <a href="/en-US/docs/Web/API/ServiceWorker_API/Using_Service_Workers#Deleting_old_caches">Supprimer des anciens caches</a> pour plus d'informations.</p>
+
+<div class="note">
+<p><strong>Remarque </strong>: l'interface <code>Cache</code> est aussi bien exposée à des contextes fenêtrés qu'à des workers; vous ne devez pas l'utiliser en conjonction avec les service workers.</p>
+</div>
+
+<div class="note">
+<p><strong>Remarque </strong>: {{domxref("Cache.put")}}, {{domxref("Cache.add")}}, et {{domxref("Cache.addAll")}} permettent seulement aux requêtes de type <code>GET</code> d'être stockées dans le cache.</p>
+</div>
+
+<div class="note">
+<p><strong>Remarque </strong>: les implementations initiales de Cache (à la fois dans Blink et Gecko) résolvent les promesses de {{domxref("Cache.add")}}, {{domxref("Cache.addAll")}}, et {{domxref("Cache.put")}} lorsque le corps de la réponse est complétement écrit dans le stockage.  De plus récentes versions de la spec versions établissent que le navigateur peut résoudre la promesse aussitôt que l'entrée est enregistrée dans la base de données même si le corps de la réponse est encore en chargement.</p>
+</div>
+
+<div class="note">
+<p><strong>Remarque :</strong> à partir de Chrome 46, l'API Cache stockera seulement les requêtes d'origines sécurisées, c'est-à-dire celles accessibles via HTTPS.</p>
+</div>
+
+<h2 id="Méthodes">Méthodes</h2>
+
+<dl>
+ <dt>{{domxref("Cache.match", "Cache.match(request, options)")}}</dt>
+ <dd>Retourne une {{jsxref("Promise")}} qui se résout en une réponse associée à la première requête correspondante dans l'objet {{domxref("Cache")}}.</dd>
+ <dt>{{domxref("Cache.matchAll", "Cache.matchAll(request, options)")}}</dt>
+ <dd>Retourne une {{jsxref("Promise")}} qui se résout en un tableau de toutes les requêtes correspondantes dans l'objet {{domxref("Cache")}}.</dd>
+ <dt>{{domxref("Cache.add", "Cache.add(request)")}}</dt>
+ <dd>Prend une URL, la récupère et ajoute l'objet réponse associé au cache donné. C'est une fonctionnalité équivalente à l'appel de fetch(), puis à l'utilisation de Cache.put() pour ajouter les résultats  au cache.</dd>
+ <dt>{{domxref("Cache.addAll", "Cache.addAll(requests)")}}</dt>
+ <dd>Prend un tableau d'URLs, les récupère, et ajoute les objets réponses associés au cache donné.</dd>
+ <dt>{{domxref("Cache.put", "Cache.put(request, response)")}}</dt>
+ <dd>Prend à la fois une requête et sa réponse et l'ajoute au cache donné.</dd>
+ <dt>{{domxref("Cache.delete", "Cache.delete(request, options)")}}</dt>
+ <dd>Trouve l'entrée {{domxref("Cache")}} dont la clé est la requête, et le cas échéant, supprime l'entrée {{domxref("Cache")}} et retourne une {{jsxref("Promise")}} qui se résout à <code>true</code>. Si aucune entrée {{domxref("Cache")}} n'est trouvée, elle retourne <code>false</code>.</dd>
+ <dt>{{domxref("Cache.keys", "Cache.keys(request, options)")}}</dt>
+ <dd>Retourne une {{jsxref("Promise")}} qui se résout en un tableau clés {{domxref("Cache")}}.</dd>
+</dl>
+
+<h2 id="Exemples">Exemples</h2>
+
+<p>Cet extrait de code provient de <a href="https://github.com/GoogleChrome/samples/blob/gh-pages/service-worker/selective-caching/service-worker.js">l'exemple de mise en cache sélective</a>. (voir <a href="https://googlechrome.github.io/samples/service-worker/selective-caching/">selective caching live</a>) Le code utilise {{domxref("CacheStorage.open", "CacheStorage.open(cacheName)")}} pour ouvrir tous les objets {{domxref("Cache")}} avec un en-tête Content-Type qui débute par <code>font/</code>.</p>
+
+<p>Le code utilise alors {{domxref("Cache.match", "Cache.match(request, options)")}} pour voir s'il y a déjà une fonte correspondante dans le cache, et le cas échéant, la retourne. S'il n'y a pas de correspondance, le code récupère la fonte à partir du réseau et utilise {{domxref("Cache.put","Cache.put(request, response)")}} pour mettre en cache la ressource récupérée.</p>
+
+<p>Le code gère les exceptions déclenchées par l'opération de {{domxref("Globalfetch.fetch","fetch()")}}. A noter qu'une réponse HTTP en erreur (e.g., 404) ne déclenchera pas une exception. Elle retournera un objet de réponse normal qui dispose du code d'erreur approprié.</p>
+
+<p>Cet extrait de code illustre également une bonne pratique pour versionner les caches utilisés par le service worker. Bien qu'il y ait seulement un cache dans cet exemple, la même approche peut être utilisée pour des caches multiples. Il associe un identifiant  court avec un nom de cache versionné et spécifique. Le code supprime aussi tous les caches qui ne sont pas nommés dans <code>CURRENT_CACHES</code>.</p>
+
+<div class="note"><strong>Note:</strong> In Chrome, visit chrome://inspect/#service-workers and click on the "inspect" link below the registered service worker to view logging statements for the various actions the <a href="https://github.com/GoogleChrome/samples/blob/gh-pages/service-worker/selective-caching/service-worker.js">service-worker.js</a> script is performing.</div>
+
+<pre class="brush: js">var CACHE_VERSION = 1;
+
+// Shorthand identifier mapped to specific versioned cache.
+var CURRENT_CACHES = {
+  font: 'font-cache-v' + CACHE_VERSION
+};
+
+self.addEventListener('activate', function(event) {
+  var expectedCacheNames = Object.keys(CURRENT_CACHES).map(function(key) {
+    return CURRENT_CACHES[key];
+  });
+
+  // Active worker won't be treated as activated until promise resolves successfully.
+  event.waitUntil(
+    caches.keys().then(function(cacheNames) {
+      return Promise.all(
+        cacheNames.map(function(cacheName) {
+          if (expectedCacheNames.indexOf(cacheName) == -1) {
+            console.log('Deleting out of date cache:', cacheName);
+            
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
+});
+
+self.addEventListener('fetch', function(event) {
+  console.log('Handling fetch event for', event.request.url);
+
+  event.respondWith(
+    
+    // Opens Cache objects that start with 'font'.
+    caches.open(CURRENT_CACHES['font']).then(function(cache) {
+      return cache.match(event.request).then(function(response) {
+        if (response) {
+          console.log(' Found response in cache:', response);
+
+          return response;
+        } 
+      }).catch(function(error) {
+        
+        // Handles exceptions that arise from match() or fetch().
+        console.error('  Error in fetch handler:', error);
+
+        throw error;
+      });
+    })
+  );
+});</pre>
+
+<h2 id="Spécifications">Spécifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Spécification</th>
+   <th scope="col">Statut</th>
+   <th scope="col">Commentaire</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('Service Workers', '#cache', 'Cache')}}</td>
+   <td>{{Spec2('Service Workers')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Compatibilité_des_navigateurs">Compatibilité des navigateurs</h2>
+
+<div>{{CompatibilityTable}}</div>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Fonctionnalité</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari (WebKit)</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatChrome(40.0)}}</td>
+   <td>{{CompatGeckoDesktop(39)}}</td>
+   <td>{{CompatNo}}</td>
+   <td>24</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+  <tr>
+   <td>add()</td>
+   <td>{{CompatChrome(44.0)}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td>addAll()</td>
+   <td>{{CompatChrome(46.0)}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td>matchAll()</td>
+   <td>{{CompatChrome(47.0)}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td>Require HTTPS for <code>add()</code>, <code>addAll()</code>, and <code>put()</code></td>
+   <td>{{CompatChrome(46.0)}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Fonctionnalité</th>
+   <th>Android</th>
+   <th>Android Webview</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>Firefox OS</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+   <th>Chrome for Android</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatGeckoMobile(39)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatChrome(40.0)}}</td>
+  </tr>
+  <tr>
+   <td>add()</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatChrome(44.0)}}</td>
+  </tr>
+  <tr>
+   <td>addAll()</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatChrome(46.0)}}</td>
+  </tr>
+  <tr>
+   <td>matchAll()</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatChrome(46.0)}}</td>
+  </tr>
+  <tr>
+   <td>Require HTTPS for <code>add()</code>, <code>addAll()</code>, and <code>put()</code></td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatChrome(46.0)}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="Voir_aussi">Voir aussi</h2>
+
+<ul>
+ <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorker_API/Using_Service_Workers">Using Service Workers</a></li>
+ <li><a class="external external-icon" href="https://github.com/mdn/sw-test">Service workers basic code example</a></li>
+ <li><a class="external external-icon" href="https://jakearchibald.github.io/isserviceworkerready/">Is ServiceWorker ready?</a></li>
+ <li>{{jsxref("Promise")}}</li>
+ <li><a href="https://developer.mozilla.org/en-US/docs/Web/Guide/Performance/Using_web_workers">Using web workers</a></li>
+</ul>

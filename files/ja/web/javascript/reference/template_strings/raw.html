@@ -1,0 +1,216 @@
+<div>{{JsSidebar("More")}}</div>
+
+<p>Template literal は組み込み式を扱うことができる文字列リテラルです。複数行文字列や文字列内挿機能を使用できます。ES2015 / ES6 仕様の以前のエディションでは、"template strings" と呼ばれていました。</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="brush: js">`string text`
+
+`string text line 1
+ string text line 2`
+
+`string text ${expression} string text`
+
+tag `string text ${expression} string text`
+</pre>
+
+<h2 id="Description" name="Description">説明</h2>
+
+<p>Template literalはダブルクオートやシングルクオートの代わりにバックティック文字(` `) (<a href="http://en.wikipedia.org/wiki/Grave_accent"><u><font color="#0066cc">grave accent</font></u></a>)で囲みます。Template literalにはプレースホルダーを含めることができます。プレースホルダーはドル記号と波括弧(${expression})で示されます。プレースホルダー内の式とその間のテキストは関数に渡されます。既定の関数はパーツを1つの文字列として繋げるだけです。template literal の前に式がある場合、template literal は"タグ付けされたtemplate literal"と呼ばれます。この場合、タグ式（通常は関数）は、template literalと一緒に呼び出され、アウトプットの前に実行できます。template literal 内でバックティック文字をエスケープするためには、バックティック文字の前にバックスラッシュ <strong>\</strong> を置きます。</p>
+
+<pre class="brush: js">`\`` === "`" // --&gt; true
+</pre>
+
+<h3 id="複数行文字列">複数行文字列</h3>
+
+<p>ソースに挿入されたあらゆる改行文字列は、Template literalに含まれます。通常の文字列を使うと、複数行文字列を取得するために次の構文を使用しないといけません。</p>
+
+<pre class="brush: js">console.log("string text line 1\n\
+string text line 2");
+// "string text line 1
+// string text line 2"</pre>
+
+<p>複数行文字列で同じ効果を得るために、このように書けます。</p>
+
+<pre class="brush: js">console.log(`string text line 1
+string text line 2`);
+// "string text line 1
+// string text line 2"</pre>
+
+<h3 id="式内挿法">式内挿法</h3>
+
+<p>通常の文字列に式を内挿するために、あなたは次のような構文を使用するでしょう。</p>
+
+<pre class="brush: js">var a = 5;
+var b = 10;
+console.log("Fifteen is " + (a + b) + " and\nnot " + (2 * a + b) + ".");
+// "Fifteen is 15 and
+// not 20."</pre>
+
+<p>Template literalを使用すれば、このようにもっと読みやすくするシンタックスシュガーを使うことができます。</p>
+
+<pre class="brush: js">var a = 5;
+var b = 10;
+console.log(`Fifteen is ${a + b} and\nnot ${2 * a + b}.`);
+// "Fifteen is 15 and
+// not 20."</pre>
+
+<p> </p>
+
+<h3 id="ネストしたテンプレートリテラル">ネストしたテンプレートリテラル</h3>
+
+<p>場合によっては、ネストしたテンプレートリテラルの方が読みやすい場合があります。バックチックとテンプレートリテラルを、<code>${ }</code>プレースホルダーの中で単に使用するだけです。以下の例では、条件によって異なるテンプレートリテラルを返します。</p>
+
+<p>ES5の場合:</p>
+
+<pre class="brush: js"><code>var classes = 'header';
+classes += (isLargeScreen() ?
+   '' : item.isCollapsed ?
+     ' icon-expander' : ' icon-collapser');</code></pre>
+
+<p>ES2015とネストせずにテンプレートリテラルで書いた場合:</p>
+
+<pre class="brush: js"><code>const classes = `header ${ isLargeScreen() ? '' :
+    (item.isCollapsed ? 'icon-expander' : 'icon-collapser') }`;</code></pre>
+
+<p>ES2015でネストしたテンプレートリテラルで書いた場合:</p>
+
+<pre class="brush: js"><code>const classes = `header ${ isLargeScreen() ? '' :
+ `icon-${item.isCollapsed ? 'expander' : 'collapser'}` }`;</code></pre>
+
+<p> </p>
+
+<h3 id="タグ付けされたTemplate_literal">タグ付けされたTemplate literal</h3>
+
+<p>Template literalのより高度な使用法はタグ付けされたTemplate literalです。タグ付けされたTemplate literalでは、関数を使ってTemplate literalのアウトプットを調整できます。最初の引数には文字列リテラルの配列(この例では"Hello "と" world") を含みます。2つ目とそれに続くそれぞれの引数は、処理された（調理されたと呼ばれることもあります）代用式（ここでは"15"と"50"）の値です。最後に関数は処理された文字列を返します。次の例では、ネームタグについて特別なことはありません。関数名は自由につけられます。</p>
+
+<pre class="brush: js">var a = 5;
+var b = 10;
+
+function tag(strings, ...values) {
+  console.log(strings[0]); // "Hello "
+  console.log(strings[1]); // " world"
+  console.log(values[0]);  // 15
+  console.log(values[1]);  // 50
+
+  return "Bazinga!";
+}
+
+tag`Hello ${ a + b } world ${ a * b}`;
+// "Bazinga!"
+</pre>
+
+<p>次の例で示すように、タグ関数は文字列を返す必要はありません。</p>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js"><span class="keyword token">function</span> <span class="function token">template</span><span class="punctuation token">(</span>strings<span class="punctuation token">,</span> <span class="punctuation token">.</span><span class="punctuation token">.</span><span class="punctuation token">.</span>keys<span class="punctuation token">)</span> <span class="punctuation token">{</span>
+  <span class="keyword token">return</span> <span class="punctuation token">(</span><span class="keyword token">function</span><span class="punctuation token">(</span><span class="punctuation token">.</span><span class="punctuation token">.</span><span class="punctuation token">.</span>values<span class="punctuation token">)</span> <span class="punctuation token">{</span>
+    <span class="keyword token">var</span> dict <span class="operator token">=</span> values<span class="punctuation token">[</span>values<span class="punctuation token">.</span>length <span class="operator token">-</span> <span class="number token">1</span><span class="punctuation token">]</span> <span class="operator token">||</span> <span class="punctuation token">{</span><span class="punctuation token">}</span><span class="punctuation token">;</span>
+    <span class="keyword token">var</span> result <span class="operator token">=</span> <span class="punctuation token">[</span>strings<span class="punctuation token">[</span><span class="number token">0</span><span class="punctuation token">]</span><span class="punctuation token">]</span><span class="punctuation token">;</span>
+    keys<span class="punctuation token">.</span><span class="function token">forEach</span><span class="punctuation token">(</span><span class="keyword token">function</span><span class="punctuation token">(</span>key<span class="punctuation token">,</span> i<span class="punctuation token">)</span> <span class="punctuation token">{</span>
+      <span class="keyword token">var</span> value <span class="operator token">=</span> Number<span class="punctuation token">.</span><span class="function token">isInteger</span><span class="punctuation token">(</span>key<span class="punctuation token">)</span> <span class="operator token">?</span> values<span class="punctuation token">[</span>key<span class="punctuation token">]</span> <span class="punctuation token">:</span> dict<span class="punctuation token">[</span>key<span class="punctuation token">]</span><span class="punctuation token">;</span>
+      result<span class="punctuation token">.</span><span class="function token">push</span><span class="punctuation token">(</span>value<span class="punctuation token">,</span> strings<span class="punctuation token">[</span>i <span class="operator token">+</span> <span class="number token">1</span><span class="punctuation token">]</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+    <span class="punctuation token">}</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+    <span class="keyword token">return</span> result<span class="punctuation token">.</span><span class="function token">join</span><span class="punctuation token">(</span><span class="string token">''</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+  <span class="punctuation token">}</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+<span class="punctuation token">}</span>
+
+<span class="keyword token">var</span> t1Closure <span class="operator token">=</span> template<span class="template-string token"><span class="string token">`</span><span class="interpolation token"><span class="interpolation-punctuation punctuation token">${</span><span class="number token">0</span><span class="interpolation-punctuation punctuation token">}</span></span><span class="interpolation token"><span class="interpolation-punctuation punctuation token">${</span><span class="number token">1</span><span class="interpolation-punctuation punctuation token">}</span></span><span class="interpolation token"><span class="interpolation-punctuation punctuation token">${</span><span class="number token">0</span><span class="interpolation-punctuation punctuation token">}</span></span><span class="string token">!`</span></span><span class="punctuation token">;</span>
+<span class="function token">t1Closure</span><span class="punctuation token">(</span><span class="string token">'Y'</span><span class="punctuation token">,</span> <span class="string token">'A'</span><span class="punctuation token">)</span><span class="punctuation token">;</span>  <span class="comment token">// "YAY!" </span>
+<span class="keyword token">var</span> t2Closure <span class="operator token">=</span> template`$<span class="punctuation token">{</span><span class="number token">0</span><span class="punctuation token">}</span> $<span class="punctuation token">{</span><span class="string token">'foo'</span><span class="punctuation token">}</span><span class="operator token">!</span>`<span class="punctuation token">;</span>
+<span class="function token">t2Closure</span><span class="punctuation token">(</span><span class="string token">'Hello'</span><span class="punctuation token">,</span> <span class="punctuation token">{</span>foo<span class="punctuation token">:</span> <span class="string token">'World'</span><span class="punctuation token">}</span><span class="punctuation token">)</span><span class="punctuation token">;</span>  <span class="comment token">// "Hello World!"</span></code></pre>
+
+<h3 id="Raw_strings">Raw strings</h3>
+
+<p>タグ関数に渡される第1引数では特別な<code>raw</code>プロパティが利用でき、<a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Guide/Grammar_and_types#Using_special_characters_in_strings">エスケープシーケンス</a>が処理されない、入力された通りの生の文字列を参照できます。</p>
+
+<pre class="brush: js">function tag(strings, ...values) {
+  console.log(strings.raw[0]); 
+  // "string text line 1 \n string text line 2"
+}
+
+tag`string text line 1 \n string text line 2`;
+</pre>
+
+<p>加えて、 {{jsxref("String.raw()")}} メソッドはデフォルトテンプレート関数のように未加工の文字列を生成するために存在し、文字列連結を行います。</p>
+
+<pre class="brush: js">String.raw`Hi\n${2+3}!`;
+// "Hi\n5!"</pre>
+
+<p> </p>
+
+<h3 id="タグ付けされたテンプレートとエスケープシーケンス">タグ付けされたテンプレートとエスケープシーケンス</h3>
+
+<h4 id="ES2016_での振る舞い">ES2016 での振る舞い</h4>
+
+<p>ECMAScript 2016 時点では、タグ付けされたテンプレートの以下のエスケープシーケンスには、次のようなルールが適用されます。</p>
+
+<ul>
+ <li>Unicode のエスケープシーケンスは "\u" で始まること。例: <code>\u00A9</code></li>
+ <li>Unicode のコードポイントのエスケープは "\u{}" で示すこと例: <code>\u{2F804}</code></li>
+ <li>16進数のエスケープは "\x" で始まること。例: <code>\xA9</code></li>
+ <li>8進数のリテラルのエスケープは "\" で始まり、その後数字が続くこと。例: <code>\251</code></li>
+</ul>
+
+<p>このルールのもとでは、下に示す例のようなタグ付けされたテンプレートが問題となります。なぜなら、ECMAScript の文法に従ってこのテキストを解釈しようとすると、パーサーはUnicodeの有効のエスケープシーケンスを探そうとするも、不正な構文が検出されてしまうからです。</p>
+
+<pre class="brush: js"><code>latex`\unicode`
+// 古い ECMAScript バージョン (ES2016 以前) では、以下のような例外が投げられる
+// SyntaxError: malformed Unicode character escape sequence</code></pre>
+
+<h4 id="ES2018_revision_of_illegal_escape_sequences">ES2018 revision of illegal escape sequences</h4>
+
+<p>Tagged templates should allow the embedding of languages (for example <a href="https://en.wikipedia.org/wiki/Domain-specific_language">DSLs</a>, or <a href="https://en.wikipedia.org/wiki/LaTeX">LaTeX</a>), where other escapes sequences are common. The ECMAScript proposal <a href="https://tc39.github.io/proposal-template-literal-revision/">Template Literal Revision</a> (stage 4, to be integrated in the ECMAScript 2018 standard) removes the syntax restriction of ECMAScript escape sequences from tagged templates.</p>
+
+<p>However, illegal escape sequences must still be represented in the “cooked” representation. They will show up as {{jsxref("undefined")}} element in the “cooked” array:</p>
+
+<pre class="brush: js"><code>function latex(str) { 
+ return { "cooked": str[0], "raw": str.raw[0] }
+} 
+
+latex`\unicode`
+
+// { cooked: undefined, raw: "\\unicode" }</code></pre>
+
+<p>Note that the escape sequence restriction is only dropped from <em>tagged</em> templates and not from <em>untagged</em> template literals:</p>
+
+<pre class="brush: js"><code>let bad = `bad escape sequence: \unicode`;</code></pre>
+
+<p> </p>
+
+<h2 id="仕様">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">状態</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-template-literals', 'Template Literals')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td>初期定義。仕様の複数セクションで定義されている；<a href="http://www.ecma-international.org/ecma-262/6.0/#sec-template-literals">Template Literals</a>, <a href="http://www.ecma-international.org/ecma-262/6.0/#sec-tagged-templates">Tagged Templates</a></td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-template-literals', 'Template Literals')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td>仕様の複数セクションで定義されている；<a href="https://tc39.github.io/ecma262/#sec-template-literals">Template Literals</a>, <a href="https://tc39.github.io/ecma262/#sec-tagged-templates">Tagged Templates</a></td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="ブラウザ実装状況">ブラウザ実装状況</h2>
+
+<div>{{Compat("javascript.grammar.template_literals")}}</div>
+
+<div> </div>
+
+<h2 id="See_also" name="See_also">関連項目</h2>
+
+<ul>
+ <li>{{jsxref("String")}}</li>
+ <li>{{jsxref("String.raw()")}}</li>
+ <li><a href="/ja/docs/Web/JavaScript/Reference/Lexical_grammar">Lexical grammar</a></li>
+ <li><a href="https://gist.github.com/WebReflection/8f227532143e63649804">Template-like strings in ES3 compatible syntax</a></li>
+ <li><a href="https://hacks.mozilla.org/2015/05/es6-in-depth-template-strings-2/"><u><font color="#0066cc">"ES6 in Depth: Template strings" on hacks.mozilla.org</font></u></a></li>
+</ul>

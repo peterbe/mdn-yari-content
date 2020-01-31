@@ -1,0 +1,97 @@
+<p>{{WebGLSidebar("Tutorial") }} {{Previous("Web/API/WebGL_API/Tutorial/Lighting_in_WebGL")}}</p>
+
+<p>在本篇介绍中，我们基于上一个例子编译构建，用播放 Ogg 视频文件的帧来替换我们静态的纹理。这实际上很简单，但是看起来很有趣，所以我们开始吧。类似的代码可以是任何近似的数据 (例如 {{ HTMLElement("canvas") }})作为我们纹理的资源。</p>
+
+<h2 id="获取视频">获取视频</h2>
+
+<p>第一步是创建一个 {{ HTMLElement("video") }} 元素， 我们将从这个元素获取视频帧:</p>
+
+<pre class="brush: js">&lt;video id="video"&gt;
+  Your browser doesn't appear to support the HTML5 &lt;code&gt;&amp;lt;video&amp;gt;&lt;/code&gt; element.
+&lt;/video&gt;
+</pre>
+
+<p>这里简单的创建一个元素来播放视频文件 "Firefox.ogv"，我们使用CSS将这个video元素隐藏。</p>
+
+<pre class="brush: css">video {
+  display: none;
+}
+</pre>
+
+<p>接着我们将注意力转到Javascript代码上，通过对 start() 函数添加一行获取video元素的代码开始:</p>
+
+<pre class="brush: js">videoElement = document.getElementById('video');
+</pre>
+
+<p>我们将之前的 drawScene() 改为由事件驱动：</p>
+
+<pre class="brush: js">videoElement.addEventListener('canplaythrough', startVideo, true);
+videoElement.addEventListener('ended', videoDone, true);
+</pre>
+
+<p>最后我们给video元素设置src属性让它开始加载。</p>
+
+<pre class="brush: js">video.preload = 'auto';
+videoElement.src = 'Firefox.ogv';</pre>
+
+<p>这里思路是，直到视频缓冲到可以持续播放之后才开始动画。 因此，我们添加一个事件侦听器等待视频元素告诉我们，它已经缓冲了足够的数据，整个视频可以持续播放而不会暂停。</p>
+
+<p><code>startVideo()</code> 函数的实现：</p>
+
+<pre class="brush: js">function startVideo() {
+  videoElement.play();
+  intervalID = setInterval(drawScene, 15);
+}
+</pre>
+
+<p>这只是开始播放视频，然后通过时间间隔驱动（interval-driven）调用 drawScene() 来渲染立方体。</p>
+
+<p>我们还添加了第二个事件监听器的视频的 "ended" 事件，这样当视频完成播放，我们就可以停止动画，让它不浪费处理器的时间。</p>
+
+<pre class="brush: js">function videoDone() {
+  clearInterval(intervalID);
+}</pre>
+
+<p><code>videoDone() 方法是通过调用 </code>{{ domxref("window.clearInterval()") }}  来结束动画的更新。</p>
+
+<h2 id="用视频帧作为纹理">用视频帧作为纹理 </h2>
+
+<p>接下来的变化的是 <code>initTexture() 变得更简单，它不需要加装图片文件，他只需要创建一个</code>空的纹理对象，并设置其过滤以供之后使用：</p>
+
+<pre class="brush: js">function initTextures() {
+  cubeTexture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, cubeTexture);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+}
+</pre>
+
+<div><code>下面这里就是 updateTexture()</code>，到这里我们就完成了纹理的映射。</div>
+
+<pre class="brush: js">function updateTexture() {
+  gl.bindTexture(gl.TEXTURE_2D, cubeTexture);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,
+        gl.UNSIGNED_BYTE, videoElement);
+}
+</pre>
+
+<p>上面的代码与前面示例中的 handleTextureLoaded() 几乎相同，不同的在于我们调用texImage2D()，传入的不是一个 Image 对象，而是  {{ HTMLElement("video") }} 对象。 WebGL知道如何将当前帧拉出并把它用作纹理。</p>
+
+<p>每当准备好重绘我们的场景时，<code>drawScene()</code> 函数会调用 updateTexture( )，唯一的不同的是我们可以在调用updateTexture() 之前做任何事情。</p>
+
+<p>这就是它全部的内容了!</p>
+
+<p>{{EmbedGHLiveSample('webgl-examples/tutorial/sample8/index.html', 670, 510) }}</p>
+
+<p><a href="https://github.com/mdn/webgl-examples/tree/gh-pages/tutorial/sample8">查看完整的代码</a> | <a href="http://mdn.github.io/webgl-examples/tutorial/sample8/">在新页中打开这个demo</a></p>
+
+<h2 id="参考">参考</h2>
+
+<ul>
+ <li><a href="/en/Using_HTML5_audio_and_video" title="En/Using audio and video in Firefox">Using audio and video in Firefox</a></li>
+</ul>
+
+<p>{{Previous("Web/API/WebGL_API/Tutorial/Lighting_in_WebGL")}}</p>

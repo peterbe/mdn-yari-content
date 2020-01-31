@@ -1,0 +1,136 @@
+<p>本文会带领您一步一步地编译出最新版本的Thunderbird。当然，如果您知道更多的信息，请参看<a class="internal" href="../../../../En/Developer_Guide/Build_Instructions" rel="internal" style="line-height: 1.5;">build documentation</a></p>
+
+<h2 id="编译要求：">编译要求：</h2>
+
+<h4 id="硬件要求：">硬件要求：</h4>
+
+<ul>
+ <li>推荐配置：4GB内存（最好是物理内存，如果只有2GB内存和2GB的swap空间可能无法成功编译）</li>
+ <li>高带宽互联网接入</li>
+</ul>
+
+<h4 id="安装：">安装：</h4>
+
+<h4 id="由于不同的操作系统有很大的区别，我们推荐您首先阅读您所使用的操作系统的手册，再来继续阅读本文进行编译。请注意：如果你使用的是_Linux或者MacOS，您可能需要忽略bootstrap脚本中的有关需要克隆mozilla-central目录的提示，而继续根据本文的步骤即可。"><span style="font-family: open sans,sans-serif; font-size: 14px; line-height: 1.5;">由于不同的操作系统有很大的区别，我们推荐您首先阅读您所使用的操作系统的手册，再来继续阅读本文进行编译。请注意：如果你使用的是 Linux或者MacOS，您可能需要忽略</span><span style="font-family: open sans,sans-serif; font-size: 14px; line-height: 22.0080013275147px;">bootstrap脚本中的有关需要克隆</span><span style="font-family: open sans,sans-serif; font-size: 14px; line-height: 22.0080013275147px;">mozilla-central目录的提示，而继续根据本文的步骤即可。</span></h4>
+
+<p><a href="/en-US/docs/Developer_Guide/Build_Instructions/Windows_Prerequisites" style="line-height: 1.5;" title="/en-US/docs/Developer_Guide/Build_Instructions/Windows_Prerequisites">Windows 系统编译要求：[英语]</a></p>
+
+<p><a href="/en-US/docs/Simple_Firefox_build/Linux_and_MacOS_build_preparation" title="/en-US/docs/Simple_Firefox_build/Linux_and_MacOS_build_preparation">Linux 和 MacOS 系统编译要求：[英语]</a></p>
+
+<h2 id="获取源代码">获取源代码</h2>
+
+<div class="note"><strong>注意：</strong>在Windows系统下，编译所涉及的目录路径中如若含有空格，那将会导致编译失败（例如 <span style="line-height: 1.5;">Documents and Settings目录等等</span><span style="line-height: 1.5;">）。您可以选择任意不含空格的路径，比如</span><span style="line-height: 1.5;">C:\thunderbird-src。</span></div>
+
+<div class="note"><strong>注意：</strong>如果路径名称过长（目录层次太深），也会造成部分编译失败。在 Linux 环境中，this can manifest as problems setting up the virtualenv for running tests (failure to install pip or virtualenv because of OS access denied errors, where access is denied not because of permission problems, but because the paths being accessed have been truncated, and so do not exist). Having the source deep in a filesystem hierarchy can also cause problems with pymake builds on Windows. If you run into seemingly arbitrary problems in building and the source is deeply nested, try moving it close to the root of your machine and re-building.</div>
+
+<p>在 Mozilla的<code>comm-central</code> Mercurial代码库获取最新的源代码:</p>
+
+<pre>hg clone http://hg.mozilla.org/comm-central 
+</pre>
+
+<p>然后，获取所有它所依赖的库。comm-central库包含一个脚本来做这件事。这可能会花费一些时间，有很多代码。首先，cd切换路径到子目录<code>comm-</code><code>central </code>（由先前的命令自动生成）：</p>
+
+<pre>cd comm-central</pre>
+
+<p>然后，运行:</p>
+
+<pre>python client.py checkout
+</pre>
+
+<div class="warning">On some types of network connections, "hg clone" might fail because it gets interrupted. It is faster and more efficient to use <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code/Mercurial/Bundles">Mercurial bundles</a> instead the first time you fetch the complete repo. In this case, you need a bundle for comm-central, and a bundle for mozilla-central. Unbundle mozilla-central into a "mozilla" subdirectory of your comm-central repo after unbundling comm-central. Then run <span style="color: #d3d3d3;">python client.py checkout</span> to ensure you are up-to-date.</div>
+
+<p class="editable">The source code requires 3.2GB of free space or more and additionally 5GB or more for default build.</p>
+
+<p class="editable">For more on getting the source code, see the page <a href="/en-US/docs/Developer_Guide/Source_Code/Getting_comm-central" title="/en-US/docs/Developer_Guide/Source_Code/Getting_comm-central">Getting comm-central Source Code Using Mercurial [en-US]</a>.</p>
+
+<h2 class="editable" id="Build_configuration">Build configuration</h2>
+
+<p>To build thunderbird, you need to add a file named <code>.mozconfig</code> to the comm-central checkout that contains the following line:</p>
+
+<pre>ac_add_options --enable-application=mail</pre>
+
+<p>If you omit this line, the build system will build Firefox instead. Other build configuration options can be added to this file, although it's <strong>strongly</strong> recommended that you only use options that you fully understand. For example, to create a debug build instead of a release build, that file would contain:</p>
+
+<pre>ac_add_options --enable-debug
+</pre>
+
+<p>For more on configuration options, see the page <a href="/en/Configuring_Build_Options" rel="internal" title="en/Configuring Build Options">Configuring build options</a>. Note that if you use an MOZ_OBJDIR it cannot be a sibling folder to your source directory. Use an absolute path to be sure!</p>
+
+<h3 id="OS_X_10.910.10_Notice">OS X 10.9/10.10 Notice</h3>
+
+<p>Because of an issue with the 10.9 OS X SDK, you must use an earlier SDK version. To do this add the following to your .mozconfig:</p>
+
+<pre class="bz_comment_text" id="comment_text_14">ac_add_options --with-macos-sdk=path/to/older/sdk</pre>
+
+<p>The path to the SDKs are usually located at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/.</p>
+
+<h2 id="Building_Thunderbird">Building Thunderbird</h2>
+
+<p>To start the build, cd into the <code>comm-central</code> subdirectory (created automatically by the <code>hg clone</code> command), and run:</p>
+
+<pre>./mozilla/mach build
+</pre>
+
+<p>mach is our command-line tool to streamline common developer tasks. See the <a href="/en-US/docs/Developer_Guide/mach" title="/en-US/docs/Developer_Guide/mach">mach</a> article for more.</p>
+
+<p>Building can take a significant amount of time, depending on your system, OS, and chosen build options. Linux builds on a fast box may take under 15 minutes, but Windows builds on a slow box may take several hours. <strong><a href="/en/Developer_Guide/Mozilla_build_FAQ#Making_builds_faster" rel="internal" title="https://developer.mozilla.org/en/Mozilla_Build_FAQ#Making_builds_faster">Tips for making builds faster</a></strong>.</p>
+
+<p><span style="line-height: 1.572;">The executable will be at the location listed under <strong>Running</strong> below.</span></p>
+
+<h4 id="Building_Thunderbird_and_Lightning">Building Thunderbird and Lightning</h4>
+
+<p>If you've set up your build environment as above, then all you need to do is:</p>
+
+<pre>echo 'ac_add_options --enable-calendar' &gt;&gt; .mozconfig
+</pre>
+
+<p>in the <code>comm-central </code>directory, or just add the <code>ac_add_options --enable-calendar</code> line to your .mozconfig with your favorite editor.</p>
+
+<p>Then just re-run the <em>mach</em> command above (you can do the addition before running make for the first time).</p>
+
+<h2 id="Running">Running</h2>
+
+<p>Various temporary files, libraries, and the Thunderbird executable will be found in your <strong>object directory</strong> (under <code>comm-central/</code>), which is prefixed with <strong><code>obj-</code></strong>. The exact name depends on your system and OS. For example, a Mac user may get an object directory name of <strong><code>obj-x86_64-apple-darwin10.7.3/</code></strong>.</p>
+
+<p>The Thunderbird executable in particular, and its dependencies, are located under the <code>dist/bin</code> folder under the object directory. To run the executable from your <code>comm-central</code> working directory:</p>
+
+<ul>
+ <li><strong>Windows:</strong> <code>obj-.../dist/bin/thunderbird.exe</code></li>
+ <li><strong>Linux:</strong> <code>obj-.../dist/bin/thunderbird</code></li>
+ <li><strong>OS X:</strong> <code>obj-.../dist/Daily.app/Contents/MacOS/thunderbird</code></li>
+</ul>
+
+<h2 id="How_to_update_and_build_again">How to update and build again</h2>
+
+<p>In your <code>comm-central</code> directory, run the same command as before:</p>
+
+<pre>python client.py checkout
+</pre>
+
+<p>Then just re-run the <em>mach</em> command above. This will only recompile files that changed, but it's still a long haul. An <a class="internal" href="/en/Incremental_Build" title="En/Incremental Build">incremental build</a> can be faster.</p>
+
+<h2 id="Problems_Building">Problems Building?</h2>
+
+<p>Have you:</p>
+
+<ul>
+ <li>Checked <a class="external" href="https://treeherder.mozilla.org/#/jobs?repo=comm-central" title="https://treeherder.mozilla.org/#/jobs?repo=comm-central">comm-central on Treeherder</a> for known failures at the time you pulled the code?
+
+  <ul>
+   <li>If the trunk is broken, you may wish to consider building <a href="/En/Developer_Guide/Source_Code/Getting_comm-central" title="https://developer.mozilla.org/En/Developer_Guide/Source_Code/Getting_comm-central">one of the branches</a> (to pull the source code from a branch, just replace the url to the repository in the hg clone instruction).</li>
+  </ul>
+ </li>
+ <li>Checked to make sure that the path in which you placed the source code has no spaces, and is not too long?</li>
+ <li>Have you searched the <a class="link-https" href="https://bugzilla.mozilla.org/" title="https://bugzilla.mozilla.org/">bug database</a> for issues relating to your problem (e.g., platform-specific issues)?</li>
+ <li>Try asking in <a class="external" href="http://groups.google.com/group/mozilla.dev.builds/" title="http://groups.google.com/group/mozilla.dev.builds/">mozilla.dev.builds</a> - don't forget to include details of what is in your mozconfig, and what the actual error is.</li>
+ <li>Did you make mozilla/ a symlink? That doesn't work.</li>
+ <li>Do you have <code>@TOPSRCDIR@</code> or relative paths in your mozconfig? Those have caused several problems historically and tend to be poorly tested when the build system changes.</li>
+</ul>
+
+<h3 id="References">References</h3>
+
+<ul>
+ <li><a class="internal" href="/En/Developer_Guide/Build_Instructions" title="En/Developer Guide/Build Instructions">General Build Documentation</a></li>
+ <li><a class="internal" href="/en/comm-central" title="en/comm-central">comm-central</a></li>
+ <li><a href="/en/Using_the_Mozilla_symbol_server" title="en/Using the Mozilla symbol server">Using the Mozilla symbol server</a></li>
+</ul>

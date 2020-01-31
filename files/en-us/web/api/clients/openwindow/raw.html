@@ -1,0 +1,76 @@
+<div>{{APIRef("Service Workers API")}}</div>
+
+<p>The <strong><code>openWindow()</code></strong> method of the {{domxref("Clients")}} interface creates a new top level browsing context and loads a given URL. If the calling script doesn't have permission to show popups, <strong><code>openWindow()</code> </strong>will throw an InvalidAccessError.</p>
+
+<p>In Firefox, the method is allowed to show popups only when called as the result of a notification click event.</p>
+
+<p>In Chrome for Android, the method may instead open the URL in an existing browsing context provided by a <a href="https://developer.mozilla.org/en-US/Apps/Progressive/Installable">standalone web app</a> previously added to the user's home screen. As of recently, this also works on Chrome for Windows.</p>
+
+<h2 id="Syntax">Syntax</h2>
+
+<pre class="syntaxbox">ServiceWorkerClients.openWindow(url).then(function(WindowClient) {
+  // Do something with your WindowClient
+});</pre>
+
+<h3 id="Parameters">Parameters</h3>
+
+<dl>
+ <dt><code>url</code></dt>
+ <dd>A {{domxref("USVString")}} representing the URL of the client you want to open in the window. Generally this value must be a URL from the same origin as the calling script.</dd>
+</dl>
+
+<h3 id="Return_value">Return value</h3>
+
+<dl>
+ <dd>A {{jsxref("Promise")}} that resolves to a {{domxref("WindowClient")}} object if the URL is from the same origin as the service worker or a {{Glossary("null", "null value")}} otherwise.</dd>
+</dl>
+
+<h2 id="Examples">Examples</h2>
+
+<pre class="brush: js">// When the user clicks a notification focus the window if it exists or open
+// a new one otherwise.
+onnotificationclick = function(event) {
+  var found = false;
+  clients.matchAll().then(function(clientsArr) {
+    for (i = 0; i &lt; clientsArr.length; i++) {
+      if (clientsArr[i].url === event.data.url) {
+        // We already have a window to use, focus it.
+        found = true;
+        clientsArr[i].focus();
+        break;
+      }
+    }
+    if (!found) {
+      // Create a new window.
+      clients.openWindow(event.data.url).then(function(windowClient) {
+        // do something with the windowClient.
+      });
+    }
+  });
+};
+</pre>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('Service Workers', '#dom-clients-openwindow', 'Clients: openWindow')}}</td>
+   <td>{{Spec2('Service Workers')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<div>
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("api.Clients.openWindow")}}</p>
+</div>

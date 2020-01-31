@@ -1,0 +1,174 @@
+<div>{{jsSidebar("JavaScript Guide")}} {{PreviousNext("Web/JavaScript/Guide/Using_promises", "Web/JavaScript/Guide/Metaprogrammierung")}}</div>
+
+<p class="summary">Das Iterieren über eine Liste bzw. das Verarbeiten jedes Elements einer Liste ist eine häufige Operation, für die es in JavaScript mehrere Möglichkeiten gibt. Zum Beispiel einfache {{jsxref("Statements/for","for")}}-Schleifen oder Array Operationen, wie {{jsxref("Global_Objects/Array/map","map()")}} und {{jsxref("Global_Objects/Array/filter","filter()")}}.<br>
+ Iteratoren und Generatoren bringen das Konzept des Itererierens über eine Liste in den Kern der Sprache und bieten im Speziellen die Möglichkeit das Verhalten von {{jsxref("Statements/for...of","for...of")}}-Schleifen anzupassen.</p>
+
+<p>For details, see also:</p>
+
+<ul>
+ <li><a href="/de/docs/Web/JavaScript/Reference/Iteration_protocols">Iteration protocols</a></li>
+ <li>{{jsxref("Statements/for...of","for...of")}}</li>
+ <li>{{jsxref("Statements/function*","function*")}} and {{jsxref("Generator")}}</li>
+ <li>{{jsxref("Operators/yield","yield")}} and {{jsxref("Operators/yield*","yield*")}}</li>
+</ul>
+
+<h2 id="Iteratoren">Iteratoren</h2>
+
+<p>Ein Objekt ist ein <strong>Iterator</strong>, wenn es einen einzelnen Eintrag aus einer Sammlung abrufen kann, während es sich die aktuelle Position in dieser Abfolge merkt. In JavaScript ist ein Iterator ein Objekt, das eine  <code>next()</code>-Methode zur Verfügung stellt, welche den nächsten Eintrag in der Sequenz zurückgibt.<br>
+ Diese Methode gibt ein Objekt mit zwei Eigenschaften zurück: <code>done</code> und <code>value</code>.</p>
+
+<p>Ein Iterator gilt als abgeschlossen bzw. beendet, wenn die <code>next()</code>-Methode ein Objekt mit der Eigenschaft <code>done</code> mit dem Wert <font face="consolas, Liberation Mono, courier, monospace"><span style="background-color: rgba(220, 220, 220, 0.498039);">true</span></font> zurückgibt.</p>
+
+<p>Einmal erstellt, kann ein Iterator-Objekt explizit verwendet werden, indem wiederholt <code>next()</code> aufgerufen wird, um nacheinander auf Schlüssel-Wert-Paare vom Objekt zuzugreifen:</p>
+
+<pre class="brush: js">const makeIterator = (someArray) =&gt; {
+  let nextIndex = 0;
+  return {
+    next: () =&gt; {
+      if (nextIndex &lt; someArray.length) {
+        return {
+          value: someArray[nextIndex++],
+          done: false
+        };
+      }
+      return {
+        done: true
+      };
+    }
+  };
+}
+
+const sampleList = document.getElementById('sample-list')
+const iterator = makeIterator(['foo', 'bar']);
+let result = iterator.next();
+while (!result.done) {
+  sampleList.innerHTML += '&lt;li&gt;Next: ' + result.value + '&lt;/li&gt;';
+  result = iterator.next();
+}
+</pre>
+
+<pre class="brush: html">&lt;p&gt;Eine Liste, die mit den Werten aus dem Iterator erweitert wird:&lt;/p&gt;
+&lt;ul id="sample-list"&gt;&lt;/ul&gt;
+</pre>
+
+<p>{{EmbedLiveSample('Iteratoren', '', '', '', '')}}</p>
+
+<h2 id="Generators">Generators</h2>
+
+<p>While custom iterators are a useful tool, their creation requires careful programming due to the need to explicitly maintain their internal state. <strong>{{jsxref("Global_Objects/Generator","Generators","","true")}}</strong> provide a powerful alternative: they allow you to define an iterative algorithm by writing a single function which can maintain its own state.</p>
+
+<p>A GeneratorFunction is a special type of function that works as a factory for iterators. When it is executed it returns a new Generator object. A function becomes a GeneratorFunction if it uses the {{jsxref("Statements/function*","function*")}} syntax.</p>
+
+<pre class="brush: js">function* idMaker() {
+  var index = 0;
+  while(true)
+    yield index++;
+}
+
+var gen = idMaker();
+
+console.log(gen.next().value); // 0
+console.log(gen.next().value); // 1
+console.log(gen.next().value); // 2
+// ...</pre>
+
+<h2 id="Iterables">Iterables</h2>
+
+<p>An object is <strong>iterable</strong> if it defines its iteration behavior, such as what values are looped over in a {{jsxref("Statements/for...of", "for...of")}} construct. Some built-in types, such as {{jsxref("Array")}} or {{jsxref("Map")}}, have a default iteration behavior, while other types (such as {{jsxref("Object")}}) do not.</p>
+
+<p>In order to be <strong>iterable</strong>, an object must implement the <strong>@@iterator</strong> method, meaning that the object (or one of the objects up its <a href="/de/docs/Web/JavaScript/Guide/Inheritance_and_the_prototype_chain">prototype chain</a>) must have a property with a {{jsxref("Symbol.iterator")}} key. This function should return a new iterator for each call, however, this is not a requirement.</p>
+
+<h3 id="User-defined_iterables">User-defined iterables</h3>
+
+<p>We can make our own iterables like this:</p>
+
+<pre class="brush: js">var myIterable = {};
+myIterable[Symbol.iterator] = function* () {
+    yield 1;
+    yield 2;
+    yield 3;
+};
+
+for (let value of myIterable) { 
+    console.log(value); 
+}
+// 1
+// 2
+// 3
+
+or
+
+[...myIterable]; // [1, 2, 3]
+</pre>
+
+<h3 id="Built-in_iterables">Built-in iterables</h3>
+
+<p>{{jsxref("String")}}, {{jsxref("Array")}}, {{jsxref("TypedArray")}}, {{jsxref("Map")}} and {{jsxref("Set")}} are all built-in iterables, because their prototype objects all have a {{jsxref("Symbol.iterator")}} method.</p>
+
+<h3 id="Syntaxes_expecting_iterables">Syntaxes expecting iterables</h3>
+
+<p>Some statements and expressions are expecting iterables, for example the {{jsxref("Statements/for...of","for-of")}} loops, {{jsxref("Operators/Spread_operator","spread syntax","","true")}}, {{jsxref("Operators/yield*","yield*")}}, and {{jsxref("Operators/Destructuring_assignment","destructuring assignment","","true")}}.</p>
+
+<pre class="brush: js">for (let value of ['a', 'b', 'c']) {
+    console.log(value);
+}
+// "a"
+// "b"
+// "c"
+
+[...'abc']; // ["a", "b", "c"]
+
+function* gen() {
+  yield* ['a', 'b', 'c'];
+}
+
+gen().next(); // { value: "a", done: false }
+
+[a, b, c] = new Set(['a', 'b', 'c']);
+a; // "a"
+
+</pre>
+
+<h2 id="Advanced_generators">Advanced generators</h2>
+
+<p>Generators compute their yielded values on demand, which allows them to efficiently represent sequences that are expensive to compute, or even infinite sequences as demonstrated above.</p>
+
+<p>The {{jsxref("Global_Objects/Generator/next","next()")}} method also accepts a value which can be used to modify the internal state of the generator. A value passed to <code>next()</code> will be treated as the result of the last <code>yield</code> expression that paused the generator.</p>
+
+<p>Here is the fibonacci generator using <code>next(x)</code> to restart the sequence:</p>
+
+<pre class="brush: js">function* fibonacci() {
+  var fn1 = 0;
+  var fn2 = 1;
+  while (true) {  
+    var current = fn1;
+    fn1 = fn2;
+    fn2 = current + fn1;
+    var reset = yield current;
+    if (reset) {
+        fn1 = 0;
+        fn2 = 1;
+    }
+  }
+}
+
+var sequence = fibonacci();
+console.log(sequence.next().value);     // 0
+console.log(sequence.next().value);     // 1
+console.log(sequence.next().value);     // 1
+console.log(sequence.next().value);     // 2
+console.log(sequence.next().value);     // 3
+console.log(sequence.next().value);     // 5
+console.log(sequence.next().value);     // 8
+console.log(sequence.next(true).value); // 0
+console.log(sequence.next().value);     // 1
+console.log(sequence.next().value);     // 1
+console.log(sequence.next().value);     // 2</pre>
+
+<p>You can force a generator to throw an exception by calling its {{jsxref("Global_Objects/Generator/throw","throw()")}} method and passing the exception value it should throw. This exception will be thrown from the current suspended context of the generator, as if the <code>yield</code> that is currently suspended were instead a <code>throw <em>value</em></code> statement.</p>
+
+<p>If the exception is not caught from within the generator, it will propagate up through the call to <code>throw()</code>, and subsequent calls to <code>next()</code> will result in the <code>done</code> property being <code>true</code>.</p>
+
+<p>Generators have a {{jsxref("Global_Objects/Generator/return","return(value)")}} method that returns the given value and finishes the generator itself.</p>
+
+<p>{{PreviousNext("Web/JavaScript/Guide/Using_promises", "Web/JavaScript/Guide/Metaprogrammierung")}}</p>

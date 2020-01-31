@@ -1,0 +1,98 @@
+<p>O evento de scroll é disparado quando o a view do documento ou um elemento for rolado.</p>
+
+<h2 id="Informações_gerais">Informações gerais</h2>
+
+<dl>
+ <dt style="float: left; text-align: right; width: 120px;">Especificação</dt>
+ <dd style="margin: 0 0 0 120px;"><a class="external" href="http://www.w3.org/TR/DOM-Level-3-Events/#event-type-scroll">DOM L3</a>, <a href="http://www.w3.org/TR/cssom-view/#scrolling-0">CSSOM View</a></dd>
+ <dt style="float: left; text-align: right; width: 120px;">Interface</dt>
+ <dd style="margin: 0 0 0 120px;">UIEvent</dd>
+ <dt style="float: left; text-align: right; width: 120px;">Bubbles</dt>
+ <dd style="margin: 0 0 0 120px;">Not on elements, but bubbles to the default view when fired on the document</dd>
+ <dt style="float: left; text-align: right; width: 120px;">Cancelable</dt>
+ <dd style="margin: 0 0 0 120px;">No</dd>
+ <dt style="float: left; text-align: right; width: 120px;">Target</dt>
+ <dd style="margin: 0 0 0 120px;">defaultView, Document, Element</dd>
+ <dt style="float: left; text-align: right; width: 120px;">Default Action</dt>
+ <dd style="margin: 0 0 0 120px;">None</dd>
+</dl>
+
+<h2 id="Properties">Properties</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">Property</th>
+   <th scope="col">Type</th>
+   <th scope="col">Description</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td><code>target</code> {{readonlyInline}}</td>
+   <td><a href="/en-US/docs/Web/API/EventTarget" title="EventTarget is an interface implemented by objects that can receive events and may have listeners for them."><code>EventTarget</code></a></td>
+   <td>The event target (the topmost target in the DOM tree).</td>
+  </tr>
+  <tr>
+   <td><code>type</code> {{readonlyInline}}</td>
+   <td><a href="/en-US/docs/Web/API/DOMString" title="DOMString is a UTF-16 String. As JavaScript already uses such strings, DOMString is mapped directly to a String."><code>DOMString</code></a></td>
+   <td>The type of event.</td>
+  </tr>
+  <tr>
+   <td><code>bubbles</code> {{readonlyInline}}</td>
+   <td><a href="/en-US/docs/Web/API/Boolean" title="The Boolean object is an object wrapper for a boolean value."><code>Boolean</code></a></td>
+   <td>Whether the event normally bubbles or not.</td>
+  </tr>
+  <tr>
+   <td><code>cancelable</code> {{readonlyInline}}</td>
+   <td><a href="/en-US/docs/Web/API/Boolean" title="The Boolean object is an object wrapper for a boolean value."><code>Boolean</code></a></td>
+   <td>Whether the event is cancellable or not.</td>
+  </tr>
+  <tr>
+   <td><code>view</code> {{readonlyInline}}</td>
+   <td><a class="new" href="/en-US/docs/Web/API/WindowProxy" rel="nofollow" title="The documentation about this has not yet been written; please consider contributing!"><code>WindowProxy</code></a></td>
+   <td><a href="/en-US/docs/Web/API/Document/defaultView" title="In browsers, document.defaultView returns the window object associated with a document, or null if none is available."><code>document.defaultView</code></a> (<code>window</code> of the document)</td>
+  </tr>
+  <tr>
+   <td><code>detail</code> {{readonlyInline}}</td>
+   <td><code>long</code> (<code>float</code>)</td>
+   <td>0.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Exemplo">Exemplo</h2>
+
+<p>Since <code>scroll</code> events can fire at a high rate, the event handler shouldn't execute computationally expensive operations such as DOM modifications. Instead, it is recommended to throttle the event using <a href="/en-US/docs/DOM/window.requestAnimationFrame" title="/en-US/docs/DOM/window.requestAnimationFrame">requestAnimationFrame</a>, <a href="/en-US/docs/Web/API/WindowTimers/setTimeout">setTimeout</a> or <a href="/en-US/docs/Web/API/CustomEvent">customEvent</a>, as follows:</p>
+
+<h4 id="Scroll_optimization_with_window.requestAnimationFrame">Scroll optimization with window.requestAnimationFrame</h4>
+
+<pre class="brush: js">// Reference: http://www.html5rocks.com/en/tutorials/speed/animations/
+
+var last_known_scroll_position = 0;
+var ticking = false;
+
+function doSomething(scroll_pos) {
+  // do something with the scroll position
+}
+
+window.addEventListener('scroll', function(e) {
+  last_known_scroll_position = window.scrollY;
+  if (!ticking) {
+    window.requestAnimationFrame(function() {
+      doSomething(last_known_scroll_position);
+      ticking = false;
+    });
+  }
+  ticking = true;
+});</pre>
+
+<p> </p>
+
+<p>More similar examples on <a href="/en-US/docs/Web/Events/resize#Example">resize</a> event.</p>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<h3 id="iOS_UIWebView">iOS UIWebView</h3>
+
+<p>In iOS UIWebViews, <code>scroll</code> events are not fired while scrolling is taking place; they are only fired after the scrolling has completed. See <a href="https://github.com/twbs/bootstrap/issues/16202">Bootstrap issue #16202</a>. Safari and WKWebViews are not affected by this bug.</p>

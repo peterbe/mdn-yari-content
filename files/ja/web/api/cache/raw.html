@@ -1,0 +1,261 @@
+<p>{{APIRef("Service Workers API")}}{{SeeCompatTable}}</p>
+
+<p><a href="/ja/docs/Web/API/ServiceWorker_API">ServiceWorker API</a> の <strong><code>Cache</code></strong> インターフェースは、{{domxref("ServiceWorker")}} ライフサイクルの一部としてキャッシュされた <code><a href="http://fetch.spec.whatwg.org/#request">Request</a></code> / <code><a href="http://fetch.spec.whatwg.org/#response">Response</a></code> のペアオブジェクトを表します。<strong><code>Cache</code></strong> インターフェースはWindowスコープやWorkerで利用できます。そのため、このAPIはservice workerスペックで定義されていますが、service workerに結びつけて使う必要はありません。</p>
+
+<p>ひとつのオリジンが、複数の <code>Cache</code> オブジェクトを持つことができます。あなたはスクリプト（e.g. {{domxref("ServiceWorker")}} スクリプト）が、<code>Cache</code> の更新処理をする方法を実装しなければなりません。明確なリクエストがない限り、<code>Cache</code> 内のアイテムは更新されません。つまり、 cache は削除されない限り有効期限切れにはなりません。{{domxref("CacheStorage.open", "CacheStorage.open(cacheName)")}} を使用して特定の名前の <code>Cache</code> オブジェクトを得たのち、 <code>Cache</code> メソッドを呼び出すことで<code>Cache</code> を操作します。</p>
+
+<p>また、定期的に cache エントリーを一掃する必要があります。それぞれのブラウザには、service worker が使用するために与えられた cache ストレージの総量に厳しい制限が設けられています。キャッシュクオータの使用状況は {{domxref("StorageEstimate")}} APIを利用して確認することができます。 ブラウザはディスクスペースの管理に最善を尽くしますが、あるオリジンのための Cache ストレージを削除してしまうかもしれません。一般的にブラウザは、あるオリジンのデータをすべて削除するか、まったく削除しないかのいずれかです。キャッシュを名前をつかってバージョンわけし、各スクリプトはそのスクリプトに対応するバージョンのキャッシュのみを使用するようにしてください。詳細は、<a href="/ja/docs/Web/API/ServiceWorker_API/Using_Service_Workers#Deleting_old_caches">古いキャッシュを削除する</a> を確認してください。</p>
+
+<div class="note">
+<p><strong>ノート：</strong> 初期の Cache 実装（Blink と Gecko）では、レスポンスボディが完全にストレージに書き込まれると、{{domxref("Cache.add")}} と {{domxref("Cache.addAll")}}、{{domxref("Cache.put")}} promise を 解決していました。 より最近のバージョンの仕様では、 レスポンスボディがまだストリーミング中でも、エントリーがデータベースに書き込まれるとすぐにブラウザが promise を解決できる新しい言語を持っています。</p>
+</div>
+
+<div class="note">
+<p><strong> ノート：</strong>キーのマッチングアルゴリズムは、バリューの中にある<a href="https://www.fastly.com/blog/best-practices-for-using-the-vary-header">VARYヘッダ</a>に依存しています。そのため、新しいキーのマッチングはキャッシュにあるキーとバリューの両方が必要です。</p>
+</div>
+
+<div class="note">
+<p><strong>ノート：</strong> このキャッシュAPIはHTTPのキャッシュヘッダーを利用しません。</p>
+</div>
+
+<h2 id="メソッド">メソッド</h2>
+
+<dl>
+ <dt>{{domxref("Cache.match", "Cache.match(request, options)")}}</dt>
+ <dd>{{domxref("Cache")}} オブジェクトで最初に一致したリクエストと関連するレスポンスを解決する {{jsxref("Promise")}} を返す。</dd>
+ <dt>{{domxref("Cache.matchAll", "Cache.matchAll(request, options)")}}</dt>
+ <dd>{{domxref("Cache")}} オブジェクトでマッチするすべてのリクエスト配列を解決する {{jsxref("Promise")}} を返す。</dd>
+ <dt>{{domxref("Cache.add", "Cache.add(request)")}}</dt>
+ <dd>URL を受け取り、取得して、指定された cache に結果のレスポンスオブジェクトを追加する。機能的にはfetch() を呼び出してから cache に結果を追加するために Cache.put() を使用するのと同じである。</dd>
+ <dt>{{domxref("Cache.addAll", "Cache.addAll(requests)")}}</dt>
+ <dd>URL 配列を受け取り、それらを取得して指定された cache に結果のレスポンスオブジェクトを追加する。</dd>
+ <dt>{{domxref("Cache.put", "Cache.put(request, response)")}}</dt>
+ <dd>Takes both a request and its response and adds it to the given cache.</dd>
+ <dt>{{domxref("Cache.delete", "Cache.delete(request, options)")}}</dt>
+ <dd>リクエストされたキーの {{domxref("Cache")}} エントリーを探し、見つかった場合は  {{domxref("Cache")}} エントリーを削除して、 <code>true</code> に解決する {{jsxref("Promise")}} を返す。{{domxref("Cache")}} エントリーが見つからない場合、<code>false</code> を返す。</dd>
+ <dt>{{domxref("Cache.keys", "Cache.keys(request, options)")}}</dt>
+ <dd>{{domxref("Cache")}} キーの配列を解決する {{jsxref("Promise")}} を返す。</dd>
+</dl>
+
+<h2 id="例">例</h2>
+
+<p>このコードスニペットは、<a href="https://github.com/GoogleChrome/samples/blob/gh-pages/service-worker/selective-caching/service-worker.js">service worker selective caching sample</a> からのものです（<a href="https://googlechrome.github.io/samples/service-worker/selective-caching/">selective caching live</a> を見てください）。コードでは、 <code>font/</code> で始まる Content-Type を持つ {{domxref("Cache")}} を開くために、{{domxref("CacheStorage.open", "CacheStorage.open(cacheName)")}} を使っています。</p>
+
+<p>そして、 マッチする font が既に cache にあるかを確認するために、{{domxref("Cache.match", "Cache.match(request, options)")}} を使用し、見つかった場合はそれを返します。マッチする font がなかった場合、ネットワークから font を取得して、取得したリソースをキャッシュするために、{{domxref("Cache.put","Cache.put(request, response)")}} を使っています。</p>
+
+<p>また、{{domxref("Globalfetch.fetch","fetch()")}} 処理からスローされる例外をハンドルしています。HTTP エラーレスポンス（つまり、404）は例外をトリガしないことに注意してください。これは適切なエラーコードが設定されている通常のレスポンスオブジェクトを返します。</p>
+
+<p>コードスニペットでは、 service worker で使われる cache のバージョン管理のベストプラクティスも示しています。この例では、1 つの cache しかありませんが、同じアプローチは複数の cache でも使えます。cache のショートハンド識別子として、特定のバージョン管理されたキャッシュ名をマップしています。また、 <code>CURRENT_CACHES</code> で指定されていないすべてのキャッシュを削除しています。</p>
+
+<div class="note"><strong>ノート：</strong> Chrome で chrome://inspect/#service-workers を訪ねて、 <a href="https://github.com/GoogleChrome/samples/blob/gh-pages/service-worker/selective-caching/service-worker.js">service-worker.js</a> スクリプトが実行している様々なアクションのログを見るために、登録された service worker の下の "inspect" リンクをクリックしてください。</div>
+
+<pre class="brush: js">var CACHE_VERSION = 1;
+
+//  特定のバージョン管理されたキャッシュ名としてマップされたショートハンド識別子。
+var CURRENT_CACHES = {
+  font: 'font-cache-v' + CACHE_VERSION
+};
+
+self.addEventListener('activate', function(event) {
+  var expectedCacheNames = Object.keys(CURRENT_CACHES).map(function(key) {
+    return CURRENT_CACHES[key];
+  });
+
+  // アクティブ worker は、promise が正常に解決されるまでアクティブとして扱われない。
+  event.waitUntil(
+    caches.keys().then(function(cacheNames) {
+      return Promise.all(
+        cacheNames.map(function(cacheName) {
+          if (expectedCacheNames.indexOf(cacheName) == -1) {
+            console.log('Deleting out of date cache:', cacheName);
+            
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
+});
+
+self.addEventListener('fetch', function(event) {
+  console.log('Handling fetch event for', event.request.url);
+
+  event.respondWith(
+    
+    //  'font' で始まる Cache オブジェクトを開く。
+    caches.open(CURRENT_CACHES['font']).then(function(cache) {
+      return cache.match(event.request).then(function(response) {
+        if (response) {
+          console.log(' Found response in cache:', response);
+
+          return response;
+        } 
+      }).catch(function(error) {
+        
+        // match() か fetch() で発生する例外をハンドルする。
+        console.error('  Error in fetch handler:', error);
+
+        throw error;
+      });
+    })
+  );
+});</pre>
+
+<h2 id="仕様">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">状態</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('Service Workers', '#cache', 'Cache')}}</td>
+   <td>{{Spec2('Service Workers')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="ブラウザ実装状況">ブラウザ実装状況</h2>
+
+<div>{{CompatibilityTable}}</div>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>機能</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari (WebKit)</th>
+  </tr>
+  <tr>
+   <td>基本サポート</td>
+   <td>{{CompatChrome(40.0)}}</td>
+   <td>{{CompatGeckoDesktop(39)}}</td>
+   <td>{{CompatNo}}</td>
+   <td>24</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+  <tr>
+   <td>add()</td>
+   <td>{{CompatChrome(44.0)}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td>addAll()</td>
+   <td>{{CompatChrome(46.0)}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td>matchAll()</td>
+   <td>{{CompatChrome(46.0)}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>add()</code>、 <code>addAll()</code>、 と <code>put() のために </code> HTTPS を必要とする</td>
+   <td>{{CompatChrome(46.0)}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>機能</th>
+   <th>Android</th>
+   <th>Android Webview</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>Firefox OS</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+   <th>Chrome for Android</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatGeckoMobile(39)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatChrome(40.0)}}</td>
+  </tr>
+  <tr>
+   <td>add()</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatChrome(44.0)}}</td>
+  </tr>
+  <tr>
+   <td>addAll()</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatChrome(46.0)}}</td>
+  </tr>
+  <tr>
+   <td>matchAll()</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatChrome(46.0)}}</td>
+  </tr>
+  <tr>
+   <td><code>add()</code>、 <code>addAll()</code>、 と <code>put() のために </code> HTTPS を必要とする</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatChrome(46.0)}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="関連項目">関連項目</h2>
+
+<ul>
+ <li><a href="https://developer.mozilla.org/ja/docs/Web/API/ServiceWorker_API/Using_Service_Workers">Using Service Workers</a></li>
+ <li><a class="external external-icon" href="https://github.com/mdn/sw-test">Service workers basic code example</a></li>
+ <li><a class="external external-icon" href="https://jakearchibald.github.io/isserviceworkerready/">Is ServiceWorker ready?</a></li>
+ <li>{{jsxref("Promise")}}</li>
+ <li><a href="https://developer.mozilla.org/ja/docs/Web/Guide/Performance/Using_web_workers">Using web workers</a></li>
+</ul>

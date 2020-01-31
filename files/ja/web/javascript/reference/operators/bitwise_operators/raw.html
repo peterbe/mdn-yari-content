@@ -1,0 +1,707 @@
+<div>{{jsSidebar("Operators")}}</div>
+
+<p><strong>ビット演算子</strong>ではそのオペランドを 10 進数や 16 進数や 8 進数の<code><a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/Number" title="JavaScript/Reference/Global_Objects/Number">数値</a></code>ではなく、（0 や 1 が）32 ビットひと続きになったものとして扱います。例えば、10 進数の 9 の 2 進表現は 1001 です。ビット演算子はこのように 2 進表現にした上で演算を行いますが、標準の JavaScript の数値を返します。</p>
+
+<p>次の表で JavaScript のビット演算子について説明します:</p>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th>演算子</th>
+   <th>使用方法</th>
+   <th>説明</th>
+  </tr>
+  <tr>
+   <td><a href="#Bitwise_AND">ビットごとの AND</a></td>
+   <td><code>a &amp; b</code></td>
+   <td>オペランドの対応するビットがともに 1 である各ビットについて 1 を返します。</td>
+  </tr>
+  <tr>
+   <td><a href="#Bitwise_OR">ビットごとの OR</a></td>
+   <td><code>a | b</code></td>
+   <td>オペランドの対応するビットがどちらかまたはともに 1 である各ビットについて 1 を返します。</td>
+  </tr>
+  <tr>
+   <td><a href="#Bitwise_XOR">ビットごとの XOR</a></td>
+   <td><code>a ^ b</code></td>
+   <td>オペランドの対応するビットがどちらか一方のみ 1 である各ビットについて 1 を返します。</td>
+  </tr>
+  <tr>
+   <td><a href="#Bitwise_NOT">ビットごとの NOT</a></td>
+   <td><code>~ a</code></td>
+   <td>オペランドの各ビットを反転します。</td>
+  </tr>
+  <tr>
+   <td><a href="#Left_shift">左シフト</a></td>
+   <td><code>a &lt;&lt; b</code></td>
+   <td>2 進表現の <code>a</code> を <code>b</code> (&lt; 32) ビット分だけ左にシフトします。右から 0 を詰めます。</td>
+  </tr>
+  <tr>
+   <td><a href="#Right_shift">符号を維持する右シフト</a></td>
+   <td><code>a &gt;&gt; b</code></td>
+   <td>2 進表現の <code>a</code> を <code>b</code> (&lt; 32) ビット分だけ右にシフトします。あふれたビットは破棄します。</td>
+  </tr>
+  <tr>
+   <td><a href="#Unsigned_right_shift">0 埋め右シフト</a></td>
+   <td><code>a &gt;&gt;&gt; b</code></td>
+   <td>2 進表現の <code>a</code> を <code>b</code> (&lt; 32) ビット分だけ右にシフトします。あふれたビットは破棄し、左から 0 を詰めます。</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Signed_32-bit_integers" name="Signed_32-bit_integers">符号付き 32 ビット整数値</h2>
+
+<p>すべてのオペランドは符号付き 32 ビット演算行われ、２の補数を使って負の数を現します。またビッグエンディアン方式でメモリ配置されます。2 の補数形式とは、ある値と、その負数 (例えば 5 と -5)で例えると正数のビットをすべて反転して (正数の NOT ビット演算は1 の補数として知られています) 1 を加えたものになります。以下に整数値 314 (10 進数)と１の補数、２の補数の具体例を紹介します。</p>
+
+<pre>00000000000000000000000100111010
+</pre>
+
+<p>以下は <code>~314</code>、すなわち <code>314</code> の 1 の補数を表しています:</p>
+
+<pre>11111111111111111111111011000101
+</pre>
+
+<p>最後に、以下は <code>-314</code>、すなわち <code>314</code> の 2 の補数を表しています:</p>
+
+<pre>11111111111111111111111011000110
+</pre>
+
+<p>2 の補数では、左端のビットが 0 であれば数値は正数、1 であれば数値は負数であることを保証します。よって、そのビットは<em>符号ビット</em>と呼ばれます。</p>
+
+<p>数値 <code>0</code> は、すべてのビットが 0 で構成される整数です。</p>
+
+<pre>0 (10 進数) = 00000000000000000000000000000000 (2 進数)
+</pre>
+
+<p>数値 <code>-1</code> は、すべてのビットが 1 で構成される整数です。</p>
+
+<pre>-1 (10 進数) = 11111111111111111111111111111111 (2 進数)
+</pre>
+
+<p>数値 <code>-2147483648</code> (16 進表記: <code>-0x80000000</code>) は、最初 (左端) を除きすべてのビットが 0 で構成される整数です。</p>
+
+<pre>-2147483648 (10 進数) = 10000000000000000000000000000000 (2 進数)
+</pre>
+
+<p>数値 <code>2147483647</code> (16 進表記: <code>0x7fffffff</code>) は、最初 (左端) を除きすべてのビットが 1 で構成される整数です。</p>
+
+<pre>2147483647 (10 進数) = 01111111111111111111111111111111 (2 進数)
+</pre>
+
+<p>数値 <code>-2147483648</code> および <code>2147483647</code> は、符号付き 32 ビット数値で表現できる最小および最大の整数です。</p>
+
+<h2 id="Bitwise_logical_operators" name="Bitwise_logical_operators">ビットごとの論理演算子</h2>
+
+<p>概念的にビットごとの論理演算子は、以下のように機能します:</p>
+
+<ul>
+ <li>オペランドは 32 ビット整数に変換され、ビット列（0 と 1）として表現されます。32 ビットを超える数値は、最上位のビットが破棄されます。例えば以下の 32 ビットを超える数値は、32 ビット整数値に変換されます:
+  <pre>変換前: 11100110111110100000000000000110000000000001
+変換後:             10100000000000000110000000000001</pre>
+ </li>
+ <li>第 1 オペランドの各ビットは第 2 オペランドの対応するビットと対にされます。第 1 ビットと第 1 ビット、 第 2 ビットと第 2 ビット、というように対にされます。</li>
+ <li>演算子は各ビットのペアに適用され、結果はビットごとに組み立てられます。</li>
+</ul>
+
+<h3 id="(Bitwise_AND)" name="(Bitwise_AND)"><a name="Bitwise_AND">&amp; (ビットごとの AND)</a></h3>
+
+<p>AND 演算は、ビットの各組で実行します。<code>a</code> AND <code>b</code> は、<code>a</code> と <code>b</code> の両方が 1 である場合にのみ 1 を出力します。AND 演算の真理値表は以下のとおりです:</p>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <td class="header">a</td>
+   <td class="header">b</td>
+   <td class="header">a AND b</td>
+  </tr>
+  <tr>
+   <td>0</td>
+   <td>0</td>
+   <td>0</td>
+  </tr>
+  <tr>
+   <td>0</td>
+   <td>1</td>
+   <td>0</td>
+  </tr>
+  <tr>
+   <td>1</td>
+   <td>0</td>
+   <td>0</td>
+  </tr>
+  <tr>
+   <td>1</td>
+   <td>1</td>
+   <td>1</td>
+  </tr>
+ </tbody>
+</table>
+
+<pre>.    9 (10 進数) = 00000000000000000000000000001001 (2 進数)
+    14 (10 進数) = 00000000000000000000000000001110 (2 進数)
+                   --------------------------------
+14 &amp; 9 (10 進数) = 00000000000000000000000000001000 (2 進数) = 8 (10 進数)
+</pre>
+
+<p>任意の数値 x と 0 とのビットごとの AND 演算は、0 を出力します。任意の数値 x と -1 とのビットごとの AND 演算は、x を出力します。</p>
+
+<h3 id="(Bitwise_OR)" name="(Bitwise_OR)"><a name="Bitwise_OR">| (ビットごとの OR)</a></h3>
+
+<p>OR 演算は、ビットの各組で実行します。<code>a</code> OR <code>b</code> は、<code>a</code> か <code>b</code> のいずれかが 1 である場合に 1 を出力します。OR 演算の真理値表は以下のとおりです:</p>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <td class="header">a</td>
+   <td class="header">b</td>
+   <td class="header">a OR b</td>
+  </tr>
+  <tr>
+   <td>0</td>
+   <td>0</td>
+   <td>0</td>
+  </tr>
+  <tr>
+   <td>0</td>
+   <td>1</td>
+   <td>1</td>
+  </tr>
+  <tr>
+   <td>1</td>
+   <td>0</td>
+   <td>1</td>
+  </tr>
+  <tr>
+   <td>1</td>
+   <td>1</td>
+   <td>1</td>
+  </tr>
+ </tbody>
+</table>
+
+<pre>.    9 (10 進数) = 00000000000000000000000000001001 (2 進数)
+    14 (10 進数) = 00000000000000000000000000001110 (2 進数)
+                   --------------------------------
+14 | 9 (10 進数) = 00000000000000000000000000001111 (2 進数) = 15 (10 進数)
+</pre>
+
+<p>任意の数値 x と 0 とのビットごとの OR 演算は、x を出力します。任意の数値 x と -1 とのビットごとの OR 演算は、-1 を出力します。</p>
+
+<h3 id="(Bitwise_XOR)" name="(Bitwise_XOR)"><a name="Bitwise_XOR">^ (ビットごとの XOR)</a></h3>
+
+<p>XOR 演算は、ビットの各組で実行します。<code>a</code> XOR <code>b</code> は、<code>a</code> と <code>b</code> が異なる場合に 1 を出力します。XOR 演算の真理値表は以下のとおりです:</p>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <td class="header">a</td>
+   <td class="header">b</td>
+   <td class="header">a XOR b</td>
+  </tr>
+  <tr>
+   <td>0</td>
+   <td>0</td>
+   <td>0</td>
+  </tr>
+  <tr>
+   <td>0</td>
+   <td>1</td>
+   <td>1</td>
+  </tr>
+  <tr>
+   <td>1</td>
+   <td>0</td>
+   <td>1</td>
+  </tr>
+  <tr>
+   <td>1</td>
+   <td>1</td>
+   <td>0</td>
+  </tr>
+ </tbody>
+</table>
+
+<pre>.    9 (10 進数) = 00000000000000000000000000001001 (2 進数)
+    14 (10 進数) = 00000000000000000000000000001110 (2 進数)
+                   --------------------------------
+14 ^ 9 (10 進数) = 00000000000000000000000000000111 (2 進数) = 7 (10 進数)
+</pre>
+
+<p>任意の数値 x と 0 とのビットごとの XOR 演算は、x を出力します。任意の数値 x と -1 とのビットごとの XOR 演算は、~x を出力します。</p>
+
+<h3 id="(Bitwise_NOT)" name="(Bitwise_NOT)"><a name="Bitwise_NOT">~ (ビットごとの NOT)</a></h3>
+
+<p>NOT 演算は、各ビットで実行します。NOT <code>a</code> は、<code>a</code> を反転した値 (1 の補数として知られています) を出力します。NOT 演算の真理値表は以下のとおりです:</p>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <td class="header">a</td>
+   <td class="header">NOT a</td>
+  </tr>
+  <tr>
+   <td>0</td>
+   <td>1</td>
+  </tr>
+  <tr>
+   <td>1</td>
+   <td>0</td>
+  </tr>
+ </tbody>
+</table>
+
+<pre> 9 (10 進数) = 00000000000000000000000000001001 (2 進数)
+               --------------------------------
+~9 (10 進数) = 11111111111111111111111111110110 (2 進数) = -10 (10 進数)
+</pre>
+
+<p>任意の数値 x のビットごとの NOT 演算は、-(x + 1) を出力します。例えば、~5 で -6 を出力します。</p>
+
+<p>indexOf を使用する例:</p>
+
+<pre class="brush: js">var str = 'rawr';
+var searchFor = 'a';
+
+// これは (-1*str.indexOf('a') &lt;= -1) の代替表記
+if (~str.indexOf(searchFor)) {
+  // searchFor が文字列内に存在する
+} else {
+  // searchFor が文字列内に存在しない
+}
+
+// (~str.indexOf(searchFor)) が返す値
+// r == -1
+// a == -2
+// w == -3
+</pre>
+
+<h2 id="Bitwise_shift_operators" name="Bitwise_shift_operators">ビットシフト演算子</h2>
+
+<p>ビットシフト演算子は 2 つのオペランドをとります。第 1 のオペランドはシフトされる数を指定し、第 2 のオペランドは、第 1 のオペランドをシフトさせるビット数を指定します。シフト演算の方向は使用する演算子によって決まります。</p>
+
+<p>シフト演算子はそのオペランドをビッグエンディアン形式の 32 ビット整数に変換し、左のオペランドと同じ型の結果を返します。右のオペランドは 32 より小さくするべきであり、そうでない場合は下位 5 ビットのみが用いられます。</p>
+
+<h3 id="&lt;&lt;_(Left_shift)" name="&lt;&lt;_(Left_shift)"><a name="Left_shift">&lt;&lt; (左シフト)</a></h3>
+
+<p>この演算子は、第 1 オペランドを指定したビット数分だけ左にシフトします。左にあふれたビットは破棄されます。0 のビットを右から詰めます。</p>
+
+<p>例えば、<code>9 &lt;&lt; 2</code> の結果は 36 になります。</p>
+
+<pre>.    9 (10 進数): 00000000000000000000000000001001 (2 進数)
+                  --------------------------------
+9 &lt;&lt; 2 (10 進数): 00000000000000000000000000100100 (2 進数) = 36 (10 進数)
+</pre>
+
+<p>任意の数値 <strong>x</strong> を <strong>y</strong> ビット左にシフトすると、<strong>x * 2^y</strong> になります。</p>
+
+<h3 id=">>_(Sign-propagating_right_shift)" name=">>_(Sign-propagating_right_shift)"><a name="Right_shift">&gt;&gt; (符号を維持する右シフト)</a></h3>
+
+<p>この演算子は、第 1 オペランドを指定したビット数分だけ右にシフトします。右にあふれたビットは破棄されます。左端のビットのコピーを左から詰めます。新たな左端のビットは従来の左端のビットと同じであることから、符号ビット (左端のビット) は変わりません。それゆえ、"符号を維持" という名称になります。</p>
+
+<p>例えば、<code>9 &gt;&gt; 2</code> の結果は 2 になります。</p>
+
+<pre>.    9 (10 進数): 00000000000000000000000000001001 (2 進数)
+                  --------------------------------
+9 &gt;&gt; 2 (10 進数): 00000000000000000000000000000010 (2 進数) = 2 (10 進数)
+</pre>
+
+<p>同様に、<code>-9 &gt;&gt; 2</code> の結果は符号が維持されるため -3 になります:</p>
+
+<pre>.    -9 (10 進数): 11111111111111111111111111110111 (2 進数)
+                   --------------------------------
+-9 &gt;&gt; 2 (10 進数): 11111111111111111111111111111101 (2 進数) = -3 (10 進数)
+</pre>
+
+<h3 id=">>>_(Zero-fill_right_shift)" name=">>>_(Zero-fill_right_shift)"><a name="Unsigned_right_shift">&gt;&gt;&gt; (0 埋め右シフト)</a></h3>
+
+<p>この演算子は、第 1 オペランドを指定したビット数分だけ右にシフトします。右にあふれたビットは破棄されます。0 のビットを左から詰めます。符号ビットが 0 になりますので、結果は常に負数になりません。</p>
+
+<p>負数ではない値では、0 埋め右シフトと符号を維持した右シフトは同じ結果になります。例えば、<code>9 &gt;&gt;&gt; 2</code> の結果は 2 になり、<code>9 &gt;&gt; 2</code> と同じです:</p>
+
+<pre>.     9 (10 進数): 00000000000000000000000000001001 (2 進数)
+                   --------------------------------
+9 &gt;&gt;&gt; 2 (10 進数): 00000000000000000000000000000010 (2 進数) = 2 (10 進数)
+</pre>
+
+<p>しかし、これは負数に当てはまりません。例えば、<code>-9 &gt;&gt;&gt; 2</code> の結果は 1073741821 であり、<code>-9 &gt;&gt; 2</code> の結果 (-3 になります) と異なります:</p>
+
+<pre>.     -9 (10 進数): 11111111111111111111111111110111 (2 進数)
+                    --------------------------------
+-9 &gt;&gt;&gt; 2 (10 進数): 00111111111111111111111111111101 (2 進数) = 1073741821 (10 進数)
+</pre>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<h3 id="Flags_and_bitmasks" name="Flags_and_bitmasks">フラグとビットマスク</h3>
+
+<p>ビット論理演算子は、一連の<em>フラグ</em>を作成、操作、あるいは読み取りによく用いられ、それらフラグはバイナリ変数のようなものです。変数は一連のフラグの代わりに用いられますが、バイナリフラグがもつメモリはとても少なく (32倍) なります。</p>
+
+<p>4 つのフラグがあると仮定します:</p>
+
+<ul>
+ <li>フラグ A: 我々は蟻の問題を抱えています</li>
+ <li>フラグ B: 我々はコウモリを飼っています</li>
+ <li>フラグ C: 我々は猫を飼っています</li>
+ <li>フラグ D: 我々はアヒルを飼っています</li>
+</ul>
+
+<p>これらのフラグは一連のビット DCBA で表されます。フラグが<em>セット</em>されると、それは値 1 になります。フラグが<em>クリア</em>されると、それは値 0 になります。変数 <code>flags</code> が 2 進数値 0101 であるとします:</p>
+
+<pre class="brush: js">var flags = 5;   // 2 進数値 0101
+</pre>
+
+<p>この値は以下を示します:</p>
+
+<ul>
+ <li>flag A は true (蟻の問題を抱えています);</li>
+ <li>flag B は false (コウモリを飼っていません);</li>
+ <li>flag C は true (猫を飼っています);</li>
+ <li>flag D は false (アヒルを飼っていません);</li>
+</ul>
+
+<p>ビット演算は 32 ビットで行われることから、0101 は実際 00000000000000000000000000000101 ですが、先行する 0 は意味のある情報ではないため無視できます。</p>
+
+<p><em>ビットマスク</em> はフラグの操作や読み取りを可能にするビット列です。一般的に、各フラグ向けの "基本" ビットマスクが定義されます:</p>
+
+<pre class="brush: js">var FLAG_A = 1; // 0001
+var FLAG_B = 2; // 0010
+var FLAG_C = 4; // 0100
+var FLAG_D = 8; // 1000
+</pre>
+
+<p>新たなビットマスクを、これら基本ビットマスクのビット論理演算を用いて作成できます。例えば、ビットマスク 1011 は FLAG_A、FLAG_B、FLAG_D の OR 演算により作成できます:</p>
+
+<pre class="brush: js">var mask = FLAG_A | FLAG_B | FLAG_D; // 0001 | 0010 | 1000 =&gt; 1011
+</pre>
+
+<p>個々のフラグの値はビットマスクとの AND 演算によって抽出され、そのとき値 1 をもつ各ビットが対応するフラグを "抽出" します。ビットマスクは 0 との AND 演算により、関係のないフラグを<em>マスク</em>します (それゆえ、"ビットマスク" という用語になります)。例えば、ビットマスク 0100 はフラグ C がセットされているかの確認に用いることができます:</p>
+
+<pre class="brush: js">// 猫を飼っている場合
+if (flags &amp; FLAG_C) { // 0101 &amp; 0100 =&gt; 0100 =&gt; true
+   // さまざまな処理
+}
+</pre>
+
+<p>複数のフラグをセットしたビットマスクは、"いずれか" を表します。例えば、以下 2 つの例は同等です:</p>
+
+<pre class="brush: js">// コウモリか猫を飼っている場合
+// (0101 &amp; 0010) || (0101 &amp; 0100) =&gt; 0000 || 0100 =&gt; true
+if ((flags &amp; FLAG_B) || (flags &amp; FLAG_C)) {
+   // さまざまな処理
+}
+</pre>
+
+<pre class="brush: js">// コウモリか猫を飼っている場合
+var mask = FLAG_B | FLAG_C; // 0010 | 0100 =&gt; 0110
+if (flags &amp; mask) { // 0101 &amp; 0110 =&gt; 0100 =&gt; true
+   // さまざまな処理
+}
+</pre>
+
+<p>フラグはビットマスクとの OR 演算によって設定でき、値が 1 である各々のビットが対応するフラグを、まだセットされていない場合にセットします。例えば、ビットマスク 1100 はフラグ C と D のセットに用いることができます:</p>
+
+<pre class="brush: js">// はい、猫とアヒルを飼っています
+var mask = FLAG_C | FLAG_D; // 0100 | 1000 =&gt; 1100
+flags |= mask;   // 0101 | 1100 =&gt; 1101
+</pre>
+
+<p>フラグはビットマスクとの AND 演算によってクリアでき、値が 0 である各ビットが対応するフラグを、まだクリアされていない場合にクリアします。このビットマスクは、基本ビットマスクの NOT 演算で作成されます。例えば、ビットマスク 1010 はフラグ A と C のクリアに用いることができます:</p>
+
+<pre class="brush: js">// いいえ、蟻の問題はありませんし猫を飼ってもいません
+var mask = ~(FLAG_A | FLAG_C); // ~0101 =&gt; 1010
+flags &amp;= mask;   // 1101 &amp; 1010 =&gt; 1000
+</pre>
+
+<p>マスクは <code>~FLAG_A &amp; ~FLAG_C</code> (ド・モルガンの法則) で作成することもできます:</p>
+
+<pre class="brush: js">// いいえ、蟻の問題はありませんし猫を飼ってもいません
+var mask = ~FLAG_A &amp; ~FLAG_C;
+flags &amp;= mask;   // 1101 &amp; 1010 =&gt; 1000
+</pre>
+
+<p>フラグはビットマスクとの XOR 演算によって切り替えることができ、値が 1 である各々のビットが対応するフラグを切り替えます。例えば、ビットマスク 0110 はフラグ B と C の切り替えに用いることができます:</p>
+
+<pre class="brush: js">// 以前はコウモリを飼っていませんでしたが今は飼っている、 
+// および以前飼っていたコウモリとお別れした、
+// また猫にも同じことが起きた場合
+var mask = FLAG_B | FLAG_C;
+flags = flags ^ mask;   // 1100 ^ 0110 =&gt; 1010
+</pre>
+
+<p>最後に、NOT 演算でフラグを反転することができます:</p>
+
+<pre class="brush: js">// パラレルワールドに入りました……
+flags = ~flags;    // ~1010 =&gt; 0101
+</pre>
+
+<h3 id="Conversion_snippets" name="Conversion_snippets">変換用コード部品</h3>
+
+<p>2 進数の <code><a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/String" title="JavaScript/Reference/Global_Objects/String">String</a></code> を 10 進数の <code><a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/Number" title="JavaScript/Reference/Global_Objects/Number">Number</a></code> に変換します:</p>
+
+<pre class="brush: js">var sBinString = "1011";
+var nMyNumber = parseInt(sBinString, 2);
+alert(nMyNumber); // 11 と表示、すなわち 1011
+</pre>
+
+<p>10 進数の <code><a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/Number" title="JavaScript/Reference/Global_Objects/Number">Number</a></code> を 2 進数の <code><a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/String" title="JavaScript/Reference/Global_Objects/String">String</a></code> に変換します:</p>
+
+<pre class="brush: js">var nMyNumber = 11;
+var sBinString = nMyNumber.toString(2);
+alert(sBinString); // 1011 と表示、すなわち 11
+</pre>
+
+<h3 id="Automatize_the_creation_of_a_mask" name="Automatize_the_creation_of_a_mask">マスク作成の自動化</h3>
+
+<p>いくつかの <code><a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/Boolean" title="JavaScript/Reference/Global_Objects/Boolean">Boolean</a></code> から多くのマスクを作成しなければならない場合に、この作業を自動化できます:</p>
+
+<pre class="brush: js">function createMask () {
+  var nMask = 0, nFlag = 0, nLen = arguments.length &gt; 32 ? 32 : arguments.length;
+  for (nFlag; nFlag &lt; nLen; nMask |= arguments[nFlag] &lt;&lt; nFlag++);
+  return nMask;
+}
+var mask1 = createMask(true, true, false, true); // 11、すなわち1011
+var mask2 = createMask(false, false, true); // 4、すなわち 0100
+var mask3 = createMask(true); // 1、すなわち 0001
+// etc.
+
+alert(mask1); // 11 と表示、すなわち 1011
+</pre>
+
+<h3 id="Reverse_algorithm_an_array_of_booleans_from_a_mask" name="Reverse_algorithm_an_array_of_booleans_from_a_mask">逆操作アルゴリズム: マスクから真偽値の配列を作成</h3>
+
+<p>マスクから <code><a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/Boolean" title="JavaScript/Reference/Global_Objects/Boolean">Boolean</a></code> の <code><a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/Array" title="JavaScript/Reference/Global_Objects/Array">Array</a></code> を作成したい場合、以下のコードを用いることができます:</p>
+
+<pre class="brush: js">function arrayFromMask (nMask) {
+  // nMask は -2147483648 から 2147483647 の間でなければならない
+  if (nMask &gt; 0x7fffffff || nMask &lt; -0x80000000) { 
+    throw new TypeError("arrayFromMask - out of range"); 
+  }
+  for (var nShifted = nMask, aFromMask = []; nShifted; 
+       aFromMask.push(Boolean(nShifted &amp; 1)), nShifted &gt;&gt;&gt;= 1);
+  return aFromMask;
+}
+
+var array1 = arrayFromMask(11);
+var array2 = arrayFromMask(4);
+var array3 = arrayFromMask(1);
+
+alert("[" + array1.join(", ") + "]");
+// "[true, true, false, true]" と表示、すなわち 11 および 1011
+</pre>
+
+<p>両方のアルゴリズムを同時に検証できます。</p>
+
+<pre class="brush: js">var nTest = 19; // マスク
+var nResult = createMask.apply(this, arrayFromMask(nTest));
+
+alert(nResult); // 19
+</pre>
+
+<p>(Number.toString(2) メソッドがありますので) 教育的な目的のみになりますが、<code><a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/Boolean" title="JavaScript/Reference/Global_Objects/Boolean">Boolean</a></code> の <code><a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/Array" title="JavaScript/Reference/Global_Objects/Array">Array</a></code> ではなく <code><a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/Number" title="JavaScript/Reference/Global_Objects/Number">Number</a></code> の 2 進表記を含む <code><a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/String" title="JavaScript/Reference/Global_Objects/String">String</a></code> を作成するために<code>arrayFromMask</code> アルゴリズムがどのように操作しているかを示します:</p>
+
+<pre class="brush: js">function createBinaryString (nMask) {
+  // nMask は -2147483648 から 2147483647 の間でなければならない
+  for (var nFlag = 0, nShifted = nMask, sMask = ""; nFlag &lt; 32;
+       nFlag++, sMask += String(nShifted &gt;&gt;&gt; 31), nShifted &lt;&lt;= 1);
+  return sMask;
+}
+
+var string1 = createBinaryString(11);
+var string2 = createBinaryString(4);
+var string3 = createBinaryString(1);
+
+alert(string1);
+// 00000000000000000000000000001011 と表示、すなわち 11
+</pre>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">策定状況</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES1')}}</td>
+   <td>{{Spec2('ES1')}}</td>
+   <td>最初期の定義</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-11.7')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td>仕様書内のいくつかのセクションで定義: <a href="http://www.ecma-international.org/ecma-262/5.1/#sec-11.4.8">Bitwise NOT operator</a>, <a href="http://www.ecma-international.org/ecma-262/5.1/#sec-11.7">Bitwise shift operators</a>, <a href="http://www.ecma-international.org/ecma-262/5.1/#sec-11.10">Binary bitwise operators</a></td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-bitwise-shift-operators')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td>仕様書内のいくつかのセクションで定義: <a href="http://www.ecma-international.org/ecma-262/6.0/#sec-bitwise-not-operator">Bitwise NOT operator</a>, <a href="http://www.ecma-international.org/ecma-262/6.0/#sec-bitwise-shift-operators">Bitwise shift operators</a>, <a href="http://www.ecma-international.org/ecma-262/6.0/#sec-binary-bitwise-operators">Binary bitwise operators</a></td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-bitwise-shift-operators')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td>仕様書内のいくつかのセクションで定義: <a href="http://tc39.github.io/ecma262/#sec-bitwise-not-operator">Bitwise NOT operator</a>, <a href="http://tc39.github.io/ecma262/#sec-bitwise-shift-operators">Bitwise shift operators</a>, <a href="http://tc39.github.io/ecma262/#sec-binary-bitwise-operators">Binary bitwise operators</a></td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザ実装状況</h2>
+
+<div>{{CompatibilityTable}}</div>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>機能</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>ビットごとの NOT (<code>~</code>)</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+  <tr>
+   <td>ビットごとの AND (<code>&amp;</code>)</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+  <tr>
+   <td>ビットごとの OR (<code>|</code>)</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+  <tr>
+   <td>ビットごとの XOR (<code>^</code>)</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+  <tr>
+   <td>左シフト (<code>&lt;&lt;</code>)</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+  <tr>
+   <td>右シフト (<code>&gt;&gt;</code>)</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+  <tr>
+   <td>符号なし右シフト (<code>&gt;&gt;&gt;</code>)</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>機能</th>
+   <th>Android</th>
+   <th>Chrome for Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>ビットごとの NOT (<code>~</code>)</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+  <tr>
+   <td>ビットごとの AND (<code>&amp;</code>)</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+  <tr>
+   <td>ビットごとの OR (<code>|</code>)</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+  <tr>
+   <td>ビットごとの XOR (<code>^</code>)</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+  <tr>
+   <td>左シフト (<code>&lt;&lt;</code>)</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+  <tr>
+   <td>右シフト (<code>&gt;&gt;</code>)</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+  <tr>
+   <td>符号なし右シフト (<code>&gt;&gt;&gt;</code>)</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li><a href="/ja/docs/Web/JavaScript/Reference/Operators/Logical_Operators">論理演算子</a></li>
+</ul>

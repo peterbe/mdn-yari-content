@@ -1,0 +1,183 @@
+<h3 id=".EC.A0.95.EA.B7.9C.ED.91.9C.ED.98.84.EC.8B.9D_.ED.8C.A8.ED.84.B4_.EC.9E.91.EC.84.B1.ED.95.98.EA.B8.B0" name=".EC.A0.95.EA.B7.9C.ED.91.9C.ED.98.84.EC.8B.9D_.ED.8C.A8.ED.84.B4_.EC.9E.91.EC.84.B1.ED.95.98.EA.B8.B0">정규표현식 패턴 작성하기</h3>
+<p>정규표현식 패턴은 <code>/abc/</code>처럼 단순한 문자로 이루어지거나, 또는 <code>/ab*c/</code>나 <code>/Chapter (\d+)\.\d*/</code>처럼 단순한 문자와 특수 문자를 함께 사용하여 작성됩니다. 마지막 예제에 포함되어 있는 괄호는 기억 장치로 사용됩니다. <a href="ko/Core_JavaScript_1.5_Guide/Working_with_Regular_Expressions/Using_Parenthesized_Substring_Matches">괄호로 묶은 일치된 문장 사용</a>에 나온 것처럼, 괄호로 묶은 부분 안쪽 패턴에 일치된 부분은 나중에 사용하기 위해 기억됩니다.</p>
+<p> </p>
+<h4 id=".EA.B0.84.EB.8B.A8.ED.95.9C_.ED.8C.A8.ED.84.B4_.EC.82.AC.EC.9A.A9" name=".EA.B0.84.EB.8B.A8.ED.95.9C_.ED.8C.A8.ED.84.B4_.EC.82.AC.EC.9A.A9">간단한 패턴 사용</h4>
+<p>Simple patterns are constructed of characters for which you want to find a direct match. For example, the pattern /abc/ matches character combinations in strings only when exactly the characters 'abc' occur together and in that order. Such a match would succeed in the strings "Hi, do you know your abc's?" and "The latest airplane designs evolved from slabcraft." In both cases the match is with the substring 'abc'. There is no match in the string "Grab crab" because it does not contain the substring 'abc'.</p>
+<p> </p>
+<h4 id=".ED.8A.B9.EC.88.98_.EB.AC.B8.EC.9E.90_.EC.82.AC.EC.9A.A9" name=".ED.8A.B9.EC.88.98_.EB.AC.B8.EC.9E.90_.EC.82.AC.EC.9A.A9">특수 문자 사용</h4>
+<p>When the search for a match requires something more than a direct match, such as finding one or more b's, or finding white space, the pattern includes special characters. For example, the pattern <code>/ab*c/</code> matches any character combination in which a single 'a' is followed by zero or more 'b's (* means 0 or more occurrences of the preceding item) and then immediately followed by 'c'. In the string "cbbabbbbcdebc," the pattern matches the substring 'abbbbc'.</p>
+<p>The following table provides a complete list and description of the special characters that can be used in regular expressions.</p>
+<table class="fullwidth-table">
+ <tbody>
+  <tr>
+   <th>Character</th>
+   <th>Meaning</th>
+  </tr>
+  <tr>
+   <td>\</td>
+   <td>Either of the following:
+    <ul>
+     <li>For characters that are usually treated literally, indicates that the next character is special and not to be interpreted literally. For example, <code>/b/ </code> matches the character 'b'. By placing a backslash in front of b, that is by using <code>/\b/</code>, the character becomes special to mean match a word boundary.</li>
+     <li>For characters that are usually treated specially, indicates that the next character is not special and should be interpreted literally. For example, * is a special character that means 0 or more occurrences of the preceding item should be matched; for example, <code>/a*/</code> means match 0 or more a's. To match * literally, precede it with a backslash; for example, <code>/a\*/</code> matches 'a*'.</li>
+    </ul>
+   </td>
+  </tr>
+  <tr>
+   <td>^</td>
+   <td>Matches beginning of input. If the multiline flag is set to true, also matches immediately after a line break character. For example, <code>/^A/</code> does not match the 'A' in "an A", but does match the first 'A' in "An A".</td>
+  </tr>
+  <tr>
+   <td>$</td>
+   <td>Matches end of input. If the multiline flag is set to true, also matches immediately before a line break character. For example, <code>/t$/</code> does not match the 't' in "eater", but does match it in "eat".</td>
+  </tr>
+  <tr>
+   <td>*</td>
+   <td>Matches the preceding character 0 or more times. For example, <code>/bo*/</code> matches 'boooo' in "A ghost booooed" and 'b' in "A bird warbled", but nothing in "A goat grunted".</td>
+  </tr>
+  <tr>
+   <td>+</td>
+   <td>Matches the preceding character 1 or more times. Equivalent to {1,}. For example, <code>/a+/</code> matches the 'a' in "candy" and all the a's in "caaaaaaandy".</td>
+  </tr>
+  <tr>
+   <td>?</td>
+   <td>Matches the preceding character 0 or 1 time.
+    <p>For example, <code>/e?le?/</code> matches the 'el' in "angel" and the 'le' in "angle."</p>
+    <p>If used immediately after any of the quantifiers *, +, ?, or {}, makes the quantifier non-greedy (matching the minimum number of times), as opposed to the default, which is greedy (matching the maximum number of times).</p>
+    Also used in lookahead assertions, described under x(?=y) and x(?!y) in this table.</td>
+  </tr>
+  <tr>
+   <td>.</td>
+   <td>(The decimal point) matches any single character except the newline character. For example, <code>/.n/</code> matches 'an' and 'on' in "nay, an apple is on the tree", but not 'nay'.</td>
+  </tr>
+  <tr>
+   <td>(x)</td>
+   <td>Matches 'x' and remembers the match. These are called capturing parentheses. For example, <code>/(foo)/</code> matches and remembers 'foo' in "foo bar." The matched substring can be recalled from the resulting array's elements <code>1</code>, ..., <code>n</code>.</td>
+  </tr>
+  <tr>
+   <td>(?:x)</td>
+   <td>Matches 'x' but does not remember the match. These are called non-capturing parentheses. The matched substring can not be recalled from the resulting array's elements <code>1</code>, ..., <code>n</code>.</td>
+  </tr>
+  <tr>
+   <td>x(?=y)</td>
+   <td>Matches 'x' only if 'x' is followed by 'y'. For example, <code>/Jack(?=Sprat)/</code> matches 'Jack' only if it is followed by 'Sprat'. <code>/Jack(?=Sprat|Frost)/</code> matches 'Jack' only if it is followed by 'Sprat' or 'Frost'. However, neither 'Sprat' nor 'Frost' is part of the match results.</td>
+  </tr>
+  <tr>
+   <td>x(?!y)</td>
+   <td>Matches 'x' only if 'x' is not followed by 'y'. For example, <code>/\d+(?!\.)/</code> matches a number only if it is not followed by a decimal point. The regular expression <code>/\d+(?!\.)/.exec("3.141")</code> matches '141' but not '3.141'.</td>
+  </tr>
+  <tr>
+   <td>x|y</td>
+   <td>Matches either 'x' or 'y'. For example, <code>/green|red/</code> matches 'green' in "green apple" and 'red' in "red apple."</td>
+  </tr>
+  <tr>
+   <td>{n}</td>
+   <td>Where n is a positive integer. Matches exactly n occurrences of the preceding character. For example, <code>/a{2}/</code> doesn't match the 'a' in "candy," but it matches all of the a's in "caandy," and the first two a's in "caaandy."</td>
+  </tr>
+  <tr>
+   <td>{n,}</td>
+   <td>Where n is a positive integer. Matches at least n occurrences of the preceding character. For example, <code>/a{2,}/</code> doesn't match the 'a' in "candy", but matches all of the a's in "caandy" and in "caaaaaaandy."</td>
+  </tr>
+  <tr>
+   <td>{n,m}</td>
+   <td>Where n and m are positive integers. Matches at least n and at most m occurrences of the preceding character. For example, <code>/a{1,3}/</code> matches nothing in "cndy", the 'a' in "candy," the first two a's in "caandy," and the first three a's in "caaaaaaandy" Notice that when matching "caaaaaaandy", the match is "aaa", even though the original string had more a's in it.</td>
+  </tr>
+  <tr>
+   <td>xyz</td>
+   <td>A character set. Matches any one of the enclosed characters. You can specify a range of characters by using a hyphen. For example, <code>abcd</code> is the same as <code>a-d</code>. They match the 'b' in "brisket" and the 'c' in "ache".</td>
+  </tr>
+  <tr>
+   <td>^xyz</td>
+   <td>A negated or complemented character set. That is, it matches anything that is not enclosed in the brackets. You can specify a range of characters by using a hyphen. For example, <code>^abc</code> is the same as <code>^a-c</code>. They initially match 'r' in "brisket" and 'h' in "chop."</td>
+  </tr>
+  <tr>
+   <td>\\b</td>
+   <td>Matches a backspace. (Not to be confused with \b.)</td>
+  </tr>
+  <tr>
+   <td>\b</td>
+   <td>Matches a word boundary, such as a space or a newline character. (Not to be confused with \\b.) For example, <code>/\bn\w/</code> matches the 'no' in "noonday";<code>/\wy\b/</code> matches the 'ly' in "possibly yesterday."</td>
+  </tr>
+  <tr>
+   <td>\B</td>
+   <td>Matches a non-word boundary. For example, <code>/\w\Bn/</code> matches 'on' in "noonday", and <code>/y\B\w/</code> matches 'ye' in "possibly yesterday."</td>
+  </tr>
+  <tr>
+   <td>\cX</td>
+   <td>Where X is a control character. Matches a control character in a string. For example, <code>/\cM/</code> matches control-M in a string.</td>
+  </tr>
+  <tr>
+   <td>\d</td>
+   <td>Matches a digit character. Equivalent to <code>0-9</code>. For example, <code>/\d/</code> or <code>/0-9/</code> matches '2' in "B2 is the suite number."</td>
+  </tr>
+  <tr>
+   <td>\D</td>
+   <td>Matches any non-digit character. Equivalent to <code>^0-9</code>. For example, <code>/\D/</code> or <code>/^0-9/</code> matches 'B' in "B2 is the suite number."</td>
+  </tr>
+  <tr>
+   <td>\f</td>
+   <td>Matches a form-feed.</td>
+  </tr>
+  <tr>
+   <td>\n</td>
+   <td>Matches a linefeed.</td>
+  </tr>
+  <tr>
+   <td>\r</td>
+   <td>Matches a carriage return.</td>
+  </tr>
+  <tr>
+   <td>\s</td>
+   <td>Matches a single white space character, including space, tab, form feed, line feed. Equivalent to
+    <p><code>\\f\\n\\r\\t\\v\\u00A0\\u2028\\u2029</code>.</p>
+    For example, <code>/\s\w*/</code> matches ' bar' in "foo bar."</td>
+  </tr>
+  <tr>
+   <td>\S</td>
+   <td>Matches a single character other than white space. Equivalent to
+    <p><code>^ \\f\\n\\r\\t\\v\\u00A0\\u2028\\u2029</code>.</p>
+    For example, <code>/\S\w*/</code> matches 'foo' in "foo bar."</td>
+  </tr>
+  <tr>
+   <td>\t</td>
+   <td>Matches a tab.</td>
+  </tr>
+  <tr>
+   <td>\v</td>
+   <td>Matches a vertical tab.</td>
+  </tr>
+  <tr>
+   <td>\w</td>
+   <td>Matches any alphanumeric character including the underscore. Equivalent to <code>A-Za-z0-9_</code>. For example, <code>/\w/</code> matches 'a' in "apple," '5' in "$5.28," and '3' in "3D."</td>
+  </tr>
+  <tr>
+   <td>\W</td>
+   <td>Matches any non-word character. Equivalent to <code>^A-Za-z0-9_</code>. For example, <code>/\W/</code> or <code>/^$A-Za-z0-9_/</code> matches '%' in "50%."</td>
+  </tr>
+  <tr>
+   <td>\n</td>
+   <td>Where n is a positive integer. A back reference to the last substring matching the n parenthetical in the regular expression (counting left parentheses). For example, <code>/apple(,)\sorange\1/</code> matches 'apple, orange,' in "apple, orange, cherry, peach."</td>
+  </tr>
+  <tr>
+   <td>\0</td>
+   <td>Matches a NUL character. Do not follow this with another digit.</td>
+  </tr>
+  <tr>
+   <td>\xhh</td>
+   <td>Matches the character with the code hh (two hexadecimal digits)</td>
+  </tr>
+  <tr>
+   <td>\uhhhh</td>
+   <td>Matches the character with the code hhhh (four hexadecimal digits).</td>
+  </tr>
+ </tbody>
+</table>
+<p><small><b>Table 4.1: Special characters in regular expressions.</b></small></p>
+<h4 id=".EA.B4.84.ED.98.B8_.EC.82.AC.EC.9A.A9" name=".EA.B4.84.ED.98.B8_.EC.82.AC.EC.9A.A9">괄호 사용</h4>
+<p>Parentheses around any part of the regular expression pattern cause that part of the matched substring to be remembered. Once remembered, the substring can be recalled for other use, as described in <a href="ko/Core_JavaScript_1.5_Guide/Working_with_Regular_Expressions/Using_Parenthesized_Substring_Matches">Using Parenthesized Substring Matches</a>.</p>
+<p>For example, the pattern <code>/Chapter (\d+)\.\d*/</code> illustrates additional escaped and special characters and indicates that part of the pattern should be remembered. It matches precisely the characters 'Chapter ' followed by one or more numeric characters (\d means any numeric character and + means 1 or more times), followed by a decimal point (which in itself is a special character; preceding the decimal point with \ means the pattern must look for the literal character '.'), followed by any numeric character 0 or more times (\d means numeric character, * means 0 or more times). In addition, parentheses are used to remember the first matched numeric characters.</p>
+<p>This pattern is found in "Open Chapter 4.3, paragraph 6" and '4' is remembered. The pattern is not found in "Chapter 3 and 4", because that string does not have a period after the '3'.</p>
+<p>To match a substring without causing the matched part to be remembered, within the parentheses preface the pattern with <code>?:</code>. For example, <code>(?:\d+)</code> matches one or more numeric characters but does not remember the matched characters.</p>
+<div class="noinclude">
+ <p>{{ PreviousNext("Core_JavaScript_1.5_Guide:Creating_a_Regular_Expression", "Core_JavaScript_1.5_Guide:Working_with_Regular_Expressions") }}</p>
+</div>
+<p> </p>

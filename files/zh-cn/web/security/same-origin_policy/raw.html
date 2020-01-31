@@ -1,0 +1,261 @@
+<p><strong>同源策略</strong>限制了从同一个源加载的文档或脚本如何与来自另一个源的资源进行交互。这是一个用于隔离潜在恶意文件的重要安全机制。</p>
+
+<h2 id="同源的定义"><strong>同源</strong>的<strong>定义</strong></h2>
+
+<p>如果两个页面的协议，端口（如果有指定）和主机都相同，则两个页面具有相同的<strong>源</strong>。我们也可以把它称为“协议/主机/端口 tuple”，或简单地叫做“tuple". ("tuple" ，“元”，是指一些事物组合在一起形成一个整体，比如（1，2）叫二元，（1，2，3）叫三元)</p>
+
+<p>下表给出了相对<code><span class="nowiki">http://store.company.com/dir/page.html</span></code>同源检测的示例:</p>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th>URL</th>
+   <th>结果</th>
+   <th>原因</th>
+  </tr>
+  <tr>
+   <td><code><span class="nowiki">http://store.company.com/dir2/other.html</span></code></td>
+   <td>成功</td>
+   <td><font face="consolas, Liberation Mono, courier, monospace"> 只有路径不同</font></td>
+  </tr>
+  <tr>
+   <td><code><span class="nowiki">http://store.company.com/dir/inner/another.html</span></code></td>
+   <td>成功</td>
+   <td><font face="consolas, Liberation Mono, courier, monospace"> 只有路径不同</font></td>
+  </tr>
+  <tr>
+   <td><code><span class="nowiki">https://store.company.com/secure.html</span></code></td>
+   <td>失败</td>
+   <td>不同协议 ( https和http )</td>
+  </tr>
+  <tr>
+   <td><code><span class="nowiki">http://store.company.com:81/dir/etc.html</span></code></td>
+   <td>失败</td>
+   <td>不同端口 ( http:// 80是默认的)</td>
+  </tr>
+  <tr>
+   <td><code><span class="nowiki">http://news.company.com/dir/other.html</span></code></td>
+   <td>失败</td>
+   <td>不同域名 ( news和store )</td>
+  </tr>
+ </tbody>
+</table>
+
+<p>另请参见<a href="https://developer.mozilla.org/en-US/docs/Same-origin_policy_for_file:_URIs">文件的源定义: URLs</a>.</p>
+
+<h3 id="源的继承"><strong>源的</strong><strong>继承</strong></h3>
+
+<p>在页面中用 <code>about:blank</code> 或 <code>javascript:</code> URL 执行的脚本会继承打开该 URL 的文档的源，因为这些类型的 URLs 没有明确包含有关原始服务器的信息。</p>
+
+<p>例如，<code>about:blank</code> 通常作为父脚本写入内容的新的空白弹出窗口的 URL（例如，通过  <a href="https://developer.mozilla.org/en-US/docs/Web/API/Window/open">Window.open()</a>  机制）。 如果此弹出窗口也包含代码，则该代码将继承与创建它的脚本相同的源。</p>
+
+<div class="note">
+<p>注意：在{{Gecko("6.0")}}之前，如果用户在位置栏中输入 <code>data</code> URLs，<code>data</code> URLs 将继承当前浏览器窗口中网页的安全上下文。</p>
+</div>
+
+<div class="blockIndicator warning">
+<p><code>data</code>：URLs 获得一个新的，空的安全上下文。</p>
+</div>
+
+<h3 id="IE_例外"><strong>IE 例外</strong></h3>
+
+<p>当涉及到同源策略时，Internet Explorer 有两个主要的不同点</p>
+
+<ul>
+ <li><strong>授信范围</strong>（Trust Zones）：两个相互之间高度互信的域名，如公司域名（corporate domains），不遵守同源策略的限制。</li>
+ <li><strong>端口</strong>：IE 未将端口号加入到同源策略的组成部分之中，因此<span> </span><span><code>http://company.com:81/index.html</code> </span><span>和 </span><span><code>http://company.com/index.html</code>  </span>属于同源并且不受任何限制。</li>
+</ul>
+
+<p>这些例外是非标准的，其它浏览器也未做出支持，但会助于开发基于window RT IE的应用程序。</p>
+
+<h2 id="源的更改"><strong>源</strong>的更改</h2>
+
+<p>页面可能会因某些限制而改变他的源。脚本可以将 {{domxref("document.domain")}} 的值设置为其当前域或其当前域的父域。如果将其设置为其当前域的父域，则这个较短的父域将用于后续源检查。假设 http://store.company.com/dir/other.html 文档中的一个脚本执行以下语句：</p>
+
+<pre class="eval">document.domain = "company.com";
+</pre>
+
+<p>这条语句执行之后，页面将会成功地通过对 <code><span class="nowiki">http://company.com/dir/page.html</span></code> 的同源检测（假设<code>http://company.com/dir/page.html</code> 将其 <code>document.domain</code> 设置为“<code>company.com</code>”，以表明它希望允许这样做 - 更多有关信息，请参阅 {{domxref("document.domain")}} ）。然而，<code>company.com</code> 不能设置 <code>document.domain</code> 为 <code>othercompany.com</code>，因为它不是 <code>company.com</code> 的父域。</p>
+
+<p>端口号是由浏览器另行检查的。任何对document.domain的赋值操作，包括 <code>document.domain = document.domain</code> 都会导致端口号被重写为 <code>null</code> 。因此 <code>company.com:8080</code> 不能仅通过设置 <code>document.domain = "company.com"</code> 来与<code>company.com</code> 通信。必须在他们双方中都进行赋值，以确保端口号都为 <code>null</code> 。</p>
+
+<div class="note">
+<p>注意：使用 <code>document.domain</code> 来允许子域安全访问其父域时，您需要在父域和子域中设置 document.domain 为相同的值。这是必要的，即使这样做只是将父域设置回其原始值。不这样做可能会导致权限错误。</p>
+</div>
+
+<h2 id="跨源网络访问">跨源网络访问</h2>
+
+<p>同源策略控制了不同源之间的交互，例如在使用{{domxref("XMLHttpRequest")}} 或 {{htmlelement("img")}} 标签时则会受到同源策略的约束。这些交互通常分为三类：</p>
+
+<ul>
+ <li>通常允许<em>跨域写操作（Cross-origin writes）。</em>例如链接（links），重定向以及表单提交。特定少数的HTTP请求需要添加 <a href="https://developer.mozilla.org/zh-CN/docs/HTTP/Access_control_CORS#Preflighted_requests" title="HTTP/Access_control_CORS#Preflighted_requests">preflight</a>。</li>
+ <li>通常允许<em>跨域资源嵌入（Cross-origin embedding）。</em>之后下面会举例说明。</li>
+ <li>通常不允许<em>跨域读操作（Cross-origin reads）。</em>但常可以通过内嵌资源来巧妙的进行读取访问。例如可以读取嵌入图片的高度和宽度，调用内嵌脚本的方法，或<a href="https://grepular.com/Abusing_HTTP_Status_Codes_to_Expose_Private_Information" title="https://grepular.com/Abusing_HTTP_Status_Codes_to_Expose_Private_Information">availability of an embedded resource</a>.</li>
+</ul>
+
+<p>以下是可能嵌入跨源的资源的一些示例：</p>
+
+<ul>
+ <li><code>&lt;script src="..."&gt;&lt;/script&gt;</code> 标签嵌入跨域脚本。语法错误信息只能在同源脚本中捕捉到。</li>
+ <li><code>&lt;link rel="stylesheet" href="..."&gt;</code> 标签嵌入CSS。由于CSS的<a href="http://scarybeastsecurity.blogspot.dk/2009/12/generic-cross-browser-cross-domain.html">松散的语法规则</a>，CSS的跨域需要一个设置正确的<code>Content-Type</code> 消息头。不同浏览器有不同的限制：<span> </span><a href="http://msdn.microsoft.com/zh-CN/library/ie/gg622939%28v=vs.85%29.aspx" title="http://msdn.microsoft.com/zh-CN/library/ie/gg622939%28v=vs.85%29.aspx">IE</a><span>, </span><a href="http://www.mozilla.org/security/announce/2010/mfsa2010-46.html" title="http://www.mozilla.org/security/announce/2010/mfsa2010-46.html">Firefox</a><span>, </span><a href="http://code.google.com/p/chromium/issues/detail?id=9877" title="http://code.google.com/p/chromium/issues/detail?id=9877">Chrome</a><span>, </span><a href="http://support.apple.com/kb/HT4070" title="http://support.apple.com/kb/HT4070">Safari</a><span> (跳至CVE-2010-0051)部分 和 </span><a href="http://www.opera.com/support/kb/view/943/" title="http://www.opera.com/support/kb/view/943/">Opera</a>。</li>
+ <li>{{htmlelement("img")}}嵌入图片。支持的图片格式包括PNG,JPEG,GIF,BMP,SVG,...</li>
+ <li>{{htmlelement("video")}} 和 {{htmlelement("audio")}}嵌入多媒体资源。</li>
+ <li><a href="https://developer.mozilla.org/zh-CN/docs/HTML/Element/object" title="HTML/Element/object"><code>&lt;object&gt;</code></a>, <a href="https://developer.mozilla.org/zh-CN/docs/HTML/Element/embed" title="HTML/Element/embed"><code>&lt;embed&gt;</code></a> 和 <code><a href="https://developer.mozilla.org/zh-CN/docs/HTML/Element/applet" title="HTML/Element/applet">&lt;applet&gt;</a></code> 的插件。</li>
+ <li><code><a href="https://developer.mozilla.org/zh-CN/docs/CSS/@font-face" title="CSS/@font-face">@font-face</a></code> 引入的字体。一些浏览器允许跨域字体（ cross-origin fonts），一些需要同源字体（same-origin fonts）。</li>
+ <li><a href="https://developer.mozilla.org/zh-CN/docs/HTML/Element/frame" title="HTML/Element/frame"><code>&lt;frame&gt;</code></a> 和 <code><a href="https://developer.mozilla.org/zh-CN/docs/HTML/Element/iframe" title="HTML/Element/iframe">&lt;iframe&gt;</a></code> 载入的任何资源。站点可以使用<a href="https://developer.mozilla.org/zh-CN/docs/HTTP/X-Frame-Options" title="HTTP/X-Frame-Options">X-Frame-Options</a>消息头来阻止这种形式的跨域交互。</li>
+</ul>
+
+<h3 id="如何允许跨源访问"><strong>如何允许跨源访问</strong></h3>
+
+<p>使用 <a href="https://developer.mozilla.org/zh-CN/docs/HTTP/Access_control_CORS">CORS</a> 允许跨源访问。</p>
+
+<h3 id="如何阻止跨源访问"><strong>如何阻止跨源访问</strong></h3>
+
+<ul>
+ <li>阻止跨域写操作，只要检测请求中的一个不可测的标记(CSRF token)即可，这个标记被称为<a href="https://www.owasp.org/index.php/Cross-Site_Request_Forgery_%28CSRF%29" title="https://www.owasp.org/index.php/Cross-Site_Request_Forgery_%28CSRF%29">Cross-Site Request Forgery (CSRF)</a><span> 标记。必须使用这个标记来阻止页面的跨站读操作。</span></li>
+ <li><span>阻止资源的跨站读取，需要保证该资源是不可嵌入的。阻止嵌入行为是必须的，因为嵌入资源通常向其暴露信息。</span></li>
+ <li><span>阻止跨站嵌入，需要确保你的资源不能是以上列出的可嵌入资源格式。多数情况下浏览器都不会遵守 <code>Content-Type</code> 消息头。例如，如果您在HTML文档中指定 <code>&lt;script&gt;</code> 标记，则浏览器将尝试将HTML解析为JavaScript。 当您的资源不是您网站的入口点时，您还可以使用CSRF令牌来防止嵌入。</span></li>
+</ul>
+
+<h2 id="跨源脚本API访问">跨源脚本API访问</h2>
+
+<p>Javascript的APIs中，如<span> </span><a href="https://developer.mozilla.org/zh-CN/docs/DOM/HTMLIFrameElement" title="DOM/HTMLIFrameElement"><code>iframe.contentWindow</code></a><span>, {{domxref("window.parent")}}, {{domxref("window.open")}} 和 {{domxref("window.opener")}} 允许文档间直接相互引用。当两个文档的源不同时，这些引用方式将对</span><span> </span><a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/browsers.html#security-window" title="http://www.whatwg.org/specs/web-apps/current-work/multipage/browsers.html#security-window">Window</a><span> 和 </span><a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/history.html#security-location" title="http://www.whatwg.org/specs/web-apps/current-work/multipage/history.html#security-location">Location</a>对象的访问添加限制，如下两节所述。</p>
+
+<p>为了在不同源中文档进一步交流，可以使用{{domxref("window.postMessage")}}。</p>
+
+<h3 id="Window">Window</h3>
+
+<p>规范:  <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/browsers.html#security-window">http://www.whatwg.org/specs/web-apps/current-work/multipage/browsers.html#security-window</a>.</p>
+
+<p> 允许以下对 <code>Window</code> 属性的跨源访问：</p>
+
+<table class="fullwidth-table standard-table">
+ <thead>
+  <tr>
+   <th scope="col">方法</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{domxref("window.blur")}}</td>
+  </tr>
+  <tr>
+   <td>{{domxref("window.close")}}</td>
+  </tr>
+  <tr>
+   <td>{{domxref("window.focus")}}</td>
+  </tr>
+  <tr>
+   <td>{{domxref("window.postMessage")}}</td>
+  </tr>
+ </tbody>
+</table>
+
+<table class="fullwidth-table standard-table">
+ <thead>
+  <tr>
+   <th scope="col">属性</th>
+   <th scope="col"></th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{domxref("window.closed")}}</td>
+   <td>只读.</td>
+  </tr>
+  <tr>
+   <td>{{domxref("window.frames")}}</td>
+   <td>只读.</td>
+  </tr>
+  <tr>
+   <td>{{domxref("window.length")}}</td>
+   <td>只读.</td>
+  </tr>
+  <tr>
+   <td>{{domxref("window.location")}}</td>
+   <td>读/写.</td>
+  </tr>
+  <tr>
+   <td>{{domxref("window.opener")}}</td>
+   <td>只读.</td>
+  </tr>
+  <tr>
+   <td>{{domxref("window.parent")}}</td>
+   <td>只读.</td>
+  </tr>
+  <tr>
+   <td>{{domxref("window.self")}}</td>
+   <td>只读.</td>
+  </tr>
+  <tr>
+   <td>{{domxref("window.top")}}</td>
+   <td>只读.</td>
+  </tr>
+  <tr>
+   <td>{{domxref("window.window")}}</td>
+   <td>只读.</td>
+  </tr>
+ </tbody>
+</table>
+
+<p>某些浏览器允许访问比规范允许的更多属性。</p>
+
+<h3 id="Location">Location</h3>
+
+<p>规范:  <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/browsers.html#security-location">http://www.whatwg.org/specs/web-apps/current-work/multipage/browsers.html#security-location</a>.</p>
+
+<p>允许以下对 <code>Location</code> 属性的跨源访问：</p>
+
+<table class="fullwidth-table standard-table">
+ <thead>
+  <tr>
+   <th scope="col">方法</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{domxref("location.replace")}}</td>
+  </tr>
+ </tbody>
+</table>
+
+<table class="fullwidth-table standard-table">
+ <thead>
+  <tr>
+   <th scope="col">属性</th>
+   <th scope="col"></th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{domxref("URLUtils.href")}}</td>
+   <td>只写.</td>
+  </tr>
+ </tbody>
+</table>
+
+<p>某些浏览器允许访问比规范允许的更多属性。</p>
+
+<h2 id="跨源数据存储访问">跨源数据存储访问</h2>
+
+<p>存储在浏览器中的数据，如<a href="https://developer.mozilla.org/zh-CN/docs/Web/Guide/API/DOM/Storage">localStorage</a>和<a href="https://developer.mozilla.org/zh-CN/docs/IndexedDB">IndexedDB</a>，以源进行分割。每个源都拥有自己单独的存储空间，一个源中的Javascript脚本不能对属于其它源的数据进行读写操作。</p>
+
+<p>Cookies 使用不同的源定义方式。一个页面可以为本域和任何父域设置cookie，只要是父域不是公共后缀（public suffix）即可。Firefox 和 Chrome 使用 <a href="http://publicsuffix.org/">Public Suffix List</a> 决定一个域是否是一个公共后缀（public suffix）。Internet Explorer使用其自己的内部方法来确定域是否是公共后缀。不管使用哪个协议（HTTP/HTTPS）或端口号，浏览器都允许给定的域以及其任何子域名(sub-domains) 访问 cookie。设置 cookie 时，你可以使用Domain，Path，Secure，和Http-Only标记来限定其访问性。读取 cookie 时，不会知晓它的出处。 即使您仅使用安全的https连接，您看到的任何cookie都可能使用不安全的连接进行设置。</p>
+
+<h2 id="参见">参见</h2>
+
+<ul>
+ <li><a href="https://developer.mozilla.org/zh-CN/docs/Same-origin_policy_for_file:_URIs" title="Same-origin policy for file: URIs">Same-origin policy for file: URIs</a></li>
+ <li><a href="http://www.w3.org/Security/wiki/Same_Origin_Policy" title="http://www.w3.org/Security/wiki/Same_Origin_Policy">Same-Origin Policy at W3C</a></li>
+ <li><a href="http://web.dev/secure/same-origin-policy">http://web.dev/secure/same-origin-policy</a></li>
+</ul>
+
+<div class="originaldocinfo">
+<h2 id="Original_Document_Information" name="Original_Document_Information">原始文件资料</h2>
+
+<ul>
+ <li>Author(s): Jesse Ruderman</li>
+</ul>
+</div>
+
+<div class="noinclude"></div>

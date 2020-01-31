@@ -1,0 +1,176 @@
+<div>{{JSRef}}</div>
+
+<p><strong><code>toLocaleString()</code></strong> メソッドは、言語に合わせた日時の文字列を返します。新しい <code>locales</code> 引数と <code>options</code> 引数により、アプリケーションは、使用される書式変換の言語の指定や、関数の振る舞いのカスタマイズができます。古い実装のアプリケーションは、<code>locales</code> 引数と <code>options</code> 引数を無視します。使用されるロケールや返される文字列の書式は、完全に実装依存です。</p>
+
+<div>{{EmbedInteractiveExample("pages/js/date-tolocalestring.html")}}</div>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox"><var>dateObj</var>.toLocaleString([<var>locales</var>[, <var>options</var>]])</pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<p>どのブラウザが <code>locales</code> と <code>options</code> をサポートしているのかは、<a href="#Browser_Compatibility">ブラウザー実装状況</a> をご覧ください。実際に機能が使用できるかを確認するには、<a href="#Checking_for_support_for_locales_and_options_arguments"><code>locales</code> と <code>options</code> がサポートされているか確認する</a> をご覧ください。</p>
+
+<div>{{page('/ja/docs/Web/JavaScript/Reference/Global_Objects/DateTimeFormat', '引数')}}</div>
+
+<p>各日時コンポーネントのプロパティのデフォルト値は、{{jsxref("undefined")}}です。ただし、<code>weekday</code> および <code>year</code>、<code>month</code>、<code>day</code>、<code>hour</code>、<code>minute</code>、<code>second</code> プロパティがすべて {{jsxref("undefined")}} のときは、<code>year</code>、<code>month</code>、<code>day</code>、<code>hour</code>、<code>minute</code>、<code>second</code> は <code>"numeric"</code> とみなされます。</p>
+
+<h3 id="Return_value" name="Return_value">戻り値</h3>
+
+<p>言語特有の規則に合わせた日付を表す文字列。</p>
+
+<h2 id="例">例</h2>
+
+<h3 id="Using_toLocaleString()" name="Using_toLocaleString()"><code>toLocaleString()</code> を使う</h3>
+
+<p>ロケールを指定しない基本的な使い方では、デフォルトのロケールとデフォルトのオプションによる書式の文字列が返されます。</p>
+
+<pre class="brush: js">var date = new Date(Date.UTC(2012, 11, 12, 3, 0, 0));
+
+// toLocaleString() メソッドに引数を与えなければ実装に依存し、
+// デフォルトのロケールとタイムゾーンを返す
+console.log(date.toLocaleString());
+// → "12/11/2012, 7:00:00 PM" : アメリカ/ロサンゼルスのタイムゾーンの en-US ロケールで実行した場合
+</pre>
+
+<h3 id="Checking_for_support_for_locales_and_options_arguments" name="Checking_for_support_for_locales_and_options_arguments"><code>locales</code> と <code>options</code> がサポートされているか確認する</h3>
+
+<p><code>locales</code> と <code>options</code> は、まだすべてのブラウザでサポートされていません。これらが実装されているかどうかは、不適切な言語タグを与えて {{jsxref("RangeError")}} 例外で拒否されるかどうかで確かめられます:</p>
+
+<pre class="brush: js">function toLocaleStringSupportsLocales() {
+  try {
+    new Date().toLocaleString('i');
+  } catch (e) {
+    return e instanceof RangeError;
+  }
+  return false;
+}
+</pre>
+
+<h3 id="Using_locales" name="Using_locales"><code>locales</code> を使う</h3>
+
+<p>この例では、国ごとに異なる日付書式を示します。ご使用のアプリケーションのユーザインターフェースで使用される言語の書式を得るには、<code>locales</code> でその言語 (あるいはフォールバック先の言語) を指定してください:</p>
+
+<pre class="brush: js">var date = new Date(Date.UTC(2012, 11, 20, 3, 0, 0));
+
+// 以下の書式はその地域のタイムゾーンとロケールを想定
+// 米国のアメリカ大陸/ロサンゼルス
+
+// 米国英語は月-日-年の順で AM/PM 表記の 12 時間制
+console.log(date.toLocaleString('en-US'));
+// → "12/19/2012, 7:00:00 PM"
+
+// 英国英語は日-月-年の順で AM/PM 表記なしの 24 時間制
+console.log(date.toLocaleString('en-GB'));
+// → "20/12/2012 03:00:00"
+
+// 韓国は年-月-日の順で AM/PM 表記の 12 時間制
+console.log(date.toLocaleString('ko-KR'));
+// → "2012. 12. 20. 오후 12:00:00"
+
+// 多くのアラビア語圏ではアラビア数字を使用
+console.log(date.toLocaleString('ar-EG'));
+// → "<span dir="rtl">٢٠‏/١٢‏/٢٠١٢ ٥:٠٠:٠٠ ص</span>"
+
+// 日本のアプリケーションでは元号を用いることがある
+// 2012 年は平成 24 年
+console.log(date.toLocaleString('ja-JP-u-ca-japanese'));
+// → "24/12/20 12:00:00"
+
+// サポートされない可能性のある言語を要求した場合、
+// ここではバリとし、フォールバック言語にインドネシア
+console.log(date.toLocaleString(['ban', 'id']));
+// → "20/12/2012 11.00.00"
+</pre>
+
+
+<h3 id="Using_options" name="Using_options"><code>options</code> を使う</h3>
+
+<p><code>toLocaleString()</code> メソッドから得られる結果は、<code>options</code> でカスタマイズできます:</p>
+
+<pre class="brush: js">var date = new Date(Date.UTC(2012, 11, 20, 3, 0, 0));
+
+// 曜日を加えて月とともに長い書式で表す
+var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+console.log(date.toLocaleString('de-DE', options));
+// → "Donnerstag, 20. Dezember 2012"
+
+// アプリケーションで UTC を用いてそれを示したい場合
+options.timeZone = 'UTC';
+options.timeZoneName = 'short';
+console.log(date.toLocaleString('en-US', options));
+// → "Thursday, December 20, 2012, GMT"
+
+// 米国でも 24 時間制を使うことがある
+console.log(date.toLocaleString('en-US', { hour12: false }));
+// → "12/19/2012, 19:00:00"
+</pre>
+
+<h2 id="Performance" name="Performance">性能</h2>
+
+<p>数多くの日付の書式を処理したいときは、{{jsxref("Global_Objects/DateTimeFormat", "Intl.DateTimeFormat")}} オブジェクトを作成し、その {{jsxref("DateTimeFormat.prototype.format", "format")}} プロパティが提供する関数を用いるのがよいでしょう。</p>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">策定状況</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES1')}}</td>
+   <td>{{Spec2('ES1')}}</td>
+   <td>初期定義。JavaScript 1.0 で実装</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-15.9.5.5', 'Date.prototype.toLocaleString')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-date.prototype.tolocalestring', 'Date.prototype.toLocaleString')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-date.prototype.tolocalestring', 'Date.prototype.toLocaleString')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES Int 1.0', '#sec-13.3.1', 'Date.prototype.toLocaleString')}}</td>
+   <td>{{Spec2('ES Int 1.0')}}</td>
+   <td><code>locales</code> および <code>options</code> 引数を定義</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES Int 2.0', '#sec-13.3.1', 'Date.prototype.toLocaleString')}}</td>
+   <td>{{Spec2('ES Int 2.0')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES Int Draft', '#sec-Date.prototype.toLocaleString', 'Date.prototype.toLocaleString')}}</td>
+   <td>{{Spec2('ES Int Draft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザー実装状況</h2>
+
+<p class="hidden">The compatibility table in this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</p>
+
+<p>{{Compat("javascript.builtins.Date.toLocaleString")}}</p>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li>{{jsxref("Global_Objects/DateTimeFormat", "Intl.DateTimeFormat")}}</li>
+ <li>{{jsxref("Date.prototype.toLocaleDateString()")}}</li>
+ <li>{{jsxref("Date.prototype.toLocaleTimeString()")}}</li>
+ <li>{{jsxref("Date.prototype.toString()")}}</li>
+</ul>

@@ -1,0 +1,445 @@
+<div>{{APIRef("WebRTC")}}</div>
+
+<p><span class="seoSummary">O método <code><strong>MediaDevices.getUserMedia()</strong></code> solicita ao utilizador permissão para utilizar a entrada de multimédia que produz uma {{domxref("MediaStream")}} com faixas contendo os tipos de multimédia solicitados.</span>That stream can include, for example, a video track (produced by either a hardware or virtual video source such as a camera, video recording device, screen sharing service, and so forth), an audio track (similarly, produced by a physical or virtual audio source like a microphone, A/D converter, or the like), and possibly other track types.</p>
+
+<p>It returns a {{jsxref("Promise")}} that resolves to a {{domxref("MediaStream")}} object. If the user denies permission, or matching media is not available, then the promise is rejected with <code>PermissionDeniedError</code> or <code>NotFoundError</code> respectively.</p>
+
+<div class="note">
+<p>It's possible for the returned promise to <em>neither</em> resolve nor reject, as the user is not required to make a choice at all.</p>
+</div>
+
+<p>Generally, you will access the {{domxref("MediaDevices")}} singleton object using {{domxref("navigator.mediaDevices")}}, like this:</p>
+
+<pre class="brush: js">navigator.mediaDevices.getUserMedia(constraints)
+.then(function(stream) {
+  /* use the stream */
+})
+.catch(function(err) {
+  /* handle the error */
+});</pre>
+
+<h2 id="Sintaxe">Sintaxe</h2>
+
+<pre class="syntaxbox">var <em>promise</em> = navigator.mediaDevices.getUserMedia(<em>constraints</em>);
+</pre>
+
+<h3 id="Parâmetros">Parâmetros</h3>
+
+<dl>
+ <dt><code>constraints</code></dt>
+ <dd>
+ <p>A {{domxref("MediaStreamConstraints")}} object specifying the types of media to request, along with any requirements for each type.</p>
+
+ <p>The constraints parameter is a <code>MediaStreamConstraints</code> object with two members: <code>video</code> and <code>audio</code>, describing the media types requested. Either or both must be specified. If the browser cannot find all media tracks with the specified types that meet the constraints given, then the returned promise is rejected with <code>NotFoundError</code>.</p>
+
+ <p>The following requests both audio and video without any specific requirements:</p>
+
+ <pre class="brush: js">{ audio: true, video: true }</pre>
+
+ <p>If <code>true</code> is specified for a media type, the resulting stream is <em>required</em> to have that type of track in it. If one cannot be included for any reason, the call to <code>getUserMedia()</code> will result in an error.</p>
+
+ <p>While information about a user's cameras and microphones are inaccessible for privacy reasons, an application can request the camera and microphone capabilities it needs and wants, using additional constraints. The following expresses a preference for 1280x720 camera resolution:</p>
+
+ <pre class="brush: js">{
+  audio: true,
+  video: { width: 1280, height: 720 }
+}</pre>
+
+ <p id="successCallback">The browser will try to honor this, but may return other resolutions if an exact match is not available, or the user overrides it.</p>
+
+ <p>To <em>require</em> a capability, use the keywords <code>min</code>, <code>max</code>, or <code>exact</code> (a.k.a. <code>min == max</code>). The following demands a minimum resolution of 1280x720:</p>
+
+ <pre class="brush: js">{
+  audio: true,
+  video: {
+    width: { min: 1280 },
+    height: { min: 720 }
+  }
+}</pre>
+
+ <p>If no camera exists with this resolution or higher, then the returned promise will be rejected with <code>OverconstrainedError</code>, and the user will not be prompted.</p>
+
+ <p>The reason for the difference in behavior is that the keywords <code>min</code>, <code>max</code>, and <code>exact</code> are inherently mandatory, whereas plain values and a keyword called <code>ideal</code> are not. Here's a fuller example:</p>
+
+ <pre class="brush: js">{
+  audio: true,
+  video: {
+    width: { min: 1024, ideal: 1280, max: 1920 },
+    height: { min: 776, ideal: 720, max: 1080 }
+  }
+}</pre>
+
+ <p>An <code>ideal</code> value, when used, has gravity, which means that the browser will try to find the setting (and camera, if you have more than one), with the smallest <a href="https://w3c.github.io/mediacapture-main/#dfn-fitness-distance">fitness distance</a> from the ideal values given.</p>
+
+ <p>Plain values are inherently ideal, which means that the first of our resolution examples above could have been written like this:</p>
+
+ <pre class="brush: js">{
+  audio: true,
+  video: {
+    width: { ideal: 1280 },
+    height: { ideal: 720 }
+  }
+}</pre>
+
+ <p>Not all constraints are numbers. For example, on mobile devices, the following will prefer the front camera (if one is available) over the rear one:</p>
+
+ <pre class="brush: js">{ audio: true, video: { facingMode: "user" } }</pre>
+
+ <p>To <em>require</em> the rear camera, use:</p>
+
+ <pre class="brush: js">{ audio: true, video: { facingMode: { exact: "environment" } } }</pre>
+ </dd>
+</dl>
+
+<h3 id="Valor_de_retorno">Valor de retorno</h3>
+
+<p>A {{jsxref("Promise")}} whose fulfillment handler receives a {{domxref("MediaStream")}} object when the requested media has successfully been obtained.</p>
+
+<h3 id="Exceções">Exceções</h3>
+
+<p>Rejections of the returned promise are made by passing a {{domxref("DOMException")}} error object to the promise's failure handler. Possible errors are:</p>
+
+<dl>
+ <dt><code>AbortError</code></dt>
+ <dd>Although the user and operating system both granted access to the hardware device, and no hardware issues occurred that would cause a <code>NotReadableError</code>, some problem occurred which prevented the device from being used.</dd>
+ <dt><code>NotAllowedError</code></dt>
+ <dd>The user has specified that the current browsing instance is not permitted access to the device; or the user has denied access for the current session; or the user has denied all access to user media devices globally.
+ <div class="note">Older versions of the specification used <code>SecurityError</code> for this instead; <code>SecurityError</code> has taken on a new meaning.</div>
+ </dd>
+ <dt><code>NotFoundError</code></dt>
+ <dd>No media tracks of the type specified were found that satisfy the given constraints.</dd>
+ <dt><code>NotReadableError</code></dt>
+ <dd>Although the user granted permission to use the matching devices, a hardware error occurred at the operating system, browser, or Web page level which prevented access to the device.</dd>
+ <dt><code>OverconstrainedError</code></dt>
+ <dd>The specified constraints resulted in no candidate devices which met the criteria requested. The error is an object of type <code>OverconstrainedError</code>, and has a <code>constraint</code> property whose string value is the name of a constraint which was impossible to meet, and a <code>message</code> property containing a human-readable string explaining the problem.
+ <div class="note">Because this error can occur even when the user has not yet granted permission to use the underlying device, it can potentially be used as a fingerprinting surface.</div>
+ </dd>
+ <dt><code>SecurityError</code></dt>
+ <dd>User media support is disabled on the {{domxref("Document")}} on which <code>getUserMedia()</code> was called. The mechanism by which user media support is enabled and disabled is left up to the individual user agent.</dd>
+ <dt><code>TypeError</code></dt>
+ <dd>The list of constraints specified is empty, or has all constraints set to <code>false</code>.</dd>
+</dl>
+
+<h2 id="Exemplos"><strong>Exemplo</strong>s</h2>
+
+<h3 id="Largura_e_altura">Largura e altura</h3>
+
+<p>This example gives a preference for camera resolution, and assigns the resulting {{domxref("MediaStream")}} object to a video element.</p>
+
+<pre>// Prefer camera resolution nearest to 1280x720.
+var constraints = { audio: true, video: { width: 1280, height: 720 } }; 
+
+navigator.mediaDevices.getUserMedia(constraints)
+.then(function(mediaStream) {
+  var video = document.querySelector('video');
+  video.srcObject = mediaStream;
+  video.onloadedmetadata = function(e) {
+    video.play();
+  };
+})
+.catch(function(err) { console.log(err.name + ": " + err.message); }); // always check for errors at the end.
+</pre>
+
+<h3 id="Utilizar_a_nova_API_nos_navegadores_antigos">Utilizar a nova API nos navegadores antigos</h3>
+
+<p>Here's an example of using <code>navigator.mediaDevices.getUserMedia()</code>, with a polyfill to cope with older browsers. Note that this polyfill does not correct for legacy differences in constraints syntax, which means constraints won't work well across browsers. It is recommended to use the <a href="https://github.com/webrtc/adapter">adapter.js</a> polyfill instead, which does handle constraints.</p>
+
+<pre class="brush: js">// Older browsers might not implement mediaDevices at all, so we set an empty object first
+if (navigator.mediaDevices === undefined) {
+  navigator.mediaDevices = {};
+}
+
+// Some browsers partially implement mediaDevices. We can't just assign an object
+// with getUserMedia as it would overwrite existing properties.
+// Here, we will just add the getUserMedia property if it's missing.
+if (navigator.mediaDevices.getUserMedia === undefined) {
+  navigator.mediaDevices.getUserMedia = function(constraints) {
+
+    // First get ahold of the legacy getUserMedia, if present
+    var getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+
+    // Some browsers just don't implement it - return a rejected promise with an error
+    // to keep a consistent interface
+    if (!getUserMedia) {
+      return Promise.reject(new Error('getUserMedia is not implemented in this browser'));
+    }
+
+    // Otherwise, wrap the call to the old navigator.getUserMedia with a Promise
+    return new Promise(function(resolve, reject) {
+      getUserMedia.call(navigator, constraints, resolve, reject);
+    });
+  }
+}
+
+navigator.mediaDevices.getUserMedia({ audio: true, video: true })
+.then(function(stream) {
+  var video = document.querySelector('video');
+  // Older browsers may not have srcObject
+  if ("srcObject" in video) {
+    video.srcObject = stream;
+  } else {
+    // Avoid using this in new browsers, as it is going away.
+    video.src = window.URL.createObjectURL(stream);
+  }
+  video.onloadedmetadata = function(e) {
+    video.play();
+  };
+})
+.catch(function(err) {
+  console.log(err.name + ": " + err.message);
+});
+</pre>
+
+<h3 id="Frame_rate"><em>Frame rate</em></h3>
+
+<p>Lower frame-rates may be desirable in some cases, like WebRTC transmissions with bandwidth restrictions.</p>
+
+<pre class="brush: js">var constraints = { video: { frameRate: { ideal: 10, max: 15 } } };
+</pre>
+
+<h3 id="Camâra_frontal_e_traseira">Camâra frontal e traseira</h3>
+
+<p>Nos telemóveis.</p>
+
+<pre class="brush: js">var front = false;
+document.getElementById('flip-button').onclick = function() { front = !front; };
+
+var constraints = { video: { facingMode: (front? "user" : "environment") } };
+</pre>
+
+<h2 id="Permissões">Permissões</h2>
+
+<p>To use <code>getUserMedia()</code> in an installable app (for example, a <a href="/en-US/Apps/Build/Building_apps_for_Firefox_OS/Firefox_OS_app_beginners_tutorial">Firefox OS app</a>), you need to specify one or both of the following fields inside your manifest file:</p>
+
+<pre class="brush: js">"permissions": {
+  "audio-capture": {
+    "description": "Required to capture audio using getUserMedia()"
+  },
+  "video-capture": {
+    "description": "Required to capture video using getUserMedia()"
+  }
+}</pre>
+
+<p>See <a href="/en-US/Apps/Developing/App_permissions#audio-capture">permission: audio-capture</a> and <a href="/en-US/Apps/Developing/App_permissions#video-capture">permission: video-capture</a> for more information.</p>
+
+<h2 id="Especificações">Especificações</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('Media Capture', '#dom-mediadevices-getusermedia', 'MediaDevices.getUserMedia()')}}</td>
+   <td>{{Spec2('Media Capture')}}</td>
+   <td>Initial definition</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Compatibilidade_de_navegador">Compatibilidade de navegador</h2>
+
+<div>{{CompatibilityTable}}</div>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Funcionalidade</th>
+   <th>Chrome</th>
+   <th>Edge</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari (WebKit)</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatChrome(53)}}<sup>[1][3]</sup></td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatGeckoDesktop(36)}}<sup>[2][4]</sup></td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatOpera(40)}}<sup>[1]</sup></td>
+   <td>{{CompatSafari(11)}}</td>
+  </tr>
+  <tr>
+   <td>Promises</td>
+   <td>{{CompatChrome(53)}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatGeckoDesktop(38)}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatSafari(11)}}</td>
+  </tr>
+  <tr>
+   <td>Stereo audio capture</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatGeckoDesktop(55)}}<sup>[5]</sup></td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android Webview</th>
+   <th>Chrome for Android</th>
+   <th>Edge</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Phone</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatChrome(53)}}<sup>[1][3]</sup></td>
+   <td>{{CompatChrome(53)}}<sup>[1][3]</sup></td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatGeckoMobile(36)}} <sup>[2]</sup></td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatOperaMobile(40)}}<sup>[1]</sup></td>
+   <td>{{CompatSafari(11)}}</td>
+  </tr>
+  <tr>
+   <td>Promises</td>
+   <td>{{CompatChrome(53)}}</td>
+   <td>{{CompatChrome(53)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatGeckoMobile(38)}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatSafari(11)}}</td>
+  </tr>
+  <tr>
+   <td>Stereo audio capture</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<p>[1] Older versions of Chrome and Opera implement <code>navigator.webkitGetUserMedia</code>, the prefixed version of the legacy {{domxref("navigator.getUserMedia")}} method.</p>
+
+<p>From version 47 to 52, the promise-based interface was only available through the <a href="https://github.com/webrtc/adapter">adapter.js</a> polyfill, or using the flag <a>chrome://flags/#enable-experimental-web-platform-features</a>. Starting with version 53, the promise-based interface is on by default, though that interface is still not available through <code>navigator</code>.</p>
+
+<p>[2] Older versions of Firefox implement <code>navigator.mozGetUserMedia()</code>, the prefixed version of the legacy {{domxref("navigator.getUserMedia")}} method.</p>
+
+<p>The promise-based version of this method and the constraint syntax described here are available as of Firefox 38. Earlier versions (32-37) used an outdated constraint syntax, but the syntax described here, as well as the promise-based interface, is available there through the <a href="https://github.com/webrtc/adapter">adapter.js</a> polyfill.</p>
+
+<p>Firefox 49 includes changes to bring the possible {{anch("Errors", "errors")}} up to date with the specification, including the change to the meaning of <code>SecurityError</code>. In addition, if both video and audio tracks are requested, <code>getUserMedia()</code> now fails unable to obtain access to both. Previously, it would create a stream which had the successful portion of the media available. For example, if the user has a microphone but no camera (or denied access to the camera), previous versions of Firefox would return a stream with an audio track but no video. Now this correctly results in an error.</p>
+
+<p>Opera uses an outdated constraint syntax, but the syntax described here is available through the <a href="https://github.com/webrtc/adapter">adapter.js</a> polyfill.</p>
+
+<p>[3] Chrome throws error if the page serving the script is loaded from insecure origin (i.e. HTTP).</p>
+
+<p>[4] Prior to Firefox 55, <code>getUserMedia()</code> incorrectly returns <code>NotSupportedError</code> when the list of constraints specified is empty, or has all constraints set to <code>false</code>. Starting in Firefox 55, this situation now correctly calls the failure handler with a <code>TypeError</code>.</p>
+
+<p>[5] Starting in Firefox 55, if the input device supports stereo input, the resulting <code>MediaStream</code> will have stereo sound; support to specifically request mono input will come in <a href="/en-US/docs/Mozilla/Firefox/Releases/56">Firefox 56</a>. The preference <code>media.getusermedia.channels</code> lets you control the maximum number of channels to be captured; a value of 0, the default, tells <code>getUserMedia()</code> to capture all of the available, supported, channels.</p>
+
+<h2 id="Consulte_também">Consulte também</h2>
+
+<ul>
+ <li>The older {{domxref("navigator.getUserMedia()")}} legacy API.</li>
+ <li>{{domxref("mediaDevices.enumerateDevices()")}}: Learn the types and number of devices the user has available.</li>
+ <li><a href="/pt-PT/docs/Web/API/API_WebRTC">API de WebRTC</a></li>
+ <li><a href="/pt-PT/docs/Web/API/API_transmissoes_multimedia">API de Capturas de Transmissões de Multimédia (<em>Media Streams</em>)</a></li>
+ <li><a href="/pt-PT/docs/Web/API/API_WebRTC/Tirar_fotografias">Tirar fotografias com a câmara da Web</a>: um tutorial sobre como utilizar <code>getUserMedia()</code> para tirar fotografias em vez de vídeo.</li>
+</ul>
+
+<div id="SL_balloon_obj" style="display: block;">
+<div class="SL_ImTranslatorLogo" id="SL_button" style="background: rgba(0, 0, 0, 0)  repeat scroll 0% 0%; opacity: 0; display: block; left: -8px; top: -25px; transition: visibility 2s ease 0s, opacity 2s linear 0s;"> </div>
+
+<div id="SL_shadow_translation_result2" style="display: none;"> </div>
+
+<div id="SL_shadow_translator" style="display: none;">
+<div id="SL_planshet">
+<div id="SL_arrow_up" style="background: rgba(0, 0, 0, 0)  repeat scroll 0% 0%;"> </div>
+
+<div id="SL_Bproviders">
+<div class="SL_BL_LABLE_ON" id="SL_P0" title="Google">G</div>
+
+<div class="SL_BL_LABLE_ON" id="SL_P1" title="Microsoft">M</div>
+
+<div class="SL_BL_LABLE_ON" id="SL_P2" title="Translator">T</div>
+</div>
+
+<div id="SL_alert_bbl" style="display: none;">
+<div id="SLHKclose" style="background: rgba(0, 0, 0, 0)  repeat scroll 0% 0%;"> </div>
+
+<div id="SL_alert_cont"> </div>
+</div>
+
+<div id="SL_TB">
+<table id="SL_tables">
+ <tbody>
+  <tr>
+   <td class="SL_td"><input></td>
+   <td class="SL_td"><select><option value="auto">Detectar idioma</option><option value="af">Africâner</option><option value="sq">Albanês</option><option value="de">Alemão</option><option value="ar">Arabe</option><option value="hy">Armênio</option><option value="az">Azerbaijano</option><option value="eu">Basco</option><option value="bn">Bengali</option><option value="be">Bielo-russo</option><option value="my">Birmanês</option><option value="bs">Bósnio</option><option value="bg">Búlgaro</option><option value="ca">Catalão</option><option value="kk">Cazaque</option><option value="ceb">Cebuano</option><option value="ny">Chichewa</option><option value="zh-CN">Chinês (Simp)</option><option value="zh-TW">Chinês (Trad)</option><option value="si">Cingalês</option><option value="ko">Coreano</option><option value="ht">Crioulo haitiano</option><option value="hr">Croata</option><option value="da">Dinamarquês</option><option value="sk">Eslovaco</option><option value="sl">Esloveno</option><option value="es">Espanhol</option><option value="eo">Esperanto</option><option value="et">Estoniano</option><option value="fi">Finlandês</option><option value="fr">Francês</option><option value="gl">Galego</option><option value="cy">Galês</option><option value="ka">Georgiano</option><option value="el">Grego</option><option value="gu">Gujarati</option><option value="ha">Hauça</option><option value="iw">Hebraico</option><option value="hi">Hindi</option><option value="hmn">Hmong</option><option value="nl">Holandês</option><option value="hu">Húngaro</option><option value="ig">Igbo</option><option value="id">Indonésio</option><option value="en">Inglês</option><option value="yo">Ioruba</option><option value="ga">Irlandês</option><option value="is">Islandês</option><option value="it">Italiano</option><option value="ja">Japonês</option><option value="jw">Javanês</option><option value="kn">Kannada</option><option value="km">Khmer</option><option value="lo">Laosiano</option><option value="la">Latim</option><option value="lv">Letão</option><option value="lt">Lituano</option><option value="mk">Macedônico</option><option value="ml">Malaiala</option><option value="ms">Malaio</option><option value="mg">Malgaxe</option><option value="mt">Maltês</option><option value="mi">Maori</option><option value="mr">Marathi</option><option value="mn">Mongol</option><option value="ne">Nepalês</option><option value="no">Norueguês</option><option value="fa">Persa</option><option value="pl">Polonês</option><option value="pt">Português</option><option value="pa">Punjabi</option><option value="ro">Romeno</option><option value="ru">Russo</option><option value="sr">Sérvio</option><option value="st">Sesotho</option><option value="so">Somália</option><option value="sw">Suaíli</option><option value="su">Sudanês</option><option value="sv">Sueco</option><option value="tg">Tadjique</option><option value="tl">Tagalo</option><option value="th">Tailandês</option><option value="ta">Tâmil</option><option value="cs">Tcheco</option><option value="te">Telugo</option><option value="tr">Turco</option><option value="uk">Ucraniano</option><option value="ur">Urdu</option><option value="uz">Uzbeque</option><option value="vi">Vietnamita</option><option value="yi">Yiddish</option><option value="zu">Zulu</option></select></td>
+   <td class="SL_td">
+    <div id="SL_switch_b" style="background: rgba(0, 0, 0, 0)  repeat scroll 0% 0%;" title="Alternar Idiomas"> </div>
+   </td>
+   <td class="SL_td"><select><option value="af">Africâner</option><option value="sq">Albanês</option><option value="de">Alemão</option><option value="ar">Arabe</option><option value="hy">Armênio</option><option value="az">Azerbaijano</option><option value="eu">Basco</option><option value="bn">Bengali</option><option value="be">Bielo-russo</option><option value="my">Birmanês</option><option value="bs">Bósnio</option><option value="bg">Búlgaro</option><option value="ca">Catalão</option><option value="kk">Cazaque</option><option value="ceb">Cebuano</option><option value="ny">Chichewa</option><option value="zh-CN">Chinês (Simp)</option><option value="zh-TW">Chinês (Trad)</option><option value="si">Cingalês</option><option value="ko">Coreano</option><option value="ht">Crioulo haitiano</option><option value="hr">Croata</option><option value="da">Dinamarquês</option><option value="sk">Eslovaco</option><option value="sl">Esloveno</option><option value="es">Espanhol</option><option value="eo">Esperanto</option><option value="et">Estoniano</option><option value="fi">Finlandês</option><option value="fr">Francês</option><option value="gl">Galego</option><option value="cy">Galês</option><option value="ka">Georgiano</option><option value="el">Grego</option><option value="gu">Gujarati</option><option value="ha">Hauça</option><option value="iw">Hebraico</option><option value="hi">Hindi</option><option value="hmn">Hmong</option><option value="nl">Holandês</option><option value="hu">Húngaro</option><option value="ig">Igbo</option><option value="id">Indonésio</option><option selected value="en">Inglês</option><option value="yo">Ioruba</option><option value="ga">Irlandês</option><option value="is">Islandês</option><option value="it">Italiano</option><option value="ja">Japonês</option><option value="jw">Javanês</option><option value="kn">Kannada</option><option value="km">Khmer</option><option value="lo">Laosiano</option><option value="la">Latim</option><option value="lv">Letão</option><option value="lt">Lituano</option><option value="mk">Macedônico</option><option value="ml">Malaiala</option><option value="ms">Malaio</option><option value="mg">Malgaxe</option><option value="mt">Maltês</option><option value="mi">Maori</option><option value="mr">Marathi</option><option value="mn">Mongol</option><option value="ne">Nepalês</option><option value="no">Norueguês</option><option value="fa">Persa</option><option value="pl">Polonês</option><option value="pt">Português</option><option value="pa">Punjabi</option><option value="ro">Romeno</option><option value="ru">Russo</option><option value="sr">Sérvio</option><option value="st">Sesotho</option><option value="so">Somália</option><option value="sw">Suaíli</option><option value="su">Sudanês</option><option value="sv">Sueco</option><option value="tg">Tadjique</option><option value="tl">Tagalo</option><option value="th">Tailandês</option><option value="ta">Tâmil</option><option value="cs">Tcheco</option><option value="te">Telugo</option><option value="tr">Turco</option><option value="uk">Ucraniano</option><option value="ur">Urdu</option><option value="uz">Uzbeque</option><option value="vi">Vietnamita</option><option value="yi">Yiddish</option><option value="zu">Zulu</option></select></td>
+   <td class="SL_td">
+    <div id="SL_TTS_voice" style="background: rgba(0, 0, 0, 0)  repeat scroll 0% 0%;" title="Ouça"> </div>
+   </td>
+   <td class="SL_td">
+    <div class="SL_copy" id="SL_copy" style="background: rgba(0, 0, 0, 0)  repeat scroll 0% 0%;" title="Copiar"> </div>
+   </td>
+   <td class="SL_td">
+    <div id="SL_bbl_font_patch"> </div>
+
+    <div class="SL_bbl_font" id="SL_bbl_font" style="background: rgba(0, 0, 0, 0)  repeat scroll 0% 0%;" title="Tamanho da fonte"> </div>
+   </td>
+   <td class="SL_td">
+    <div id="SL_bbl_help" style="background: rgba(0, 0, 0, 0)  repeat scroll 0% 0%;" title="Ajuda"> </div>
+   </td>
+   <td class="SL_td">
+    <div class="SL_pin_off" id="SL_pin" style="background: rgba(0, 0, 0, 0)  repeat scroll 0% 0%;" title="Fixar a janela de pop-up"> </div>
+   </td>
+  </tr>
+ </tbody>
+</table>
+</div>
+</div>
+
+<div id="SL_shadow_translation_result" style=""> </div>
+
+<div class="SL_loading" id="SL_loading" style="background: rgba(0, 0, 0, 0)  repeat scroll 0% 0%;"> </div>
+
+<div id="SL_player2"> </div>
+
+<div id="SL_alert100">A função de fala é limitada a 200 caracteres</div>
+
+<div id="SL_Balloon_options" style="background: rgb(255, 255, 255)  repeat scroll 0% 0%;">
+<div id="SL_arrow_down" style="background: rgba(0, 0, 0, 0)  repeat scroll 0% 0%;"> </div>
+
+<table id="SL_tbl_opt" style="width: 100%;">
+ <tbody>
+  <tr>
+   <td><input></td>
+   <td>
+    <div id="SL_BBL_IMG" style="background: rgba(0, 0, 0, 0)  repeat scroll 0% 0%;" title="Mostrar o botão do ImTranslator 3 segundos"> </div>
+   </td>
+   <td><a class="SL_options" title="Mostrar opções">Opções</a> : <a class="SL_options" title="Histórico de tradução">Histórico</a> : <a class="SL_options" title="Comentários">Comentários</a> : <a class="SL_options" href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&amp;hosted_button_id=GD9D8CPW8HFA2" title="Faça sua contribuição">Donate</a></td>
+   <td><span id="SL_Balloon_Close" title="Encerrar">Encerrar</span></td>
+  </tr>
+ </tbody>
+</table>
+</div>
+</div>
+</div>

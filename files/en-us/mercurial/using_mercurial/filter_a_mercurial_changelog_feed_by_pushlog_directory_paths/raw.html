@@ -1,0 +1,85 @@
+
+<blockquote>As of early 2009, the Mozilla HG (Mercurial) changelog and pushlog feeds are too broad to watch for changes in a component or small project. The changelog entries are titled with a descriptive check-in comment, but do not list changed files. The pushlog feeds list the changed files, but do not have a descriptive title. Fortunately the two feeds both include a changeset id, so they can be matched in Yahoo Query Language (YQL) to produce a custom Yahoo Pipes feed that is restricted to a component or project directory. Unfortunately, the changelog feed is short (fixed at 20 entries, which is often less than two days of commits), so the filtered feed still must be retrieved daily to keep up with changes.</blockquote>
+<h2 id="Two_feeds_with_insufficient_info_separately">Two feeds with insufficient info separately</h2>
+<p>Consider the Calendar Project (Lightning/Sunbird), whose code resides in the <code>calendar/</code> directory. The atom Changelog feed (<a class=" external" href="http://hg.mozilla.org/comm-central/atom-log">http://hg.mozilla.org/comm-central/atom-log</a>) for the comm-central repository shows all commits from the Thunderbird, Seamonkey, and Calendar projects. The Thunderbird commits greatly outnumber the Calendar commits, so for people who want to watch for just Calendar commits it contains too many non-Calendar changes, and but not enough information to filter it.</p>
+<pre>&lt;feed xmlns="http://www.w3.org/2005/Atom"&gt;
+  ...
+  &lt;entry&gt;
+    &lt;title&gt;Bug 444444 fix MM to do JJ&lt;/title&gt;
+    &lt;id&gt;http://www.selenic.com/mercurial/#changeset-CCCCCCC&lt;/id&gt;
+    &lt;link href="http://hg.mozilla.org/comm-central/rev/CCCCCCC"/&gt;
+    &lt;updated&gt;yyyy-MM-ddThh:mm:ssZ&lt;/updated&gt;
+    &lt;author&gt;
+      &lt;name&gt;Cody Wright&lt;name&gt;
+      &lt;email&gt;cody@example.com&lt;email&gt;
+    &lt;/author&gt;
+    &lt;content type="xhtml"&gt;
+      &lt;div xmlns="http://www.w3.org/1999/xhtml"&gt;
+        &lt;pre xml:space="preserve"&gt;Bug 444444 fix MM to do JJ&lt;/pre&gt;
+      &lt;/div&gt;
+    &lt;/content&gt;
+  &lt;/entry&gt;
+  ...
+&lt;/feed&gt;  
+</pre>
+<p>The Mozilla HG (Mercurial) Changelog feed (atom-log) takes no parameters and returns a list of checked-in changesets for a repository, such as the entry above. The query cannot be restricted to a directory, so all changes in the repository are included in the feed at the server. As you can see above, the result content includes the changeset id, the bug number, author, and descriptive check-in comment, but does not include the files affected. So even though many feed readers can filter entries by content, at the recipient it is impossible to filter this feed to restrict it to changes in the "calendar/" directory, based on the content of the feed alone.</p>
+<p>The calendar project commits also appear in the Pushlog feed (<a class=" external" href="http://hg.mozilla.org/comm-central/pushlog">http://hg.mozilla.org/comm-central/pushlog</a>) for the comm-central repository, along with commits from the thunderbird and seamonkey projects. The pushlog feed lists the changed files in each entry, so it is possible to filter the entries by the directory. However, the title of each entry is just the changeset id, and the content is just the list of files changed, so it is not useful for people who want to watch for a summary of what changed and why in the calendar code.</p>
+<pre>&lt;feed xmlns="http://www.w3.org/2005/Atom"&gt;
+  ...
+  &lt;entry&gt;
+    &lt;title&gt;Changeset CCCCCCC&lt;/title&gt;
+    &lt;id&gt;http://www.selenic.com/mercurial/#changeset-CCCCCCC&lt;/id&gt;
+    &lt;link href="http://hg.mozilla.org/comm-central/rev/CCCCCCC"/&gt;
+    &lt;updated&gt;yyyy-MM-ddThh:mm:ssZ&lt;/updated&gt;
+    &lt;author&gt;
+      &lt;name&gt;cody@example.com&lt;name&gt;
+    &lt;/author&gt;
+    &lt;content type="xhtml"&gt;
+      &lt;div xmlns="http://www.w3.org/1999/xhtml"&gt;
+        &lt;ul class="filelist"&gt;
+          &lt;li class="file"&gt;calendar/base/content/file1.js&lt;/li&gt;
+          &lt;li class="file"&gt;calendar/base/content/file2.xul&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/div&gt;
+    &lt;/content&gt;
+  &lt;/entry&gt;
+  ...
+&lt;/feed&gt;  
+</pre>
+<p>The Mozilla HG Pushlog feed (pushlog) takes startdate and enddate parameters and returns a list of checked-in changesets for a repository, such as the entry above. The query cannot be restricted to a directory, so all changes in the respository are included in the feed at the server. As you can see above, its content includes the the filepaths, so it is possible to filter the entries based on the directory. The content also includes changeset id and the author, but not the descriptive comment nor bug id. Therefore, while it is possible to filter this feed, reading it does not provide a summary of what changed inside the files, and why.</p>
+<h2 id="Combining_the_feeds_with_Yahoo_Query_Language_(Yahoo_Pipes)">Combining the feeds with Yahoo Query Language (Yahoo Pipes)</h2>
+<p>Yahoo Query Language (YQL) is an SQL-like language that can treat atom feeds as input tables. Below is code that selects entries from the comm-central atom-log. Each atom-log entry must have an id which matches an id of an entry in the comm-central pushlog over the last two days, and that pushlog entry must contain the directory "calendar/".</p>
+<pre style="margin-left: 2em;">select * from atom 
+where url='http://hg.mozilla.org/<strong>comm-central</strong>/atom-log' 
+and id in 
+(select id from atom
+ where url='http://hg.mozilla.org/<strong>comm-central</strong>/pushlog?startdate=2+days+ago&amp;enddate=now'
+ and content like '% <strong>calendar/</strong>%')
+</pre>
+<p>This query can easily be adapted for</p>
+<ul> <li>another directory in same respository<br> [change <code>calendar/</code>, but keep wildcard % at each end, and keep the leading space as in <code>'% calendar/%'</code> so it will only match when <code>calendar/</code> is at the start of the path],</li> <li>multiple directories in same respository<br> [replace <code>content like '% calendar/%'</code><br> with <code>(content like '% calendar/base/public/%' or content like '% calendar/providers/%')</code> including parentheses],</li> <li>another <a class=" external" href="http://hg.mozilla.org/">respository</a> at same server [change <code>comm-central</code>], or</li> <li>another server [change <code>hg.mozilla.org</code>, but check whether it actually implements an atom-log and pushlog compatibly, as they have been customized by Mozilla].</li>
+</ul>
+<p>You can try the query at <a class=" external" href="http://developer.yahoo.com/yql/console/">YQL console</a> (free Yahoo registration required).</p>
+<p> </p>
+<p>Making this <a class=" external" href="http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20atom%20where%20url%3D'http%3A%2F%2Fhg.mozilla.org%2Fcomm-central%2Fatom-log'%20and%20id%20in%20(select%20id%20from%20atom%20where%20url%3D'http%3A%2F%2Fhg.mozilla.org%2Fcomm-central%2Fpushlog%3Fstartdate%3D2%2Bdays%2Bago%26enddate%3Dnow'%20and%20content%20like%20'%25calendar%2F%25')&amp;format=rss" title="select * from atom
+where url='http://hg.mozilla.org/comm-central/atom-log'
+and id in
+(select id from atom
+where url='http://hg.mozilla.org/comm-central/pushlog?startdate=2+days+ago&amp;enddate=now'
+and content like '% calendar/%')">query</a> directly to <code>query.yahooapis.com/v1/public/yql</code> can produce an XML file, but not an atom or RSS feed. To create a feed the results must be reformatted. The simplest way to do that is to create a Yahoo "Pipe".</p>
+<h2 id="Creating_a_Yahoo_Pipe">Creating a Yahoo Pipe</h2>
+<p>Creating a Yahoo pipe for a YQL query is very simple.</p>
+<ol> <li>Log in to <a class=" external" href="http://pipes.yahoo.com">pipes.yahoo.com</a> (free Yahoo registration required).</li> <li>Click "Create a Pipe". <blockquote>This takes you to a graphical programming language page. In the left column will be a tree of components that can be dragged onto the page.</blockquote></li> <li>From "Sources", drag the "YQL" component onto the page (or just click its "+" icon). <blockquote>The "YQL" component will appear on the page with a text field for the query. (Since it was the first component, the "Pipe output" component now also appears.)</blockquote></li> <li>Copy entire text of the select query into the YQL component text area. <pre style="margin-left: 2em;">select * from atom 
+where url='http://hg.mozilla.org/comm-central/atom-log' 
+and id in 
+(select id from atom
+ where url='http://hg.mozilla.org/comm-central/pushlog?startdate=2+days+ago&amp;enddate=now'
+ and content like '% calendar/%')
+</pre> </li> <li>At the bottom of the "YQL" component is a circle, its output. At the top of the "Pipe output" component is another circle, its input. Connect them by dragging (hold down the mouse button) from the "YQL" output circle to the "Pipe Output" input circle; a flexible pipe will appear while you drag the mouse, and will connect the two circles after you release the mouse button. <blockquote>You can test the result by clicking on the output component, then clicking refresh in the debugger pane at the bottom of the screen. If it is working, a list/tree of entries will appear; clicking on the title will expand the entry to show the other fields. (If the YQL is not working, the <a class=" external" href="http://developer.yahoo.com/yql/console/">YQL console</a> may be a better YQL debugging tool since it shows error messages.) </blockquote></li> <li>Click the "Save" button near the top of the window. You will need to give your pipe a name. This sample query can be called "MozCalendar: Recent changes"</li> <li>Click "Run Pipe" near the top of the window. <blockquote>The page for this pipe will appear, and a pane with the current results will be showing. Above the results there is a buttons and links, including "Get as RSS", a link which produces the results as an RSS feed.</blockquote></li>
+</ol>
+<p>On the day this was written, the comm-central Changelog feed showed 20 entries. The MozCalendar feed just created showed two entries with their descriptive titles confirming they are calendar project changes. It's a useful filter, but since the changelog feed is fixed at 20 entries, and 20 entries often covers less than two days of commits, the feed must still be updated daily to catch all changes.</p>
+<p>If you use Thunderbird to read the RSS newsfeed, the <a class=" link-https" href="https://addons.mozilla.org/en-US/thunderbird/addon/10263" title="https://addons.mozilla.org/en-US/thunderbird/addon/10263">Bug ID Helper</a> extension will linkify references to "bug NNNNN" in message bodies, and provide a customizable tooltip that can lookup its bugzilla status and title.</p>
+<h2 id="Limits">Limits</h2>
+<p>Here's the <a class=" external" href="http://pipes.yahoo.com/pipes/pipe.run?_id=5832f57d21a7321bccceecd0548a2e9c&amp;_render=rss">RSS link</a> for the original pipe used in this example. You may try it out, but please create your own pipe if you plan to use it frequently. There are <a class=" external" href="http://developer.yahoo.com/yql/">YQL request rate limits</a> per application pipe as well as per IP address. And please don't abuse hg.mozilla.org with very frequent queries.</p>
+<p>YQL is in beta, so terms and features are subject to change in the future. YQL is sufficient to filter one feed using info from another feed as above, but so far there seems to be no way to create a feed where each entry combines information from two feeds (no sql joins, no select expression in column list, only single "from" table). So it appears not (yet) possible to create a feed which has both the informative title and the list of changed files in one message. This restriction may be one way to limit the computational cost of the free service, in addition to the maximum time limits (<a class=" external" href="http://developer.yahoo.com/yql/guide/yql_guide.pdf">YQL Guide (pdf), Ch4</a>: 4 seconds fetch, 30 seconds total).</p>
+<p> </p>

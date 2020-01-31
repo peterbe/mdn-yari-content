@@ -1,0 +1,151 @@
+<div>{{jsSidebar("Operators")}}</div>
+
+<p>The <strong><code>yield*</code> expression</strong> is used to delegate to another {{jsxref("Statements/function*", "generator")}} or iterable object.</p>
+
+<div>{{EmbedInteractiveExample("pages/js/expressions-yieldasterisk.html")}}</div>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<h2 id="Syntax">Syntax</h2>
+
+<pre class="syntaxbox"> yield* [[expression]];</pre>
+
+<dl>
+ <dt><code>expression</code></dt>
+ <dd>The expression which returns an iterable object.</dd>
+</dl>
+
+<h2 id="Description">Description</h2>
+
+<p>The <code>yield*</code> expression iterates over the operand and yields each value returned by it.</p>
+
+<p>The value of <code>yield*</code> expression itself is the value returned by that iterator when it's closed (i.e., when <code>done</code> is <code>true</code>).</p>
+
+<h2 id="Examples">Examples</h2>
+
+<h3 id="Delegating_to_another_generator">Delegating to another generator</h3>
+
+<p>In following code, values yielded by <code>g1()</code> are returned from <code>next()</code> calls just like those which are yielded by <code>g2()</code>.</p>
+
+<pre class="brush: js">function* g1() {
+  yield 2;
+  yield 3;
+  yield 4;
+}
+
+function* g2() {
+  yield 1;
+  yield* g1();
+  yield 5;
+}
+
+var iterator = g2();
+
+console.log(iterator.next()); // {value: 1, done: false}
+console.log(iterator.next()); // {value: 2, done: false}
+console.log(iterator.next()); // {value: 3, done: false}
+console.log(iterator.next()); // {value: 4, done: false}
+console.log(iterator.next()); // {value: 5, done: false}
+console.log(iterator.next()); // {value: undefined, done: true}
+</pre>
+
+<h3 id="Other_Iterable_objects">Other Iterable objects</h3>
+
+<p>Besides generator objects, <code>yield*</code> can also <code>yield</code> other kinds of iterables, e.g. arrays, strings or arguments objects.</p>
+
+<pre class="brush: js">function* g3() {
+  yield* [1, 2];
+  yield* '34';
+  yield* Array.from(arguments);
+}
+
+var iterator = g3(5, 6);
+
+console.log(iterator.next()); // {value: 1, done: false}
+console.log(iterator.next()); // {value: 2, done: false}
+console.log(iterator.next()); // {value: "3", done: false}
+console.log(iterator.next()); // {value: "4", done: false}
+console.log(iterator.next()); // {value: 5, done: false}
+console.log(iterator.next()); // {value: 6, done: false}
+console.log(iterator.next()); // {value: undefined, done: true}
+</pre>
+
+<h3 id="The_value_of_yield*_expression_itself">The value of <code>yield*</code> expression itself</h3>
+
+<p><code>yield*</code> is an expression, not a statement, so it evaluates to a value.</p>
+
+<pre class="brush: js">function* g4() {
+  yield* [1, 2, 3];
+  return 'foo';
+}
+
+var result;
+
+function* g5() {
+  result = yield* g4();
+}
+
+var iterator = g5();
+
+console.log(iterator.next()); // {value: 1, done: false}
+console.log(iterator.next()); // {value: 2, done: false}
+console.log(iterator.next()); // {value: 3, done: false}
+console.log(iterator.next()); // {value: undefined, done: true}, 
+                              // g4() returned {value: 'foo', done: true} at this point
+
+console.log(result);          // "foo"
+</pre>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-generator-function-definitions-runtime-semantics-evaluation', 'Yield')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-generator-function-definitions-runtime-semantics-evaluation', 'Yield')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.operators.yield_star")}}</p>
+
+<h2 id="Firefox-specific_notes">Firefox-specific notes</h2>
+
+<ul>
+ <li>Starting with Gecko 33 {{geckoRelease(33)}}, the parsing of the yield expression has been updated to conform with the ES2015 specification ({{bug(981599)}}):
+  <ul>
+   <li>The line terminator restriction is now implemented. No line terminator between "yield" and "*" is allowed. Code like the following will throw a {{jsxref("SyntaxError")}}:
+    <pre class="brush: js">function* foo() {
+  yield
+  *[];
+}</pre>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Web/JavaScript/Guide/The_Iterator_protocol">The Iterator protocol</a></li>
+ <li>{{jsxref("Statements/function*", "function*")}}</li>
+ <li>{{jsxref("Operators/function*", "function* expression")}}</li>
+ <li>{{jsxref("Operators/yield", "yield")}}</li>
+</ul>

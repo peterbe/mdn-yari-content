@@ -1,0 +1,109 @@
+<p>{{ ApiRef("DOM Events") }}</p>
+
+<p><code>EventTarget</code> est une interface implémentée par des objets qui peuvent recevoir des évènements et avoir des auditeurs.</p>
+
+<p>{{domxref("Element")}}, {{domxref("document")}}, et {{domxref("window")}} sont les évènements cibles les plus communs, cependant d'autres objets peuvent être utilisés comme évènements cibles, par exemple {{domxref("XMLHttpRequest")}}, {{domxref("AudioNode")}}, {{domxref("AudioContext")}} et d'autres.</p>
+
+<p>De nombreux évènements cibles (incluant les éléments documents et fenêtres) supportent également le réglage <a href="/en-US/docs/Web/Guide/DOM/Events/Event_handlers" title="/en-US/docs/Web/Guide/DOM/Events/Event_handlers">event handlers</a> via les propriétés et attributs <code>on...</code> .</p>
+
+<h2 id="Methods" name="Methods">Constructeur</h2>
+
+<dl>
+ <dt>{{domxref("EventTarget.EventTarget()","EventTarget()")}}</dt>
+ <dd>Crée une nouvelle instance d'<code>EventTarget</code>.</dd>
+</dl>
+
+<h2 id="Methods" name="Methods">Méthodes</h2>
+
+<dl>
+ <dt>{{domxref("EventTarget.addEventListener()")}}</dt>
+ <dd>Enregiste un gestionnaire d'évènement d'un type d'évènement spécifique <code>EventTarget</code>.</dd>
+ <dt>{{domxref("EventTarget.removeEventListener()")}}</dt>
+ <dd>Supprime un auditeur d'évènements de <code>EventTarget</code>.</dd>
+ <dt>{{domxref("EventTarget.dispatchEvent()")}}</dt>
+ <dd>Envoie un élément à <code>EventTarget</code>.</dd>
+</dl>
+
+<h2 id="Exemples">Exemples</h2>
+
+<h3 id="_Simple_implementation_of_EventTarget" name="_Simple_implementation_of_EventTarget">Une implémentation simple</h3>
+
+<pre class="brush: js">var EventTarget = function() {
+  this.listeners = {};
+};
+
+EventTarget.prototype.listeners = null;
+EventTarget.prototype.addEventListener = function(type, callback) {
+  if (!(type in this.listeners)) {
+    this.listeners[type] = [];
+  }
+  this.listeners[type].push(callback);
+};
+
+EventTarget.prototype.removeEventListener = function(type, callback) {
+  if (!(type in this.listeners)) {
+    return;
+  }
+  var stack = this.listeners[type];
+  for (var i = 0, l = stack.length; i &lt; l; i++) {
+    if (stack[i] === callback){
+      stack.splice(i, 1);
+      return;
+    }
+  }
+};
+
+EventTarget.prototype.dispatchEvent = function(event) {
+  if (!(event.type in this.listeners)) {
+    return true;
+  }
+  var stack = this.listeners[event.type];
+
+  for (var i = 0, l = stack.length; i &lt; l; i++) {
+    stack[i].call(this, event);
+  }
+  return !event.defaultPrevented;
+};
+
+</pre>
+
+<h2 id="Specification" name="Specification">Spécifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Spécifications</th>
+   <th scope="col">Statuts</th>
+   <th scope="col">Commentaires</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('DOM WHATWG', '#interface-eventtarget', 'EventTarget')}}</td>
+   <td>{{Spec2('DOM WHATWG')}}</td>
+   <td>Pas de changement.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('DOM3 Events', 'DOM3-Events.html#interface-EventTarget', 'EventTarget')}}</td>
+   <td>{{Spec2('DOM3 Events')}}</td>
+   <td>Quelques paramètres sont désormais optionnels (<code>listener</code>), ou accepte la valeur <code>null</code> (<code>useCapture</code>).</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('DOM2 Events', 'events.html#Events-EventTarget', 'EventTarget')}}</td>
+   <td>{{Spec2('DOM2 Events')}}</td>
+   <td>Définition initiale.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_Compatibility" name="Browser_Compatibility">Compatibilité des navigateurs</h2>
+
+<div class="hidden">Le tableau de compatibilité de cette page a été généré à partir de données structurées. Si vous souhaitez contribuer à ces données, n'hésitez pas à consulter <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> et à nous envoyer une<em>pull request</em>.</div>
+
+<p>{{Compat("api.EventTarget")}}</p>
+
+<h2 id="Voir_aussi">Voir aussi</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Web/Reference/Events" title="/en-US/docs/Web/Reference/Events">Event reference</a> - les évènements disponibles pour la plateforme.</li>
+ <li><a href="/en-US/docs/Web/Guide/DOM/Events" title="/en-US/docs/Web/Guide/DOM/Events">Event developer guide</a></li>
+ <li>{{domxref("Event")}} interface</li>
+</ul>

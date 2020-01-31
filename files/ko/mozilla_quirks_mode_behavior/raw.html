@@ -1,0 +1,82 @@
+<p>다음은 Mozilla 표준 모드 행동(behavior)과 하위 호환(quirks) 모드 행동 사이에 있는<em>애벌</em> 차이점 목록입니다. 이 목록은 2001년 6월 초 (그 뒤 몇 번 추가가 있지만 바뀐 점에 관한 완전한 목록은 아닌) 판이 현재 두루 쓰입니다. 그 때 이후 많은 폼 컨트롤 관련 quirk가 없어진 게 가장 중요한 변화입니다. 또 하나 표준 모드에서, 자주 언급되는 변화는 우리가 <code>text/css</code>를 뺀 다른 MIME 형인 CSS 스타일시트는 거부한다는 점입니다.</p>
+
+<ul>
+ <li>기타 &amp; 스타일
+  <ul>
+   <li>{{ Source("layout/style/quirk.css") }}의 모든 스타일 규칙을 적용합니다.</li>
+   <li>하위 호환 모드에서 CSS 클래스 이름은 대/소문자를 구별하지 않습니다. 표준 모드에서는 구별합니다.</li>
+   <li><code>text/css</code> 권고 MIME 형인 문서에 링크된 스타일시트는 여전히 비록 서버가 <code>text/css</code>를 뺀 <code>Content-Type</code> 헤더를 제공하더라도 CSS로서 처리됩니다.</li>
+   <li>CSS 파서(parser)가 #으로 시작하지 않는 색을 받아들입니다.</li>
+   <li>CSS 파서가 단위 없는 수를 (Nav4가 그랬기 때문에 <code>font-size</code>와 또, 단위 없는 수가 뚜렷한 뜻이 있는 <code>line-height</code>와 다른 프로퍼티는 빼고) <code>px</code>로 번역합니다.</li>
+   <li>HTML 색이 다르게(#이 불필요하고 빠진 숫자가 따로 채워진) 구문 분석됩니다.</li>
+   <li><code>background</code> 속성을 위한 빈 문자열을 하위 호환 모드에서만 배경 URL에 빈 문자열을 설정합니다.</li>
+   <li>시스템 글꼴이 navquirks 모드에서 다르게(대신 다르게 작동하는 글꼴을 쓰는 폼 컨트롤이 아닌듯이?) 작동합니다.</li>
+   <li>HTML (1-7)과 CSS (<code>xx-small</code> - <code>xx-large</code>) 글꼴 크기는 조금 다르게({{ Bug(18136) }} 참조) 계산됩니다.</li>
+   <li>리스트(List) 불릿(bullet)은 하위 호환 모드에서 리스트 글꼴 크기를 상속하지 않습니다.</li>
+   <li><code>:hover</code> pseudo 클래스는 오직 선택자(selector)가 태그 이름, id, 또는 속성을 포함하지 않는 한 링크, 이미지, 그리고 폼 컨트롤에만 적용됩니다.</li>
+  </ul>
+ </li>
+</ul>
+
+<ul>
+ <li>Block 레이아웃과 Inline 레이아웃
+  <ul>
+   <li><strong>{{ mediawiki.external('이 quirk는 거의 표준(almost standards) 모드에 있습니다.') }}</strong> 줄 간격(<code>line-height</code>가 아니라) 계산은 {{ Bug(5821) }}과 {{ Bug(24186) }}을 고치기 위해 다릅니다(일부 다른 문제점은 {{ Bug(22274) }}에 기술됐습니다).</li>
+   <li>비록 CSS에서 백분율 height가 부모 요소의 height가 고정되지 않았으면 'auto' height처럼 작동할지라도 이미지, 표, 개체(object), 그리고 애플릿(들?)에 백분율 height가 "작동"(Nav4에서 했던 방식으로)하게 하는 많은 quirk가 있습니다. 설명은 {{ Bug("33443#c9") }}를 참조. {{ Bug(41656) }}과 그 사본 또한 참조하세요. 이 quirk 가운데 일부는 다른 영향을 초래할 수 있습니다 ({{ Bug(54119) }} 참조).</li>
+   <li><code>HR</code> 요소는 하위 호환 모드와 strict 모드에서 다르게 처리됩니다( 그리고 아마 양쪽에서 거꾸로입니다).</li>
+  </ul>
+ </li>
+</ul>
+
+<ul>
+ <li>표
+  <ul>
+   <li>표 배경색이 다르게({{ Bug(4510) }} 참조) 작동합니다. 이 quirk가 필요한 지는 분명치 않습니다. <strong>{{ mediawiki.external('quirk가 없어졌습니다') }}</strong></li>
+   <li>하위 호환 모드에서 (부정확하게? 처리되는) <code>absmiddle</code>과 (아마 마찬가지로 부정확하게?) <code>middle</code>은 표 cell의 <code>align</code>값으로 해석되고 <code>absmiddle</code>, <code>abscenter</code>, 그리고 <code>middle</code>은 (<code>center</code>와 같게 처리되는) 표에 지원됩니다.</li>
+   <li>문서 배경(과 색?)이 있는 <code>TD</code>, <code>TH</code>, <code>TR</code>, <code>THEAD</code>, <code>TBODY</code>, 그리고 <code>TFOOT</code> 요소는 (문서 배경이 확실한 방법?으로 지정되면) 요소에 적용되는 문서 배경( 그리고 색?)을 갖습니다({{ Bug(70831) }} 또한 참조).</li>
+   <li><code>empty-cells</code> 프로퍼티는 하위 호환 모드에서 <code>hide</code>(숨김)이 기본이지만 strict 모드에서는 (CSS2 정오표에 따라) 보입니다({{ Bug(33244) }} 참조) (비록 바로잡는 고침(fix)이 그것을 <code>quirk.css</code>의 HTML <code>TABLE</code> 요소에 지정할지라도).</li>
+   <li>하위 호환 모드에서 float 값을 갖는 표는 다른 float과 나란히 맞지 않으면 전혀 다음 "줄"로 움직이지 않고, 그냥 페이지를 넓혀 둡니다 ({{ Bug(43086) }} 참조).</li>
+   <li>하위 호환 모드에서 <code>colspan="0"</code>과 <code>rowspan="0"</code>은 일부로 HTML4에 기술된 대로 처리되지 않습니다.</li>
+   <li><code>hspace</code>와 <code>vspace</code>는 하위 호환 모드에서만 <code>TABLE</code>에 지원됩니다.</li>
+   <li>하위 호환 모드에서, 표 테두리 스타일이 <code>inset</code>이나 <code>outset</code>이면, 테두리색은 표나 불투명 배경을 갖는 가장 가까운 조상 요소의 배경색에 기반을 둡니다.</li>
+   <li>하위 호환 모드에서 테두리 있는 표 cell은 너비가 최소 1픽셀입니다.</li>
+   <li>Gecko 1.8을 시작으로 ({{ Bug(277232) }} 참조): 하위 호환 모드에서 표 cell에 지정된 고정폭은 nowrap 속성을 재설정합니다. nowrap 속성이 있으면 cell 폭은 지정된 고정폭보다 결코 더 작아지지 않습니다.</li>
+   <li>기본 표 레이아웃 전략은 하위 호환 모드에서 (어떤) 안쪽 여백(padding)은 무시합니다.</li>
+   <li>기본 표 레이아웃 전략은 어떻게든 너비를 다르게 처리합니다.</li>
+  </ul>
+ </li>
+</ul>
+
+<ul>
+ <li>폼
+  <ul>
+   <li>Button input이 크기를 다르게 계산합니다.</li>
+   <li>표준 모드에서 <code>BUTTON</code> 요소(?)는 <code>type</code> 속성이 없는 경우에 한해 보낼(submit) 수 있습니다.</li>
+   <li>Text input(과 text???가 담긴 다른 폼 컨트롤)은 크기를 다르게 계산합니다 (원 고침 설명용 {{ Bug("X") }}와 또한 제안된 변경용 {{ Bug("X") }} 참조).</li>
+   <li>Button <code>INPUT</code> 요소와 <code>SELECT</code> 요소용 글꼴이 다르게 계산됩니다.</li>
+   <li>라디오 그룹에서 버튼 하나가 항상 (기본으로) 선택되는 HTML의 요구는 하위 호환 모드에서는 강요되지 않습니다.</li>
+  </ul>
+ </li>
+</ul>
+
+<ul>
+ <li>프레임
+  <ul>
+   <li>하위 호환 모드에서 <code>FRAME</code>의 <code>marginwidth</code>와 <code>marginheight</code>는 프레임이 담긴 <code>BODY</code>로 전달됩니다.</li>
+   <li>프레임 크기 지정에서 <code>0*</code>은 <code>1*</code>로 처리됩니다 ({{ Bug(40383) }} 참조).</li>
+   <li><code>FRAME</code>의 <code>scrolling</code> 속성이 다르게 처리됩니다.</li>
+  </ul>
+ </li>
+</ul>
+
+<ul>
+ <li>HTML 파서
+  <ul>
+   <li>하위 호환 모드에서, 주석 시작과 끝 구분자(delimeter)로 "--"을 처리하는 대신 예전 브라우저와 호환되는 방식으로 HTML 주석을 구문 분석합니다.</li>
+  </ul>
+ </li>
+</ul>
+
+<h3 id=".EA.B0.99.EC.9D.B4_.EB.B3.B4.EA.B8.B0" name=".EA.B0.99.EC.9D.B4_.EB.B3.B4.EA.B8.B0">같이 보기</h3>
+
+<p><a href="ko/Mozilla's_Quirks_Mode">Mozilla's Quirks Mode</a></p>

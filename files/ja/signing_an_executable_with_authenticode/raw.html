@@ -1,0 +1,60 @@
+<p>この記事では、Microsoft Authenticode Digital ID を利用して、Windows アプリケーションインストーラなどの実行ファイルにデジタル署名を付ける方法について説明します。</p>
+
+<h2 id="はじめに">はじめに</h2>
+
+<p>Microsoft は、当然のことながら、独自の署名ツールを SDK に同梱していますが、もうひとつの選択肢として <a class="external" href="http://www.mono-project.com/">Mono</a> を使う方法があります。Mono の署名ツールを使えば、Mac や Linux でも実行ファイルに署名をすることが可能です。ここで説明する手順は Mac での作業を前提としています。</p>
+
+<h2 id="Mono_のインストール">Mono のインストール</h2>
+
+<p>Mono Framework の最新版を <a class="external" href="http://www.mono-project.com/Download">ダウンロード</a> してインストールします。Mono はオープンソース・フリーソフトウェアです！</p>
+
+<h3 id="パスの設定">パスの設定</h3>
+
+<pre class="eval">export PATH=${PATH}:/Library/Frameworks/Mono.framework/Commands</pre>
+
+<h2 id="証明書のエクスポート">証明書のエクスポート</h2>
+
+<ol>
+ <li>Windows の [証明書マネージャ] を開きます。Windows の [スタート] ボタンをクリックし、[検索] ボックスに「<code>certmgr.msc</code>」と入力します。</li>
+ <li>自分の組織の証明書を探します。</li>
+ <li>証明書を右クリックし、[すべてのタスク] &gt; [エクスポート] を選択します。</li>
+ <li>[証明書のエクスポート ウィザード] が開きます。[次へ] を選択します。</li>
+ <li>[はい、秘密キーをエクスポートします] を選択し、[次へ] を選択します。</li>
+ <li>[証明のパスにある証明書を可能であればすべて含む] というオプションにチェックを入れ、[次へ] を選択します。</li>
+ <li>秘密キーを保護するパスワードを入力し、[次へ] を選択します。</li>
+ <li>ファイル名を入力します。例「<code>authenticode.pfx</code>」</li>
+ <li>エクスポートを完了します。デスクトップに PFX ファイルがエクスポートされます。</li>
+</ol>
+
+<h2 id="証明書の_SPCPVK_形式への変換">証明書の SPC/PVK 形式への変換</h2>
+
+<p>OpenSSL を使用し、エクスポートした PFX ファイルを PVK ファイルと SPC ファイルに変換します。Mac では OpenSSL は標準装備されています。</p>
+
+<pre class="eval">openssl pkcs12 -in authenticode.pfx -nocerts -nodes -out key.pem
+openssl rsa -in key.pem -outform PVK -pvk-strong -out authenticode.pvk
+openssl pkcs12 -in authenticode.pfx -nokeys -nodes -out cert.pem
+openssl crl2pkcs7 -nocrl -certfile cert.pem -outform DER -out authenticode.spc</pre>
+
+<p>PVK ファイルと SPC ファイルが出力されたら、これらを厳重に保管します。PFX ファイルと PEM ファイルは削除します。</p>
+
+<h2 id="署名">署名</h2>
+
+<pre class="eval">signcode \
+ -spc authenticode.spc \
+ -v authenticode.pvk \
+ -a sha1 -$ commercial \
+ -n <em>My\ Application</em> \
+ -i <em><span class="nowiki">http://www.example.com/</span></em> \
+ -t <span class="nowiki">http://timestamp.verisign.com/scripts/timstamp.dll</span> \
+ -tr 10 \
+ <em>MyApp.exe</em>
+</pre>
+
+<h2 id="参考資料">参考資料</h2>
+
+<ul>
+ <li><a class="external" href="http://www.verisign.co.jp/codesign/authcodeWP.html">Authenticode 対応 Digital ID 導入ガイド</a> - VeriSign による公式ガイド</li>
+ <li><a href="https://docs.microsoft.com/en-us/previous-versions/windows/internet-explorer/ie-developer/platform-apis/ms537364(v=vs.85)">MSDN: Signing and Checking Code with Authenticode</a></li>
+ <li><a class="link-https" href="https://support.comodo.com/index.php?_m=knowledgebase&amp;_a=viewarticle&amp;kbarticleid=1089">Converting a PFX file to SPC and PVK files</a> - Comodo</li>
+ <li><a href="/ja/Signing_an_extension" title="ja/Signing_an_extension">拡張機能への署名</a></li>
+</ul>

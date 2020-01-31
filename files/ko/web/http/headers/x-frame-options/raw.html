@@ -1,0 +1,124 @@
+<div>{{HTTPSidebar}}</div>
+
+<p>The <strong><code>X-Frame-Options</code></strong> <a href="/en-US/docs/Web/HTTP">HTTP</a> 응답 헤더는 해당 페이지를 {{HTMLElement("frame")}} 또는{{HTMLElement("iframe")}}, {{HTMLElement("object")}} 에서 렌더링할 수 있는지 여부를 나타내는데 사용됩니다. 사이트 내 콘텐츠들이 다른 사이트에 포함되지 않도록 하여 {{interwiki("wikipedia", "clickjacking")}} 공격을 막기 위해 이 헤더를 사용합니다.</p>
+
+<p>이 설정은 사용자가  <code>X-Frame-Options</code>를 지원하는 브라우저를 통해 페이지에 접근할 경우에만 보안됩니다.</p>
+
+<table class="properties">
+ <tbody>
+  <tr>
+   <th scope="row">Header type</th>
+   <td>{{Glossary("Response header")}}</td>
+  </tr>
+  <tr>
+   <th scope="row">{{Glossary("Forbidden header name")}}</th>
+   <td>no</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Syntax">Syntax</h2>
+
+<p>There are three possible directives for <code>X-Frame-Options</code>:</p>
+
+<pre class="syntaxbox">X-Frame-Options: deny
+X-Frame-Options: sameorigin
+X-Frame-Options: allow-from https://example.com/
+</pre>
+
+<h3 id="Directives">Directives</h3>
+
+<p><code>deny</code>는 같은 사이트 내에서 frame을 통한 접근도 막습니다.<br>
+ <code>sameorigin</code>를 명시할 경우에는 frame에 포함된 페이지가 페이지를 제공하는 사이트와 동일한할 경우 계속 사용할 수 있습니다.</p>
+
+<dl>
+ <dt><code>deny</code></dt>
+ <dd>The page cannot be displayed in a frame, regardless of the site attempting to do so.</dd>
+ <dt><code>sameorigin</code></dt>
+ <dd>The page can only be displayed in a frame on the same origin as the page itself. The spec leaves it up to browser vendors to decide whether this option applies to the top level, the parent, or the whole chain, although it is argued that the option is not very useful unless all ancestors are also in the same origin (see {{bug(725490)}}). Also see {{anch("Browser compatibility")}} for support details.</dd>
+ <dt><code>allow-from <em>uri</em></code></dt>
+ <dd>The page can only be displayed in a frame on the specified origin. Note that in Firefox this still suffers from the same problem as <code>sameorigin</code> did — it doesn't check the frame ancestors to see if they are in the same origin.</dd>
+</dl>
+
+<h2 id="Examples">Examples</h2>
+
+<div class="note">
+<p><strong>Note:</strong> Setting the meta tag is useless! For instance, <code>&lt;meta http-equiv="X-Frame-Options" content="deny"&gt;</code> has no effect. Do not use it! Only by setting through the HTTP header like the examples below, <code>X-Frame-Options</code> will work.</p>
+</div>
+
+<h3 id="Configuring_Apache">Configuring Apache</h3>
+
+<p>To configure Apache to send the <code>X-Frame-Options</code> header for all pages, add this to your site's configuration:</p>
+
+<pre>Header always set X-Frame-Options "sameorigin"
+</pre>
+
+<p>To configure Apache to set the <code>X-Frame-Options</code>  deny , add this to your site's configuration:</p>
+
+<pre>Header set X-Frame-Options "deny"
+</pre>
+
+<p>To configure Apache to set the <code>X-Frame-Options</code>  to <code>allow-from</code> a specific Host , add this to your site's configuration:</p>
+
+<pre>Header set X-Frame-Options "allow-from https://example.com/"
+</pre>
+
+<h3 id="Configuring_nginx">Configuring nginx</h3>
+
+<p>To configure nginx to send the <code>X-Frame-Options</code> header, add this either to your http, server or location configuration:</p>
+
+<pre>add_header X-Frame-Options sameorigin;
+</pre>
+
+<h3 id="Configuring_IIS">Configuring IIS</h3>
+
+<p>To configure IIS to send the <code>X-Frame-Options</code> header, add this to your site's <code>Web.config</code> file:</p>
+
+<pre class="brush: xml">&lt;system.webServer&gt;
+  ...
+
+  &lt;httpProtocol&gt;
+    &lt;customHeaders&gt;
+      &lt;add name="X-Frame-Options" value="sameorigin" /&gt;
+    &lt;/customHeaders&gt;
+  &lt;/httpProtocol&gt;
+
+  ...
+&lt;/system.webServer&gt;
+</pre>
+
+<h3 id="Configuring_HAProxy">Configuring HAProxy</h3>
+
+<p>To configure HAProxy to send the <code>X-Frame-Options</code> header, add this to your front-end, listen, or backend configuration:</p>
+
+<pre>rspadd X-Frame-Options:\ sameorigin</pre>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Title</th>
+  </tr>
+  <tr>
+   <td>{{RFC("7034")}}</td>
+   <td>HTTP Header Field X-Frame-Options</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<p class="hidden">The compatibility table in this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</p>
+
+<p>{{Compat("http.headers.X-Frame-Options")}}</p>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li><a class="external" href="https://blogs.msdn.com/b/ie/archive/2009/01/27/ie8-security-part-vii-clickjacking-defenses.aspx">ClickJacking Defenses - IEBlog</a></li>
+ <li><a href="https://blogs.msdn.com/b/ieinternals/archive/2010/03/30/combating-clickjacking-with-x-frame-options.aspx">Combating ClickJacking with X-Frame-Options - IEInternals</a></li>
+ <li><a href="https://tools.ietf.org/html/rfc7034">HTTP Header Field X-Frame-Options - RFC 7034</a></li>
+ <li><a href="https://w3c.github.io/webappsec/specs/content-security-policy/#directive-frame-ancestors">CSP Level 2 frame-ancestors directive</a></li>
+</ul>

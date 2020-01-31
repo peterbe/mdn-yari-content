@@ -1,0 +1,24 @@
+<p>伝統的なブラウザの HTML パーサーはメインスレッドで動作し、<code>&lt;/script&gt;</code> タグの後はスクリプトがネットワークから取得されて実行が完了するまでブロックされます。Firefox 4 以降の HTML パーサーは、メインスレッドから分離された投機的解析をサポートします。これは、スクリプトがダウンロードされて、実行されている間、先に解析を進めます。Firefox 3.5 と 3.6 では、HTML パーサーは、スクリプト、スタイルシート、およびストリーム内で先に見つかる画像の投機的なロードを開始します。しかし、Firefox 4 以降の HTML パーサーは、さらに HTML ツリーの構築アルゴリズムを投機的に実行します。これの良い点は、投機が成功した場合に、部分的に取り込まれて既に解析されたスクリプト、スタイルシート、および画像のファイルを再解析する必要がないことです。欠点は、投機が失敗した場合により多くの作業が失われることです。</p>
+
+<p>このドキュメントは、投機が失敗してページの読み込みが遅くなるようなことを避けるのに役立ちます。</p>
+
+<h2 id="Making_speculative_loads_succeed">Making speculative loads succeed</h2>
+
+<p>リンクされたスクリプト、スタイルシート、および画像の投機的ロードを成功させるための唯一の方法 : </p>
+
+<ul>
+ <li><code>&lt;base&gt;</code> 要素を使用してページのベース URI を上書きする場合は、その要素をドキュメントの非スクリプト部分に配置します。<code>document.write()</code> や <code>document.createElement()</code> を使用して追加しないでください。</li>
+</ul>
+
+<h2 id="ツリービルダーの出力を失うのを避ける">ツリービルダーの出力を失うのを避ける</h2>
+
+<p>Speculative tree building fails when <code>document.write()</code> changes the tree builder state such that the speculative state after the <code>&lt;/script&gt;</code> tag no longer holds when all the content inserted by <code>document.write()</code> has been parsed. However, only unusual uses of <code>document.write()</code> cause trouble. Here are the things to avoid:</p>
+
+<ul>
+ <li>Don't write unbalanced trees. <code>&lt;script&gt;document.write("&lt;div&gt;");&lt;/script&gt;</code> is bad. <code>&lt;script&gt;document.write("&lt;div&gt;&lt;/div&gt;");&lt;/script&gt;</code> is OK.</li>
+ <li>Don't write an unfinished token. <code>&lt;script&gt;document.write("&lt;div&gt;&lt;/div");&lt;/script&gt;</code> is bad.</li>
+ <li>Don't finish your writing with a carriage return. <code>&lt;script&gt;document.write("Hello World!\r");&lt;/script&gt;</code> is bad. <code>&lt;script&gt;document.write("Hello World!\n");&lt;/script&gt;</code> is OK.</li>
+ <li>Note that writing balanced tags may cause other tags to be inferred in a way that makes the write unbalanced. E.g. <code>&lt;script&gt;document.write("&lt;div&gt;&lt;/div&gt;");&lt;/script&gt;</code> inside the <code>head</code> element will be interpreted as <code>&lt;script&gt;document.write("&lt;/head&gt;&lt;body&gt;&lt;div&gt;&lt;/div&gt;");&lt;/script&gt;</code> which is unbalanced.</li>
+ <li>Don't format part of a table. <code>&lt;table&gt;&lt;script&gt;document.write("&lt;tr&gt;&lt;td&gt;Hello World!&lt;/td&gt;&lt;/tr&gt;");&lt;/script&gt;&lt;/table&gt;</code> is bad. However, <code>&lt;script&gt;document.write("</code><code>&lt;table&gt;</code><code>&lt;tr&gt;&lt;td&gt;Hello World!&lt;/td&gt;&lt;/tr&gt;</code><code>&lt;/table&gt;</code><code>");&lt;/script&gt;</code> is OK.</li>
+ <li>TODO: document.write inside other formatting elements.</li>
+</ul>

@@ -1,0 +1,157 @@
+<div>{{JSRef}} {{SeeCompatTable}}</div>
+
+<p><strong><code>Intl.DateTimeFormat.prototype.formatToParts()</code></strong> メソッドは、<code>DateTimeFormat</code> フォーマットによって生成されるロケール対応書式を設定可能にします</p>
+
+<h2 id="構文">構文</h2>
+
+<pre class="syntaxbox">Intl.DateTimeFormat.prototype.formatToParts(date)</pre>
+
+<h3 id="パラメーター">パラメーター</h3>
+
+<dl>
+ <dt><code>date</code> {{optional_inline}}</dt>
+ <dd>フォーマットする日付。</dd>
+</dl>
+
+<h3 id="戻り値">戻り値</h3>
+
+<p>フォーマットされた日付のパーツを含むオブジェクトの {{jsxref("Array")}}。</p>
+
+<h2 id="説明">説明</h2>
+
+<p><code>formatToParts()</code> メソッドは、日付文字列のフォーマットをカスタマイズするときに役立ちます。これは、ロケール特有の部分を保持しながら、カスタム文字列を構築できるロケール特有のトークンを含むオブジェクトの {{jsxref("Array")}} を返します。<code>formatToParts()</code> メソッドが返却する構造は、このようになります：</p>
+
+<pre class="brush: js">[
+  { type: 'day', value: '17' },
+  { type: 'weekday', value 'Monday' }
+]</pre>
+
+<p>渡される可能性がある type は以下のとおりです。</p>
+
+<dl>
+ <dt>day</dt>
+ <dd>日付として使用される文字列。たとえば、 <code>"17"</code>。</dd>
+ <dt>dayPeriod</dt>
+ <dd>日付期間として使用される文字列。たとえば、<code>"AM"</code> や <code>"PM"</code>。</dd>
+ <dt>era</dt>
+ <dd>時代として使用される文字列。たとえば、<code>"BC"</code> や <code>"AD"</code>。</dd>
+ <dt>hour</dt>
+ <dd>時刻として使用される文字列。たとえば、<code>"3"</code> や <code>"03"</code>。</dd>
+ <dt>literal</dt>
+ <dd>日付や時刻の区切りとして使用される文字列。 たとえば、 <code>"/"</code>、<code>","</code>、<code>"o'clock"</code>、<code>"de"</code>。</dd>
+ <dt>minute</dt>
+ <dd>分として使用される文字列。たとえば、<code>"00"</code>。</dd>
+ <dt>month</dt>
+ <dd>月として使用される文字列。たとえば、<code>"12"</code>。</dd>
+ <dt>second</dt>
+ <dd>秒として使用される文字列。たとえば、<code>"07"</code> や <code>"42"</code>。</dd>
+ <dt>timeZoneName</dt>
+ <dd>タイムゾーン名として使用される文字列。たとえば、<code>"UTC"</code>。</dd>
+ <dt>weekday</dt>
+ <dd>曜日として使用される文字列。たとえば、<code>"M"</code> や <code>"Monday"</code>、<code>"Montag"</code>。</dd>
+ <dt>year</dt>
+ <dd>年として使用される文字列。たとえば、<code>"2012"</code> や <code>"96"</code>。</dd>
+</dl>
+
+<h2 id="例">例</h2>
+
+<p><code>DateTimeFormat</code> は、ローカライズされた、不透過で直接操作できない文字列を出力します：</p>
+
+<pre class="brush: js">var date = Date.UTC(2012, 11, 17, 3, 0, 42);
+
+var formatter = new Intl.DateTimeFormat('en-us', {
+  weekday: 'long',
+  year: 'numeric',
+  month: 'numeric',
+  day: 'numeric',
+  hour: 'numeric',
+  minute: 'numeric',
+  second: 'numeric',
+  hour12: true,
+  timeZone: 'UTC'
+});
+
+formatter.format(date);
+// "Monday, 12/17/2012, 3:00:42 AM"
+</pre>
+
+<p>しかし、多くのユーザーインターフェースにおいて、この文字列フォーマットをカスタマイズしたいという要望があります。<code>formatToParts</code> メソッドは、文字列のパーツを提供することで、<code>DateTimeFormat</code> フォーマットによって生成されるロケール対応書式を設定可能にします：</p>
+
+<pre class="brush: js">formatter.formatToParts(date);
+
+// 戻り値： 
+[ 
+  { type: 'weekday',   value: 'Monday' }, 
+  { type: 'literal', value: ', '     }, 
+  { type: 'month',     value: '12'     }, 
+  { type: 'literal', value: '/'      }, 
+  { type: 'day',       value: '17'     }, 
+  { type: 'literal', value: '/'      }, 
+  { type: 'year',      value: '2012'   }, 
+  { type: 'literal', value: ', '     }, 
+  { type: 'hour',      value: '3'      }, 
+  { type: 'literal', value: ':'      }, 
+  { type: 'minute',    value: '00'     }, 
+  { type: 'literal', value: ':'      }, 
+  { type: 'second',    value: '42'     }, 
+  { type: 'literal', value: ' '      }, 
+  { type: 'dayperiod', value: 'AM'     } 
+]
+</pre>
+
+<p>情報を個別に利用してフォーマットし、独自の方法で再結合できます。たとえば、{{jsxref("Array.prototype.map()")}} や <a href="/ja/docs/Web/JavaScript/Reference/Functions/Arrow_functions">アロー関数</a>、<a href="/ja/docs/Web/JavaScript/Reference/Statements/switch">switch ステートメント</a>、<a href="/ja/docs/Web/JavaScript/Reference/Template_literals">テンプレートリテラル</a>、{{jsxref("Array.prototype.reduce()")}} で使用できます。</p>
+
+<pre class="brush: js">var dateString = formatter.formatToParts(date).map(({type, value}) =&gt; { 
+  switch (type) {
+    case 'dayperiod': return `&lt;strong&gt;${value}&lt;/strong&gt;`; 
+    default : return value; 
+  } 
+}).reduce((string, part) =&gt; string + part);
+</pre>
+
+<p><code>formatToParts()</code> メソッドを使用した場合、日付期間を太字にします。</p>
+
+<pre class="brush: js">console.log(formatter.format(date));
+// "Monday, 12/17/2012, 3:00:42 AM"
+
+console.log(dateString);
+// "Monday, 12/17/2012, 3:00:42 &lt;strong&gt;AM&lt;/strong&gt;"</pre>
+
+<h2 id="ポリフィル(Polyfill)">ポリフィル(Polyfill)</h2>
+
+<p>この機能のポリフィルは<a href="https://github.com/zbraniecki/proposal-intl-formatToParts">proposal repository</a>で利用可能です。</p>
+
+<h2 id="仕様">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">状態</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES Int Draft', '#sec-Intl.DateTimeFormat.prototype.formatToParts', 'Intl.DateTimeFormat.prototype.formatToParts')}}</td>
+   <td>{{Spec2('ES Int Draft')}}</td>
+   <td>初期定義。</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="ブラウザ実装状況">ブラウザ実装状況</h2>
+
+<div class="hidden">
+<p>The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</p>
+</div>
+
+<p>{{Compat("javascript.builtins.Intl.DateTimeFormat.formatToParts")}}</p>
+
+<h2 id="関連項目">関連項目</h2>
+
+<ul>
+ <li>{{jsxref("DateTimeFormat", "Intl.DateTimeFormat")}}</li>
+ <li>{{jsxref("DateTimeFormat.format", "Intl.DateTimeFormat.prototype.format")}}</li>
+ <li>{{jsxref("Date.prototype.toLocaleString()")}}</li>
+ <li>{{jsxref("Date.prototype.toLocaleDateString()")}}</li>
+ <li>{{jsxref("Date.prototype.toLocaleTimeString()")}}</li>
+</ul>

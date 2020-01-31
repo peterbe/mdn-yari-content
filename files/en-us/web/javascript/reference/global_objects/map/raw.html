@@ -1,0 +1,306 @@
+<div>{{JSRef}}</div>
+
+<p><span class="seoSummary">The <strong><code>Map</code></strong> object holds key-value pairs and remembers the original insertion order of the keys.</span> Any value (both objects and {{Glossary("Primitive", "primitive values")}}) may be used as either a key or a value.</p>
+
+<h2 id="Syntax">Syntax</h2>
+
+<pre class="syntaxbox">new Map([<var>iterable</var>])</pre>
+
+<h3 id="Parameters">Parameters</h3>
+
+<dl>
+	<dt><code><var>iterable</var></code></dt>
+	<dd>An {{jsxref("Array")}} or other <a href="/en-US/docs/Web/JavaScript/Guide/iterable">iterable</a> object whose elements are key-value pairs. (For example, arrays with two elements, such as <code>[[ 1, 'one' ],[ 2, 'two' ]]</code>.) Each key-value pair is added to the new <code>Map</code>.</dd>
+</dl>
+
+<h2 id="Description">Description</h2>
+
+<p>A <code>Map</code> object iterates its elements in insertion order — a {{jsxref("Statements/for...of", "for...of")}} loop returns an array of <code>[<var>key</var>, <var>value</var>]</code> for each iteration.<br>
+ </p>
+
+<h3 id="Key_equality">Key equality</h3>
+
+<ul>
+	<li>Key equality is based on the <a href="/en-US/docs/Web/JavaScript/Equality_comparisons_and_sameness#Same-value-zero_equality"><code>sameValueZero</code></a> algorithm.</li>
+	<li>{{jsxref("NaN")}} is considered the same as <code>NaN</code> (even though <code>NaN !== NaN</code>) and all other values are considered equal according to the semantics of the <code>===</code> operator.</li>
+	<li>In the current ECMAScript specification, <code>-0</code> and <code>+0</code> are considered equal, although this was not so in earlier drafts. See <em>"Value equality for -0 and 0"</em> in the {{anch("Browser compatibility")}} table for details.</li>
+</ul>
+
+<h3 id="Objects_and_maps_compared">Objects and maps compared</h3>
+
+<p>{{jsxref("Object")}} is similar to <code>Map</code>—both let you set keys to values, retrieve those values, delete keys, and detect whether something is stored at a key. Because of this (and because there were no built-in alternatives), <code>Object</code>s have been used as <code>Map</code>s historically.</p>
+
+<p>However, there are important differences that make <code>Map</code> preferable in certain cases:</p>
+
+<ul>
+	<li>The keys of an <code>Object</code> are {{jsxref("String")}} and {{jsxref("Symbol")}}, whereas they can be any value for a <code>Map</code> (including functions, objects, or any primitive).</li>
+	<li>The keys in <code>Map</code> are ordered, while keys added to Object are not. Thus, when iterating over it, a <code>Map</code> object returns keys in order of insertion.
+	<div class="blockIndicator note">
+	<p><strong>Note:</strong> Since the ECMAScript 2015 spec, objects <em>do</em> preserve creation order for string and <code>Symbol</code> keys; so iterating over an object with only string keys would yield the keys in order of insertion.</p>
+	</div>
+	</li>
+	<li>You can get the size of a <code>Map</code> easily with the {{jsxref("Map.prototype.size", "size")}} property, while the number of properties in an <code>Object</code> must be determined manually.</li>
+	<li>A <code>Map</code> is an <a href="/en-US/docs/Web/JavaScript/Guide/iterable">iterable</a>, so it can be directly iterated. Iterating over an <code>Object</code> requires obtaining its keys in some fashion and iterating over them.</li>
+	<li>An <code>Object</code> has a prototype, so there are default keys in the map that could collide with your keys if you're not careful.
+	<div class="blockIndicator note">
+	<p><strong>Note:</strong> As of ES5, this can be bypassed by using {{jsxref("Object.create", "Object.create(null)")}}, but this is seldom done.</p>
+	</div>
+	</li>
+	<li>A <code>Map</code> may perform better in scenarios involving frequent additions and removals of key-value pairs.</li>
+</ul>
+
+<h2 id="Properties">Properties</h2>
+
+<dl>
+	<dt><code>Map.length</code></dt>
+	<dd>The value of the <code>length</code> property is <code>0</code>.<br>
+	To count how many entries are in a <code>Map</code>, use {{jsxref("Map.prototype.size")}}.</dd>
+	<dt>{{jsxref("Map.@@species", "get Map[@@species]")}}</dt>
+	<dd>The constructor function that is used to create derived objects.</dd>
+	<dt>{{jsxref("Map.prototype")}}</dt>
+	<dd>Represents the prototype for the <code>Map</code> constructor. Allows the addition of properties to all <code>Map</code> objects.</dd>
+</dl>
+
+<h2 id="Map_instances">Map instances</h2>
+
+<p>All <code>Map</code> instances inherit from {{jsxref("Map.prototype")}}.</p>
+
+<h3 id="Properties_2">Properties</h3>
+
+<p>{{page('en-US/Web/JavaScript/Reference/Global_Objects/Map/prototype','Properties')}}</p>
+
+<h3 id="Methods">Methods</h3>
+
+<p>{{page('en-US/Web/JavaScript/Reference/Global_Objects/Map/prototype','Methods')}}</p>
+
+<h2 id="Examples">Examples</h2>
+
+<h3 id="Using_the_Map_object">Using the <code>Map</code> object</h3>
+
+<pre class="brush: js">let myMap = new Map()
+
+let keyString = 'a string'
+let keyObj    = {}
+let keyFunc   = function() {}
+
+// setting the values
+myMap.set(keyString, "value associated with 'a string'")
+myMap.set(keyObj, 'value associated with keyObj')
+myMap.set(keyFunc, 'value associated with keyFunc')
+
+myMap.size              // 3
+
+// getting the values
+myMap.get(keyString)    // "value associated with 'a string'"
+myMap.get(keyObj)       // "value associated with keyObj"
+myMap.get(keyFunc)      // "value associated with keyFunc"
+
+myMap.get('a string')    // "value associated with 'a string'"
+                         // because keyString === 'a string'
+myMap.get({})            // undefined, because keyObj !== {}
+myMap.get(function() {}) // undefined, because keyFunc !== function () {}
+</pre>
+
+<h3 id="Using_NaN_as_Map_keys">Using <code>NaN</code> as <code>Map</code> keys</h3>
+
+<p>{{jsxref("NaN")}} can also be used as a key. Even though every <code>NaN</code> is not equal to itself (<code>NaN !== NaN</code> is true), the following example works because <code>NaN</code>s are indistinguishable from each other:</p>
+
+<pre class="brush: js">let myMap = new Map()
+myMap.set(NaN, 'not a number')
+
+myMap.get(NaN) 
+// "not a number"
+
+let otherNaN = Number('foo')
+myMap.get(otherNaN) 
+// "not a number"
+</pre>
+
+<h3 id="Iterating_Map_with_for..of">Iterating <code>Map</code> with <code>for..of</code></h3>
+
+<p>Maps can be iterated using a <code>for..of</code> loop:</p>
+
+<pre class="brush: js">let myMap = new Map()
+myMap.set(0, 'zero')
+myMap.set(1, 'one')
+
+for (let [key, value] of myMap) {
+  console.log(key + ' = ' + value)
+}
+// 0 = zero
+// 1 = one
+
+for (let key of myMap.keys()) {
+  console.log(key)
+}
+// 0
+// 1
+
+for (let value of myMap.values()) {
+  console.log(value)
+}
+// zero
+// one
+
+for (let [key, value] of myMap.entries()) {
+  console.log(key + ' = ' + value)
+}
+// 0 = zero
+// 1 = one
+</pre>
+
+<h3 id="Iterating_Map_with_forEach">Iterating <code>Map</code> with <code>forEach()</code></h3>
+
+<p>Maps can be iterated using the {{jsxref("Map.prototype.forEach", "forEach()")}} method:</p>
+
+<pre class="brush: js">myMap.forEach(function(value, key) {
+  console.log(key + ' = ' + value)
+})
+// 0 = zero
+// 1 = one
+</pre>
+
+<h3 id="Relation_with_Array_objects">Relation with Array objects</h3>
+
+<pre class="brush: js">let kvArray = [['key1', 'value1'], ['key2', 'value2']]
+
+// Use the regular Map constructor to transform a 2D key-value Array into a map
+let myMap = new Map(kvArray)
+
+myMap.get('key1') // returns "value1"
+
+// Use Array.from() to transform a map into a 2D key-value Array
+console.log(Array.from(myMap)) // Will show you exactly the same Array as kvArray
+
+// A succinct way to do the same, using the spread syntax
+console.log([...myMap])
+
+// Or use the keys() or values() iterators, and convert them to an array
+console.log(Array.from(myMap.keys())) // ["key1", "key2"]
+</pre>
+
+<h3 id="Cloning_and_merging_Maps">Cloning and merging <code>Map</code>s</h3>
+
+<p>Just like <code>Array</code>s, <code>Map</code>s can be cloned:</p>
+
+<pre class="brush: js">let original = new Map([
+  [1, 'one']
+])
+
+let clone = new Map(original)
+
+console.log(clone.get(1))       // one
+console.log(original === clone) // false (useful for shallow comparison)</pre>
+
+<div class="blockIndicator note">
+<p><strong>Important:</strong> Keep in mind that <em>the data itself</em> is not cloned.</p>
+</div>
+
+<p>Maps can be merged, maintaining key uniqueness:</p>
+
+<pre class="brush: js">let first = new Map([
+  [1, 'one'],
+  [2, 'two'],
+  [3, 'three'],
+])
+
+let second = new Map([
+  [1, 'uno'],
+  [2, 'dos']
+])
+
+// Merge two maps. The last repeated key wins.
+// Spread operator essentially converts a Map to an Array
+let merged = new Map([...first, ...second])
+
+console.log(merged.get(1)) // uno
+console.log(merged.get(2)) // dos
+console.log(merged.get(3)) // three</pre>
+
+<p>Maps can be merged with Arrays, too:</p>
+
+<pre class="brush: js">let first = new Map([
+  [1, 'one'],
+  [2, 'two'],
+  [3, 'three'],
+])
+
+let second = new Map([
+  [1, 'uno'],
+  [2, 'dos']
+])
+
+// Merge maps with an array. The last repeated key wins.
+let merged = new Map([...first, ...second, [1, 'eins']])
+
+console.log(merged.get(1)) // eins
+console.log(merged.get(2)) // dos
+console.log(merged.get(3)) // three</pre>
+
+<h2 id="Usage_notes">Usage notes</h2>
+
+<p>Beware! Setting Object properties works for Map objects as well, and can cause considerable confusion.</p>
+
+<p>Therefore, this still <em>sort-of</em> works....</p>
+
+<pre class="syntaxbox example-bad brush js">let wrongMap = new Map()
+wrongMap['bla'] = 'blaa'
+wrongMap['bla2'] = 'blaaa2'
+
+console.log(wrongMap)  // Map { bla: 'blaa', bla2: 'blaaa2' }
+</pre>
+
+<p>...But, it does not behave as expected:</p>
+
+<pre class="syntaxbox example-bad brush js">wrongMap.has('bla')    // false
+wrongMap.delete('bla') // false
+console.log(wrongMap)  // Map { bla: 'blaa', bla2: 'blaaa2' }</pre>
+
+<p>And there's very little difference from the correct usage, anyway: </p>
+
+<pre class="syntaxbox brush js example-good">let myMap = new Map()
+myMap.set('bla','blaa')
+myMap.set('bla2','blaa2')
+console.log(myMap)  // Map { 'bla' =&gt; 'blaa', 'bla2' =&gt; 'blaa2' }
+
+myMap.has('bla')    // true
+myMap.delete('bla') // true
+console.log(myMap)  // Map { 'bla2' =&gt; 'blaa2' }</pre>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+	<tbody>
+		<tr>
+			<th scope="col">Specification</th>
+			<th scope="col">Status</th>
+			<th scope="col">Comment</th>
+		</tr>
+		<tr>
+			<td>{{SpecName('ES2015', '#sec-map-objects', 'Map')}}</td>
+			<td>{{Spec2('ES2015')}}</td>
+			<td>Initial definition.</td>
+		</tr>
+		<tr>
+			<td>{{SpecName('ESDraft', '#sec-map-objects', 'Map')}}</td>
+			<td>{{Spec2('ESDraft')}}</td>
+			<td></td>
+		</tr>
+	</tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.builtins.Map")}}</p>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+	<li><a class="link-https" href="https://bugzilla.mozilla.org/show_bug.cgi?id=697479">Map and Set bug at Mozilla</a></li>
+	<li><a class="external" href="https://web.archive.org/web/20170105121945/http://wiki.ecmascript.org:80/doku.php?id=harmony:simple_maps_and_sets">ECMAScript Harmony proposal</a></li>
+	<li>{{jsxref("Set")}}</li>
+	<li>{{jsxref("WeakMap")}}</li>
+	<li>{{jsxref("WeakSet")}}</li>
+</ul>

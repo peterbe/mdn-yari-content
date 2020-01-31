@@ -1,0 +1,188 @@
+<div>{{LearnSidebar}}{{PreviousMenuNext("Learn/CSS/Building_blocks/Sizing_items_in_CSS", "Learn/CSS/Building_blocks/Styling_tables", "Learn/CSS/Building_blocks")}}</div>
+
+<p>このレッスンでは、特定の要素が CSS でどのように扱われるかを見ていきます。画像・メディア・フォーム要素では、CSS でスタイルを設定するにあたって通常のボックスとは少し異なる動作をします。何が可能で何が不可能かを理解することで、フラストレーションを軽減することができます。このレッスンでは、知っておくべきことのをいくつかを取り上げます。</p>
+
+<table class="learn-box standard-table">
+ <tbody>
+  <tr>
+   <th scope="row">前提条件:</th>
+   <td>基本的なコンピューターリテラシー、<a href="https://developer.mozilla.org/ja/Learn/Getting_started_with_the_web/Installing_basic_software">基本的なソフトウェアがインストールされている</a>こと、<a href="https://developer.mozilla.org/ja/Learn/Getting_started_with_the_web/Dealing_with_files">ファイルの扱い</a>、HTML の基本（<a href="/ja/docs/Learn/HTML/Introduction_to_HTML">HTML 入門</a>）および CSS に関するアイデア（<a href="/ja/docs/Learn/CSS/First_steps">CSS の第一歩</a>）に関する基本的な知識を得ている。</td>
+  </tr>
+  <tr>
+   <th scope="row">目的:</th>
+   <td>CSS でスタイルを設定したときに一部の要素が異常に動作することを理解する。</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Replaced_elements" name="Replaced_elements">置換要素</h2>
+
+<p>Images and video are described as <strong><a href="/ja/docs/Web/CSS/Replaced_element">replaced elements</a></strong>. This means that CSS cannot affect the internal layout of these elements — only their position on the page amongst other elements. As we will see however, there are various things that CSS can do with an image.</p>
+
+<p>Certain replaced elements, such as images and video, are also described as having an<strong> aspect ratio</strong>. This means that it has a size in both the horizontal (x) and vertical (y) dimensions, and will be displayed using the intrinsic dimensions of the file 既定では.</p>
+
+<h2 id="Sizing_images" name="Sizing_images">画像サイズ</h2>
+
+<p>As you already know from following these lessons, everything in CSS generates a box. If you place an image inside a box that is smaller or larger than the intrinsic dimensions of the image file in either direction, it will either appear smaller than the box, or overflow the box. You need to make a decision about what happens with the overflow.</p>
+
+<p>In the example below we have two boxes, both 200 pixels in size:</p>
+
+<ul>
+ <li>One contains an image which is smaller than 200 pixels — it is smaller than the box and doesn't stretch to fill it.</li>
+ <li>The other is larger than 200 pixels and overflows the box.</li>
+</ul>
+
+<p>{{EmbedGHLiveSample("css-examples/learn/images/size.html", '100%', 1000)}}</p>
+
+<p>So what can we do about the overflowing issue?</p>
+
+<p>As we learned <a href="/ja/docs/Learn/CSS/Building_blocks/Sizing_items_in_CSS">our previous lesson</a>, a common technique is to make the {{cssxref("max-width")}} of an image 100%. This will enable the image to become smaller in size than the box but not larger. This technique will work with other replaced elements such as <code><a href="/ja/docs/Web/HTML/Element/video">&lt;video&gt;</a></code>s, or <code><a href="/ja/docs/Web/HTML/Element/iframe">&lt;iframe&gt;</a></code>s.</p>
+
+<p><strong>Try adding <code>max-width: 100%</code> to the <code>&lt;img&gt;</code> element in the example above. You will see that the smaller image remains unchanged, but the larger one becomes smaller to fit into the box.</strong></p>
+
+<p>You can make other choices about images inside containers. 例えば、you may want to size an image so it completely covers a box.</p>
+
+<p>The {{cssxref("object-fit")}} property can help you here. When using <code>object-fit</code> the replaced element can be sized to fit a box in a variety of ways.</p>
+
+<p>Below we have used the value <code>cover</code>, which sizes the image down, maintaining the aspect ratio so that it neatly fills the box. As the aspect ratio is maintained some parts of the image will be cropped by the box.</p>
+
+<p>{{EmbedGHLiveSample("css-examples/learn/images/object-fit.html", '100%', 1000)}}</p>
+
+<p>If we use <code>contain</code> as a value the image will be scaled down until it is small enough to fit inside the box. This will result in "letterboxing" if it is not the same aspect ratio as the box.</p>
+
+<p>You could also try the value of <code>fill</code>, which will fill the box but not maintain the aspect ratio.</p>
+
+<h2 id="Replaced_elements_in_layout" name="Replaced_elements_in_layout">レイアウト内の置換要素</h2>
+
+<p>When using various CSS layout techniques on replaced elements, you may well find that they behave slightly differently to other elements. 例えば、in a flex or grid layout elements are stretched 既定では to fill the entire area. Images will not stretch, and instead will be aligned to the start of the grid area or flex container.</p>
+
+<p>You can see this happening in the example below where we have a two column, two row grid container, which has four items in it. All of the <code>&lt;div&gt;</code> elements have a background color and stretch to fill the row and column. The image, however, does not stretch.</p>
+
+<p>{{EmbedGHLiveSample("css-examples/learn/images/layout.html", '100%', 1000)}}</p>
+
+<p>If you are following these lessons in order then you may not have looked at layout yet. Just keep in mind that replaced elements, when they become part of a grid or flex layout, have different default behaviors, essentially to avoid them being stretched strangely by the layout.</p>
+
+<p>To force the image to stretch to fill the grid cell it is in, you'd have to do something like following:</p>
+
+<pre class="brush: css">img {
+  width: 100%;
+  height: 100%;
+}</pre>
+
+<p>This would however stretch the image, so probably isn't what you'd want to do.</p>
+
+<h2 id="Form_elements" name="Form_elements">フォーム要素</h2>
+
+<p>Form elements are a tricky issue when it comes to styling with CSS, and the <a href="/ja/docs/Learn/HTML/Forms">HTML Forms module</a> contains detailed guides to styling form elements, which I will not fully reproduce here. There are a few key things worth highlighting in this section of the article.</p>
+
+<p>Many form controls are added to your page by way of the <code><a href="/ja/docs/Web/HTML/Element/input">&lt;input&gt;</a></code> element — this defines simple form fields such as text inputs, through to more complex fields added in HTML5 such as color and date pickers. There are some additional elements, such as <code><a href="/ja/docs/Web/HTML/Element/textarea">&lt;textarea&gt;</a></code> for multiline text input, and also elements used to contain and label parts of forms such as <code><a href="/ja/docs/Web/HTML/Element/fieldset">&lt;fieldset&gt;</a></code> and <code><a href="/ja/docs/Web/HTML/Element/legend">&lt;legend&gt;</a></code>.</p>
+
+<p>HTML5 also contains attributes that enable web developers to indicate which fields are required, and even the type of content that needs to be entered. If the user enters something unexpected, or leaves a required field blank, the browser can show an error message. Different browsers are inconsistent in how much styling and customization they allow for such items.</p>
+
+<h3 id="Styling_text_input_elements" name="Styling_text_input_elements">テキスト入力欄のスタイル</h3>
+
+<p>Elements that allow for text input, such as <code>&lt;input type="text"&gt;</code>, specific types such as <code>&lt;input type="email"&gt;</code>, and the <code>&lt;textarea&gt;</code> element are quite easy to style and tend to behave just like other boxes on your page. The default styling of these elements will differ however based on the operating system and browser that your user visits the site with.</p>
+
+<p>In the example below we have styled some text inputs using CSS — you can see that things such as borders, margins and padding all apply as you would expect. We are using attribute selectors to target the different input types. Try changing how this form looks by adjusting the borders, adding background colors to the fields, and changing fonts and padding.</p>
+
+<p>{{EmbedGHLiveSample("css-examples/learn/images/form.html", '100%', 1000)}}</p>
+
+<div class="blockIndicator warning">
+<p><strong>Important</strong>: You should take care when changing the styling of form elements to make sure it is still obvious to the user they are form elements. You could create a form input with no borders and background that is almost indistinguisable from the content around it, but this would make it very hard to recognise and fill in.</p>
+</div>
+
+<p>As explained in the lessons on <a href="/ja/docs/Learn/HTML/Forms/Styling_HTML_forms">form styling</a> in the HTML part of this course, many of the more complex input types are rendered by the operating system and are inaccessible to styling. You should therefore always assume that forms are going to look quite different for different visitors and test complex forms in a number of browsers.</p>
+
+<h3 id="Inheritance_and_form_elements" name="Inheritance_and_form_elements">継承とフォーム要素</h3>
+
+<p>In some browsers, form elements do not inherit font styling 既定では. Therefore if you want to be sure that your form fields use the font defined on the body, or on a parent element, you should add this rule to your CSS.</p>
+
+<pre class="brush: css"><code>button, 
+input, 
+select, 
+textarea { 
+  font-family : inherit; 
+  font-size : 100%; 
+} </code></pre>
+
+<h3 id="Form_elements_and_box-sizing" name="Form_elements_and_box-sizing">フォーム要素と box-sizing</h3>
+
+<p>Across browsers form elements use different box sizing rules for different widgets. You learned about the <code>box-sizing</code> property in <a href="/ja/docs/Learn/CSS/Building_blocks/The_box_model">our box model lesson</a> and you can use this knowledge when styling forms to ensure a consistent experience when setting widths and heights on form elements.</p>
+
+<p>For consistency it is a good idea to set margins and padding to <code>0</code> on all elements, then add these back in when styling particular controls</p>
+
+<pre class="brush: css"><code>button, 
+input, 
+select, 
+textarea {  
+  box-sizing: border-box; 
+  padding: 0;
+  margin: 0; 
+}</code></pre>
+
+<h3 id="Other_useful_settings" name="Other_useful_settings">その他の便利な設定</h3>
+
+<p>In addition to the rules mentioned above, you should also set <code>overflow: auto</code> on <code>&lt;textarea&gt;</code>s to stop IE showing a scrollbar when there is no need for one:</p>
+
+<pre class="brush: css">textarea {
+  overflow: auto;
+}</pre>
+
+<h3 id="Putting_it_all_together_into_a_reset" name="Putting_it_all_together_into_a_reset">リセット処理としてまとめる</h3>
+
+<p>As a final step, we can wrap up the various properties discussed above into the following "form reset" to provide a consistent base to work from. This includes all the items mentioned in the last three sections:</p>
+
+<pre class="brush: css"><code>button, 
+input, 
+select, 
+textarea { 
+  font-family: inherit; 
+  font-size: 100%; 
+  box-sizing: border-box; 
+  padding: 0; margin: 0; 
+} 
+
+textarea { 
+  overflow: auto; 
+} </code></pre>
+
+<div class="blockIndicator note">
+<p><strong>注</strong>: Normalizing stylesheets are used by many developers to create a set of baseline styles to use on all projects. Typically these do similar things to those described above, making sure that anything different across browsers is set to a consistent default before you do your own work on the CSS. They are not as important as they once were, as browsers are typically more consistent than in the past. However if you want to take a look at one example, check out <a href="http://necolas.github.io/normalize.css/">Normalize.css</a>, which is a very popular stylesheet used as a base by many projects.</p>
+</div>
+
+<p>For further information on styling forms, take a look at the two articles in the HTML section of these guides.</p>
+
+<ul>
+ <li><a href="/ja/docs/Learn/HTML/Forms/Styling_HTML_forms">Styling HTML Forms</a></li>
+ <li><a href="/ja/docs/Learn/HTML/Forms/Advanced_styling_for_HTML_forms">Advanced Styling for HTML Forms</a></li>
+</ul>
+
+<h2 id="Summary" name="Summary">まとめ</h2>
+
+<p>This lesson has highlighted some of the differences you will encounter when working with images, media, and other unusual elements in CSS. In the next article we'll look over a few tips you'll find useful when you have to style HTML tables.</p>
+
+<p>{{PreviousMenuNext("Learn/CSS/Building_blocks/Sizing_items_in_CSS", "Learn/CSS/Building_blocks/Styling_tables", "Learn/CSS/Building_blocks")}}</p>
+
+<h2 id="In_this_module" name="In_this_module">このモジュール</h2>
+
+<ol>
+ <li><a href="/ja/docs/Learn/CSS/Building_blocks/Cascade_and_inheritance">カスケードと継承</a></li>
+ <li><a href="/ja/docs/Learn/CSS/Building_blocks/Selectors">CSS セレクター</a>
+  <ul>
+   <li><a href="/ja/docs/Learn/CSS/Building_blocks/Selectors/Type_Class_and_ID_Selectors">要素・クラス・ID によるセレクター</a></li>
+   <li><a href="/ja/docs/Learn/CSS/Building_blocks/Selectors/Attribute_selectors">属性によるセレクター</a></li>
+   <li><a href="/ja/docs/Learn/CSS/Building_blocks/Selectors/Pseudo-classes_and_pseudo-elements">擬似クラスおよび疑似要素によるセレクター</a></li>
+   <li><a href="/ja/docs/Learn/CSS/Building_blocks/Selectors/Combinators">結合子</a></li>
+  </ul>
+ </li>
+ <li><a href="/ja/docs/Learn/CSS/Building_blocks/The_box_model">ボックスモデル</a></li>
+ <li><a href="/ja/docs/Learn/CSS/Building_blocks/Backgrounds_and_borders">背景と枠線</a></li>
+ <li><a href="/ja/docs/Learn/CSS/Building_blocks/Handling_different_text_directions">テキスト方向の操作</a></li>
+ <li><a href="/ja/docs/Learn/CSS/Building_blocks/Overflowing_content">要素のはみ出し（オーバーフロー）</a></li>
+ <li><a href="/ja/docs/Learn/CSS/Building_blocks/Values_and_units">CSS の値と単位</a></li>
+ <li><a href="/ja/docs/Learn/CSS/Building_blocks/Sizing_items_in_CSS">CSS によるサイズ設定</a></li>
+ <li><a href="/ja/docs/Learn/CSS/Building_blocks/Images_media_form_elements">画像・メディア・フォーム要素</a></li>
+ <li><a href="/ja/docs/Learn/CSS/Building_blocks/Styling_tables">表のスタイリング</a></li>
+ <li><a href="/ja/docs/Learn/CSS/Building_blocks/Debugging_CSS">CSS のデバッグ</a></li>
+ <li><a href="/ja/docs/Learn/CSS/Building_blocks/Organizing">CSS の整理</a></li>
+</ol>

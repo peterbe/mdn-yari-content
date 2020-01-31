@@ -1,0 +1,81 @@
+<p>{{APIRef("DOM")}}</p>
+
+<p>In an <a href="/en-US/docs/Web/HTML">HTML</a> document, the <strong><code>history.pushState()</code></strong> method adds a state to the browser's session history stack.</p>
+
+<h2 id="Syntax">Syntax</h2>
+
+<pre class="syntaxbox">history.pushState(<em><var>state, title, url</var></em>);</pre>
+
+<h3 id="Parameters">Parameters</h3>
+
+<dl>
+ <dt><code><strong>state</strong></code></dt>
+ <dd>The state object is a JavaScript object which is associated with the new history entry created by <code>pushState()</code>. Whenever the user navigates to the new state, a <code>popstate</code> event is fired, and the <code>state</code> property of the event contains a copy of the history entry's state object.</dd>
+ <dd>The state object can be anything that can be serialized. Because Firefox saves state objects to the user's disk so they can be restored after the user restarts the browser, we impose a size limit of 640k characters on the serialized representation of a state object. If you pass a state object whose serialized representation is larger than this to <code>pushState()</code>, the method will throw an exception. If you need more space than this, you're encouraged to use <code>sessionStorage</code> and/or <code>localStorage</code>.</dd>
+ <dt><code><strong>title</strong></code></dt>
+ <dd><a href="https://github.com/whatwg/html/issues/2174">Most browsers currently ignores this parameter</a>, although they may use it in the future. Passing the empty string here should be safe against future changes to the method. Alternatively, you could pass a short title for the state to which you're moving.</dd>
+ <dt><code><strong>url</strong></code></dt>
+ <dd>The new history entry's URL is given by this parameter. Note that the browser won't attempt to load this URL after a call to <code>pushState()</code>, but it might attempt to load the URL later, for instance after the user restarts the browser. The new URL does not need to be absolute; if it's relative, it's resolved relative to the current URL. The new URL must be of the same origin as the current URL; otherwise, <code>pushState()</code> will throw an exception. This parameter is optional; if it isn't specified, it's set to the document's current URL.</dd>
+</dl>
+
+<div class="note">
+<p><strong>Note:</strong> In Gecko 2.0 (Firefox 4 / Thunderbird 3.3 / SeaMonkey 2.1) through Gecko 5.0 (Firefox 5.0 / Thunderbird 5.0 / SeaMonkey 2.2), the passed object is serialized using JSON. Starting in Gecko 6.0 (Firefox 6.0 / Thunderbird 6.0 / SeaMonkey 2.3), the object is serialized using <a href="https://developer.mozilla.org/en/DOM/The_structured_clone_algorithm" title="en/DOM/The structured clone algorithm">the structured clone algorithm</a>. This allows a wider variety of objects to be safely passed.</p>
+</div>
+
+<p>In a sense, calling <code>pushState()</code> is similar to setting <code>window.location = "#foo"</code>, in that both will also create and activate another history entry associated with the current document. But <code>pushState()</code> has a few advantages:</p>
+
+<ul>
+ <li>The new URL can be any URL in the same origin as the current URL. In contrast, setting <code>window.location</code> keeps you at the same <a href="https://developer.mozilla.org/en-US/docs/Web/API/Document" title="Each web page loaded in the browser has its own document object. The Document interface serves as an entry point into the web page's content (the DOM tree, including elements such as &lt;body> and &lt;table>) and provides functionality which is global to the document (such as obtaining the page's URL and creating new elements in the document)."><code>document</code></a> only if you modify only the hash.</li>
+ <li>You don't have to change the URL if you don't want to. In contrast, setting <code>window.location = "#foo";</code> only creates a new history entry if the current hash isn't <code>#foo</code>.</li>
+ <li>You can associate arbitrary data with your new history entry. With the hash-based approach, you need to encode all of the relevant data into a short string.</li>
+</ul>
+
+<p>Note that <code>pushState()</code> never causes a <code>hashchange</code> event to be fired, even if the new URL differs from the old URL only in its hash.</p>
+
+<p>In other documents, it creates an element with a <code>null</code> namespace URI.</p>
+
+<h2 id="Examples">Examples</h2>
+
+<p>This creates a new browser history state setting the <em>state</em>, <em>title</em>, and <em>url</em>.</p>
+
+<h3 id="JavaScript">JavaScript</h3>
+
+<pre class="brush: js">let state = { 'page_id': 1, 'user_id': 5 }
+let title = ''
+let url = 'hello-world.html'
+
+history.pushState(state, title, url)</pre>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('HTML WHATWG', "browsers.html#dom-history-pushstate", "History.pushState()")}}</td>
+   <td>{{Spec2('HTML WHATWG')}}</td>
+   <td>No change from {{SpecName("HTML5 W3C")}}.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('HTML5 W3C', "browsers.html#dom-history-pushstate", "History.pushState()")}}</td>
+   <td>{{Spec2('HTML5 W3C')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("api.History.pushState")}}</p>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Web/API/History_API/Working_with_the_History_API">Working with the History API</a></li>
+</ul>

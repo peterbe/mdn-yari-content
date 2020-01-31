@@ -1,0 +1,386 @@
+<div>{{jsSidebar("Intermediate")}}</div>
+
+<p class="summary">Замикання - це функції, що посилаються на незалежні (вільні) змінні (змінні, які використовуються локально, але визначені в обмеженій області видимості). Іншими словами, ці функції "пам'ятають" середовище, в якому вони були створені.</p>
+
+<h2 id="Лексичне_середовище">Лексичне середовище</h2>
+
+<p>Розглянемо наступне:</p>
+
+<div>
+<pre class="brush: js">function init() {
+  var name = "Mozilla"; // name - це локальна змінна створена init
+  function displayName() { // displayName() - це внутрішня функція, a closure
+    alert(name); // використовуємо змінну оголошену в батьківській функції    
+  }
+  displayName();    
+}
+init();</pre>
+</div>
+
+<p><code>init()</code> створює локальну змінну <code>name</code> та функцію <code>displayName()</code>. <code>displayName()</code> є вкладеною функцією, що оголошена всередині <code>init()</code> та є доступною тільки в тілі цієї функції. <code>displayName()</code> не має локальних змінних, проте вкладені функції мають доступ до змінних зовнішніх функцій саме тому <code>displayName()</code> може використовувати імена змінних оголошених в батіківській функції <code>init()</code>.</p>
+
+<p>{{JSFiddleEmbed("https://jsfiddle.net/78dg25ax/", "js,result", 200)}}</p>
+
+<p><a href="http://jsfiddle.net/xAFs9/3/" title="http://jsfiddle.net/xAFs9/">Запустіть</a> цей код і побачите, що все працює. Це є прикладом лексичної області видимості: у JavaScript, область видимості змінної є визначеною по місцю знаходження всередині коду (це очевидно лексично) і вкладені функції мають доступ до змінних, оголошених у їх зовнішній області.</p>
+
+<h2 id="Замикання">Замикання</h2>
+
+<p>Тепер розглянемо наступний приклад:</p>
+
+<pre class="brush: js">function makeFunc() {
+  var name = "Mozilla";
+  function displayName() {
+    alert(name);
+  }
+  return displayName;
+}
+
+var myFunc = makeFunc();
+myFunc();
+</pre>
+
+<p>Якщо ви запустите цей код, то результат його буде таким самим, як і в попередньому прикладі функції <code>init()</code>: рядок  "Mozilla" буде відображений в спливаючому повідомленні <font face="consolas, Liberation Mono, courier, monospace">alert</font>(). Цікавою відмінністю є те, що внутрішня функція <code>displayName() </code>буде повернена з зовнішньої функції перш ніж вона буде виконана. </p>
+
+<p>Той факт, що цей код досі працює, може здаватись не очевидним. В мовах програмування без лексичних замикань, локальні змінні в середині функції існують тільки на протязі часу виконання самої функції. Як тільки <code>makeFunc()</code> завершила своє виконання, слід очікувати що змінна <font face="consolas, Liberation Mono, courier, monospace"><span style="background-color: #eeeeee;">name</span></font> не буде більше існувати. Однак, оскільки цей код працює як і очікувалось, очевидно що цей підхід не є таким, що використовується у JavaScript.</p>
+
+<p>Це відбувається тому що ці функції в JavaScript утворюють замикання. <em>Замикання</em> це комбінація функції і лексичного середовища (або просто середовища), де ця функція була оголошена. Середовище складається з будь-яких локальних змінних, які були в області видимості в той час коли замикання було створене. В цьому випадку, <code>myFunc</code> є посиланням на екземпляр функції <font face="consolas, Liberation Mono, courier, monospace"><span style="background-color: #eeeeee;">displayName</span></font> створений коли <font face="consolas, Liberation Mono, courier, monospace"><span style="background-color: #eeeeee;">makeFunc</span></font> була виконана. Екземпляр <code>displayName</code> включає посилання на власне лексичне середовище в середині якого існує змінна <code>name</code>. З цієї причини, коли <code>myFunc</code> викликається, змінна <code>name</code> є доступною для використання і "Mozilla" передається до <code>alert</code>. ​​​​​​</p>
+
+<p>Ось трохи цікавіший приклад — a <code>makeAdder</code> function:</p>
+
+<pre class="brush: js">function makeAdder(x) {
+  return function(y) {
+    return x + y;
+  };
+}
+
+var add5 = makeAdder(5);
+var add10 = makeAdder(10);
+
+console.log(add5(2));  // 7
+console.log(add10(2)); // 12
+</pre>
+
+<p>У цьому прикладі ми визначили функцію <code>makeAdder(x),</code> яка приймає єдиний аргумент <code>x</code> і повертає нову функцію. Функція, яку вона повертає, приймає єдиний аргумент <code>y</code>, і повертає суму  <code>x</code> і <code>y</code>.</p>
+
+<p>По суті, <code>makeAdder</code> це фабрика функцій — вона створює функції, які можуть додавати певне значення до свого аргументу. У наведеному вище прикладі ми використовуємо нашу фабричну функцію для створення двох нових функцій — одна додає 5 до свого аргументу, і інша додає 10.</p>
+
+<p><code>add5</code> і <code>add10</code> є прикладами замикання. Вони поділяють одне визначення тіла функції, але зберігають різні лексичні середовища. В лексичному середовищі <code>add5</code> , <code>x</code> - це 5, а в лексичному середовищі <code>add10,</code> <code>x</code>- це 10.</p>
+
+<h2 id="Замикання_на_практиці">Замикання на практиці</h2>
+
+<p>Замикання корисні, оскільки вони дозволяють зв'язати деякі дані (лексичне середовище) з функцією, яка працює з цими даними. Це має очевидні паралелі з об'єктно-орієнтованим програмуванням, де об'єкти дозволяють нам зв'язати деякі дані (властивості об'єкта) з одним або декількома методами.</p>
+
+<p>Отже, замикання можна використовувати всюди, де ви зазвичай використовували об'єкт з одним єдиним методом. </p>
+
+<p>Ситуації, в яких ви можливо захочете зробити це, особливо поширені в web-розробці. Велика частина front-end коду, який ми пишемо на JavaScript, основана на обробці подій - ми визначаємо деяку поведінку, а потім прикріплюємо її до події, яка запускається користувачем (наприклад, клацання або натискання клавіші). Наш код, як правило, прив'язується до події як зворотній виклик <strong>(callback)</strong> - функція, яка виконується у відповідь на виникнення події.</p>
+
+<p>Давайте розглянемо практичний приклад: припустимо, що ми хочемо додати кілька кнопок на сторінку, які змінюватимуть розмір тексту. Один із способів зробити це - вказати <code>font-size</code> елементу <code>body</code> у пікселях, а потім встановити розмір інших елементів на сторінці (наприклад, заголовки) за допомогою відносних одиниць виміру <code>em</code>:</p>
+
+<pre class="brush: css">body {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 12px;
+}
+
+h1 {
+  font-size: 1.5em;
+}
+
+h2 {
+  font-size: 1.2em;
+}
+</pre>
+
+<p>Наші інтерактивні кнопки розміру тексту можуть змінювати властивість <code>font-size</code> елемента <code>body</code>, і налаштування будуть підхвачені іншими елементами на сторінці завдяки відносним одиницям.</p>
+
+<p>Ось JavaScript:</p>
+
+<pre class="brush: js">function makeSizer(size) {
+  return function() {
+    document.body.style.fontSize = size + 'px';
+  };
+}
+
+var size12 = makeSizer(12);
+var size14 = makeSizer(14);
+var size16 = makeSizer(16);
+</pre>
+
+<p> Тепер <code>size12</code>, <code>size14</code>, і <code>size16</code> є функціями, які будуть змінювати розмір тексту елемента body відповідно до 12, 14 та 16 пікселів. Ми можемо прив'язати їх до кнопок таким чином:</p>
+
+<pre class="brush: js">document.getElementById('size-12').onclick = size12;
+document.getElementById('size-14').onclick = size14;
+document.getElementById('size-16').onclick = size16;
+</pre>
+
+<pre class="brush: html">&lt;a href="#" id="size-12"&gt;12&lt;/a&gt;
+&lt;a href="#" id="size-14"&gt;14&lt;/a&gt;
+&lt;a href="#" id="size-16"&gt;16&lt;/a&gt; 
+</pre>
+
+<p>{{JSFiddleEmbed("https://jsfiddle.net/vnkuZ/","","200")}}</p>
+
+<h2 id="Emulating_private_methods_with_closures">Emulating private methods with closures</h2>
+
+<p>Languages such as Java provide the ability to declare methods private, meaning that they can only be called by other methods in the same class.</p>
+
+<p>JavaScript does not provide a native way of doing this, but it is possible to emulate private methods using closures. Private methods aren't just useful for restricting access to code: they also provide a powerful way of managing your global namespace, keeping non-essential methods from cluttering up the public interface to your code.</p>
+
+<p>Here's how to define some public functions that can access private functions and variables, using closures which is also known as the <a class="external" href="http://www.google.com/search?q=javascript+module+pattern" title="http://www.google.com/search?q=javascript+module+pattern">module pattern</a>:</p>
+
+<pre class="brush: js">var counter = (function() {
+  var privateCounter = 0;
+  function changeBy(val) {
+    privateCounter += val;
+  }
+  return {
+    increment: function() {
+      changeBy(1);
+    },
+    decrement: function() {
+      changeBy(-1);
+    },
+    value: function() {
+      return privateCounter;
+    }
+  };   
+})();
+
+console.log(counter.value()); // logs 0
+counter.increment();
+counter.increment();
+console.log(counter.value()); // logs 2
+counter.decrement();
+console.log(counter.value()); // logs 1
+</pre>
+
+<p>There's a lot going on here. In previous examples each closure has had its own environment; here we create a single environment which is shared by three functions: <code>counter.increment</code>, <code>counter.decrement</code>, and <code>counter.value</code>.</p>
+
+<p>The shared environment is created in the body of an anonymous function, which is executed as soon as it has been defined. The environment contains two private items: a variable called <code>privateCounter</code> and a function called <code>changeBy</code>. Neither of these private items can be accessed directly from outside the anonymous function. Instead, they must be accessed by the three public functions that are returned from the anonymous wrapper.</p>
+
+<p>Those three public functions are closures that share the same environment. Thanks to JavaScript's lexical scoping, they each have access to the <code>privateCounter</code> variable and <code>changeBy</code> function.</p>
+
+<p>You'll notice we're defining an anonymous function that creates a counter, and then we call it immediately and assign the result to the <code>counter</code> variable. We could store this function in a separate variable <code>makeCounter</code> and use it to create several counters.</p>
+
+<pre class="brush: js">var makeCounter = function() {
+  var privateCounter = 0;
+  function changeBy(val) {
+    privateCounter += val;
+  }
+  return {
+    increment: function() {
+      changeBy(1);
+    },
+    decrement: function() {
+      changeBy(-1);
+    },
+    value: function() {
+      return privateCounter;
+    }
+  }  
+};
+
+var counter1 = makeCounter();
+var counter2 = makeCounter();
+alert(counter1.value()); /* Alerts 0 */
+counter1.increment();
+counter1.increment();
+alert(counter1.value()); /* Alerts 2 */
+counter1.decrement();
+alert(counter1.value()); /* Alerts 1 */
+alert(counter2.value()); /* Alerts 0 */
+</pre>
+
+<p>Notice how each of the two counters maintains its independence from the other. Its environment during the call of the <code>makeCounter()</code> function is different each time. The closure variable <code>privateCounter </code>contains a different instance each time.</p>
+
+<p>Using closures in this way provides a number of benefits that are normally associated with object oriented programming, in particular data hiding and encapsulation.</p>
+
+<h2 id="Creating_closures_in_loops_A_common_mistake">Creating closures in loops: A common mistake</h2>
+
+<p>Prior to the introduction of the <a href="/en-US/docs/Web/JavaScript/Reference/Statements/let" title="let"><code>let</code> keyword</a> in ECMAScript 2015, a common problem with closures occurred when they were created inside a loop. Consider the following example:</p>
+
+<pre class="brush: html">&lt;p id="help"&gt;Helpful notes will appear here&lt;/p&gt;
+&lt;p&gt;E-mail: &lt;input type="text" id="email" name="email"&gt;&lt;/p&gt;
+&lt;p&gt;Name: &lt;input type="text" id="name" name="name"&gt;&lt;/p&gt;
+&lt;p&gt;Age: &lt;input type="text" id="age" name="age"&gt;&lt;/p&gt;
+</pre>
+
+<pre class="brush: js">function showHelp(help) {
+  document.getElementById('help').innerHTML = help;
+}
+
+function setupHelp() {
+  var helpText = [
+      {'id': 'email', 'help': 'Your e-mail address'},
+      {'id': 'name', 'help': 'Your full name'},
+      {'id': 'age', 'help': 'Your age (you must be over 16)'}
+    ];
+
+  for (var i = 0; i &lt; helpText.length; i++) {
+    var item = helpText[i];
+    document.getElementById(item.id).onfocus = function() {
+      showHelp(item.help);
+    }
+  }
+}
+
+setupHelp(); 
+</pre>
+
+<p>{{JSFiddleEmbed("https://jsfiddle.net/v7gjv/", "", 200)}}</p>
+
+<p>The <code>helpText</code> array defines three helpful hints, each associated with the ID of an input field in the document. The loop cycles through these definitions, hooking up an <code>onfocus</code> event to each one that shows the associated help method.</p>
+
+<p>If you try this code out, you'll see that it doesn't work as expected. No matter what field you focus on, the message about your age will be displayed.</p>
+
+<p>The reason for this is that the functions assigned to <code>onfocus</code> are closures; they consist of the function definition and the captured environment from the <code>setupHelp</code> function's scope. Three closures have been created by the loop, but each one shares the same single environment which has a variable with changing values (<code>item.help</code>). When the <code>onfocus</code> callbacks are executed, accessing <code>item.help</code> at that moment causes this behaviour (indeed, as the value of the variable is only accessed/calculated at runtime), as the loop has run its course by that time, and the <code>item</code> variable object (shared by all three closures) has been left pointing to the last entry in the <code>helpText</code> list.</p>
+
+<p>One solution in this case is to use more closures: in particular, to use a function factory as described earlier on:</p>
+
+<pre class="brush: js">function showHelp(help) {
+  document.getElementById('help').innerHTML = help;
+}
+
+function makeHelpCallback(help) {
+  return function() {
+    showHelp(help);
+  };
+}
+
+function setupHelp() {
+  var helpText = [
+      {'id': 'email', 'help': 'Your e-mail address'},
+      {'id': 'name', 'help': 'Your full name'},
+      {'id': 'age', 'help': 'Your age (you must be over 16)'}
+    ];
+
+  for (var i = 0; i &lt; helpText.length; i++) {
+    var item = helpText[i];
+    document.getElementById(item.id).onfocus = makeHelpCallback(item.help);
+  }
+}
+
+setupHelp(); 
+</pre>
+
+<p>{{JSFiddleEmbed("https://jsfiddle.net/v7gjv/1/", "", 300)}}</p>
+
+<p>This works as expected. Rather than the callbacks all sharing a single environment, the <code>makeHelpCallback</code> function creates <em>a new environment</em> for each one in which <code>help</code> refers to the corresponding string from the <code>helpText</code> array.</p>
+
+<p>One other way to write the above using anonymous closures is:</p>
+
+<pre class="brush: js">function showHelp(help) {
+  document.getElementById('help').innerHTML = help;
+}
+
+function setupHelp() {
+  var helpText = [
+      {'id': 'email', 'help': 'Your e-mail address'},
+      {'id': 'name', 'help': 'Your full name'},
+      {'id': 'age', 'help': 'Your age (you must be over 16)'}
+    ];
+
+  for (var i = 0; i &lt; helpText.length; i++) {
+    (function() {
+       var item = helpText[i];
+       document.getElementById(item.id).onfocus = function() {
+         showHelp(item.help);
+       }
+    })(); // Immediate event listener attachment with the current value of item (preserved until iteration).
+  }
+}
+
+setupHelp();</pre>
+
+<p>If you don't want to use more closures, you can use the <code><a href="https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Statements/let">let</a></code> keyword of ES6 :</p>
+
+<pre class="brush: js">function showHelp(help) {
+  document.getElementById('help').innerHTML = help;
+}
+
+function setupHelp() {
+  var helpText = [
+      {'id': 'email', 'help': 'Your e-mail address'},
+      {'id': 'name', 'help': 'Your full name'},
+      {'id': 'age', 'help': 'Your age (you must be over 16)'}
+    ];
+
+  for (var i = 0; i &lt; helpText.length; i++) {
+    let item = helpText[i];
+    document.getElementById(item.id).onfocus = function() {
+      showHelp(item.help);
+    }
+  }
+}
+
+setupHelp();</pre>
+
+<p>In the above case, we used let instead of var, so every closure will bind the every block scoped variable, so it will work perfectly without using any extra closure.</p>
+
+<h2 id="Performance_considerations">Performance considerations</h2>
+
+<p>It is unwise to unnecessarily create functions within other functions if closures are not needed for a particular task, as it will negatively affect script performance both in terms of processing speed and memory consumption.</p>
+
+<p>For instance, when creating a new object/class, methods should normally be associated to the object's prototype rather than defined into the object constructor. The reason is that whenever the constructor is called, the methods would get reassigned (that is, for every object creation).</p>
+
+<p>Consider the following impractical but demonstrative case:</p>
+
+<pre class="brush: js">function MyObject(name, message) {
+  this.name = name.toString();
+  this.message = message.toString();
+  this.getName = function() {
+    return this.name;
+  };
+
+  this.getMessage = function() {
+    return this.message;
+  };
+}
+</pre>
+
+<p>The previous code does not take advantage of the benefits of closures and thus could instead be formulated:</p>
+
+<pre class="brush: js">function MyObject(name, message) {
+  this.name = name.toString();
+  this.message = message.toString();
+}
+MyObject.prototype = {
+  getName: function() {
+    return this.name;
+  },
+  getMessage: function() {
+    return this.message;
+  }
+};
+</pre>
+
+<p>However, redefining the prototype is not recommended, so the following example is even better because it appends to the existing prototype:</p>
+
+<pre class="brush: js">function MyObject(name, message) {
+  this.name = name.toString();
+  this.message = message.toString();
+}
+MyObject.prototype.getName = function() {
+  return this.name;
+};
+MyObject.prototype.getMessage = function() {
+  return this.message;
+};
+</pre>
+
+<p>The above code can also be written in a cleaner way with the same result:</p>
+
+<pre class="brush: js">function MyObject(name, message) {
+    this.name = name.toString();
+    this.message = message.toString();
+}
+(function() {
+    this.getName = function() {
+        return this.name;
+    };
+    this.getMessage = function() {
+        return this.message;
+    };
+}).call(MyObject.prototype);
+</pre>
+
+<p>In the three previous examples, the inherited prototype can be shared by all objects and the method definitions need not occur at every object creation. See <a href="/en-US/docs/Web/JavaScript/Guide/Details_of_the_Object_Model">Details of the Object Model</a> for more details.</p>

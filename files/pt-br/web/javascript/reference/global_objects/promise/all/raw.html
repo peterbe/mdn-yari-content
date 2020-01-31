@@ -1,0 +1,234 @@
+<div>{{JSRef}}</div>
+
+<p>O método <code><strong>Promise.all(iterable)</strong></code> retorna uma única {{jsxref("Promise")}} que resolve quando todas as promises no argumento iterável forem resolvidas ou quando o iterável passado como argumento não contém promises. É rejeitado com o motivo da primeira promise que foi rejeitada.</p>
+
+<p>{{EmbedInteractiveExample("pages/js/promise-all.html")}}</p>
+
+<div class="hidden">
+<p>A fonte para essa demonstração interativa está em um repositório no GitHub. Se você quiser contribuir para esse projeto de demonstrações iterativas, por favor, clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> e envienos um pull request.</p>
+</div>
+
+<h2 id="Sintaxe">Sintaxe</h2>
+
+<pre class="syntaxbox"><var>Promise.all(iterable)</var>;</pre>
+
+<h3 id="Parâmetros">Parâmetros</h3>
+
+<dl>
+ <dt>iterable</dt>
+ <dd>Um objeto <a href="https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Iteration_protocols">iterável</a>, como um {{jsxref("Array")}} ou {{jsxref("String")}}.</dd>
+</dl>
+
+<h3 id="Retorno">Retorno</h3>
+
+<ul>
+ <li>Uma {{jsxref("Promise")}}<strong> já resolvida</strong> se o iterável passado for vazio.</li>
+ <li>Uma {{jsxref("Promise")}} <strong>resolvida assíncronamente</strong> se o iterável passado não conter promises. Nota, Google Chrome 58 retorna uma promise <strong>já resolvida</strong> nesse caso.</li>
+ <li>Uma {{jsxref("Promise")}} <strong>pendente</strong> em todos os outros casos. Essa promise retornada é então resolvida/rejeitada <strong>assíncronamente</strong> (tão logo a pilha esteja vazia) quando todas as promises no dado iterável forem resolvidas, ou se alguma das promises for rejeitada. Veja o exemplo sobre "<span class="tlid-translation translation" lang="pt"><span title="">Assincronia ou sincronia </span></span>da Promise.all" abaixo. Os valores retornados estarão na ordem em que as promises foram passadas. independentemente da ordem em que forem concluídas.</li>
+</ul>
+
+<h2 id="Descrição">Descrição</h2>
+
+<p>Esse método pode ser usado para agregar resultados de várias promises.</p>
+
+<h3 id="Resolvimento">Resolvimento</h3>
+
+<p>A promise retornada é resolvida com um array contendo <strong>todos</strong> os valores dos iteráveis passados como argumento (como valores que não são promises).</p>
+
+<ul>
+ <li>Se um iterável vazio é passado, então esse método retorna (sincronamente) uma promise já resolvida.</li>
+ <li>Se todas as promises passadas forem resolvidas, ou não forem promises, a promise retornada por <code>Promise.all</code> é resolvida assincronamente.</li>
+</ul>
+
+<h3 id="Rejeição">Rejeição</h3>
+
+<p>Se qualquer uma das promises passadas for rejeitada, <code>Promise.all</code> assíncronamente é rejeitada com o valor da promise rejeitada, independentemente se outras promises foram resolvidas.</p>
+
+<h2 id="Exemplos">Exemplos</h2>
+
+<h3 id="Utilizando_Promise.all">Utilizando Promise.all </h3>
+
+<p><code>Promise.all</code> espera que todas as promises sejam resolvidas (ou a primeira rejeição).</p>
+
+<pre><code class="language-js"><span class="keyword token">var</span> p1 <span class="operator token">=</span> Promise<span class="punctuation token">.</span><span class="function token">resolve</span><span class="punctuation token">(</span><span class="number token">3</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+<span class="keyword token">var</span> p2 <span class="operator token">=</span> <span class="number token">1337</span><span class="punctuation token">;</span>
+<span class="keyword token">var</span> p3 <span class="operator token">=</span> <span class="keyword token">new</span> <span class="class-name token">Promise</span><span class="punctuation token">(</span><span class="punctuation token">(</span>resolve<span class="punctuation token">,</span> reject<span class="punctuation token">)</span> <span class="operator token">=&gt;</span> <span class="punctuation token">{</span>
+  <span class="function token">setTimeout</span><span class="punctuation token">(</span><span class="punctuation token">(</span><span class="punctuation token">)</span> <span class="operator token">=&gt;</span> <span class="punctuation token">{</span>
+    <span class="function token">resolve</span><span class="punctuation token">(</span><span class="string token">"foo"</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+  <span class="punctuation token">}</span><span class="punctuation token">,</span> <span class="number token">100</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+<span class="punctuation token">}</span><span class="punctuation token">)</span><span class="punctuation token">;</span> 
+
+Promise<span class="punctuation token">.</span><span class="function token">all</span><span class="punctuation token">(</span><span class="punctuation token">[</span>p1<span class="punctuation token">,</span> p2<span class="punctuation token">,</span> p3<span class="punctuation token">]</span><span class="punctuation token">)</span><span class="punctuation token">.</span><span class="function token">then</span><span class="punctuation token">(valores</span><span class="operator token">=&gt;</span> <span class="punctuation token">{</span> 
+  console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(valores);</span> <span class="comment token">// [3, 1337, "foo"] </span>
+<span class="punctuation token">}</span><span class="punctuation token">)</span><span class="punctuation token">;</span></code>
+</pre>
+
+<p>Se o iterável conter valores que não são promises, eles serão ignorados, mas ainda serão contados no array da promise retornada (se a promise for resolvida):</p>
+
+<pre><code class="language-js"><span class="comment token">// Essa será considerada como se o iterável passado fosse vazio, logo ela será resolvido</span>
+<span class="keyword token">var</span> p <span class="operator token">=</span> Promise<span class="punctuation token">.</span><span class="function token">all</span><span class="punctuation token">(</span><span class="punctuation token">[</span><span class="number token">1</span><span class="punctuation token">,</span><span class="number token">2</span><span class="punctuation token">,</span><span class="number token">3</span><span class="punctuation token">]</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+<span class="comment token">// Essa será considerada como se o iterável passado contém apenas a promise resolvida com o valor "444", logo ela é resolvida</span>
+<span class="keyword token">var</span> p2 <span class="operator token">=</span> Promise<span class="punctuation token">.</span><span class="function token">all</span><span class="punctuation token">(</span><span class="punctuation token">[</span><span class="number token">1</span><span class="punctuation token">,</span><span class="number token">2</span><span class="punctuation token">,</span><span class="number token">3</span><span class="punctuation token">,</span> Promise<span class="punctuation token">.</span><span class="function token">resolve</span><span class="punctuation token">(</span><span class="number token">444</span><span class="punctuation token">)</span><span class="punctuation token">]</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+<span class="comment token">// Esse será considerada como se o iterável passado contém apenas o valor de rejeição "555" da promise, logo ela é rejeitada</span>
+<span class="keyword token">var</span> p3 <span class="operator token">=</span> Promise<span class="punctuation token">.</span><span class="function token">all</span><span class="punctuation token">(</span><span class="punctuation token">[</span><span class="number token">1</span><span class="punctuation token">,</span><span class="number token">2</span><span class="punctuation token">,</span><span class="number token">3</span><span class="punctuation token">,</span> Promise<span class="punctuation token">.</span><span class="function token">reject</span><span class="punctuation token">(</span><span class="number token">555</span><span class="punctuation token">)</span><span class="punctuation token">]</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+
+<span class="comment token">// Utilizando setTimeout para executar </span>código depois que a pilha estiver vazia
+<span class="function token">setTimeout</span><span class="punctuation token">(</span><span class="keyword token">function</span><span class="punctuation token">(</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+    console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(</span>p<span class="punctuation token">)</span><span class="punctuation token">;</span>
+    console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(</span>p2<span class="punctuation token">)</span><span class="punctuation token">;</span>
+    console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(</span>p3<span class="punctuation token">)</span><span class="punctuation token">;</span>
+<span class="punctuation token">}</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+
+<span class="comment token">// logs</span>
+<span class="comment token">// Promise { &lt;estado&gt;: "resolvida", &lt;valor&gt;: Array[3] }</span>
+<span class="comment token">// Promise { &lt;estado&gt;: "resolvida", &lt;valor&gt;: Array[4] }</span>
+<span class="comment token">// Promise { &lt;estado&gt;: "rejeitada", &lt;razão&gt;: 555 }</span></code>
+</pre>
+
+<h3 id="Assincronia_ou_sincronia_da_Promise.all"><span class="tlid-translation translation" lang="pt"><span title="">Assincronia ou sincronia </span></span>da Promise.all</h3>
+
+<p>O exemplo a seguir demonstra a assincronia (ou sincronia, se o iterável passado for fazio) de <code>Promise.all</code>:</p>
+
+<pre><code class="language-js"><span class="comment token">// </span>Passamos o argumento como um array de promises que já estão resolvidas para disparar Promise.all a mais rápido possível
+<span class="keyword token">var</span> arrayPromisesResolvidas <span class="operator token">=</span> <span class="punctuation token">[</span>Promise<span class="punctuation token">.</span><span class="function token">resolve</span><span class="punctuation token">(</span><span class="number token">33</span><span class="punctuation token">)</span><span class="punctuation token">,</span> Promise<span class="punctuation token">.</span><span class="function token">resolve</span><span class="punctuation token">(</span><span class="number token">44</span><span class="punctuation token">)</span><span class="punctuation token">]</span><span class="punctuation token">;</span>
+
+<span class="keyword token">var</span> p <span class="operator token">=</span> Promise<span class="punctuation token">.</span><span class="function token">all</span><span class="punctuation token">(</span>arrayPromisesResolvidas<span class="punctuation token">);</span>
+<span class="comment token">// Logando imediatamente o valor de p</span>
+console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(</span>p<span class="punctuation token">)</span><span class="punctuation token">;</span>
+
+<span class="comment token">// Utilizando setTimeout para executar </span>código depois que a pilha estiver vazia
+<span class="function token">setTimeout</span><span class="punctuation token">(</span><span class="keyword token">function</span><span class="punctuation token">(</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+    console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(</span><span class="string token">'a pilha está vazia agora'</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+    console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(</span>p<span class="punctuation token">)</span><span class="punctuation token">;</span>
+<span class="punctuation token">}</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+
+<span class="comment token">// logs, em ordem:</span>
+<span class="comment token">// Promise { &lt;estado&gt;: "pendente" } </span>
+<span class="comment token">// a pilha está vazia agora</span>
+<span class="comment token">// Promise { &lt;estado&gt;: "resolvida", &lt;valor&gt;: Array[2] }</span></code>
+</pre>
+
+<p>A mesma coisa acontece se <code>Promise.all</code> for rejeitada:</p>
+
+<pre><code class="language-js"><span class="keyword token">var</span> arrayPromisesMisturadas <span class="operator token">=</span> <span class="punctuation token">[</span>Promise<span class="punctuation token">.</span><span class="function token">resolve</span><span class="punctuation token">(</span><span class="number token">33</span><span class="punctuation token">)</span><span class="punctuation token">,</span> Promise<span class="punctuation token">.</span><span class="function token">reject</span><span class="punctuation token">(</span><span class="number token">44</span><span class="punctuation token">)</span><span class="punctuation token">]</span><span class="punctuation token">;</span>
+<span class="keyword token">var</span> p <span class="operator token">=</span> Promise<span class="punctuation token">.</span><span class="function token">all</span><span class="punctuation token">(</span>arrayPromisesMisturadas<span class="punctuation token">);</span>
+console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(</span>p<span class="punctuation token">)</span><span class="punctuation token">;</span>
+<span class="function token">setTimeout</span><span class="punctuation token">(</span><span class="keyword token">function</span><span class="punctuation token">(</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+    console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(</span><span class="string token">'a pilha está vazia agora'</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+    console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(</span>p<span class="punctuation token">)</span><span class="punctuation token">;</span>
+<span class="punctuation token">}</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+
+<span class="comment token">// logs</span>
+<span class="comment token">// Promise { &lt;estado&gt;: "pendente" } </span>
+<span class="comment token">// a pilha está vazia agora</span>
+<span class="comment token">// Promise { &lt;estado&gt;: "rejeitada", &lt;razão&gt;: 44 }</span></code>
+</pre>
+
+<p>Mas, <code>Promise.all</code> resolve sincromamente <strong>se e somente se</strong> o iterável passado for vazio:</p>
+
+<pre><code class="language-js"><span class="keyword token">var</span> p <span class="operator token">=</span> Promise<span class="punctuation token">.</span><span class="function token">all</span><span class="punctuation token">(</span><span class="punctuation token">[</span><span class="punctuation token">]</span><span class="punctuation token">)</span><span class="punctuation token">;</span> <span class="comment token">// será resolvida imediatamente</span>
+<span class="keyword token">var</span> p2 <span class="operator token">=</span> Promise<span class="punctuation token">.</span><span class="function token">all</span><span class="punctuation token">(</span><span class="punctuation token">[</span><span class="number token">1337</span><span class="punctuation token">,</span> <span class="string token">"oi"</span><span class="punctuation token">]</span><span class="punctuation token">)</span><span class="punctuation token">;</span> <span class="comment token">// um valor que não é uma promise será ignorado, mas a avaliação será feita assíncronamente</span>
+console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(</span>p<span class="punctuation token">)</span><span class="punctuation token">;</span>
+console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(</span>p2<span class="punctuation token">)</span>
+<span class="function token">setTimeout</span><span class="punctuation token">(</span><span class="keyword token">function</span><span class="punctuation token">(</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+    console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(</span><span class="string token">'a pilha está vazia agora'</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+    console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(</span>p2<span class="punctuation token">)</span><span class="punctuation token">;</span>
+<span class="punctuation token">}</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+
+<span class="comment token">// logs</span>
+<span class="comment token">// Promise { &lt;estado&gt;: "resolvida", &lt;valor&gt;: Array[0] }</span>
+<span class="comment token">// Promise { &lt;estado&gt;: "pendente" }</span>
+<span class="comment token">// a pilha está vazia agora</span>
+<span class="comment token">// Promise { &lt;estado&gt;: "resolvida", &lt;valor&gt;: Array[2] }</span></code>
+</pre>
+
+<h3 id="Comportamente_de_falhar_rapidamente_de_Promise.all">Comportamente de falhar rapidamente de Promise.all</h3>
+
+<p><code>Promise.all</code> é rejeitada se qualquer um dos elementos for rejeitado. Por exemplo, se você passar quartro promises que resolvem após um intervalo de tempo e uma promise que rejeita imediatamente, então <code>Promise.all</code> será rejeitada imediatamente.</p>
+
+<pre><code class="language-js"><span class="keyword token">var</span> p1 <span class="operator token">=</span> <span class="keyword token">new</span> <span class="class-name token">Promise</span><span class="punctuation token">(</span><span class="punctuation token">(</span>resolve<span class="punctuation token">,</span> reject<span class="punctuation token">)</span> <span class="operator token">=&gt;</span> <span class="punctuation token">{</span> 
+  <span class="function token">setTimeout</span><span class="punctuation token">(</span><span class="punctuation token">(</span><span class="punctuation token">)</span> <span class="operator token">=&gt;</span> <span class="function token">resolve</span><span class="punctuation token">(</span><span class="string token">'um'</span><span class="punctuation token">)</span><span class="punctuation token">,</span> <span class="number token">1000</span><span class="punctuation token">)</span><span class="punctuation token">;</span> 
+<span class="punctuation token">}</span><span class="punctuation token">)</span><span class="punctuation token">;</span> 
+<span class="keyword token">var</span> p2 <span class="operator token">=</span> <span class="keyword token">new</span> <span class="class-name token">Promise</span><span class="punctuation token">(</span><span class="punctuation token">(</span>resolve<span class="punctuation token">,</span> reject<span class="punctuation token">)</span> <span class="operator token">=&gt;</span> <span class="punctuation token">{</span> 
+  <span class="function token">setTimeout</span><span class="punctuation token">(</span><span class="punctuation token">(</span><span class="punctuation token">)</span> <span class="operator token">=&gt;</span> <span class="function token">resolve</span><span class="punctuation token">(</span><span class="string token">'dois'</span><span class="punctuation token">)</span><span class="punctuation token">,</span> <span class="number token">2000</span><span class="punctuation token">)</span><span class="punctuation token">;</span> 
+<span class="punctuation token">}</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+<span class="keyword token">var</span> p3 <span class="operator token">=</span> <span class="keyword token">new</span> <span class="class-name token">Promise</span><span class="punctuation token">(</span><span class="punctuation token">(</span>resolve<span class="punctuation token">,</span> reject<span class="punctuation token">)</span> <span class="operator token">=&gt;</span> <span class="punctuation token">{</span>
+  <span class="function token">setTimeout</span><span class="punctuation token">(</span><span class="punctuation token">(</span><span class="punctuation token">)</span> <span class="operator token">=&gt;</span> <span class="function token">resolve</span><span class="punctuation token">(</span><span class="string token">'três'</span><span class="punctuation token">)</span><span class="punctuation token">,</span> <span class="number token">3000</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+<span class="punctuation token">}</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+<span class="keyword token">var</span> p4 <span class="operator token">=</span> <span class="keyword token">new</span> <span class="class-name token">Promise</span><span class="punctuation token">(</span><span class="punctuation token">(</span>resolve<span class="punctuation token">,</span> reject<span class="punctuation token">)</span> <span class="operator token">=&gt;</span> <span class="punctuation token">{</span>
+  <span class="function token">setTimeout</span><span class="punctuation token">(</span><span class="punctuation token">(</span><span class="punctuation token">)</span> <span class="operator token">=&gt;</span> <span class="function token">resolve</span><span class="punctuation token">(</span><span class="string token">'quatro'</span><span class="punctuation token">)</span><span class="punctuation token">,</span> <span class="number token">4000</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+<span class="punctuation token">}</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+<span class="keyword token">var</span> p5 <span class="operator token">=</span> <span class="keyword token">new</span> <span class="class-name token">Promise</span><span class="punctuation token">(</span><span class="punctuation token">(</span>resolve<span class="punctuation token">,</span> reject<span class="punctuation token">)</span> <span class="operator token">=&gt;</span> <span class="punctuation token">{</span>
+  <span class="function token">reject</span><span class="punctuation token">(</span><span class="keyword token">new</span> <span class="class-name token">Error</span><span class="punctuation token">(</span><span class="string token">'rejeitada'</span><span class="punctuation token">)</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+<span class="punctuation token">}</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+
+
+<span class="comment token">// Usando .catch:</span>
+Promise<span class="punctuation token">.</span><span class="function token">all</span><span class="punctuation token">(</span><span class="punctuation token">[</span>p1<span class="punctuation token">,</span> p2<span class="punctuation token">,</span> p3<span class="punctuation token">,</span> p4<span class="punctuation token">,</span> p5<span class="punctuation token">]</span><span class="punctuation token">)</span>
+<span class="punctuation token">.</span><span class="function token">then</span><span class="punctuation token">(valores </span><span class="operator token">=&gt;</span> <span class="punctuation token">{</span> 
+  console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(valores</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+<span class="punctuation token">}</span><span class="punctuation token">)</span>
+<span class="punctuation token">.</span><span class="keyword token">catch</span><span class="punctuation token">(</span>erro <span class="operator token">=&gt;</span> <span class="punctuation token">{</span> 
+  console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(</span>erro<span class="punctuation token">.</span>message<span class="punctuation token">)</span>
+<span class="punctuation token">}</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+
+<span class="comment token">// No console: </span>
+<span class="comment token">// "rejeitada"</span></code>
+</pre>
+
+<p>É possível mudar esse comportamente lidando com possíveis rejeições:</p>
+
+<pre class="brush: js line-numbers language-js"><code class="language-js"><span class="keyword token">var</span> p1 <span class="operator token">=</span> <span class="keyword token">new</span> <span class="class-name token">Promise</span><span class="punctuation token">(</span><span class="punctuation token">(</span>resolve<span class="punctuation token">,</span> reject<span class="punctuation token">)</span> <span class="operator token">=&gt;</span> <span class="punctuation token">{</span> 
+  <span class="function token">setTimeout</span><span class="punctuation token">(</span><span class="punctuation token">(</span><span class="punctuation token">)</span> <span class="operator token">=&gt;</span> <span class="function token">resolve</span><span class="punctuation token">(</span><span class="string token">'p1_resolução_atrasada'</span><span class="punctuation token">)</span><span class="punctuation token">,</span> <span class="number token">1000</span><span class="punctuation token">)</span><span class="punctuation token">;</span> 
+<span class="punctuation token">}</span><span class="punctuation token">)</span><span class="punctuation token">;</span> 
+
+<span class="keyword token">var</span> p2 <span class="operator token">=</span> <span class="keyword token">new</span> <span class="class-name token">Promise</span><span class="punctuation token">(</span><span class="punctuation token">(</span>resolve<span class="punctuation token">,</span> reject<span class="punctuation token">)</span> <span class="operator token">=&gt;</span> <span class="punctuation token">{</span>
+  <span class="function token">reject</span><span class="punctuation token">(</span><span class="keyword token">new</span> <span class="class-name token">Error</span><span class="punctuation token">(</span><span class="string token">'p2_rejeição_imediata'</span><span class="punctuation token">)</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+<span class="punctuation token">}</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+
+Promise<span class="punctuation token">.</span><span class="function token">all</span><span class="punctuation token">(</span><span class="punctuation token">[</span>
+  p1<span class="punctuation token">.</span><span class="keyword token">catch</span><span class="punctuation token">(</span>erro <span class="operator token">=&gt;</span> <span class="punctuation token">{</span> <span class="keyword token">return</span> erro <span class="punctuation token">}</span><span class="punctuation token">)</span><span class="punctuation token">,</span>
+  p2<span class="punctuation token">.</span><span class="keyword token">catch</span><span class="punctuation token">(</span>erro <span class="operator token">=&gt;</span> <span class="punctuation token">{</span> <span class="keyword token">return</span> erro <span class="punctuation token">}</span><span class="punctuation token">)</span><span class="punctuation token">,</span>
+<span class="punctuation token">]</span><span class="punctuation token">)</span><span class="punctuation token">.</span><span class="function token">then</span><span class="punctuation token">(valores </span><span class="operator token">=&gt;</span> <span class="punctuation token">{</span> 
+  console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(valores[</span><span class="number token">0</span><span class="punctuation token">]</span><span class="punctuation token">)</span> <span class="comment token">// "</span><span class="string token">p1_resolução_atrasada</span><span class="comment token">"</span>
+  console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(valores[</span><span class="number token">1</span><span class="punctuation token">]</span><span class="punctuation token">)</span> <span class="comment token">// "Erro: </span><span class="string token">p2_rejeição_imediata</span><span class="comment token">"</span>
+<span class="punctuation token">}</span><span class="punctuation token">)</span></code></pre>
+
+<h2 id="Especificações">Especificações</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Especificação</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comentário</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-promise.all', 'Promise.all')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td>
+    <p>Definição inicial em um padrão ECMA.</p>
+   </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-promise.all', 'Promise.all')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td></td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Compatibilidade_com_browsers">Compatibilidade com browsers</h2>
+
+<div class="hidden">
+<p>Para contribuir para esse dado de compatibilidade, por favor, escreva um pull request para o repositório: <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a>.</p>
+</div>
+
+<p>{{Compat("javascript.builtins.Promise.all")}}</p>
+
+<h2 id="Veja_também">Veja também</h2>
+
+<ul>
+ <li>{{jsxref("Promise")}}</li>
+ <li>{{jsxref("Promise.race()")}}</li>
+</ul>

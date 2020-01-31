@@ -1,0 +1,637 @@
+<p>一个<strong>媒体查询</strong>由一个可选的媒体类型和零个或多个使用媒体功能的限制了样式表范围的表达式组成，例如宽度、高度和颜色。<strong>媒体查询</strong>，添加自CSS3，允许内容的呈现针对一个特定范围的输出设备而进行裁剪，而不必改变内容本身。</p>
+
+<h2 id="语法">语法</h2>
+
+<p>媒体查询包含一个可选的<a href="https://developer.mozilla.org/en-US/docs/CSS/@media">媒体类型</a>和媒体特性表达式(0或多个)最终会被解析为true或false。如果媒体查询中指定的媒体类型匹配展示文档所使用的设备类型，并且所有的表达式的值都是true，那么该媒体查询的结果为true。</p>
+
+<pre class="brush: html"><code class="brush: html">&lt;!-- link元素中的CSS媒体查询 --&gt;
+</code>&lt;link rel="stylesheet" media="(max-width: 800px)" href="example.css" /&gt;
+
+<code class="brush: html">&lt;!-- 样式表中的CSS媒体查询 --&gt;
+&lt;style&gt;
+@media (max-width: 600px) {
+  .facet_sidebar {
+    display: none;
+  }
+}
+&lt;/style&gt;</code></pre>
+
+<p>当媒体查询为true时，其对应的样式表或样式规则就会遵循正常的级联规则进行应用。即使媒体查询返回false，<code><a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link" title="The HTML &lt;link> element specifies relationships between the current document and an external resource. Possible uses for this element include defining a relational framework for navigation. This Element is most used to link to style sheets."><code>&lt;link&gt;</code></a></code> 标签指向的样式表<a href="http://scottjehl.github.com/CSS-Download-Tests/">也将会被下载</a>(但是它们不会被应用)</p>
+
+<p>除非使用not或only操作符，否则媒体类型是可选的，默认值是all(全部).</p>
+
+<h3 id="逻辑操作符">逻辑操作符</h3>
+
+<p>你可以使用逻辑操作符，包括<code>not</code>、<code>and</code>和<code>only</code>等，<span style="line-height: 1.5;">构建复杂的媒体查询。</span><code>and</code><span style="line-height: 1.5;">操作符用来把多个</span><a href="#Media_features" style="line-height: 1.5;" title="#Media_features">媒体属性</a><span style="line-height: 1.5;">组合成一条媒体查询，对成链式的特征进行请求，只有当每个属性都为真时，结果才为真。<code>not</code></span><span style="line-height: 1.5;">操作符用来对一条媒体查询的结果进行取反。</span><code>only</code><span style="line-height: 1.5;">操作符仅在媒体查询匹配成功的情况下被用于应用一个样式，这对于防止让选中的样式在老式浏览器中被应用到。</span><span style="line-height: 1.5;">若使用了</span><span style="line-height: 1.5;"><code>not</code>或</span><code>only</code><span style="line-height: 1.5;">操作符，必须明确指定一个媒体类型。</span></p>
+
+<p>你也可以将多个媒体查询以逗号分隔放在一起；只要其中任何一个为真，整个媒体语句就返回真。相当于<code>or</code>操作符。</p>
+
+<h4 id="and">and</h4>
+
+<p><code>and</code>关键字用于合并多个媒体属性或合并媒体属性与媒体类型。一个基本的媒体查询，即一个媒体属性与默认指定的<code>all</code>媒体类型，可能像这样子：</p>
+
+<pre class="brush: css">@media (min-width: 700px) { ... }</pre>
+
+<p>如果你只想在横屏时应用这个，你可以使用 <code>and</code> 操作符合并媒体属性：</p>
+
+<pre class="brush: css"> (min-width: 700px) and (orientation: landscape) { ... }</pre>
+
+<p>现在上面的媒体查询仅在可视区域宽度不小于700像素并在横屏时有效。如果，你仅想在电视媒体上应用，你可以使用 <code>and</code> 操作符合并媒体属性：</p>
+
+<pre class="brush: css">@media tv and (min-width: 700px) and (orientation: landscape) { ... }</pre>
+
+<p>现在，上面媒体查询仅在电视媒体上，可视区域不小于700像素宽度并且是横屏时有效。</p>
+
+<h4 id="逗号分隔列表">逗号分隔列表</h4>
+
+<p>媒体查询中使用逗号分隔效果等同于<code>or</code>逻辑操作符。当使用逗号分隔的媒体查询时，如果任何一个媒体查询返回真，样式就是有效的。逗号分隔的列表中每个查询都是独立的，一个查询中的操作符并不影响其它的媒体查询。这意味着逗号媒体查询列表能够作用于不同的媒体属性、类型和状态。</p>
+
+<p>例如，如果你想在最小宽度为700像素或是横屏的手持设备上应用一组样式，你可以这样写：</p>
+
+<pre class="brush: css">@media (min-width: 700px), handheld and (orientation: landscape) { ... }</pre>
+
+<p>如上文，如果是一个800像素宽的屏幕设备，媒体语句将会返回真，因为第一部分相当于 <code>@media all and (min-width: 700px)</code> 将会应用于该设备并且返回真，尽管我的屏幕媒体类型并不与第二部分的手持媒体类型相符。同样地，如果我是一个500像素宽的横屏手持设备，尽管第一部分因为宽度问题而不匹配，第二部分仍会成功，因此整个媒体查询返回真。</p>
+
+<h4 id="not">not</h4>
+
+<p><code>not</code> 关键字应用于整个媒体查询，在媒体查询为假时返回真 (比如 <code>monochrome</code> 应用于彩色显示设备上或一个600像素的屏幕应用于 <code>min-width: 700px</code> 属性查询上 )。在逗号媒体查询列表中<code>not</code>仅会否定它应用到的媒体查询上而不影响其它的媒体查询。 <code>not</code>关键字仅能应用于整个查询，而不能单独应用于一个独立的查询。例如，<code>not</code><span style="line-height: 1.572;">在下面的查询中最后被计算：</span></p>
+
+<pre class="brush: css" style="font-size: 14px;">@media not all and (monochrome) { ... }
+</pre>
+
+<p>等价于：</p>
+
+<pre class="brush: css" style="font-size: 14px;">@media not (all and (monochrome)) { ... }
+</pre>
+
+<p>而不是：</p>
+
+<pre class="brush: css" style="font-size: 14px;">@media (not all) and (monochrome) { ... }</pre>
+
+<p>另一个例子，看下面的媒体查询：</p>
+
+<pre class="brush: css" style="font-size: 14px;">@media not screen and (color), print and (color)
+</pre>
+
+<p>等价于：</p>
+
+<pre class="brush: css" style="font-size: 14px;">@media (not (screen and (color))), print and (color)</pre>
+
+<h4 id="only">only</h4>
+
+<p><code>only</code><span style="line-height: 21px;">关键字防止老旧的浏览器不支持带媒体属性的查询而应用到给定的样式：</span></p>
+
+<pre class="brush: html">&lt;link rel="stylesheet" media="only screen and (color)" href="example.css" /&gt;
+</pre>
+
+<h3 id="伪范式">伪范式</h3>
+
+<pre>media_query_list: &lt;media_query&gt; [, &lt;media_query&gt; ]*
+media_query: [[only | not]? &lt;media_type&gt; [ and &lt;expression&gt; ]*]
+  | &lt;expression&gt; [ and &lt;expression&gt; ]*
+expression: ( &lt;media_feature&gt; [: &lt;value&gt;]? )
+media_type: all | aural | braille | handheld | print |
+  projection | screen | tty | tv | embossed
+media_feature: width | min-width | max-width
+  | height | min-height | max-height
+  | device-width | min-device-width | max-device-width
+  | device-height | min-device-height | max-device-height
+  | aspect-ratio | min-aspect-ratio | max-aspect-ratio
+  | device-aspect-ratio | min-device-aspect-ratio | max-device-aspect-ratio
+  | color | min-color | max-color
+  | color-index | min-color-index | max-color-index
+  | monochrome | min-monochrome | max-monochrome
+  | resolution | min-resolution | max-resolution
+  | scan | grid</pre>
+
+<p>媒体查询是大小写不敏感的，包含未知媒体类型的查询通常返回假。</p>
+
+<div class="note"><strong>注意:</strong> 表达式需要用圆括号。没有使用的会引起错误。</div>
+
+<h2 id="媒体特征">媒体特征</h2>
+
+<p>大多数媒体属性可以带有“min-”或“max-”前缀，用于表达“最低...”或者“最高...”。例如，max-width:12450px表示应用其所包含样式的条件最高是宽度为12450px，大于12450px则不满足条件，不会应用此样式。这避免了使用与HTML和XML冲突的“&lt;”和“&gt;”字符。如果你未向媒体属性指定一个值，并且该特性的实际值不为零，则该表达式被解析为真。</p>
+
+<div class="note"><strong>注意：如果浏览器运行的设备上没有该属性值，包含这个属性值的表达式一般返回假。例如，在语音合成器上查询屏幕长宽比总是返回假。</strong></div>
+
+<h3 id="颜色（color）">颜色（color）</h3>
+
+<p><strong>值：</strong> {{cssxref("&lt;color&gt;")}}<br>
+ <strong style="font-weight: bold;"><strong>媒体：</strong></strong> {{cssxref("Media/Visual")}}<br>
+ <strong>是否接受 min/max 前缀：是</strong></p>
+
+<p>指定输出设备每个像素单元的比特值。如果设备不支持输出颜色，则该值为0。</p>
+
+<div class="note"><strong>注意：</strong>如果每个颜色单元具有不同数量的比特值，则使用最小的。例如，如果显示器为蓝色和红色提供5比特，而为绿色提供6比特，则认为每个颜色单元有5比特<strong>。</strong>如果设备使用索引颜色，则使用颜色表中颜色单元的最小比特数。</div>
+
+<h4 id="示例">示例</h4>
+
+<p>向所有能显示颜色的设备应用样式表：</p>
+
+<pre class="brush: css">@media all and (color) { ... }
+</pre>
+
+<p>向每个颜色单元至少有4个比特的设备应用样式表：</p>
+
+<pre class="brush: css">@media all and (min-color: 4) { ... }
+</pre>
+
+<h3 id="颜色索引（color-index）">颜色索引（color-index）</h3>
+
+<p><strong>值</strong>：{{cssxref("&lt;integer&gt;")}}<br>
+ <strong style="font-weight: bold;"><strong>媒体：</strong></strong> {{cssxref("Media/Visual")}}<br>
+ <strong>是否接受 min/max 前缀：</strong>是</p>
+
+<p>指定了输出设备中颜色查询表中的条目数量。</p>
+
+<h4 id="示例_2">示例</h4>
+
+<p>向所有使用索引颜色的设备应用样式表，你可以这么做：</p>
+
+<pre class="brush: css">@media all and (color-index) { ... }
+</pre>
+
+<p>向所有使用至少256个索引颜色的设备应用样式表：</p>
+
+<pre class="brush: html">&lt;link rel="stylesheet" media="all and (min-color-index: 256)" href="http://foo.bar.com/stylesheet.css" /&gt;
+</pre>
+
+<h3 id="宽高比（aspect-ratio）">宽高比（aspect-ratio）</h3>
+
+<p><strong>值：</strong>{{cssxref("&lt;ratio&gt;")}}<br>
+ <strong style="font-weight: bold;">媒体：</strong> {{cssxref("Media/Visual")}}, {{cssxref("Media/Tactile")}}<br>
+ <strong>是否接受 min/max 前缀</strong>：是</p>
+
+<p>描述了输出设备目标显示区域的宽高比。该值包含两个以“/”分隔的正整数。代表了水平像素数（第一个值）与垂直像素数（第二个值）的比例。</p>
+
+<h4 id="示例_3">示例</h4>
+
+<p>下面为显示区域宽高至少为一比一的设备选择了一个特殊的样式表。</p>
+
+<pre class="brush: css">@media screen and (min-aspect-ratio: 1/1) { ... }</pre>
+
+<p>这指定了宽高比或者1：1或者更大。换句话说，可视区域或者是正方形或者是宽屏。</p>
+
+<h3 id="设备宽高比（device-aspect-ratio）">设备宽高比（device-aspect-ratio）</h3>
+
+<p><strong>值：</strong>{{cssxref("&lt;ratio&gt;")}}<br>
+ <strong style="font-weight: bold;">媒体：</strong>{{cssxref("Media/Visual")}}, {{cssxref("Media/Tactile")}}<br>
+ <strong>是否接受 min/max 前缀：是</strong></p>
+
+<p>描述了输出设备的宽高比。该值包含两个以“/”分隔的正整数。代表了水平像素数（第一个值）与垂直像素数（第二个值）的比例。</p>
+
+<h4 id="示例_4">示例</h4>
+
+<p>下面为宽屏设备选择了一个特殊的样式表。</p>
+
+<pre class="brush: css">@media screen and (device-aspect-ratio: 16/9), screen and (device-aspect-ratio: 16/10) { ... }</pre>
+
+<p>宽高比或者16：9或者16：10。</p>
+
+<h3 id="设备高度（device-height）">设备高度（device-height）</h3>
+
+<p><strong>值：</strong>{{cssxref("&lt;length&gt;")}}<br>
+ <strong style="font-weight: bold;">媒体：</strong>{{cssxref("Media/Visual")}}, {{cssxref("Media/Tactile")}}<br>
+ <strong>是否接受 min/max 前缀：是</strong></p>
+
+<p>描述了输出设备的高度（整个屏幕或页的高度，而不是仅仅像文档窗口一样的渲染区域）。</p>
+
+<h3 id="设备宽度（device-width）">设备宽度（device-width）</h3>
+
+<p><strong>值：</strong>{{cssxref("&lt;length&gt;")}}<br>
+ <strong>媒体：</strong> {{cssxref("Media/Visual")}}, {{cssxref("Media/Tactile")}}<br>
+ <strong>是否接受 min/max 前缀</strong>：是</p>
+
+<p>描述了输出设备的宽度（整个屏幕或页的宽度，而不是仅仅像文档窗口一样的渲染区域）。</p>
+
+<h4 id="示例_5">示例</h4>
+
+<p>向显示在最大宽度800px的屏幕上的文档应用样式表，你可以这样做：</p>
+
+<pre class="brush: html">&lt;link rel="stylesheet" media="screen and (max-device-width: 800px)" /&gt;</pre>
+
+<h3 id="网格（grid）">网格（grid）</h3>
+
+<p><strong>值：</strong>{{cssxref("&lt;integer&gt;")}}<br>
+ <strong style="font-weight: bold;">媒体：</strong>all<br>
+ <strong>是否接受 min/max 前缀：</strong> 否</p>
+
+<p>判断输出设备是网格设备还是位图设备。如果设备是基于网格的（例如电传打字机终端或只能显示一种字形的电话），该值为1，否则为0。</p>
+
+<h4 id="示例_6">示例</h4>
+
+<p>向一个15字符宽度或更窄的手持设备应用样式：</p>
+
+<pre class="brush: css">@media handheld and (grid) and (max-width: 15em) { ... }
+</pre>
+
+<div class="note"><strong>注意：</strong>“em” 在网格设备中有不同的意义；一个“em”的实际宽度不得而知，假设1em相当于一个网格单元的宽高。</div>
+
+<h3 id="高度（height）">高度（height）</h3>
+
+<p><strong>值：</strong>{{cssxref("&lt;length&gt;")}}<br>
+ <strong style="font-weight: bold;">媒体：</strong>{{cssxref("Media/Visual")}}, {{cssxref("Media/Tactile")}}<br>
+ <strong>是否接受 min/max 前缀：</strong>是</p>
+
+<p><code>height</code> 媒体属性描述了输出设备渲染区域（如可视区域的高度或打印机纸盒的高度）的高度。</p>
+
+<div class="note"><strong>注意：</strong>用户调整窗口大小后，火狐浏览器会根据使用了<code>width</code>和<code>height</code>属性的媒体查询来切换合适的样式表。</div>
+
+<h3 id="黑白（monochrome）">黑白（monochrome）</h3>
+
+<p><strong>值：</strong>{{cssxref("&lt;integer&gt;")}}<br>
+ <strong>媒体：</strong> {{cssxref("Media/Visual")}}<br>
+ <strong>是否接受 min/max 前缀：是</strong></p>
+
+<p>指定了一个黑白（灰度）设备每个像素的比特数。如果不是黑白设备，值为0。</p>
+
+<h4 id="示例_7">示例</h4>
+
+<p>向所有黑白设备应用样式表：</p>
+
+<pre class="brush: css">@media all and (monochrome) { ... }
+</pre>
+
+<p>向每个像素至少8比特的黑白设备应用样式表：</p>
+
+<pre class="brush: css">@media all and (min-monochrome: 8) { ... }
+</pre>
+
+<h3 id="方向（orientation）">方向（orientation）</h3>
+
+<p><strong><code>值：</code></strong><code>landscape</code> | <code>portrait</code><br>
+ <strong style="font-weight: bold;">媒体：</strong>{{cssxref("Media/Visual")}}<br>
+ <strong>是否接受 min/max 前缀：否</strong></p>
+
+<p>指定了设备处于横屏（宽度大于高度）模式还是竖屏（高度大于宽度）模式。</p>
+
+<h4 id="示例_8">示例</h4>
+
+<p>向竖屏设备应用样式表：</p>
+
+<pre class="brush: css">@media all and (orientation: portrait) { ... }</pre>
+
+<h3 id="分辨率（resolution）">分辨率（resolution）</h3>
+
+<p><strong>值：</strong> {{cssxref("&lt;resolution&gt;")}}<br>
+ <strong style="font-weight: bold;"><strong>媒体：</strong></strong> {{cssxref("Media/Bitmap", "bitmap")}}<br>
+ <strong>是否接受 min/max 前缀：是</strong></p>
+
+<p>指定输出设备的分辨率（像素密度）。分辨率可以用每英寸（dpi）或每厘米（dpcm）的点数来表示。</p>
+
+<h4 id="示例_9">示例</h4>
+
+<p>为每英寸至多300点的打印机应用样式：</p>
+
+<pre class="brush: css">@media print and (min-resolution: 300dpi) { ... }
+</pre>
+
+<p>替换老旧的 <span style="font-family: courier new,andale mono,monospace; line-height: normal;">(min-device-pixel-ratio: 2) 语法：</span></p>
+
+<pre class="brush: css">@media screen and (min-resolution: 2dppx) { ... }</pre>
+
+<h3 id="扫描（scan）">扫描（scan）</h3>
+
+<p><strong>值：</strong> <code>progressive</code> | <code>interlace</code><br>
+ <strong style="font-weight: bold;">媒体：</strong>{{cssxref("Media/TV")}}<br>
+ <strong>是否接受 min/max 前缀：否</strong></p>
+
+<p>描述了电视输出设备的扫描过程。</p>
+
+<h4 id="示例_10">示例</h4>
+
+<p>向以顺序方式扫描的电视机上应用样式表：</p>
+
+<pre class="brush: css">@media tv and (scan: progressive) { ... }
+</pre>
+
+<h3 id="宽度（width）">宽度（width）</h3>
+
+<p><strong>值：</strong> {{cssxref("&lt;length&gt;")}}<br>
+ <strong style="font-weight: bold;"><strong>媒体：</strong></strong> {{cssxref("Media/Visual")}}, {{cssxref("Media/Tactile")}}<br>
+ <strong>是否接受 min/max 前缀：是</strong></p>
+
+<p><code>width</code> 媒体属性描述了输出设备渲染区域（如可视区域的宽度或打印机纸盒的宽度）的宽度。</p>
+
+<div class="note"><strong>注意：</strong>用户调整窗口大小后，火狐浏览器会根据使用了<code>width</code>和<code>height</code>属性的媒体查询来切换合适的样式表。</div>
+
+<h4 id="示例_11">示例</h4>
+
+<p>如果你想向最小宽度20em的手持设备或屏幕应用样式表，你可以使用这样的查询：</p>
+
+<pre class="brush: css">@media handheld and (min-width: 20em), screen and (min-width: 20em) { ... }
+</pre>
+
+<p>这个媒体查询将向最小宽度8.5英寸的打印机应用样式表：</p>
+
+<pre class="brush: html">&lt;link rel="stylesheet" media="print and (min-width: 8.5in)"
+    href="http://foo.com/mystyle.css" /&gt;
+</pre>
+
+<p>这个查询适用于宽度在500px和800px之间的屏幕：</p>
+
+<pre class="brush: css">@media screen and (min-width: 500px) and (max-width: 800px) { ... }
+</pre>
+
+<h2 id="Mozilla专有的媒体属性">Mozilla专有的媒体属性</h2>
+
+<p>Mozilla 提供了几个Gecko网页排版引擎专有的媒体属性。这些属性中有些可能会被提议成官方媒体属性。</p>
+
+<p>{{ h3_gecko_minversion("-moz-images-in-menus", "1.9.2") }}</p>
+
+<p><strong>值:</strong> {{cssxref("&lt;integer&gt;")}}<br>
+ <strong style="font-weight: bold;">媒体</strong><strong>:</strong> {{cssxref("Media/Visual")}}<br>
+ <strong style="line-height: 1.5;">是否接受 min/max 前缀：否</strong></p>
+
+<p>如果设备允许图片出现在菜单中，这个值是1，否则的话，这个值是0。 </p>
+
+<p>{{ h3_gecko_minversion("-moz-mac-graphite-theme", "1.9.2") }}</p>
+
+<p><strong>值：</strong> {{cssxref("&lt;integer&gt;")}}<br>
+ <strong style="line-height: 1.5;">媒体：</strong><span style="line-height: 1.5;">{{cssxref("Media/Visual")}}</span></p>
+
+<p><strong style="line-height: 1.5;">是否接受 min/max 前缀：否</strong></p>
+
+<p>如果用户将Mac OS X系统的主题设置为“Graphite”, 这个值为1. 如果使用标准主题或者不是使用Mac OS X，则为0.</p>
+
+<p>对应 {{ cssxref(":-moz-system-metric(mac-graphite-theme)") }} <a href="/en-US/docs/CSS/Pseudo-classes" title="伪类">伪类</a>.</p>
+
+<p>{{ h3_gecko_minversion("-moz-maemo-classic", "1.9.2") }}</p>
+
+<p><strong>值：</strong> {{cssxref("&lt;integer&gt;")}}<br>
+ <strong>媒体：</strong> {{cssxref("Media/Visual")}}<br>
+ <strong style="line-height: 1.5;">是否接受 min/max 前缀：否</strong></p>
+
+<p>如果使用经典的Maemo主题, 值为 1; 如果使用更新的Fremantle主题, 值为 0.</p>
+
+<p>对应 {{ cssxref(":-moz-system-metric(maemo-classic)") }} <a href="/en-US/docs/CSS/Pseudo-classes" title="Pseudo-classes">伪类</a>.</p>
+
+<p>{{ h3_gecko_minversion("-moz-device-pixel-ratio", "2.0") }}</p>
+
+<p><strong>值：</strong>{{cssxref("&lt;number&gt;")}}<br>
+ <strong style="font-weight: bold;">媒体：</strong> {{cssxref("Media/Visual")}}<br>
+ <strong style="line-height: 1.5;">是否接受 min/max 前缀：是</strong></p>
+
+<p>获取CSS与设备的像素个数比.</p>
+
+<div class="geckoVersionNote style-wrap">
+<p><strong>不要使用这个属性。</strong></p>
+
+<p>使用分辨率特性与dppx单位。</p>
+
+<p>-moz-device-pixel-ratio可以用于兼容版本号低于16的Firefox浏览器,-webkit-device-pixel-ratio基于webkit的浏览器不支持dppx。</p>
+
+<p>例子:</p>
+
+<pre>@media (-webkit-min-device-pixel-ratio: 2), /* Webkit-based browsers */
+       (min--moz-device-pixel-ratio: 2),    /* Older Firefox browsers (prior to Firefox 16) */
+       (min-resolution: 2dppx),             /* The standard way */
+       (min-resolution: 192dpi)             /* dppx fallback */ </pre>
+
+<p>请参阅本文CSSWG兼容性有关决议和dppx良好实践。</p>
+</div>
+
+<div class="note">注意：这个媒体功能也由Webkit用 <span style="font-family: courier new;">-webkit-device-pixel-ratio</span>实现. 按照Gecko命名规则，min 和 max 前缀命名为 <span style="font-family: courier new;">min--moz-device-pixel-ratio</span> and <span style="font-family: courier new;">max--moz-device-pixel-ratio</span>;但是同样的前缀命名被 Webkit实现为<span style="font-family: courier new;">-webkit-min-device-pixel-ratio</span> and <span style="font-family: courier new;">-webkit-max-device-pixel-ratio</span>.</div>
+
+<p>{{ h3_gecko_minversion("-moz-os-version", "25.0") }}</p>
+
+<p><strong>Value:</strong> <code>windows-xp</code> | <code>windows-vista</code> | <code>windows-win7</code> | <code>windows-win8</code><br>
+ <strong style="font-weight: bold;">Media</strong><strong>:</strong> {{cssxref("Media/Visual")}}<br>
+ <strong>Accepts min/max prefixes:</strong> no</p>
+
+<p>指出目前使用哪些操作系统版本。目前只在Windows上实现。可能的值是:</p>
+
+<ul>
+ <li><code>windows-xp</code></li>
+ <li><code>windows-vista</code></li>
+ <li><code>windows-win7</code></li>
+ <li><code>windows-win8</code></li>
+</ul>
+
+<p>这是为应用程序提供皮肤，提供其他浏览器代码，使得其能够适应工作与当前操作系统版本的代码。</p>
+
+<p>{{ h3_gecko_minversion("-moz-scrollbar-end-backward", "1.9.2") }}</p>
+
+<p><strong>Value:</strong> {{cssxref("&lt;integer&gt;")}}<br>
+ <strong style="font-weight: bold;">Media</strong><strong>:</strong> {{cssxref("Media/Visual")}}<br>
+ <strong>Accepts min/max prefixes:</strong> no</p>
+
+<p>如果设备的用户界面在滚动条的末尾·显示一个向后的箭头按钮,这是1，否则它是0。</p>
+
+<p>对应于 {{ cssxref(":-moz-system-metric(scrollbar-end-backward)") }} <a href="/en-US/docs/CSS/Pseudo-classes" title="Pseudo-classes">伪类</a>.</p>
+
+<p>{{ h3_gecko_minversion("-moz-scrollbar-end-forward", "1.9.2") }}</p>
+
+<p><strong>Value:</strong> {{cssxref("&lt;integer&gt;")}}<br>
+ <strong style="font-weight: bold;">Media</strong><strong>:</strong> {{cssxref("Media/Visual")}}<br>
+ <strong>Accepts min/max prefixes:</strong> no</p>
+
+<p>如果设备的用户界面在滚动条的末尾显示一个箭头按钮,这是1，否则它是0。</p>
+
+<p>对应于 {{ cssxref(":-moz-system-metric(scrollbar-end-forward)") }} <a href="/en-US/docs/CSS/Pseudo-classes" title="Pseudo-classes">伪类</a>.</p>
+
+<p>{{ h3_gecko_minversion("-moz-scrollbar-start-backward", "1.9.2") }}</p>
+
+<p><strong>Value:</strong> {{cssxref("&lt;integer&gt;")}}<br>
+ <strong style="font-weight: bold;">Media</strong><strong>:</strong> {{cssxref("Media/Visual")}}<br>
+ <strong>Accepts min/max prefixes:</strong> no</p>
+
+<p>如果设备的用户界面在滚动条的开始显示一个向后的箭头按钮,这是1，否则它是0。</p>
+
+<p>对应于 {{ cssxref(":-moz-system-metric(scrollbar-start-backward)") }} <a href="/en-US/docs/CSS/Pseudo-classes" title="Pseudo-classes">伪类</a>.</p>
+
+<p>{{ h3_gecko_minversion("-moz-scrollbar-start-forward", "1.9.2") }}</p>
+
+<p><strong>Value:</strong> {{cssxref("&lt;integer&gt;")}}<br>
+ <strong style="font-weight: bold;">Media</strong><strong>:</strong> {{cssxref("Media/Visual")}}<br>
+ <strong>Accepts min/max prefixes:</strong> no</p>
+
+<p>如果设备的用户界面在滚动条的开始显示一个箭头按钮,这是1，否则它是0。</p>
+
+<p>对应于{{ cssxref(":-moz-system-metric(scrollbar-start-forward)") }} <a href="/en-US/docs/CSS/Pseudo-classes" title="Pseudo-classes">伪类</a>.</p>
+
+<p>{{ h3_gecko_minversion("-moz-scrollbar-thumb-proportional", "1.9.2") }}</p>
+
+<p><strong>Value:</strong> {{cssxref("&lt;integer&gt;")}}<br>
+ <strong style="font-weight: bold;">Media</strong><strong>:</strong> {{cssxref("Media/Visual")}}<br>
+ <strong>Accepts min/max prefixes:</strong> no</p>
+
+<p>如果设备的用户界面成比例显示滚动条的thumb(即大小基于可视document的百分比),这是1。否则它是0。</p>
+
+<p>对应于 {{ cssxref(":-moz-system-metric(scrollbar-thumb-proportional)") }} <a href="/en-US/docs/CSS/Pseudo-classes" title="Pseudo-classes">伪类</a>.</p>
+
+<p>{{ h3_gecko_minversion("-moz-touch-enabled", "1.9.2") }}</p>
+
+<p><strong>Value:</strong> {{cssxref("&lt;integer&gt;")}}<br>
+ <strong style="font-weight: bold;">Media</strong><strong>:</strong> {{cssxref("Media/Visual")}}<br>
+ <strong>Accepts min/max prefixes:</strong> no</p>
+
+<p>如果设备支持触摸事件(触屏设备), 这是1，否则它是0。</p>
+
+<p>对应于 {{ cssxref(":-moz-system-metric(touch-enabled)") }} <a href="/en-US/docs/CSS/Pseudo-classes" title="Pseudo-classes">伪类</a>.</p>
+
+<h4 id="例子">例子</h4>
+
+<p>你可以使用这来渲染按钮变得略大，例如，如果用户使用的是触屏设备，通过这个可以让按钮拥有很多效果，变得更友好。</p>
+
+<p>{{ h3_gecko_minversion("-moz-windows-classic", "1.9.2") }}</p>
+
+<p><strong>Value:</strong> {{cssxref("&lt;integer&gt;")}}<br>
+ <strong style="font-weight: bold;">Media</strong><strong>:</strong> {{cssxref("Media/Visual")}}<br>
+ <strong>Accepts min/max prefixes:</strong> no</p>
+
+<p>如果用户使用的是没有主题的Windows (在经典模式下而不是使用uxtheme),这是1，否则它是0。</p>
+
+<p>对应 {{ cssxref(":-moz-system-metric(windows-classic)") }} <a href="/en-US/docs/CSS/Pseudo-classes" title="Pseudo-classes">伪类</a>.</p>
+
+<p>{{ h3_gecko_minversion("-moz-windows-compositor", "1.9.2") }}</p>
+
+<p><strong>Value:</strong> {{cssxref("&lt;integer&gt;")}}<br>
+ <strong style="font-weight: bold;">Media</strong><strong>:</strong> {{cssxref("Media/Visual")}}<br>
+ <strong>Accepts min/max prefixes:</strong> no</p>
+
+<p>如果用户用DWM排字工人使用Windows，这是1，其他为0。</p>
+
+<p>对应于 {{ cssxref(":-moz-system-metric(windows-compositor)") }} <a href="/en-US/docs/CSS/Pseudo-classes" title="Pseudo-classes">伪类</a>.</p>
+
+<p>{{ h3_gecko_minversion("-moz-windows-default-theme", "1.9.2") }}</p>
+
+<p><strong>Value:</strong> {{cssxref("&lt;integer&gt;")}}<br>
+ <strong style="font-weight: bold;">Media</strong><strong>:</strong> {{cssxref("Media/Visual")}}<br>
+ <strong>Accepts min/max prefixes:</strong> no</p>
+
+<p>如果用户正在使用默认的Windows主题之一 (Luna, Royale, Zune, or Aero (包括 Vista Basic, Vista Advanced, and Aero Glass),这是1，否则它是0。</p>
+
+<p>对应于 {{ cssxref(":-moz-system-metric(windows-default-theme)") }} <a href="/en-US/docs/CSS/Pseudo-classes" title="Pseudo-classes">伪类</a>.</p>
+
+<p>{{ h3_gecko_minversion("-moz-windows-theme", "2.0") }}</p>
+
+<p><strong>Value:</strong> <code>aero</code> | <code>luna-blue</code> | <code>luna-olive</code> | <code>luna-silver</code> | <code>royale</code> | <code>generic</code> | <code>zune</code><br>
+ <strong style="font-weight: bold;">Media</strong><strong>:</strong> {{cssxref("Media/Visual")}}<br>
+ <strong>Accepts min/max prefixes:</strong> no</p>
+
+<p>表明目前使用的是Windows的主题，仅在Windows上可用，可能的值有:</p>
+
+<ul>
+ <li><code>aero</code></li>
+ <li><code>luna-blue</code></li>
+ <li><code>luna-olive</code></li>
+ <li><code>luna-silver</code></li>
+ <li><code>royale</code></li>
+ <li><code>generic</code></li>
+ <li><code>zune</code></li>
+</ul>
+
+<p>这是为应用程序提供的皮肤，其他浏览器代码能够适应当前窗口的工作主题。</p>
+
+<h2 id="浏览器兼容性">浏览器兼容性</h2>
+
+<p>{{ CompatibilityTable() }}</p>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{ CompatChrome("21") }}</td>
+   <td>{{ CompatGeckoDesktop("1.9.1") }}</td>
+   <td>{{ CompatIE("9.0") }}</td>
+   <td>{{ CompatOpera("9") }}</td>
+   <td>{{ CompatSafari("4") }}</td>
+  </tr>
+  <tr>
+   <td>grid</td>
+   <td>{{ CompatUnknown() }}</td>
+   <td>{{ CompatNo() }} (<code>grid</code> media type is not supported)</td>
+   <td>{{ CompatUnknown() }}</td>
+   <td>{{ CompatUnknown() }}</td>
+   <td>{{ CompatUnknown() }}</td>
+  </tr>
+  <tr>
+   <td>resolution</td>
+   <td>{{ CompatUnknown() }}</td>
+   <td>{{ CompatGeckoDesktop("1.9.1") }} supports {{cssxref("&lt;integer&gt;")}} values;<br>
+    {{ CompatGeckoDesktop("8.0") }} supports {{cssxref("&lt;number&gt;")}} values, as per the spec.</td>
+   <td>{{ CompatUnknown() }}</td>
+   <td>{{ CompatUnknown() }}</td>
+   <td>{{ CompatUnknown() }}</td>
+  </tr>
+  <tr>
+   <td>scan</td>
+   <td>{{ CompatUnknown() }}</td>
+   <td>{{ CompatNo() }} (<code>tv</code> media type is not supported)</td>
+   <td>{{ CompatUnknown() }}</td>
+   <td>{{ CompatUnknown() }}</td>
+   <td>{{ CompatUnknown() }}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{ CompatVersionUnknown() }}</td>
+   <td>{{ CompatVersionUnknown() }}</td>
+   <td>{{ CompatUnknown() }}</td>
+   <td>{{ CompatVersionUnknown() }}</td>
+   <td>{{ CompatVersionUnknown() }}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="其它">其它</h2>
+
+<ul>
+ <li><a class="external" href="http://www.w3.org/TR/css3-mediaqueries/" title="http://www.w3.org/TR/css3-mediaqueries/">CSS 3 媒体查询规范</a></li>
+ <li><a class="internal" href="/en-US/docs/CSS/@media" title="En/CSS/@media">媒体类型</a></li>
+ <li><a href="/en-US/docs/CSS/Using_media_queries_from_code" title="en/CSS/Using media queries from code">用代码实现媒体查询</a>\</li>
+</ul>
+
+<p> </p>
+
+<ul>
+ <li><a href="http://www.w3.org/TR/css3-mediaqueries/">CSS 3 media query specification</a></li>
+ <li><a href="https://developer.mozilla.org/en-US/docs/CSS/@media">Media types</a></li>
+ <li><a href="https://developer.mozilla.org/en-US/docs/CSS/Using_media_queries_from_code">Using media queries from code</a></li>
+ <li><a href="http://www.canbike.org/CSSpixels/">List of mobile and tablet viewport sizes with pixel ratios</a></li>
+ <li><a href="http://davidwalsh.name/animate-media-queries">CSS Animations Between Media Queries</a> by David Walsh</li>
+ <li><a href="https://miketaylr.com/posts/2016/01/at-media-webkit-transform-three-dee.html">@media (-webkit-transform-3d)</a></li>
+</ul>
+
+<div id="xunlei_com_thunder_helper_plugin_d462f475-c18e-46be-bd10-327458d045bd"> </div>
+
+<div id="xunlei_com_thunder_helper_plugin_d462f475-c18e-46be-bd10-327458d045bd"> </div>
+
+<div id="xunlei_com_thunder_helper_plugin_d462f475-c18e-46be-bd10-327458d045bd"> </div>
+
+<div id="xunlei_com_thunder_helper_plugin_d462f475-c18e-46be-bd10-327458d045bd"> </div>
+
+<div id="xunlei_com_thunder_helper_plugin_d462f475-c18e-46be-bd10-327458d045bd"> </div>
+
+<div id="xunlei_com_thunder_helper_plugin_d462f475-c18e-46be-bd10-327458d045bd"> </div>
+
+<div id="xunlei_com_thunder_helper_plugin_d462f475-c18e-46be-bd10-327458d045bd"> </div>
+
+<div id="xunlei_com_thunder_helper_plugin_d462f475-c18e-46be-bd10-327458d045bd"> </div>
+
+<div id="xunlei_com_thunder_helper_plugin_d462f475-c18e-46be-bd10-327458d045bd"> </div>

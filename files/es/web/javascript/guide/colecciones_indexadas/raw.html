@@ -1,0 +1,476 @@
+<div>{{jsSidebar("JavaScript Guide")}} {{PreviousNext("Web/JavaScript/Guide/Regular_Expressions", "Web/JavaScript/Guide/Keyed_Collections")}}</div>
+
+<p class="summary">Este cápitulo presenta las colecciones de datos que son ordenadas por un valor índice. Esto incluye arrays y construcciónes "array-like" tales como objetos {{jsxref("Array")}} y objetos {{jsxref("TypedArray")}} .</p>
+
+<h2 id="Objetos_Matriz_o_Array"><code>Objetos Matriz o Array</code></h2>
+
+<p>Una  <em>matriz </em>o array es un conjunto ordenado de valores al que se refiere con un nombre y un índice. Por ejemplo: podría tener un array llamado  <code>emp</code> que contenga a los nombre de los empleados indexados por su número de empleado. Así  <code>emp[1]</code> sería el empleado número uno , <code>emp[2]</code> seria el empleado número dos, y así sucesivamente.</p>
+
+<p>JavaScript no tiene un tipo de dato de matriz explícito. Sin embargo, podemos utilizar el objeto <code>Array</code> predefinido y sus métodos para trabajar con matrices en sus aplicaciones.<span lang="es"> El objeto Array tiene métodos para manipular matrices de varias maneras, tales como unirlas, invertirlas, y ordenarlas. Tiene una propiedad para determinar la longitud de la matriz y otras propiedades para su uso con expresiones regulares.</span></p>
+
+<h3 id="Creando_una_matriz_o_array">Creando una matriz o array</h3>
+
+<div class="tw-swapa">
+<div class="_wYb"><span lang="es">Las siguientes declaraciones crean matrices equivalentes :</span></div>
+</div>
+
+<pre class="brush: js">var arr = new Array(element0, element1, ..., elementN);
+var arr = Array(element0, element1, ..., elementN);
+var arr = [element0, element1, ..., elementN];
+</pre>
+
+<p class="tw-data-text vk_txt tw-ta tw-text-small" dir="ltr" id="tw-target-text"><code>element0, element1, ..., elementN</code><span lang="es"> es una lista de valores para los elementos de la matriz. Cuando se especifican estos valores , la matriz se inicializa con ellos como elementos de la matriz. La propiedad de </span><code>length </code><span lang="es">de la matriz se establece con el número de argumentos. </span></p>
+
+<p class="tw-data-text vk_txt tw-ta tw-text-small" dir="ltr"><span lang="es">Los corchetes en la sintaxis estan llamando a  "literal de la matriz" o "inicializador de matriz".  </span><span lang="es">Siendo este más corto que otras formas de creación de la matriz, y así se prefiere generalmente</span>. Vea <a href="/en-US/docs/Web/JavaScript/Guide/Grammar_and_types#Array_literals" title="en-US/docs/JavaScript/Guide/Values, Variables, and Literals#Array Literals">Array literals</a> para más detalles.<span lang="es"> Vea literales de conjunto para obtener más detalles.</span></p>
+
+<p><span id="result_box" lang="es"><span>Para crear una matriz con longitud distinta de cero, pero sin ningún elemento, se puede utilizar cualquiera de las siguientes opciones:</span></span></p>
+
+<pre class="brush: js">var arr = new Array(arrayLength);
+var arr = Array(arrayLength);
+
+// Esto tiene exactamente el mismo efecto
+var arr = [];
+arr.length = arrayLength;
+</pre>
+
+<div class="blockIndicator note">
+<p><strong>Nota</strong>: en el código de arriba, <code>arrayLength</code> debe ser <code>Number</code>. De otra forma, se creará un array con un único valor (el que fué provisto). Llamar <code>arr.length</code> devolverá <code>arrayLength</code>, pero el array realmente contendrá elementos vacíos (undefined). Correr un bucle <code><a href="/en-US/docs/Web/JavaScript/Reference/Statements/for...in">for...in</a></code> en el array no devolverá ninguno de sus elementos.</p>
+</div>
+
+<p>Adicionalmente a la nueva variable definida como se muestra arriba, los arrays también pueden ser asignados como una propiedad de un objeto nuevo o ya existente:</p>
+
+<pre class="brush: js">var obj = {};
+// ...
+obj.prop = [element0, element1, ..., elementN];
+
+// OR
+var obj = {prop: [element0, element1, ...., elementN]}
+</pre>
+
+<p>Si deseas inicializar un array con un solo elemento, y este debe ser un valor de tipo <font face="consolas, Liberation Mono, courier, monospace">Number, </font>deberás utilizar la sintaxis de corchetes, Cuando se pasa solo un valor <code>Number</code> al constructor o función Array(), este es interpretado como la longitud del array (<code>arrayLength</code>), no como un solo elemento. </p>
+
+<pre class="brush: js">var arr = [42];
+var arr = Array(42); // Crea un array sin elementos, 
+                     // pero con una arr.length de 42
+
+// El código de arriba es equivalente a lo siguiente
+var arr = [];
+arr.length = 42;
+</pre>
+
+<p>Llamar <code>Array(N) resulta en un error</code> <code>RangeError</code>, si <code>N</code> es un entero con una parte fraccionaria distinta de 0. El siguiente ejemplo ilustra este comportamiento.</p>
+
+<pre class="brush: js">var arr = Array(9.3);  // RangeError: Longitud de array inválida
+</pre>
+
+<p>Si tu código necesita crear arrays con elementos únicos de tipos arbitrarios, es más seguro utilizar literales de array. O, crear un array vacío antes que agregar un único elemento a el.</p>
+
+<h3 id="LLenando_un_array">LLenando un array</h3>
+
+<p>Puedes llenar un array al asignar valores a sus elementos. Por ejemplo,</p>
+
+<pre class="brush: js">var emp = [];
+emp[0] = "Casey Jones";
+emp[1] = "Phil Lesh";
+emp[2] = "August West";
+</pre>
+
+<p><strong>Nota:</strong>  si en el código de arriba utilizas un valor no entero en el operador del array, se creará una propiedad en el objeto que representa el array, y no un elemento del array.</p>
+
+<pre class="brush: js">var arr = [];
+arr[3.4] = "Oranges";
+console.log(arr.length);                // 0
+console.log(arr.hasOwnProperty(3.4));   // true
+</pre>
+
+<p>También puedes llenar un array al crearlo:</p>
+
+<pre class="brush: js">var myArray = new Array("Hello", myVar, 3.14159);
+var myArray = ["Mango", "Apple", "Orange"]
+</pre>
+
+<h3 id="Hacer_referencia_a_elementos_de_un_array">Hacer referencia a elementos de un array</h3>
+
+<p>Puedes hacer referencia a los elementos contenidos en un array, usando el número ordinal del elemento. Por ejemplo, supongamos que defines el siguiente array:</p>
+
+<pre class="brush: js">var myArray = ["Wind", "Rain", "Fire"];
+</pre>
+
+<p>Ahora puedes hacer referencia el primer elemento del array con<code>myArray[0]</code> y al segundo elemento de array con <code>myArray[1]</code>. Los indices de elemento comienzan siempre por cero.</p>
+
+<p><strong>Nota:</strong> the array operator (square brackets) is also used for accessing the array's properties (arrays are also objects in JavaScript). For example,</p>
+
+<pre class="brush: js">var arr = ["one", "two", "three"];
+arr[2];  // three
+arr["length"];  // 3
+</pre>
+
+<h3 id="Understanding_length">Understanding length</h3>
+
+<p>At the implementation level, JavaScript's arrays actually store their elements as standard object properties, using the array index as the property name. The <code>length</code> property is special; it always returns the index of the last element plus one (in following example Dusty is indexed at 30 so cats.length returns 30 + 1). Remember, JavaScript Array indexes are 0-based: they start at 0, not 1. This means that the <code><code>length</code></code> property will be one more than the highest index stored in the array:</p>
+
+<pre class="brush: js">var cats = [];
+cats[30] = ['Dusty'];
+console.log(cats.length); // 31
+</pre>
+
+<p>You can also assign to the <code>length</code> property. Writing a value that is shorter than the number of stored items truncates the array; writing 0 empties it entirely:</p>
+
+<pre class="brush: js">var cats = ['Dusty', 'Misty', 'Twiggy'];
+console.log(cats.length); // 3
+
+cats.length = 2;
+console.log(cats); // logs "Dusty,Misty" - Twiggy has been removed
+
+cats.length = 0;
+console.log(cats); // logs nothing; the cats array is empty
+
+cats.length = 3;
+console.log(cats); // [undefined, undefined, undefined]
+</pre>
+
+<h3 id="Iterando_sobre_arrays">Iterando sobre arrays</h3>
+
+<p>Una operación común es iterar sobre los valores de un array, procesando cada uno de ellos de alguna manera. La forma más sencilla de hacerlo es la siguiente:</p>
+
+<pre class="brush: js">var colors = ['red', 'green', 'blue'];
+for (var i = 0; i &lt; colors.length; i++) {
+  console.log(colors[i]);
+}
+</pre>
+
+<p>If you know that none of the elements in your array evaluate to <code>false</code> in a boolean context — if your array consists only of <a href="/en-US/docs/DOM" title="en-US/docs/DOM">DOM</a> nodes, for example, you can use a more efficient idiom:</p>
+
+<pre class="brush: js">var divs = document.getElementsByTagName('div');
+for (var i = 0, div; div = divs[i]; i++) {
+  /* Process div in some way */
+}
+</pre>
+
+<p>This avoids the overhead of checking the length of the array, and ensures that the <code>div</code> variable is reassigned to the current item each time around the loop for added convenience.</p>
+
+<p>The {{jsxref("Array.forEach", "forEach()")}} method provides another way of iterating over an array:</p>
+
+<pre class="brush: js">var colors = ['red', 'green', 'blue'];
+colors.forEach(function(color) {
+  console.log(color);
+});
+</pre>
+
+<p>The function passed to <code>forEach</code> is executed once for every item in the array, with the array item passed as the argument to the function. Unassigned values are not iterated in a <code>forEach</code> loop.</p>
+
+<p>Note that the elements of array omitted when the array is defined are not listed when iterating by <code>forEach,</code>but are listed when <code>undefined</code> has been manually assigned to the element:</p>
+
+<pre class="brush: js">var array = ['first', 'second', , 'fourth'];
+
+// returns ['first', 'second', 'fourth'];
+array.forEach(function(element) {
+  console.log(element);
+})
+
+if(array[2] === undefined) { console.log('array[2] is undefined'); } // true
+
+var array = ['first', 'second', undefined, 'fourth'];
+
+// returns ['first', 'second', undefined, 'fourth'];
+array.forEach(function(element) {
+  console.log(element);
+})</pre>
+
+<p>Since JavaScript elements are saved as standard object properties, it is not advisable to iterate through JavaScript arrays using <code><a href="/en-US/docs/Web/JavaScript/Reference/Statements/for...in">for...in</a></code> loops because normal elements and all enumerable properties will be listed.</p>
+
+<h3 id="Array_methods">Array methods</h3>
+
+<p>The {{jsxref("Array")}} object has the following methods:</p>
+
+<p>{{jsxref("Array.concat", "concat()")}} joins two arrays and returns a new array.</p>
+
+<pre class="brush: js">var myArray = new Array("1", "2", "3");
+myArray = myArray.concat("a", "b", "c"); 
+// myArray is now ["1", "2", "3", "a", "b", "c"]
+</pre>
+
+<p>{{jsxref("Array.join", "join(deliminator = ',')")}} joins all elements of an array into a string.</p>
+
+<pre class="brush: js">var myArray = new Array("Wind", "Rain", "Fire");
+var list = myArray.join(" - "); // list is "Wind - Rain - Fire"
+</pre>
+
+<p>{{jsxref("Array.push", "push()")}} adds one or more elements to the end of an array and returns the resulting length of the array.</p>
+
+<pre class="brush: js">var myArray = new Array("1", "2");
+myArray.push("3"); // myArray is now ["1", "2", "3"]
+</pre>
+
+<p>{{jsxref("Array.pop", "pop()")}} removes the last element from an array and returns that element.</p>
+
+<pre class="brush: js">var myArray = new Array("1", "2", "3");
+var last = myArray.pop(); 
+// myArray is now ["1", "2"], last = "3"
+</pre>
+
+<p>{{jsxref("Array.shift", "shift()")}} removes the first element from an array and returns that element.</p>
+
+<pre class="brush: js">var myArray = new Array ("1", "2", "3");
+var first = myArray.shift(); 
+// myArray is now ["2", "3"], first is "1"
+</pre>
+
+<p>{{jsxref("Array.shift", "unshift()")}} adds one or more elements to the front of an array and returns the new length of the array.</p>
+
+<pre class="brush: js">var myArray = new Array ("1", "2", "3");
+myArray.unshift("4", "5"); 
+// myArray becomes ["4", "5", "1", "2", "3"]</pre>
+
+<p>{{jsxref("Array.slice", "slice(start_index, upto_index)")}} extracts a section of an array and returns a new array.</p>
+
+<pre class="brush: js">var myArray = new Array ("a", "b", "c", "d", "e");
+myArray = myArray.slice(1, 4); // starts at index 1 and extracts all elements
+                               // until index 3, returning [ "b", "c", "d"]
+</pre>
+
+<p>{{jsxref("Array.splice", "splice(index, count_to_remove, addElement1, addElement2, ...)")}} removes elements from an array and (optionally) replaces them.</p>
+
+<pre class="brush: js">var myArray = new Array ("1", "2", "3", "4", "5");
+myArray.splice(1, 3, "a", "b", "c", "d"); 
+// myArray is now ["1", "a", "b", "c", "d", "5"]
+// This code started at index one (or where the "2" was), 
+// removed 3 elements there, and then inserted all consecutive
+// elements in its place.
+</pre>
+
+<p>{{jsxref("Array.reverse", "reverse()")}} transposes the elements of an array: the first array element becomes the last and the last becomes the first.</p>
+
+<pre class="brush: js">var myArray = new Array ("1", "2", "3");
+myArray.reverse(); 
+// transposes the array so that myArray = [ "3", "2", "1" ]
+</pre>
+
+<p>{{jsxref("Array.sort", "sort()")}} sorts the elements of an array.</p>
+
+<pre class="brush: js">var myArray = new Array("Wind", "Rain", "Fire");
+myArray.sort(); 
+// sorts the array so that myArray = [ "Fire", "Rain", "Wind" ]
+</pre>
+
+<p><code>sort()</code> can also take a callback function to determine how array elements are compared. The function compares two values and returns one of three values:</p>
+
+<p>For instance, the following will sort by the last letter of a string:</p>
+
+<pre class="brush: js">var sortFn = function(a, b){
+  if (a[a.length - 1] &lt; b[b.length - 1]) return -1;
+  if (a[a.length - 1] &gt; b[b.length - 1]) return 1;
+  if (a[a.length - 1] == b[b.length - 1]) return 0;
+}
+myArray.sort(sortFn); 
+// sorts the array so that myArray = ["Wind","Fire","Rain"]</pre>
+
+<ul>
+ <li>if <code>a</code> is less than <code>b</code> by the sorting system, return -1 (or any negative number)</li>
+ <li>if <code>a</code> is greater than <code>b</code> by the sorting system, return 1 (or any positive number)</li>
+ <li>if <code>a</code> and <code>b</code> are considered equivalent, return 0.</li>
+</ul>
+
+<p>{{jsxref("Array.indexOf", "indexOf(searchElement[, fromIndex])")}} searches the array for <code>searchElement</code> and returns the index of the first match.</p>
+
+<pre class="brush: js">var a = ['a', 'b', 'a', 'b', 'a'];
+console.log(a.indexOf('b')); // logs 1
+// Now try again, starting from after the last match
+console.log(a.indexOf('b', 2)); // logs 3
+console.log(a.indexOf('z')); // logs -1, because 'z' was not found
+</pre>
+
+<p>{{jsxref("Array.lastIndexOf", "lastIndexOf(searchElement[, fromIndex])")}} works like <code>indexOf</code>, but starts at the end and searches backwards.</p>
+
+<pre class="brush: js">var a = ['a', 'b', 'c', 'd', 'a', 'b'];
+console.log(a.lastIndexOf('b')); // logs 5
+// Now try again, starting from before the last match
+console.log(a.lastIndexOf('b', 4)); // logs 1
+console.log(a.lastIndexOf('z')); // logs -1
+</pre>
+
+<p>{{jsxref("Array.forEach", "forEach(callback[, thisObject])")}} executes <code>callback</code> on every array item.</p>
+
+<pre class="brush: js">var a = ['a', 'b', 'c'];
+a.forEach(function(element) { console.log(element);} ); 
+// logs each item in turn
+</pre>
+
+<p>{{jsxref("Array.map", "map(callback[, thisObject])")}} returns a new array of the return value from executing <code>callback</code> on every array item.</p>
+
+<pre class="brush: js">var a1 = ['a', 'b', 'c'];
+var a2 = a1.map(function(item) { return item.toUpperCase(); });
+console.log(a2); // logs A,B,C
+</pre>
+
+<p>{{jsxref("Array.filter", "filter(callback[, thisObject])")}} returns a new array containing the items for which callback returned true.</p>
+
+<pre class="brush: js">var a1 = ['a', 10, 'b', 20, 'c', 30];
+var a2 = a1.filter(function(item) { return typeof item == 'number'; });
+console.log(a2); // logs 10,20,30
+</pre>
+
+<p>{{jsxref("Array.every", "every(callback[, thisObject])")}} returns true if <code>callback</code> returns true for every item in the array.</p>
+
+<pre class="brush: js">function isNumber(value){
+  return typeof value == 'number';
+}
+var a1 = [1, 2, 3];
+console.log(a1.every(isNumber)); // logs true
+var a2 = [1, '2', 3];
+console.log(a2.every(isNumber)); // logs false
+</pre>
+
+<p>{{jsxref("Array.some", "some(callback[, thisObject])")}} returns true if <code>callback</code> returns true for at least one item in the array.</p>
+
+<pre class="brush: js">function isNumber(value){
+  return typeof value == 'number';
+}
+var a1 = [1, 2, 3];
+console.log(a1.some(isNumber)); // logs true
+var a2 = [1, '2', 3];
+console.log(a2.some(isNumber)); // logs true
+var a3 = ['1', '2', '3'];
+console.log(a3.some(isNumber)); // logs false
+</pre>
+
+<p>The methods above that take a callback are known as <em>iterative methods</em>, because they iterate over the entire array in some fashion. Each one takes an optional second argument called <code>thisObject</code>. If provided, <code>thisObject</code> becomes the value of the <code>this</code> keyword inside the body of the callback function. If not provided, as with other cases where a function is invoked outside of an explicit object context, <code>this</code> will refer to the global object ({{domxref("window")}}).</p>
+
+<p>The callback function is actually called with three arguments. The first is the value of the current item, the second is its array index, and the third is a reference to the array itself. JavaScript functions ignore any arguments that are not named in the parameter list so it is safe to provide a callback function that only takes a single argument, such as <code>alert</code>.</p>
+
+<p>{{jsxref("Array.reduce", "reduce(callback[, initialValue])")}} applies <code>callback(firstValue, secondValue)</code> to reduce the list of items down to a single value.</p>
+
+<pre class="brush: js">var a = [10, 20, 30];
+var total = a.reduce(function(first, second) { return first + second; }, 0);
+console.log(total) // Prints 60
+</pre>
+
+<p>{{jsxref("Array.reduceRight", "reduceRight(callback[, initalvalue])")}} works like <code>reduce()</code>, but starts with the last element.</p>
+
+<p><code>reduce</code> and <code>reduceRight</code> are the least obvious of the iterative array methods. They should be used for algorithms that combine two values recursively in order to reduce a sequence down to a single value.</p>
+
+<h3 id="Multi-dimensional_arrays">Multi-dimensional arrays</h3>
+
+<p>Arrays can be nested, meaning that an array can contain another array as an element. Using this characteristic of JavaScript arrays, multi-dimensional arrays can be created.</p>
+
+<p>The following code creates a two-dimensional array.</p>
+
+<pre class="brush: js">var a = new Array(4);
+for (i = 0; i &lt; 4; i++) {
+  a[i] = new Array(4);
+  for (j = 0; j &lt; 4; j++) {
+    a[i][j] = "[" + i + "," + j + "]";
+  }
+}
+</pre>
+
+<p>This example creates an array with the following rows:</p>
+
+<pre>Row 0: [0,0] [0,1] [0,2] [0,3]
+Row 1: [1,0] [1,1] [1,2] [1,3]
+Row 2: [2,0] [2,1] [2,2] [2,3]
+Row 3: [3,0] [3,1] [3,2] [3,3]
+</pre>
+
+<h3 id="Arrays_and_regular_expressions">Arrays and regular expressions</h3>
+
+<p>When an array is the result of a match between a regular expression and a string, the array returns properties and elements that provide information about the match. An array is the return value of <a href="/en-US/docs/JavaScript/Reference/Global_Objects/RegExp/exec" title="en-US/docs/JavaScript/Reference/Global Objects/RegExp/exec"><code>RegExp.exec()</code></a>, <a href="/en-US/docs/JavaScript/Reference/Global_Objects/String/match" title="en-US/docs/JavaScript/Reference/Global Objects/String/match"><code>String.match()</code></a>, and <a href="/en-US/docs/JavaScript/Reference/Global_Objects/String/split" title="en-US/docs/JavaScript/Reference/Global
+Objects/String/split"><code>String.split()</code></a>. For information on using arrays with regular expressions, see <a href="/en-US/docs/Web/JavaScript/Guide/Regular_Expressions" title="en-US/docs/JavaScript/Guide/Regular Expressions">Regular Expressions</a>.</p>
+
+<h3 id="Working_with_array-like_objects">Working with array-like objects</h3>
+
+<p>Some JavaScript objects, such as the {{domxref("NodeList")}} returned by {{domxref("document.getElementsByTagName()")}} or the <a href="/en-US/docs/Web/JavaScript/Reference/Functions/arguments" title="en-US/docs/JavaScript/Reference/Functions andfunctionscope/arguments"><code>arguments</code></a> object made available within the body of a function, look and behave like arrays on the surface but do not share all of their methods. The <code>arguments</code> object provides a <code><a href="/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/length">length</a></code> attribute but does not implement the {{jsxref("Array.forEach", "forEach()")}} method, for example.</p>
+
+<p>Array generics, provide a way of running <code>Array</code> methods against other array-like objects. Each standard array method has a corresponding method on the <code>Array</code> object itself; for example:</p>
+
+<pre class="brush: js">function printArguments() {
+  Array.forEach(arguments, function(item) {
+    console.log(item);
+  });
+}
+</pre>
+
+<p>These generic methods can be emulated more verbosely in older versions of JavaScript using the call method provided by JavaScript function objects:</p>
+
+<pre class="brush: js">Array.prototype.forEach.call(arguments, function(item) {
+  console.log(item);
+});
+</pre>
+
+<p>Array generic methods can be used on strings as well, since they provide sequential access to their characters in a similar way to arrays:</p>
+
+<pre class="brush: js">Array.forEach("a string", function(chr) {
+  console.log(chr);
+});</pre>
+
+<h2 id="Array_comprehensions">Array comprehensions</h2>
+
+<p>Introduced in <a href="/en-US/docs/Web/JavaScript/New_in_JavaScript/1.7">JavaScript 1.7</a> and proposed to be standardized in <a href="/en-US/docs/Web/JavaScript/New_in_JavaScript/ECMAScript_7_support_in_Mozilla">ECMAScript 7</a>, <a href="/en-US/docs/Web/JavaScript/Reference/Operators/Array_comprehensions">array comprehensions</a> provide a useful shortcut for constructing a new array based on the contents of another. Comprehensions can often be used in place of calls to <code>map()</code> and <code>filter()</code>, or as a way of combining the two.</p>
+
+<p>The following comprehension takes an array of numbers and creates a new array of the double of each of those numbers.</p>
+
+<pre class="brush: js">var numbers = [1, 2, 3, 4];
+var doubled = [i * 2 for (i of numbers)];
+console.log(doubled); // logs 2,4,6,8
+</pre>
+
+<p>This is equivalent to the following <code>map()</code> operation:</p>
+
+<pre class="brush: js">var doubled = numbers.map(function(i){return i * 2;});
+</pre>
+
+<p>Comprehensions can also be used to select items that match a particular expression. Here is a comprehension which selects only even numbers:</p>
+
+<pre class="brush: js">var numbers = [1, 2, 3, 21, 22, 30];
+var evens = [i for (i of numbers) if (i % 2 === 0)];
+console.log(evens); // logs 2,22,30
+</pre>
+
+<p><code>filter()</code> can be used for the same purpose:</p>
+
+<pre class="brush: js">var evens = numbers.filter(function(i){return i % 2 === 0;});
+</pre>
+
+<p><code>map()</code> and <code>filter()</code> style operations can be combined into a single array comprehension. Here is one that filters just the even numbers, then creates an array containing their doubles:</p>
+
+<pre class="brush: js">var numbers = [1, 2, 3, 21, 22, 30];
+var doubledEvens = [i * 2 for (i of numbers) if (i % 2 === 0)];
+console.log(doubledEvens); // logs 4,44,60
+</pre>
+
+<p>The square brackets of an array comprehension introduce an implicit block for scoping purposes. New variables (such as i in the example) are treated as if they had been declared using <a href="/en-US/docs/Web/JavaScript/Reference/Statements/let" title="/en-US/docs/JavaScript/Reference/Statements/let"><code>let</code></a>. This means that they will not be available outside of the comprehension.</p>
+
+<p>The input to an array comprehension does not itself need to be an array; <a href="/en-US/docs/Web/JavaScript/Guide/Iterators_and_Generators" title="en-US/docs/JavaScript/Guide/Iterators and Generators">iterators and generators</a> can also be used.</p>
+
+<p>Even strings may be used as input; to achieve the filter and map actions (under Array-like objects) above:</p>
+
+<pre class="brush: js">var str = 'abcdef';
+var consonantsOnlyStr = [c for (c of str) if (!(/[aeiouAEIOU]/).test(c))  ].join(''); // 'bcdf'
+var interpolatedZeros = [c+'0' for (c of str) ].join(''); // 'a0b0c0d0e0f0'
+</pre>
+
+<p>Again, the input form is not preserved, so we have to use <code>join()</code> to revert back to a string.</p>
+
+<h2 id="Typed_Arrays">Typed Arrays</h2>
+
+<p><a href="/en-US/docs/Web/JavaScript/Typed_arrays">JavaScript typed arrays</a> are array-like objects and provide a mechanism for accessing raw binary data. As you already know, {{jsxref("Array")}} objects grow and shrink dynamically and can have any JavaScript value. JavaScript engines perform optimizations so that these arrays are fast. However, as web applications become more and more powerful, adding features such as audio and video manipulation, access to raw data using <a href="/en-US/docs/WebSockets">WebSockets</a>, and so forth, it has become clear that there are times when it would be helpful for JavaScript code to be able to quickly and easily manipulate raw binary data in typed arrays.</p>
+
+<h3 id="Buffers_and_views_typed_array_architecture">Buffers and views: typed array architecture</h3>
+
+<p>To achieve maximum flexibility and efficiency, JavaScript typed arrays split the implementation into <strong>buffers</strong> and <strong>views</strong>. A buffer (implemented by the {{jsxref("ArrayBuffer")}} object) is an object representing a chunk of data; it has no format to speak of, and offers no mechanism for accessing its contents. In order to access the memory contained in a buffer, you need to use a view. A view provides a context — that is, a data type, starting offset, and number of elements — that turns the data into an actual typed array.</p>
+
+<p><img alt="Typed arrays in an ArrayBuffer" src="https://mdn.mozillademos.org/files/8629/typed_arrays.png" style="height: 278px; width: 666px;"></p>
+
+<h3 id="ArrayBuffer">ArrayBuffer</h3>
+
+<p>The {{jsxref("ArrayBuffer")}} is a data type that is used to represent a generic, fixed-length binary data buffer. You can't directly manipulate the contents of an <code>ArrayBuffer</code>; instead, you create a typed array view or a {{jsxref("DataView")}} which represents the buffer in a specific format, and use that to read and write the contents of the buffer.</p>
+
+<h3 id="Typed_array_views">Typed array views</h3>
+
+<p>Typed array views have self descriptive names and provide views for all the usual numeric types like <code>Int8</code>, <code>Uint32</code>, <code>Float64</code> and so forth. There is one special typed array view, the <code>Uint8ClampedArray</code>. It clamps the values between 0 and 255. This is useful for <a href="/en-US/docs/Web/API/ImageData">Canvas data processing</a>, for example.</p>
+
+<p>{{page("/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray", "TypedArray_objects")}}</p>
+
+<p>Fore more information, see <a href="/en-US/docs/Web/JavaScript/Typed_arrays">JavaScript typed arrays</a> and the reference documentation for the different {{jsxref("TypedArray")}} objects.</p>
+
+<p>{{PreviousNext("Web/JavaScript/Guide/Regular_Expressions", "Web/JavaScript/Guide/Keyed_Collections")}}</p>

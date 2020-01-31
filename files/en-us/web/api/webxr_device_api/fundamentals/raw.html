@@ -1,0 +1,54 @@
+<p>{{Draft}}</p>
+
+<p>&lt;&lt;intro&gt;&gt;</p>
+
+<h2 id="Coding_recommendations">Coding recommendations</h2>
+
+<p>...</p>
+
+<h3 id="Optimizing_memory_use_and_usage">Optimizing memory use and usage</h3>
+
+<p>When using libraries that perform things such as matrix mathematics, you typically have a number of working variables through which various vectors, matrices, and quaternions pass over time. It makes sense, then, to have a limited set of these objects, simply replacing their contents with the new information each time you need to use them. They can be thought of as being similar to the registers in a microprocessor: a limited set of memory storage slots for specific kinds of data or use cases.</p>
+
+<p>While an individual vector or matrix doesn't occupy an inordinate amount of memory, the sheer number of vectors and matrices and other structures that are used to build each frame of a 3D scene means the memory management becomes a problem evntually if you keep allocating and deallocating memory objects.</p>
+
+<p>Consider the following</p>
+
+<pre class="brush: js">function drawScene(gl, view, programInfo, buffers, texture, deltaTime) {
+  ...
+  for (object in scene) {
+    let vertexList = ...
+    let normalMatrix = mat4.create();
+    let modelViewMatrix = mat4.create();
+    let objectMatrix = mat4.
+
+    // Apply rotation updates to the object if needed
+
+    mat4.rotate(
+  }
+}</pre>
+
+<p>This renders a scene. But it's inefficient, because it allocates as local variables a number of things, including at least two matrices, an array of vertices, and more. That means that for every frame, the JavaScript runtime has to allocate memory for those and set them up—possibly triggering garbage collection—and then when each iteraction of the loop is completed, the memory is released.</p>
+
+<p>A simple change can optimize this significantly:</p>
+
+<pre class="brush: js">const vertexList = ...
+const normalMatrix = mat4.create();
+const modelViewMatrix = mat4.create();
+
+function drawScene(gl, view, programInfo, buffers, texture, deltaTime) {
+  ...
+  for (object in scene) {
+    ...
+  }
+}</pre>
+
+<p>Now, instead of allocating variables every loop iteration, we're using global constants(or class member constants). This has multiple benefits:</p>
+
+<ul>
+ <li>The memory allocated for each value or structure will not need to be reallocated every frame. This reduces the potential for triggering garbage collection, and optimizes memory use.</li>
+ <li>You can't accidentally delete the objects that contain your vectors and matrices, since they're constants.</li>
+ <li>You can, however, still replace the <em>contents</em> of each of these objects, so they're reusable.</li>
+</ul>
+
+<p>You're now protected from several possible coding mistakes, and your entire animation will be smoother and more performant as well.</p>

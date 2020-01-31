@@ -1,0 +1,293 @@
+<div>{{JSRef}}</div>
+
+<p>Ця стаття надає додаткові приклади для {{jsxref("Object.defineProperty()")}}.</p>
+
+<h2 id="Використання_двійкових_прапорів_замість_дескриптора_властивості">Використання двійкових прапорів замість дескриптора властивості</h2>
+
+<p>Якщо вам необхідно визначити велику кількість властивостей методом {{jsxref("Object.defineProperty()")}}, ви можете використовувати один і той самий дескриптор для кожної властивості, перевизначаючи його час від часу через {{jsxref("Operators/Bitwise_Operators", "двійкові прапори", "Прапори_та_бітові_маски", 1)}}.</p>
+
+<pre class="brush: js">var oDesc = {};
+function setProp (oObj, nMask, sKey, vVal_fGet, fSet) {
+  if (nMask &amp; 8) {
+    // дескриптор доступу
+    if (vVal_fGet) {
+      oDesc.get = vVal_fGet;
+    } else {
+      delete oDesc.get;
+    }
+    if (fSet) {
+      oDesc.set = fSet;
+    } else {
+      delete oDesc.set;
+    }
+    delete oDesc.value;
+    delete oDesc.writable;
+  } else {
+    // дескриптор даних
+    if (arguments.length &gt; 3) {
+      oDesc.value = vVal_fGet;
+    } else {
+      delete oDesc.value;
+    }
+    oDesc.writable = Boolean(nMask &amp; 4);
+    delete oDesc.get;
+    delete oDesc.set;
+  }
+  oDesc.enumerable = Boolean(nMask &amp; 1);
+  oDesc.configurable = Boolean(nMask &amp; 2);
+  Object.defineProperty(oObj, sKey, oDesc);
+  return oObj;
+}
+
+/*
+* :: функція setProp ::
+*
+* nMask є бітовою маскою:
+*  flag 0x1: властивість є доступною для переліку,
+*  flag 0x2: властивість є доступною для налаштування,
+*  flag 0x4: властивість є доступною для запису,
+*  flag 0x8: властивість є дескриптором доступу.
+* oObj - об'єкт, на якому ми визначаємо властивість;
+* sKey - ім'я властивості, яка визначається чи модифікується;
+* vVal_fGet - значення, що призначається дескриптору даних чи функції-гетеру
+* для присвоєння дескриптору доступу (в залежності від бітової маски);
+* fSet - функція-сетер для присвоєння дескриптору доступу;
+*
+* Можливі значення бітової маски:
+*
+*  0  : дескриптор даних тільки для читання - недоступний для налаштування та переліку (0000).
+*  1  : дескриптор даних тільки для читання - недоступний для налаштування, доступний для переліку (0001).
+*  2  : дескриптор даних тільки для читання - доступний для налаштування, недоступний для переліку (0010).
+*  3  : дескриптор даних тільки для читання - доступний для налаштування та переліку (0011).
+*  4  : дескриптор даних, доступний для запису - недоступний для налаштування та переліку (0100).
+*  5  : дескриптор даних, доступний для запису - недоступний для налаштування, доступний для переліку (0101).
+*  6  : дескриптор даних, доступний для запису - доступний для налаштування, недоступний для переліку (0110).
+*  7  : дескриптор даних, доступний для запису - доступний для налаштування та переліку (0111).
+*  8  : дескриптор доступу - недоступний для налаштування та переліку (1000).
+*  9  : дескриптор доступу - недоступний для налаштування, доступний для переліку (1001).
+*  10 : дескриптор доступу - доступний для налаштування, недоступний для переліку (1010).
+*  11 : дескриптор доступу - доступний для налаштування та переліку (1011).
+*
+*  Заувага: Якщо прапор 0x8 встановлений у "дескриптор доступу", прапор 0x4 (доступний для запису)
+*  ігноруватиметься. Якщо ні, то аргумент fSet ігноруватиметься.
+*/
+
+// створення нового порожнього об'єкта
+var myObj = {};
+
+// додавання дескриптора даних, доступного для запису - недоступний для налаштування та переліку
+setProp(myObj, 4, 'myNumber', 25);
+
+// додавання дескриптора даних тільки для читання - недоступний для налаштування, доступний для переліку
+setProp(myObj, 1, 'myString', 'Привіт!');
+
+// додавання дескриптора доступу - недоступний для налаштування, доступний для переліку
+setProp(myObj, 9, 'myArray', function() {
+  for (var iBit = 0, iFlag = 1, aBoolArr = [false];
+    iFlag &lt; this.myNumber + 1 || (this.myNumber &amp; iFlag);
+    iFlag = iFlag &lt;&lt; 1
+  ) {
+    aBoolArr[iBit++] = Boolean(this.myNumber &amp; iFlag);
+  }
+  return aBoolArr;
+}, function(aNewMask) {
+  for (var nNew = 0, iBit = 0; iBit &lt; aNewMask.length; iBit++) {
+    nNew |= Boolean(aNewMask[iBit]) &lt;&lt; iBit;
+  }
+  this.myNumber = nNew;
+});
+
+// додавання дескриптора даних, доступного для запису (значення undefined) - доступний для налаштування та переліку
+setProp(myObj, 7, 'myUndefined');
+
+// додавання дескриптора доступу (тільки гетер) - доступний для налаштування та переліку
+setProp(myObj, 11, 'myDate', function() { return new Date(); });
+
+// додавання дескриптора доступу (тільки сетер) - недоступний для налаштування та переліку
+setProp(myObj, 8, 'myAlert', null, function(sTxt) { alert(sTxt); });
+
+myObj.myAlert = myObj.myDate.toLocaleString() + '\n\n' + myObj.myString +
+  '\nЧисло ' + myObj.myNumber + ' представляє наступну бітову маску: ' +
+  myObj.myArray.join(', ') + '.';
+
+// список перелічуваних властивостей
+var sList = "Ось перелічувані властивості об'єкта myObj:\n";
+for (var sProp in myObj) {
+  sList += '\nmyObj.' + sProp + ' =&gt; ' + myObj[sProp] + ';'
+}
+
+alert(sList);
+</pre>
+
+<h2 id="Створення_нового_невбудованого_методу_Object.setProperty">Створення нового невбудованого методу <code>Object.setProperty()</code></h2>
+
+<p>Те саме можна зробити з дескриптором, отриманим через анонімний конструктор, та користувацьким методом {{jsxref("Global_Objects/Object", "Object")}} на ім'я <code>setProperty()</code>:</p>
+
+<pre class="brush: js">// створення нового методу Object на ім'я Object.setProperty()
+
+new (function() {
+  var oDesc = this;
+  oDesc.constructor = Object;
+  Object.setProperty = function(oObj, nMask, sKey, vVal_fGet, fSet) {
+    if (nMask &amp; 8) {
+      // дескриптор доступу
+      if (vVal_fGet) {
+        oDesc.get = vVal_fGet;
+      } else {
+        delete oDesc.get;
+      }
+      if (fSet) {
+        oDesc.set = fSet;
+      } else {
+        delete oDesc.set;
+      }
+      delete oDesc.value;
+      delete oDesc.writable;
+    } else {
+      // дескриптор даних
+      if (arguments.length &gt; 3) {
+        oDesc.value = vVal_fGet;
+      } else {
+        delete oDesc.value;
+      }
+      oDesc.writable = Boolean(nMask &amp; 4);
+      delete oDesc.get;
+      delete oDesc.set;
+    }
+    oDesc.enumerable = Boolean(nMask &amp; 1);
+    oDesc.configurable = Boolean(nMask &amp; 2);
+    Object.defineProperty(oObj, sKey, oDesc);
+    return oObj;
+  };
+})();
+
+// створення нового порожнього об'єкта
+var myObj = {};
+
+// додавання дескриптора даних, доступного дня запису - недоступний для налаштування та переліку
+Object.setProperty(myObj, 4, 'myNumber', 25);
+
+// додавання дескриптора даних тільки для читання - недоступний для налаштування, доступний для переліку
+Object.setProperty(myObj, 1, 'myString', 'Привіт!');
+
+// і т.д, і т.п.
+</pre>
+
+<div class="note"><strong>Заувага:</strong> Метод <code>Object.setProperty()</code> також може бути запропонований як новий вбудований метод JavaScript (див. <a class="external" href="https://bugs.ecmascript.org/show_bug.cgi?id=335" rel="external">ECMAScript bug 335</a>).</div>
+
+<h3 id="Синтаксис">Синтаксис</h3>
+
+<pre class="syntaxbox">Object.setProperty(<var>obj</var>, <var>bitmask</var>, <var>prop</var>[, <var>value/getter</var>[, <var>setter</var>]])</pre>
+
+<h3 id="Параметри">Параметри</h3>
+
+<dl>
+ <dt><code>obj</code></dt>
+ <dd>Об'єкт, на якому визначається властивість.</dd>
+ <dt><code>bitmask</code></dt>
+ <dd>Бітова маска дескриптора (дивіться нижче).</dd>
+ <dt><code>prop</code></dt>
+ <dd>Ім'я властивості, яка визначається чи модифікується.</dd>
+ <dt><code>value/getter</code></dt>
+ <dd>Необов'язковий. Значення, що призначається дескриптору даних чи функції-гетеру для присвоєння дескриптору доступу (в залежності від бітової маски).</dd>
+ <dt><code>setter</code></dt>
+ <dd>Необов'язковий. Функція-сетер для присвоєння дескриптору доступу. Якщо прапор <code>0x8</code> встановлений у <em>дескриптор даних</em>, цей аргумент ігноруватиметься.</dd>
+</dl>
+
+<h3 id="Опис">Опис</h3>
+
+<p>Не вбудований метод <code>Object.setProperty()</code> працює як вбудований метод <code>Object.defineProperty()</code>, за винятком об'єкта-дескриптора, який замінений бітовою маскою. Аргумент <code>bitmask</code> має наступну структуру:</p>
+
+<dl>
+ <dt>flag <code>0x1</code></dt>
+ <dd>Властивість доступна для переліку.</dd>
+ <dt>flag <code>0x2</code></dt>
+ <dd>Властивість доступна для налаштування.</dd>
+ <dt>flag <code>0x4</code></dt>
+ <dd>Властивість доступна для запису.</dd>
+ <dt>flag <code>0x8</code></dt>
+ <dd>Властивість є дескриптором доступу.</dd>
+</dl>
+
+<p>Отже, бітова маска може мати такі можливі числові значення:</p>
+
+<ul>
+ <li><strong><code>0</code></strong>: Бітова маска відображає дескриптор <em>даних</em> тільки для читання - недоступний для налаштування та переліку (<code>0000</code>).</li>
+ <li><strong><code>1</code></strong>: Бітова маска відображає дескриптор <em>даних</em> тільки для читання - недоступний для налаштування, доступний для переліку (<code>0001</code>).</li>
+ <li><strong><code>2</code></strong>: Бітова маска відображає дескриптор <em>даних</em> тільки для читання - доступний для налаштування, недоступний для переліку (<code>0010</code>).</li>
+ <li><strong><code>3</code></strong>: Бітова маска відображає дескриптор <em>даних</em> тільки для читання - доступний для налаштування та переліку (<code>0011</code>).</li>
+ <li><strong><code>4</code></strong>: Бітова маска відображає дескриптор <em>даних</em>, доступний для запису - недоступний для налаштування та переліку (<code>0100</code>).</li>
+ <li><strong><code>5</code></strong>: Бітова маска відображає дескриптор <em>даних</em>, доступний для запису - недоступний для налаштування, доступний для переліку (<code>0101</code>).</li>
+ <li><strong><code>6</code></strong>: Бітова маска відображає дескриптор <em>даних</em>, доступний для запису - доступний для налаштування, недоступний для переліку (<code>0110</code>).</li>
+ <li><strong><code>7</code></strong>: Бітова маска відображає дескриптор <em>даних</em>, доступний для запису - доступний для налаштування та переліку (<code>0111</code>).</li>
+ <li><strong><code>8</code></strong>: Бітова маска відображає дескриптор <em>доступу</em> - недоступний для налаштування та переліку (<code>1000</code>).</li>
+ <li><strong><code>9</code></strong>: Бітова маска відображає дескриптор <em>доступу</em> - недоступний для налаштування, доступний для переліку (<code>1001</code>).</li>
+ <li><strong><code>10</code></strong>: Бітова маска відображає дескриптор <em>доступу</em> - доступний для налаштування, недоступний для переліку (<code>1010</code>).</li>
+ <li><strong><code>11</code></strong>: Бітова маска відображає дескриптор <em>доступу</em> - доступний для налаштування та переліку (<code>1011</code>).</li>
+</ul>
+
+<div class="note"><strong>Заувага:</strong> Якщо прапор <code>0x8</code> встановлений у <em>дескриптор доступу</em>, прапор <code>0x4</code> (<em>доступний для запису</em>) ігноруватиметься. Якщо ні, то аргумент <code>setter</code> ігноруватиметься.</div>
+
+<h2 id="Реалізація_HTMLSelectElement.selectedIndex">Реалізація HTMLSelectElement.selectedIndex</h2>
+
+<p>Метод <code>Object.defineProperty()</code> також можна використовувати із вбудованими об'єктами. Наступний приклад демонструє, як реалізувати властивість {{domxref("HTMLSelectElement.selectedIndex", "selectedIndex")}} інтерфейсу {{domxref("HTMLSelectElement")}} у групах перемикачів.</p>
+
+<pre class="brush: html">&lt;!doctype html&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /&gt;
+&lt;title&gt;Radio group selectedIndex example&lt;/title&gt;
+&lt;script type="text/javascript"&gt;
+Object.defineProperty(NodeList.prototype, 'selectedIndex', {
+  get: function() {
+    var nIndex = this.length - 1;
+    while (nIndex &gt; -1 &amp;&amp; !this[nIndex].checked) {
+      nIndex--;
+    }
+    return nIndex;
+  },
+
+  set: function(nNewIndex) {
+    if (isNaN(nNewIndex)) {
+      return;
+    }
+    var nOldIndex = this.selectedIndex;
+    if (nOldIndex &gt; -1) {
+      this[nOldIndex].checked = false;
+    }
+    if (nNewIndex &gt; -1) {
+      this[nNewIndex].checked = true;
+    }
+  },
+
+  enumerable: true,
+  configurable: false
+});
+
+// спробуйте!
+function checkForm() {
+  var nSelectedIndex = document.myForm.myRadioGroup.selectedIndex;
+  if (nSelectedIndex &lt; 0) {
+    alert('Оберіть предмет!!');
+    return false;
+  }
+  alert('Вітаємо!! Ви обрали ' + document.myForm.myRadioGroup[nSelectedIndex].value + '.');
+  return true;
+}
+&lt;/script&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+  &lt;form name="myForm" onsubmit="return(checkForm());"&gt;
+    &lt;fieldset&gt;&lt;legend&gt;Оберіть предмет&lt;/legend&gt;
+      &lt;p&gt;&lt;input type="radio" name="myRadioGroup" id="ourShirt" value="сорочка" /&gt; &lt;label for="ourShirt"&gt;сорочка&lt;/label&gt;&lt;br /&gt;
+      &lt;input type="radio" name="myRadioGroup" id="ourPants" value="штани" /&gt; &lt;label for="ourPants"&gt;штани&lt;/label&gt;&lt;br /&gt;
+      &lt;input type="radio" name="myRadioGroup" id="ourBelt" value="ремінь" /&gt; &lt;label for="ourBelt"&gt;ремінь&lt;/label&gt;&lt;br /&gt;
+      &lt;input type="radio" name="myRadioGroup" id="ourShoes" value="взуття" /&gt; &lt;label for="ourShoes"&gt;взуття&lt;/label&gt;&lt;/p&gt;
+      &lt;p&gt;&lt;span style="cursor:pointer;text-decoration:underline;color:#0000ff;" onclick="document.myForm.myRadioGroup.selectedIndex=2;"&gt;Оберіть улюблений предмет ;-)&lt;/span&gt;&lt;/p&gt;
+      &lt;p&gt;&lt;input type="submit" value="Замовити!" /&gt;
+    &lt;/fieldset&gt;
+  &lt;/form&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>

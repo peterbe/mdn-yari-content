@@ -1,0 +1,161 @@
+<div>{{APIRef("DOM")}}</div>
+
+<p><code><strong>Node.textContent</strong></code> 프로퍼티는 노드와 그 자손의 텍스트 내용을 표시한다.</p>
+
+<h2 id="문법">문법</h2>
+
+<pre class="syntaxbox">var <em>text</em> = element.textContent;
+element.textContent = "this is some sample text";
+</pre>
+
+<h2 id="설명">설명</h2>
+
+<ul>
+ <li>만약 요소가 문서, 문서 형식 혹은 표기법일 때 <code>textContent </code>는<code> null </code>값을 반환한다. 문서 전체의 텍스트와 CDATA 데이터를 선택하는 한가지 방법은 <code><a href="/en-US/docs/DOM/document.documentElement">document.documentElement</a>.textContent</code>를 사용하는 것이다.</li>
+ <li>만약 노드가 CDATA 섹션, 주석, 처리 명령 혹은 텍스트 노드일 때, <code>textContent</code>는 해당 노드(<a href="/en-US/docs/DOM/Node.nodeValue">nodeValue</a>) 안의 텍스트를 반환한다.</li>
+ <li>다른 유형의 노드에서 <code>textContent</code> 는 연쇄적으로 모든 자식 노드의 주석과 처리 명령을 제외한 <code>textContent </code>프로퍼티를 반환한다. 만약 자식 노드가 없다면 빈 문자열을 반환한다.</li>
+ <li>이 프로퍼티를 설정하면 해당 노드의 자식 노드 모두를 지우고 그것들을 주어진 값인 단일 텍스트 노드로 대체한다.</li>
+</ul>
+
+<h3 id="innerText와의_차이점"><code>innerText</code>와의 차이점</h3>
+
+<p>Internet Explorer는 {{domxref("node.innerText")}}를 도입했다. 그 의도는 유사하나 아래와 같은 차이점이 있다 :</p>
+
+<ul>
+ <li><code>textContent</code>가<code> </code>{{HTMLElement("script")}}와 {{HTMLElement("style")}} 요소를 포함한 모든 요소들의 내용을 가져오는 반면 <code>innerText</code>는 그렇지 않다.</li>
+ <li><code>innerText</code>는<code> style</code>을 인지하고 숨겨진 요소들의 텍스트를 반환하지 않지만 textContent는 반환한다.</li>
+ <li><code>innerText는 </code>CSS 스타일링을 인지하기 때문에 레이아웃의 변화를 가져올 수 있지만 <code>textContent</code>는 그렇지 않다.</li>
+ <li><code>textContent</code>와는 달리 (버전 11 까지를 포함한) Internet Explorer에서 <code>innerText</code>를 대신 사용하면 요소의 자식 노드를 지우는 것 뿐만이 아니라 텍스트 노드의 모든 자손을 <em>영구적으로 제거한다</em>. (그래서 더이상 해당 노드를 다른 요소 혹은 같은 요소에 다시 삽입하는게 불가능해진다.)</li>
+</ul>
+
+<h3 id="innerHTML과의_차이점"><code>innerHTML</code>과의 차이점</h3>
+
+<p>{{domxref("Element.innerHTML")}}는 그것의 이름이 나타내는 <code>HTML</code>을 반환한다. 꽤 자주, 검색 혹은 요소 안에 텍스트 작성을 위해 사람들이 <code>innerHTML</code>을 사용하지만, <code>textContent</code>가 텍스트를 <code>HTML</code>로 파싱하지 않기 때문에 종종 더 좋은 성능을 보여준다. 게다가 <code>textContent</code>를 사용하면 <abbr title="cross-site scripting">XSS(크로스 사이트 스크립팅)</abbr><code> </code>공격을 방지할 수 있다.</p>
+
+<h2 id="예제">예제</h2>
+
+<pre class="brush: js">// 아래와 같이 주어진 HTML 일 부분:
+//   &lt;div id="divA"&gt;This is &lt;span&gt;some&lt;/span&gt; text&lt;/div&gt;
+
+// 텍스트 내용 획득:
+var text = document.getElementById("divA").textContent;
+// |text| 를 "This is some text"로 설정한다.
+
+// 텍스트 내용 설정:
+document.getElementById("divA").textContent = "This is some text";
+// 현재 divA의 HTML:
+//   &lt;div id="divA"&gt;This is some text&lt;/div&gt;
+</pre>
+
+<h2 id="IE8을_위한_폴리필">IE8을 위한 폴리필</h2>
+
+<pre class="brush: js">if (Object.defineProperty 
+  &amp;&amp; Object.getOwnPropertyDescriptor 
+  &amp;&amp; Object.getOwnPropertyDescriptor(Element.prototype, "textContent") 
+  &amp;&amp; !Object.getOwnPropertyDescriptor(Element.prototype, "textContent").get) {
+  (function() {
+    var innerText = Object.getOwnPropertyDescriptor(Element.prototype, "innerText");
+    Object.defineProperty(Element.prototype, "textContent",
+     {
+       get: function() {
+         return innerText.get.call(this);
+       },
+       set: function(s) {
+         return innerText.set.call(this, s);
+       }
+     }
+   );
+  })();
+}
+</pre>
+
+<p> </p>
+
+<h2 id="브라우저_호환성">브라우저 호환성</h2>
+
+<p>{{CompatibilityTable}}</p>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Edge</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>기본 지원</td>
+   <td>1+</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>2</td>
+   <td>9</td>
+   <td>9.64 (possibly earlier)</td>
+   <td>3 (possibly earlier)</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Edge</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>기본 지원</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="명세">명세</h2>
+
+<table class="spectable standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">명세서</th>
+   <th scope="col">상태</th>
+   <th scope="col">주석</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('DOM WHATWG','#dom-node-textcontent','Node.textContent')}}</td>
+   <td>{{Spec2('DOM WHATWG')}}</td>
+   <td>
+    <p>DOM4와 비교하여 변화 없음</p>
+   </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('DOM4','#dom-node-textcontent','Node.textContent')}}</td>
+   <td>{{Spec2('DOM4')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('DOM3 Core','core.html#Node3-textContent','Node.textContent')}}</td>
+   <td>{{Spec2('DOM3 Core')}}</td>
+   <td>도입</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="참고">참고</h2>
+
+<ul>
+ <li><a href="http://perfectionkills.com/the-poor-misunderstood-innerText/">More on differences between <code>innerText</code> and <code>textContent</code></a> (블로그 포스트)</li>
+</ul>

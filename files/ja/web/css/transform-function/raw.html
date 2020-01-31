@@ -1,0 +1,142 @@
+<div>{{CSSRef}}</div>
+
+<p><a href="/ja/docs/Web/CSS">CSS</a> の <code>&lt;transform-function&gt;</code> <a href="/ja/docs/Web/CSS/CSS_Types">データ型</a>は、要素の外見の変形を表します。変形関数は二次元または三次元空間で要素を回転、拡大縮小、歪曲、移動させることができます。これは {{cssxref("transform")}} プロパティの中で使用されます。</p>
+
+<h2 id="Describing_transformations_mathematically" name="Describing_transformations_mathematically">数学的な変形の記述</h2>
+
+<p>HTML 要素の寸法や形状を記述するために様々な座標モデルが用いられることがあり、同様に変形にも適用されます。最も一般的なものは、<a href="https://ja.wikipedia.org/wiki/%E7%9B%B4%E4%BA%A4%E5%BA%A7%E6%A8%99%E7%B3%BB">直交座標系</a>ですが、<a href="https://en.wikipedia.org/wiki/Homogeneous_coordinates">同次座標系</a>が用いられることもあります。</p>
+
+<h3 id="Cartesian_coordinates" name="Cartesian_coordinates"><a href="/@api/deki/files/5796/=coord_in_R2.png"><img src="/files/3438/coord_in_R2.png" style="float: right; width: 171px;"></a>直交座標系</h3>
+
+<p>直交座標系では、二次元の点は、 X 座標 (横座標) と Y 座標 (縦座標) の二つの値を使用して記述します。これは <code>(x, y)</code> のベクトル表記で表現されます。</p>
+
+<p>CSS (および多くのコンピューターグラフィック) では、原点 <code>(0, 0)</code> が各要素の<em>左上</em>を表します。正の座標は原点から下および右に向かい、負の座標は上および左に向かいます。従って、右に2単位、下に5単位では <code>(2, 5)</code> となり、左に3単位、上に12単位では <code>(-3, -12)</code> となります。</p>
+
+<h3 id="Transformation_functions" name="Transformation_functions">変形関数</h3>
+
+<p>変形関数は、座標の値を操作することによって要素の外見を変更します。線形変形関数は、次のように2×2の行列で記述されます。</p>
+
+<p style="text-align: center;"><math> <mfenced> <mtable> <mtr><mtd><mi>a</mi></mtd><mtd><mi>c</mi></mtd></mtr> <mtr><mtd><mi>b</mi></mtd><mtd><mi>d</mi></mtd></mtr> </mtable> </mfenced> </math></p>
+
+<p>関数は行列の乗算によって要素に適用されます。つまり、それぞれの座標は行列の値に基づいて変化します。</p>
+
+<p style="text-align: center;"><math> <mfenced> <mtable> <mtr><mtd><mi>a</mi></mtd><mtd><mi>c</mi></mtd></mtr> <mtr><mtd><mi>b</mi></mtd><mtd><mi>d</mi></mtd></mtr> </mtable> </mfenced> <mfenced> <mtable> <mtr><mtd><mi>x</mi></mtd><mtd><mi>y</mi></mtd></mtr> </mtable> </mfenced> <mo>=</mo> <mfenced> <mtable> <mtr> <mtd><mi>a</mi><mi>x</mi><mo>+</mo><mi>c</mi><mi>y</mi></mtd> </mtr> <mtr> <mtd><mi>b</mi><mi>x</mi><mo>+</mo><mi>d</mi><mi>y</mi></mtd> </mtr> </mtable> </mfenced> </math></p>
+
+<p>一行の中に複数の変換を適用することもできます。</p>
+
+<p style="text-align: center;"><math> <mfenced> <mtable> <mtr> <mtd><msub><mi>a</mi><mn>1</mn></msub></mtd> <mtd><msub><mi>c</mi><mn>1</mn></msub></mtd> </mtr> <mtr> <mtd><msub><mi>b</mi><mn>1</mn></msub></mtd> <mtd><msub><mi>d</mi><mn>1</mn></msub></mtd> </mtr> </mtable> </mfenced> <mfenced> <mtable> <mtr> <mtd><msub><mi>a</mi><mn>2</mn></msub></mtd> <mtd><msub><mi>c</mi><mn>2</mn></msub></mtd> </mtr> <mtr> <mtd><msub><mi>b</mi><mn>2</mn></msub></mtd> <mtd><msub><mi>d</mi><mn>2</mn></msub></mtd> </mtr> </mtable> </mfenced> <mo>=</mo> <mfenced> <mtable> <mtr> <mtd> <msub><mi>a</mi><mn>1</mn></msub> <msub><mi>a</mi><mn>2</mn></msub> <mo>+</mo> <msub><mi>c</mi><mn>1</mn></msub> <msub><mi>b</mi><mn>2</mn></msub> </mtd> <mtd> <msub><mi>a</mi><mn>1</mn></msub> <msub><mi>c</mi><mn>2</mn></msub> <mo>+</mo> <msub><mi>c</mi><mn>1</mn></msub> <msub><mi>d</mi><mn>2</mn></msub> </mtd> </mtr> <mtr> <mtd> <msub><mi>b</mi><mn>1</mn></msub> <msub><mi>a</mi><mn>2</mn></msub> <mo>+</mo> <msub><mi>d</mi><mn>1</mn></msub> <msub><mi>b</mi><mn>2</mn></msub> </mtd> <mtd> <msub><mi>b</mi><mn>1</mn></msub> <msub><mi>c</mi><mn>2</mn></msub> <mo>+</mo> <msub><mi>d</mi><mn>1</mn></msub> <msub><mi>d</mi><mn>2</mn></msub> </mtd> </mtr> </mtable> </mfenced> </math></p>
+
+<p>この記法で、最もよく使われる回転、拡大縮小、傾斜の変換を記述し、合成することができます。 (実際、すべての変換が記述できる線形関数です。) 変換の合成は右から左の順に効果的に適用されます。</p>
+
+<p>しかし、主要な変形のうち平行移動は線形ではなく、従ってこの記法を使用する場合は特例とする必要があります。平行移動のベクトル <code>(tx, ty)</code> は、二つの追加の引数で別に表現しなければなりません。</p>
+
+<div class="note">
+<p><strong>メモ:</strong> 直交座標よりも難解ですが、<a href="http://ja.wikipedia.org/wiki/%E5%B0%84%E5%BD%B1%E5%B9%BE%E4%BD%95%E5%AD%A6">射影幾何学</a>の<a class="external" href="https://en.wikipedia.org/wiki/Homogeneous_coordinates">同次座標</a>は3×3の変換行列を使用するので、線形関数として平行移動をより簡単に表現できます。</p>
+</div>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<p><code>&lt;transform-function&gt;</code> データ型は、以下に示した変形関数のうちの一つを使用して指定します。各関数は二次元または三次元の座標操作を適用します。</p>
+
+<h3 id="Matrix_transformation" name="Matrix_transformation">行列変換</h3>
+
+<dl>
+ <dt><code><a href="/ja/docs/Web/CSS/transform-function/matrix">matrix()</a></code></dt>
+ <dd>二次元の同次変換行列を記述します。</dd>
+ <dt><code><a href="/ja/docs/Web/CSS/transform-function/matrix3d">matrix3d()</a></code></dt>
+ <dd>三次元の変換を4×4の同次行列で記述します。</dd>
+</dl>
+
+<h3 id="Perspective" name="Perspective">視点距離</h3>
+
+<dl>
+ <dt><code><a href="/ja/docs/Web/CSS/transform-function/perspective">perspective()</a></code></dt>
+ <dd>ユーザーと z=0 平面との間の距離を設定します。</dd>
+</dl>
+
+<h3 id="Rotation" name="Rotation">回転</h3>
+
+<dl>
+ <dt><code><a href="/ja/docs/Web/CSS/transform-function/rotate">rotate()</a></code></dt>
+ <dd>要素を二次元平面上で特定の点を中心に回転します。</dd>
+ <dt><code><a href="/ja/docs/Web/CSS/transform-function/rotate3d">rotate3d()</a></code></dt>
+ <dd>要素を三次元空間で特定の軸を中心に回転します。</dd>
+ <dt><code><a href="/ja/docs/Web/CSS/transform-function/rotateX">rotateX()</a></code></dt>
+ <dd>要素を水平軸を中心に回転します。</dd>
+ <dt><code><a href="/ja/docs/Web/CSS/transform-function/rotateY">rotateY()</a></code></dt>
+ <dd>要素を垂直軸を中心に回転します。</dd>
+ <dt><code><a href="/ja/docs/Web/CSS/transform-function/rotateZ">rotateZ()</a></code></dt>
+ <dd>要素を Z 軸を中心に回転します。</dd>
+</dl>
+
+<h3 id="Scaling_(resizing)" name="Scaling_(resizing)">拡大縮小</h3>
+
+<dl>
+ <dt><code><a href="/ja/docs/Web/CSS/transform-function/scale">scale()</a></code></dt>
+ <dd>要素を二次元平面上で拡大または縮小します。</dd>
+ <dt><code><a href="/ja/docs/Web/CSS/transform-function/scale3d">scale3d()</a></code></dt>
+ <dd>要素を三次元空間で拡大または縮小します。</dd>
+ <dt><code><a href="/ja/docs/Web/CSS/transform-function/scaleX">scaleX()</a></code></dt>
+ <dd>要素を水平に拡大または縮小します。</dd>
+ <dt><code><a href="/ja/docs/Web/CSS/transform-function/scaleY">scaleY()</a></code></dt>
+ <dd>要素を垂直に拡大または縮小します。</dd>
+ <dt><code><a href="/ja/docs/Web/CSS/transform-function/scaleZ">scaleZ()</a></code></dt>
+ <dd>要素を Z 軸方向に拡大または縮小します。</dd>
+</dl>
+
+<h3 id="Skewing_(distortion)" name="Skewing_(distortion)">歪め</h3>
+
+<dl>
+ <dt><code><a href="/ja/docs/Web/CSS/transform-function/skew">skew()</a></code></dt>
+ <dd>要素を二次元平面上で歪ませます。</dd>
+ <dt><code><a href="/ja/docs/Web/CSS/transform-function/skewX">skewX()</a></code></dt>
+ <dd>要素を水平方向に歪ませます。</dd>
+ <dt><code><a href="/ja/docs/Web/CSS/transform-function/skewY">skewY()</a></code></dt>
+ <dd>要素を垂直方向に歪ませます。</dd>
+</dl>
+
+<h3 id="Translation_(moving)" name="Translation_(moving)">平行移動</h3>
+
+<dl>
+ <dt><code><a href="/ja/docs/Web/CSS/transform-function/translate">translate()</a></code></dt>
+ <dd>要素を二次元平面上で平行移動させます。</dd>
+ <dt><code><a href="/ja/docs/Web/CSS/transform-function/translate3d">translate3d()</a></code></dt>
+ <dd>要素を三次元空間で平行移動させます。</dd>
+ <dt><code><a href="/ja/docs/Web/CSS/transform-function/translateX">translateX()</a></code></dt>
+ <dd>要素を水平方向に平行移動させます。</dd>
+ <dt><code><a href="/ja/docs/Web/CSS/transform-function/translateY">translateY()</a></code></dt>
+ <dd>要素を垂直方向に平行移動させます。</dd>
+ <dt><code><a href="/ja/docs/Web/CSS/transform-function/translateZ">translateZ()</a></code></dt>
+ <dd>要素を Z 軸方向に平行移動させます。</dd>
+</dl>
+
+<h2 id="Specifications" name="Specifications">仕様書</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">状態</th>
+   <th scope="col">備考</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName('CSS3 Transforms', '#transform-property', 'transform')}}</td>
+   <td>{{Spec2('CSS3 Transforms')}}</td>
+   <td>初回定義</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザーの対応</h2>
+
+<p class="hidden">このページの互換性一覧表は構造化データから生成されています。データに協力していただけるのであれば、 <a class="external" href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> をチェックアウトしてプルリクエストを送信してください。</p>
+
+<p>{{Compat("css.types.transform-function")}}</p>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li>CSS の {{cssxref("transform")}} プロパティ</li>
+</ul>

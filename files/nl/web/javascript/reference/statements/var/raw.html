@@ -1,0 +1,207 @@
+<div>{{jsSidebar("Statements")}}</div>
+
+<p>The <strong><code>variable</code> statement</strong> declares a variable, optionally initializing it to a value.</p>
+
+<div>{{EmbedInteractiveExample("pages/js/statement-var.html")}}</div>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<h2 id="Syntax">Syntax</h2>
+
+<pre class="syntaxbox">var <em>varname1 [</em>= <em>value1] [</em>, <em>varname2 [</em>= <em>value2] </em><em>... [</em>, <em>varnameN [</em>= <em>valueN]]]</em>;</pre>
+
+<dl>
+ <dt><code>varnameN</code></dt>
+ <dd>Naam van de variabele. Het kan eender welke legale identifier (referentie) zijn.</dd>
+</dl>
+
+<dl>
+ <dd>De initiele waarde van een variabele. Het mag eender welke legale expressie zijn. De standaard waarde is "undefined" (ongedefinieerd).</dd>
+</dl>
+
+<h2 id="Beschrijving">Beschrijving</h2>
+
+<p>Verklaringen van een variabele, waar ze ook voorkomen, worden verwerkt voordat een code wordt uitgevoerd. Het bereik van een variabele gedeclareerd met <strong><em>var</em></strong> is de huidige uitvoeringscontext, ofwel de insluitingsfunctie of, voor variabelen die buiten een functie worden gedeclareerd, globaal. Als je een Javascript variabele her-declareert, dan zal het zijn waarde niet verliezen.</p>
+
+<p>Assigning a value to an undeclared variable implicitly creates it as a global variable (it becomes a property of the global object) when the assignment is executed. The differences between declared and undeclared variables are:</p>
+
+<p>1. Declared variables are constrained in the execution context in which they are declared. Undeclared variables are always global.</p>
+
+<pre class="brush: js">function x() {
+  y = 1;   // Throws a ReferenceError in strict mode
+  var z = 2;
+}
+
+x();
+
+console.log(y); // logs "1" 
+console.log(z); // Throws a ReferenceError: z is not defined outside x
+</pre>
+
+<p>2. Declared variables are created before any code is executed. Undeclared variables do not exist until the code assigning to them is executed.</p>
+
+<pre class="brush: js">console.log(a);                // Throws a ReferenceError.
+console.log('still going...'); // Never executes.</pre>
+
+<pre class="brush: js">var a;
+console.log(a);                // logs "undefined" or "" depending on browser.
+console.log('still going...'); // logs "still going...".</pre>
+
+<p>3. Declared variables are a non-configurable property of their execution context (function or global). Undeclared variables are configurable (e.g. can be deleted).</p>
+
+<pre class="brush: js">var a = 1;
+b = 2;
+
+delete this.a; // Throws a TypeError in strict mode. Fails silently otherwise.
+delete this.b;
+
+console.log(a, b); // Throws a ReferenceError. 
+// The 'b' property was deleted and no longer exists.</pre>
+
+<p>Because of these three differences, failure to declare variables will very likely lead to unexpected results. Thus <strong>it is recommended to always declare variables, regardless of whether they are in a function or global scope.</strong> And in ECMAScript 5 <a href="/en-US/docs/Web/JavaScript/Reference/Functions_and_function_scope/Strict_mode">strict mode</a>, assigning to an undeclared variable throws an error.</p>
+
+<h3 id="var_hoisting">var hoisting</h3>
+
+<p>Because variable declarations (and declarations in general) are processed before any code is executed, declaring a variable anywhere in the code is equivalent to declaring it at the top. This also means that a variable can appear to be used before it's declared. This behavior is called "hoisting", as it appears that the variable declaration is moved to the top of the function or global code.</p>
+
+<pre class="brush: js">bla = 2;
+var bla;
+// ...
+
+// is implicitly understood as:
+
+var bla;
+bla = 2;
+</pre>
+
+<p>For that reason, it is recommended to always declare variables at the top of their scope (the top of global code and the top of function code) so it's clear which variables are function scoped (local) and which are resolved on the scope chain.</p>
+
+<p>It's important to point out that the hoisting will affect the variable declaration, but not its value's initialization. The value will be indeed assigned when the assignment statement is reached:</p>
+
+<pre class="brush: js">function do_something() {
+  console.log(bar); // undefined
+  var bar = 111;
+  console.log(bar); // 111
+}
+
+// is implicitly understood as: 
+function do_something() {
+  var bar;
+  console.log(bar); // undefined
+  bar = 111;
+  console.log(bar); // 111
+}
+</pre>
+
+<p> </p>
+
+<h2 id="Examples">Examples</h2>
+
+<h3 id="Declaring_and_initializing_two_variables">Declaring and initializing two variables</h3>
+
+<pre class="brush: js">var a = 0, b = 0;
+</pre>
+
+<h3 id="Assigning_two_variables_with_single_string_value">Assigning two variables with single string value</h3>
+
+<pre class="brush: js">var a = 'A';
+var b = a;
+
+// Equivalent to:
+
+var a, b = a = 'A';
+</pre>
+
+<p>Be mindful of the order:</p>
+
+<pre class="brush: js">var x = y, y = 'A';
+console.log(x + y); // undefinedA
+</pre>
+
+<p>Here, <code>x</code> and <code>y</code> are declared before any code is executed, the assignments occur later. At the time "<code>x = y</code>" is evaluated, <code>y</code> exists so no <code>ReferenceError</code> is thrown and its value is '<code>undefined</code>'. So, <code>x</code> is assigned the undefined value. Then, <code>y</code> is assigned a value of 'A'. Consequently, after the first line, <code>x === undefined &amp;&amp; y === 'A'</code>, hence the result.</p>
+
+<h3 id="Initialization_of_several_variables">Initialization of several variables</h3>
+
+<pre class="brush: js">var x = 0;
+
+function f() {
+  var x = y = 1; // x is declared locally. y is not!
+}
+f();
+
+console.log(x, y); // Throws a ReferenceError in strict mode (y is not defined). 0, 1 otherwise. 
+// In non-strict mode:
+// x is the global one as expected
+// y leaked outside of the function, though!</pre>
+
+<h3 id="Implicit_globals_and_outer_function_scope">Implicit globals and outer function scope</h3>
+
+<p>Variables that appear to be implicit globals may be references to variables in an outer function scope:</p>
+
+<pre class="brush: js">var x = 0;  // x is declared within file scope, then assigned a value of 0
+
+console.log(typeof z); // undefined, since z doesn't exist yet
+
+function a() { // when a is called,
+  var y = 2;   // y is declared within scope of function a, then assigned a value of 2
+
+  console.log(x, y);   // 0 2 
+
+  function b() {       // when b is called
+    x = 3;  // assigns 3 to existing file scoped x, doesn't create a new global var
+    y = 4;  // assigns 4 to existing outer y, doesn't create a new global var
+    z = 5;  // creates a new global variable z and assigns a value of 5. 
+  }         // (Throws a ReferenceError in strict mode.)
+
+  b();     // calling b creates z as a global variable
+  console.log(x, y, z);  // 3 4 5
+}
+
+a();                   // calling a also calls b
+console.log(x, z);     // 3 5
+console.log(typeof y); // undefined as y is local to function a</pre>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES1')}}</td>
+   <td>{{Spec2('ES1')}}</td>
+   <td>Initial definition. Implemented in JavaScript 1.0</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-12.2', 'var statement')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-variable-statement', 'variable statement')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-variable-statement', 'variable statement')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.statements.var")}}</p>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Web/JavaScript/Reference/Statements/let"><code>let</code></a></li>
+ <li><a href="/en-US/docs/Web/JavaScript/Reference/Statements/const"><code>const</code></a></li>
+</ul>

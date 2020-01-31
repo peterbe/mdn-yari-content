@@ -1,0 +1,243 @@
+<div>{{jsSidebar("Operators")}}</div>
+
+<p><strong>Оператор розпакування</strong> дозволяє розкласти ітерабельний об'єкт, такий як масив чи рядок, там, де очікується нуль чи більше аргументів (для викликів функцій) чи елементів (для масивних літералів), або розкласти об'єкт там, де очікується нуль або більше пар ключ-значення (для об'єктних літералів).</p>
+
+<div>{{EmbedInteractiveExample("pages/js/expressions-spreadsyntax.html")}}</div>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<h2 id="Синтаксис">Синтаксис</h2>
+
+<p>Для викликів функцій:</p>
+
+<pre class="syntaxbox">myFunction(...iterableObj);
+</pre>
+
+<p>Для масивних літералів або рядків:</p>
+
+<pre class="syntaxbox">[...iterableObj, "4", "п'ять", 6];</pre>
+
+<p>Для об'єктних літералів (нове у ECMAScript 2018):</p>
+
+<pre class="syntaxbox">let objClone = { ...obj };</pre>
+
+<h2 id="Приклади">Приклади</h2>
+
+<h3 id="Розпакування_у_викликах_функцій"><a id="Spread_in_function_calls" name="Spread_in_function_calls">Розпакування у викликах функцій</a></h3>
+
+<h4 id="Заміна_apply">Заміна <code>apply()</code></h4>
+
+<p>Зазвичай, {{jsxref("Function.prototype.apply()")}} використовується, коли ви бажаєте використати елементи масиву як аргументи у функції.</p>
+
+<pre class="brush: js">function myFunction(x, y, z) { }
+var args = [0, 1, 2];
+myFunction.apply(null, args);</pre>
+
+<p>З оператором розпакування наведене можна записати так:</p>
+
+<pre class="brush: js">function myFunction(x, y, z) { }
+var args = [0, 1, 2];
+myFunction(...args);</pre>
+
+<p>Будь-який аргумент у списку може використати розпакування, і воно може використовуватись неодноразово.</p>
+
+<pre class="brush: js">function myFunction(v, w, x, y, z) { }
+var args = [0, 1];
+myFunction(-1, ...args, 2, ...[3]);</pre>
+
+<h4 id="Apply_для_new">Apply для <code>new</code></h4>
+
+<p>Викликаючи конструктор з {{jsxref("Operators/new", "new")}}, неможливо <strong>прямо</strong> використовувати масив та <code>apply</code> (<code>apply</code> виконує <code>[[Call]]</code>, а не <code>[[Construct]]</code>). Однак, масив можна легко використовувати з <code>new</code> завдяки розпакуванню:</p>
+
+<pre class="brush: js">var dateFields = [1970, 0, 1];  // 1 Січня 1970
+var d = new Date(...dateFields);
+</pre>
+
+<p>Щоб використати new з масивом параметрів без розпакування, вам довелося б зробити це <strong>непрямо</strong>, частковим застосуванням:</p>
+
+<pre class="brush: js">function applyAndNew(constructor, args) {
+   function partial () {
+      return constructor.apply(this, args);
+   };
+   if (typeof constructor.prototype === "object") {
+      partial.prototype = Object.create(constructor.prototype);
+   }
+   return partial;
+}
+
+
+function myConstructor () {
+   console.log("arguments.length: " + arguments.length);
+   console.log(arguments);
+   this.prop1="знач1";
+   this.prop2="знач2";
+};
+
+var myArguments = ["вітаю", "як", "ся", "маєте", "п.", null];
+var myConstructorWithArguments = applyAndNew(myConstructor, myArguments);
+
+console.log(new myConstructorWithArguments);
+// (internal log of myConstructor):           arguments.length: 6
+// (internal log of myConstructor):           ["вітаю", "як", "ся", "маєте", "п.", null]
+// (log of "new myConstructorWithArguments"): {prop1: "знач1", prop2: "знач2"}</pre>
+
+<h3 id="Розпакування_у_масивних_літералах"><a id="Spread_in_array_literals" name="Spread_in_array_literals">Розпакування у масивних літералах</a></h3>
+
+<h4 id="Потужніший_масивний_літерал">Потужніший масивний літерал</h4>
+
+<p>Без оператора розпакування, щоб створити новий масив, частиною якого є існуючий масив, літерального синтаксису масивів недостатньо, доводиться використовувати імперативний код з використанням комбінації з {{jsxref("Array.prototype.push", "push()")}}, {{jsxref("Array.prototype.splice", "splice()")}}, {{jsxref("Array.prototype.concat", "concat()")}}, і т. д. З розпакуванням все стає набагато лаконічнішим:</p>
+
+<pre class="brush: js">var parts = ['плечі', 'коліна']; 
+var lyrics = ['голова', ...parts, 'та', 'пальці']; 
+// ["голова", "плечі", "коліна", "та", "пальці"]
+</pre>
+
+<p>Як і у списку аргументів, <code>...</code> може використовуватись будь-де у масивному літералі, і може використовуватись неодноразово.</p>
+
+<h4 id="Копія_масиву">Копія масиву</h4>
+
+<pre class="brush: js">var arr = [1, 2, 3];
+var arr2 = [...arr]; // як arr.slice()
+arr2.push(4); 
+
+// arr2 стає [1, 2, 3, 4]
+// arr залишається незміненим
+</pre>
+
+<div class="blockIndicator note">
+<p><strong>Заувага:</strong> Оператор розпакування ефективно йде на один рівень вглиб при копіюванні масиву. Тому він може бути непридатний для копіювання багатовимірних масивів, як показано у наступному прикладі (те саме з {{jsxref("Object.assign()")}} та розпакуванням).</p>
+</div>
+
+<pre class="brush: js">var a = [[1], [2], [3]];
+var b = [...a];
+b.shift().shift(); // 1
+// Тепер масив a також змінено: [[], [2], [3]]
+</pre>
+
+<h4 id="Краще_обєднання_масивів">Краще об'єднання масивів</h4>
+
+<p>Метод {{jsxref("Array.prototype.concat()")}} часто використовується для приєднання масиву у кінець існуючого масиву. Без оператора розпакування це робиться так:</p>
+
+<pre class="brush: js">var arr1 = [0, 1, 2];
+var arr2 = [3, 4, 5];
+// Додати всі елементи з arr2 у arr1
+arr1 = arr1.concat(arr2);</pre>
+
+<p>З оператором розпакування отримуємо:</p>
+
+<pre class="brush: js">var arr1 = [0, 1, 2];
+var arr2 = [3, 4, 5];
+arr1 = [...arr1, ...arr2]; // arr1 тепер [0, 1, 2, 3, 4, 5]
+</pre>
+
+<p>Метод {{jsxref("Array.prototype.unshift()")}} часто використовується для додавання масиву значень у початок існуючого масиву. Без оператора розпакування це робиться так:</p>
+
+<pre class="brush: js">var arr1 = [0, 1, 2];
+var arr2 = [3, 4, 5];
+// Подати усі елементи з arr2 до arr1
+Array.prototype.unshift.apply(arr1, arr2) // arr1 тепер [3, 4, 5, 0, 1, 2]</pre>
+
+<p>З оператором розпакування отримуємо:</p>
+
+<pre class="brush: js">var arr1 = [0, 1, 2];
+var arr2 = [3, 4, 5];
+arr1 = [...arr2, ...arr1]; // arr1 тепер [3, 4, 5, 0, 1, 2]
+</pre>
+
+<div class="blockIndicator note">
+<p><strong>Заувага</strong>: На відміну від <code>unshift()</code>, цей код створює новий <code>arr1</code>, а не змінює початковий масив <code>arr1</code>.</p>
+</div>
+
+<h3 id="Розпакування_у_обєктних_літералах"><a id="Spread_in_object_literals" name="Spread_in_object_literals">Розпакування у об'єктних літералах</a></h3>
+
+<p>Пропозиція <a href="https://github.com/tc39/proposal-object-rest-spread">Rest/Spread Properties for ECMAScript</a> (стадія 4) додає розпакування до властивостей <a href="/uk/docs/Web/JavaScript/Reference/Operators/Ініціалізація_об’єктів">об'єктних літералів</a>. Воно копіює особисті, перелічувані властивості наданого об'єкта у новий об'єкт.</p>
+
+<p>Дрібне клонування (без прототипу) чи злиття об'єктів тепер можливе за допомогою синтаксису, коротшого, ніж {{jsxref("Object.assign()")}}.</p>
+
+<pre class="brush: js">var obj1 = { foo: 'bar', x: 42 };
+var obj2 = { foo: 'baz', y: 13 };
+
+var clonedObj = { ...obj1 };
+// Object { foo: "bar", x: 42 }
+
+var mergedObj = { ...obj1, ...obj2 };
+// Object { foo: "baz", x: 42, y: 13 }</pre>
+
+<p>Зауважте, що {{jsxref("Object.assign()")}} запускає <a href="/uk/docs/Web/JavaScript/Reference/Functions/set">сетери</a>, а оператор розпакування ні.</p>
+
+<p>Зауважте, що ви не можете ані замінити, ані імітувати функцію {{jsxref("Object.assign()")}}:</p>
+
+<pre class="brush: js">var obj1 = { foo: 'bar', x: 42 };
+var obj2 = { foo: 'baz', y: 13 };
+const merge = ( ...objects ) =&gt; ( { ...objects } );
+
+var mergedObj = merge ( obj1, obj2);
+// Object { 0: { foo: 'bar', x: 42 }, 1: { foo: 'baz', y: 13 } }
+
+var mergedObj = merge ( {}, obj1, obj2);
+// Object { 0: {}, 1: { foo: 'bar', x: 42 }, 2: { foo: 'baz', y: 13 } }</pre>
+
+<p>У наведеному прикладі оператор розпакування працює не так, як можна було очікувати: він розпаковує <em>масив</em> аргументів у об'єктний літерал, через наявність залишкового параметра.</p>
+
+<h3 id="Тільки_для_ітерабельних_обєктів">Тільки для ітерабельних об'єктів</h3>
+
+<p>Оператор розпакування (окрім випадку розпакування властивостей) може застосовуватись тільки до <a href="/uk/docs/Web/JavaScript/Reference/Global_Objects/Symbol/iterator">ітерабельних</a> об'єктів:</p>
+
+<pre class="brush: js">var obj = {'key1': 'value1'};
+var array = [...obj]; // TypeError: obj is not iterable
+</pre>
+
+<h3 id="Розпакування_великої_кількості_значень">Розпакування великої кількості значень</h3>
+
+<p>При використанні оператора розпакування для викликів функцій пам'ятайте про можливість перевищити ліміт кількості аргументів рушія JavaScript. Більше інформації дивіться у статті {{jsxref("Function.prototype.apply", "apply()")}}.</p>
+
+<h2 id="Залишкові_параметри">Залишкові параметри</h2>
+
+<p>Синтаксис залишкових параметрів виглядає точно так само, як оператор розпакування, але використовується для деструктурування масивів та об'єктів. В певному сенсі, залишковий синтаксис є протилежністю розпакуванню: розпакування 'розкладає' масив на окремі елементи, в той час як залишковий синтаксис збирає множину елементів та 'стискає' їх у єдиний елемент. Дивіться <a href="/uk/docs/Web/JavaScript/Reference/Functions/решта_параметрів">залишкові параметри.</a></p>
+
+<h2 id="Специфікації">Специфікації</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">Специфікація</th>
+   <th scope="col">Статус</th>
+   <th scope="col">Коментар</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-array-initializer')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td>Визначені у декількох розділах специфікації: <a href="http://www.ecma-international.org/ecma-262/6.0/#sec-array-initializer">Ініціалізатор масиву</a>, <a href="http://www.ecma-international.org/ecma-262/6.0/#sec-argument-lists">Argument Lists</a></td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2018', '#sec-object-initializer')}}</td>
+   <td>{{Spec2('ES2018')}}</td>
+   <td>Визначено у розділі <a href="http://www.ecma-international.org/ecma-262/9.0/#sec-object-initializer">Ініціалізатор об'єкта</a></td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-array-initializer')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td>Без змін.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-object-initializer')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td>Без змін.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Сумісність_з_веб-переглядачами">Сумісність з веб-переглядачами</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.operators.spread")}}</p>
+
+<h2 id="Див._також">Див. також</h2>
+
+<ul>
+ <li><a href="/uk/docs/Web/JavaScript/Reference/Functions/решта_параметрів">Залишкові параметри</a> (також ‘<code>...</code>’)</li>
+ <li><a href="/uk/docs/Web/JavaScript/Reference/Global_Objects/Function/apply">fn.apply</a> (також ‘<code>...</code>’)</li>
+</ul>

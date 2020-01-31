@@ -1,0 +1,213 @@
+<p> </p>
+<p>Este documentos lista las herramientas necesarias para compilar Mozilla en la plataforma OS/2 y <a class="external" href="http://www.ecomstation.com">eComStation</a> e indica como configurar, descargar y empezar a compilar. Hemos intentado hacer este documento lo más detallado posible. Si tienes problemas por favor pide ayuda en mozilla.dev.ports.os2 que está en news.mozilla.org.</p>
+<p><b>Cuidado</b>: Actualmente el tronco no se compila en OS/2. <a class="link-https" href="https://bugzilla.mozilla.org/show_bug.cgi?id=371503">Bug 371503</a> (iugal puedes compilar código del tronco usando MOZ_CO_DATE 20070206 o anterior, pero luego utiliza --disable-svg).</p>
+<p>Este documento está diseñado para aquellos que crean un entorno de compilado desde cero. El entorno es más fácil de configurar cuando todas las herrmientas se encuentra en una misma unidad. Para nuestros ejemplos usaremos la unidad <code>D:</code>.</p>
+<p><span class="comment">Important sections of this page are * {{ mediawiki.external('http://www.mozilla.org/ports/os2/#build Warpzilla Developer Information') }} ** contains link to ''Latest Build Instructions'' *** section ''Download the following packages'' contains link to the current location of the required ''glib'' and ''libidl'' binaries, required by ''XPIDL'', the IDL compiler for XPCOM objects&lt;br/&gt;&lt;small&gt;current link as of 07/2006 is {{ mediawiki.external('http://www.axess.com/users/sobotka/warpzilla/srcs/glibidl-b4.zip http://www.axess.com/users/sobotka/warpzilla/srcs/glibidl-b4.zip') }}, link is subject to change or package may be outdated meanwhile, in case of problems please check original page!&lt;/small&gt;</span></p>
+<p>{{ page("es/docs/Build_Documentation/TOC") }}</p>
+<p> </p>
+<h2 id="Requerimientos_de_hardware" name="Requerimientos_de_hardware">Requerimientos de hardware</h2>
+<p>Compilar un paquete tan grande como Mozilla requiere mucho espacio en disco y tiempo:</p>
+<ul>
+ <li>Compilar SeaMonkey en una máquina con Athlon XP 3000+ lleva más o menos
+  <ul>
+   <li>45min (usando gcc 3.2.2, cronometrado SeaMonkey 1.1a 30-jul-2006)</li>
+   <li>70min (usando gcc 3.3.5, cronometrado SeaMOnkey 1.1a 30-jul-2006)</li>
+   <li>Según las opciones de compilación puede variar varios minutos</li>
+  </ul>
+ </li>
+ <li>Firefox y Thunderbird llevan unos minutos menos.</li>
+ <li>El <b>árbol fuente</b> en disco requiere <b>350 MB</b></li>
+ <li>El <b>árbol binario'</b> de una compilación de distribución tal vez lleve <b>300 MB</b></li>
+ <li>Se necesitan más de 1.2 GB si se depura.</li>
+</ul>
+<h2 id="Paquetes_requeridos" name="Paquetes_requeridos">Paquetes requeridos</h2>
+<p>Aquí se explica qué herramientas se necesitan para compilar Warpzilla.</p>
+<ul>
+ <li>En caso de que estes compilando Mozilla en eComStation, encontrarás más herramientes para el entorno Mozilla en el CD nro. 2 (en <code>/DEVELOP/GCC</code> cuando ejecutas "Developer's Install Guide" hay una opción para instalarlas) ecepto el paquete de soporte para cairo "mozfntcfgft" y Python (?).</li>
+ <li>OS/2 Toolkit<br>
+  Instala el kit de herramientas que viene con tu versión de OS/2 o eComStation.</li>
+ <li><a class="external" href="http://hobbes.nmsu.edu/pub/os2/dev/emx/v0.9d/emxrt.zip">EMX runtime</a><br>
+  Si no está instalado descomprime EMXRT.ZIP en el directorio raíz. Creará un directorio llamado EMX, agrega D:\EMX\DLL a tu LIBPATH en CONFIG.SYS.</li>
+ <li><a class="external" href="http://www.axess.com/users/sobotka/warpzilla/srcs/autoconf-gcc.zip">autoconf</a><br>
+  Descomprime AUTOCONF.ZIP en el directorio raíz. Creará un directorio llamado AUTOCONF. <b>Nota</b><br>
+  no intentes usar versiones posteriores a 2.13</li>
+ <li><a class="external" href="http://hobbes.nmsu.edu/cgi-bin/h-search?key=glibidl_01Oct2006">glibidl</a> (cuidado: no uses Shit click para descargar) Descomprime el archivo <code>glibidl*.zip</code> en el directorio raíz. Creará un directorio con ese nombre.</li>
+ <li>Perl 5.8.0 (<a class="external" href="http://hobbes.nmsu.edu/pub/os2/dev/perl/perl-5.8.0-bin.zip">bin</a> y <a class="external" href="http://hobbes.nmsu.edu/pub/os2/dev/perl/perl-5.8.0-core.zip">core</a>)<br>
+  Descomprime ambos archivos en el directorio raíz. Crearán un directorio llamado PERL. En el archivo <code>PERL\LIB\5.8.0\OS2\CONFIG.PM</code> busca la etiqueta "archlib" (línea 120) y cambia la letra de la unidad por la cuál tienes instalado PERL. (el archivo ReadMe está equivocado, <em>no</em> deberías usar PERL_LIBBATH!)</li>
+ <li>Python (<a class="external" href="http://hobbes.nmsu.edu/pub/os2/dev/python/python-2.4.4-emx-bin-070101.zip">binarios v2.4.4</a>)<br>
+  Descomprime el paquete en el directorio raíz. Creará un directorio llamado PYTHON244.</li>
+ <li>Paquete de soporte para compilaciones cairo-activadas <a class="external" href="http://hobbes.nmsu.edu/cgi-bin/h-search?key=mozfntcfgft_26nov2006">mozfntcfgft</a> (cuidado: no uses Shift clik para descargar).<br>
+  Descomprime <code>mozfntcfgft*.zip</code> en el directorio raíz. Si no estás usando gcc 3.3.5 necesitarás compilar el paquete (mira README). Nota: Este paquete sólo es necesario si quieres compilar con soporte SVG.</li>
+ <li>Hay un paquete del año 2003 que contiene la mayoría de los programas nombrados anteriormente: <a class="external" href="http://hobbes.nmsu.edu/pub/os2/dev/util/moztools-03-08-07.wpi">MozTools of 07Aug2003</a>. If you use this package, and have problems, you may have to update CVS and GNU make afterwards.</li>
+</ul>
+<p><b>Nota:</b> En los paquetes siguientes debes extraer sólo los archivos especificados. Recomendamos poner todos los EXEs y DLLs en un único directorio llamado MOZTOOLS.</p>
+<ul>
+ <li>ZIP <a class="external" href="http://hobbes.nmsu.edu/pub/os2/util/archiver/zip23x2.zip">ZIP v2.3 con encriptación</a> y UnZIP <a class="external" href="http://hobbes.nmsu.edu/pub/os2/util/archiver/uzs551x2.exe">Unzip v5.51 con soporte unshrink</a>.<br>
+  <b>Nota</b>: Utiliza estos para descomprimir los paquetes.
+  <ul>
+   <li>zip.exe</li>
+   <li>unzip.exe</li>
+  </ul>
+ </li>
+ <li><a class="external" href="http://os2ports.com/ftp/pub/os2/unix/devtools/cvs/cvs11204.zip">CVS</a>
+  <ul>
+   <li>cvs.exe</li>
+  </ul>
+ </li>
+ <li><a class="link-ftp" href="ftp://ftp.mozilla.org/pub/mozilla.org/mozilla/source/os2tools.zip">NSINSTALL</a>
+  <ul>
+   <li>nsinstall.exe</li>
+  </ul>
+ </li>
+ <li><a class="external" href="http://hobbes.nmsu.edu/pub/os2/util/shell/ashos2.zip">BSD Ash</a>
+  <ul>
+   <li>ash.exe</li>
+  </ul>
+ </li>
+ <li>Utilidades shell GNU (<a class="external" href="http://hobbes.nmsu.edu/pub/os2/util/shell/gnusutil.zip">gnusutil.zip v1.12</a>)
+  <ul>
+   <li>Descomprime y copia EXE\*.EXE a y EXE\*.DLL al directorio MOZTOOLS.</li>
+  </ul>
+ </li>
+ <li>bash GNU <a class="external" href="http://hobbes.nmsu.edu/pub/os2/util/shell/bash-2.0-b264.zip">bash v2.0-b264</a>
+  <ul>
+   <li>bash.exe</li>
+  </ul>
+ </li>
+ <li>Utilidades de texto GNU (<a class="external" href="http://hobbes.nmsu.edu/pub/os2/util/file/gnututil.zip">gnututil v1.19</a>)
+  <ul>
+   <li>Descomprime y copia EXE\*.EXE a y EXE\*.DLL al directorio MOZTOOLS.</li>
+  </ul>
+ </li>
+ <li>Utilidades de archivo GNU (<a class="external" href="http://hobbes.nmsu.edu/pub/os2/util/file/gnufutil.zip">gnufutil.zip v3.13</a>)
+  <ul>
+   <li>Descomprime y copia EXE\*.EXE a y EXE\*.DLL al directorio MOZTOOLS.</li>
+  </ul>
+ </li>
+ <li>GNU diff (<a class="external" href="http://hobbes.nmsu.edu/pub/os2/util/file/diffutils-2.8.zip">diffutils v2.8</a>)
+  <ul>
+   <li>Descomprime OS2TREE.ZIP</li>
+   <li>Copia todo desde USR/BIN al directorio MOZTOOLS.</li>
+  </ul>
+ </li>
+ <li>GNU grep (<a class="external" href="http://unixos2.com/pub/binary/grep/grep-2_5_1-bin.zip">grep v2.5.1</a>)
+  <ul>
+   <li>Copia todo BIN al directorio MOZTOOLS.</li>
+  </ul>
+ </li>
+ <li>GNU awk (<a class="external" href="http://unixos2.com/pub/binary/gawk/gawk-3_1_2-bin.zip">gawk v3.1.2</a>)
+  <ul>
+   <li>Copia USR/BIN/GAWK.EXE al directorio MOZTOOLS.</li>
+   <li>Copia gawk.exe to awk.exe</li>
+  </ul>
+ </li>
+ <li><a class="external" href="http://hobbes.nmsu.edu/pub/os2/dev/misc/gnum4.zip">GNU m4 v1.4</a>
+  <ul>
+   <li>m4.exe</li>
+  </ul>
+ </li>
+ <li><a class="external" href="http://hobbes.nmsu.edu/pub/os2/dev/util/make-3.81-r2-bin.zip">GNU make 3.81</a>
+  <ul>
+   <li>make.exe</li>
+  </ul>
+ </li>
+ <li><a class="external" href="http://unixos2.com/pub/binary/gettext/gettext-0_11_5-r2-bin.zip">gettext-0_11_5-r2-bin.zip</a>
+  <ul>
+   <li>intl.dll</li>
+  </ul>
+ </li>
+ <li>GNU <a class="external" href="http://unixos2.com/pub/binary/sed/sed-4_0_5-bin.zip">sed v4.0.5</a>
+  <ul>
+   <li>sed.exe</li>
+  </ul>
+ </li>
+ <li>GNU <a class="external" href="http://hobbes.nmsu.edu/pub/os2/util/disk/gnufind.zip">find v4.1</a>
+  <ul>
+   <li>find.exe</li>
+   <li>xargs.exe</li>
+   <li>gnufind.dll</li>
+   <li>gnuregex.dll</li>
+   <li>Copia gnuregex.dll a regex.dll (el último es necesitado por grep.exe)</li>
+  </ul>
+ </li>
+ <li><a class="link-ftp" href="ftp://ftp.software.ibm.com/ps/products/warpzilla/os2tk40rc.zip">RC.EXE</a><br>
+  <b>Nota:</b> Este paquete contiene rc.exe v.5.00.004 but se necesita la v.5.00.007 para compilar las fuentes sin modifcarlas. Esa versión se incluye en el paquete eCS moztools, pero si no puedes obtenerlo debes usar el parche de {{ Bug(272194) }}, i.e. <a class="link-https" href="https://bugzilla.mozilla.org/attachment.cgi?id=180581">adjunto 180581</a></li>
+ <li><a class="link-ftp" href="ftp://ftp.software.ibm.com/ps/products/warpzilla/ilink50.zip">ILINK 5.0</a>
+  <ul>
+   <li>Copia todo de BIN a MOZTOOLS dir.</li>
+  </ul>
+ </li>
+ <li><a class="external" href="http://hobbes.nmsu.edu/pub/os2/dev/util/gnupatch.zip">GNU Patch v2.5</a>
+  <ul>
+   <li>patch.exe</li>
+  </ul>
+ </li>
+ <li><a class="external" href="http://hobbes.nmsu.edu/pub/os2/util/archiver/gtar258.zip">GNU Tar v1.10</a>
+  <ul>
+   <li>tar.exe</li>
+  </ul>
+ </li>
+ <li><a class="external" href="http://hobbes.nmsu.edu/pub/os2/apps/graphics/convert/winico92-2.zip">Icon converter version 0.92-2</a>
+  <ul>
+   <li>winico.exe</li>
+  </ul>
+ </li>
+</ul>
+<h2 id="Compilador" name="Compilador">Compilador</h2>
+<p>Ya no es posible compilar Mozilla con el IBM VAC++. En lugar de eso podemos elegir entre dos versiones de GCC disponibles para OS/2. Deberías poder compilar todas versiones de Mozilla 1.7 o superior con ambos compiladores pero se recomienda que uses GCC 3.2.2 para Gecko 1.8.0.x y GCC 3.3.5 para versiones superiores.</p>
+<h3 id="GCC_3.2.2" name="GCC_3.2.2">GCC 3.2.2</h3>
+<p>Descarga <a class="external" href="http://download.innotek.de/gccos2/3.2.2-Beta4/gcc-3.2.2-beta4.exe">GCC 3.2.2 Beta 4</a> desde el sitio de Innotek e instálalo. Luego, descarga la última acatualización, <a class="external" href="http://download.innotek.de/gccos2/3.2.2-Beta4/gcc-3.2.2-beta4csd1.zip">GCC 3.2.2 Beta 4 CSD 1</a>, y colócala sobre ésta instlación. Vé al directorio <b>lib</b> y ejecuta <em>MakeOmfLibs.cmd</em>. El script de la configuración supone que instalaste en el directorio '<b>D:\GCC322</b>. Si instalaste en otro lugar debes hacer los cambios necesarios.</p>
+<p>Si elegiste este compilador y deseas compilar con SVG/Canvas activado debes recompilar el paquete <b>mozfntcfgft</b> después de descargarlo (ejecutando <b>make</b> en su directorio).</p>
+<h3 id="GCC_3.3.5" name="GCC_3.3.5">GCC 3.3.5</h3>
+<p>Descarga la última versión <a class="link-ftp" href="ftp://ftp.netlabs.org/pub/gcc/gcc-3.3.5-csd1.zip">GCC 3.3.5 CSD1</a> desde el servidor de FTP de Netlabs, descomprime, ve a <b>lib</b> y ejecuta <b>MakeOmfLibs.cmd</b> El script de la configuración supone que instalaste en el directorio <b>D:\GCC322</b>. Si instalaste en otro lugar debes hacer los cambios necesarios.</p>
+<h2 id="Entorno_de_desarrollo" name="Entorno_de_desarrollo">Entorno de desarrollo</h2>
+<p>El proceso de compilado requiere todos los paquetes listados anteriormente. Son encontrados por variables de entorno específicas (ej. para Perl y Autoconf) o a través de PATH/LIBPATH que incluye al directorio <b>moztools</b>.</p>
+<p>Este entorno es configurado usando los scripts <b>setmozenv*.cmd</b> de REXX. Hay dos scripts disponibles, uno para cada versión de GCC: para <a class="external" href="http://pmw-warpzilla.sf.net/setmozenv_gcc322.cmd">GCC 3.2.2</a> o para <a class="external" href="http://pmw-warpzilla.sf.net/setmozenv_gcc335.cmd">GCC 3.3.5</a>. Por favor cambia todas las direcciones listadas en este archivo en caso de que no instales en la unidad <b>D:</b> y en el directorio <b>D:\MOZTOOLS</b>. Para configurar el entorno abre CMD y ejecuta el archivo batch. . <span class="comment">An {{ mediawiki.external('https://bugzilla.mozilla.org/attachment.cgi?id=188005 alternative CMD batchfile') }} is attached to {{ bug(294088)}}, it is adapted for builds with GCC 3.2.2 without SVG/Canvas support, but is structured in a way that should make it easy to edit.</span></p>
+<h2 id="Obtiendo_las_fuentes_y_compilando" name="Obtiendo_las_fuentes_y_compilando">Obtiendo las fuentes y compilando</h2>
+<p>Las <a class="external" href="http://developer.mozilla.org/es/docs/Configurando_las_opciones_de_compilación">opciones para la compilación</a> han sido tomadas de <code>.mozconfig</code>, que es un archivo que tu creas en el directorio <code>mozilla</code>. También se pueden generar usando <a class="external" href="http://webtools.mozilla.org/build/config.cgi">Unix Build Configurator</a> debes empezar con un archivo básico como éste:</p>
+<pre>mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj
+mk_add_options MOZ_CO_PROJECT=suite
+
+ac_add_options --enable-application=suite
+ac_add_options --disable-tests
+ac_add_options --enable-optimize
+ac_add_options --disable-debug</pre>
+<p>Eso creará una compilación optimizada de SeaMOnkey, con los binarios ubicados en el directorio <code>obj</code> dentro del directorio <code>mozilla</code>.</p>
+<p>El código fuente de Mozilla es distribuido via CVS, el script setmozenv ya configura el entorno para eso. En principio, debes seleccionar un proyecto para bajar desde CVS (agrega la línea MO_CO_PROJECT al .mozconfig), mira el archivo make principal <code>client.mk</code> (<code> cvs co mozilla/client.mk</code>) y deja que el sistema baje el resto de las fuentes (<code>make -f client.mk pull_all</code>). Los detalles para esto están descriptos <a href="es/C%c3%b3digo_fuente_de_Mozilla_(CVS)#Selecting_a_Project_to_Pull">aquí</a>.</p>
+<p>Una vez que creaste el archivo <code>.mozconfig</code> puedes empezar a compilar usando<br>
+ <code>make -f client.mk build 2&gt;&amp;1 | tee build.log</code><br>
+ (la redirección y la llamada <code>tee</code> lleva un logfile de toda la compilación en el archivo buil.log, pero también muestra todos los mensajes en la pantalla)</p>
+<p>Cuando se completa la compilación los bianrios se pueden hallar en <code>obj/dist/bin</code>. Si quieres hacer un paquete por favor sigue las intrucciones en <a href="es/Building_a_SeaMonkey_package">Building a SeaMonkey package</a>.</p>
+<p>Si esta información es insuficiente, hay un poco más en <a class="external" href="http://developer.mozilla.org/en/docs/How_Mozilla%27s_build_system_works">How Mozilla's build system works</a>.</p>
+<h2 id="Trucos" name="Trucos">Trucos</h2>
+<p>Algunos consejos en caso de problemas. También deberías postear en mozilla.dev.ports.os2 si tienes problemas.</p>
+<ol>
+ <li>Si bien el comando para bajar las fuentes desde CVS debería hacer esto de forma automática, a veces es necesario borrar los tres archivos de configuración así pueden ser generados adecuadamente en OS/2. Esto suele suceder cuando hay un conflicto CVS bajando el código. Si hay errores en la compilación deberías probar borrando los archivos:
+  <ul>
+   <li><code>rm mozilla/configure</code></li>
+   <li><code>rm mozilla/nsprpub/configure</code></li>
+   <li><code>rm mozilla/directory/c-sdk/configure</code></li>
+  </ul>
+  Este se regenerarán de forma automática desde el configure.in correspondiente. Para generarlos manualmente debes ir a cada directorio y ejecutar "bash autoconf".</li>
+ <li>El primer paso de la compilación utiliza el script <b>configure</b> generado por <a class="external" href="http://www.gnu.org/software/autoconf/">GNU autoconf</a>.
+  <ul>
+   <li>Automaticamente testea varios aspectos del entorno para compilar, generando programas que intentan compilarse usando el compilador seleccionado.</li>
+   <li>Deja un historial de las actividades en el archivo <b>config.log</b> (en el OBJDIR) donde puedes ver los errores.</li>
+   <li>i ocurre un error crítico, imprimirá en config.log el código fuente del programa generado y el respectivo archivo .h en el mismo directorio. Este puede ser compilado manualmente y utilizado para rastrear errores en la configuración para compilar.</li>
+  </ul>
+ </li>
+ <li>Si estás generando código Mozilla que sea capaz de compilar una extensión para ser usada en OS/2 (ej <a class="external" href="http://enigmail.mozdev.org/">enigmail</a>) sería buena idea editar los tres archivos <code>configure.in</code> en el árbol <code>security\coreconf\OS2.mk</code> y reemplazar <code>emxexp -o </code> con simplemente <code>emxexp</code> en la definición de la variable FILTER. Luego quita todos los archivos de configuración cómo se describe en el punto 1. Si haces esto no será necesario compilar la extensión en cada versión nueva..</li>
+</ol>
+<div class="originaldocinfo">
+ <h2 id="Informaci.C3.B3n_del_documento" name="Informaci.C3.B3n_del_documento">Información del documento</h2>
+ <ul>
+  <li>Traductor: <a class="external" href="http://developer.mozilla.org/es/docs/Usuario_Discusión:Blank_zero">Blank zero</a></li>
+  <li>Ultima modificación: 01-may-2007</li>
+  <li>Fuente: <a class="external" href="http://developer.mozilla.org/en/docs/OS/2_Build_Prerequisites">OS/2 Build Prerequisites</a></li>
+ </ul>
+ <h2 id="Informaci.C3.B3n_sobre_el_documento_original" name="Informaci.C3.B3n_sobre_el_documento_original">Información sobre el documento original</h2>
+ <ul>
+  <li>-</li>
+ </ul>
+</div>
+<p> </p>

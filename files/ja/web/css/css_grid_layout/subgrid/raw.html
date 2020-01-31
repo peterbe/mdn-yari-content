@@ -1,0 +1,109 @@
+<p>{{CSSRef}}</p>
+
+<p>CSS Grid Layout の Level 2 は、{{cssxref("grid-template-columns")}} および {{cssxref("grid-template-rows")}} に <code>subgrid</code> 値を含みます。このガイドでは、subgrid でできること、いくつかの使用例、この機能で解決されるデザインパターンを詳述します。</p>
+
+<div class="blockIndicator warning">
+<p><strong>重要</strong>: この機能は Firefox 71 で使用可能になりますが、今のところ、これが subgrid を実装する唯一のブラウザーです。</p>
+</div>
+
+<h2 id="Introduction_to_subgrid" name="Introduction_to_subgrid">subgrid の導入</h2>
+
+<p>grid コンテナーに <code>display: grid</code> を追加する場合、その直下の子だけが grid アイテムになり、作成した grid 上に置くことができます。これら grid アイテムの子要素は通常フローで表示されます。</p>
+
+<p>grid アイテムを grid コンテナーにすることにより、grid を「入れ子」にできます。しかし、これらの grid は互いの親 grid に依存し、親 grid のサイズ変更に追従しません。これでは、入れ子の grid アイテムをメイン grid で整列させることが難しくなります。</p>
+
+<p><code>grid-template-columns</code> および <code>grid-template-rows</code> の両方またはどちらかに <code>subgrid</code> 値を設定すると、新しいトラックリストを作成するのではなく、入れ子の grid が親要素上で定義されたトラックを利用します。</p>
+
+<p>例えば、<code>grid-template-columns: subgrid</code> を使用し、入れ子の grid が親のトラック 3 列にまたがる場合、入れ子の grid は、親 grid のサイズと同じトラック 3 列分になります。その列の間隔は継承されますが、異なる {{cssxref("gap")}} 値で上書きすることもできます。ライン名は親から subgrid へ渡されますが、subgrid が独自のライン名を定義することもできます。</p>
+
+<h2 id="Subgrid_for_columns" name="Subgrid_for_columns">列の subgrid</h2>
+
+<p>以下の例では、幅 <code>1fr</code> の 9 列のトラックで高さが最低 100px の 4 行の grid レイアウトを定義しています。</p>
+
+<p>この grid の 2 から 7 番の列ライン、2 から 4 番の行ラインに <code>.item</code> を置き、これを grid アイテムから grid コンテナーにします。これを subgrid である列トラックに与え、通常の行を定義します。アイテムの幅が 5 列のトラックにまたがるので、subgrid も 5 列のトラックを持ちます。次に、この grid 上に <code>.subitem</code> を置きます。</p>
+
+<p>この例の行は subgrid ではないため、通常の入れ子の grid として振る舞います。親 grid 領域は、この入れ子の grid が十分入る大きさに拡張されます。</p>
+
+<p>{{EmbedGHLiveSample("css-examples/grid/subgrid/columns.html", '100%', 1200)}}</p>
+
+<p>subgrid 内のライン番号は再び 1 番から始まるので注意してください。subgrid 内の列ライン 1 番は、subgrid の最初のラインです。subgrid 化された要素は親 grid のライン番号を継承しません。これは、メイン grid 上の異なる位置に置かれるコンポーネントを安全に配置できることを意味し、このコンポーネント上のライン番号が常に同じであることが分かります。</p>
+
+<h2 id="Subgrid_for_rows" name="Subgrid_for_rows">行の subgrid</h2>
+
+<p>次の例は、上記と同じ設定で、<code>grid-template-rows</code> の値に <code>subgrid</code> を使用し、明示的に列トラックを定義しています。このため、列トラックが通常の入れ子の grid として振る舞い、行が子スパンの 2 トラックに紐づけられます。</p>
+
+<p>{{EmbedGHLiveSample("css-examples/grid/subgrid/rows.html", '100%', 1200)}}</p>
+
+<h2 id="A_subgrid_in_both_dimensions" name="A_subgrid_in_both_dimensions">列と行の subgrid</h2>
+
+<p>もちろん、以下の例のように、行と列の両方を subgrid として定義できます。これは、subgrid が親 grid の行と列両方のトラックの数に紐づけられることを意味します。</p>
+
+<p>{{EmbedGHLiveSample("css-examples/grid/subgrid/both.html", '100%', 1200)}}</p>
+
+<h3 id="No_implicit_grid_in_a_subgridded_dimension" name="No_implicit_grid_in_a_subgridded_dimension">subgrid 化された範囲に暗黙の grid はありません</h3>
+
+<p>アイテムを自動配置する必要があり、そのアイテムが何個になるか分からないときは、subgrid の作成時に、それらのアイテムを保持する追加の行が作成されないように注意してください。</p>
+
+<p>次の例を見てください。これは上記の例と同様に、同じ親 grid と子 grid を使用していますが、subgrid 内の 10 個の grid セルに 12 個のアイテムを自動配置しようとしています。この subgrid には行と列どちらにも追加の 2 個のアイテムを置く場所がないため、仕様で定義されている通りに、これらは grid の最後のトラック内に置かれることになります。</p>
+
+<p>{{EmbedGHLiveSample("css-examples/grid/subgrid/no-implicit.html", '100%', 1200)}}</p>
+
+<p><code>grid-template-rows</code> の値を削除すると、通常の明示的なトラックが作成できるようになります。とはいえ、これらは親のトラックに沿って並ばないため、その数に応じて作成する必要があります。</p>
+
+<p>{{EmbedGHLiveSample("css-examples/grid/subgrid/implicit.html", '100%', 1200)}}</p>
+
+<h2 id="The_gap_properties_and_subgrid" name="The_gap_properties_and_subgrid">gap プロパティと subgrid</h2>
+
+<p>親 grid に {{cssxref("gap")}} または {{cssxref("column-gap")}}, {{cssxref("row-gap")}} が指定されている場合、これらは subgrid にも渡され、トラックの間隔が親と同じになります。状況によっては、subgrid のトラックの間隔を親と異なるものに設定したい場合があるでしょう。これは、subgrid の grid コンテナーに <code>gap-*</code> プロパティを使用することにより達成できます。</p>
+
+<p>これは以下の例で確認できます。親 grid は 20px の行間隔と列間隔を持ち、subgrid は <code>row-gap</code> の値に <code>0</code> を設定しています。</p>
+
+<p>{{EmbedGHLiveSample("css-examples/grid/subgrid/gap.html", '100%', 1200)}}</p>
+
+<p>これを Firefox の Grid インスペクターで調査すると、grid のラインが gap の中央に正しく描かれていることが分るでしょう。gap の値を 0 に設定した場合、同様の動作で要素に負のマージンが適用され、gap からアイテムまでのスペースが与えられます。</p>
+
+<p><img alt="The smaller item displays in the gap as row-gap is set to 0 on the subgrid." src="https://mdn.mozillademos.org/files/16628/gap.png" style="height: 928px; width: 1312px;"></p>
+
+<h2 id="Named_grid_lines" name="Named_grid_lines">名付けられた grid ライン</h2>
+
+<p>CSS Grid を利用する時、その grid のラインに名前を付けて、ライン番号ではなく、これらの名前でアイテムを配置できます。親 grid のライン名が subgrid に渡されるので、それらを使用してアイテムを配置できます。以下の例では、親のラインに <code>col-start</code> および <code>col-end</code> という名前を付けました。これらはサブアイテムの配置に使用されます。</p>
+
+<p>{{EmbedGHLiveSample("css-examples/grid/subgrid/line-names.html", '100%', 1200)}}</p>
+
+<p>また、subgrid にもライン名を指定できます。<code>subgrid</code> キーワードの後のラインのリストに、角括弧で囲まれたライン名を追加します。subgrid に 4 本のラインがある場合、次の構文ですべてのラインに名前を付けられます: <code>grid-template-columns: subgrid [line1] [line2] [line3] [line4]</code></p>
+
+<p>subgrid に指定されたラインは親で指定された任意のラインに追加されるため、そのライン名を親と subgrid のどちらでも利用できます。デモンストレーションするため、以下の例で、アイテムの一つは親ラインを利用して配置し、もう一つは subgrid のラインを利用しています。</p>
+
+<p>{{EmbedGHLiveSample("css-examples/grid/subgrid/adding-line-names.html", '100%', 1200)}}</p>
+
+<h2 id="Using_subgrids" name="Using_subgrids">subgrid の利用</h2>
+
+<p>subgrid 内にうまく収まらないアイテムを心配する必要なく、subgrid は入れ子の grid にとてもよく似た動作をします。ただ一つ違うところは、subgrid のトラックのサイズ変更が親 grid で設定されることです。どの入れ子の grid でもそうであったように、subgrid 内のコンテンツのサイズがトラックのサイズを変更することがあり、コンテンツがトラックのサイズ変更に影響することを許すメソッドが用いられることが想定されます。このような場合、例えばサイズが自動調整される行トラックは、コンテンツがメイン grid と subgrid 内に収まるように大きくなります。</p>
+
+<p>subgrid 値は、通常の入れ子の grid とほとんど同じ方法で動作するため、これらを切り替えるのは簡単です。例えば、暗黙的な行の grid が必要になったときにすべきことは、<code>grid-template-rows</code> の <code>subgrid</code> 値を削除し、あるいは暗黙的なトラックのサイズ変更を制御するために <code>grid-auto-rows</code> に値を与えることだけです。</p>
+
+<h2 id="Specification" name="Specification">仕様</h2>
+
+<table>
+	<thead>
+		<tr>
+			<th scope="col">仕様書</th>
+			<th scope="col">策定状況</th>
+			<th scope="col">備考</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>{{SpecName("CSS Grid 2")}}</td>
+			<td>{{Spec2("CSS Grid 2")}}</td>
+			<td><a href="/ja/docs/Web/CSS/CSS_Grid_Layout/Basic_Concepts_of_Grid_Layout#Subgrid">subgrids</a> の初期定義。</td>
+		</tr>
+	</tbody>
+</table>
+
+<h2 id="See_Also" name="See_Also">関連情報</h2>
+
+<ul>
+	<li>Mozilla Developer YouTube チャンネル上の動画、<a href="https://www.youtube.com/watch?v=gmQlK3kRft4">Laying out forms using subgrid</a> と <a href="https://www.youtube.com/watch?v=lLnFtK1LNu4">Don't Wait To Use Subgrid For Better Card Layouts</a> をご覧ください。</li>
+	<li>CSSConf.eu でのプレゼンテーション <a href="https://noti.st/rachelandrew/i6gUcF/hello-subgrid">Hello Subgrid!</a></li>
+</ul>

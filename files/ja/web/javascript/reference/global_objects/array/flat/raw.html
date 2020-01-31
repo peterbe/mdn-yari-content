@@ -1,0 +1,157 @@
+<div>{{JSRef}}</div>
+
+<p><code><strong>flat()</strong></code> メソッドは、すべてのサブ配列の要素を指定した深さで再帰的に結合した新しい配列を生成します。</p>
+
+<p class="hidden">\{{EmbedInteractiveExample("pages/js/array-flat.html")}}</p>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox"><var>var newArray = arr</var>.flat(<var>depth</var>)</pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<dl>
+ <dt><code>depth</code> {{optional_inline}}</dt>
+ <dd>ネストされた配列構造でどの程度の深さをフラット化するか指定する深さレベルです。既定値は 1 です。</dd>
+</dl>
+
+<h3 id="Return_value" name="Return_value">戻り値</h3>
+
+<p>サブ配列要素が結合された新しい配列。</p>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<h3 id="Flattening_nested_arrays" name="Flattening_nested_arrays">ネストされた配列のフラット化</h3>
+
+<pre class="brush: js">var arr1 = [1, 2, [3, 4]];
+arr1.flat(); 
+// [1, 2, 3, 4]
+
+var arr2 = [1, 2, [3, 4, [5, 6]]];
+arr2.flat();
+// [1, 2, 3, 4, [5, 6]]
+
+var arr3 = [1, 2, [3, 4, [5, 6]]];
+arr3.flat(2);
+// [1, 2, 3, 4, 5, 6]
+</pre>
+
+<h3 id="Flattening_and_array_holes" name="Flattening_and_array_holes">フラット化と配列の穴</h3>
+
+<p>flat メソッドは配列内の空要素を削除します:</p>
+
+<pre class="brush: js">var arr4 = [1, 2, , 4, 5];
+arr4.flat();
+// [1, 2, 4, 5]</pre>
+
+<h2 id="Alternative" name="Alternative">代替</h2>
+
+<h3 id="reduce_and_concat" name="reduce_and_concat"><code>reduce</code> と <code>concat</code></h3>
+
+<pre class="brush: js">var arr1 = [1, 2, [3, 4]];
+arr1.flat();
+
+//to flat single level array
+arr1.reduce((acc, val) =&gt; acc.concat(val), []);// [1, 2, 3, 4]
+
+//or
+const flatSingle = arr =&gt; [].concat(...arr);
+</pre>
+
+<pre class="brush: js">//to enable deep level flatten use recursion with reduce and concat
+var arr1 = [1,2,3,[1,2,3,4, [2,3,4]]];
+
+function flattenDeep(arr1) {
+   return arr1.reduce((acc, val) =&gt; Array.isArray(val) ? acc.concat(flattenDeep(val)) : acc.concat(val), []);
+}
+flattenDeep(arr1);// [1, 2, 3, 1, 2, 3, 4, 2, 3, 4]
+</pre>
+
+<pre class="brush: js">//non recursive flatten deep using a stack
+var arr1 = [1,2,3,[1,2,3,4, [2,3,4]]];
+function flatten(input) {
+  const stack = [...input];
+  const res = [];
+  while (stack.length) {
+    // pop value from stack
+    const next = stack.pop();
+    if (Array.isArray(next)) {
+      // push back array items, won't modify the original input
+      stack.push(...next);
+    } else {
+      res.push(next);
+    }
+  }
+  //reverse to restore input order
+  return res.reverse();
+}
+flatten(arr1);// [1, 2, 3, 1, 2, 3, 4, 2, 3, 4]
+</pre>
+
+<pre class="brush: js">//recursive flatten deep
+function flatten(array) {
+  var flattend = [];
+  !(function flat(array) {
+    array.forEach(function(el) {
+      if (Array.isArray(el)) flat(el);
+      else flattend.push(el);
+    });
+  })(array);
+  return flattend;
+}
+</pre>
+
+<h2 id="Polyfill">Polyfill</h2>
+
+<pre class="brush: js">if (!Array.prototype.flat) {
+  Array.prototype.flat = function(depth) {
+    var flattend = [];
+    (function flat(array, depth) {
+      for (let el of array) {
+        if (Array.isArray(el) &amp;&amp; depth &gt; 0) {
+          flat(el, depth - 1); 
+        } else {
+          flattend.push(el);
+        }
+      }
+    })(this, Math.floor(depth) || 1);
+    return flattend;
+  };
+}
+</pre>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">ステータス</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td><a href="https://tc39.github.io/proposal-flatMap/#sec-Array.prototype.flat"><code>Array.prototype.flat</code> proposal</a></td>
+   <td>Finished (4)</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザー実装状況</h2>
+
+<div>
+<div class="hidden">The compatibility table in this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.builtins.Array.flat")}}</p>
+</div>
+
+<h2 id="See_also" name="See_also">関連項目</h2>
+
+<ul>
+ <li>{{jsxref("Array.prototype.flatMap()")}}</li>
+ <li>{{jsxref("Array.prototype.map()")}}</li>
+ <li>{{jsxref("Array.prototype.reduce()")}}</li>
+ <li>{{jsxref("Array.prototype.concat()")}}</li>
+</ul>

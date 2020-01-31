@@ -1,0 +1,152 @@
+<p>当URL的片段标识符更改时，将触发<strong>hashchange</strong>事件 (跟在＃符号后面的URL部分，包括＃符号)</p>
+
+<h2 id="通用信息">通用信息</h2>
+
+<dl>
+ <dt style="float: left; text-align: right; width: 120px;">规范</dt>
+ <dd style="margin: 0pt 0pt 0pt 120px;"><a class="external" href="http://www.whatwg.org/specs/web-apps/current-work/multipage/history.html#event-hashchange">HTML5</a></dd>
+ <dt style="float: left; text-align: right; width: 120px;">接口</dt>
+ <dd style="margin: 0pt 0pt 0pt 120px;">HashChangeEvent</dd>
+ <dt style="float: left; text-align: right; width: 120px;">是否冒泡</dt>
+ <dd style="margin: 0pt 0pt 0pt 120px;">是</dd>
+ <dt style="float: left; text-align: right; width: 120px;">能否取消默认行为</dt>
+ <dd style="margin: 0pt 0pt 0pt 120px;">不能</dd>
+ <dt style="float: left; text-align: right; width: 120px;">目标</dt>
+ <dd style="margin: 0pt 0pt 0pt 120px;">defaultView</dd>
+ <dt style="float: left; text-align: right; width: 120px;">默认行为</dt>
+ <dd style="margin: 0pt 0pt 0pt 120px;">无</dd>
+</dl>
+
+<h2 id="属性">属性</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">Property</th>
+   <th scope="col">Type</th>
+   <th scope="col">Description</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td><code>target</code> {{readonlyInline}}</td>
+   <td>{{domxref("EventTarget")}}</td>
+   <td>The browsing context (<code>window</code>).</td>
+  </tr>
+  <tr>
+   <td><code>type</code> {{readonlyInline}}</td>
+   <td>{{domxref("DOMString")}}</td>
+   <td>The type of event.</td>
+  </tr>
+  <tr>
+   <td><code>bubbles</code> {{readonlyInline}}</td>
+   <td>{{jsxref("Boolean")}}</td>
+   <td>Whether the event normally bubbles or not.</td>
+  </tr>
+  <tr>
+   <td><code>cancelable</code> {{readonlyInline}}</td>
+   <td>{{jsxref("Boolean")}}</td>
+   <td>Whether the event is cancellable or not.</td>
+  </tr>
+  <tr>
+   <td><code>oldURL</code> {{readonlyInline}}</td>
+   <td>{{jsxref("String")}}</td>
+   <td>The previous URL from which the window was navigated.</td>
+  </tr>
+  <tr>
+   <td>newURL {{readonlyInline}}</td>
+   <td>{{jsxref("String")}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="浏览器兼容性">浏览器兼容性</h2>
+
+<p>{{ CompatibilityTable() }}</p>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>5.0</td>
+   <td>{{ CompatGeckoDesktop("1.9.2") }}<br>
+    <small>Firefox 6 中加入对 <code>oldURL</code>/<code>newURL</code> 属性的支持.</small></td>
+   <td>8.0</td>
+   <td>10.6</td>
+   <td>5.0</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>2.2</td>
+   <td>{{ CompatGeckoMobile("1.9.2") }}</td>
+   <td>9.0</td>
+   <td>11.0</td>
+   <td>5.</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<p><a href="https://github.com/Modernizr/Modernizr/wiki/HTML5-Cross-Browser-Polyfills" title="https://github.com/Modernizr/Modernizr/wiki/HTML5-Cross-Browser-Polyfills">这个页面</a>里有几个用JavaScript模拟该事件的脚本,原理基本上都是隔一段时间检测一下location.hash是否发生变化.下面的这个实现可以在&lt;code&gt;window.onhashchange&lt;/code&gt;属性上绑定事件处理函数:</p>
+
+<pre class="brush:js;">(function(window) {
+
+  // 如果浏览器原生支持该事件,则退出  
+if ( "onhashchange" in window.document.body ) { return; }
+
+  var location = window.location,
+    oldURL = location.href,
+    oldHash = location.hash;
+
+  // 每隔100ms检测一下location.hash是否发生变化
+  setInterval(function() {
+    var newURL = location.href,
+      newHash = location.hash;
+
+    // 如果hash发生了变化,且绑定了处理函数...
+    if ( newHash != oldHash &amp;&amp; typeof window.onhashchange === "function" ) {
+      // execute the handler
+      window.onhashchange({
+        type: "hashchange",
+        oldURL: oldURL,
+        newURL: newURL
+      });
+
+      oldURL = newURL;
+      oldHash = newHash;
+    }
+  }, 100);
+
+})(window);
+</pre>
+
+<h2 id="相关事件">相关事件</h2>
+
+<ul>
+ <li><a href="/zh-CN/docs/Mozilla_event_reference/popstate"><code>popstate</code></a></li>
+</ul>

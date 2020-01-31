@@ -1,0 +1,158 @@
+<div>{{JSRef}}</div>
+
+<p><span id="result_box" lang="ru"><span title="The handler.set() method is a trap for setting a property value.
+">Метод <strong>handler.set()</strong> является ловушкой для установки значения свойства.</span></span></p>
+
+<h2 id="Синтаксис">Синтаксис</h2>
+
+<pre class="brush: js">var p = new Proxy(target, {
+  set: function(target, property, value, receiver) {
+  }
+});
+</pre>
+
+<h3 id="Параметры">Параметры</h3>
+
+<p><span id="result_box" lang="ru"><span>Следующие параметры передаются методу set.</span> <span>это связано с обработчиком</span></span></p>
+
+<dl>
+ <dt><code>target</code></dt>
+ <dd>Целевой обьект</dd>
+ <dt><code>property</code></dt>
+ <dd><span id="result_box" lang="ru"><span>Имя свойства для установки.</span></span></dd>
+ <dt><code>value</code></dt>
+ <dd><span id="result_box" lang="ru"><span>Новое значение свойства для установки.</span></span></dd>
+ <dt><code>receiver</code></dt>
+ <dd><span id="result_box" lang="ru"><span>Объект, которому первоначально было присвоено задание.</span> <span>Обычно это сам прокси.</span> <span>Но обработчик набора также может быть вызван косвенно, через цепочку прототипов или различными способами.</span><br>
+      <span>Например, предположим, что сценарий выполняет obj.name = "jen", а obj не является прокси-сервером и не имеет собственного свойства .name, но имеет прокси-сервер в цепочке прототипов.</span> <span>Этот обработчик заданий прокси будет вызываться, а obj будет передан в качестве получателя.</span></span></dd>
+ <dd> </dd>
+</dl>
+
+<h3 id="Возвращаемые_результаты">Возвращаемые результаты</h3>
+
+<p>Метод <code>set</code> <span id="result_box" lang="ru"><span>должен возвращать boolean значение</span></span>. Возвращение <code>true</code> <span id="result_box" lang="ru"><span> чтобы указать, что присвоение выполнено успешно</span></span> . Если <code>set</code> возвращает <code>false</code>, <span id="result_box" lang="ru"><span>а присваивание произошло в коде строгого режима, будет выбрано</span></span> <code>TypeError</code></p>
+
+<h2 id="Описание">Описание</h2>
+
+<p>The <code><strong>handler.set</strong></code> method is a trap for setting property value.</p>
+
+<h3 id="Interceptions">Interceptions</h3>
+
+<p>This trap can intercept these operations:</p>
+
+<ul>
+ <li>Property assignment: <code>proxy[foo] = bar</code> and <code>proxy.foo = bar</code></li>
+ <li>Inherited property assignment: <code>Object.create(proxy)[foo] = bar</code></li>
+ <li>{{jsxref("Reflect.set()")}}</li>
+</ul>
+
+<h3 id="Invariants">Invariants</h3>
+
+<p>If the following invariants are violated, the proxy will throw a {{jsxref("TypeError")}}:</p>
+
+<ul>
+ <li>Cannot change the value of a property to be different from the value of the corresponding target object property if the corresponding target object property is a non-writable, non-configurable data property.</li>
+ <li>Cannot set the value of a property if the corresponding target object property is a non-configurable accessor property that has <code>undefined</code> as its [[Set]] attribute.</li>
+ <li>In strict mode, a <code>false</code> return value from the <code>set</code> handler will throw a {{jsxref("TypeError")}} exception.</li>
+</ul>
+
+<h2 id="Примеры">Примеры</h2>
+
+<p><span id="result_box" lang="ru"><span>Следующие ловушки кода устанавливают значение свойства.</span></span></p>
+
+<pre class="brush: js">var p = new Proxy({}, {
+  set: function(target, prop, value, receiver) {
+    target[prop] = value
+    console.log('property set: ' + prop + ' = ' + value)
+    return true
+  }
+})
+
+console.log('a' in p)  // false
+
+p.a = 10               // "property set: a = 10"
+console.log('a' in p)  // true
+console.log(p.a)       // 10
+</pre>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-proxy-object-internal-methods-and-internal-slots-set-p-v-receiver', '[[Set]]')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-proxy-object-internal-methods-and-internal-slots-set-p-v-receiver', '[[Set]]')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<div>{{CompatibilityTable}}</div>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatChrome("61")}}</td>
+   <td>{{CompatGeckoDesktop("18")}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatSafari("10.1")}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Chrome for Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatGeckoMobile("18")}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li>{{jsxref("Proxy")}}</li>
+ <li>{{jsxref("Proxy.handler", "handler")}}</li>
+ <li>{{jsxref("Reflect.set()")}}</li>
+</ul>

@@ -1,0 +1,325 @@
+<p>{{ ApiRef() }}</p>
+<p>이 장은 DOM을 쓰는 좀 더 긴 웹 개발과 XML 개발 예제를 제공합니다. 어느 곳에서라도, 예제는 문서 개체를 다루기 위해 JavaScript 공통 API, 트릭(trick), 패턴(pattern)을 씁니다.</p>
+<h3 id=".EC.98.88.EC.A0.9C_1:_.ED.94.84.EB.A1.9C.ED.8D.BC.ED.8B.B0_height.EC.99.80_width" name=".EC.98.88.EC.A0.9C_1:_.ED.94.84.EB.A1.9C.ED.8D.BC.ED.8B.B0_height.EC.99.80_width">예제 1: 프로퍼티 height와 width</h3>
+<p>다음 예는 바뀌는 차원 이미지(image)와 함께 <code>height</code>와 <code>width</code> 프로퍼티(property) 사용을 보입니다.</p>
+<pre>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd"&gt;
+
+&lt;html lang="en"&gt;
+
+&lt;head&gt;
+&lt;title&gt;width/height example&lt;/title&gt;
+&lt;script type="text/javascript"&gt;
+function init()
+{
+  var arrImages = new Array(3);
+  arrImages[0] = document.getElementById("image1");
+  arrImages[1] = document.getElementById("image2");
+  arrImages[2] = document.getElementById("image3");
+  var objOutput = document.getElementById("output");
+  var strHtml = "&lt;ul&gt;";
+  for (var i = 0; i &lt; arrImages.length; i++)
+    strHtml += "&lt;li&gt;image" + (i+1) + 
+            ": height=" + arrImages[i].height + 
+            ", width=" + arrImages[i].width + 
+            ", style.height=" + arrImages[i].style.height + 
+            ", style.width=" + arrImages[i].style.width + 
+            "&lt;\/li&gt;";
+  strHtml += "&lt;\/ul&gt;";
+  objOutput.innerHTML = strHtml;
+}
+&lt;/script&gt;
+&lt;/head&gt;
+&lt;body onload="init();"&gt;
+
+&lt;p&gt;Image 1: no height, width, or style 
+    &lt;img id="image1" src="http://www.mozilla.org/images/mozilla-banner.gif"&gt;
+&lt;/p&gt;
+&lt;p&gt;Image 2: height="50", width="500", but no style 
+    &lt;img id="image2" src="http://www.mozilla.org/images/mozilla-banner.gif" 
+         height="50" width="500"&gt;
+&lt;/p&gt;
+&lt;p&gt;Image 3: no height, width, but style="height: 50px; width: 500px;"
+    &lt;img id="image3" src="http://www.mozilla.org/images/mozilla-banner.gif" 
+         style="height: 50px; width: 500px;"&gt;
+&lt;/p&gt;
+
+&lt;div id="output"&gt; &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<p><code>height</code>와 <code>width</code>는 또한 <code>OBJECT</code>와 <code>APPLET</code> 요소(element)의 프로퍼티입니다.</p>
+<h3 id=".EC.98.88.EC.A0.9C_2:_.EC.9D.B4.EB.AF.B8.EC.A7.80_.EC.86.8D.EC.84.B1" name=".EC.98.88.EC.A0.9C_2:_.EC.9D.B4.EB.AF.B8.EC.A7.80_.EC.86.8D.EC.84.B1">예제 2: 이미지 속성</h3>
+<pre>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd"&gt;
+
+&lt;html lang="en"&gt;
+
+&lt;head&gt;
+&lt;title&gt;Modifying an image border&lt;/title&gt;
+&lt;script type="text/javascript"&gt;
+function setBorderWidth(width) {
+  document.getElementById("img1").style.borderWidth = width + "px";
+}
+&lt;/script&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+&lt;p&gt;
+  &lt;img id="img1" src="image1.gif" style="border: 5px solid green;" width="100"
+height="100" alt="border test"&gt;
+&lt;/p&gt;
+
+&lt;form name="FormName"&gt;
+  &lt;p&gt;&lt;input type="button" value="Make border 20px-wide" 
+onclick="setBorderWidth(20);"&gt; &lt;input type="button" value="Make border 5px-wide" 
+onclick="setBorderWidth(5);"&gt;&lt;/p&gt;
+&lt;/form&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<h3 id=".EC.98.88.EC.A0.9C_3:_.EC.8A.A4.ED.83.80.EC.9D.BC_.EB.8B.A4.EB.A3.A8.EA.B8.B0" name=".EC.98.88.EC.A0.9C_3:_.EC.8A.A4.ED.83.80.EC.9D.BC_.EB.8B.A4.EB.A3.A8.EA.B8.B0">예제 3: 스타일 다루기</h3>
+<p>이 간단한 예제에서는, HTML paragraph 요소의 일부 기본 스타일 프로퍼티를 요소에 스타일 개체를 써서 이용하고 그 개체의 CSS 스타일 프로퍼티는 DOM에서 검색하고 설정할 수 있습니다. 이 경우에, 여러분은 개별 스타일을 바로 조작합니다. 다음 예제(예제 4를 보세요)에서, 여러분은 전체 문서의 스타일을 바꾸기 위해 스타일시트와 그 규칙을 쓸 수 있습니다.</p>
+<pre>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd"&gt;
+
+&lt;html lang="en"&gt;
+
+&lt;head&gt;
+&lt;title&gt;Changing color and font-size example&lt;/title&gt;
+&lt;script type="text/javascript"&gt;
+function changeText() {
+	var p = document.getElementById("pid");
+	p.style.color = "blue"
+	p.style.fontSize = "18pt"
+}
+&lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;p id="pid" 
+onclick="window.location.href = 'http://www.cnn.com/';"&gt;linker&lt;/p&gt;
+&lt;form&gt;
+&lt;p&gt;&lt;input value="rec" type="button" onclick="changeText();"&gt;&lt;/p&gt;
+&lt;/form&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<h3 id=".EC.98.88.EC.A0.9C_4:_Stylesheet_.EC.82.AC.EC.9A.A9.ED.95.98.EA.B8.B0" name=".EC.98.88.EC.A0.9C_4:_Stylesheet_.EC.82.AC.EC.9A.A9.ED.95.98.EA.B8.B0">예제 4: Stylesheet 사용하기</h3>
+<p>document 개체의 styleSheets 프로퍼티는 그 문서에 로드되는 스타일시트 목록을 반환합니다. 여러분은 스타일시트, style과 CSSRule 개체를 써서 이 스타일시트와 그 규칙에 하나하나 접근할 수 있습니다, 이 예제에서 실제로 보이듯이, 개체는 모든 스타일 규칙 선택자(selector)를 콘솔에 출력합니다.</p>
+<pre>ss = document.styleSheets;
+for(i=0; i&lt;ss.length; i++)
+ {
+ for(j=0; j&lt;ss[0].cssRules.length; j++)
+  {
+  dump( ss[i].cssRules[j].style.selectorText + "\n" );
+  }
+ }
+</pre>
+<p>다음 세 규칙이 정의된 스타일시트 하나가 있는 문서의 경우,</p>
+<pre class="eval">BODY { background-color: darkblue; }
+P { font-face: Arial; font-size: 10pt; margin-left: .125in; }
+#lumpy { display: none; }
+</pre>
+<p>이 스크립트는 다음을 출력합니다.</p>
+<pre class="eval">BODY
+P
+#LUMPY
+</pre>
+<h3 id=".EC.98.88.EC.A0.9C_5:_Event_.EC.A0.84.EB.8B.AC" name=".EC.98.88.EC.A0.9C_5:_Event_.EC.A0.84.EB.8B.AC">예제 5: Event 전달</h3>
+<p>이 예제는 어떻게 event가 발생하고 간단한 방식으로 DOM에서 처리되는 지를 실제로 보입니다. 이 HTML 문서의 BODY가 로드될 때, event listener는 TABLE 꼭대기 줄(top row)에 등록됩니다. event listener는 표의 밑바닥(bottom) cell값을 바꾸는 stopEvent 함수를 실행하여 이벤트를 처리합니다.</p>
+<p>그러나, stopEvent는 또한 더 이상 DOM 속으로 일어나지 않게 event를 보호하는 event 개체 메소드(<a href="ko/DOM/event.stopPropagation">event.stopPropagation</a>)를 호출합니다. 표 자체는 표가 클릭됐을 때 메시지를 표시해야 하는 <a href="ko/DOM/element.onclick">onclick</a> event handler가 있음을 유의하세요. 하지만 stopEvent 메소드는 표의 데이터를 갱신(update)하고, event 단계가 실제로 끝나고 나서 경보 상자(alert box)가 이를 확인하기 위해 표시된 뒤에야 전달(propagation)을 멈춥니다.</p>
+<pre>&lt;html&gt;
+&lt;head&gt;
+&lt;title&gt;Event Propagation&lt;/title&gt;
+
+&lt;style type="text/css"&gt;
+ #t-daddy { border: 1px solid red }
+ #c1 { background-color: pink; }
+&lt;/style&gt;
+
+&lt;script type="text/javascript"&gt;
+
+function stopEvent(ev) {
+  c2 = document.getElementById("c2");
+  c2.innerHTML = "hello";
+
+  // 이 줄이 받은 마우스 클릭으로부터 t-daddy를 보호해야 합니다.
+  ev.stopPropagation();
+  alert("event propagation halted.");
+}
+
+function load() {
+  elem = document.getElementById("tbl1");
+  elem.addEventListener("click", stopEvent, false);
+}
+&lt;/script&gt;
+&lt;/head&gt;
+
+&lt;body onload="load();"&gt;
+
+&lt;table id="t-daddy" onclick="alert('hi');"&gt;
+ &lt;tr id="tbl1"&gt;
+  &lt;td id="c1"&gt;one&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+  &lt;td id="c2"&gt;two&lt;/td&gt;
+ &lt;/tr&gt;
+&lt;/table&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<h3 id=".EC.98.88.EC.A0.9C_6:_getComputedStyle" name=".EC.98.88.EC.A0.9C_6:_getComputedStyle">예제 6: getComputedStyle</h3>
+<p>이 예제는 어떻게 <a href="ko/DOM/window.getComputedStyle">window.getComputedStyle</a> 메소드가 <code>style</code> 속성을 쓰거나 JavaScript로( 예컨대, <code>elt.style.backgroundColor="rgb(173, 216, 230)"</code>) 설정하지 않은 요소의 스타일을 얻는 데 쓰일 수 있는 지를 실제로 보입니다. 이 후자 형태의 스타일은 곧바로 <a href="ko/DOM/element.style">elt.style</a> 프로퍼티(이 프로퍼티 소유의 프로퍼티는 <a href="ko/DOM/CSS">DOM CSS 프로퍼티 목록</a>에 나열되어 있음)로 검색될 수 있습니다.</p>
+<p><code>getComputedStyle()</code>는 다음 예제 문서가 보이듯이 <code>ComputedCSSStyleDeclaration</code> 개체를 반환하고 개체의 개별 스타일 프로퍼티는 이 개체의 <code>getPropertyValue()</code> 메소드로 참조할 수 있습니다.</p>
+<pre>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd"&gt;
+
+&lt;html lang="en"&gt;
+
+&lt;head&gt;
+ &lt;title&gt;getComputedStyle example&lt;/title&gt;
+
+ &lt;script type="text/javascript"&gt;
+   function cStyles() 
+  {
+   var RefDiv = document.getElementById("d1");
+
+   var txtHeight = document.getElementById("t1");
+   var h_style = 
+document.defaultView.getComputedStyle(RefDiv, null).getPropertyValue("height");
+   txtHeight.value = h_style;
+
+   var txtWidth = document.getElementById("t2");
+   var w_style = 
+document.defaultView.getComputedStyle(RefDiv, null).getPropertyValue("width");
+   txtWidth.value = w_style;
+
+   var txtBackgroundColor = document.getElementById("t3");
+   var b_style = 
+document.defaultView.getComputedStyle(RefDiv,
+null).getPropertyValue("background-color");
+   txtBackgroundColor.value = b_style;
+  }
+ &lt;/script&gt;
+
+ &lt;style type="text/css"&gt;
+   #d1 { margin-left: 10px; background-color: rgb(173, 216, 230); 
+height: 20px; max-width: 20px; }
+ &lt;/style&gt;
+
+&lt;/head&gt;
+
+&lt;body&gt;
+
+&lt;div id="d1"&gt;&amp;nbsp;&lt;/div&gt;
+
+&lt;form action=""&gt;
+&lt;p&gt;&lt;button type="button" onclick="cStyles();"&gt;getComputedStyle&lt;/button&gt;
+  height&lt;input id="t1" type="text" value="1"&gt;
+  max-width&lt;input id="t2" type="text" value="2"&gt;
+  bg-color&lt;input id="t3" type="text" value="3"&gt;&lt;/p&gt;
+&lt;/form&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<h3 id=".EC.98.88.EC.A0.9C_7:_Event_.EA.B0.9C.EC.B2.B4_.EC.83.81.EC.88.98_.ED.91.9C.EC.8B.9C.ED.95.98.EA.B8.B0" name=".EC.98.88.EC.A0.9C_7:_Event_.EA.B0.9C.EC.B2.B4_.EC.83.81.EC.88.98_.ED.91.9C.EC.8B.9C.ED.95.98.EA.B8.B0">예제 7: Event 개체 상수 표시하기</h3>
+<p>이 예제는 모든 event 개체 상수(constant)와 표시되는 개체 상수값으로 된 표를 만들기 위해 DOM을 쓰는 법을 보입니다. 예제는 여러분이 특정 개체의 프로퍼티를 얻게 하는 Event.prototype 프로퍼티, 그 prototype에서 프로퍼티를 반복하기 위한 좋은 패턴(pattern), 그리고 표에 표시되는 자체 상수값을 포함하는 DOM의 여러 유용한 면을 돋보이게 합니다. 이 상수의 middle range는 event동안 눌려진 실제 키를 나타내(고 charCode 프로퍼티로 fetch할 수 있)는 문자 코드임을 유의하세요. event 개체 상수를 보기 위해 웹 페이지로 다음 코드를 로드하세요.</p>
+<pre>&lt;?xml version="1.0" ?&gt;
+&lt;!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd"&gt;
+&lt;!--
+ * ***** LICENSE BLOCK 시작 *****
+ * 판: NPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * 이 파일의 contents는 Netscape Public License 1.1판(이하 "License")을
+ * 따릅니다; you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * Contributor(s):
+ *   Alexander J. Vincent &lt;jscript@pacbell.net&gt;
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the NPL, the GPL or the LGPL.
+ *
+ * ***** LICENSE BLOCK 끝 ***** * --&gt;
+&lt;html xmlns="http://www.w3.org/1999/xhtml" &gt;
+&lt;head&gt;&lt;title&gt;&lt;/title&gt;
+&lt;script language="JavaScript" type="text/javascript"&gt;
+&lt;!--
+function respond() {
+// 표 만듦 
+    var table = document.createElement("table")
+    table.setAttribute("border", "1")
+    var tbody = document.createElement("tbody")
+    var y = 0
+    var tr = document.createElement("tr")
+    var td = document.createElement("th")
+// 루프에서 같은 변수명 다시 씀
+// 표 heading 정보 시작
+    td.appendChild(document.createTextNode("Index"))
+    tr.appendChild(td)
+    td = document.createElement("th")
+    td.appendChild(document.createTextNode("Property Name"))
+    tr.appendChild(td)
+    td = document.createElement("th")
+    td.appendChild(document.createTextNode("Property Value"))
+    tr.appendChild(td)
+    tbody.appendChild(tr)
+// 표 heading 정보 끝
+    for (property in Event.prototype) {
+        if (property == property.toUpperCase()) {
+// event 개체의 각 프로퍼티에 새 줄(row) 추가
+            tr = document.createElement("tr")
+            td = document.createElement("td")
+            td.appendChild(document.createTextNode(y))
+// which property number it happens to be
+            tr.appendChild(td)
+            y++
+            td = document.createElement("td")
+            var td_text = document.createTextNode(property)
+// the property name
+            td.appendChild(td_text)
+            tr.appendChild(td)
+            td = document.createElement("td")
+            var td_text = document.createTextNode(Event.prototype[property])
+// the property value
+            td.appendChild(td_text)
+            tr.appendChild(td)
+            tbody.appendChild(tr)
+            }
+        }
+    table.appendChild(tbody)
+    document.body.appendChild(table)
+    }
+//--&gt;
+&lt;/script&gt;
+&lt;/head&gt;
+&lt;body onload="respond()"&gt;
+&lt;!-- 버튼을 누른 뒤 결과:
+The this object is myInput.
+Index    Property Name Property Value
+0        type          click
+1        target        [object HTMLInputElement]
+...
+--&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<p>{{ languages( { "en": "en/Gecko_DOM_Reference/Examples", "fr": "fr/R\u00e9f\u00e9rence_du_DOM_Gecko/Exemples", "pl": "pl/Dokumentacja_Gecko_DOM/Przyk\u0142ady_u\u017cycia_DOM" } ) }}</p>

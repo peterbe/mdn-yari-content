@@ -1,0 +1,145 @@
+<p>« <a href="/en-US/docs/XPCOM_API_Reference">XPCOM API Reference</a> </p>
+
+<p></p><div style="border: solid #ddd 2px; margin-bottom: 12px;">
+<div style="background: #eee; padding: 2px;"><code><a href="https://dxr.mozilla.org/mozilla-central/source/widget/public/nsIIdleService.idl" rel="custom">widget/public/nsIIdleService.idl</a></code><span style="text-align: right; float: right;"><a href="/en-US/docs/Interfaces/About_Scriptable_Interfaces" style="color: #00cc00; font-weight: 700;">Scriptable</a></span></div>
+<span style="padding: 4px 2px;">
+
+<i>Please add a summary to this article.</i>
+</span>
+
+<div style="background: #eee; padding: 2px;">
+<span> </span>
+<span style="text-align: right; float: right;">Last changed in Gecko 1.9a </span></div>
+</div><p></p>
+
+<h2 id="Summary" name="Summary">Summary</h2>
+
+<p>The idle service lets you monitor how long the user has been 'idle', i.e. not used their mouse or keyboard. You can get the idle time directly, but in most cases you will want to register an observer for a predefined interval.</p>
+
+<p>Currently <code>nsIIdleService</code> implementations exist for Windows, Mac OS X, and Linux (via XScreenSaver).</p>
+
+<p>Implemented by: <code>@mozilla.org/widget/idleservice;1</code>. To create an instance, use:</p>
+
+<pre class="eval">var idleService = Components.classes["@mozilla.org/widget/idleservice;1"]
+                            .getService(Components.interfaces.nsIIdleService)
+</pre>
+
+<h2 id="Method_overview" name="Method_overview">Method overview</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <td><code>void <a href="#addIdleObserver.28.29">addIdleObserver</a>(in <a href="es/NsIObserver">nsIObserver</a> observer, in unsigned long time)</code></td>
+  </tr>
+  <tr>
+   <td><code>void <a href="#removeIdleObserver.28.29">removeIdleObserver</a>(in <a href="es/NsIObserver">nsIObserver</a> observer, in unsigned long time)</code></td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Attributes" name="Attributes">Attributes</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <td class="header">Attribute</td>
+   <td class="header">Type</td>
+   <td class="header">Description</td>
+  </tr>
+  <tr>
+   <td><code>idleTime</code></td>
+   <td><code>long</code></td>
+   <td>The amount of time in milliseconds that has passed since the last user activity.<em>Read only.</em></td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Methods" name="Methods">Methods</h2>
+
+<h3 id="addIdleObserver.28.29" name="addIdleObserver.28.29">addIdleObserver()</h3>
+
+<p>Add an observer to be notified when the user idles for some period of time, and when they get back from that.</p>
+
+<pre class="eval">void addIdleObserver(
+  in nsIObserver observer,
+  in unsigned long time
+)
+</pre>
+
+<h6 id="Parameters" name="Parameters">Parameters</h6>
+
+<dl>
+ <dt>observer</dt>
+ <dd>the <a href="es/NsIObserver">observer</a> to be notified</dd>
+</dl>
+
+<dl>
+ <dt>time</dt>
+ <dd>time the amount of time in seconds the user should be idle before the observer should be notified.</dd>
+</dl>
+
+<h6 id="Remarks" name="Remarks">Remarks</h6>
+
+<ul>
+ <li>The subject of the notification the observer will get is always the <code>nsIIdleService</code> itself. When the user goes idle, the observer topic is 'idle' and when they get back, the observer topic is 'back'. The data param for the notification contains the current user idle time.</li>
+</ul>
+
+<ul>
+ <li>You can add the same observer twice.</li>
+</ul>
+
+<ul>
+ <li>Most implementations need to poll the OS for idle info themselves, meaning your notifications could arrive with a delay up to the length of the polling interval in that implementation. Current implementations use a delay of 5 seconds.</li>
+</ul>
+
+<h3 id="removeIdleObserver.28.29" name="removeIdleObserver.28.29">removeIdleObserver()</h3>
+
+<p>Remove an observer registered with addIdleObserver.</p>
+
+<pre class="eval">void removeIdleObserver(
+  in nsIObserver observer,
+  in unsigned long time
+)
+</pre>
+
+<h6 id="Parameters_2" name="Parameters_2">Parameters</h6>
+
+<dl>
+ <dt>observer</dt>
+ <dd>the <a href="es/NsIObserver">observer</a> to be removed</dd>
+</dl>
+
+<dl>
+ <dt>time</dt>
+ <dd>the amount of time they were listening for.</dd>
+</dl>
+
+<h6 id="Remarks_2" name="Remarks_2">Remarks</h6>
+
+<p>Removing an observer will remove it once, for the idle time you specify. If you have added an observer multiple times, you will need to remove it just as many times.</p>
+
+<h2 id="Example_Code" name="Example_Code">Example Code</h2>
+
+<p>Example 1:</p>
+
+<pre class="eval">var idleService = Components.classes["@mozilla.org/widget/idleservice;1"]
+                            .getService(Components.interfaces.nsIIdleService)
+setTimeout(function() { alert(idleService.idleTime) }, 1000)
+// if you don't use the mouse or the keyboard after running this snippet,
+// you'll see a number around 1000 alerted.
+</pre>
+
+<p>Example 2:</p>
+
+<pre class="eval">var idleService = Components.classes["@mozilla.org/widget/idleservice;1"]
+                            .getService(Components.interfaces.nsIIdleService)
+var idleObserver = {
+  observe: function(subject, topic, data) {
+    alert("topic: " + topic + "\ndata: " + data);
+  }
+};
+idleService.addIdleObserver(idleObserver, 60); // one minute
+// ...
+// Don't forget to remove the observer using removeIdleObserver!
+idleService.removeIdleObserver(idleObserver, 60);
+</pre>

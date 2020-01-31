@@ -1,0 +1,174 @@
+<p></p>
+
+<h3 id="Travail_avec_le_gestionnaire_d.27identification" name="Travail_avec_le_gestionnaire_d.27identification">Travail avec le gestionnaire d'identification</h3>
+
+<p>Les extensions ont souvent besoin de conserver de manière sûre des mots de passe vers des sites et applications Web. Pour ce faire, elles peuvent utiliser <code><a href="fr/NsILoginManager">nsILoginManager</a></code>, qui permet le stockage sécurisé de mots de passe sensibles, et <code><a href="fr/NsILoginInfo">nsILoginInfo</a></code>, qui permet de garder des informations d'identification.</p>
+
+<h3 id="Obtention_de_nsILoginManager" name="Obtention_de_nsILoginManager">Obtention de <code>nsILoginManager</code></h3>
+
+<p>Pour obtenir un composant implémentant <code>nsILoginManager</code>, utilisez le code suivant :</p>
+
+<pre>var passwordManager = Components.classes["@mozilla.org/login-manager;1"]
+                                .getService(Components.interfaces.nsILoginManager);
+</pre>
+
+<p>La plupart des fonctions du gestionnaire d'identification prennent un objet <code><a href="fr/NsILoginInfo">nsILoginInfo</a></code> comme paramètre. Celui-ci contient les attributs suivants : nom d'hôte, URL de soumission de formulaire, domaine d'identification HTTP, nom d'utilisateur, champ de nom d'utilisateur, mot de passe et champ de mot de passe. Seuls les attributs de nom d'hôte, nom d'utilisateur et mot de passe sont obligatoires, tandis que les autres champs sont définis selon que l'identification correspond à un formulaire de page Web ou pour une identification sur un site HTTP/FTP. Consultez les définitions d'attributs de <code><a href="fr/NsILoginInfo">nsILoginInfo</a></code> pour plus de détails. La définition d'un objet <code><a href="fr/NsILoginInfo">nsILoginInfo</a></code> est simple :</p>
+
+<pre>var nsLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
+                                             Components.interfaces.nsILoginInfo,
+                                             "init");
+	  
+var loginInfo = new nsLoginInfo(hostname, formSubmitURL, httprealm, username, password,
+                                usernameField, passwordField);
+</pre>
+
+<h3 id="Exemples" name="Exemples">Exemples</h3>
+
+<h4 id="Cr.C3.A9ation_d.27un_login_pour_une_page_Web" name="Cr.C3.A9ation_d.27un_login_pour_une_page_Web">Création d'un login pour une page Web</h4>
+
+<pre class="eval"> <span class="nowiki">var formLoginInfo = new nsLoginInfo('http://www.example.com',
+                       'http://login.example.com', null,
+                       'joe', 'SeCrEt123', 'uname', 'pword');</span>
+</pre>
+
+<p>Ce login correspondrait à un formulaire HTML comme :</p>
+
+<pre class="eval"> <span class="nowiki">
+  &lt;form action="http://login.example.com/foo/authenticate.cgi"&gt;
+  Veuillez vous identifier.
+  Nom d'utilisateur : &lt;input type="text"     name="uname"&gt;
+  Mot de passe : &lt;input type="password" name="pword"&gt;
+  &lt;/form&gt;
+  </span>
+</pre>
+
+<h4 id="Cr.C3.A9ation_d.27un_login_d.27authentification_pour_un_site" name="Cr.C3.A9ation_d.27un_login_d.27authentification_pour_un_site">Création d'un login d'authentification pour un site</h4>
+
+<pre class="eval"> <span class="nowiki">var authLoginInfo = new nsLoginInfo('http://www.example.com',
+                       null, 'ExampleCo Login',
+                       'alice', 'SeCrEt321', "", "");</span>
+</pre>
+
+<p>Ceci correspondrait à un login sur <span class="nowiki">http://www.example.com</span> où le serveur enverrait une réponse telle que :</p>
+
+<pre class="eval"> HTTP/1.0 401 Authorization Required
+ Server: Apache/1.3.27
+ WWW-Authenticate: Basic realm="ExampleCo Login"
+</pre>
+
+<h4 id="Cr.C3.A9ation_d.27un_login_pour_une_extension_locale" name="Cr.C3.A9ation_d.27un_login_pour_une_extension_locale">Création d'un login pour une extension locale</h4>
+
+<pre class="eval"> <span class="nowiki">var extLoginInfo = new nsLoginInfo('chrome://firefoo',
+                      'User Registration', null,
+                      'bob', '123sEcReT', "", "");</span>
+</pre>
+
+<p>Le gestionnaire d'idenfication traite ceci comme s'il s'agissait d'un login sur un site Web. Utilisez l'URL <code><a class="external" rel="freelink">chrome://</a></code> de votre extension pour empêcher les conflits avec d'autres extensions, et une chaîne de domaine décrivant rapidement le but de l'identification.</p>
+
+<h3 id="Conservation_d.27un_mot_de_passe" name="Conservation_d.27un_mot_de_passe">Conservation d'un mot de passe</h3>
+
+<p>Pour stocker un mot de passe dans le gestionnaire d'idenfification, il est nécessaire de créer auparavant un objet <code><a href="fr/NsILoginInfo">nsILoginInfo</a></code> comme défini plus haut. Il suffit alors d'appeler la méthode <code><a href="fr/NsILoginManager#addLogin.28.29">addLogin()</a></code> de <code><a href="fr/NsILoginManager">nsILoginManager</a></code>.</p>
+
+<pre class="eval"> myLoginManager.addLogin(loginInfo);
+</pre>
+
+<p></p><div class="blockIndicator note"><strong>Note :</strong> Ceci déclenchera une exception si les paramètres httprealm et formSubmitURL sont tous deux à <code>NULL</code>. L'un d'entre-eux doit être spécifié lors de l'enregistrement d'un mot de passe. Les champs hostname, username et password sont également obligatoires.</div><p></p>
+
+<h3 id="R.C3.A9cup.C3.A9ration_d.27un_mot_de_passe" name="R.C3.A9cup.C3.A9ration_d.27un_mot_de_passe">Récupération d'un mot de passe</h3>
+
+<p>La récupération d'un mot de passe depuis le gestionnaire d'identification est légèrement plus complexe. Afin de localiser un mot de passe, les champs hostname, formSubmitURL et httprealm doivent <strong>correspondre exactement</strong> à ceux utilisés pour l'enregistrement. La seule exception est que si l'adresse formSubmitURL est vide, le paramètre sera ignoré. Notez que les paramètres hostname et formSubmitURL ne doivent pas contenir le chemin vers l'URL complète. L'exemple ci-dessous peut servir de point de départ pour établir une correspondance entre des identifications par formulaire :</p>
+
+<pre>var hostname = 'http://www.example.com';
+var formSubmitURL = 'http://www.example.com';  // not http://www.example.com/foo/auth.cgi
+var httprealm = null;
+var username = 'user';
+var password;
+
+try {
+   // Obtient le gestionnaire d'identification 
+   var myLoginManager = Components.classes["@mozilla.org/login-manager;1"]
+                         .getService(Components.interfaces.nsILoginManager);
+	  
+   // Recherche des utilisateurs pour les paramètres donnés
+   var logins = myLoginManager.findLogins({}, hostname, formSubmitURL, httprealm);
+      
+   // Trouve l'utilisateur dans le tableau d'objets nsILoginInfo renvoyé
+   for (var i = 0; i &lt; logins.length; i++) {
+      if (logins[i].username == username) {
+         password = logins[i].password;
+         break;
+      }
+   }
+}
+catch(ex) {
+   // Ceci se produira uniquement s'il n'y a pas de classe de composant nsILoginManager
+}
+</pre>
+
+<p>Notez que le mot de passe principal de l'utilisateur lui sera demandé s'il en a choisi un pour sécuriser ses mots de passe.</p>
+
+<h3 id="Suppression_d.27un_mot_de_passe" name="Suppression_d.27un_mot_de_passe">Suppression d'un mot de passe</h3>
+
+<p>Le retrait d'un mot de passe est simple :</p>
+
+<pre class="eval"> myLoginManager.removeLogin(loginInfo);
+</pre>
+
+<p>Lors du retrait d'un mot de passe, l'objet <code><a href="fr/NsILoginInfo">nsILoginInfo</a></code> spécifié doit <strong>correspondre exactement</strong> à ce qui a été enregistré, ou une exception sera déclenchée. L'attribut de mot de passe en fait partie. Voici un exemple de retrait de mot de passe sans savoir duquel il s'agit :</p>
+
+<pre>// valeurs d'exemple
+var hostname = 'http://www.example.com';
+var formSubmitURL = 'http://www.example.com';
+var httprealm = null;
+var username = 'user';
+
+try {
+   // Obtient le gestionnaire d'identification 
+   var passwordManager = Components.classes["@mozilla.org/login-manager;1"]
+                         .getService(Components.interfaces.nsILoginManager);
+ 
+   // Recherche des utilisateurs pour cette extension 
+   var logins = passwordManager.findLogins({}, hostname, formSubmitURL, httprealm);
+      
+   for (var i = 0; i &lt; logins.length; i++) {
+      if (logins[i].username == username) {
+         passwordManager.removeLogin(logins[i]);
+         break;
+      }
+   }
+}
+catch(ex) {
+   // Ceci se produira uniquement s'il n'y a pas de classe de composant nsILoginManager
+}
+</pre>
+
+<h3 id="Modification_des_informations_d.27identification_enregistr.C3.A9es" name="Modification_des_informations_d.27identification_enregistr.C3.A9es">Modification des informations d'identification enregistrées</h3>
+
+<p>Le changement de mot de passe est assez simple. Comme il s'agit en faire de faire un appel à <code><a href="fr/NsILoginManager#removeLogin.28.29">removeLogin()</a></code> suivi d'un <code><a href="fr/NsILoginManager#addLogin.28.29">addLogin()</a></code>, les contraintes sont les mêmes que pour chacun d'eux : c'est-à-dire que la valeur de l'ancien login (oldLogin) doit correspondre exactement à un login existant (voir plus haut), et que les attributs du nouveau login (newLogin) doivent être positionnés correctement :</p>
+
+<pre>myLoginManager.modifyLogin(oldLogin, newLogin);</pre>
+
+<h3 id="D.C3.A9bogage" name="D.C3.A9bogage">Débogage</h3>
+
+<p>L'implémentation du gestionnaire d'identification a la possibilité d'envoyer des messages de débogage dans la console d'erreurs, ce qui peut aider à comprendre ce qui se passe. Pour activer l'affichage de débogage, consultez <a class="external" href="http://wiki.mozilla.org/Firefox:Password_Manager_Debugging" rel="freelink">http://wiki.mozilla.org/Firefox:Pass...ager_Debugging</a>.</p>
+
+<h3 id="Support_d.27anciennes_versions_de_Firefox" name="Support_d.27anciennes_versions_de_Firefox">Support d'anciennes versions de Firefox</h3>
+
+<p>Si vous désirez que votre extension supporte tant Firefox 3 que des versions plus anciennes, elle devra implémenter les composants <code><a href="fr/NsILoginManager">nsILoginManager</a></code> et <code><a href="fr/NsIPasswordManager">nsIPasswordManager</a></code>. Une méthode simple est présentée ci-dessous :</p>
+
+<pre>if ("@mozilla.org/passwordmanager;1" in Components.classes) {
+   // Le gestionnaire de mots de passe existe, on n'est donc pas dans Firefox 3 (il peut s'agir de Firefox 2, Netscape, SeaMonkey, etc).
+   // Code pour le gestionnaire de mots de passe
+}
+else if ("@mozilla.org/login-manager;1" in Components.classes) {
+   // Le gestionnaire d'identification existe, on est donc au moins dans Firefox 3
+   // Code pour le gestionnaire d'identification
+}
+</pre>
+
+<h3 id="Voir_.C3.A9galement" name="Voir_.C3.A9galement">Voir également</h3>
+
+<ul>
+ <li><code><a href="/fr/docs/Mozilla/Tech/XPCOM/Reference/Interface/nsILoginManager" title="">nsILoginManager</a></code></li>
+ <li><a href="fr/Cr%c3%a9ation_d'un_module_de_stockage_du_gestionnaire_d'identification">Création d'un module de stockage du gestionnaire d'identification</a></li>
+</ul>

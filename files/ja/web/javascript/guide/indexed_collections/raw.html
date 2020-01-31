@@ -1,0 +1,449 @@
+<div>{{jsSidebar("JavaScript Guide")}} {{PreviousNext("Web/JavaScript/Guide/Regular_Expressions", "Web/JavaScript/Guide/Keyed_Collections")}}</div>
+
+<p class="summary">この節では、インデックス値により順序付けされたデータのコレクションを紹介します。配列、 {{jsxref("Array")}} オブジェクト、 {{jsxref("TypedArray")}} オブジェクトなどの配列用の構造体があります。</p>
+
+<h2 id="Array_object" name="Array_object"><code>Array</code> オブジェクト</h2>
+
+<p><em>配列</em>は名前やインデックスで参照できる値からなる順序集合です。例えば、 <code>emp</code> という配列を作成し、従業員番号と従業員の名前を対応付けることができます。つまり、 <code>emp[1]</code> が従業員番号 1 、 <code>emp[2]</code> が従業員番号 2 、のようになります。</p>
+
+<p>JavaScript は明確な配列データ型を持っていません。しかし、アプリケーションで配列として機能する定義済みの <code>Array</code> オブジェクトとそのメソッドを利用できます。 <code>Array</code> オブジェクトには配列の結合、反転、ソートなど様々な方法で配列を操作するメソッドがあります。また、配列の長さを特定するプロパティや、正規表現で使用するプロパティなどがあります。</p>
+
+<h3 id="Creating_an_array" name="Creating_an_array">配列の生成</h3>
+
+<p>以下の文は同じ配列を生成します。</p>
+
+<pre class="brush: js">var arr = new Array(element0, element1, ..., elementN);
+var arr = Array(element0, element1, ..., elementN);
+var arr = [element0, element1, ..., elementN];
+</pre>
+
+<p><code>element0, element1, ..., elementN</code> は配列要素となる値から構成されるリストです。これらの値が指定されると、この配列の要素はそれらの値に初期化されます。配列の <code>length</code> プロパティは引数の数に設定されます。</p>
+
+<p>角括弧による構文は「配列リテラル」または「配列初期化子」と呼ばれます。この構文はその他の形式による配列作成よりも短いため、一般的に好まれる方法です。詳細については、<a href="/ja/docs/Web/JavaScript/Guide/Grammar_and_types#Array_literals">配列リテラル</a>をご覧ください。</p>
+
+<p>長さがゼロではないが項目のない配列を作成するには、以下の方法が使用できます。</p>
+
+<pre class="brush: js">var arr = new Array(arrayLength);
+var arr = Array(arrayLength);
+
+// この手順でもまったく同じ結果になります
+var arr = [];
+arr.length = arrayLength;
+</pre>
+
+<div class="note">
+<p><strong>注:</strong> 上記のコードでは、 <code>arrayLength</code> は <code>Number</code>（数値）である必要があります。さもないと、（指定した値の）単一の要素を持つ配列が生成されます。<code>arr.length</code> を呼び出すと <code>arrayLength</code> が返されますが、実際には配列は空要素 (undefined) で構成されます。この配列で {{jsxref("Statements/for...in","for...in")}} ループを実行しても、配列の要素は返されません。</p>
+</div>
+
+<p>上記のように新規に定義した変数に割り当てるだけでなく、新規または既存のオブジェクトのプロパティに配列を割り当てることができます。</p>
+
+<pre class="brush: js">var obj = {};
+// ...
+obj.prop = [element0, element1, ..., elementN];
+
+// あるいは、
+var obj = {prop: [element0, element1, ...., elementN]};
+</pre>
+
+<p>単一の要素で配列を初期化しようとして、その要素が <code>Number</code> である場合、角括弧の構文を使用する必要があります。単一の <code>Number</code> 値が Array() コンストラクタや関数に渡されると、単一の数値要素としてではなく、<code>arrayLength</code> として解釈されます。</p>
+
+<pre class="brush: js">var arr = [42];      // 42という数の要素を
+                     // 1個だけ持つ配列が作られる。
+
+var arr = Array(42); // 要素がなく、arr.length が
+                     // 42に設定された配列が作られる。
+                     // 以下のコードと同様。
+var arr = [];
+arr.length = 42;
+</pre>
+
+<p><code>N</code> の値が小数部分がゼロではない実数である場合、<code>Array(N)</code> を呼び出すと、結果は <code>RangeError</code> になります。以下の例ではこの動作を示します。</p>
+
+<pre class="brush: js">var arr = Array(9.3);  // RangeError: Invalid array length
+</pre>
+
+<p>任意のデータ型の単一の要素を持つ配列を作成したければ、配列リテラルを使用する方が安全です。あるいは、単一の要素を追加する前に空の配列を作成しましょう。</p>
+
+<p>ES2015 から単一の要素を持つ配列を生成するために Array.of 静的メソッドを使用することができます。</p>
+
+<pre class="syntaxbox">let wisenArray = Array.of(9.3);  // wisenArray は1つの要素 9.3 だけを持つ配列</pre>
+
+<h3 id="Populating_an_array" name="Populating_an_array">配列へのデータ追加</h3>
+
+<p>要素に値を割り当てることで配列にデータを追加することができます。例えば、</p>
+
+<pre class="brush: js">var emp = [];
+emp[0] = 'Casey Jones';
+emp[1] = 'Phil Lesh';
+emp[2] = 'August West';
+</pre>
+
+<div class="note">
+<p><strong>注:</strong> 上記のコードで配列演算子（角括弧）内に非整数値を指定すると、配列要素ではなく配列を表すオブジェクトのプロパティとして作成されます。</p>
+</div>
+
+<pre class="brush: js">var arr = [];
+arr[3.4] = 'Oranges';
+console.log(arr.length);                // 0
+console.log(arr.hasOwnProperty(3.4));   // true
+</pre>
+
+<p>配列を作成するときにも、データを追加することができます。</p>
+
+<pre class="brush: js">var myArray = new Array('Hello', myVar, 3.14159);
+var myArray = ['Mango', 'Apple', 'Orange'];
+</pre>
+
+<h3 id="Referring_to_array_elements" name="Referring_to_array_elements">配列要素の参照</h3>
+
+<p>要素に付けられた序数を使って配列要素を参照することができます。例えば、次のような配列を定義しましょう。</p>
+
+<pre class="brush: js">var myArray = ['Wind', 'Rain', 'Fire'];
+</pre>
+
+<p>配列の最初の要素は <code>myArray[0]</code> として参照し、二番目の要素は <code>myArray[1]</code> として参照します。要素のインデックスはゼロから始まります。</p>
+
+<div class="note">
+<p><strong>注 :</strong> 配列演算子（角括弧）は配列のプロパティにアクセスする際にも使用できます（つまり JavaScript では配列はオブジェクトでもあります）。以下の例をご覧ください。</p>
+</div>
+
+<pre class="brush: js">var arr = ['one', 'two', 'three'];
+arr[2];  // three
+arr['length'];  // 3
+</pre>
+
+<h3 id="Understanding_length" name="Understanding_length">配列の長さの理解</h3>
+
+<p>実装レベルでは、 JavaScript の配列はその添字をプロパティ名として使うことで、実際には標準のオブジェクトプロパティとして要素を格納しています。しかし <code>length</code> プロパティは特別です。これは常に最終要素の添字+1を返します（次の例では、 Dusty の添字は30なので、 cats.length は30+1を返します）。JavaScript の配列の添字は {{原語併記("0 オリジン","0-based")}} です。1からではなく、0から始まります。つまり、 <code>length</code> プロパティは配列に格納されている最大の添字より1多い値になるということです :</p>
+
+<pre class="brush: js">var cats = [];
+cats[30] = ['Dusty'];
+console.log(cats.length); // 31
+</pre>
+
+<p><code>length</code> プロパティに値を割り当てることもできます。格納されているアイテムの数より小さい値を設定すると、配列は切り捨てられます。すなわち、0に設定すると完全に配列を空にします。</p>
+
+<pre class="brush: js">var cats = ['Dusty', 'Misty', 'Twiggy'];
+console.log(cats.length); // 3
+
+cats.length = 2;
+console.log(cats); // ログに "Dusty, Misty"  - Twiggy は削除される
+
+cats.length = 0;
+console.log(cats); // ログに [ ] 、配列 cats は空になる
+
+cats.length = 3;
+console.log(cats); // ログに [ &lt;3 個の空スロット&gt; ]
+</pre>
+
+<h3 id="Iterating_over_arrays" name="Iterating_over_arrays">配列の反復処理</h3>
+
+<p>よく行われるのは配列に含まれる値に対し、それぞれの値について、なんらかの処理を行うことです。これを行う一番簡単な方法は次のとおりです。</p>
+
+<pre class="brush: js">var colors = ['red', 'green', 'blue'];
+for (var i = 0; i &lt; colors.length; i++) {
+  console.log(colors[i]);
+}
+</pre>
+
+<p>配列内の要素がいずれも真偽値としては <code>false</code> に評価されないことがわかっている場合 ― 例えば配列が <a href="/ja/docs/Web/API/Document_Object_Model">DOM</a> ノードのみで構成されている場合などには、例のように、より効率的なイディオムを使用できます。</p>
+
+<pre class="brush: js">var divs = document.getElementsByTagName('div');
+for (var i = 0, div; div = divs[i]; i++) {
+  /* div に対して何らか処理をする */
+}
+</pre>
+
+<p>この例では、配列の長さのチェックに掛かるオーバーヘッドを回避しています。そしてより便利に使えるように、ループの反復のたびに <code>div</code> 変数に現在の項目を代入するようにしています。</p>
+
+<p>配列を反復処理する別の方法として {{jsxref("Array.forEach", "forEach()")}} メソッドがあります。</p>
+
+<pre class="brush: js">var colors = ['red', 'green', 'blue'];
+colors.forEach(function(color) {
+  console.log(color);
+});
+// red
+// green
+// blue
+</pre>
+
+<p>他に、ES2015 のアロー関数式を forEach の引数にしてコードを短くすることができます。</p>
+
+<pre class="brush: js">var colors = ['red', 'green', 'blue'];
+colors.forEach(color =&gt; console.log(color)); 
+// red
+// green
+// blue
+</pre>
+
+<p><code>forEach</code> に渡される関数では、その関数への引数に配列の要素が渡されて、配列内の各項目ごとに1回ずつ実行されます。値が割り当てられていない要素は <code>forEach</code> ループで反復されません。</p>
+
+<p>配列定義の際に省略された要素は、 <code>forEach</code> によって反復処理されるときには現れませんが、配列要素に <code>undefined</code> が割り当てられている場合は現れることに注意してください。</p>
+
+<pre class="brush: js">var array = ['first', 'second', , 'fourth'];
+
+array.forEach(function(element) {
+  console.log(element);
+});
+// first
+// second
+// fourth
+
+if (array[2] === undefined) { 
+  console.log('array[2] is undefined'); // true
+} 
+
+array = ['first', 'second', undefined, 'fourth'];
+
+array.forEach(function(element) {
+  console.log(element);
+});
+// first
+// second
+// undefined
+// fourth
+</pre>
+
+<p>JavaScript では、配列の要素は標準的なオブジェクトプロパティとして保存されるので、 {{jsxref("Statements/for...in","for...in")}} ループを使って JavaScript 配列を反復処理するのはお勧めできません。というのも、通常の要素とすべての列挙可能なプロパティが現れるからです。</p>
+
+<h3 id="Array_methods" name="Array_methods">配列のメソッド</h3>
+
+<p>{{jsxref("Array")}} オブジェクトには以下のようなメソッドがあります。</p>
+
+<p>{{jsxref("Array.concat", "concat()")}} は2つの配列を結合し、新しい配列を返します。</p>
+
+<pre class="brush: js">var myArray = new Array('1', '2', '3');
+myArray = myArray.concat('a', 'b', 'c'); 
+// myArray は ["1", "2", "3", "a", "b", "c"] になる
+</pre>
+
+<p>{{jsxref("Array.join", "join(delimiter = ',')")}} は配列のすべての要素を文字列に結合します。</p>
+
+<pre class="brush: js">var myArray = new Array('Wind', 'Rain', 'Fire');
+var list = myArray.join(' - '); // list は "Wind - Rain - Fire" になる
+</pre>
+
+<p>{{jsxref("Array.push", "push()")}} は1つ以上の要素を配列の最後に追加し、その新しい配列の長さを返します。</p>
+
+<pre class="brush: js">var myArray = new Array('1', '2');
+myArray.push('3'); // myArray は ["1", "2", "3"] になる
+</pre>
+
+<p>{{jsxref("Array.pop", "pop()")}} は配列から最後の要素を取り除き、その要素を返します。</p>
+
+<pre class="brush: js">var myArray = new Array('1', '2', '3');
+var last = myArray.pop(); 
+// myArray は ["1", "2"] に、 last は "3" となる
+</pre>
+
+<p>{{jsxref("Array.shift", "shift()")}} は配列から最初の要素を取り除き、その要素を返します。</p>
+
+<pre class="brush: js">var myArray = new Array('1', '2', '3');
+var first = myArray.shift(); 
+// myArray は ["2", "3"]に、first は "1" になる
+</pre>
+
+<p>{{jsxref("Array.shift", "unshift()")}} は1つ以上の要素を配列の先頭に追加し、その新しい配列の長さを返します。</p>
+
+<pre class="brush: js">var myArray = new Array('1', '2', '3');
+myArray.unshift('4', '5'); 
+// myArray は ["4", "5", "1", "2", "3"] となる</pre>
+
+<p>{{jsxref("Array.slice", "slice(start_index, upto_index)")}} は配列の一部を抽出し、新しい配列を返します。</p>
+
+<pre class="brush: js">var myArray = new Array('a', 'b', 'c', 'd', 'e');
+myArray = myArray.slice(1, 4); // 添字1から始め、添字3まですべての要素を
+                               // 展開して、[ "b", "c", "d"] を返す
+</pre>
+
+<p>{{jsxref("Array.splice", "splice(index, count_to_remove, addElement1, addElement2, ...)")}} は要素を配列から取り除き、（必要に応じて）置き換えます。</p>
+
+<pre class="brush: js">var myArray = new Array('1', '2', '3', '4', '5');
+myArray.splice(1, 3, 'a', 'b', 'c', 'd'); 
+// myArray は ["1", "a", "b", "c", "d", "5"] となる
+// このコードでは添字1の要素（"2"がある場所）から始め、
+// 3つの要素を削除して、その場所に後続の引数を要素として
+// すべて挿入する
+</pre>
+
+<p>{{jsxref("Array.reverse", "reverse()")}} は配列の中の要素をその場で反転させます。配列の最初の要素が最後に、最後の要素が最初になります。配列への参照を返します。</p>
+
+<pre class="brush: js">var myArray = new Array('1', '2', '3');
+myArray.reverse(); 
+// 配列要素が入れ替えられ、myArray = ["3", "2", "1"] となる
+</pre>
+
+<p>{{jsxref("Array.sort", "sort()")}} は配列の要素をその場でソートし、その配列の参照を返します。</p>
+
+<pre class="brush: js">var myArray = new Array('Wind', 'Rain', 'Fire');
+myArray.sort(); 
+// 配列がソートされ、myArray = ["Fire", "Rain", "Wind"] となる
+</pre>
+
+<p><code>sort()</code> は要素を比較する方法を指定するための、コールバック関数を引数として取ることがあります。</p>
+
+<p>sort メソッドを始めとしコールバック関数を引数として取る以下のメソッドは <strong>{{原語併記("反復メソッド","iterative method")}}</strong> と呼ばれ、何らかの形で配列全体を反復処理します。それぞれが任意で <code>thisObject</code> と呼ばれる第二引数を受け取ります。 <code>thisObject</code> が与えられた場合、これがコールバック関数の本体内で <code>this</code> キーワードの値になります。与えられなかった場合は、関数が明示的なオブジェクトコンテキストの外で呼び出された場合と同様に、<code>this</code> はアロー関数がコールバックとして使用された場合にはグローバルオブジェクト（{{domxref("window")}}）を参照し、通常の関数の場合には <code>undefined</code> になります。</p>
+
+<p>コールバック関数は、配列の要素2つを引数として呼び出されます。</p>
+
+<p>以下の関数は2つの値を比較して、3つの値のうち1つを返します。</p>
+
+<p>つまり、以下の例は文字列の最後の文字で並べ替えをします。</p>
+
+<pre class="brush: js">var sortFn = function(a, b) {
+  if (a[a.length - 1] &lt; b[b.length - 1]) return -1;
+  if (a[a.length - 1] &gt; b[b.length - 1]) return 1;
+  if (a[a.length - 1] == b[b.length - 1]) return 0;
+}
+myArray.sort(sortFn); 
+// 配列がソートされ、 myArray = ["Wind","Fire","Rain"] となる</pre>
+
+<ul>
+ <li>このソートシステムにより <code>a</code> が <code>b</code> より小さいとされた場合、-1（または、任意の負の数）を返します。</li>
+ <li>このソートシステムにより <code>a</code> が <code>b</code> より大きいとされた場合、1（または、任意の正の数）を返します。</li>
+ <li><code>a</code> と <code>b</code> が等値と見なされる場合、0を返します。</li>
+</ul>
+
+<p>{{jsxref("Array.indexOf", "indexOf(searchElement[, fromIndex])")}} は配列から <code>searchElement</code> を検索します。そして、最初にマッチした位置の添字を返します。</p>
+
+<pre class="brush: js">var a = ['a', 'b', 'a', 'b', 'a'];
+console.log(a.indexOf('b')); // 1がログ出力される
+// 最後にマッチした位置の後から検索を再開する
+console.log(a.indexOf('b', 2)); // 3がログ出力される
+console.log(a.indexOf('z')); // 'z'は見つからないので-1がログ出力される
+</pre>
+
+<p>{{jsxref("Array.lastIndexOf", "lastIndexOf(searchElement[, fromIndex])")}} は <code>indexOf</code> のように動作します。しかし、最後の要素から開始して後方に検索します。</p>
+
+<pre class="brush: js">var a = ['a', 'b', 'c', 'd', 'a', 'b'];
+console.log(a.lastIndexOf('b')); // 5 がログ出力される
+// 最後にマッチした位置の前から検索を再開する
+console.log(a.lastIndexOf('b', 4)); // 1 がログ出力される
+console.log(a.lastIndexOf('z')); // -1 がログ出力される
+</pre>
+
+<p>{{jsxref("Array.forEach", "forEach(callback[, thisObject])")}} はすべての配列アイテムにコールバック関数 <code>callback</code> を実行し、 undefined を返します。</p>
+
+<pre class="brush: js">var a = ['a', 'b', 'c'];
+a.forEach(function(element) { console.log(element); }); 
+// 順番にそれぞれのアイテムをログ出力する
+</pre>
+
+<p>{{jsxref("Array.map", "map(callback[, thisObject])")}} はすべての配列アイテムごとにコールバック関数 <code>callback</code> を実行し、戻り値からなる新しい配列を返します。</p>
+
+<pre class="brush: js">var a1 = ['a', 'b', 'c'];
+var a2 = a1.map(function(item) { return item.toUpperCase(); });
+console.log(a2); // [ 'A', 'B', 'C' ] がログ出力される
+</pre>
+
+<p>{{jsxref("Array.filter", "filter(callback[, thisObject])")}} はコールバック関数 <code>callback</code> が true を返すアイテムからなる新しい配列を返します。</p>
+
+<pre class="brush: js">var a1 = ['a', 10, 'b', 20, 'c', 30];
+var a2 = a1.filter(function(item) { return typeof item === 'number'; });
+console.log(a2); // [10, 20, 30] がログ出力される
+</pre>
+
+<p>{{jsxref("Array.every", "every(callback[, thisObject])")}} はコールバック関数 <code>callback</code> が配列内のすべてのアイテムで true を返す場合に true を返します。</p>
+
+<pre class="brush: js">function isNumber(value) {
+  return typeof value === 'number';
+}
+var a1 = [1, 2, 3];
+console.log(a1.every(isNumber)); // true がログ出力される
+var a2 = [1, '2', 3];
+console.log(a2.every(isNumber)); // false がログ出力される
+</pre>
+
+<p>{{jsxref("Array.some", "some(callback[, thisObject])")}} はコールバック関数 <code>callback</code> が配列内の少なくとも一つのアイテムで true を返す場合に true を返します。</p>
+
+<pre class="brush: js">function isNumber(value) {
+  return typeof value === 'number';
+}
+var a1 = [1, 2, 3];
+console.log(a1.some(isNumber)); // true がログ出力される
+var a2 = [1, '2', 3];
+console.log(a2.some(isNumber)); // true がログ出力される
+var a3 = ['1', '2', '3'];
+console.log(a3.some(isNumber)); // false がログ出力される
+</pre>
+
+<p>{{jsxref("Array.reduce", "reduce(callback[, initialValue])")}} はアイテムリストを単一の値に還元し、それを返す <code>callback(firstValue, secondValue)</code> を適用します。</p>
+
+<pre class="brush: js">var a = [10, 20, 30];
+var total = a.reduce(function(first, second) { return first + second; }, 0);
+console.log(total) // 60 が出力される
+</pre>
+
+<p>{{jsxref("Array.reduceRight", "reduceRight(callback[, initialValue])")}} は <code>reduce()</code> のように機能します。しかし最後の要素から適用を開始します。</p>
+
+<p><code>reduce</code> と <code>reduceRight</code> もある意味では配列の反復メソッドです。要素列を単一の値に還元するために、再帰的に2つの値を組み合わせるアルゴリズムにこれらのメソッドを使用してください。</p>
+
+<h3 id="Multi-dimensional_arrays" name="Multi-dimensional_arrays">多次元配列</h3>
+
+<p>配列をネストすることができます、つまり配列要素として配列を含めることができることを意味します。JavaScript の配列の特徴を活かして、多次元配列を生成できます。</p>
+
+<p>以下のコードでは2次元配列を作成しています。</p>
+
+<pre class="brush: js">var a = new Array(4);
+for (i = 0; i &lt; 4; i++) {
+  a[i] = new Array(4);
+  for (j = 0; j &lt; 4; j++) {
+    a[i][j] = '[' + i + ', ' + j + ']';
+  }
+}
+</pre>
+
+<p>この例では、次のテーブル行を持つ配列を作成しています。</p>
+
+<pre>Row 0: [0, 0] [0, 1] [0, 2] [0, 3]
+Row 1: [1, 0] [1, 1] [1, 2] [1, 3]
+Row 2: [2, 0] [2, 1] [2, 2] [2, 3]
+Row 3: [3, 0] [3, 1] [3, 2] [3, 3]
+</pre>
+
+<h3 id="Arrays_and_regular_expressions" name="Arrays_and_regular_expressions">配列と正規表現</h3>
+
+<p>配列が正規表現と文字列との間のマッチ結果である場合、その配列はマッチについての情報を提供するプロパティと要素を返します。{{jsxref("Global_Objects/RegExp/exec","RegExp.exec()")}}、{{jsxref("Global_Objects/String/match","String.match()")}}、{{jsxref("Global_Objects/String/split","String.split()")}} による戻り値がこうした配列となります。正規表現とともに配列を使用する際の情報については、当ガイドの<a href="/ja/docs/Web/JavaScript/Guide/Regular_Expressions">正規表現</a>の章をご覧ください。</p>
+
+<h3 id="Working_with_array-like_objects" name="Working_with_array-like_objects">配列様のオブジェクトを利用する</h3>
+
+<p>{{domxref("document.getElementsByTagName()")}} によって返される {{domxref("NodeList")}} や、関数本体内で利用できる {{jsxref("Functions/arguments","arguments")}} オブジェクトのように、表面上は配列のようにふるまう JavaScript オブジェクトがありますが、これらはメソッドすべてを共有してはいません。例えば、<code>arguments</code> オブジェクトには {{jsxref("Global_Objects/Function/length","length")}} 属性がありますが、{{jsxref("Array.forEach", "forEach()")}} メソッドは実装されていません。</p>
+
+<p>その他の配列様オブジェクトに対して、<code>Array</code> プロトタイプメソッドは呼び出しが可能です。例：</p>
+
+<pre class="brush: js">function printArguments() {
+  Array.prototype.forEach.call(arguments, function(item) {
+    console.log(item);
+  });
+}
+</pre>
+
+<p><code>Array</code> プロトタイプメソッドは文字列上でも利用できます。これは文字列が配列と同じ方法で文字に順次アクセスする方法を提供しているためです。</p>
+
+<pre class="brush: js">Array.prototype.forEach.call('a string', function(chr) {
+  console.log(chr);
+});</pre>
+
+<h2 id="Typed_Arrays" name="Typed_Arrays">型付き配列</h2>
+
+<p><a href="/ja/docs/Web/JavaScript/Typed_arrays">JavaScript の型付き配列</a>は配列様のオブジェクトで、未加工のバイナリデータにアクセスする仕組みをもたらします。ご存知のように、 {{jsxref("Array")}} オブジェクトは動的に拡大、縮小し、JavaScript におけるいかなる値でも保持することができます。JavaScript エンジンは最適化を行うため、これらの配列は高速に機能します。しかし、オーディオやビデオ操作といった機能が追加され、<a href="/en-US/docs/WebSockets">WebSocket</a> を使い未加工のデータにアクセスするなど、Webアプリケーションはさらにパワフルなものとなってきました、そのため JavaScript コードが型付き配列内の未加工バイナリデータを手早く簡単に操作できれば有益である場合がよくある、ということが明らかになってきました。</p>
+
+<h3 id="Buffers_and_views_typed_array_architecture" name="Buffers_and_views_typed_array_architecture">バッファとビュー : 型付き配列のアーキテクチャ</h3>
+
+<p>最大の柔軟性と効率性を達成するため、JavaScript 型付き配列の実装を<strong>バッファ</strong>と<strong>ビュー</strong>に分離しました。バッファ（{{jsxref("ArrayBuffer")}} オブジェクトによる実装）はデータのかたまりを表すオブジェクトです。語るほどのフォーマットはなく、データの中身にアクセスするためのメカニズムを提供しません。バッファに含まれるメモリにアクセスするには、ビューを使用する必要があります。ビューはデータを実際の型付き配列に変換するコンテキスト — つまり、データ型、開始位置のオフセット、要素数 — を提供します。</p>
+
+<p><img alt="Typed arrays in an ArrayBuffer" src="https://mdn.mozillademos.org/files/8629/typed_arrays.png" style="height: 278px; width: 666px;"></p>
+
+<h3 id="ArrayBuffer" name="ArrayBuffer">ArrayBuffer</h3>
+
+<p>{{jsxref("ArrayBuffer")}} は汎用的な固定長のバイナリデータバッファを表すために使用されるデータ型です。<code>ArrayBuffer</code> の内容は直接操作できません。かわりに、型付き配列ビューか特定のフォーマットでバッファを表す {{jsxref("DataView")}} を生成し、それらをバッファの内容の読み書きに使用します。</p>
+
+<h3 id="Typed_array_views" name="Typed_array_views">型付き配列ビュー</h3>
+
+<p>型付き配列ビューは自己記述的な名前を持っていて、そのすべてが <code>Int8</code>, <code>Uint32</code>, <code>Float64</code> などといったよく見られる数値型用のビューを提供しています。<code>Uint8ClampedArray</code> という1つ特別な型付き配列ビューがあります。これは、0〜255 の範囲に値を固定します。これは、例えば、<a href="/ja/en-US/docs/Web/API/ImageData">Canvas のデータ処理</a>に便利です。</p>
+
+<p>{{page("/ja/docs/Web/JavaScript/Reference/Global_Objects/TypedArray", "TypedArray_objects")}}</p>
+
+<p>詳細については、<a href="/docs/Web/JavaScript/Typed_arrays">JavaScript 型付き配列</a>と様々な {{jsxref("TypedArray")}} オブジェクトに関するリファレンスをご覧ください。</p>
+
+<p>{{PreviousNext("Web/JavaScript/Guide/Regular_Expressions", "Web/JavaScript/Guide/Keyed_Collections")}}</p>

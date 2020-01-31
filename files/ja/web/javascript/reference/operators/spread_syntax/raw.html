@@ -1,0 +1,240 @@
+<div>{{jsSidebar("Operators")}}</div>
+
+<p><strong>スプレッド構文</strong>を使うと、関数呼び出しでは 0 個以上の引数として、Array リテラルでは 0 個以上の要素として、Object リテラルでは 0 個以上の key-value のペアとして、Array や String などの iterable オブジェクトをその場で展開します。</p>
+
+<div>{{EmbedInteractiveExample("pages/js/expressions-spreadsyntax.html")}}</div>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<p>関数呼び出し</p>
+
+<pre class="syntaxbox">myFunction(...iterableObj);</pre>
+
+<p>Array リテラル</p>
+
+<pre class="syntaxbox">[...iterableObj, '4', 'five', 6];</pre>
+
+<p>Object リテラル（ECMAScript 2018 の新機能）</p>
+
+<pre class="syntaxbox">let objClone = { ...obj };</pre>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<h3 id="Spread_in_function_calls" name="Spread_in_function_calls">関数呼び出しで使う</h3>
+
+<h4 id="Replace_apply" name="Replace_apply">apply を置き換える</h4>
+
+<p>Array の要素を引数にして関数を呼び出すには {{jsxref("Function.prototype.apply")}} を使うのが一般的です。</p>
+
+<pre class="brush: js">function myFunction(x, y, z) { }
+var args = [0, 1, 2];
+myFunction.apply(null, args);</pre>
+
+<p>スプレッド構文を使うと、上のコードは次のように書けます。</p>
+
+<pre class="brush: js">function myFunction(x, y, z) { }
+var args = [0, 1, 2];
+myFunction(...args);</pre>
+
+<p>スプレッド構文は、引数の何番目でも使えます。また、複数回使えます。</p>
+
+<pre class="brush: js">function myFunction(v, w, x, y, z) { }
+var args = [0, 1];
+myFunction(-1, ...args, 2, ...[3]);</pre>
+
+<h4 id="Apply_for_new" name="Apply_for_new">new 演算子と併用する</h4>
+
+<p>コンストラクタを <code>new</code> 演算子で呼ぶとき、 引数リストを Array で指定するために <code>apply</code> を使うことはできません。{{jsxref("Function.prototype.apply")}} はコンストラクタを関数として呼び出してしまうからです。</p>
+
+<p>スプレッド構文を使えば、Array の要素をコンストラクタの引数として簡単に指定できます。</p>
+
+<pre class="brush: js">var dateFields = [1970, 0, 1];  // 1 Jan 1970
+var d = new Date(...dateFields);
+</pre>
+
+<p>スプレッド構文を使わずに同じ結果を得るには、専用の関数を使う<strong>間接的</strong>な手段を取らざるをえません。</p>
+
+<pre class="brush: js">function applyAndNew(constructor, args) {
+   function partial () {
+      return constructor.apply(this, args);
+   };
+   if (typeof constructor.prototype === "object") {
+     partial.prototype = Object.create(constructor.prototype);
+   }
+   return partial;
+}
+
+
+function myConstructor () {
+   console.log("arguments.length: " + arguments.length);
+   console.log(arguments);
+   this.prop1="val1";
+   this.prop2="val2";
+};
+
+var myArguments = ["hi", "how", "are", "you", "mr", null];
+var myConstructorWithArguments = applyAndNew(myConstructor, myArguments);
+
+console.log(new myConstructorWithArguments);
+// (internal log of myConstructor):           arguments.length: 6
+// (internal log of myConstructor):           ["hi", "how", "are", "you", "mr", null]
+// (log of "new myConstructorWithArguments"): {prop1: "val1", prop2: "val2"}
+</pre>
+
+<h3 id="Spread_in_array_literals" name="Spread_in_array_literals">Array リテラルで使う</h3>
+
+<h4 id="A_more_powerful_array_literal" name="A_more_powerful_array_literal">より強力な配列リテラル</h4>
+
+<p>Array リテラルでスプレッド構文を使うと、すでにある Array を一部とする新しい配列を簡単に作れます。スプレッド構文を使わない場合、Array リテラルだけでは不十分で、<code>push</code>, <code>splice</code>, <code>concat</code> などを使うコードを書かなければなりません。</p>
+
+<pre class="brush: js">var parts = ['shoulders', 'knees']; 
+var lyrics = ['head', ...parts, 'and', 'toes']; 
+// ["head", "shoulders", "knees", "and", "toes"]
+</pre>
+
+<p>関数の引数と同様に、<code>...</code> は Array リテラルのどこでも、何回でも使えます。</p>
+
+<h4 id="Copy_an_array" name="Copy_an_array">Array を複製する</h4>
+
+<pre class="brush: js">var arr = [1, 2, 3];
+var arr2 = [...arr]; // arr.slice() のような動きです
+arr2.push(4); 
+
+// arr2 は [1, 2, 3, 4] になります
+// arr は変更されません
+</pre>
+
+<p><strong>注意：</strong>コピーは 1 段階の深さで行われます。そのため、次の例のような多次元配列のようなオブジェクトをコピーする場合には適さないでしょう。{{jsxref("Object.assign()")}} についても同じことが言えます。</p>
+
+<pre class="brush: js">var a = [[1], [2], [3]];
+var b = [...a];
+b.shift().shift(); // 1
+// a は影響を受けています: [[], [2], [3]]
+</pre>
+
+<h4 id="A_better_way_to_concatenate_arrays" name="A_better_way_to_concatenate_arrays">Array を連結する</h4>
+
+<p>Array の連結には {{jsxref("Array.concat")}} がよく使われます。</p>
+
+<pre class="brush: js">var arr1 = [0, 1, 2];
+var arr2 = [3, 4, 5];
+// arr1 の後ろに arr2 を連結した新しい配列をつくる
+arr1 = arr1.concat(arr2);
+</pre>
+
+<p>スプレッド構文を使うと、次のように書けます。</p>
+
+<pre class="brush: js">var arr1 = [0, 1, 2];
+var arr2 = [3, 4, 5];
+arr1 = [...arr1, ...arr2];
+</pre>
+
+<p>{{jsxref("Array.unshift")}} は、既存の配列の先頭に配列を挿入するためによく使われます。</p>
+
+<pre class="brush: js">var arr1 = [0, 1, 2];
+var arr2 = [3, 4, 5];
+// Prepend all items from arr2 onto arr1
+Array.prototype.unshift.apply(arr1, arr2) // arr1 is now [3, 4, 5, 0, 1, 2]</pre>
+
+<p>スプレッド構文を使うと、次のように書けます（ただし、この記述だと新しい配列を生成して <code>arr1</code> に代入しています。{{jsxref("Array.unshift")}} と異なり、元の <code>arr1</code> に追加していません）。</p>
+
+<pre class="brush: js">var arr1 = [0, 1, 2];
+var arr2 = [3, 4, 5];
+arr1 = [...arr2, ...arr1]; // arr1 is now [3, 4, 5, 0, 1, 2]
+</pre>
+
+<h3 id="Spread_in_object_literals" name="Spread_in_object_literals">Object リテラルで使う</h3>
+
+<p><a href="https://github.com/tc39/proposal-object-rest-spread">Rest/Spread Properties for ECMAScript</a> proposal (stage 4) では、<a href="/ja/docs/Web/JavaScript/Reference/Operators/Object_initializer">Object リテラル</a>でのスプレッド構文が追加されています。スプレッド構文の対象となるオブジェクトの列挙可能なプロパティを、新しいオブジェクトにコピーします。</p>
+
+<p>prototype を除いた浅いコピーの作成や、マージしたオブジェクトの作成が {{jsxref("Object.assign()")}} を使うよりも短いコードで書けます。</p>
+
+<pre class="brush: js">var obj1 = { foo: 'bar', x: 42 };
+var obj2 = { foo: 'baz', y: 13 };
+
+var clonedObj = { ...obj1 };
+// Object { foo: "bar", x: 42 }
+
+var mergedObj = { ...obj1, ...obj2 };
+// Object { foo: "baz", x: 42, y: 13 }</pre>
+
+<p>{{jsxref("Object.assign()")}} は <a href="/ja/docs/Web/JavaScript/Reference/Functions/set">setters</a> をトリガーしますが、スプレッド構文はトリガーできません。</p>
+
+<p>スプレッド構文は {{jsxref("Object.assign()")}} 関数を置き換えたり模倣することはできません。</p>
+
+<pre class="brush: js">var obj1 = { foo: 'bar', x: 42 };
+var obj2 = { foo: 'baz', y: 13 };
+const merge = ( ...objects ) =&gt; ( { ...objects } );
+
+var mergedObj = merge ( obj1, obj2);
+// Object { 0: { foo: 'bar', x: 42 }, 1: { foo: 'baz', y: 13 } }
+
+var mergedObj = merge ( {}, obj1, obj2);
+// Object { 0: {}, 1: { foo: 'bar', x: 42 }, 2: { foo: 'baz', y: 13 } }</pre>
+
+<p>上記の例でスプレッド構文は期待通りに動きません。レストパラメーターは配列で、オブジェクトリテラルに配列として展開されます。</p>
+
+<h3 id="Only_for_iterables" name="Only_for_iterables">iterable オブジェクトだけに使えます</h3>
+
+<p>Object リテラルで使う場合を除き、スプレッド構文は <a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/Symbol/iterator">iterable</a> オブジェクトだけに使えます。iterable でないオブジェクトでは、TypeError 例外となります。</p>
+
+<pre class="brush: js">var obj = {'key1': 'value1'};
+var array = [...obj]; // TypeError: obj is not iterable
+</pre>
+
+<h3 id="Spread_with_many_values" name="Spread_with_many_values">大量の値を展開する場合</h3>
+
+<p>JavaScript エンジンには、引数の個数に上限があります。関数呼び出しでのスプレッド構文では、引数の個数がその上限を超えてしまう可能性に留意してください。詳細は <a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/Function/apply" title="The apply() method calls a function with a given this value, and arguments provided as an array (or an array-like object)."><code>apply()</code></a> のページを参照してください。</p>
+
+<h2 id="Rest_syntax_(parameters)" name="Rest_syntax_(parameters)">レスト構文（レストパラメータ）</h2>
+
+<p>レスト構文はスプレッド構文と全く同じ見た目をしていますが、Array や Object の分割代入に使われます。こちらはスプレッド構文とは逆の働きといえます: スプレッド構文が要素を展開するのに対して、レスト構文は複数の要素を集約して 1 つのオブジェクトにします。<a href="/ja/docs/Web/JavaScript/Reference/Functions_and_function_scope/rest_parameters">レスト構文</a> のページを参照してください。</p>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">ステータス</th>
+   <th scope="col">コメント</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-array-initializer')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td><a href="http://www.ecma-international.org/ecma-262/6.0/#sec-array-initializer">配列初期化子</a>, <a href="http://www.ecma-international.org/ecma-262/6.0/#sec-argument-lists">引数リスト</a> のセクションで定義されました。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2018', '#sec-object-initializer')}}</td>
+   <td>{{Spec2('ES2018')}}</td>
+   <td><a href="http://www.ecma-international.org/ecma-262/9.0/#sec-object-initializer">オブジェクト初期化子</a>で定義されました。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-array-initializer')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td>変更はありません。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-object-initializer')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td>変更はありません。</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザー実装状況</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.operators.spread")}}</p>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li><a href="/ja/docs/Web/JavaScript/Reference/Functions_and_function_scope/rest_parameters">レスト構文</a> (also ‘<code>...</code>’)</li>
+ <li><a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/Function/apply">fn.apply</a> (also ‘<code>...</code>’)</li>
+</ul>

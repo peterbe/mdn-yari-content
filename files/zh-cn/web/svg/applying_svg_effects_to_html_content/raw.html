@@ -1,0 +1,216 @@
+<p>现代浏览器支持在 <a href="/en-US/docs/Web/CSS" title="Cascading Style Sheets">CSS</a> 样式中使用 <a href="/en-US/docs/SVG">SVG</a> 来对HTML内容应用图像效果。</p>
+
+<p>你可以在同一文件中使用SVG样式，也可以通过外部样式表引入。有三个属性可以使用： <a href="/en-US/docs/Web/CSS/mask"><code>mask</code></a>, <a href="/en-US/docs/Web/CSS/clip-path"><code>clip-path</code></a>, 和 <code><a href="/en-US/docs/Web/CSS/filter">filter</a>。</code></p>
+
+<div class="note"><strong>注意:</strong> 在外部文件引入的SVG必须与原始文件 <a href="/en-US/docs/Web/Security/Same-origin_policy">同源</a> 。</div>
+
+<h2 id="使用内嵌SVG">使用内嵌SVG</h2>
+
+<p>要想在CSS样式中应用SVG效果，首先需要创建一个引用SVG的CSS样式。</p>
+
+<pre class="brush: html">&lt;style&gt;p { mask: url(#my-mask); }&lt;/style&gt;</pre>
+
+<p>在上面的例子中, 所有段落会被<a href="/en-US/docs/Web/HTML/Global_attributes/id">ID</a> 为<code>my-mask的</code><a href="https://developer.mozilla.org/en-US/docs/Web/SVG/Element/mask">SVG <code>&lt;mask&gt;</code></a>遮罩.</p>
+
+<h3 id="例子_Masking">例子: Masking</h3>
+
+<p>例如，你可以在你的HTML文档中用SVG和CSS代码对HTML内容作渐变mask效果。</p>
+
+<pre class="brush: html">&lt;svg height="0"&gt;
+  &lt;mask id="mask-1"&gt;
+    &lt;linearGradient id="gradient-1" y2="1"&gt;
+      &lt;stop stop-color="white" offset="0"/&gt;
+      &lt;stop stop-opacity="0" offset="1"/&gt;
+    &lt;/linearGradient&gt;
+    &lt;circle cx="0.25" cy="0.25" r="0.25" id="circle" fill="white"/&gt;
+    &lt;rect x="0.5" y="0.2" width="300" height="100" fill="url(#gradient-1)"/&gt;
+  &lt;/mask&gt;
+&lt;/svg&gt;
+</pre>
+
+<pre class="brush: css">.target { 
+  mask: url(#mask-1); 
+}
+p {
+  width: 300px;
+  border: 1px solid #000;
+  display: inline-block;
+}</pre>
+
+<p>Note that in the CSS, the mask is specified using a URL to the ID <code>#mask-1</code>, which is the ID of the SVG mask specified below it. Everything else specifies details about the gradient mask itself.</p>
+
+<p>Applying the SVG effect to (X)HTML is accomplished by assigning the <code>target</code> class defined above to an element, like this:</p>
+
+<pre class="brush: html">&lt;p class="target" style="background:lime;"&gt;
+    Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt
+    ut labore et dolore magna aliqua. Ut enim ad minim veniam.
+&lt;/p&gt;
+&lt;p&gt;
+    Lorem ipsum dolor sit amet, consectetur adipisicing
+    &lt;b class="target"&gt;elit, sed do eiusmod tempor incididunt
+    ut labore et dolore magna aliqua.&lt;/b&gt;
+    Ut enim ad minim veniam.
+&lt;/p&gt;
+</pre>
+
+<p>The above example would be rendered with the mask applied to it.</p>
+
+<p>{{EmbedLiveSample('Example_Masking', 650, 200)}}</p>
+
+<h3 id="例子_Clipping">例子: Clipping</h3>
+
+<p>此示例演示如何使用SVG剪辑HTML内容。请注意，即使链接的可点击区域也被剪切。</p>
+
+<pre class="brush: html">&lt;p class="target" style="background:lime;"&gt;
+    Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt
+    ut labore et dolore magna aliqua. Ut enim ad minim veniam.
+&lt;/p&gt;
+&lt;p&gt;
+    Lorem ipsum dolor sit amet, consectetur adipisicing
+    &lt;b class="target"&gt;elit, sed do eiusmod tempor incididunt
+    ut labore et dolore magna aliqua.&lt;/b&gt;
+    Ut enim ad minim veniam.
+&lt;/p&gt;
+
+&lt;button onclick="toggleRadius()"&gt;Toggle radius&lt;/button&gt;
+
+&lt;svg height="0"&gt;
+  &lt;clipPath id="clipping-path-1" clipPathUnits="objectBoundingBox"&gt;
+    &lt;circle cx="0.25" cy="0.25" r="0.25" id="circle"/&gt;
+    &lt;rect x="0.5" y="0.2" width="0.5" height="0.8"/&gt;
+  &lt;/clipPath&gt;
+&lt;/svg&gt;
+</pre>
+
+<pre class="brush: css">.target {
+  clip-path: url(#clipping-path-1);
+}
+p {
+  width: 300px;
+  border: 1px solid #000;
+  display: inline-block;
+}</pre>
+
+<p>This establishes a clipping area made of a circle and rectangle, assigns it the ID <code>#clipping-path-1</code>, then references it in the CSS. The clip path can be assigned to any element with the <code>target</code> class.</p>
+
+<p>You can make changes to the SVG in real time and see them immediately affect the rendering of the HTML. For example, you can resize the circle in the clip path established above:</p>
+
+<pre class="brush: js">function toggleRadius() {
+  var circle = document.getElementById("circle");
+  circle.r.baseVal.value = 0.40 - circle.r.baseVal.value;
+}
+</pre>
+
+<p>{{EmbedLiveSample('Example_Clipping', 650, 200)}}</p>
+
+<h3 id="例子_Filtering">例子: Filtering</h3>
+
+<p>This demonstrates applying a filter to HTML content using SVG. It establishes several filters, which are applied with CSS to three elements in both the normal and mouse <a href="/en-US/docs/Web/CSS/:hover">hover</a> states.</p>
+
+<pre class="brush: html">&lt;p class="target" style="background: lime;"&gt;
+    Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt
+    ut labore et dolore magna aliqua. Ut enim ad minim veniam.
+&lt;/p&gt;
+&lt;pre class="target"&gt;lorem&lt;/pre&gt;
+&lt;p&gt;
+    Lorem ipsum dolor sit amet, consectetur adipisicing
+    &lt;b class="target"&gt;elit, sed do eiusmod tempor incididunt
+    ut labore et dolore magna aliqua.&lt;/b&gt;
+    Ut enim ad minim veniam.
+&lt;/p&gt;
+</pre>
+
+<p>Any SVG filter can be applied this way. For example, to apply a blur effect, you might use:</p>
+
+<pre class="brush: html">&lt;svg height="0"&gt;
+  &lt;filter id="f1"&gt;
+    &lt;feGaussianBlur stdDeviation="3"/&gt;
+  &lt;/filter&gt;
+&lt;/svg&gt;</pre>
+
+<p>You could also apply a color matrix:</p>
+
+<pre class="brush: html">&lt;svg height="0"&gt;
+  &lt;filter id="f2"&gt;
+    &lt;feColorMatrix values="0.3333 0.3333 0.3333 0 0
+                           0.3333 0.3333 0.3333 0 0
+                           0.3333 0.3333 0.3333 0 0
+                           0      0      0      1 0"/&gt;
+  &lt;/filter&gt;
+&lt;/svg&gt;
+</pre>
+
+<p>And some more filters:</p>
+
+<pre class="brush: html"><span>&lt;svg height="0"&gt;
+</span>  &lt;filter id="f3"&gt;
+    &lt;feConvolveMatrix filterRes="100 100" style="color-interpolation-filters:sRGB"
+      order="3" kernelMatrix="0 -1 0   -1 4 -1   0 -1 0" preserveAlpha="true"/&gt;
+  &lt;/filter&gt;
+  &lt;filter id="f4"&gt;
+    &lt;feSpecularLighting surfaceScale="5" specularConstant="1"
+                        specularExponent="10" lighting-color="white"&gt;
+      &lt;fePointLight x="-5000" y="-10000" z="20000"/&gt;
+    &lt;/feSpecularLighting&gt;
+  &lt;/filter&gt;
+  &lt;filter id="f5"&gt;
+    &lt;feColorMatrix values="1 0 0 0 0
+                           0 1 0 0 0
+                           0 0 1 0 0
+                           0 1 0 0 0" style="color-interpolation-filters:sRGB"/&gt;
+  &lt;/filter&gt;
+<span>&lt;/svg&gt;</span></pre>
+
+<p>The five filters are applied using the following CSS:</p>
+
+<pre class="brush: css">p.target { filter:url(#f3); }
+p.target:hover { filter:url(#f5); }
+b.target { filter:url(#f1); }
+b.target:hover { filter:url(#f4); }
+pre.target { filter:url(#f2); }
+pre.target:hover { filter:url(#f3); }
+</pre>
+
+<p>{{EmbedLiveSample('Example_Filtering', 650, 200)}}</p>
+
+<p style="display: none;"><a class="button liveSample" href="/files/3329/filterdemo.xhtml">View this example live</a></p>
+
+<h3 id="例子_Blurred_Text">例子: Blurred Text</h3>
+
+<p>In order to blur text, Webkit based browsers have a (prefixed) CSS filter called blur (see also <a href="/en-US/docs/Web/CSS/filter#blur%28%29_2">CSS filter</a>). You can achieve the same effect using SVG filters.</p>
+
+<pre class="brush: html">&lt;p class="blur"&gt;Time to clean my glasses&lt;/p&gt; 
+&lt;svg height="0"&gt;
+  &lt;defs&gt;
+    &lt;filter id="wherearemyglasses" x="0" y="0"&gt;
+    &lt;feGaussianBlur in="SourceGraphic" stdDeviation="1"/&gt;
+    &lt;/filter&gt;
+  &lt;/defs&gt;
+&lt;/svg&gt; 
+</pre>
+
+<p>You can apply the SVG and the CSS filter in the same class:</p>
+
+<pre class="brush: css">.blur { filter: url(#wherearemyglasses); }</pre>
+
+<p>{{ EmbedLiveSample('Example_Blurred_Text', 300, 100) }}</p>
+
+<p>Blurring is computation heavy, so ensure to use it sparingly, especially in elements that get scrolled or animated.</p>
+
+<h2 id="使用外部引用">使用外部引用</h2>
+
+<p>用来clipping，masking，filtering的SVG可以从其他外部源载入，只要外部源是与要使用SVG的该HTML文档同源的。</p>
+
+<p>例如，CSS规则在一个名为default.css的文件中，如下这样：</p>
+
+<pre class="brush: css" id="line1">.target { clip-path: url(resources.svg#c1); }</pre>
+
+<p>这个SVG就可以从一个名为resources.svg的文件中导入，clip路径为ID c1。</p>
+
+<h2 id="参见">参见</h2>
+
+<ul>
+ <li><a href="/en-US/docs/SVG" title="SVG">SVG</a></li>
+ <li><a class="external" href="http://robert.ocallahan.org/2008/06/applying-svg-effects-to-html-content_04.html">SVG Effects for HTML Content</a> (blog post)</li>
+ <li><del><a class="external" href="/web-tech/2008/10/10/svg-external-document-references">SVG External Document References</a></del> (blog post) (<a href="http://web.archive.org/web/20120512132948/https://developer.mozilla.org/web-tech/2008/10/10/svg-external-document-references/" title="Web Tech Blog » Blog Archive » SVG External Document References">[archive.org] Web Tech Blog » Blog Archive » SVG External Document References</a>)</li>
+</ul>

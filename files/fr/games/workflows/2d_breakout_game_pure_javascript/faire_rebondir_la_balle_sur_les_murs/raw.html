@@ -1,0 +1,96 @@
+<div>{{GamesSidebar}}</div>
+
+<div>{{IncludeSubnav("/en-US/docs/Games")}}</div>
+
+<p>{{PreviousNext("Games/Workflows/2D_Breakout_game_pure_JavaScript/Move_the_ball", "Games/Workflows/2D_Breakout_game_pure_JavaScript/Paddle_and_keyboard_controls")}}</p>
+
+<div class="summary">
+<p>C'est la <strong>3<sup>ème</sup> étape sur</strong> 10 de ce <a href="https://developer.mozilla.org/fr/docs/Games/Workflows/2D_Breakout_game_pure_JavaScript">tutoriel Gamedev Canvas</a>. Vous pouvez retrouver le code source de cette leçon sur <a class="external external-icon" href="https://github.com/end3r/Gamedev-Canvas-workshop/blob/gh-pages/lesson01.html" rel="noopener">Gamedev-Canvas-workshop/lesson3.html</a>.</p>
+</div>
+
+<p>C'est bien de voir notre balle bouger, mais celle-ci disparraît très vite! Pour y pallier nous allons intégrer à notre code de quoi à detecter les collisions avec les murs. Ne vous inquiétez pas, cela restera très simple et bientôt vous verrez votre balle rebondir au 4 coins du canvas !</p>
+
+<h2 id="Détection_des_murs">Détection des murs</h2>
+
+<p>Pour détecter les collisions nous allons vérifier si la balle touche le mur, et si celle-ci rentre en collision, alors son sens devra changer.</p>
+
+<p>Pour simplifier tout les calculs, nous allons créer quelques variables. Appellons la première <code>ballRadius</code>, elle contient le rayon de la balle. Ajoutez cela à votre code au milieu des autres variables :</p>
+
+<pre class="brush: js">var ballRadius = 10;</pre>
+
+<p>Il faut donc changer le rayon donné dans la fonction <code>drawBall()</code>. Changez donc comme ceci :</p>
+
+<pre class="brush: js">ctx.arc(x, y, ballRadius, 0, Math.PI*2);</pre>
+
+<h3 id="Rebondir_en_haut_et_en_bas">Rebondir en haut et en bas</h3>
+
+<p>Il y a 4 murs en tout mais nous allons d'abord nous pencher sur le mur du haut. Nous devons, à chaque rafraichissement du canvas, regarder si la balle touche le bord du haut. Si c'est le cas, alors nous devons inverser la direction de la balle pour créer un effet de limite de zone de jeu. Il ne faut surtout pas oublier que les coordonnées commence du coin en haut à gauche! Nous pouvons donc écrire :</p>
+
+<pre class="brush: js">if(y + dy &lt; 0) {
+    dy = -dy;
+}</pre>
+
+<p>Si la position en y de la balle est inférieur à 0, on change la direction du mouvement sur l'axe y juste en inversant le signe du déplacement de la balle! Par exemple si celle-ci bouge vers le haut (elle a donc une vitesse de -2 car le point (0,0) est en haut à gauche) et qu'elle rencontre le mur du haut, alors sa vitesse passera à 2 et se mettre à redescendre!</p>
+
+<p>Le code ci-dessous est presque le même à une exception, celui-ci gère le bas du canvas! Et oui, ce n'est pas si compliqué :</p>
+
+<pre class="brush: js">if(y + dy &gt; canvas.height) {
+    dy = -dy;
+}</pre>
+
+<p>Si la position en y de la balle est supérieur à  la hauteur du canvas (soit 480 pixels dans cette leçon) on inverse encore comme précedemment la vitesse de la balle.</p>
+
+<p>On peut rassembler les deux conditions en une gràce au "ou" qui s'écrit || en JavaScript :</p>
+
+<pre class="brush: js">if(y + dy &gt; canvas.height || y + dy &lt; 0) {
+    dy = -dy;
+}</pre>
+
+<p>Si une des deux conditions est vérifiées, alors la vitesse est inversée. Essayer de créer votre propre code pour la gauche et la droite avant de passer à la prochaine sous-partie. Vous verrez que le principe est le même!</p>
+
+<h3 id="Rebondir_à_gauche_et_à_droite">Rebondir à gauche et à droite</h3>
+
+<p>Voici donc le fameux bout de code que vous deviez compléter. J'éspère que vous avez réussi car cela est très simple. Vérifiez quand même et recopiez cela si vous ne l'avez pas trouvé :</p>
+
+<pre class="brush: js">if(x + dx &gt; canvas.width || x + dx &lt; 0) {
+    dx = -dx;
+}
+
+if(y + dy &gt; canvas.height || y + dy &lt; 0) {
+    dy = -dy;
+}</pre>
+
+<p>Une fois cela fait. Vous pouvez intégrer ce code dans la fonction draw() juste après avoir dessiner votre boule en appellant la fonction drawBall().</p>
+
+<h3 id="La_balle_disparaît_toujours!">La balle disparaît toujours!</h3>
+
+<p>Vous pouvez tester votre code et magie votre balle rebondit maintenant. Mais un problème persiste...Elle s'enfonce toujours dans le mur avant de changer direction. Si vous regardez bien vous aller vous rendre compte de quelque chose, elle s'enfonce dans le mur de la profondeur de son rayon.</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/10432/ball-in-wall.png" style="display: block; height: 320px; margin: 0px auto; width: 480px;"></p>
+
+<p>Si vous l'aviez vu bravo!! Effectivement nous calculons la collision à partir des coordonnées x et y qui sont le centre de la balle. Nous ne prenons pas en compte le rayon de la balle mais j'en suis sûr que vous pouvez résoudre ça en ajoutant le rayon de la balle dans les conditions de rebondissement. Essayez et vérifiez avec ça :</p>
+
+<pre class="brush: js">if(x + dx &gt; canvas.width-ballRadius || x + dx &lt; ballRadius) {
+    dx = -dx;
+}
+if(y + dy &gt; canvas.height-ballRadius || y + dy &lt; ballRadius) {
+    dy = -dy;
+}</pre>
+
+<p>Maintenant quand la distance entre le centre de la balle et le bord est le même que le rayon de la balle, cela change sa direction. De ce fait la balle tape rebondit comme elle se doit! Vous avez maitenant une balle opérationelle.</p>
+
+<h2 id="Comparez_votre_code">Comparez votre code</h2>
+
+<p>Vérifiez encore le code que vous avez avec celui-ci et testez le en live pour voir si des différences apparaissent.</p>
+
+<p>{{JSFiddleEmbed("https://jsfiddle.net/end3r/redj37dc/","","395")}}</p>
+
+<div class="note">
+<p><strong>Exercice</strong>: essayez de changer la couleur de la balle à chaque fois que celle-ci tape un mur.</p>
+</div>
+
+<h2 id="Dans_le_prochain_chapitre">Dans le prochain chapitre</h2>
+
+<p>Nous avons une balle qui bouge et reste dans l'écran de jeu (et qui change de couleur pour certain). Nous allons maintenant intégrer un paddle (une raquette si vous préférez), allez voir <a href="https://developer.mozilla.org/en-US/docs/Games/Workflows/Breakout_game_from_scratch/Paddle_and_keyboard_controls">Paddle and keyboard controls</a>.</p>
+
+<p>{{PreviousNext("Games/Workflows/2D_Breakout_game_pure_JavaScript/Move_the_ball", "Games/Workflows/2D_Breakout_game_pure_JavaScript/Paddle_and_keyboard_controls")}}</p>

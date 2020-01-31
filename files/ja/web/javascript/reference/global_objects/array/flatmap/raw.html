@@ -1,0 +1,149 @@
+<div>{{JSRef}}</div>
+
+<p><code><strong>flatMap()</strong></code> メソッドは、最初にマッピング関数を使用してそれぞれの要素をマップした後、結果を新しい配列内にフラット化します。これは深さ 1 の <a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/Array/flat">flat</a> が続く <a href="/jaS/docs/Web/JavaScript/Reference/Global_Objects/Array/map">map</a> と同じですが、<code>flatMap</code> はしばしば有用であり、2 つのメソッドを 1 つにマージするよりもやや効果的です。</p>
+
+<p class="hidden">\{{EmbedInteractiveExample("pages/js/array-flatmap.html")}}</p>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox"><var>var new_array = arr</var>.flatMap(function <var>callback(currentValue[, index[, array]]) {
+    // return element for new_array
+}</var>[, <var>thisArg</var>])</pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<dl>
+ <dt><code>callback</code></dt>
+ <dd>新しい配列の要素を生成する関数。3 つの引数を受け取ります。
+ <dl>
+  <dt><code>currentValue</code></dt>
+  <dd>配列で現在処理されている要素です。</dd>
+  <dt><code>index</code>{{optional_inline}}</dt>
+  <dd>配列で現在処理されている要素のインデックスです。</dd>
+  <dt><code>array</code>{{optional_inline}}</dt>
+  <dd><code>map</code> が呼び出された配列です。</dd>
+ </dl>
+ </dd>
+ <dt><code>thisArg</code>{{optional_inline}}</dt>
+ <dd><code>callback</code> を実行するときの <code>this</code> として用いられる値です。</dd>
+</dl>
+
+<h3 id="Return_value" name="Return_value">戻り値</h3>
+
+<p>各要素がコールバック関数の結果であり、深さが 1 にフラット化された新しい配列です。</p>
+
+<h2 id="Description" name="Description">説明</h2>
+
+<p>コールバック関数の詳細については、{{jsxref("Array.prototype.map()")}} を見てください。<code>flatMap</code> メソッドは、深さ 1 の <code><a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/Array/flat">flat</a></code> が続く <code><a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/Array/map">map</a></code> と同じです。</p>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<h3 id="map_and_flatMap" name="map_and_flatMap"><code>map</code> と <code>flatMap</code></h3>
+
+<pre class="brush: js">let arr1 = [1, 2, 3, 4];
+
+arr1.map(x =&gt; [x * 2]<span class="js source"><span class="function-call js meta"><span class="js meta"><span class="brace js meta square"><span>);</span></span></span></span></span> 
+// [[2], [4], [6], [8]]
+
+arr1.flatMap(x =&gt; [x * 2]<span class="js source"><span class="function-call js meta"><span class="js meta"><span class="brace js meta square"><span>);
+// [2, 4, 6, 8]</span></span></span></span></span>
+
+// only one level is flattened
+arr1.flatMap(x =&gt; [[x * 2]]);
+// [[2], [4], [6], [8]]
+</pre>
+
+<p>While the above could have been achieved by using map itself, here is an example that better showcases the use of <code>flatMap</code>.</p>
+
+<p>Let's generate a list of words from a list of sentences.</p>
+
+<pre class="brush: js">let arr1 = ["it's Sunny in", "", "California"];
+
+arr1.map(x =&gt; x.split(" "));
+// [["it's","Sunny","in"],[""],["California"]]
+
+arr1.flatMap(x =&gt; x.split(" ")<span class="js source"><span class="function-call js meta"><span class="js meta"><span class="brace js meta square"><span>);
+// ["it's","Sunny","in", "", "California"]</span></span></span></span></span></pre>
+
+<p>Notice, the output list length can be different from the input list length.</p>
+
+<h3 id="For_adding_and_removing_items_during_a_map">For adding and removing items during a <code>map</code></h3>
+
+<p><code>flatMap</code> can be used as a way to add and remove items (modify the number of items) during a <code>map</code>. In other words, it allows you to map <em>many items to many items</em> (by handling each input item separately), rather than always <em>one-to-one</em>. In this sense, it works like the opposite of <a href="/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter">filter</a>. Simply return a 1-element array to keep the item, a multiple-element array to add items, or a 0-element array to remove the item.</p>
+
+<pre class="brush: js">// Let's say we want to remove all the negative numbers and split the odd numbers into an even number and a 1
+let a = [5, 4, -3, 20, 17, -33, -4, 18]
+//       |\  \  x   |  | \   x   x   |
+//      [4,1, 4,   20, 16, 1,       18]
+
+a.flatMap( (n) =&gt;
+  (n &lt; 0) ?      [] :
+  (n % 2 == 0) ? [n] :
+                 [n-1, 1]
+)
+
+// expected output: [4, 1, 4, 20, 16, 1, 18]
+</pre>
+
+<div class="line"><span class="js source"><span class="comment double-slash js line"><span class="comment definition js punctuation"><span>//</span></span><span>=&gt; [1, 2, 3, 4, 5, 6, 7, 8, 9]</span></span></span></div>
+
+<h2 id="Alternative" name="Alternative">代替え</h2>
+
+<h3 id="reduce_and_concat" name="reduce_and_concat"><code>reduce</code> と <code>concat</code></h3>
+
+<pre class="brush: js">var arr1 = [1, 2, 3, 4];
+
+arr1.flatMap(x =&gt; [x * 2]);
+// is equivalent to
+arr1.reduce((acc, x) =&gt; acc.concat([x * 2]), []);
+// [2, 4, 6, 8]
+</pre>
+
+<div class="line"><span class="js source"><span class="comment double-slash js line"><span class="comment definition js punctuation"><span>//</span></span><span>=&gt; [1, 2, 3, 4, 5, 6, 7, 8, 9]</span></span></span></div>
+
+<h2 id="Polyfill" name="Polyfill">Polyfill</h2>
+
+<p>This polyfill needs <a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/Array/flat" title="Array.prototype.flat()">Array.prototype.flat polyfill</a></p>
+
+<pre class="brush: js">if (!Array.prototype.flatMap) {
+  Array.prototype.flatMap = function() {
+    return Array.prototype.map.apply(this, arguments).flat(1);
+  };
+}
+</pre>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">ステータス</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td><a href="https://tc39.github.io/proposal-flatMap/#sec-Array.prototype.flatMap"><code>Array.prototype.flatMap</code> proposal</a></td>
+   <td>Finished (4)</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザー実装状況</h2>
+
+<div>
+<div class="hidden">The compatibility table in this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.builtins.Array.flatMap")}}</p>
+</div>
+
+<h2 id="See_also" name="See_also">関連項目</h2>
+
+<ul>
+ <li>{{jsxref("Array.prototype.flat()")}}</li>
+ <li>{{jsxref("Array.prototype.map()")}}</li>
+ <li>{{jsxref("Array.prototype.reduce()")}}</li>
+ <li>{{jsxref("Array.prototype.concat()")}}</li>
+</ul>

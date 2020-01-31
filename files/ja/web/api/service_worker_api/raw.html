@@ -1,0 +1,319 @@
+<p>{{ServiceWorkerSidebar}}</p>
+
+<p class="summary">Service Workerは、基本的にウェブアプリケーション、ブラウザー、そして（もし繋がっていれば）ネットワークの間に介在するプロキシサーバーのように振る舞います。これは、よりよいオフライン体験を可能にするように意図されており、ネットワークのリクエストに介在してネットワークの使用可否の状況に基づいて適切な対応を取ったり、サーバー上にあるアセットを更新したりします。また、プッシュ通知やバックグラウンド同期の API 群へのアクセスもできるようになります。</p>
+
+<h2 id="Service_worker_concepts_and_usage" name="Service_worker_concepts_and_usage">Service Workerの概念と使い方</h2>
+
+<p>Service Workerは、あるオリジンとパスに対して登録されたイベント駆動型の <a href="/docs/Web/API/Worker">worker</a> です。 JavaScript ファイルの形を取り、ナビゲーションやリソースへのリクエストを横取りや改変したり細かい粒度でリソースをキャッシュすることで関連付けられたウェブページやサイトを制御し、それぞれの状況（もっとも顕著な例は、ネットワークが利用できないとき）にアプリがどのように振舞うかを完全に制御することができます。</p>
+
+<p>Service Workerは worker のコンテキストで実行されます。従って、 DOM へアクセスすることができず、アプリを実行する主要な JavaScript とは異なるスレッドで実行されるため、他のタスクをブロックすることはありません。完全に非同期で設計されています。そのため、同期型の <a href="/docs/Web/API/XMLHttpRequest">XHR</a> や <a href="/docs/Web/Guide/API/DOM/Storage">localStorage</a> のような API をService Workerで利用することはできません。</p>
+
+<p>Serivce worker はセキュリティ上の理由から、 HTTPS 通信でのみ動作します。ネットワークリクエストが改変されると、中間者攻撃を受けるので、人間に広く開かれているのは本当にまずいことです。 Firefox では<a href="https://support.mozilla.org/ja/kb/private-browsing-use-firefox-without-history">プライベートブラウジングモード</a>でService Worker API を利用することはできません。</p>
+
+<div class="note">
+<p><strong>メモ</strong>: Service Worker は <a href="http://alistapart.com/article/application-cache-is-a-douchebag">AppCache</a> のような、この分野における以前の試みより勝っています。以前のものは、あなたがしようとしていることを想定していなかったり想定が正しくなかったときに壊れたりしていたのに対して、Service Workerはあなたがすべてを細粒度で制御することができるためです。</p>
+</div>
+
+<div class="note">
+<p><strong>メモ</strong>: Service Workerは <a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/Promise">promise</a> を頻繁に使用して、応答が来るのを待ってから、成功または失敗のアクションで応答します。 promise のアーキテクチャはこの領域に対して理想的なものです。</p>
+</div>
+
+<h3 id="Registration" name="Registration">登録</h3>
+
+<p>Service Workerは最初に {{domxref("ServiceWorkerContainer.register()")}} メソッドを使って登録されます。成功したら、 Service Workerがクライアントにダウンロードされ、ユーザーがアクセスした URL のオリジン内全体、又は指定したそのサブセット内に対してインストールと有効化（下記参照）が試みられます。</p>
+
+<h3 id="Download_install_and_activate" name="Download_install_and_activate">ダウンロードとインストールと有効化</h3>
+
+<p>この段階で、Service Workerは以下のライフサイクルで実行されます。</p>
+
+<ol>
+ <li>ダウンロード</li>
+ <li>インストール</li>
+ <li>有効化</li>
+</ol>
+
+<p>ユーザーが最初にService Workerが制御するサイトやページにアクセスすると、Service Workerが直ちにダウンロードされます。</p>
+
+<p>その後、ダウンロードは24時間ごとに行われます。もっと頻繁にダウンロードされる<em>かもしれません</em>が、不正なスクリプトに長時間悩まされないために、必ず24時間ごとにダウンロードする<em>必要があります</em>。</p>
+
+<p>ダウンロードしたファイルが新しいと分かった場合、既存のService Workerとバイト単位に比較して異っていた場合や、そのページやサイトで最初のService Workerが見つかった場合は、インストールが試みられます。</p>
+
+<p>Service Workerが初めて有効化されるときであれば、インストールが試みられ、インストールに成功した後で、有効化されます。</p>
+
+<p>利用できる既存のService Workerがあった場合は、新しいバージョンがバックグラウンドでインストールされますが、まだ有効化 (activate) されません。この時点のものを<em>待機中の (waiting) ワーカー</em>と呼びます。まだ使用している古いService Workerが読み込んでいるページがなくなった時のみ、有効化されます。ページが読み込まれなくなったらすぐに、新しいService Workerが有効化されます（<em>アクティブワーカー</em>になります）。 {{domxref("ServiceWorkerGlobalScope.skipWaiting()")}} を使用するとすぐに有効化することができ、 {{domxref("Clients.claim()")}} を使用してアクティブワーカーが既存のページの管理を始めることができます。</p>
+
+<p>{{domxref("InstallEvent")}} を受け取ることもできます。イベントが発火したときの標準的なアクションは、使用するためにService Workerを準備すること、例えば組込みストレージ API を使用してキャッシュを構築したり、アプリがオフラインの時に使用したい資産をその中に配置したりすることです。</p>
+
+<p><code>activate</code> イベントもあります。このイベントが発火した時点は、古いキャッシュや、前のバージョンのService Workerに関するその他のものを整理するのによいタイミングです。</p>
+
+<p>Service Workerは {{domxref("FetchEvent")}} イベントを使用してリクエストに応答することができます。 {{domxref("event.respondWith") }} メソッドを使用して、これらのリクエストに対するレスポンスを何でも思うように変更できます。</p>
+
+<div class="note">
+<p><strong>メモ</strong>: <code>oninstall</code>/<code>onactivate</code> は完了するまでに時間がかかる可能性があるため、Service Workerの仕様書では <code>waitUntil</code> メソッドを提供しており、これが <code>oninstall</code> 又は <code>onactivate</code> を呼び出すと、 promise を渡します。 promise が正常に解決されるまで、関数イベントはService Workerに配信されません。</p>
+</div>
+
+<p>最初の基本的な例をどのように構築するかについての完全なチュートリアルは、 <a href="/docs/Web/API/ServiceWorker_API/Using_Service_Workers">Service Workerの使用</a>を読んでください。</p>
+
+<h2 id="Other_use_case_ideas" name="Other_use_case_ideas">その他の使用例</h2>
+
+<p>Service Workerは次のようなことにも利用されることを想定しています。</p>
+
+<ul>
+ <li>バックグラウンドのデータ同期</li>
+ <li>他のオリジンからのリソースのリクエストに対する応答</li>
+ <li>位置情報やジャイロスコープのような計算コストの高いデータの更新を集中的に受信して、複数のページがデータの一部を利用できるようにすること</li>
+ <li>CoffeeScript, less, CJS/AMD モジュールなどの開発用途で、クライアント側のコンパイルや依存性管理</li>
+ <li>バックグラウンドサービスのフック</li>
+ <li>特定の URL パターンに基づくテンプレートカスタマイズ</li>
+ <li>パフォーマンスの改善、例えばユーザーが近く必要とするであろう、写真アルバムの次の数枚の写真などの先読み</li>
+</ul>
+
+<p>近い将来、Service Workerはネイティブアプリで実現できることに近い、その他いくつもの便利なことを、ウェブプラットフォーム上でも実現する事ができるようになるでしょう。興味深いことに、次のような他の仕様書でも、Service Workerのコンテキストを利用できるようになってきています。</p>
+
+<ul>
+ <li><a href="https://github.com/slightlyoff/BackgroundSync">バックグラウンド同期</a>: ユーザーがサイトにいないときにもService Workerを起動し、キャッシュを更新したりすることができます。</li>
+ <li><a href="/docs/Web/API/Push_API">プッシュメッセージへの応答</a>: 新しいコンテンツが利用可能になった旨を伝えるためにユーザーにメッセージを送るためにService Workerを起動します。</li>
+ <li>特定の日付・時刻に対する反応</li>
+ <li>特定の地理的範囲へ入った事を検知する</li>
+</ul>
+
+<h2 id="Interfaces" name="Interfaces">インターフェイス</h2>
+
+<dl>
+ <dt>{{domxref("Cache")}} {{Experimental_Inline}}</dt>
+ <dd>{{DOMxRef("ServiceWorker")}} のライフライクルの一部としてキャッシュされる、{{domxref("Request")}} / {{domxref("Response")}} オブジェクトのペアのためのストレージです。</dd>
+ <dt>{{domxref("CacheStorage")}} {{Experimental_Inline}}</dt>
+ <dd>{{domxref("Cache")}} オブジェクトのストレージです。これは{{domxref("ServiceWorker")}} がアクセスできるすべての名前付きキャッシュのへの目録を提供し、文字列の名前から対応する {{domxref("Cache")}} へのマップを保持します。</dd>
+ <dt>{{domxref("Client")}} {{Experimental_Inline}}</dt>
+ <dd>サービスワーカークライアントを表します。サービスワーカークライアントは、有効化されたサービスワーカーによってブラウザーコントロールされた、コンテキストにおけるドキュメントか {{domxref("SharedWorker")}} です。</dd>
+ <dt>{{domxref("Clients")}} {{Experimental_Inline}}</dt>
+ <dd>{{domxref("Client")}} オブジェクトのリストのためのコンテナであり、現在のオリジンにある有効化されたサービスワーカークライアントにアクセスする主な方法です。</dd>
+ <dt>{{domxref("ExtendableEvent")}} {{Experimental_Inline}}</dt>
+ <dd>{{domxref("ServiceWorkerGlobalScope")}} でディスパッチされる <code>install</code> イベントや <code>activate</code> イベントのライフタイムを伸ばします。これは、データベーススキーマの更新や使われなくなったキャッシュエントリの削除などが終わるまで機能的イベント (Functional events) が {{domxref("ServiceWorker")}} にディスパッチされないことを保証します。</dd>
+ <dt>{{domxref("ExtendableMessageEvent")}} {{Experimental_Inline}}</dt>
+ <dd>The event object of a {{event("message_(ServiceWorker)","message")}} event fired on a service worker (when a channel message is received on the {{domxref("ServiceWorkerGlobalScope")}} from another context) — extends the lifetime of such events.</dd>
+ <dt>{{domxref("FetchEvent")}} {{Experimental_Inline}}</dt>
+ <dd>The parameter passed into the {{domxref("ServiceWorkerGlobalScope.onfetch")}} handler, <code>FetchEvent</code> represents a fetch action that is dispatched on the {{domxref("ServiceWorkerGlobalScope")}} of a {{domxref("ServiceWorker")}}. It contains information about the request and resulting response, and provides the {{domxref("FetchEvent.respondWith", "FetchEvent.respondWith()")}} method, which allows us to provide an arbitrary response back to the controlled page.</dd>
+ <dt>{{domxref("InstallEvent")}} {{Experimental_Inline}}</dt>
+ <dd>The parameter passed into the {{domxref("ServiceWorkerGlobalScope.oninstall", "oninstall")}} handler, the <code>InstallEvent</code> interface represents an install action that is dispatched on the {{domxref("ServiceWorkerGlobalScope")}} of a {{domxref("ServiceWorker")}}. As a child of {{domxref("ExtendableEvent")}}, it ensures that functional events such as {{domxref("FetchEvent")}} are not dispatched during installation.</dd>
+ <dt>{{domxref("NavigationPreloadManager")}} {{Experimental_Inline}}</dt>
+ <dd>Provides methods for managing the preloading of resources with a service worker.</dd>
+ <dt>{{domxref("Navigator.serviceWorker")}}</dt>
+ <dd>Returns a {{domxref("ServiceWorkerContainer")}} object, which provides access to registration, removal, upgrade, and communication with the {{domxref("ServiceWorker")}} objects for the <a href="https://html.spec.whatwg.org/multipage/browsers.html#concept-document-window">associated document</a>.</dd>
+ <dt>{{domxref("NotificationEvent")}} {{Experimental_Inline}}</dt>
+ <dd>The parameter passed into the {{domxref("ServiceWorkerGlobalScope.onnotificationclick", "onnotificationclick")}} handler, the <code>NotificationEvent</code> interface represents a notification click event that is dispatched on the {{domxref("ServiceWorkerGlobalScope")}} of a {{domxref("ServiceWorker")}}.</dd>
+ <dt>{{domxref("ServiceWorker")}} {{Experimental_Inline}}</dt>
+ <dd>Represents a service worker. Multiple browsing contexts (e.g. pages, workers, etc.) can be associated with the same <code>ServiceWorker</code> object.</dd>
+ <dt>{{domxref("ServiceWorkerContainer")}} {{Experimental_Inline}}</dt>
+ <dd>Provides an object representing the service worker as an overall unit in the network ecosystem, including facilities to register, unregister, and update service workers, and access the state of service workers and their registrations.</dd>
+ <dt>{{domxref("ServiceWorkerGlobalScope")}}</dt>
+ <dd>Represents the global execution context of a service worker.</dd>
+ <dt>{{domxref("ServiceWorkerMessageEvent")}} {{deprecated_inline}}</dt>
+ <dd>Represents a message sent to a {{domxref("ServiceWorkerGlobalScope")}}. <strong>Note that this interface is deprecated in modern browsers. Service worker messages will now use the {{domxref("MessageEvent")}} interface, for consistency with other web messaging features.</strong></dd>
+ <dt>{{domxref("ServiceWorkerRegistration")}} {{Experimental_Inline}}</dt>
+ <dd>Represents a service worker registration.</dd>
+ <dt>{{domxref("ServiceWorkerState")}} {{experimental_inline}}</dt>
+ <dd>Associated with its <a href="https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorker" title="The ServiceWorker interface of the ServiceWorker API provides a reference to a service worker. Multiple browsing contexts (e.g. pages, workers, etc.) can be associated with the same service worker, each through a unique ServiceWorker object."><code>ServiceWorker</code></a>'s state.</dd>
+ <dt>{{domxref("SyncEvent")}} {{non-standard_inline}}</dt>
+ <dd>
+ <p>The SyncEvent interface represents a sync action that is dispatched on the {{domxref("ServiceWorkerGlobalScope")}} of a ServiceWorker.</p>
+ </dd>
+ <dt>{{domxref("SyncManager")}} {{non-standard_inline}}</dt>
+ <dd>Provides an interface for registering and listing sync registrations.</dd>
+ <dt>{{domxref("WindowClient")}} {{Experimental_Inline}}</dt>
+ <dd>Represents the scope of a service worker client that is a document in a browser context, controlled by an active worker. This is a special type of {{domxref("Client")}} object, with some additional methods and properties available.</dd>
+</dl>
+
+<h2 id="Specifications" name="Specifications">仕様策定状況</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">策定状況</th>
+   <th scope="col">コメント</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName('Service Workers')}}</td>
+   <td>{{Spec2('Service Workers')}}</td>
+   <td>初回定義。</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザーの対応</h2>
+
+<div>{{ CompatibilityTable() }}</div>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <thead>
+  <tr>
+   <th>機能</th>
+   <th>Chrome</th>
+   <th>Edge</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari (WebKit)</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>基本対応</td>
+   <td>{{CompatChrome(40)}}</td>
+   <td>17</td>
+   <td>{{ CompatGeckoDesktop("44.0") }}<sup>[1]</sup></td>
+   <td>{{ CompatNo() }}</td>
+   <td>24</td>
+   <td>{{ CompatNo() }}<sup>[2]</sup></td>
+  </tr>
+  <tr>
+   <td>install/activate events</td>
+   <td>{{ CompatChrome(40) }}</td>
+   <td>17</td>
+   <td>{{ CompatGeckoDesktop("44.0") }}<sup>[1]</sup></td>
+   <td>{{ CompatNo() }}</td>
+   <td>{{ CompatVersionUnknown() }}</td>
+   <td>{{ CompatNo() }}</td>
+  </tr>
+  <tr>
+   <td>fetch event/request/<br>
+    <code>respondWith()</code></td>
+   <td>{{CompatChrome(40)}}</td>
+   <td>17</td>
+   <td>{{ CompatGeckoDesktop("44.0") }}<sup>[1]</sup></td>
+   <td>{{ CompatNo() }}</td>
+   <td>{{ CompatNo() }}</td>
+   <td>{{ CompatNo() }}</td>
+  </tr>
+  <tr>
+   <td>caches/cache</td>
+   <td>{{CompatChrome(42)}}</td>
+   <td>17</td>
+   <td>{{ CompatGeckoDesktop("39.0") }}<sup>[1]</sup></td>
+   <td>{{ CompatNo() }}</td>
+   <td>{{ CompatNo() }}</td>
+   <td>{{ CompatNo() }}</td>
+  </tr>
+  <tr>
+   <td>{{domxref("MessageEvent")}} を採用して {{domxref("ServiceWorkerMessageEvent")}} を非推奨とした</td>
+   <td>{{CompatChrome(57)}}</td>
+   <td>{{ CompatNo() }}</td>
+   <td>{{ CompatGeckoDesktop("55.0") }}<sup>[1]</sup></td>
+   <td>{{ CompatNo() }}</td>
+   <td>{{ CompatNo() }}</td>
+   <td>{{ CompatNo() }}</td>
+  </tr>
+  <tr>
+   <td><code>NavigationPreloadManager</code></td>
+   <td>{{CompatChrome(59)}}</td>
+   <td>{{ CompatNo() }}</td>
+   <td></td>
+   <td>{{ CompatNo() }}</td>
+   <td>{{CompatOpera(46)}}</td>
+   <td>{{ CompatNo() }}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <thead>
+  <tr>
+   <th>機能</th>
+   <th>Android Webview</th>
+   <th>Chrome for Android</th>
+   <th>Edge</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Phone</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>基本対応</td>
+   <td>{{ CompatNo() }}</td>
+   <td>{{CompatChrome(40)}}</td>
+   <td>17</td>
+   <td>{{ CompatGeckoMobile("44.0") }}</td>
+   <td>{{ CompatNo() }}</td>
+   <td>{{ CompatVersionUnknown() }}</td>
+   <td>{{ CompatNo() }}<sup>[2]</sup></td>
+  </tr>
+  <tr>
+   <td>install/activate events</td>
+   <td>{{ CompatNo() }}</td>
+   <td>{{CompatChrome(40)}}</td>
+   <td>17</td>
+   <td>{{ CompatGeckoMobile("44.0") }}</td>
+   <td>{{ CompatNo() }}</td>
+   <td>{{ CompatVersionUnknown() }}</td>
+   <td>{{ CompatNo() }}</td>
+  </tr>
+  <tr>
+   <td>fetch event/request/<br>
+    <code>respondWith()</code></td>
+   <td>{{ CompatNo() }}</td>
+   <td>{{CompatChrome(40)}}</td>
+   <td>17</td>
+   <td>{{ CompatGeckoMobile("44.0") }}</td>
+   <td>{{ CompatNo() }}</td>
+   <td>{{ CompatNo() }}</td>
+   <td>{{ CompatNo() }}</td>
+  </tr>
+  <tr>
+   <td>caches/cache</td>
+   <td>{{ CompatNo() }}</td>
+   <td>{{CompatChrome(40)}}</td>
+   <td>17</td>
+   <td>{{ CompatGeckoMobile("39.0") }}</td>
+   <td>{{ CompatNo() }}</td>
+   <td>{{ CompatNo() }}</td>
+   <td>{{ CompatNo() }}</td>
+  </tr>
+  <tr>
+   <td>{{domxref("MessageEvent")}} を採用して {{domxref("ServiceWorkerMessageEvent")}} を非推奨とした</td>
+   <td>{{ CompatNo() }}</td>
+   <td>
+    <p class="p1">{{CompatChrome(57)}}</p>
+   </td>
+   <td>{{ CompatNo() }}</td>
+   <td>{{ CompatGeckoMobile("55.0") }}</td>
+   <td>{{ CompatNo() }}</td>
+   <td>{{ CompatNo() }}</td>
+   <td>{{ CompatNo() }}</td>
+  </tr>
+  <tr>
+   <td><code>NavigationPreloadManager</code></td>
+   <td>{{ CompatNo() }}</td>
+   <td>{{CompatChrome(59)}}</td>
+   <td>{{ CompatNo() }}</td>
+   <td>{{ CompatNo() }}</td>
+   <td>{{ CompatNo() }}</td>
+   <td>{{CompatOperaMobile(46)}}</td>
+   <td>{{ CompatNo() }}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<p>[1] Service Worker（及び<a href="/en-US/docs/Web/API/Push_API">プッシュ通知</a>）は <a href="https://www.mozilla.org/en-US/firefox/organizations/">Firefox 45 &amp; 52 Extended Support Releases</a> (ESR.) では無効になっています。</p>
+
+<p>[2] この機能にはまだ対応していませんが、<a href="https://bugs.webkit.org/show_bug.cgi?id=174541">現在</a><a href="https://webkit.org/status/#specification-service-workers">開発中です</a>。</p>
+
+<h2 id="See_also" name="See_also">関連項目</h2>
+
+<ul>
+ <li><a href="https://serviceworke.rs">ServiceWorker Cookbook</a></li>
+ <li><a href="/docs/Web/API/ServiceWorker_API/Using_Service_Workers">Service Workerの使用</a></li>
+ <li><a href="https://github.com/mdn/sw-test">Service workers basic code example</a></li>
+ <li><a href="https://jakearchibald.github.io/isserviceworkerready/">Is ServiceWorker ready?</a></li>
+ <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promises</a></li>
+ <li><a href="/en-US/docs/Web/Guide/Performance/Using_web_workers">Using web workers</a></li>
+ <li><a href="https://www.fastly.com/blog/best-practices-for-using-the-vary-header">Best Practices for using the VARY header</a></li>
+</ul>

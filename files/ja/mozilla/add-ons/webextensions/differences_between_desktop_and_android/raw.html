@@ -1,0 +1,80 @@
+<div>{{AddonSidebar()}}</div>
+
+<p>Android 版 Firefox にはデスクトップ版 Firefox で利用できる WebExtensions APIs のサブセットが提供されます。この相違の一部は Android 環境の性質のためで、このため Firefox の実装できる機能であり、その他は Android 版 Firefox がデスクトップ版機能のすべては提供していないものです。この記事ではこうした違いを説明して、アドオン開発への影響を見ていきます。</p>
+
+<div class="note">この要約は Firefox バージョン 54 で計画される機能に基づいています。</div>
+
+<p>Android 版Firefox でサポートされる WebExtension API の詳細なリストは <a href="https://developer.mozilla.org/ja/docs/Mozilla/Add-ons/WebExtensions/Browser_support_for_JavaScript_APIs">JavaScript API のブラウザーサポート</a> のページにあり、サポートされている manifest.json キーの詳細は <a href="https://developer.mozilla.org/ja/Add-ons/WebExtensions/manifest.json">manifest.json セクション</a>ページにて提供されます。</p>
+
+<h2 id="User_interface" name="User_interface">ユーザーインターフェイス</h2>
+
+<p>Android 版 Firefox はデスクトップ版 Firefox で見られる UI のストリームライン版を提供しており、Firefox がモバイルでも楽しくて魅力ある体験を提供するのを保証しています。違いは Android の UI が Linux, Mac OS, Windows でのデスクトップ UI と違うのに関係しています。例えば、Android はウィンドウ環境をサポートしませんし、端末には普通は、キーボードショートカットを発行できるような物理キーボードが含まれません。他の違いはモバイル端末の画面が通常は小さいことに関係しています。</p>
+
+<p>UI の違いの結果、Android版Firefox の拡張機能は下記の API と manifest.json キーをサポートしていません: </p>
+
+<ul>
+ <li>{{WebExtAPIRef("commands")}} と関連する <a href="https://developer.mozilla.org/ja/Add-ons/WebExtensions/manifest.json/commands"><code>commands</code> </a>manifest.json キー、なぜなら Android タブレットとスマートフォンは通常‘commands'を発行する物理キーボードを持たないためです。</li>
+ <li>{{WebExtAPIRef("sidebarAction")}} と関連する <code><a href="https://developer.mozilla.org/ja/Add-ons/WebExtensions/manifest.json/sidebar_action">sidebar_action</a></code> manifest.json キー、, 限られた画面のため Android 端末サイドバーの不動産、例えばブラウザー履歴は、フルブラウザータブに表示されます。可能な場合、同様にサイドバーコンテンツをタブに移動すべきです。</li>
+ <li>{{WebExtAPIRef("windows")}} 、なぜならAndroid 版 Firefox にはただ1つの 'window'　があり、このため追加のブラウザーウィンドウを開いたり操作したりする能力はありません。</li>
+</ul>
+
+<p>{{WebExtAPIRef("browserAction")}} と<a href="https://developer.mozilla.org/ja/docs/Mozilla/Add-ons/WebExtensions/manifest.json/browser_action">browser_action</a> manifest.json キーのサポートは開発中です。Firefox 55 ではmanifest.jsonの<code><a href="https://developer.mozilla.org/ja/docs/Mozilla/Add-ons/WebExtensions/manifest.json/browser_action">browser_action</a></code>キーの <code>default_title</code> と <code>default_popup</code> をサポートするでしょう、その方法はAndroid 版 Firefoxメニューに項目を追加する <code>default_title</code> で、{{WebExtAPIRef("browserAction.onClicked()")}} イベントがメニュー項目がタップされるのをリッスンするのに利用できるでしょう。加えて、Firefox 57 サポートでは {{WebExtAPIRef("browserAction.setTitle")}} と {{WebExtAPIRef("browserAction.getTitle")}} メソッドが追加されるでしょう。</p>
+
+<h3 id="Effect_on_your_add-on_UI" name="Effect_on_your_add-on_UI">アドオン UI のエフェクト</h3>
+
+<p>These differences impact the way you expose your add-on in the Firefox UI. The most common option, adding a button for your add-on to the Firefox toolbar with <code><a href="https://developer.mozilla.org/ja/docs/Mozilla/Add-ons/WebExtensions/API/browserAction">browserAction</a></code>, is not available (at least until Firefox 55). Nor can you expose your add-on through a sidebar or context menu. You will, therefore, use an address bar button (through the manifest.json <code><a href="https://developer.mozilla.org/ja/docs/Mozilla/Add-ons/WebExtensions/manifest.json/page_action">page_action</a></code> key and <code><a href="https://developer.mozilla.org/ja/Add-ons/WebExtensions/API/pageAction">pageAction</a></code> API) remembering that 既定では this button is hidden and must be shown programmatically.</p>
+
+<p>The features of {{WebExtAPIRef("pageAction")}} are also reduced in Firefox for Android. The manifest.json key <a href="/ja/docs/Mozilla/Add-ons/WebExtensions/manifest.json/page_action">page_action</a> enables you to define the button icon and a popup. You then have use of {{WebExtAPIRef("pageAction.show()")}} and {{WebExtAPIRef("pageAction.hide()")}} however, once ‘shown’, note that the address bar button is visible in all tabs (unlike the desktop behavior, where the button is shown only for a specified tab.) And you can set a listener to {{WebExtAPIRef("pageAction.onClicked()")}}. {{WebExtAPIRef("pageAction.setPopup()")}} and {{WebExtAPIRef("pageAction.getPopup()")}} are also available, so you can update the popup or create a popup once the add-on is running. </p>
+
+<p>Also, in both {{WebExtAPIRef("pageAction")}} and {{WebExtAPIRef("browserAction")}} popup content is opened in a new tab and persists until the user manually closes the tab.</p>
+
+<p>You can also manipulate tabs on Firefox for Android. The {{WebExtAPIRef("tabs")}} API enables you to perform most of the actions you can on the desktop, the main exceptions are:</p>
+
+<ul>
+ <li>zoom features, Firefox for Android has one zoom level only, which the user can override with a pinch gesture on the page.</li>
+ <li>features related to selecting and moving tabs, again as these features are not supported on Android.</li>
+ <li>the ability to detect a tab's language or muted status. </li>
+</ul>
+
+<h3 id="Other_UI_related_API_and_manifest.json_key_differences" name="Other_UI_related_API_and_manifest.json_key_differences">Other UI related API and manifest.json key differences</h3>
+
+<p>There are some other UI features not supported, these are:</p>
+
+<ul>
+ <li>{{WebExtAPIRef("bookmarks")}}, which means you cannot manipulate the user's bookmarks, although the user can do this themselves through the UI.</li>
+ <li>{{WebExtAPIRef("browsingData")}}, which means you cannot offer users features to clear browser data such as history, downloads, passwords, and alike.</li>
+ <li>The <a href="https://developer.mozilla.org/ja/Add-ons/WebExtensions/manifest.json/chrome_url_overrides">chrome_url_overrides</a> and <a href="https://developer.mozilla.org/ja/Add-ons/WebExtensions/manifest.json/chrome_settings_overrides">chrome_settings_overrides</a> manifest.json keys, which means you cannot add custom home and new tab pages.</li>
+ <li>{{WebExtAPIRef("contextMenus")}}, which means you cannot add options to context menus.</li>
+ <li>{{WebExtAPIRef("history")}}, which means you cannot search or manipulate the history of browsed pages.</li>
+ <li>{{WebExtAPIRef("omnibox")}} and the related <a href="https://developer.mozilla.org/ja/Add-ons/WebExtensions/manifest.json/omnibox">omnibox</a> manifest.json key, which means you cannot provide custom address bar suggestions.</li>
+ <li>{{WebExtAPIRef("sessions")}}, which means you cannot list and restore tabs that have been closed while the browser has been running.</li>
+ <li>The <a href="https://developer.mozilla.org/ja/Add-ons/WebExtensions/manifest.json/options_ui">options_ui </a> manifest.json key, which means you cannot provide options settings on about:addons. (And, as a consequence, {{WebExtAPIRef("runtime.openOptionsPage()")}} is not available either.) You can, however, offer your users a page for setting add-on options using a <a href="/ja/docs/Mozilla/Add-ons/WebExtensions/user_interface/Bundled_web_pages">bundled wep page</a> displayed using {{WebExtAPIRef("tabs")}}, you just have to add a button or other mechanism in your add-on to access the page.</li>
+ <li class="note">At the time of writing the options_ui key was being implemented under <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1302504">bug 1302504</a>.</li>
+</ul>
+
+<ul>
+</ul>
+
+<h2 id="Developer_tools" name="Developer_tools">開発者ツール</h2>
+
+<p>Android 版Firefox の開発者ツールは、デスクトップの WebIDE に接続する <a href="https://developer.mozilla.org/ja/docs/Tools/Remote_Debugging/Debugging_Firefox_for_Android_with_WebIDE" style="text-decoration: none;">USB</a> や <a href="https://developer.mozilla.org/ja/docs/Tools/Remote_Debugging/Debugging_Firefox_for_Android_over_Wifi">Wi-Fi経由の</a> リモートデバッグにて提供されます。このため、Android 版Firefox では組み込みの開発者ツールを提供せず、拡張機能は開発ツールに展開する次の API をサポートしません:</p>
+
+<ul>
+ <li><a href="https://developer.mozilla.org/ja/docs/Mozilla/Add-ons/WebExtensions/API/devtools.inspectedWindow">devtools.inspectedWindow</a></li>
+ <li><a href="https://developer.mozilla.org/ja/docs/Mozilla/Add-ons/WebExtensions/API/devtools.network">devtools.network</a></li>
+ <li><a href="https://developer.mozilla.org/ja/docs/Mozilla/Add-ons/WebExtensions/API/devtools.panels">devtools.panels</a> と関連する <a href="https://developer.mozilla.org/ja/Add-ons/WebExtensions/manifest.json/devtools_page">devtools_page</a> の manifest.json キー</li>
+</ul>
+
+<h2 id="Native_application_interaction" name="Native_application_interaction">ネイティブアプリの相互作用</h2>
+
+<p> {{WebExtAPIRef("runtime.connectNative()")}} と {{WebExtAPIRef("runtime.sendNativeMessage()")}} からのネイティブアプリケーションへの相互作用はできません。</p>
+
+<h2 id="Permissions" name="Permissions">パーミッション</h2>
+
+<p>Permissions to use certain WebExtension APIs must be requested in the manifest.json file. On the desktop version of Firefox users are warned when an extension requests a permission and are given the option to deny the add-on that permission. However, on Firefox for Android permissions are granted automatically and the user isn’t given the option to deny them. It is currently planned to resolve this issue in Firefox 57.</p>
+
+<h2 id="Other_notes" name="Other_notes">その他のメモ</h2>
+
+<ul>
+ <li class="note">At the time of writing there was an issue with {{WebExtAPIRef("storage.sync()")}} and data is not synchronized with the user’s Firefox account from Firefox for Android. More details can be found in <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1316442">bug 1316442</a>.</li>
+</ul>

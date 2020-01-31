@@ -1,0 +1,125 @@
+<p>{{DefaultAPISidebar("WebXR")}}{{draft}}</p>
+
+<p>At a fundamental level, rendering of scenes for WebXR presentation in either augmented reality or virtual reality contexts is performed using WebGL, so the two APIs share much of the same design language. However, in order to provide the ability to present scenes in true 3D using XR headsets and other such equipment, WebXR has additional concepts that must be understood.s</p>
+
+<p><span class="seoSummary">In this article, we introduce the ways in which WebXR expands upon the geometry of WebGL, and how the positions and orientations of objects—both physical and virtual—are described in relation to one another using spaces and, in particular, reference spaces.</span></p>
+
+<p>The article <a href="/en-US/docs/Web/API/WebXR_Device_API/Spatial_tracking">Spatial tracking in WebXR</a> builds upon the information provided here to cover how the physical position and orientation of the user's head, as well as potentially other parts of their body such as the hands, are mapped into the digital world, as well as how the relative positions of both physical and virtual objects are tracked as they move around, so that the scene can be properly rendered and composited.</p>
+
+<h2 id="Fundamentals_of_3D_geometry">Fundamentals of 3D geometry</h2>
+
+<p>While we'll examine here the required math operations used to compute the positions, orientations, and movement of objects in virtual space—plus the need to integrate the human viewer of the scene into the mix—a thorough introduction to geometry and the use of matrices and vectors to manage 3D representations of a scene is well beyond the scope of what can be accomplished in this article. You can learn more about the individual operations in <a href="/en-US/docs/Web/API/WebGL_API/Matrix_math_for_the_web">Matrix math for the web</a>.</p>
+
+<h3 id="Units">Units</h3>
+
+<p>Before discussing the details of the geometry of the 3D space used by WebXR, it's first useful to understand the units of measure that are applied to the 3D world.</p>
+
+<h4 id="Lengths_and_distances">Lengths and distances</h4>
+
+<p>WebGL measures all distances and lengths in <strong>meters</strong>. WebXR inherits this standard, as well as the fact that the world is a cube two meters wide, two meters tall, and two meters deep. Each of the three axes has a minimum value of -1.0 and a maximum of 1.0, with the center of the cube located at (0, 0, 0).</p>
+
+<p><img alt="Diagram showing a WebXR space whose X, Y, and Z coordinate axes each have a minimum value of -1 and a maximum of 1." src="https://mdn.mozillademos.org/files/17034/DefaultSpaceDimensions.svg" style="height: 384px; width: 640px;"></p>
+
+<p>This two cubic meter space encompasses the entire universe for the purposes of your code. Everything you draw must have its coordinates mapped to fit into this space, either explicitly within your code, or by using a transform to adjust the coordinates of all vertices.</p>
+
+<h4 id="Angles">Angles</h4>
+
+<p>Angles are specified using <strong>{{interwiki("wikipedia", "radians")}}</strong>. To convert degrees to radians, simply multiply the value in degrees by <code>π/180</code>. The following code snippet shows two simple functions, <code>degreesToRadians()</code> and <code>radiansToDegrees()</code>, which convert back and forth between the two units for measuring angles.</p>
+
+<pre class="brush: js">const RADIANS_PER_DEGREE = Math.PI / 180.0;
+
+let degreesToRadians = (deg) =&gt; deg * RADIANS_PER_DEGREE;
+let radiansToDegrees = (rad) =&gt; rad / RADIANS_PER_DEGREE;
+</pre>
+
+<h4 id="Times_and_durations">Times and durations</h4>
+
+<p>All times and durations in WebXR are measured using the {{domxref("DOMHighResTimeStamp")}} type, which is a double-precision floating-point value specifying the time in milliseconds relative to the starting time. Since the value is a floating-point number, it may be accurate to well better than the millisecond level, depending on the platform and hardware.</p>
+
+<p>Time is primarily used to determine the amount of time that's elapsed since the scene's previous animation frame was drawn. As such the time is typically in alignment with the refresh rate of the display, or some fraction thereof if the frame rate needs to be constrained due to performance issues. This means that the time will usually step in 1/60th of a second intervals, assuming a 60 FPS frame rate. Doing the math, we find that this means that each frame will ideally be rendered 16.6667 milliseconds apart.</p>
+
+<h3 id="Geometry_operations_with_matrices">Geometry operations with matrices</h3>
+
+<p>We offer a <a href="/en-US/docs/Web/API/WebGL_API/Matrix_math_for_the_web">guide to matrix mathematics as it pertains to 3D geometry</a>, including how matrices are used for the three primary transforms that need to be performed when rendering 3D scenes:</p>
+
+<ul>
+ <li><strong><a href="/en-US/docs/Web/API/WebGL_API/Matrix_math_for_the_web#Translation_matrix">Translation</a></strong> is the use of a matrix to shift the position of a point through the virtual space. This motion can be along any of the object's axes, or any combination of them.</li>
+ <li><strong><a href="https://wiki.developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Matrix_math_for_the_web#Rotation_matrix">Rotation</a></strong> is the application of a matrix that rotates a point around the origin of the object's coordinate system.</li>
+ <li><strong><a href="/en-US/docs/Web/API/WebGL_API/Matrix_math_for_the_web#Scale_matrix">Scaling</a></strong> is the use of a matrix to alter the size of an object.</li>
+</ul>
+
+<p>Note that when we say that a transform applies to a point, it also, by extension, can be applied to a <em>collection</em> of points. Since an object is represented by some number of polygons made up of a number of points in space, applying the same transform to every point that makes up the object will apply that same transform to the entire object overall. Transforms can also be applied to vectors, since vectors are described using a coordinate value to define the direction and magnitude of the vector.</p>
+
+<h2 id="On_the_origins_of_spaces">On the origins of spaces</h2>
+
+<p>Every virtual coordinate system used in WebXR is represented by a <strong>space</strong>, represented by an instance of {{domxref("XRSpace")}}, and is used to make determinations about the relative positions and motion of objects and other entities (such as light sources and cameras) within the user's environment.</p>
+
+<p>A point in 3D space is, as you probably know, made up of three components, each identifying the distance of the point along one the three axes. The position of any given point in the world is described by indicating how far along each of three axes the point is located from the center of the space, which is the position at which those the three axes meet.</p>
+
+<p>This is the <strong>native origin</strong> of the space, corresponding to a specific physical location in the user's environment. Each space has its own native origin, which is tracked by the XR device's tracking system. This may be different from the <strong>effective origin</strong>, which is the origin point for the space's local coordinate system.</p>
+
+<p>The directionality of the coordinate system can be seen in the following diagram:</p>
+
+<p><img alt="Diagram showing the coordinate system used by WebGL and WebXR." src="https://mdn.mozillademos.org/files/17033/webgl_coordinates.svg" style="height: 487px; width: 487px;"></p>
+
+<p>An {{domxref("XRRigidTransform")}} called the <strong>origin offset</strong> is used to transform points from the space's own effective coordinate system to the XR device's native coordinate system. The origin offset is initially simply an identity transform, since typically the two origins are aligned when the space is first established. However, as changes in alignment accumulate over time the origin offset may change to compensate.</p>
+
+<p>The position of a point in space relative to the origin is determined by determining its distance along each of the three spatial axes shown in the diagram above. The space's origin is the point (0, 0, 0), at the center of the space and at the zero position along each axis. Specifically, under the initial starting conditions, with the default orientation of the viewer upon the space:</p>
+
+<ul>
+ <li>The <strong>x-axis</strong> extends horizontally from left to right away from the origin, with the <em>x</em> coordinate of +1.0 being located at the right edge of the world. Negative values of <em>x</em> extend toward the left from the origin, reaching a value of -1.0 at the left edge of the space.</li>
+ <li>The <strong>y-axis</strong> is positive extending upward from the origin toward the top of the screen, reaching +1.0 at the top of the world space. Values of <em>y</em> less than 0 are found below the origin, extending toward the bottom of the screen and reaching -1.0 at the bottom of the world's space.</li>
+ <li>The <strong>z-axis</strong> extends from the origin outward from the screen, reaching +1.0 at the closest point to the user in that direction. Negative values of <em>z</em> extend away from the user further into the screen, with the farthest away point in the world having a <em>z</em> of -1.0.</li>
+</ul>
+
+<p>Every object is, at the simplest level, a set of polygons defined by points in 3D space and an offset transform, indicating how to move and rotate the object to position it at the desired point in space. If the offset transform is an identity matrix, the object is located at the origin point.</p>
+
+<p>To be useful for spatial tracking and scene geometry, though, you need to be able to correlate the XR device's perceived position with the space's coordinate system. That's where reference spaces come in.</p>
+
+<h2 id="Defining_spatial_relationships_with_reference_spaces">Defining spatial relationships with reference spaces</h2>
+
+<p>There are a number of commonly used ways to reference the positions and orientations of objects relative to their environment, as well as to constrain the environment itself. To that end, WebXR defines a set of standard spaces, called <strong>reference spaces</strong>, that you can and should use whenever possible.</p>
+
+<h3 id="Selecting_the_reference_space_type">Selecting the reference space type</h3>
+
+<p>Regardless of the type of reference space you choose, its type is {{domxref("XRReferenceSpace")}} or is based on <code>XRReferenceSpace</code>.</p>
+
+<p>{{page("/en-US/docs/Web/API/XRReferenceSpaceType", "Values")}}</p>
+
+<p><strong>&lt;&lt;&lt;--- most common spaces etc ---&gt;&gt;&gt;</strong></p>
+
+<p>By using a reference space to describe the position and orientation of objects, WebXR is able to standardize the form of the data you use to describe these things, regardless of the underlying XR hardware. The reference space's configuration is then able to provide you with the view matrices and object poses needed to correctly render the contents of the space.</p>
+
+<h3 id="Establishing_the_reference_space">Establishing the reference space</h3>
+
+<p><span style="font-size: 1rem; letter-spacing: -0.00278rem;">The topmost space—the one obtained by calling the {{domxref("XRSession")}} method {{domxref("XRSession.requestReferenceSpace", "requestReferenceSpace()")}}—describes the coordinate system used for the overall world space. Everything is fundamentally tied to this coordinate system, which represents the relationship between the user's equipment's position and the virtual world.</span></p>
+
+<p>While you can use WebXR for everything from augmenting the world with annotations to 360° video playback to scientific simulations to virtual reality training systems or anything else you can imagine, let's take a 3D video game as an example of a typical WebXR application. <span style="font-size: 1rem; letter-spacing: -0.00278rem;">Consider the model of a player's avatar standing in the game world's space. You position that avatar relative to the world space, using the coordinate system defined by the world's reference space.</span></p>
+
+<p>To move the player to a new position, you could rewrite all of its coordinates or manually apply a transform each time they move, but there's an easier way, thanks to reference spaces and their ability to be created relative to one another. Create an {{domxref("XRRigidTransform")}} object representing the new position and orientation of the player's avatar, then create a new reference space to represent the avatar's point of view at the new position using the {{domxref("XRReferenceSpace")}} method {{domxref("XRReferenceSpace.getOffsetReferenceSpace", "getOffsetReferenceSpace()")}}. This comes in especially handy when implementing support for using non-XR devices such as keyboards or mice to move the player's avatar through the world.</p>
+
+<p>{{EmbedYouTube("nVSlQkSSQeQ")}}</p>
+
+<p>With the newly-created reference space, the avatar can remain at the same coordinates yet appear in the world to be located at (and be see the world from the perspective of) its new location. For a more detailed look at how to use reference spaces to manage the player's viewpoint, see the article </p>
+
+<p>In the case of our game avatar example, it's rare for an avatar (or any other moving creature or machine) to be a simple blob sliding around the world. They usually have additional form, as well as internal movement, such as moving legs, arms that swing as they walk, a head that turns or bobs, weapons that move around, and so forth. Bring these to life using standard WebGL techniques and a positioning matrix or {{domxref("XRRigidTransform")}} to shift the objects to the correct position relative to the effective origin.</p>
+
+<p>All spatial (position, orientation, and movement) information exchanged between your app and the WebXR API is expressed in relation to a specific space at the time the frame is being rendered. Any further position and orientation management is between you and WebGL, though you do make use of the origin offset from the reference space in order to position the objects correctly in the 3D world.</p>
+
+<h2 id="Positioning_and_orienting_objects">Positioning and orienting objects</h2>
+
+<p>When it's time to render an animation frame, the callback function specified when you called the WebXR session's {{domxref("XRSession")}} object's {{domxref("XRSession.requestAnimationFrame", "requestAnimationFrame()")}} method is invoked. The callback receives as one of its parameters a timestamp indicating the time at which the frame takes place, and should perform all rendering for the corresponding animation frame.</p>
+
+<p>As the callback is repeatedly called with increasing time values, the callback generates a sequence of frames which are presented using the XR hardware, thereby showing a 3D scene to the user.</p>
+
+<h2 id="Relative_positions_with_reference_spaces">Relative positions with reference spaces</h2>
+
+<p>...</p>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Web/API/WebXR_Device_API">WebXR Device API</a></li>
+ <li><a href="/en-US/docs/Web/API/WebGL_API">WebGL: 2D and 3D rendering for the web</a></li>
+ <li><a href="/en-US/docs/Web/API/WebGL_API/Matrix_math_for_the_web">Matrix math for the web</a></li>
+</ul>

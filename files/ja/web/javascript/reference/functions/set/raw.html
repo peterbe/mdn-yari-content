@@ -1,0 +1,138 @@
+<div>{{jsSidebar("Functions")}}</div>
+
+<p><strong><code>set</code></strong> 構文は、オブジェクトプロパティに対して、値を設定しようとするときに呼び出される関数を割り当てます。</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox">{set <em>prop</em>(<em>val</em>) { . . . }}
+{set [expression](<em>val</em>) { . . . }}</pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<dl>
+ <dt><code>prop</code></dt>
+ <dd>与えられた関数を割り当てるプロパティの名称です。</dd>
+ <dt><code>val</code></dt>
+ <dd><code>prop</code> に設定しようとする値を保持する変数のエイリアスです。</dd>
+ <dt>expression</dt>
+ <dd>ECMAScript 6 より、算出されたプロパティ名 (computed property name) の式を使用して関数に結び付けることもできます。</dd>
+</dl>
+
+<h2 id="Description" name="Description">説明</h2>
+
+<p>JavaScript では、特定のプロパティを変更しようとするたびに関数を実行するため、setter を利用できます。setter はたいてい getter と合わせて、擬似的なプロパティを作成するために用いられます。実際の値を持つプロパティが、同時に setter を持つことはできません。</p>
+
+<div>
+<p><code>set</code> 構文を使用する際の注意事項:</p>
+
+<ul style="text-align: left;">
+ <li>数値か文字列かの識別子を持つことができます。</li>
+ <li>厳密に 1 つの引数を持たなければなりません (詳しくは <a href="http://whereswalden.com/2010/08/22/incompatible-es5-change-literal-getter-and-setter-functions-must-now-have-exactly-zero-or-one-arguments/" rel="external nofollow">Incompatible <abbr title="ECMAScript 5th edition">ES5</abbr> change: literal getter and setter functions must now have exactly zero or one arguments</a> をご覧ください)。</li>
+ <li>同一のプロパティに別の <code>set</code> あるいはデータエントリを持つオブジェクトリテラルが現れてはいけません。<br>
+  （ ※ <code>{ set x(v) { }, set x(v) { } }</code> および <code>{ x: ..., set x(v) { } }</code> は不可 ）</li>
+</ul>
+</div>
+
+<p>setter は <a href="/ja/docs/JavaScript/Reference/Operators/delete" title="JavaScript/Reference/Operators/delete"><code>delete</code></a> 演算子を用いて削除できます。</p>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<h3 id="Defining_a_setter_on_new_objects_in_object_initializers" name="Defining_a_setter_on_new_objects_in_object_initializers">オブジェクトの初期化時に新しいオブジェクトで setter を定義する</h3>
+
+<p>ここではオブジェクト <code>o</code> に疑似プロパティ <code>current</code> を定義して、値が設定されたときに <code>log</code> をその値で更新します:</p>
+
+<pre class="brush: js">var o = {
+  set current (str) {
+    this.log[this.log.length] = str;
+  },
+  log: []
+}</pre>
+
+<p><code>current</code> は定義されておらず、あらゆるアクセスを試みてもその結果は <code>undefined</code> になることに注意してください。</p>
+
+<h3 id="Removing_a_setter_with_the_delete_operator" name="Removing_a_setter_with_the_delete_operator"><code>delete</code> 演算子による setter の削除</h3>
+
+<p>setter を削除したい場合は、<code><a href="/ja/docs/Web/JavaScript/Reference/Operators/delete">delete</a></code> を使用します:</p>
+
+<pre class="brush: js">delete o.current;
+</pre>
+
+<h3 id="Defining_a_setter_on_existing_objects_using_defineProperty" name="Defining_a_setter_on_existing_objects_using_defineProperty"><code>defineProperty</code> を使用して既存のオブジェクトに setter を定義する</h3>
+
+<p>任意のタイミングで既存のオブジェクトに setter を追加するには、{{jsxref("Object.defineProperty()")}} を使用します。</p>
+
+<pre class="brush: js">var o = { a:0 };
+
+Object.defineProperty(o, "b", { set: function (x) { this.a = x / 2; } });
+
+o.b = 10; // setter を実行。プロパティ 'a' に 10 / 2 (5) を代入
+console.log(o.a) // 5</pre>
+
+<h3 id="Using_a_computed_property_name" name="Using_a_computed_property_name">算出されたプロパティ名を使用する</h3>
+
+<div class="note">
+<p><strong>注記:</strong> プロパティ名の算出は ECMAScript 6 の提案に含まれる実験的な技術であり、まだブラウザで広くはサポートされていません。非サポート環境では構文エラーが発生します。</p>
+</div>
+
+<pre class="brush: js">var expr = "foo";
+
+var obj = {
+  baz: "bar",
+  set [expr](v) { this.baz = v; }
+};
+
+console.log(obj.baz); // "bar"
+obj.foo = "baz";      // setter を実行
+console.log(obj.baz); // "baz"
+</pre>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">策定状況</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-11.1.5', 'Object Initializer')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td>最初期の定義</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-method-definitions', 'Method definitions')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td>computed property names を追加。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-method-definitions', 'Method definitions')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザ実装状況</h2>
+
+<div>
+<p>{{Compat("javascript.functions.set")}}</p>
+</div>
+
+<h2 id="SpiderMonkey-specific_notes" name="SpiderMonkey-specific_notes">SpiderMonkey に関する注記</h2>
+
+<ul>
+ <li><a href="/ja/docs/Web/JavaScript/New_in_JavaScript/1.8.1">JavaScript 1.8.1</a> より、オブジェクトや配列のイニシャライザでプロパティを設定する際に、setter は呼び出されません。</li>
+ <li>SpiderMonkey 38 より ES6 仕様に従い、{{jsxref("Functions/rest_parameters", "rest parameter", "", 1)}} を持つ setter は {{jsxref("SyntaxError")}} が発生します。</li>
+</ul>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li><a href="/ja/docs/Web/JavaScript/Reference/Functions/get">getter</a></li>
+ <li>{{jsxref("Operators/delete", "delete")}}</li>
+ <li>{{jsxref("Object.defineProperty()")}}</li>
+ <li>{{jsxref("Object.defineGetter", "__defineGetter__")}}</li>
+ <li>{{jsxref("Object.defineSetter", "__defineSetter__")}}</li>
+ <li><a href="/ja/docs/Web/JavaScript/Guide/Working_with_Objects#Defining_getters_and_setters">ゲッターとセッターの定義</a> (JavaScript ガイド)</li>
+</ul>

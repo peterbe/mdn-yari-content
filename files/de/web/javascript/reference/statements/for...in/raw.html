@@ -1,0 +1,194 @@
+<div>
+<div>{{jsSidebar("Statements")}}</div>
+</div>
+
+<p>Die <code>for...in</code> Anweisung durchläuft die <a href="/de/docs/Web/JavaScript/Aufzählbarkeit_und_Zugehörigkeit_von_Eigenschaften">Eigenschaften/Attribute (nur enumerable Eigenschaften)</a> eines Objekts in willkürlicher Reihenfolge. Für jede einzelne Eigenschaft können Anweisungen ausgeführt werden.</p>
+
+<p><strong style="font-size: 2.14285714285714rem; font-weight: 700; letter-spacing: -1px; line-height: 30px;">Syntax</strong></p>
+
+<pre class="syntaxbox">for (<var>variable</var> in <var>object</var>) {<em>...</em> }</pre>
+
+<dl>
+ <dt><code>variable</code></dt>
+ <dd>in jedem Schleifendurchlauf wird der Name einer Eigenschaft der <em>variable</em> zugewiesen.</dd>
+ <dt><code>object</code></dt>
+ <dd>Das Objekt dessen Eigenschaften / Attribute durchlaufen werden sollen.</dd>
+</dl>
+
+<h2 id="Description" name="Description">Beschreibung</h2>
+
+<p>Eine <code>for...in</code> Schleife durchläuft nur die aufzählbaren Eigenschaften. Objekte die "built–in constructors" wie <code>Array</code> und <code>Object</code> abgeleitet werden, haben von <span style="font-family: courier new,andale mono,monospace; line-height: 1.5;">Object.prototype und </span><span style="font-family: courier new,andale mono,monospace; line-height: 1.5;">String.prototype</span><span style="line-height: 1.5;"> geerbte nicht-durchzählbare Eigenschaften</span><span style="line-height: 1.5;">, wie {{jsxref("String")}}'s {{jsxref("String.indexOf", "indexOf()")}} Methode oder {{jsxref("Object")}}'s {{jsxref("Object.toString", "toString()")}} Methode. Die Schleife durchläuft alle (zählbaren) "enumerable" Eigenschaften des Objekts selber und diejenigen die das Objekt vom Constructor seines prototypes geerbt hat (Eigenschaften näher am Objekt in der prototype Kette überschreiben die Eigenschaften des  Prototypes).</span></p>
+
+<h3 id="Gelöschte_hinzugefügte_oder_modifizierte_Properties">Gelöschte, hinzugefügte oder modifizierte Properties</h3>
+
+<p>Eine <code>for...in</code> Schleife iteriert über die Properties eines Objektes in beliebiger Reihenfolge (siehe auch {{jsxref("Operators/delete", "delete")}} um mehr darüber zu erfahren warum man sich nicht auf die scheinbare Ordnung der Iteration verlassen kann, zumindestens nicht in einer Cross-Browser-Umgebung). Falls eine Property in einer Iteration verändert wird und später erneut ausgelesen wird, dann ist ihr Wert innerhalb der Schleife derselbe wie der zum späteren Zeitpunkt. Eine Property die gelöscht wurde bevor sie besucht wurde, wird später nicht besucht. Properties die während der Iteration zu einem Objekt, über dessen Properties gerade iteriert wird,  hinzugefügt werden, werden entweder besucht oder ignoriert von der Iteration. Im Allgemeinen ist es ratsam während der Iteration keine Properties hinzuzufügen, zu verändern oder zu entfernen außer der Property die gerade besucht wird. Es gibt keine Garantie ob eine hinzugefügte Property besucht wird, eine geänderte (außer der aktuell besuchten) besucht wird bevor oder nachdem sie besucht wurde, oder eine gelöschte Property besucht wird bevor sie gelöscht wird.</p>
+
+<h3 id="Array_Iteration_und_for...in">Array Iteration und <code>for...in</code></h3>
+
+<div class="note">
+<p><strong>Hinweis:</strong> <strong><code>for..in</code> sollte nicht für die Iteration von einem {{jsxref("Array")}} verwendet werden, bei denen die Indexreihenfolge wichtig ist.</strong></p>
+</div>
+
+<p>Array Indizes sind aufzählbare Eigenschaften mit Ganzzahlen als Namen und sind ansonsten identisch zu allgemeinen Objekteigenschaften. Es ist nicht sichergestellt, dass <code>for...in</code> die Indizes in einer bestimmten Reihenfolge zurück gibt und liefert außerdem auch alle aufzählbaren Eigenschaften zurück, einschließlich derer mit nicht ganzzahligen Namen und geerbten.</p>
+
+<p>Weil die Reihenfolge bei der Iteration von der Implementierung abhängt, werden die Elemente nicht einer konsistenten Reihenfolge abgerufen. Daher ist es besser, eine {{jsxref("Statements/for", "for")}} Schleife mit numerischem Index (oder {{jsxref("Array.prototype.forEach()")}} oder die {{jsxref("Statements/for...of", "for...of")}} Schleife) zu verwenden, wenn beim Durchlaufen des Arrays die Reihenfolge des Zugriff wichtig ist.</p>
+
+<h3 id="Iteration_nur_über_eigene_Eigenschaften">Iteration nur über eigene Eigenschaften</h3>
+
+<p>Falls Sie nur Eigenschaften berücksichtigen möchten, die direkt mit dem Objekt und nicht mit dem Prototypen verknüpft sind, verwenden Sie {{jsxref("Object.getOwnPropertyNames", "getOwnPropertyNames()")}} oder nutzen Sie eine {{jsxref("Object.prototype.hasOwnProperty", "hasOwnProperty()")}} Prüfung ( {{jsxref("Object.prototype.propertyIsEnumerable", "propertyIsEnumerable")}} kann auch verwendet werden). Alternativ können Sie auch den eingebauten Prototypen mit einer Prüfmethode erweitern, falls sichergestellt ist, dass es nicht zu einer Beeinflussung von externem Code kommt.</p>
+
+<h2 id="Example" name="Example">Beispiele</h2>
+
+<p>Die folgende Funktion erwartet ein Objekt als Argument. Es werden dann alle aufzählbaren Eigenschaften des Objekts durchlaufen und der Name der Eigenschaften mit dem entsprechenden Wert ausgegeben.</p>
+
+<pre class="brush: js">var obj = {a:1, b:2, c:3};
+    
+for (var prop in obj) {
+  console.log("o." + prop + " = " + obj[prop]);
+}
+
+// Ausgabe:
+// "o.a = 1"
+// "o.b = 2"
+// "o.c = 3"</pre>
+
+<p>Die folgende Funktion verdeutlicht die Verwendung von {{jsxref("Object.hasOwnProperty", "hasOwnProperty()")}}: die geerbten Eigenschaften werden nicht angezeigt.</p>
+
+<pre class="brush: js">var triangle = {a:1, b:2, c:3};
+
+function ColoredTriangle() {
+  this.color = "red";
+}
+
+ColoredTriangle.prototype = triangle;
+
+var obj = new ColoredTriangle();
+
+for (var prop in obj) {
+  if( obj.hasOwnProperty( prop ) ) {
+    console.log("o." + prop + " = " + obj[prop]);
+  } 
+}
+
+// Ausgabe:
+// "o.color = red"
+</pre>
+
+<h2 id="Spezifikationen">Spezifikationen</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Spezifikation</th>
+   <th scope="col">Status</th>
+   <th scope="col">Kommentar</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-for-in-and-for-of-statements', 'for...in statement')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-for-in-and-for-of-statements', 'for...in statement')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-12.6.4', 'for...in statement')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES3', '#sec-12.6.4', 'for...in statement')}}</td>
+   <td>{{Spec2('ES3')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES1', '#sec-12.6.3', 'for...in statement')}}</td>
+   <td>{{Spec2('ES1')}}</td>
+   <td>Initiale Definition.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browserkompatibilität">Browserkompatibilität</h2>
+
+<p>{{ CompatibilityTable() }}</p>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>6</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Chrome for Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="Kompatibilität_Initial-Ausdruck">Kompatibilität: Initial-Ausdruck</h2>
+
+<p>Vor SpiderMonkey 40 {{geckoRelease(40)}}, war es möglich einee Initial-Ausdruck (<code>i=0</code>) in einer <code>for...in</code> Schleife zu benutzen:</p>
+
+<pre class="brush: js example-bad">var obj = {a:1, b:2, c:3};
+for(var i=0 in obj) {
+  console.log(obj[i]);
+}
+// 1
+// 2
+// 3
+</pre>
+
+<p>Das nicht standardisierte Verhalten wird ab der Version 40 und später ignoriert und führt zu einem {{jsxref("SyntaxError")}} ("for-in loop head declarations may not have initializers") Warnung in der Console ({{bug(748550)}} und {{bug(1164741)}}).</p>
+
+<p>Andere Umgebungen wie v8 (Chrome), Chakra (IE/Edge), und JSC (WebKit/Safari) investieren ebenfalls in die Entfernung dieses Verhaltens.</p>
+
+<h2 id="See_also" name="See_also">Siehe auch</h2>
+
+<ul>
+ <li>{{jsxref("Statements/for...of", "for...of")}} - eine ähnliche Anweisung, die Eigenschafts<em>werte</em> durchläuft</li>
+ <li>{{jsxref("Statements/for_each...in", "for each in")}} - eine ähnliche Anweisung , die nicht die Namen sondern Werte von Objekteigenschaften durchläuft (veraltet)</li>
+ <li>{{jsxref("Statements/for", "for")}}</li>
+ <li><a href="/en-US/docs/Web/JavaScript/Guide/Iterators_and_Generators">Generatorausdrücke</a> (verwenden Sie die <code>for...in</code> Syntax)</li>
+ <li><a href="/en-US/docs/Enumerability_and_ownership_of_properties">Aufzählbarkeit und Besitz von Eigenschaften</a></li>
+ <li>{{jsxref("Object.getOwnPropertyNames()")}}</li>
+ <li>{{jsxref("Object.prototype.hasOwnProperty()")}}</li>
+ <li>{{jsxref("Array.prototype.forEach()")}}</li>
+</ul>

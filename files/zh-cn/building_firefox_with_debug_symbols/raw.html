@@ -1,0 +1,181 @@
+<h2 id="概述">概述</h2>
+<p>当我们需要对基于Firefox的插件、组件和扩展等进行调试时，需要首先对firefox进行调试。 获取Firefox的调试信息可以有两种方式：</p>
+<p>1. 下载Firefox的源代码，重新编译，加入debug信息。即在.mozconfig配置文件中加入</p>
+<pre><code><code>ac_add_options --enable-debug</code></code>
+</pre>
+<p>2.  安装Linux发行版的Firefox调试信息程序包。下面以Fedora 10系统为例介绍第2种方式。</p>
+<h2 id="安装需要的程序包">安装需要的程序包</h2>
+<p>执行以下命令</p>
+<pre><code>$sudo debuginfo-install firefox</code>
+</pre>
+<p>安装时会提示安装了以下软件包</p>
+<pre><span style="font-size: small;"><span><span style="font-family: Verdana;"><code>=================================================================================================================================================================
+ Package                                               Arch                   Version                                 Repository                           Size 
+================================================================================================================================================================= 
+Installing:  
+firefox-debuginfo                                     i386                   3.0.11-1.fc10                            updates-debuginfo                   578 k
+GConf2-debuginfo                                      i386                   2.24.0-1.fc10                            fedora-debuginfo                    589 k  
+atk-debuginfo                                         i386                   1.24.0-1.fc10                            fedora-debuginfo                    182 k  
+cairo-debuginfo                                       i386                   1.8.0-1.fc10                             fedora-debuginfo                    972 k  
+fontconfig-debuginfo                                  i386                   2.6.0-3.fc10                             fedora-debuginfo                    326 k  
+freetype-debuginfo                                    i386                   2.3.7-3.fc10                             updates-debuginfo                   2.0 M  
+gcc-debuginfo                                         i386                   4.3.2-7                                  fedora-debuginfo                    101 M  
+glib2-debuginfo                                       i386                   2.18.4-2.fc10                            updates-debuginfo                   2.4 M  
+glibc-debuginfo                                       i686                   2.9-3                                    updates-debuginfo                   9.1 M  
+gnome-vfs2-debuginfo                                  i386                   2.24.0-3.fc10                            fedora-debuginfo                    1.5 M  
+gtk2-debuginfo                                        i386                   2.14.7-8.fc10                            updates-debuginfo                   8.9 M  
+nspluginwrapper-debuginfo                             i386                   1.3.0-2.fc10                             updates-debuginfo                   568 k  
+nspr-debuginfo                                        i386                   4.7.4-1.fc10                             updates-testing-debuginfo           643 k  
+pango-debuginfo                                       i386                   1.22.3-1.fc10                            updates-debuginfo                   1.2 M  
+startup-notification-debuginfo                        i386                   0.9-4.fc9                                fedora-debuginfo                    65  k  
+xulrunner-debuginfo                                   i386                   1.9.0.11-1.fc10                          updates-debuginfo                   63  M 
+
+Installing for dependencies:  
+glibc-debuginfo-common                                i386                   2.9-3                                    updates-debuginfo                    13 M  
+
+Transaction Summary 
+
+================================================================================================================================================================= 
+Install     17 Package(s)          
+Update       0 Package(s)          
+Remove       0 Package(s)           
+Total size: 205 M 
+
+Is this ok [y/N]:</code></span></span>y</span>
+</pre>
+<p>也可以通过命令</p>
+<pre><code> $sudo yum --enablerepo=fedora-debuginfo,updates-debuginfo install GConf2-debuginfo ORBit2-debuginfo atk-debuginfo \
+ cairo-debuginfo dbus-debuginfo dbus-glib-debuginfo expat-debuginfo fontconfig-debuginfo freetype-debuginfo \
+ gcc-debuginfo glib2-debuginfo glibc-debuginfo gnome-vfs2-debuginfo gtk2-debuginfo gtk2-engines-debuginfo \
+ hal-debuginfo libX11-debuginfo libXcursor-debuginfo libXext-debuginfo libXfixes-debuginfo libXft-debuginfo \
+ libXi-debuginfo libXinerama-debuginfo libXrender-debuginfo libbonobo-debuginfo libgnome-debuginfo \
+ libselinux-debuginfo pango-debuginfo popt-debuginfo scim-bridge-debuginfo</code>
+</pre>
+<p>这里安装的debuginfo需要很多磁盘空间，下载时大概是205M的内容，安装之后需要大概500M的硬盘空间，安装过程中需要200M左右的临时文件空间，因此至少应该保证900M以上的磁盘空余空间。</p>
+<h2 id="使用gdb进行调试"><br>
+ 使用gdb进行调试</h2>
+<p>使用下面的命令启动firefox。</p>
+<pre>$firefox -g -d gdb
+</pre>
+<ul>
+ <li>-g 告诉Firefox以debug的模式启动</li>
+ <li>-d 指定采用的调试器，这里我们选择的是gdb</li>
+</ul>
+<p>执行了以上命令后，系统将打开一个gdb程序，加在调试信息（debugging symbols），之后进入gdb的调试环境，如：</p>
+<pre><code>MOZILLA_FIVE_HOME=/usr/lib/firefox-3.0.11
+ LD_LIBRARY_PATH=/usr/lib/firefox-3.0.11:/usr/lib/firefox-3.0.11/plugins:/usr/lib/firefox-3.0.11
+ FONTCONFIG_PATH=/etc/fonts:/usr/lib/firefox-3.0.11/res/Xft
+ DYLD_LIBRARY_PATH=/usr/lib/firefox-3.0.11:/usr/lib/firefox-3.0.11
+ LIBRARY_PATH=/usr/lib/firefox-3.0.11:/usr/lib/firefox-3.0.11/components:/usr/lib/firefox-3.0.11
+ SHLIB_PATH=/usr/lib/firefox-3.0.11:/usr/lib/firefox-3.0.11
+ LIBPATH=/usr/lib/firefox-3.0.11:/usr/lib/firefox-3.0.11
+ ADDON_PATH=/usr/lib/firefox-3.0.11
+ MOZ_PROGRAM=/usr/lib/firefox-3.0.11/firefox
+ MOZ_TOOLKIT=
+ moz_debug=1
+ moz_debugger=gdb /usr/bin/gdb /usr/lib/firefox-3.0.11/firefox -x /tmp/mozargs.NMP1yi
+GNU gdb Fedora (6.8-32.fc10) Copyright (C) 2008 Free Software Foundation, Inc. 
+License GPLv3+: GNU GPL version 3 or later &lt;http://gnu.org/licenses/gpl.html&gt;
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+and "show warranty" for details.
+This GDB was configured as "i386-redhat-linux-gnu"...
+(gdb)</code>
+</pre>
+<p>从上面的提示信息可以看出，实际上上面的命令等效于：</p>
+<pre><code>$/usr/bin/gdb /usr/lib/firefox-3.0.11/firefox -x /tmp/mozargs.NMP1yi</code>
+</pre>
+<p>运行firefox</p>
+<pre>(gdb) run
+</pre>
+<p>经过一系列的调用过程，firefox将被最终打开。我们可以在地址栏输入测试的页面，进行调试。<br>
+ <br>
+ 例如如果这个页面造成firefox崩溃，我们可以运行命令</p>
+<pre>backtrace
+</pre>
+<p>查看调用的情况。执行结果例如：</p>
+<pre><code>#0  0x07e16d18 in EventObject::GetSurface () from /home/phenix/.mozilla/firefox/qyvai5...ng@cs2c.com.cn/plugins/moonlight/libmoon.so 
+#1  0x07e8b945 in PlaylistParser::IsValidPlaylist () from /home/phenix/.mozilla/firefox/qyvai5...ng@cs2c.com.cn/plugins/moonlight/libmoon.so 
+#2  0x07e84533 in ASXDemuxerInfo::Supports () from /home/phenix/.mozilla/firefox/qyvai5...ng@cs2c.com.cn/plugins/moonlight/libmoon.so 
+#3  0x07e8524c in Media::Open () from /home/phenix/.mozilla/firefox/qyvai5...ng@cs2c.com.cn/plugins/moonlight/libmoon.so 
+#4  0x07e85b34 in Media::WorkerLoop () from /home/phenix/.mozilla/firefox/qyvai5...ng@cs2c.com.cn/plugins/moonlight/libmoon.so 
+#5  0x07e85bff in Media::WorkerLoop () from /home/phenix/.mozilla/firefox/qyvai5...ng@cs2c.com.cn/plugins/moonlight/libmoon.so 
+#6  0x007e251f in start_thread (arg=0xb1cfdb90) at pthread_create.c:297 #7  0x0071804e in clone () at ../sysdeps/unix/sysv/linux/i386/clone.S:130</code>
+</pre>
+<h2 id="调试插件">调试插件</h2>
+<p>插件是以线程方式工作的。</p>
+<pre><code>(gdb)info threads 
+ *9 Thread 0xb2784b90 (LWP 3210)  0x01203d18 in EventObject::GetSurface () from /home/phenix/.mozilla/firefox/qyva...ng@cs2c.com.cn/plugins/moonlight/libmoon.so   
+  8 Thread 0xb3186b90 (LWP 3209)  0x00fe0416 in __kernel_vsyscall ()   
+  7 Thread 0xb3b87b90 (LWP 3208)  0x00fe0416 in __kernel_vsyscall ()
+  6 Thread 0xb692bb90 (LWP 3207)  0x00fe0416 in __kernel_vsyscall ()
+  5 Thread 0xb5dffb90 (LWP 3206)  0x00fe0416 in __kernel_vsyscall ()
+  3 Thread 0xb73e0b90 (LWP 3204)  0x00fe0416 in __kernel_vsyscall ()
+  2 Thread 0xb7de1b90 (LWP 3203)  0x00fe0416 in __kernel_vsyscall ()
+  1 Thread 0xb7fe26d0 (LWP 3202)  0x00fe0416 in __kernel_vsyscall ()</code>
+</pre>
+<p>在使用gdb调试线程的时候，只有一个线程为活动线程，如果希望得到其他的线程的输出结果，必须使用thread命令切换至指定的线程，才能对该线程进行调试或观察输出结果。现在我们的9号线程是活动线程（前面有个星号＊）。如果我们想要调试的插件目前不是活动线程，可以通过使用下面的命令进行线程切换。</p>
+<pre>(gdb)thread 9
+</pre>
+<p>也可以配合/proc目录进行调试。下面的例子是查看进程打开的文件</p>
+<pre>[phenix@huangsl fd]$ ls -la
+total 0
+dr-x------ 2 phenix phenix  0 2009-07-07 17:25 .
+dr-xr-xr-x 5 phenix phenix  0 2009-07-07 17:25 ..
+lrwx------ 1 phenix phenix 64 2009-07-07 17:25 0 -&gt; /dev/pts/1
+lrwx------ 1 phenix phenix 64 2009-07-07 17:25 1 -&gt; /dev/pts/1
+l-wx------ 1 phenix phenix 64 2009-07-07 17:25 10 -&gt; pipe:[85382]
+lr-x------ 1 phenix phenix 64 2009-07-07 17:25 11 -&gt; pipe:[85383]
+l-wx------ 1 phenix phenix 64 2009-07-07 17:25 12 -&gt; pipe:[85383]
+lrwx------ 1 phenix phenix 64 2009-07-07 17:25 13 -&gt; socket:[85384]
+l-wx------ 1 phenix phenix 64 2009-07-07 17:25 14 -&gt; /home/phenix/.mozilla/firefox/9ftd6ha2.default/.parentlock
+lr-x------ 1 phenix phenix 64 2009-07-07 17:25 15 -&gt; pipe:[85391]
+l-wx------ 1 phenix phenix 64 2009-07-07 17:25 16 -&gt; pipe:[85391]
+lrwx------ 1 phenix phenix 64 2009-07-07 17:25 17 -&gt; socket:[85394]
+lr-x------ 1 phenix phenix 64 2009-07-07 17:25 18 -&gt; pipe:[85396]
+l-wx------ 1 phenix phenix 64 2009-07-07 17:25 19 -&gt; pipe:[85396]
+lrwx------ 1 phenix phenix 64 2009-07-07 17:25 2 -&gt; /dev/pts/1
+lr-x------ 1 phenix phenix 64 2009-07-07 17:25 20 -&gt; /dev/urandom
+lrwx------ 1 phenix phenix 64 2009-07-07 17:25 22 -&gt; socket:[85399]
+lr-x------ 1 phenix phenix 64 2009-07-07 17:25 23 -&gt; /usr/lib/firefox-3.0.11/chrome/en-US.jar
+lrwx------ 1 phenix phenix 64 2009-07-07 17:25 24 -&gt; /home/phenix/.mozilla/firefox/9ftd6ha2.default/permissions.sqlite
+lr-x------ 1 phenix phenix 64 2009-07-07 17:25 25 -&gt; /usr/lib/firefox-3.0.11/chrome/browser.jar
+lrwx------ 1 phenix phenix 64 2009-07-07 17:25 26 -&gt; /home/phenix/.mozilla/firefox/9ftd6ha2.default/places.sqlite
+lr-x------ 1 phenix phenix 64 2009-07-07 17:25 27 -&gt; /usr/lib/xulrunner-1.9/chrome/en-US.jar
+lr-x------ 1 phenix phenix 64 2009-07-07 17:25 28 -&gt; /usr/lib/xulrunner-1.9/chrome/classic.jar
+lr-x------ 1 phenix phenix 64 2009-07-07 17:25 29 -&gt; /usr/lib/xulrunner-1.9/chrome/toolkit.jar
+lr-x------ 1 phenix phenix 64 2009-07-07 17:25 3 -&gt; pipe:[85363]
+lr-x------ 1 phenix phenix 64 2009-07-07 17:25 30 -&gt; /home/phenix/.mozilla/firefox/9ftd6ha2.default/XUL.mfasl
+lrwx------ 1 phenix phenix 64 2009-07-07 17:25 31 -&gt; socket:[85409]
+lr-x------ 1 phenix phenix 64 2009-07-07 17:25 32 -&gt; /usr/lib/firefox-3.0.11/chrome/classic.jar
+lrwx------ 1 phenix phenix 64 2009-07-07 17:25 33 -&gt; /home/phenix/.mozilla/firefox/9ftd6ha2.default/search.sqlite
+lrwx------ 1 phenix phenix 64 2009-07-07 17:25 34 -&gt; /home/phenix/.mozilla/firefox/9ftd6ha2.default/formhistory.sqlite
+lrwx------ 1 phenix phenix 64 2009-07-07 17:25 35 -&gt; /home/phenix/.mozilla/firefox/9ftd6ha2.default/places.sqlite-journal
+lrwx------ 1 phenix phenix 64 2009-07-07 17:25 36 -&gt; /home/phenix/.mozilla/firefox/9ftd6ha2.default/content-prefs.sqlite
+lrwx------ 1 phenix phenix 64 2009-07-07 17:25 37 -&gt; /home/phenix/.mozilla/firefox/9ftd6ha2.default/cert8.db
+lrwx------ 1 phenix phenix 64 2009-07-07 17:25 38 -&gt; /home/phenix/.mozilla/firefox/9ftd6ha2.default/key3.db
+lr-x------ 1 phenix phenix 64 2009-07-07 17:25 39 -&gt; pipe:[85416]
+l-wx------ 1 phenix phenix 64 2009-07-07 17:25 4 -&gt; pipe:[85363]
+</pre>
+<pre>$firefox -g -d gdb
+(gdb)break main
+</pre>
+<p>执行firefox</p>
+<pre>(gdb)run
+</pre>
+<p>中断，主进程，开始调试插件进程</p>
+<pre>^C
+</pre>
+<p>调试插件进程</p>
+<pre>(gdb)attach 3210
+</pre>
+<p>插入断点</p>
+<pre>(gdb)break media.cpp 100
+</pre>
+<p>继续执行</p>
+<pre>(gdb)continue
+</pre>
+<h2 id="参考文件">参考文件</h2>
+<p><a class="internal" href="/en/Debugging_Mozilla_with_gdb" title="en/Debugging Mozilla with gdb">Debugging Mozilla with gdb</a> https://developer.mozilla.org/En/Debugging_Mozilla_on_Linux_FAQ<br>
+ <br>
+ <a class="internal" href="/En/Debugging" title="En/Debugging">Debugging</a> https://developer.mozilla.org/en/Debugging</p>

@@ -1,0 +1,225 @@
+<div>{{JSRef("Objetos_globales", "Error", "EvalError,InternalError,RangeError,ReferenceError,SyntaxError,TypeError,URIError")}}</div>
+
+<h2 id="Resumen" name="Resumen">Resumen</h2>
+
+<p>Representa un error en tiempo de ejecución.</p>
+
+<h3 id="Se_Crea_Por" name="Se_Crea_Por">Syntax</h3>
+
+<pre class="eval">new Error()
+new Error(<em>mensaje</em>)
+</pre>
+
+<p>Los errores en tiempo de ejecución también tienen como resultado un nuevo objeto <code>Error</code> que es creado y lanzado.</p>
+
+<h3 id="Par.C3.A1metros" name="Par.C3.A1metros">Parámetros</h3>
+
+<dl>
+ <dt><code>mensaje</code></dt>
+ <dd>Mensaje de error.</dd>
+</dl>
+
+<h2 id="Descripci.C3.B3n" name="Descripci.C3.B3n">Descripción</h2>
+
+<p>Además del <code>Error</code> base, existen otros seis tipos de error en el núcleo de JavaScript 1.5:</p>
+
+<dl>
+ <dt>{{jsxref("EvalError")}}</dt>
+ <dd>Lanzado cuando un error ocurre al ejecutar código en <code>eval()</code></dd>
+ <dt>{{jsxref("RangeError")}}</dt>
+ <dd>Lanzado cuando una variable numérica o un parámetro se encuentra fuera de su rango válido</dd>
+ <dt>{{jsxref("ReferenceError")}}</dt>
+ <dd>Lanzado cuando se referencia una referencia no válida</dd>
+ <dt>{{jsxref("SyntaxError")}}</dt>
+ <dd>Lanzado cuando ocurre un error de sintaxis mientras se traduce (parsea) código en <code>eval()</code></dd>
+ <dt>{{jsxref("TypeError")}}</dt>
+ <dd>Lanzado cuando una variable o un parámetro no es del tipo válido</dd>
+ <dt>{{jsxref("URIError")}}</dt>
+ <dd>Lanzado cuando <code>encodeURI()</code> o <code>decodeURI()</code> se le pasan parámetros no válidos</dd>
+</dl>
+
+<h2 dir="ltr" id="Propiedades">Propiedades</h2>
+
+<dl>
+ <dt>{{jsxref("Error.constructor")}}</dt>
+ <dd>Especifica la función que crea el prototipo de un objeto.</dd>
+ <dt>{{jsxref("Error.description")}}</dt>
+ <dd>Descripción / mensaje del error (sólo IE).</dd>
+ <dt>{{jsxref("Error.fileName")}}</dt>
+ <dd>Ruta de acceso al archivo que generó este error (sólo Mozilla).</dd>
+ <dt>{{jsxref("Error.lineNumber")}}</dt>
+ <dd>Número de línea en el archivo que generó este error (sólo Mozilla).</dd>
+ <dt>{{jsxref("Error.message")}}</dt>
+ <dd>Mensaje de error.</dd>
+ <dt>{{jsxref("Error.name")}}</dt>
+ <dd>Nombre del error.</dd>
+ <dt>{{jsxref("Error.number")}}</dt>
+ <dd>Numero del error (sólo IE).</dd>
+ <dt>{{jsxref("Error.prototype")}}</dt>
+ <dd>Permite agregar propiedades a un objeto Error.</dd>
+ <dt>{{jsxref("Error.stack")}}</dt>
+ <dd>
+ <p dir="ltr" id="tw-target-text">Rastreo de la pila (sólo Mozilla).</p>
+
+ <p> </p>
+ </dd>
+</dl>
+
+<h2 id="Ejemplos" name="Ejemplos">Ejemplos</h2>
+
+<h3 id="Ejemplo:_Lanzando_un_error_gen.C3.A9rico" name="Ejemplo:_Lanzando_un_error_gen.C3.A9rico">Ejemplo: Lanzando un error genérico</h3>
+
+<p>Normalmente los objetos de Error se crean con la intención de lanzarlos utilizando {{jsxref("Sentencias/throw", "throw")}}. Es posible manejar el error mediante {{jsxref("Sentencias/try...catch", "try...catch")}}:</p>
+
+<pre class="brush: js">try {
+    throw new Error("Whoops!");
+} catch (e) {
+    alert(e.name + ": " + e.message);
+}
+</pre>
+
+<h3 id="Ejemplo:_Manejando_un_error_espec.C3.ADfico" name="Ejemplo:_Manejando_un_error_espec.C3.ADfico">Ejemplo: Manejando un error específico</h3>
+
+<p dir="ltr" id="tw-target-text">Puede elegir manejar sólo tipos de error específicos probando el tipo de error con la propiedad {{jsxref("Object.prototype.constructor", "constructor")}} del error o, si está escribiendo para los motores de JavaScript modernos,  {{jsxref("Operators/instanceof", "instanceof")}} palabra clave:</p>
+
+<pre class="brush: js">try {
+    foo.bar();
+} catch (e) {
+    if (e instanceof EvalError) {
+        alert(e.name + ": " + e.message);
+    } else if (e instanceof RangeError) {
+        alert(e.name + ": " + e.message);
+    }
+    // ... etc
+}
+</pre>
+
+<h3 id="Tipos_de_error_personalizados"><br>
+ Tipos de error personalizados</h3>
+
+<p dir="ltr" id="tw-target-text">Es posible que desee definir sus propios tipos de error derivados de Error para poder lanzar <strong>new MyError()</strong>  y usar <strong>instanceof MyError </strong>para comprobar el tipo de error en el manejador de excepciones. A continuación se muestra la forma habitual de hacerlo.</p>
+
+<div class="warning">
+<p>Tenga en cuenta que el trono de error informará incorrecta número de línea y nombre de archivo al menos en Firefox.</p>
+</div>
+
+<p>See also the <a href="http://stackoverflow.com/questions/1382107/whats-a-good-way-to-extend-error-in-javascript">"What's a good way to extend Error in JavaScript?" discussion on Stackoverflow</a>.</p>
+
+<pre class="brush: js">// Create a new object, that prototypically inherits from the Error constructor
+function MyError(message) {
+  this.name = 'MyError';
+  this.message = message || 'Default Message';
+  this.stack = (new Error()).stack;
+}
+MyError.prototype = Object.create(Error.prototype);
+MyError.prototype.constructor = MyError;
+
+try {
+  throw new MyError();
+} catch (e) {
+  console.log(e.name);     // 'MyError'
+  console.log(e.message);  // 'Default Message'
+}
+
+try {
+  throw new MyError('custom message');
+} catch (e) {
+  console.log(e.name);     // 'MyError'
+  console.log(e.message);  // 'custom message'
+}</pre>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES1')}}</td>
+   <td>{{Spec2('ES1')}}</td>
+   <td>Initial definition. Implemented in JavaScript 1.1.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-15.11', 'Error')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-error-objects', 'Error')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-error-objects', 'Error')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<div>{{CompatibilityTable}}</div>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Edge</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>6</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Chrome for Android</th>
+   <th>Edge</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>8.1 {{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li>{{jsxref("Error.prototype")}}</li>
+ <li>{{jsxref("Statements/throw", "throw")}}</li>
+ <li>{{jsxref("Statements/try...catch", "try...catch")}}</li>
+</ul>

@@ -1,0 +1,162 @@
+<div>{{JSRef}}</div>
+
+<p><code><strong><var>TypedArray</var>.from()</strong></code> メソッドは、配列風オブジェクトや反復可能オブジェクトから新しい<a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/TypedArray#TypedArray_objects">型付き配列</a>を生成します。このメソッドは {{jsxref("Array.from()")}} とほぼ同じです。</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox"><code><var>TypedArray</var>.from(source[, mapFn[, thisArg]])
+</code>
+ここで <var>TypedArray</var> は次のいずれかです。
+
+Int8Array
+Uint8Array
+Uint8ClampedArray
+Int16Array
+Uint16Array
+Int32Array
+Uint32Array
+Float32Array
+Float64Array
+</pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<dl>
+ <dt><var>source</var></dt>
+ <dd>型付き配列に変換する配列風オブジェクトか反復可能オブジェクト</dd>
+ <dt><var>mapFn</var></dt>
+ <dd>オプション。型付き配列のすべての要素に適用される map 関数。</dd>
+ <dt><var>thisArg</var></dt>
+ <dd>オプション。<var>mapFn</var> を実行するときに <code>this</code> として使う値。</dd>
+</dl>
+
+<h3 id="Return_value" name="Return_value">返値</h3>
+
+<p>新しい {{jsxref("TypedArray")}} インスタンス。</p>
+
+<h2 id="Description" name="Description">解説</h2>
+
+<p><code><var>TypedArray</var>.from()</code> によって下記から型付き配列を生成できます:</p>
+
+<ul>
+ <li>配列風オブジェクト (<code>length</code> プロパティと、番号の振られた要素をもつオブジェクト)</li>
+ <li><a href="/ja/docs/Web/JavaScript/Guide/iterable">反復可能オブジェクト</a> ({{jsxref("Map")}} や {{jsxref("Set")}} のように要素を取得できるオブジェクト)</li>
+</ul>
+
+<p><code><var>TypedArray</var>.from()</code> はオプションの引数 <code>mapFn</code> を持ちます。型付き配列の各要素 (または作成されているサブクラスオブジェクト) 上で {{jsxref("Array.prototype.map", "map")}} 関数を実行できます。明確に述べれば、<code><var>TypedArray</var>.from(obj, mapFn, thisArg)</code> は <code><var>TypedArray</var>.from(Array.prototype.map.call(obj, mapFn, thisArg))</code> と同じです。</p>
+
+<p><code>from()</code> メソッドの <code>length</code> プロパティは 1 です。</p>
+
+<p>{{jsxref("Array.from()")}} と <code><var>TypedArray</var>.from()</code> の間には、いくつかの微妙な違いがあります。</p>
+
+<ul>
+ <li><code><var>TypedArray</var>.from</code> に渡された <code>|this|</code> 値がコンストラクターでなければ、 <code><var>TypedArray</var>.from</code> は {{jsxref("TypeError")}} をスローします。<code>Array.from</code> は新しい {{jsxref("Array")}} を生成することがデフォルトとなっています。</li>
+ <li><code><var>TypedArray</var>.from</code> は <code>[[Put]]</code> を使用します。<code>Array.from</code> は <code>[[DefineProperty]]</code> を使用します。 従って {{jsxref("Proxy")}} オブジェクトを使っている場合は、<code><var>TypedArray</var>.from()</code> が配列に新しい要素を追加するときに {{jsxref("Global_Objects/Proxy/handler/defineProperty", "handler.defineProperty")}} ではなく {{jsxref("Global_Objects/Proxy/handler/set", "handler.set")}} が呼び出されます。</li>
+ <li><code>from</code> がイテレーターを取得するとき、 <code><var>TypedArray</var></code> バージョンは最初にイテレーターからすべての値を集め、その数を使用して <code>|this|</code> のインスタンスを生成し、そのインスタンスに値を設定します。 <code>Array.from</code> はイテレーターから取得して各値を設定し、最後にサイズを設定します。</li>
+ <li><code>Array.from</code> はイテレーターではない配列風オブジェクトを引数に取ったときは、元の配列風オブジェクトで定義されていない番号の要素を空のまま残した疎配列 (sparse array) を生成します。一方、<code><var>TypedArray</var>.from</code> は必ず密配列 (dense array) を生成します。</li>
+</ul>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<pre class="brush: js">// Set (反復可能オブジェクト)
+var s = new Set([1, 2, 3]);
+Uint8Array.from(s);
+// Uint8Array [ 1, 2, 3 ]
+
+
+// 文字列
+Int16Array.from('123');
+// Int16Array [ 1, 2, 3 ]
+
+
+// アロー関数を map 関数として使って要素を操作する
+Float32Array.from([1, 2, 3], x =&gt; x + x);
+// Float32Array [ 2, 4, 6 ]
+
+
+// 数列を生成する
+Uint8Array.from({length: 5}, (v, k) =&gt; k);
+// Uint8Array [ 0, 1, 2, 3, 4 ]
+</pre>
+
+<h2 id="Polyfill" name="Polyfill">ポリフィル</h2>
+
+<p>JavaScript エンジンの実装がこのメソッドにネイティブに対応していない場合、回避策として、以下のコードをスクリプトの先頭に挿入することで、 <code>from()</code> の機能の大部分が使えるようになります。</p>
+
+<pre class="brush: js">if (!Int8Array.__proto__.from) {
+    (function () {
+        Int8Array.__proto__.from = function (obj, func, thisObj) {
+
+            var typedArrayClass = Int8Array.__proto__;
+            if(typeof this !== 'function') {
+                throw new TypeError('# is not a constructor');
+            }
+            if (this.__proto__ !== typedArrayClass) {
+                throw new TypeError('this is not a typed array.');
+            }
+ 
+            func = func || function (elem) {
+                    return elem;
+                };
+
+            if (typeof func !== 'function') {
+                throw new TypeError('specified argument is not a function');
+            }
+
+            obj = Object(obj);
+            if (!obj['length']) {
+                return new this(0);
+            }
+            var copy_data = [];
+            for(var i = 0; i &lt; obj.length; i++) {
+                copy_data.push(obj[i]);
+            }
+
+            copy_data = copy_data.map(func, thisObj);
+
+            var typed_array = new this(copy_data.length);
+            for(var i = 0; i &lt; typed_array.length; i++) {
+                typed_array[i] = copy_data[i];
+            }
+            return typed_array;
+        }
+    })();
+}</pre>
+
+<h2 id="Specifications" name="Specifications">仕様書</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">状態</th>
+   <th scope="col">備考</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-%typedarray%.from', '%TypedArray%.from')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-%typedarray%.from', '%TypedArray%.from')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td>初回定義</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザーの対応</h2>
+
+<div class="hidden">このページの互換性一覧表は構造化データから生成されています。データに協力していただけるのであれば、 <a class="external" href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> をチェックアウトしてプルリクエストを送信してください。</div>
+
+<p>{{Compat("javascript.builtins.TypedArray.from")}}</p>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li>{{jsxref("TypedArray.of()")}}</li>
+ <li>{{jsxref("Array.from()")}}</li>
+ <li>{{jsxref("Array.prototype.map()")}}</li>
+</ul>

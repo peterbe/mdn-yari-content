@@ -1,0 +1,175 @@
+<p>이 페이지에서는 최신 기술이 포함된 개발 버전의 Thunderbird를 빌드하기 위해 필요한 기본적인 단계를 설명하고 있습니다. 더 많은 정보를 원하는 경우 <a class="internal" href="../../../../En/Developer_Guide/Build_Instructions" rel="internal">빌드 문서</a>를 확인하세요.</p>
+
+<h2 id="빌드_전_준비사항">빌드 전 준비사항</h2>
+
+<h4 id="하드웨어_요구사항">하드웨어  요구사항:</h4>
+
+<ul>
+ <li>추천: 4GB 메모리(2GB 메모리와 2GB swap 만 가지고 시도할 경우 컴파일 도중 메모리 에러가 발생할 수 있습니다). 메모리 에러와 관련한 더 자세한 사항은 아래 내용을 참조하세요.</li>
+ <li>고속 인터넷</li>
+</ul>
+
+<h4 id="설치">설치:</h4>
+
+<p>당신의 운영체제에 따라 빌드 환경을 설치하는데 각각 다른 설치 과정이 요구됩니다. 우선 당신의 운영체제에 따른 요구사항을 완료한 뒤 빌드 설치를 시작하세요. Linux/MacOS 사용자는 mozilla-central 레포지토리를 복사하기 위한 스크립트 프롬프트를 무시하시고 대신 이 문서를 따라 진행해주세요.</p>
+
+<p><a href="/ko/docs/Developer_Guide/Build_Instructions/Windows_Prerequisites" title="/ko/docs/Developer_Guide/Build_Instructions/Windows_Prerequisites">Windows 빌드 요구사항 [ko]</a></p>
+
+<p><a href="/ko/docs/Simple_Firefox_build/Linux_and_MacOS_build_preparation" title="/ko/docs/Simple_Firefox_build/Linux_and_MacOS_build_preparation">Linux / MacOS 빌드 요구사항 [ko]</a></p>
+
+<h2 id="소스코드_가져오기">소스코드 가져오기</h2>
+
+<div class="note"><strong>Note:</strong> On Windows, you won't be able to build the Thunderbird source code if it's under a directory with spaces in the path (e.g., don't use "Documents and Settings"). You can pick any other location, such as a new directory C:/thunderbird-src (where the syntax "C:/" with a forward slash is intentional to clarify one should now be in the <a href="/en-US/docs/">Windows build prerequisite</a> MozillaBuild command prompt).</div>
+
+<div class="note"><strong>Note:</strong> Parts of the build process also have problems when the source code is in a directory where the path is long (nested many levels deep). On Linux, this can manifest as problems setting up the virtualenv for running tests (failure to install pip or virtualenv because of OS access denied errors, where access is denied not because of permission problems, but because the paths being accessed have been truncated, and so do not exist). Having the source deep in a filesystem hierarchy can also cause problems with pymake builds on Windows. If you run into seemingly arbitrary problems in building and the source is deeply nested, try moving it close to the root of your machine and re-building.</div>
+
+<p>모질라 <code>comm-central</code> Mercurial 코드 레포지토리에서 최신 소스 코드를 받아옵니다:</p>
+
+<pre>hg clone http://hg.mozilla.org/comm-central 
+</pre>
+
+<p>필요한 모든 레포지토리를 받아옵니다.  comm-central 레포지토리는 이에 필요한 모든 스크립트를 포함하고 있습니다. 코드양이 꽤 많기 때문에 조금 기다리셔야 합니다. 우선 <code>comm-</code><code>central 폴더로 이동해보겠습니다</code>(이전 명령으로 폴더가 자동으로 생성됨):</p>
+
+<pre>cd comm-central</pre>
+
+<p>그리고 다음을 실행합니다:</p>
+
+<pre>python client.py checkout
+</pre>
+
+<div class="warning">On some types of network connections, "hg clone" might fail because it gets interrupted. It is faster and more efficient to use <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code/Mercurial/Bundles">Mercurial bundles</a> instead the first time you fetch the complete repo. In this case, you need a bundle for comm-central, and a bundle for mozilla-central. Unbundle mozilla-central into a "mozilla" subdirectory of your comm-central repo after unbundling comm-central. (Make sure the unbundled folder's name is now "mozilla" and not "mozilla-central" ). Then run <span style="color: #d3d3d3;">python client.py checkout</span> to ensure you are up-to-date.</div>
+
+<p class="editable">이 소스코드는 3.2GB 이상의 여유 공간이 필요하며, 빌드를 위해서는 추가적으로 5GB 이상의 여유 공간이 필요합니다.</p>
+
+<p class="editable">소스코드를 얻기 위한 더 많은 정보를 원한다면, <a href="/ko/docs/Developer_Guide/Source_Code/Getting_comm-central" title="/en-US/docs/Developer_Guide/Source_Code/Getting_comm-central">Mercurial을 사용하여 comm-central 소스코드 가져오기 [ko]</a> 페이지를 확인하세요.</p>
+
+<h2 class="editable" id="빌드_설정">빌드 설정</h2>
+
+<p>Thunderbird를 빌드하기 위해서는 루트 디렉토리에 <code>.mozconfig</code> 파일이 필요하며 그리고 이 파일에는 다음 정보가 적혀있어야 합니다:</p>
+
+<pre>ac_add_options --enable-application=mail</pre>
+
+<p>다음 명령어로 쉽게 이 파일을 생성할 수 있습니다:</p>
+
+<pre>cd comm-central
+echo 'ac_add_options --enable-application=mail' &gt; .mozconfig
+</pre>
+
+<p>위 파일을 빠트리는 경우 빌드 시스템은 Firefox를 대신하여 빌드할 것입니다. 이 외에도 또 다른 빌드 옵션을 파일에 추가하여 활용할 수 있지만, 확실히 이해하고 난 뒤 사용하기를 권장합니다. 예를 들어, 릴리즈 버전이 아닌 디버그 버전을 생성하고자 한다면 다음의 옵션을 추가할 수 있습니다:</p>
+
+<pre>ac_add_options --enable-debug
+</pre>
+
+<p>더 많은 옵션들을 알고싶다면 <a href="/ko/Configuring_Build_Options" rel="internal" title="ko/Configuring Build Options">빌드 옵션 설정하기</a>를 확인하세요. 한가지 알아둘 사항은 MOZ_OBJDIR 을 사용하고 있다면, 이 옵션은 형제 폴더가 될 수 없습니다. 절대 경로를 사용하세요!</p>
+
+<h3 id="OS_X_10.910.10_공지">OS X 10.9/10.10 공지</h3>
+
+<p>Because of an issue with the 10.9 OS X SDK 에서의 문제로 인해 여러분은 좀 더 구버전의 SDK를 사용해야 합니다. <code>.mozconfig</code> 파일에 다음 줄을 추가하세요:</p>
+
+<pre class="bz_comment_text" id="comment_text_14">ac_add_options --with-macos-sdk=path/to/older/sdk</pre>
+
+<p>SDK는 보통 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/ 에 저장되어 있습니다.</p>
+
+<h2 id="Thunderbird_빌드">Thunderbird 빌드</h2>
+
+<p>시작하기 전에, 여러분이 받은 버전에 오류가 있지는 않은지 먼저 확인하세요. hg 를 사용하는 팁 중 하나로 <a href="https://treeherder.mozilla.org/#/jobs?repo=comm-central">https://treeherder.mozilla.org/#/jobs?repo=comm-central</a> 에서 초록색 Bs를 확인해보세요.</p>
+
+<p>빌드를 시작하기 위해  <code>comm-central</code> 하위폴더로 들어가 (<code>hg clone</code> 명령 후 자동으로 생성된), 다음을 실행하세요:</p>
+
+<pre>./mozilla/mach build
+</pre>
+
+<p>mach는 개발자들을 위해 저희가 만든 커맨드 라인 도구입니다. 더 많은 정보를 원한다면 <a href="/en-US/docs/Developer_Guide/mach" title="/en-US/docs/Developer_Guide/mach">mach</a> 문서를 확인하세요.</p>
+
+<p>빌드를 하는데에는 여러분의 시스템 환경, OS, 빌드 옵션에 따라 꽤 많은 시간이 필요합니다. 리눅스에서는 보통 15분 이하, 윈도우에서는 오래 걸리는 경우 수시간이 걸릴 수도 있습니다. <strong><a href="/en/Developer_Guide/Mozilla_build_FAQ#Making_builds_faster" rel="internal" title="https://developer.mozilla.org/en/Mozilla_Build_FAQ#Making_builds_faster">더 빠른 빌드를 위한 팁을 확인하세요</a></strong>.</p>
+
+<p><span style="line-height: 1.572;">The executable will be at the location listed under <strong>Running</strong> below.</span></p>
+
+<h4 id="Building_Thunderbird_and_Lightning">Building Thunderbird and Lightning</h4>
+
+<p>If you've set up your build environment as above, then all you need to do is:</p>
+
+<pre>echo 'ac_add_options --enable-calendar' &gt;&gt; .mozconfig
+</pre>
+
+<p>in the <code>comm-central </code>directory, or just add the <code>ac_add_options --enable-calendar</code> line to your .mozconfig with your favorite editor.</p>
+
+<p>Then just re-run the <em>mach</em> command above (you can do the addition before running make for the first time).</p>
+
+<h2 id="실행">실행</h2>
+
+<p>Various temporary files, libraries, and the Thunderbird executable will be found in your <strong>object directory</strong> (under <code>comm-central/</code>), which is prefixed with <strong><code>obj-</code></strong>. The exact name depends on your system and OS. For example, a Mac user may get an object directory name of <strong><code>obj-x86_64-apple-darwin10.7.3/</code></strong>.</p>
+
+<p>The Thunderbird executable in particular, and its dependencies, are located under the <code>dist/bin</code> folder under the object directory. To run the executable from your <code>comm-central</code> working directory:</p>
+
+<ul>
+ <li><strong>Windows:</strong> <code>obj-.../dist/bin/thunderbird.exe</code></li>
+ <li><strong>Linux:</strong> <code>obj-.../dist/bin/thunderbird</code></li>
+ <li><strong>OS X:</strong> <code>obj-.../dist/Daily.app/Contents/MacOS/thunderbird</code></li>
+</ul>
+
+<h2 id="업데이트_및_재빌드하는_방법">업데이트 및 재빌드하는 방법</h2>
+
+<p>In your <code>comm-central</code> directory, run the same command as before:</p>
+
+<pre>python client.py checkout
+</pre>
+
+<p>Then just re-run the <em>mach</em> command above. This will only recompile files that changed, but it's still a long haul.</p>
+
+<h2 id="재빌드">재빌드</h2>
+
+<p>To build after making changes, run</p>
+
+<pre>./mozilla/mach build
+</pre>
+
+<p>again. This will only rebuild what is necessary for these changes. It is also possible to rebuild specifically.</p>
+
+<p>If you changed C or C++ files, run:</p>
+
+<pre>./mozilla/mach build binaries
+</pre>
+
+<p>If you changed JavaScript or XUL files, on Mac OS X or Linux you don't have to rebuild since the files in the object directory are linked to the ones in the source directory. On Windows run:</p>
+
+<pre>./mozilla/mach build path/to/dir
+</pre>
+
+<p>This is the tricky bit, since you need to specify the directory that installs the files, which may be a parent directory of the changed file's directory.</p>
+
+<p>For all other changes run the full rebuild:</p>
+
+<pre>./mozilla/mach build
+</pre>
+
+<h2 id="빌드_과정_중_문제가_생기는_경우">빌드 과정 중 문제가 생기는 경우</h2>
+
+<p>아래처럼 해보세요:</p>
+
+<ul>
+ <li>Check <a class="external" href="https://treeherder.mozilla.org/#/jobs?repo=comm-central" title="https://treeherder.mozilla.org/#/jobs?repo=comm-central">comm-central on Treeherder</a> for known failures at the time you pulled the code. The current status of the trunk can also be checked at <a href="https://treestatus.mozilla.org/">https://treestatus.mozilla.org/</a>
+
+  <ul>
+   <li>If the trunk is broken (i.e. closed), you may wish to consider building <a href="/En/Developer_Guide/Source_Code/Getting_comm-central" title="https://developer.mozilla.org/En/Developer_Guide/Source_Code/Getting_comm-central">one of the branches</a> (to pull the source code from a branch, just replace the url to the repository in the hg clone instruction).</li>
+  </ul>
+ </li>
+ <li>On Windows: check that the MAPI header files from <a href="http://www.microsoft.com/en-us/download/details.aspx?id=12905">http://www.microsoft.com/en-us/download/details.aspx?id=12905</a> are installed because the MAPI header files are not bundled with Visual Studio 2013 (Windows SDK 8.1). You should copy the header files to a Windows SDK include directory so that the build process will find the files, for example to <code>C:\Program Files (x86)\Windows Kits\8.1\Include\shared</code>.</li>
+ <li>Check to make sure that the path in which you placed the source code has no spaces, and is not too long.</li>
+ <li>Searched the <a class="link-https" href="https://bugzilla.mozilla.org/" title="https://bugzilla.mozilla.org/">bug database</a> for issues relating to your problem (e.g., platform-specific issues).</li>
+ <li>Try asking in <a class="external" href="http://groups.google.com/group/mozilla.dev.builds/" title="http://groups.google.com/group/mozilla.dev.builds/">mozilla.dev.builds</a> - include details of what is in your mozconfig, and what the actual error is.</li>
+ <li>Check if your mozilla/ is a symlink. A symlink there is not supported.</li>
+ <li>Check for <code>@TOPSRCDIR@</code> or relative paths in your mozconfig. Those have caused several problems historically and tend to be poorly tested when the build system changes.</li>
+ <li>If on Windows you get link errors like "LNK1102: out of memory" or "LNK1318: Unexpected PDB error; OK (0)", try deleting the largest .PDB files before rushing out the door to buy more RAM. Clobbering (see below) will also remove those files.</li>
+ <li>Try with a clean obj-dir. You can clean out previous build artefacts using
+  <pre class="language-html"><code class="language-html">./mozilla/mach clobber</code></pre>
+ </li>
+</ul>
+
+<h3 id="참조">참조</h3>
+
+<ul>
+ <li><a class="internal" href="/ko/Developer_Guide/Build_Instructions" title="ko/Developer Guide/Build Instructions">일반 빌드 문서</a></li>
+ <li><a class="internal" href="/ko/comm-central" title="ko/comm-central">comm-central</a></li>
+ <li><a href="/ko/Using_the_Mozilla_symbol_server" title="ko/Using the Mozilla symbol server">Mozilla 기호 서버 사용하기</a></li>
+</ul>

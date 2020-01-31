@@ -1,0 +1,83 @@
+<p>Diese Seite behandelt die grundlegenden Schritte um eine Build-Version sowie den Quellcode von Firefox zu installieren. Detaillierte Informationen findest Du in der <a href="https://developer.mozilla.org/de/docs/Entwicklerhandbuch/Build_Anweisungen" title="/De/Developer_Guide/Build_Instructions">Build-Dokumentation</a>.</p>
+
+<h2 id="Voraussetzungen">Voraussetzungen</h2>
+
+<p>Abhängig von deinem Betriebssystem musst Du deinen Computer vor der eigentlichen Installation auf die Installation vorbereiten. Stell' also zuerst sicher dass dein Rechner alle Voraussetzungen erfüllt.</p>
+
+<p><a href="https://developer.mozilla.org/de/docs/Entwicklerhandbuch/Build_Anweisungen/Windows_Build_Voraussetzungen" title="https://developer.mozilla.org/de/docs/Entwicklerhandbuch/Build_Anweisungen/Windows_Build_Voraussetzungen">Windows Build-Voraussetzungen [de-DE]</a></p>
+
+<p><a href="/de/docs/Simple_Firefox_build/Linux_and_MacOS_build_preparation" title="/en-US/docs/Simple_Firefox_build/Linux_and_MacOS_build_preparation">Linux and MacOS Build-Voraussetzungen  [de-DE]</a></p>
+
+<h2 id="Hol'_dir_den_Quellcode">Hol' dir den Quellcode</h2>
+
+<p>Lade über das <a href="http://mingw.org/wiki/msys" title="http://mingw.org/wiki/msys">MSYS Kommandozeilenfenster</a> zuerst den neusten Quellcode von Mozilla's Mercurial herunter. Dies dauert eine Weile. Es ist ja auch eine Menge Code!</p>
+
+<pre>hg clone https://hg.mozilla.org/mozilla-central
+</pre>
+
+<div class="warning">Bei einigen Netzwerkverbindungen könnte <em>hg clone</em> aufgrund von Unterbrechungen Probleme verursachen. Versuche es in diesem Fall besser mit einem der <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code/Mercurial/Bundles" title="https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code/Mercurial/Bundles">Mercurial Bundles</a>.</div>
+
+<h2 id="Build_Einstellungen_(optional)">Build Einstellungen (optional)</h2>
+
+<p>Standardmäßig erstellt das Build-System ein Release-Build welches grob dem offiziellen Firefox-Build entspricht. Wenn das nicht dem entspricht, was du willst, dann gibt es dafür die Build-Einstellungen. Es wird <strong>wärmstens</strong> empfohlen, nur vollständig verstandene Build-Anweisungen zu gebrauchen.</p>
+
+<p>Der <em>normale </em>Weg, Build Einstellungen anzugeben, ist, sie in einer Datei namens <code>.mozconfig</code> einzufügen. Diese Datei befindet sich im Rootverzeichnis des Mozilla-Trees, im <code>mozilla-central</code> Ordner, welcher durch den <code>hg clone</code> Befehl erstellt wurde.</p>
+
+<pre class="eval">cd /path/to/mozilla-central
+touch .mozconfig
+</pre>
+
+<p>Um z.B. einen Debug-Build anstelle eines Release-Builds zu erstellen, fügt man folgendes in die Datei ein:</p>
+
+<pre>ac_add_options --enable-debug
+</pre>
+
+<p>Um mehr Einstellungs-Informationen zu erhalten, besuche folgende Seite: Konfiguration der Build-Optionen.</p>
+
+<h2 id="Der_Build">Der Build</h2>
+
+<p>Um den Build zu starten, wechsle mit <code>cd</code> in den <code>mozilla-central</code> Unterordner und führe dort folgenden Befehl aus:</p>
+
+<pre>./mach build
+</pre>
+
+<p><code>mach </code>ist unser Kommandozeilen-Tool um gemeinsame Entwicklungsaufgaben zu vereinfachen. Um mehr Informationen darüber zu erlangen, lies den <a href="https://developer.mozilla.org/en-US/docs/Developer_Guide/mach" title="https://developer.mozilla.org/en-US/docs/Developer_Guide/mach">mach-Artikel</a>.</p>
+
+<p>Der Build-Vorgang kann je nach Betriebssystem und gewählten Build-Optionen einige Zeit dauern. Eine schnelle Linux-Box kann weniger als 15 Minuter brauchen, ein langsamer PC mit Windows braucht unter Umständen hingegen einige Stunden. Lies dir am besten die <a href="https://developer.mozilla.org/en-US/docs/Developer_Guide/Mozilla_build_FAQ#Making_builds_faster" title="https://developer.mozilla.org/en-US/docs/Developer_Guide/Mozilla_build_FAQ#Making_builds_faster">Tipps um Builds zu beschleunigen</a> durch.</p>
+
+<h2 id="Deinen_Build_starten">Deinen Build starten</h2>
+
+<p>Verschiedene temporäre Dateien, Bibliotheken sowie die ausführbare Firefox-Datei befinden sich in deinem <strong>object directory</strong> (unter <code>mozilla-central</code>), welches mit obj- beginnt. Der volle Name ist vom Betriebssystem und anderen Dingen abhängig. Ein Mac User kann zum Beispiel folgenden object directory Namen haben: <code>obj-x86_64-apple-darwin10.7.3/.</code></p>
+
+<p>Um den gerade erstellten Firefox-Build auszuführen, verwende:</p>
+
+<pre>./mach run</pre>
+
+<p>Die ausführbare Firefox-Datei und seine Abhängigkeiten befinden sich unter dem <code>dist/bin</code> Verzeichnis. Abhängig vom Betriebssystem befindet sich dieser an unterschiedlichen Orten:</p>
+
+<ul>
+ <li><strong>Windows:</strong> <code>obj-.../dist/bin/firefox.exe</code></li>
+ <li><strong>Linux:</strong> <code>obj-.../dist/bin/firefox</code></li>
+ <li><strong>OS X:</strong> <code>obj-.../dist/Nightly.app/Contents/MacOS/firefox</code></li>
+</ul>
+
+<h2 id="Updates_installieren_oder_ein_Re-Build_ausführen">Updates installieren oder ein Re-Build ausführen</h2>
+
+<p>Um die neusten Updates hinzuzufügen, führe diesen Befehl im <code>mozilla-central</code> Arbeitsverzeichnis aus:</p>
+
+<pre>hg pull -u
+</pre>
+
+<p>Führe danach den <code>mach</code> Befehl nochmals aus. Diesmal werden aber nur die Datein, die geändert wurden, erneuert. Es dauert aber trotzdem noch eine Ewigkeit. Ein <a href="https://developer.mozilla.org/en-US/docs/Incremental_Build" name="https://developer.mozilla.org/en-US/docs/Incremental_Build" title="Inkrementieller Build">inkrementieller Build</a> kann da schneller sein.</p>
+
+<pre class="language-html">./mach build
+</pre>
+
+<p>Es ist ebenfalls möglich,</p>
+
+<pre class="language-html">./mach build <var>path/to/dir</var>
+</pre>
+
+<p>zu benutzen um nur Teile des Trees zu builden. Jedoch könnte die Ausführung dieses Befehls nicht die gewünschten Ergebnisse bringen, sie wird also <strong>nicht empfohlen</strong>.</p>
+
+<p>{{ languages( { "ja": "ja/Simple_Firefox_build" } ) }}</p>

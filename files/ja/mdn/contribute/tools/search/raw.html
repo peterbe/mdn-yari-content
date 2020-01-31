@@ -1,0 +1,151 @@
+<div>{{MDNSidebar}}</div><p class="summary"><span class="seoSummary">MDN のオンサイト検索機能では、外部の検索エンジンで MDN記事を検索した時には得られない多くの機能が提供されます。この記事では MDN検索エンジンを最大限に活用する方法を記します。</span></p>
+
+<h2 id="Basic_search_options" name="Basic_search_options">基本的な検索オプション</h2>
+
+<h3 id="Filtering_results" name="Filtering_results">結果をフィルターリングする</h3>
+
+<p>MDN の検索クエリーの結果を見るときに、その結果をトピックや、技術レベルや、文書タイプでフィルターリングできます。これは便利で、例えば関連キーワードが複数のコンテキストで出てくるようなメソッドを探している時など; トピックフィルターを使って、最も興味のある API の中の結果だけを見ることができます。このフィルターはページのタグによって、どのページを含む/除くのかを決めています (これがページ作成/編集時に<a href="https://developer.mozilla.org/ja/docs/MDN/Contribute/Howto/Tag">適切にタグ付けする</a>べき理由です)。下記タイプのフィルターを適用できます:</p>
+
+<ul>
+ <li><strong>トピック</strong>: トピックのタグに従って検索結果をフィルターする</li>
+ <li><strong>技術レベル</strong>: <strong>Beginner</strong>, <strong>Intermediate</strong>, <strong>Advanced</strong> タグでフィルターする</li>
+ <li><strong>文書タイプ</strong>: <strong>Example</strong>, <strong>Guide</strong>, <strong>Tools</strong> タグでフィルターする</li>
+</ul>
+
+<h2 id="Advanced_search_options" name="Advanced_search_options">高度な検索オプション</h2>
+
+<p>MDN 貢献者向けに特定のマクロや HTML 属性などを検索できるよう、マクロの出力ではなく生の HTML でページのソースを検索できる高度な検索機能を用意しています。</p>
+
+<p>今のところこの高度な検索用のユーザーインターフェイスは用意しておらず、URL に直接アクセスすることで利用できます。検索結果は通常の MDN の検索結果ページあるいは JSON フォーマットのいずれかで得られます (後者の検索結果は例えば KumaScript などから使うこともできます)。この節ではその使い方を説明します。</p>
+
+<div class="note">
+<p><strong>注:</strong> ここで紹介する検索クエリーは広く利用される目的で作る URL ではありません。ツールやユーティリティから使用するためのものであり、将来変更される可能性があります。クエリーのパフォーマンスも高くない場合があります。</p>
+</div>
+
+<h3 id="検索クエリーの書式">検索クエリーの書式</h3>
+
+<p>高度な検索クエリーは検索に適切なパラメータを付けた URL で実行してください。ベースとなる URL は次のいずれかです:</p>
+
+<dl>
+ <dt><code>https://developer.mozilla.org/ja/search</code></dt>
+ <dd>通常の MDN 検索結果ページを出力とする場合はこちらを使います。</dd>
+ <dt><code>https://developer.mozilla.org/ja/search.json</code></dt>
+ <dd>JSON 形式で結果を取得する場合はこちらを使います。検索結果の書式については {{anch(" JSON response body format ")}} をご覧ください。</dd>
+</dl>
+
+<p>これに続けて、欲しい結果を得るには適切なパラメータを追加してください。次のパラメータを組み合わせて利用できます:</p>
+
+<dl>
+ <dt><code>q=</code></dt>
+ <dd>マッチする検索クエリー。これは基本検索で使われるパラメーターと同じです。</dd>
+</dl>
+
+<dl>
+ <dt><code>locale=</code></dt>
+ <dd>検索対象とするロケール。デフォルトではすべてのロケールが対象となります。すべてのロケールを明示的に指定するにはワイルドカード "*" を指定することもできます。例えば、<code>locale=ja</code> とすれば検索結果を日本語だけに絞り込めます。</dd>
+ <dt><code>css_classnames=</code></dt>
+ <dd>検索対象とする CSS クラス名。ページの HTML に少なくとも指定されたクラスが 1 つ以上含まれているページを検索します。</dd>
+ <dt><code>html_attributes=</code></dt>
+ <dd>検索対象とする HTML 属性テキスト。これは前方一致検索です。つまり、指定したテキストが HTML の属性文字列の始めにある場合、検索にマッチします。詳しくは下記をご覧ください。</dd>
+ <dt><code>kumascript_macros=</code></dt>
+ <dd>検索対象とする 1 つ以上の KumaScript のリスト。これをつかって特定のマクロを使った記事を検索できます。例えば、マクロを廃止する場合や、パラメータが変更され既存のページを更新する必要がある場合に便利です。</dd>
+ <dt><code>highlight=</code></dt>
+ <dd><code>true</code> か <code>false</code> のどちらかで、既定では <code>true</code> です。検索クエリーにマッチする結果の周りに <code><a href="https://developer.mozilla.org/ja/docs/Web/HTML/Element/mark">&lt;mark&gt;</a></code> 要素を含めるかどうかを決めます。</dd>
+</dl>
+
+<h3 id="例">例</h3>
+
+<p>検索例をいくつか示します。</p>
+
+<h4 id="locale_による検索">locale による検索</h4>
+
+<pre>https://developer.mozilla.org/ja/search?locale=ja</pre>
+
+<p>この例では日本語の記事のリストが得られます。言語 (ロケール) 以外での絞り込みはされません。このページの翻訳時点では 12092 ページが見つかります (もちろん翻訳ページは増え続けているのであなたが試すときにはもっと大きな数になっているはずです！)</p>
+
+<h4 id="CSS_クラス名による検索">CSS クラス名による検索</h4>
+
+<pre>https://developer.mozilla.org/ja/search?locale=ja&amp;css_classnames=smaller</pre>
+
+<p>この例では <code>"smaller"</code> CSS クラスを使っている記事のリストが得られます。ページ翻訳時点では 42 ページに絞り込まれます。</p>
+
+<h4 id="HTML_属性文字列による検索">HTML 属性文字列による検索</h4>
+
+<pre>https://developer.mozilla.org/ja/search?locale=ja&amp;html_attributes=style</pre>
+
+<p>この例では HTML 要素に <code>"style"</code> 属性が使われている記事のリストが得られます。ページ翻訳時点では 7277 ページが該当します。これらはダメなページで修正されるべきものです。少しずつ標準化したクラスで置き換えていく必要があります。</p>
+
+<p>属性値も含めて検索することはできますが、検索文字列に <code>"="</code> や <code>"/"</code> を含める場合にはこれらを URL エンコードする必要があることに注意してください。例えば、www.mozilla.org にリンクしているページは次のように検索します:</p>
+
+<pre>https://developer.mozilla.org/ja/search?locale=ja&amp;html_attributes=href%3D%22https%3A%2F%2Fwww.mozilla.org</pre>
+
+<p>この検索結果は 80 件になりました。www.mozilla.org にリンクしているページは意外と少ないですね！</p>
+
+<h4 id="KumaScript_マクロ利用有無による検索">KumaScript マクロ利用有無による検索</h4>
+
+<pre>https://developer.mozilla.org/ja/search?locale=ja&amp;kumascript_macros=unimplemented_header</pre>
+
+<p>この例では {{TemplateLink("unimplemented_header")}} マクロを使用しているページを検索します。ページ翻訳時点では 7 ページが見つかります。マクロパラメータ変更時の修正やマクロ廃止時 (この検索例がまさにその例ですが) にはこの機能を使ってマクロを検索します。</p>
+
+<h3 id="JSON_response_body_format" name="JSON_response_body_format">JSON レスポンスボディの書式</h3>
+
+<p>JSON で検索結果を取得する場合も、通常の検索結果ページ同様に数件ずつのページ単位で結果が返されます。各ページには検索結果に関するメタデータが含まれる KumaScript オブジェクトと、通常のページオブジェクトにページ編集用の URL フィールドが追加されたものの配列が返されます。</p>
+
+<p>結果のオブジェクトに含まれるデータは次の通りです:</p>
+
+<dl>
+ <dt><code>count</code></dt>
+ <dd>検索結果の総数</dd>
+ <dt><code>next</code></dt>
+ <dd>検索結果の次ページ URL (あるいは最終ページの場合は {{jsxref("Global_Objects/null", "null")}})</dd>
+ <dt><code>previous</code></dt>
+ <dd>検索結果の前ページ URL (あるいは最初のページの場合は {{jsxref("Global_Objects/null", "null")}})</dd>
+ <dt><code>query</code></dt>
+ <dd>結果を検索するのに使われた検索クエリー</dd>
+ <dt><code>page</code></dt>
+ <dd>このオブジェクトに含まれる検索結果ページ番号</dd>
+ <dt><code>pages</code></dt>
+ <dd>検索結果ページの総数</dd>
+ <dt><code>start</code></dt>
+ <dd>このページの結果のうち最初の項目の番号</dd>
+ <dt><code>end</code></dt>
+ <dd>このページの結果のうち最後の項目の番号</dd>
+ <dt><code>filters</code></dt>
+ <dd>さまざまな検索フィルターの設定を含めた配列。通常の検索に利用可能なフィルターです</dd>
+ <dt><code>documents</code></dt>
+ <dd>マッチしたページの {{anch("ページオブジェクト")}} の配列</dd>
+</dl>
+
+<h4 id="ページオブジェクト">ページオブジェクト</h4>
+
+<p>各ページオブジェクトには次のものが含まれます:</p>
+
+<dl>
+ <dt><code>title</code></dt>
+ <dd>記事タイトル</dd>
+ <dt><code>slug</code></dt>
+ <dd>記事のスラグ。ページの URL のうち、ロケール名とスラッシュに続くものすべてです。</dd>
+ <dt><code>locale</code></dt>
+ <dd>ページのロケール</dd>
+ <dt><code>excerpt</code></dt>
+ <dd>ページコンテンツの断片 (スニペット)。これは記事本文の冒頭部分か、"SEO Summary" クラスが使われていればそのクラスで指定されたコンテンツ。<a href="https://developer.mozilla.org/ja/docs/MDN/Contribute/Tools/Search$edit#Search_query_format">検索クエリーパラメーター</a>内で <code>highlight=false</code> を指定しない限り、excerpt には <code><a href="https://developer.mozilla.org/ja/docs/Web/HTML/Element/mark">&lt;mark&gt;</a></code> 要素が入ります。</dd>
+ <dt><code>url</code></dt>
+ <dd>ページの完全な URL</dd>
+ <dt><code>edit_url</code></dt>
+ <dd>ページを編集モードで開く完全な URL</dd>
+ <dt><code>tags</code></dt>
+ <dd>ページのタグの配列</dd>
+ <dt><code>score</code></dt>
+ <dd>検索エンジンで割り当てられたスコア値</dd>
+ <dt><code>explanation</code></dt>
+ <dd>検索クエリーにどのように何故マッチしたかという検索エンジンからの雑多な情報。このコンテンツの詳細についてはこのページでは解説しません。</dd>
+</dl>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<dl>
+ <dd>
+ <p>スラグが特定の文字で始まっているページを検索するような、追加の<a href="https://developer.mozilla.org/ja/docs/MDN/Kuma/Getting_started#Finding_pages">管理者のみの検索機能</a>があります。</p>
+ </dd>
+ <dt> </dt>
+</dl>

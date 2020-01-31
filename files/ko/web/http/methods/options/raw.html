@@ -1,0 +1,117 @@
+<div>{{HTTPSidebar}}</div>
+
+<p><strong>HTTP <code>OPTIONS</code> method</strong> 는 목표 리소스와의 통신 옵션을 설명하기 위해 사용됩니다. 클라이언트는 OPTIONS 메소드의 URL을 특정지을 수 있으며, aterisk(*) 를 통해 서버 전체를 선택할 수 있습니다.</p>
+
+<table class="properties">
+ <tbody>
+  <tr>
+   <th scope="row">Request has body</th>
+   <td>No</td>
+  </tr>
+  <tr>
+   <th scope="row">Successful response has body</th>
+   <td>Yes</td>
+  </tr>
+  <tr>
+   <th scope="row">{{Glossary("Safe")}}</th>
+   <td>Yes</td>
+  </tr>
+  <tr>
+   <th scope="row">{{Glossary("Idempotent")}}</th>
+   <td>Yes</td>
+  </tr>
+  <tr>
+   <th scope="row">{{Glossary("Cacheable")}}</th>
+   <td>No</td>
+  </tr>
+  <tr>
+   <th scope="row">Allowed in HTML forms</th>
+   <td>No</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Syntax">Syntax</h2>
+
+<pre class="syntaxbox">OPTIONS /index.html HTTP/1.1
+OPTIONS * HTTP/1.1
+</pre>
+
+<h2 id="Examples">Examples</h2>
+
+<h3 id="Identifying_allowed_request_methods">Identifying allowed request methods</h3>
+
+<p>curl을 이용하여 OPTIONS 요청을 서버에 보냄으로써 서버에서 지원하는 method를 확인할 수 있다.</p>
+
+<pre>curl -X OPTIONS http://example.org -i</pre>
+
+<p>요청을 보내면, 응답에 {{HTTPHeader("Allow")}}헤더가 포함되어서 오는데, 이를 통해 허용되는 메소드를 확인할 수 있다.</p>
+
+<pre>HTTP/1.1 200 OK
+Allow: OPTIONS, GET, HEAD, POST
+Cache-Control: max-age=604800
+Date: Thu, 13 Oct 2016 11:45:00 GMT
+Expires: Thu, 20 Oct 2016 11:45:00 GMT
+Server: EOS (lax004/2813)
+x-ec-custom-error: 1
+Content-Length: 0
+</pre>
+
+<h3 id="Preflighted_requests_in_CORS">Preflighted requests in CORS</h3>
+
+<p>In <a href="/en-US/docs/Web/HTTP/Access_control_CORS">CORS</a>, a preflight request with the <code>OPTIONS</code> method is sent, so that the server can respond whether it is acceptable to send the request with these parameters. The {{HTTPHeader("Access-Control-Request-Method")}} header notifies the server as part of a preflight request that when the actual request is sent, it will be sent with a <code>POST</code> request method. The {{HTTPHeader("Access-Control-Request-Headers")}} header notifies the server that when the actual request is sent, it will be sent with a <code>X-PINGOTHER</code> and <code>Content-Type</code> custom headers.  The server now has an opportunity to determine whether it wishes to accept a request under these circumstances.</p>
+
+<pre>OPTIONS /resources/post-here/ HTTP/1.1 
+Host: bar.other 
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8 
+Accept-Language: en-us,en;q=0.5 
+Accept-Encoding: gzip,deflate 
+Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7 
+Connection: keep-alive 
+Origin: http://foo.example 
+Access-Control-Request-Method: POST 
+Access-Control-Request-Headers: X-PINGOTHER, Content-Type</pre>
+
+<p>The server responds with {{HTTPHeader("Access-Control-Allow-Methods")}} and says that <code>POST</code>, <code>GET</code>, and <code>OPTIONS</code> are viable methods to query the resource in question. This header is similar to the {{HTTPHeader("Allow")}} response header, but used strictly within the context of CORS.</p>
+
+<pre>HTTP/1.1 200 OK
+Date: Mon, 01 Dec 2008 01:15:39 GMT 
+Server: Apache/2.0.61 (Unix) 
+Access-Control-Allow-Origin: http://foo.example 
+Access-Control-Allow-Methods: POST, GET, OPTIONS 
+Access-Control-Allow-Headers: X-PINGOTHER, Content-Type 
+Access-Control-Max-Age: 86400 
+Vary: Accept-Encoding, Origin 
+Content-Encoding: gzip 
+Content-Length: 0 
+Keep-Alive: timeout=2, max=100 
+Connection: Keep-Alive 
+Content-Type: text/plain</pre>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Title</th>
+  </tr>
+  <tr>
+   <td>{{RFC("7231", "OPTIONS", "4.3.7")}}</td>
+   <td>Hypertext Transfer Protocol (HTTP/1.1): Semantics and Content</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<p class="hidden">The compatibility table in this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</p>
+
+<p>{{Compat("http.methods.OPTIONS")}}</p>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li>{{HTTPHeader("Allow")}} header</li>
+ <li><a href="/en-US/docs/Web/HTTP/Access_control_CORS">CORS</a></li>
+</ul>

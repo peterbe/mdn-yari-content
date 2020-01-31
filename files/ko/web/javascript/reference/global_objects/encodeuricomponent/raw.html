@@ -1,0 +1,132 @@
+<div>
+ {{jsSidebar("Objects")}}</div>
+<h2 id="Summary" name="Summary">개요</h2>
+<p>The <code><strong>encodeURIComponent()</strong></code> method encodes a Uniform Resource Identifier (URI) component by replacing each instance of certain characters by one, two, three, or four escape sequences representing the UTF-8 encoding of the character (will only be four escape sequences for characters composed of two "surrogate" characters).</p>
+<h2 id="Syntax" name="Syntax">문법</h2>
+<pre class="syntaxbox">encodeURIComponent(str);</pre>
+<h3 id="Parameters" name="Parameters">파라미터</h3>
+<dl>
+ <dt>
+  <code>str</code></dt>
+ <dd>
+  URI를 담은 문자열</dd>
+</dl>
+<h2 id="Description" name="Description">상세</h2>
+<p><code>encodeURIComponent</code> 다음을 제외하고는 모든 문자를 이스케이프 처리한다.  :  알파벳, 0~9의 숫자, <code>- _ . ! ~ * ' ( )</code></p>
+<p> {{jsxref("Global_Objects/URIError", "URIError")}}는 high-row 짝의 대행문자가 아니면 예외를 던진다. 예를 들자면 아래와 같다,</p>
+<pre class="brush: js">// high-low 짝의 경우 정상
+alert(encodeURIComponent('\uD800\uDFFF'));
+
+// high 대행문자로만 구성된 경우, 예외 발생 "URIError: malformed URI sequence"
+alert(encodeURIComponent('\uD800'));
+
+// low 대행문자로만 구성된 경우, 예외 발생 "URIError: malformed URI sequence"
+alert(encodeURIComponent('\uDFFF')); 
+</pre>
+<p>의도치 않은 요청을 서버쪽으로 보내는 경우를 방지하기 위해서는, encodeURIComponent를 사용자가 입력해 전달하는 모든 파라미터들에 적용시키는 것이 바람직하다. 예를 들자면, 사용자가 "Thyme &amp;time=again" 이라고 comment라는 변수에 담았을 경우를 들 수 있다.  encodeURIComponent를 사용하지 않은 경우에 이 파라미터는 comment=Thyme%20&amp;time=again 이라는 값을 전달하게 된다.  여기서 주목할 점은 앰퍼샌드(&amp;)와 이퀄(=)이 본디 키와 값을 의미한다는 것이다.  이럴 경우 comment라는 키에 "Thyme &amp;time=again" 이라는 값을 담는 대신 두 개의 키를 POST하게 된다. comment 는 "Thyme"을, time은 "again"이라는 값을 갖게 된다.</p>
+<p><a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/association-of-controls-and-forms.html#application/x-www-form-urlencoded-encoding-algorithm"><code>application/x-www-form-urlencoded</code></a> (POST)에서는, 공란은 '+'로 대치되며, encodeURIComponent를 사용했을 경우에 "%20" 이 "+"로 추가적으로 대치되게 된다.</p>
+<p><a class="external" href="http://tools.ietf.org/html/rfc3986">RFC 3986</a> (다음과 같은 예약어 포함 !, ', (, ), *) 권고에 보다 엄격하게 적용되게 하기 위해서는 메소드에서 지원하지 않는 다른 문자에 대해서도 아래와 같이 처리하는 것이 안전한 사용이 되겠다.</p>
+<pre class="brush: js">function fixedEncodeURIComponent (str) {
+  return encodeURIComponent(str).replace(/[!'()]/g, escape).replace(/\*/g, "%2A");
+}
+</pre>
+<h2 id="See_also" name="See_also">예제</h2>
+<p>아래 예제는 UTF-8 Content-Disposition과 Link 서버 응답 헤더 파라미터에 필요한 인코딩 필요 상황을 볼수있다.(예 : UTF-8로 작성된 파일명)</p>
+<pre class="brush: js">var fileName = 'my file(2).txt';
+var header = "Content-Disposition: attachment; filename*=UTF-8''" + encodeRFC5987ValueChars(fileName);
+
+console.log(header); 
+// logs "Content-Disposition: attachment; filename*=UTF-8''my%20file%282%29.txt"
+
+
+function encodeRFC5987ValueChars (str) {
+    return encodeURIComponent(str).
+<code class="language-js">       <span class="token comment"> // Note that although RFC3986 reserves "!", RFC5987 does not,</span></code>
+<code class="language-js">       <span class="token comment"> // so we do not need to escape it</span></code>
+        replace(/['()]/g, escape). // %27 %28 %29
+        replace(/\*/g, '%2A').
+<code class="language-js">           <span class="token comment"> // The following are not required for percent-encoding per RFC5987, </span></code>
+<code class="language-js">           <span class="token comment"> //  so we can allow for a little better readability over the wire: |`^</span></code>
+            replace(/%(?:7C|60|5E)/g, unescape);
+}
+</pre>
+<h2 id="사양">사양</h2>
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">사양</th>
+   <th scope="col">상태</th>
+   <th scope="col">비고</th>
+  </tr>
+  <tr>
+   <td>ECMAScript 3rd Edition.</td>
+   <td>표준</td>
+   <td>최초작성본</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-15.1.3.4', 'encodeURIComponent')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-encodeuricomponent-uricomponent', 'encodeURIComponent')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+<h2 id="브라우저_호환성">브라우저 호환성</h2>
+<p>{{ CompatibilityTable() }}</p>
+<div id="compat-desktop">
+ <table class="compat-table">
+  <tbody>
+   <tr>
+    <th>제품</th>
+    <th>Chrome</th>
+    <th>Firefox (Gecko)</th>
+    <th>Internet Explorer</th>
+    <th>Opera</th>
+    <th>Safari</th>
+   </tr>
+   <tr>
+    <td>기본지원</td>
+    <td>{{ CompatVersionUnknown() }}</td>
+    <td>{{ CompatVersionUnknown() }}</td>
+    <td>{{ CompatVersionUnknown() }}</td>
+    <td>{{ CompatVersionUnknown() }}</td>
+    <td>{{ CompatVersionUnknown() }}</td>
+   </tr>
+  </tbody>
+ </table>
+</div>
+<div id="compat-mobile">
+ <table class="compat-table">
+  <tbody>
+   <tr>
+    <th>제품</th>
+    <th>Android</th>
+    <th>Chrome for Android</th>
+    <th>Firefox Mobile (Gecko)</th>
+    <th>IE Mobile</th>
+    <th>Opera Mobile</th>
+    <th>Safari Mobile</th>
+   </tr>
+   <tr>
+    <td>기본지원</td>
+    <td>{{ CompatVersionUnknown() }}</td>
+    <td>{{ CompatVersionUnknown() }}</td>
+    <td>{{ CompatVersionUnknown() }}</td>
+    <td>{{ CompatVersionUnknown() }}</td>
+    <td>{{ CompatVersionUnknown() }}</td>
+    <td>{{ CompatVersionUnknown() }}</td>
+   </tr>
+  </tbody>
+ </table>
+</div>
+<h2 id="See_Also" name="See_Also">참조</h2>
+<ul>
+ <li>{{jsxref("Global_Objects/decodeURI", "decodeURI")}}</li>
+ <li>{{jsxref("Global_Objects/encodeURI", "encodeURI")}}</li>
+ <li>{{jsxref("Global_Objects/decodeURIComponent", "decodeURIComponent")}}</li>
+</ul>
+<p></p>

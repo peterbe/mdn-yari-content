@@ -1,0 +1,274 @@
+<h3 id="Introduction" name="Introduction">Introdução</h3>
+<p>Este artigo oferece uma visão geral de alguns métodos fundamentais DOM e como utilizá-los via JavaScript. Você irá aprender como criar, manipular e remover elementos HTML dinamicamente. Os métodos DOM apresentados aqui não são específicos do HTML — eles também se aplicam ao XML. As demonstrações devem funcionar corretamente em navegadores modernos.</p>
+<div class="note">
+  Os métodos DOM apresentados são parte da especificação Document Object Model (Core) level 1. Esta especificação inclui métodos para acesso e manipulação de elementos genéricos (DOM 1 Core) e também métodos que são específicos para elementos HTML (DOM 1 HTML).</div>
+<h3 id="Overview_of_Sample1.html" name="Overview_of_Sample1.html">Visão geral do Sample1.html</h3>
+<p>As seções deste artigo vão apresentar DOM por meio de exemplos. Para iniciar, comece verificando o exemplo abaixo. Este utiliza de métodos DOM level 1, por meio de JavaScript, e irá criar uma tabela HTML dinamicamente. A tabela criada deve ter 4 células e um conteúdo de texto dentro delas.</p>
+<pre>&lt;html&gt;
+&lt;head&gt;
+&lt;title&gt;Sample code - Traversing an HTML Table with JavaScript and DOM Interfaces&lt;/title&gt;
+&lt;script&gt;
+    function start() {
+        // get the reference for the body
+        var body = document.getElementsByTagName("body")[0];
+
+        // creates a &lt;table&gt; element and a &lt;tbody&gt; element
+        var tbl     = document.createElement("table");
+        var tblBody = document.createElement("tbody");
+
+        // creating all cells
+        for (var j = 0; j &lt; 2; j++) {
+            // creates a table row
+            var row = document.createElement("tr");
+
+            for (var i = 0; i &lt; 2; i++) {
+                // Create a &lt;td&gt; element and a text node, make the text
+                // node the contents of the &lt;td&gt;, and put the &lt;td&gt; at
+                // the end of the table row
+                var cell = document.createElement("td");
+                var cellText = document.createTextNode("cell is row "+j+", column "+i);
+                cell.appendChild(cellText);
+                row.appendChild(cell);
+            }
+
+            // add the row to the end of the table body
+            tblBody.appendChild(row);
+        }
+
+        // put the &lt;tbody&gt; in the &lt;table&gt;
+        tbl.appendChild(tblBody);
+        // appends &lt;table&gt; into &lt;body&gt;
+        body.appendChild(tbl);
+        // sets the border attribute of tbl to 2;
+        tbl.setAttribute("border", "2");
+    }
+&lt;/script&gt;
+&lt;/head&gt;
+&lt;body onload="start()"&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<p>Observe a ordem de criação dos elementos: </p>
+<ol>
+  <li>Primeiro o elemento &lt;table&gt; é criado. </li>
+  <li>Depois o elemento &lt;tbody&gt;. </li>
+  <li>Depois um <em>loop </em>foi criado para fazer as linhas por meio de elementos &lt;tr&gt;. Eles foram inseridos dentro do elemento &lt;tbody&gt;.</li>
+  <li>Para cada elemento &lt;tr&gt;, um outro <em>loop </em>foi criado para os elementos &lt;td&gt; que são as células da tabela. </li>
+  <li>Para cada elemento &lt;td&gt; um nó de texto foi criado — este é de fato a célula visível com o texto. </li>
+</ol>
+<p>Na media que os elementos são criados, eles são inseridos dentro de outros elementos criando-se uma estrutura com hierarquia. A inserção é feita a partir das "folhas" depois subindo na hierarquia, até  o final onde a tabela será inserida no HTML. Assim quando a tabela for inserida ela deverá aparecer completa. </p>
+<ol>
+  <li>Primeiro o nó de texto é inserido no elemento &lt;td&gt; por meio de
+    <pre>cell.appendChild(cellText);</pre>
+  </li>
+  <li>Depois nós colocamos o &lt;td&gt; chamados no código de "cell" dentro dos &lt;tr&gt;
+    <pre>row.appendChild(cell);</pre>
+  </li>
+  <li>Depois os &lt;tr&gt; são colocados dentro do &lt;tbody&gt; também com o uso da interface appendChild
+    <pre>tblBody.appendChild(row);</pre>
+  </li>
+  <li>o &lt;tbody&gt; na table
+    <pre>tbl.appendChild(tblBody);</pre>
+  </li>
+  <li>E finalmente a tabela é colocada dentro do corpo do HTML no elemento &lt;body&gt;
+    <pre>body.appendChild(tbl);</pre>
+  </li>
+</ol>
+<p>Esta técnica é uma das mais básicas para a inserção de elementos no HTML e as interfaces também podem ser utilizadas para inserção de elementos em outros tipos de documentos baseados em XML que tem suporte para W3C DOM Level 1. </p>
+<p>Abaixo é o código gerado pelo exemplo acima: </p>
+<pre>...
+&lt;table border="2"&gt;
+&lt;tr&gt;&lt;td&gt;cell is row 0 column 0&lt;/td&gt;&lt;td&gt;cell is row 0 column 1&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;cell is row 1 column 0&lt;/td&gt;&lt;td&gt;cell is row 1 column 1&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+...
+</pre>
+<p>E abaixo a representação em árvore:</p>
+<p><img alt="Image:sample1-tabledom.jpg" class="internal" src="/@api/deki/files/833/=Sample1-tabledom.jpg"></p>
+<p>O exemplo permite criar uma tabela com dois métodos DOM. No entanto, é importante ter em mente sempre o modelo de árvore. You can build this table and its internal child elements by using just a few DOM methods. Na forma narrativa a estrutura acima inicia com uma tabela (&lt;table&gt;) que tem somente um nó filho, o &lt;tbody&gt; que por sua vez possui dois nós filhos, &lt;tr&gt;, e cada &lt;tr&gt; tem dois &lt;td&gt; que por sua vez possuem um elemento do tipo nó de texto. </p>
+<h3 id="Fundamental_DOM_Methods_-_Sample2.html" name="Fundamental_DOM_Methods_-_Sample2.html">Métodos fundamentais DOM - Sample2.html</h3>
+<p><code>getElementsByTagName()</code> é um método que é disponível na interface <em>Document</em> e também na interface <em>Element</em>. Assim, utilize-o para obter a lista de todos elementos descendentes do elemento interface que você utilizou — seja o <em>document</em> ou um elemento DOM. </p>
+<p><code>getElementsByTagName</code> returns a list of descendant elements that have the specified tagname. From that list of elements, you can reach an individual element by calling the <code>item</code> method, passing an index for the item number you want returned. The first child element of the list is element number zero. It's easy and very simple but needs attention when you are working with large structures. In the next topic we continue working with the Table sample. The following sample is a simpler one, intended to show some basic methods:</p>
+<pre>&lt;html&gt;
+&lt;head&gt;
+&lt;title&gt;Sample code - Traversing an HTML Table with JavaScript and DOM
+Interfaces&lt;/title&gt;
+&lt;script&gt;
+    function start() {
+        // get a list of all the body elements (there will only be one),
+        // and then select the zeroth (or first) such element
+        myBody = document.getElementsByTagName("body")[0];
+
+        // now, get all the p elements that are descendants of the body
+        myBodyElements = myBody.getElementsByTagName("p");
+
+        // get the second item of the list of p elements
+        myP = myBodyElements[1];
+    }
+&lt;/script&gt;
+&lt;/head&gt;
+&lt;body onload="start()"&gt;
+&lt;p&gt;hi&lt;/p&gt;
+&lt;p&gt;hello&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<p>In this example, we set the <code>myP</code> variable to the DOM object for the second <code>p</code> element inside the body:</p>
+<ol>
+  <li>First, we get a list of all the body elements via
+    <pre>myBody = document.getElementsByTagName("body")[0]</pre>
+    Since there is only one body element in any valid HTML document, this list will have only one item, which we retrieve by selecting the first element in that list using <code>{{ mediawiki.external(0) }}</code>.</li>
+  <li>Next, we get all the p elements that are descendants of the body via
+    <pre>myBodyElements = myBody.getElementsByTagName("p");</pre>
+  </li>
+  <li>Finally, we get the second item from the list of p elements via
+    <pre>myP = myBodyElements[1];</pre>
+  </li>
+</ol>
+<p><img alt="Image:sample2a2.jpg" class="internal" src="/@api/deki/files/834/=Sample2a2.jpg"></p>
+<p>Once you have gotten the DOM object for an HTML element, you can set its properties. For example, if you want to set the style background color property, you just add:</p>
+<pre>myP.style.background = "rgb(255,0,0)";
+// setting inline STYLE attribute
+</pre>
+<h4 id="Creating_TextNodes_with_document.createTextNode.28.22...22.29" name="Creating_TextNodes_with_document.createTextNode.28.22...22.29">Creating TextNodes with <code>document.createTextNode("..")</code></h4>
+<p>Use the document object to invoke the createTextNode method and create your text node. You just need to pass the text content. The return value is an object that represents the text node.</p>
+<pre>myTextNode = document.createTextNode("world");
+</pre>
+<p>This means that you have created a node of the type TEXT_NODE (a piece of text) whose text data is "world", and myTextNode is your reference to this node object. To insert this text into your HTML page, you need to make this text node a child of some other node element.</p>
+<h4 id="Inserting_Elements_with_appendChild.28...29" name="Inserting_Elements_with_appendChild.28...29">Inserting Elements with appendChild(..)</h4>
+<p>So, by calling myP.appendChild({{ mediawiki.external('node_element') }}), you are making the element a new child of the second &lt;p&gt; element.</p>
+<pre>myP.appendChild(myTextNode);
+</pre>
+<p>After testing this sample, note that the words hello and world are together: helloworld. So visually, when you see the HTML page it seems like the two text nodes hello and world are a single node, but remember that in the document model, there are two nodes. The second node is a new node of type TEXT_NODE, and it is the second child of the second &lt;p&gt; tag. The following figure shows the recently created Text Node object inside the document tree.</p>
+<p><img alt="Image:sample2b2.jpg" class="internal" src="/@api/deki/files/835/=Sample2b2.jpg"></p>
+<div class="note">
+  createTextNode and appendChild is a simple way to include white space between the words hello and world. Another important note is that the appendChild method will append the child after the last child, just like the word world has been added after the word hello. So if you want to append a Text Node between hello and world you will need to use insertBefore instead of appendChild.</div>
+<h4 id="Creating_New_Elements_with_the_document_object_and_the_createElement.28...29_method" name="Creating_New_Elements_with_the_document_object_and_the_createElement.28...29_method">Creating New Elements with the document object and the <code>createElement(..)</code> method</h4>
+<p>You can create new HTML elements or any other element you want with createElement. For example, if you want to create a new &lt;p&gt; element as a child of the &lt;body&gt; element, you can use the myBody in the previous example and append a new element node. To create a node simply call <code>document.createElement("tagname")</code>. For example:</p>
+<pre>myNewPTAGnode = document.createElement("p");
+myBody.appendChild(myNewPTAGnode);
+</pre>
+<p><img alt="Image:sample2c.jpg" class="internal" src="/@api/deki/files/836/=Sample2c.jpg"></p>
+<h4 id="Removing_nodes_with_the_removeChild.28...29_method" name="Removing_nodes_with_the_removeChild.28...29_method">Removing nodes with the <code>removeChild(..)</code> method</h4>
+<p>Each node can be removed. The following line removes the text node which contains the word world of the myP (second &lt;p&gt; element).</p>
+<pre>myP.removeChild(myTextNode);
+</pre>
+<p>Finally you can add myTextNode (which contains the word world) into the recently created &lt;p&gt; element:</p>
+<pre>myNewPTAGnode.appendChild(myTextNode);
+</pre>
+<p>The final state for the modified object tree looks like this:</p>
+<p><img alt="Image:sample2d.jpg" class="internal" src="/@api/deki/files/837/=Sample2d.jpg"></p>
+<h3 id="Creating_a_table_dynamically_.28back_to_Sample1.html.29" name="Creating_a_table_dynamically_.28back_to_Sample1.html.29">Creating a table dynamically (back to Sample1.html)</h3>
+<p>For the rest of this article we will continue working with sample1.html. The following figure shows the table object tree structure for the table created in the sample.</p>
+<h4 id="Reviewing_the_HTML_Table_structure" name="Reviewing_the_HTML_Table_structure">Reviewing the HTML Table structure</h4>
+<p><img alt="Image:sample1-tabledom.jpg" class="internal" src="/@api/deki/files/833/=Sample1-tabledom.jpg"></p>
+<h4 id="Creating_element_nodes_and_inserting_them_into_the_document_tree" name="Creating_element_nodes_and_inserting_them_into_the_document_tree">Creating element nodes and inserting them into the document tree</h4>
+<p>The basic steps to create the table in sample1.html are:</p>
+<ul>
+  <li>Get the body object (first item of the document object).</li>
+  <li>Create all the elements.</li>
+  <li>Finally, append each child according to the table structure (as in the above figure). The following source code is a commented version for the sample1.html.</li>
+</ul>
+<div class="note">
+  At the end of the start function there is a new line of code. The table's border property was set using another DOM method, <code>setAttribute</code>. setAttribute has two arguments: the attribute name and the attribute value. You can set any attribute of any element using the setAttribute method.</div>
+<pre>&lt;head&gt;
+&lt;title&gt;Sample code - Traversing an HTML Table with JavaScript and DOM Interfaces&lt;/title&gt;
+&lt;script&gt;
+    function start() {
+        // get the reference for the body
+        var mybody = document.getElementsByTagName("body")[0];
+
+        // creates &lt;table&gt; and &lt;tbody&gt; elements
+        mytable     = document.createElement("table");
+        mytablebody = document.createElement("tbody");
+
+        // creating all cells
+        for(var j = 0; j &lt; 2; j++) {
+            // creates a &lt;tr&gt; element
+            mycurrent_row = document.createElement("tr");
+
+            for(var i = 0; i &lt; 2; i++) {
+                // creates a &lt;td&gt; element
+                mycurrent_cell = document.createElement("td");
+                // creates a Text Node
+                currenttext = document.createTextNode("cell is row " + j + ", column " + i);
+                // appends the Text Node we created into the cell &lt;td&gt;
+                mycurrent_cell.appendChild(currenttext);
+                // appends the cell &lt;td&gt; into the row &lt;tr&gt;
+                mycurrent_row.appendChild(mycurrent_cell);
+            }
+            // appends the row &lt;tr&gt; into &lt;tbody&gt;
+            mytablebody.appendChild(mycurrent_row);
+        }
+
+        // appends &lt;tbody&gt; into &lt;table&gt;
+        mytable.appendChild(mytablebody);
+        // appends &lt;table&gt; into &lt;body&gt;
+        mybody.appendChild(mytable);
+        // sets the border attribute of mytable to 2;
+        mytable.setAttribute("border","2");
+    }
+&lt;/script&gt;
+&lt;/head&gt;
+&lt;body onload="start()"&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<h3 id="Manipulating_the_table_with_DOM_and_CSS" name="Manipulating_the_table_with_DOM_and_CSS">Manipulating the table with DOM and CSS</h3>
+<h4 id="Getting_a_text_node_from_the_table" name="Getting_a_text_node_from_the_table">Getting a text node from the table</h4>
+<p>This example introduces two new DOM attributes. First it uses the <code>childNodes</code> attribute to get the list of child nodes of mycel. The <code>childNodes</code> list includes all child nodes, regardless of what their name or type is. Like getElementsByTagName(), it returns a list of nodes. The differences are that (a) getElementsByTagName() only returns elements of the specified tag name; and (b) getElementsByTagName() returns descendants at any level, not just immediate children. Once you have the returned list, use <code>{{ mediawiki.external('x') }}</code> method to retrieve the desired child item. This example stores in myceltext the text node of the second cell in the second row of the table. Then, to display the results in this example, it creates a new text node whose content is the data of myceltext and appends it as a child of the &lt;body&gt; element.</p>
+<div class="note">
+  If your object is a text node, you can use the data attribute and retrieve the text content of the node.</div>
+<pre>mybody      = document.getElementsByTagName("body")[0];
+mytable     = mybody.getElementsByTagName("table")[0];
+mytablebody = mytable.getElementsByTagName("tbody")[0];
+myrow       = mytablebody.getElementsByTagName("tr")[1];
+mycel       = myrow.getElementsByTagName("td")[1];
+
+// first item element of the childNodes list of mycel
+myceltext=mycel.childNodes[0];
+
+// content of currenttext is the data content of myceltext
+currenttext=document.createTextNode(myceltext.data);
+mybody.appendChild(currenttext);
+</pre>
+<h4 id="Getting_an_attribute_value" name="Getting_an_attribute_value">Getting an attribute value</h4>
+<p>At the end of sample1 there is a call to setAttribute on the mytable object. This call was used to set the border property of the table. To retrieve the value of the attribute, use the getAttribute method:</p>
+<pre>mytable.getAttribute("border");
+</pre>
+<h4 id="Hiding_a_column_by_changing_style_properties" name="Hiding_a_column_by_changing_style_properties">Hiding a column by changing style properties</h4>
+<p>Once you have the object in your JavaScript variable, you can set style properties directly. The following code is a modified version of sample1.html in which each cell of the second column is hidden and each cell of the first column is changed to have a red background. Note that the style property was set directly.</p>
+<pre>&lt;html&gt;
+&lt;body onload="start()"&gt;
+&lt;/body&gt;
+&lt;script&gt;
+    function start() {
+       var mybody =document.getElementsByTagName("body")[0];
+       mytable     = document.createElement("table");
+       mytablebody = document.createElement("tbody");
+
+       for(var j = 0; j &lt; 2; j++) {
+           mycurrent_row=document.createElement("tr");
+           for(var i = 0; i &lt; 2; i++) {
+               mycurrent_cell = document.createElement("td");
+               currenttext = document.createTextNode("cell is:" + i + j);
+               mycurrent_cell.appendChild(currenttext);
+               mycurrent_row.appendChild(mycurrent_cell);
+               // set the cell background color
+               // if the column is 0. If the column is 1 hide the cel
+               if (i == 0) {
+                   mycurrent_cell.style.background = "rgb(255,0,0)";
+               } else {
+                   mycurrent_cell.style.display = "none";
+               }
+           }
+           mytablebody.appendChild(mycurrent_row);
+       }
+       mytable.appendChild(mytablebody);
+       mybody.appendChild(mytable);
+    }
+&lt;/script&gt;
+&lt;/html&gt;
+</pre>
+<p><br>
+  <span class="comment">Interwiki</span></p>

@@ -1,0 +1,314 @@
+<div>{{jsSidebar("Statements")}}</div>
+
+<p><strong><code>try…catch</code></strong> 構文は試したい文のブロックをマークし、例外を投げる必要がある場合のレスポンスを指定するための構文です。</p>
+
+<div>{{EmbedInteractiveExample("pages/js/statement-trycatch.html")}}</div>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox">try {
+   <em>try_statements</em>
+}
+[catch (<em>exception_var_1</em> if <em>condition_1</em>) { // non-standard
+   <em>catch_statements_1</em>
+}]
+...
+[catch (<em>exception_var_2</em>) {
+   <em>catch_statements_2</em>
+}]
+[finally {
+   <em>finally_statements</em>
+}]
+</pre>
+
+<dl>
+ <dt><code>try_statements</code></dt>
+ <dd>実行される文です。</dd>
+</dl>
+
+<dl>
+ <dt><code>catch_statements_1</code>, <code>catch_statements_2</code></dt>
+ <dd><code>try</code> ブロックの中で例外が投げられた場合に実行される文です。</dd>
+</dl>
+
+<dl>
+ <dt><code>exception_var_1</code>, <code>exception_var_2</code></dt>
+ <dd>関連する <code>catch</code> 節に対して例外オブジェクトを保持する識別子です。</dd>
+</dl>
+
+<dl>
+ <dt><code>condition_1</code></dt>
+ <dd>条件式です。</dd>
+</dl>
+
+<dl>
+ <dt><code>finally_statements</code></dt>
+ <dd><code>try</code> 文が完了した後に実行される文です。これらの文は、例外が投げられたり捕捉されたかどうかに関係なく実行されます。</dd>
+</dl>
+
+<h2 id="Description" name="Description">説明</h2>
+
+<p><code>try</code> 文は、1 つ以上の文を含む <code>try</code> ブロック、および少なくとも 1 つの <code>catch</code> 節、または <code>finally</code> 節、もしくはその両方から成り立っています。すなわち、<code>try</code> 文には 3 つの形式があります:</p>
+
+<ol>
+ <li><code>try...catch</code></li>
+ <li><code>try...finally</code></li>
+ <li><code>try...catch...finally</code></li>
+</ol>
+
+<p><code>catch</code> 節は、例外が <code>try</code> ブロックの中で投げられたのなら何をすべきか指定する文を含みます。すなわち、<code>try</code> ブロックは成功すべきで、それが成功しなかったのなら、制御は <code>catch</code> ブロックに渡るべきです。<code>try</code> ブロック内 (または <code>try</code> ブロック内から呼び出された関数の中) の任意の文が例外を投げたのなら、制御は即座に <code>catch</code> 節へ移ります。例外が <code>try</code> ブロックの中で投げられなかったのなら、<code>catch</code> 節は飛ばされます。</p>
+
+<p><code>finally</code> 節は、<code>try</code> ブロックおよび（ 1 つまたは複数の）<code>catch</code> 節が実行された後、なおかつ <code>try</code> 文の次の文の前に実行されます。これは、例外が投げられた、または捕捉されたかどうかに関係なく、常に実行されます。</p>
+
+<p>1 つ以上の <code>try</code> 文をネストすることもできます。内側の <code>try</code> 文が <code>catch</code> 節を持たないのなら、囲んでいる <code>try</code> 文の <code>catch</code> 節に入ります。</p>
+
+<p>JavaScript の例外を操作するためにも <code>try</code> 文を使います。JavaScript の例外に関する情報は <a href="/ja/docs/Web/JavaScript/Guide">JavaScript ガイド</a>を参照してください。</p>
+
+<h3 id="Unconditional_catch_clause" name="Unconditional_catch_clause">無条件 <code>catch</code> 節</h3>
+
+<p>単独の無条件 <code>catch</code> 節が使われたときは、任意の例外が投げられると <code>catch</code> 節に入ります。たとえば、次のコードの中で例外が生じたとき、制御は <code>catch</code> 節に移動します。</p>
+
+<pre class="brush: js">try {
+   throw "myException"; // 例外を生成します
+}
+catch (e) {
+   // 任意の例外を操作するための文
+   logMyErrors(e); // エラーハンドラに例外オブジェクトを渡します
+}
+</pre>
+
+<p><code>catch</code> ブロックは <code>throw</code> 文で指定した値を保持する識別子（上記の例では <code>e</code> ）を指定します。The <code>catch</code> block is unique in that JavaScript creates this identifier when the <code>catch</code> block is entered, and it adds it to the current scope; the identifier lasts only for the duration of the <code>catch</code> block; after the <code>catch</code> block finishes executing, the identifier is no longer available.</p>
+
+<h3 id="Conditional_catch_clauses" name="Conditional_catch_clauses">条件付き <code>catch</code> 節</h3>
+
+<p>{{non-standard_header}}</p>
+
+<p>特定の例外を操作するために、1 つ以上の条件付き <code>catch</code> 節を使うこともできます。この場合、特定の例外が投げられると、適切な <code>catch</code> 節に入ります。次の例では、<code>try</code> ブロックの中のコードは 3 つの例外: {{jsxref("TypeError")}}、{{jsxref("RangeError")}}、および {{jsxref("EvalError")}}、を投げる可能性があります。例外が生じたとき、制御は適切な <code>catch</code> 節に移動します。例外が、指定された例外のどれでもなく、かつ無条件 <code>catch</code> 節が見つかったのなら、制御はその <code>catch</code> 節に移動します。</p>
+
+<p>1 つ以上の条件付き <code>catch</code> 節とともに無条件 <code>catch</code> 節を使うのなら、無条件 <code>catch</code> 節は最後に指定されなくてはいけません。そうでなければ、無条件 <code>catch</code> 節が全種類の例外を、それらが条件付きのものに到達する前に、途中で捕捉します。</p>
+
+<p>注: この機能は ECMAScript 仕様の一部ではなく、Firefox 59 で削除されています。現在のブラウザではサポートされていません。</p>
+
+<pre class="brush: js">try {
+   myroutine(); // 3 つの例外を投げる可能性があります
+} catch (e if e instanceof TypeError) {
+   // TypeError 例外を操作するための文
+} catch (e if e instanceof RangeError) {
+   // RangeError 例外を操作するための文
+} catch (e if e instanceof EvalError) {
+   // EvalError 例外を操作するための文
+} catch (e) {
+   // 任意の指定されていない例外を操作するための文
+   logMyErrors(e); // エラーハンドラに例外オブジェクトを渡します
+}
+</pre>
+
+<p>続いて「条件付き <code>catch</code> 節」と同じことを ECMAScript 仕様に準拠した JavaScript を使って実装する方法も示します（これは明らかに冗長ですが、かわりにどの環境でも動作します）：</p>
+
+<pre class="brush: js">try {
+    myroutine(); // may throw three types of exceptions
+} catch (e) {
+    if (e instanceof TypeError) {
+        // statements to handle TypeError exceptions
+    } else if (e instanceof RangeError) {
+        // statements to handle RangeError exceptions
+    } else if (e instanceof EvalError) {
+        // statements to handle EvalError exceptions
+    } else {
+       // statements to handle any unspecified exceptions
+       logMyErrors(e); // pass exception object to error handler
+    }
+}
+</pre>
+
+<h3 id="The_exception_identifier" name="The_exception_identifier">例外識別子</h3>
+
+<p>例外が <code>try</code> ブロックの中で投げられたときは、<em><code>exception_var</code></em> (たとえば、<code>catch (e)</code> における <code>e</code>) が <code>throw</code> 文により指定された値を保持します。投げられた例外についての情報を得るために、この識別子を使うことができます。この識別子は <code>catch</code> 節にローカルです。すなわち、これは <code>catch</code> 節に入ったときに作成され、<code>catch</code> 節が実行を終了した後では、この識別子はもはや利用できません。</p>
+
+<div class="warning">
+<p>Firefox 58（および <a href="https://www.typescriptlang.org/docs/handbook/release-notes/typescript-2-5.html">TypeScript 2.5</a> 以降）では、例外が使用されていない場合は、次のコードのように識別子を省略できます。ですが、これを書いている時点（2018年8月）では、これを<a href="https://github.com/tc39/proposal-optional-catch-binding">サポートする提案</a>はまだ ECMAScript 標準に含まれていないので、この構文は他のブラウザでは動作しないかもしれません。</p>
+</div>
+
+<pre class="brush: js">function isValidJSON(text) {
+    try {
+        JSON.parse(text);
+        return true;
+    } catch {
+        return false;
+    }
+}
+</pre>
+
+<h3 id="The_finally_clause" name="The_finally_clause"><code>finally</code> 節</h3>
+
+<p><code>finally</code> 節は、<code>try</code> ブロックおよび (1 つまたは複数の) <code>catch</code> 節が実行された後、なおかつ <code>try</code> 文の次の文の前に実行される文を含みます。but before the statements following the <code>try..catch..finally</code>　block.　<code>finally</code> 節は、例外が投げられたかどうかに関係なく実行されます。例外が投げられたのなら、たとえ例外を操作する <code>catch</code> 節がなかったとしても、<code>finally</code> 節の中の文は実行されます。</p>
+
+<p>例外が生じたときに、スクリプトを潔く失敗させるために <code>finally</code> 節を使うことができます。たとえば、スクリプトが結び付けていたリソースを解放する必要があるかもしれません。</p>
+
+<p>It may seem strange to have a special exception-related clause that executes <strong>regardless</strong> of whether there is an exception, but this construct actually does serve a purpose.  The important point is not that the <code>finally</code>-clause always executes, but rather that ordinary code following a <code>try..catch</code> does not. </p>
+
+<p>For instance, if another exception occurs inside a try's catch-block, any remaining code in the same outer try-block enclosing that try..catch (or in the main flow, if not in an outer try-block) , will not get executed, since control is immediately transferred to the outer try's catch-block (or the internal error-generator, if not in a try-block).  </p>
+
+<p>Thus, any routine cleanup code done in that enclosed (or the main) section before it exits, will be skipped.  However, If the try-block has a finally-block, then that finally-block code will be executed first to permit any such cleanup, and THEN the other try's catch-block (or the error-generator) will get control to handle the second exception.  </p>
+
+<p>Now, if that routine cleanup must be done whether or not the try..catch code succeeds, then if the finally-block only executed after an exception, the same cleanup code would have to be duplicated both inside and outside the finally-block, and therefore there is no reason not to have just the finally-block alone, and let it execute regardless of exceptions or not.</p>
+
+<p>次の例ではファイルを開き、そのファイルを使う文を実行します (サーバーサイド JavaScript ではファイルにアクセスできます)。ファイルが開かれている間に例外が投げられたのなら、スクリプトが失敗する前に <code>finally</code> 節はファイルを閉じます。The code in <code>finally</code> also executes upon explicitly returning from <code>try</code> or <code>catch</code> block.</p>
+
+<pre class="brush: js">openMyFile()
+try {
+   // リソースを結び付けます
+   writeMyFile(theData);
+}
+finally {
+   closeMyFile(); // リソースを常に閉じます
+}
+</pre>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<h3 id="Nested_try-blocks" name="Nested_try-blocks">入れ子になった try ブロック</h3>
+
+<p>最初に、これで何が起きるか見てみましょう：</p>
+
+<pre class="brush: js">try {
+  try {
+    throw new Error('oops');
+  }
+  finally {
+    console.log('finally');
+  }
+}
+catch (ex) {
+  console.error('outer', ex.message);
+}
+
+// Output:
+// "finally"
+// "outer" "oops"
+</pre>
+
+<p>続いて、catch ブロックを追加して内部の try ブロックで例外をキャッチしてみます。</p>
+
+<pre class="brush: js">try {
+  try {
+    throw new Error('oops');
+  }
+  catch (ex) {
+    console.error('inner', ex.message);
+  }
+  finally {
+    console.log('finally');
+  }
+}
+catch (ex) {
+  console.error('outer', ex.message);
+}
+
+// Output:
+// "inner" "oops"
+// "finally"
+</pre>
+
+<p>そして、エラーを再スローします。</p>
+
+<pre class="brush: js">try {
+  try {
+    throw new Error('oops');
+  }
+  catch (ex) {
+    console.error('inner', ex.message);
+    throw ex;
+  }
+  finally {
+    console.log('finally');
+  }
+}
+catch (ex) {
+  console.error('outer', ex.message);
+}
+
+// Output:
+// "inner" "oops"
+// "finally"
+// "outer" "oops"
+</pre>
+
+<p>再スローされない限り任意の例外は、最も内側のキャッチブロックで一度だけ捕捉されます。もちろん、何らかの例外が "内部" のブロックで発生した場合（catch ブロックのコードで何らかのスローが発生した場合）、"外部" のブロックでキャッチされます。</p>
+
+<h3 id="Returning_from_a_finally_block" name="Returning_from_a_finally_block">finally ブロックからの return</h3>
+
+<p><code>finally</code> ブロックが値を返した場合、<code>try</code> ブロックと <code>catch</code> ブロックの <code>return</code> ステートメントにかからわず、この値が <code>try-catch-finally</code> 全体の戻り値になります。これは catch ブロック内でスローされた例外も含みます：</p>
+
+<pre class="brush: js">(function() {
+  try {
+    try {
+      throw new Error('oops');
+    }
+    catch (ex) {
+      console.error('inner', ex.message);
+      throw ex;
+    }
+    finally {
+      console.log('finally');
+      return;
+    }
+  }
+  catch (ex) {
+    console.error('outer', ex.message);
+  }
+})();
+
+// Output:
+// "inner" "oops"
+// "finally"
+</pre>
+
+<p>外部("outer")の "oops" は finally ブロックで return されているため、スローされません。同じことが、catch ブロックから返されているそのほかの値にも適用されます。</p>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">ステータス</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES3')}}</td>
+   <td>{{Spec2('ES3')}}</td>
+   <td>初期定義。JavaScript 1.4 で実装されました。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-12.14', 'try statement')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-try-statement', 'try statement')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-try-statement', 'try statement')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td>現在の ECMA-262 標準には含まれていません。複数の catch 節と条件付き catch 節（SpiderMonkey 拡張、JavaScript 1.5）。</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザー実装状況</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.statements.try_catch")}}</p>
+
+<h2 id="See_also" name="See_also">関連項目</h2>
+
+<ul>
+ <li>{{jsxref("Error")}}</li>
+ <li>{{jsxref("Statements/throw", "throw")}}</li>
+</ul>

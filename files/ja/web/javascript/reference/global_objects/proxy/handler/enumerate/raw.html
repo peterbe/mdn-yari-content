@@ -1,0 +1,109 @@
+<div>{{JSRef}} {{obsolete_header}}</div>
+
+<p><strong><code>handler.enumerate()</code></strong> メソッドは {{jsxref("Statements/for...in", "for...in")}} ステートメントのトラップにするために使用されていましたが、 ES2016 で ECMAScript 標準から削除され、ブラウザーで非推奨になりました。</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="brush: js">var p = new Proxy(target, {
+  enumerate(target) {
+  }
+});
+</pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<p>次の引数が <code>enumerate</code> メソッドに渡されます。 <code>this</code> はハンドラーにバインドされます。</p>
+
+<dl>
+ <dt><code>target</code></dt>
+ <dd>対象オブジェクト。</dd>
+</dl>
+
+<h3 id="Return_value" name="Return_value">返値</h3>
+
+<p><a href="/ja/docs/Web/JavaScript/Guide/The_Iterator_protocol">iterator</a> オブジェクト。</p>
+
+<h2 id="Description" name="Description">解説</h2>
+
+<p><code><strong>handler.enumerate</strong></code> メソッドは{{jsxref("Statements/for...in", "for...in")}} 文に対するトラップです。</p>
+
+<h3 id="Interceptions" name="Interceptions">横取り</h3>
+
+<p>このトラップは下記の操作を横取りできます。</p>
+
+<ul>
+ <li>プロパティの列挙 / for...in: <code>for (var name in proxy) {...}</code></li>
+ <li>{{jsxref("Reflect.enumerate()")}}</li>
+</ul>
+
+<h3 id="Invariants" name="Invariants">不変条件</h3>
+
+<p>次の不変条件に違反している場合、 Proxy は {{jsxref("TypeError")}} をスローします。</p>
+
+<ul>
+ <li><code>enumerate</code> メソッドはオブジェクトを返さなければなりません。</li>
+</ul>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<p>次のコードでは{{jsxref("Statements/for...in", "for...in")}} 文をトラップします。</p>
+
+<pre class="brush: js">var p = new Proxy({}, {
+  enumerate(target) {
+    console.log('called');
+    return ['a', 'b', 'c'][Symbol.iterator]();
+  }
+});
+
+for (var x in p) { // "called"
+  console.log(x);  // "a"
+}                  // "b"
+                   // "c"
+</pre>
+
+<p>次のコードでは不変条件に違反します。</p>
+
+<pre class="brush: js">var p = new Proxy({}, {
+  enumerate(target) {
+    return 1;
+  }
+});
+
+for (var x in p) {} // TypeError is thrown
+</pre>
+
+<p>メモ: 両方の例では<a href="/ja/docs/Web/JavaScript/Reference/Functions/Method_definitions">メソッド定義</a>の短縮構文を使用しています。</p>
+
+<h2 id="Specifications" name="Specifications">仕様策定状況</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">策定状況</th>
+   <th scope="col">コメント</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-proxy-object-internal-methods-and-internal-slots-enumerate', '[[Enumerate]]')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td>初回定義。 ECMAScript 2016 で削除。</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザーの対応</h2>
+
+<p class="hidden">このページの互換性一覧表は構造化データから生成されています。データに協力したいのであれば、 <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> をチェックアウトしてプルリクエストを送信してください。</p>
+
+<p>{{Compat("javascript.builtins.Proxy.handler.enumerate")}}</p>
+
+<h2 id="See_also" name="See_also">関連項目</h2>
+
+<ul>
+ <li>{{jsxref("Proxy")}}</li>
+ <li>{{jsxref("Proxy.handler", "handler")}}</li>
+ <li>{{jsxref("Statements/for...in", "for...in")}} ステートメント</li>
+ <li>{{jsxref("Reflect.enumerate()")}}</li>
+</ul>

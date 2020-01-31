@@ -1,0 +1,662 @@
+<p>{{jsSidebar("JavaScript Guide")}} {{PreviousNext("Web/JavaScript/Guide/Text_formatting", "Web/JavaScript/Guide/Indexed_collections")}}</p>
+
+<p class="summary">Las expresiones regulares son patrones utilizados para encontrar una determinada combinación de caracteres dentro de una cadena de texto. En JavaScript, las expresiones regulares también son objetos. Estos patrones se utilizan en los métodos <a href="/en-US/docs/JavaScript/Reference/Global_Objects/RegExp/exec" title="exec"><code>exec</code></a> y <a href="/en-US/docs/JavaScript/Reference/Global_Objects/RegExp/test" title="prueba"><code>test</code></a> de<a href="/en-US/docs/JavaScript/Reference/Global_Objects/RegExp" title="RegExp"> <code>RegExp</code></a>, así como los métodos <a href="/en-US/docs/JavaScript/Reference/Global_Objects/String/match" title="partido"><code>match</code></a>, <a href="/en-US/docs/JavaScript/Reference/Global_Objects/String/replace" title="EN-US / docs / JavaScript / Referencia / Global_Objects / Cadena / reemplazar"><code>replace</code></a>,<a href="/en-US/docs/JavaScript/Reference/Global_Objects/String/search" title="buscar"> <code>search</code></a> y <a href="/en-US/docs/JavaScript/Reference/Global_Objects/String/split" title="división"><code>split</code></a> de <a href="/en-US/docs/JavaScript/Reference/Global_Objects/String" title="Cuerda"><code>String</code></a>. En este capítulo se describe el uso y funcionamiento de las expresiones regulares en JavaScript.</p>
+
+<h2 id="Creación_de_una_expresión_regular">Creación de una expresión regular</h2>
+
+<p>Una expresión regular puede crearse de cualquiera de las dos siguientes maneras:</p>
+
+<ul>
+ <li>Utilizando una representación literal de la expresión regular, consistente en un patrón encerrado entre diagonales, como a continuación:
+  <pre class="brush: js">var re = /ab+c/;
+</pre>
+
+  <p>La representación literal ofrece la compilación de la expresión regular cuando se carga el script donde se encuentra. Si la expresión regular permanece constante, utilizar esta forma puede mejorar en rendimiento.</p>
+ </li>
+ <li>Llamando a la función constructora del objeto <code><a href="/en-US/docs/JavaScript/Reference/Global_Objects/RegExp" title="en-US/docs/JavaScript/Reference/Global Objects/RegExp">RegExp</a></code>, como a continuación: 
+  <pre class="brush: js"><font><font>var re = new RegExp('ab+c');
+</font></font></pre>
+
+  <p>El uso de la función constructora ofrece la compilación en tiempo de ejecución de la expresión regular. Utilice la función constructora cuando sepa que el patrón de la expresión regular cambiará, o cuando desconozca el patrón y deba obtenerlo de otra fuente, como por ejemplo del usuario.</p>
+ </li>
+</ul>
+
+<h2 id="Escribiendo_un_patrón_de_expresión_regular">Escribiendo un patrón de expresión regular</h2>
+
+<p>Un patrón de expresión regular se compone de caracteres simples, como <code>/abc/</code>,  o una combinación de caracteres simples y especiales, como  <code>/ab*c/</code> o <code>/Chapter (\d+)\.\d*/</code>.  El segundo ejemplo incluye paréntesis, que se emplean como un recurso de memoria. La coincidencia encontrada por esta parte del patrón es almacenada para posterior uso, como se describe en <a href="#Usar_coincidencias_subcadenas_paréntesis">Usando coincidencias de subcadenas entre paréntesis</a>.</p>
+
+<h3 id="Utilizando_patrones_simples">Utilizando patrones simples</h3>
+
+<p>Los patrones simples se construyen con caracteres para los que se desea una coincidencia exacta. Por ejemplo, el patrón <code>/abc/</code> coincidirá sólo con esta exacta secuencia y orden de caracteres 'abc'. Tal expresión tendría resultados en las cadenas "Hola, ¿conoces tu abc?" y "Los últimos diseños de aviones evolucionaron desde slabcraft." En ambos existe una coincidencia exacta con la subcadena 'abc'. Sin embargo, no habría coincidencia en la cadena 'Nayab calló' debido a que, a pesar de que contiene los caracteres 'a', 'b' y 'c', la secuencia exacta 'abc' nunca aparece.</p>
+
+<h3 id="Utilizando_caracteres_especiales">Utilizando caracteres especiales</h3>
+
+<p>Cuando la búsqueda de coincidencias requiere algo más que una coincidencia exacta, como por ejemplo el encontrar una o más 'b', o encontrar espacios en blanco, se incluyen en el patrón caracteres especiales. Por ejemplo, el patrón <code>/ab*c/</code> coincidirá con cualquier secuencia de caracteres en la cual una 'a' preceda a cero o más 'b' (<code>*</code> significa 0 o más ocurrencias del elemento precedente)  y sea inmediatamente seguida por una 'c'. En la cadena 'cbbabbbbcdebc,' el patrón coincidirá con la subcadena 'abbbbc'.</p>
+
+<p>La siguiente tabla ofrece una lista completa de los caracteres especiales que pueden utilizarse en las expresiones regulares.</p>
+
+<table class="fullwidth-table">
+ <caption>Tabla 4.1 Caracteres especiales para expresiones regulares.</caption>
+ <thead>
+  <tr>
+   <th scope="col">carácter</th>
+   <th scope="col">Significado</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td><a href="#special-backslash" id="special-backslash" name="special-backslash"><code>\</code></a></td>
+   <td>
+    <p>Buscará coincidencias conforme a las siguientes reglas:<br>
+     <br>
+     Una barra invertida precediendo un carácter no especial indica que éste debe ser interpretado como un carácter especial y no de forma literal. Por ejemplo, una '<code>b</code>' sin '\' precediéndole coincidirá con cualquier 'b' minúscula en la cadena, sin embargo, '<code>\b</code>' no coincidirá con algún carácter en específico; representará el <a href="#special-word-boundary" title="# Especial de límite de palabra">delimitador especial de palabras</a>.<br>
+     <br>
+     Una barra invertida que precede a un carácter especial indica que éste deberá ser interpretado literalmente, esto es, como un carácter simple y no como un carácter especial. A esto se le demonina <code>escapado</code>. Por ejemplo, en el patrón <code>/a*/</code> el '*' indica que se deberá buscar una secuencia de 'a' cero o más veces; por el contrario, el cambiar el patrón a  <code>/a\*/</code> , el carácter especial es interpretado como un carácter simple, y cadenas como 'a*' harán coincidencia.<br>
+     <br>
+     No se olvide de <em>escapar</em> la propia barra invertida al usarla en expresiones regulares con cadenas - RegExp("patron") - ya que la \ es un carácter de escapado en cadenas.</p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-caret" id="special-caret" name="special-caret"><code>^</code></a></td>
+   <td>Coincide con el principio de la entrada. Si el interruptor o bandera de multilínea está activada, también coincidirá inmediatamente después de un salto de línea.<br>
+    <br>
+    Por ejemplo, <code>/^A/</code> no coincide con la 'A' en "an A", pero sí con la 'A' en "An E".<br>
+    <br>
+    El carácter '<code>^</code>' tiene un significado diferente cuando aparece como el primer carácter en un patrón tipo conjunto o grupo. Véase <a href="#special-negated-character-set" title="#-Negada-character-set especial">patrones complementarios</a> para mayores detalles y ejemplos.</td>
+  </tr>
+  <tr>
+   <td><a href="#special-dollar" id="special-dollar" name="special-dollar"><code>$</code></a></td>
+   <td>
+    <p>Busca el final de la entrada. Si interruptor o bandera de multilínea se establece en <code>true</code>, también buscará inmediatamente antes de un carácter de salto de línea.</p>
+
+    <p>Por ejemplo, la expresión <code>/r$/</code> no encontrará el carácter 'r' en la cadena "cenaremos", pero sí la encontrará en la cadena "cenar".</p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-asterisk" id="special-asterisk" name="special-asterisk"><code>*</code></a></td>
+   <td>
+    <p>Busca el carácter precedente 0 (cero) o más veces. Es equivalente a {0,}.</p>
+
+    <p>Por ejemplo, la expresión <code>/bo*/</code> encontrará la subcadena 'boooo' en la cadena "Y el fantasma hizo boooo" y el carácter 'b' en la cadena "Un pajaro bebía agua", pero no encontrará nada en la cadena "Un perro ladró".</p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-plus" id="special-plus" name="special-plus"><code>+</code></a></td>
+   <td>
+    <p>Busca el carácter precedente 1 o más veces. Es equivalente a {1,}.</p>
+
+    <p>Por ejemplo, la expresión <code>/u+/</code> encontrará el carácter 'u' en la cadena "dulce" y todos los caracteres 'u' en la cadena "duuuuulce".</p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-questionmark" id="special-questionmark" name="special-questionmark"><code>?</code></a></td>
+   <td>Busca el carácter precedente 0 (cero) o 1 (una) vez. Es equivalente a<code> {0,1}</code>.<br>
+    <br>
+    Por ejemplo, la expresión <code>/e?le?/</code> encontrará la subcadena 'el' en la cadena "angel" y la subcadena 'le' en la cadena "abominable" y también el carácter 'l' en la cadena "muslo".<br>
+    <br>
+    Si se utiliza inmediatamente después que cualquiera de los cuantificadores *, +, ?, o {}, hace que el cuantificador no sea expansivo (encontrando la menor cantidad posible de caracteres), en comparación con el valor predeterminado, que sí es expansivo (encontrando tantos caracteres como le sea posible). Por ejemplo, aplicando la expresión <code>/\d+/</code> a la cadena "123abc" encuentra "123". Pero aplicando la expresión <code>/\d+?/</code> a la misma cadena, encuentra solamente el carácter "1".<br>
+    <br>
+    También se utiliza en coincidencias previsivas, como se describe en las entradas <code>x(?=y)</code>  y  <code>x(?!y)</code> de esta tabla.<br>
+     </td>
+  </tr>
+  <tr>
+   <td><a href="#special-dot" id="special-dot" name="special-dot"><code>.</code></a></td>
+   <td>
+    <p>(El punto decimal) coincide con cualquier carácter precedente excepto un carácter de nueva línea.</p>
+
+    <p>Por ejemplo , <code>/.n/</code> coincide 'an' y 'on' en "nay, an apple is on the tree", pero no 'nay'.</p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-capturing-parentheses" id="special-capturing-parentheses" name="special-capturing-parentheses"><code>(x)</code></a></td>
+   <td>
+    <p>Busca 'x' y recuerda la búsqueda, como muestra el siguiente ejemplo. Los paréntesis son llamados <em>paréntesis de captura</em>. <br>
+     <br>
+     El '<code>(foo)</code>' y '<code>(bar)</code>' en el patrón  <code>/(foo) (bar) \1 \2/</code> busca y recuerda las primeras dos palabras en el string  "foo bar foo bar". El <code>\1 y</code> <code>\2</code> en el patron hacen que coincida las dos últimas palabras de la cadena. Note que <code>\1, \2, \n</code> son usados en la parte donde se define la expresión regular. Cuando se usan en la parte de reemplazo, se debe usar la sintaxis  <code>$1</code>, <code>$2</code>, ..., <code> $n</code> en su lugar  <code>'bar foo'.replace( /(...) (...)/, '$2 $1' )</code>. <span class="short_text" id="result_box" lang="es"><span>$ &amp; significa la secuencia completa.  </span></span> </p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-non-capturing-parentheses" id="special-non-capturing-parentheses" name="special-non-capturing-parentheses"><code>(?:x)</code></a></td>
+   <td>Coincide con 'x' pero no recuerda la coincidencia. Los paréntesis son llamados paréntesis no capturadores, y permiten definir subexpresiones para manipular con los operadores de las expresiones regulares.Para mayor información, mira <a href="#usando_parentesis">Usando paréntesis</a> mas abajo en este artículo.</td>
+  </tr>
+  <tr>
+   <td><a href="#special-lookahead" id="special-lookahead" name="special-lookahead"><code>x(?=y)</code></a></td>
+   <td>
+    <p>Coincide con 'x' sólo si 'x' es seguida por 'y'. Esto se denomina previsión (lookahead, mirar adelante).</p>
+
+    <p>Por ejemplo, <code>/Jack(?=Sprat)/</code> coincide con 'Jack' solo si es seguido por 'Sprat'. <code>/Jack(?=Sprat|Frost)/</code> conicide con 'Jack' solo si es seguido por 'Sprat' o 'Frost'. Sin embargo, ni 'Sprat' ni 'Frost' serán parte del resultado.</p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-negated-look-ahead" id="special-negated-look-ahead" name="special-negated-look-ahead"><code>x(?!y)</code></a></td>
+   <td>
+    <p>Coincide con 'x' solo si 'x' no es seguida por 'y'. Es una previsión negativa.</p>
+
+    <p>Por ejemplo, <code>/\d+(?!\.)/</code> coincide con numeros solo si no vienen seguidos por un punto decimal. La expresion regular <code>/\d+(?!\.)/.exec("3.141")</code> coincide con '141' pero no con '3.141'.</p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-or" id="special-or" name="special-or"><code>x|y</code></a></td>
+   <td>
+    <p>Coincide con 'x' o 'y' <span class="short_text" id="result_box" lang="es"><span>(si no hay coincidencias para 'x')</span></span>.</p>
+
+    <p>Por ejemplo, <code>/green|red/</code> coincide con 'green' en "green apple" y 'red' en "red apple."</p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-quantifier" id="special-quantifier" name="special-quantifier"><code>{n}</code></a></td>
+   <td>Coincide exactamente con n ocurrencias de la expresión. N debe ser un entero positivo.<br>
+    <br>
+    Por ejemplo, <code>/a{2}/</code> no coincide con la 'a' en "candy," pero si con las a de "caandy," y las 2 primeras a en "caaandy."</td>
+  </tr>
+  <tr>
+   <td><a href="#special-quantifier-range" id="special-quantifier-range" name="special-quantifier-range"><code>{n,m}</code></a></td>
+   <td>
+    <p>Donde <code>n</code> y <code>m</code> son enteros positivos y n &lt;= m. Coincide con al menos <code>n</code> y no más de <code>m</code> ocurrencias de la expresión. Si se omite <code>m</code>, no tiene limite de máximo.</p>
+
+    <p>Por ejemplo, <code>/a{1,3}/</code> no coincide con "cndy", pero sí con la 'a' en "candy," las primeras 2 a en "caandy," y las primeras 3 <code>a</code> en "caaaaaaandy". Note que en "caaaaaaandy", la coincidencia es "aaa", aunque la cadena contenga más <code>a</code> en ella.</p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-character-set" id="special-character-set" name="special-character-set"><code>[xyz]</code></a></td>
+   <td>Grupo de caracteres. Este tipo de patrón coincide con cada carácter dentro de los corchetes, incluyendo <a href="https://developer.mozilla.org/en-US/docs/JavaScript/Guide/Values,_variables,_and_literals#Unicode_escape_sequences" title="https://developer.mozilla.org/en-US/docs/JavaScript/Guide/Values,_variables,_and_literals#Unicode_escape_sequences">secuencias de escapado</a>. Caracteres especiales como el punto (<code>.</code>) y el asterisco (<code>*</code>) no son especiales en un grupo, así que no necesitan ser escapados. Puede especificar un rango utilizando un guión, como en el siguiente ejemplo.<br>
+    <br>
+    El patrón <code>[a-d]</code>, que equivale a <code>[abcd]</code>, coincide con la 'b' en "brisket" y la 'c' in "city". El patrón <code>/[a-z.]+/</code> y <code>/[\w.]+/</code> coinciden con toda la cadena "test.i.ng".</td>
+  </tr>
+  <tr>
+   <td><a href="#special-negated-character-set" id="special-negated-character-set" name="special-negated-character-set"><code>[^xyz]</code></a></td>
+   <td>
+    <p>Grupo de caracteres negativo. Significa que coincide con cualquier cosa que no esté en los corchetes. Puede especificar rangos. Todo lo que funciona en el grupo de caracteres positivo funciona también aquí.</p>
+
+    <p>Por ejemplo, <code>[^abc]</code> es lo mismo que <code>[^a-c]</code>, y coincide con la 'r' en "brisket" y 'h' en "chop."</p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-backspace" id="special-backspace" name="special-backspace"><code>[\b]</code></a></td>
+   <td>Coincide con backspace (U+0008). Debe ir entre corchetes. (No confundir con <code>\b</code>.)</td>
+  </tr>
+  <tr>
+   <td><a href="#special-word-boundary" id="special-word-boundary" name="special-word-boundary"><code>\b</code></a></td>
+   <td>
+    <p>Coincide con un <em>limite de palabra</em>. Un <em>limite de palabra</em> coincide con la posición entre donde un carácter de palabra no viene precedido o seguido por otro. Nótese que el límite no estará incluido en la coincidencia. En otras palabras, la longitud del limite es cero. (No confundir con <code>[\b]</code>.)</p>
+
+    <p>Ejemplos:<br>
+     <code>/\bm/</code> coincide con la 'm' de "moon" ;<br>
+     <code>/oo\b/</code> no tiene coincidencias en "moon", porque las 'oo' estan seguidas de una 'n' que es un carácter de palabra;<br>
+     <code>/oon\b/</code> coincide con 'oon' en "moon", porque 'oon' es el final de la cadena, por lo cual no va seguido de un carácter de palabra;<br>
+     <code>/\w\b\w/</code> no coincidirá con nada, porque un carácter de palabra no puede estar seguido por ambos, un limite y un carácter de palabra.</p>
+
+    <div class="note">
+    <p><strong>Nota:</strong> El motor de expresiones regulares de JavaScript define un <a href="http://www.ecma-international.org/ecma-262/5.1/#sec-15.10.2.6">conjunto específico de caracteres</a> que son caracteres "palabra". Cualquier caracter que no está en ese conjunto se considera una ruptura de palabra. Este conjunto de caracteres es bastante limitado: consiste consiste únicamente en el alfabeto romano, tanto en mayúscula como minúscula, dígitos decimales, y el caracter de subrayado. Los caracteres acentuados, como "é" o "ü" son tratados, desafortunadamente, como rupturas de palabra.</p>
+    </div>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-non-word-boundary" id="special-non-word-boundary" name="special-non-word-boundary"><code>\B</code></a></td>
+   <td>
+    <p>Coincide con un <em>no-limite de palabra</em>. Esto coincide con una posicion donde el anterior y el siguiente carácter son del mismo tipo: ambos son o no son caracteres de palabra. El inicio y el final de una cadena se consideran <em>no palabras</em>.</p>
+
+    <p>Por ejemplo, <code>/\B../</code> coincide con 'oo' en "noonday", y <code>/y\B./</code> coincide con 'ye' en "possibly yesterday."</p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-control" id="special-control" name="special-control"><code>\c<em>X</em></code></a></td>
+   <td>
+    <p>Donde <em>X</em> es un carácter entre A y Z. Coincide con un carácter de control en un string.</p>
+
+    <p>Por ejemplo, <code>/\cM/</code> coincide con control-M (U+000D) en un string.</p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-digit" id="special-digit" name="special-digit"><code>\d</code></a></td>
+   <td>
+    <p>Coincide con un carácter de número. Equivalente a <code>[0-9]</code>.</p>
+
+    <p>Por ejemplo, <code>/\d/</code> or <code>/[0-9]/</code> coinciden con el '2' en "B2 is the suite number."</p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-non-digit" id="special-non-digit" name="special-non-digit"><code>\D</code></a></td>
+   <td>
+    <p>Coincide con cualquier carácter no numérico. Equivalente a <code>[^0-9]</code>.</p>
+
+    <p>Por ejemplo, <code>/\D/</code> or <code>/[^0-9]/</code> coincide con la 'B' en "B2 is the suite number."</p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-form-feed" id="special-form-feed" name="special-form-feed"><code>\f</code></a></td>
+   <td>Coincide con un form feed (salto de página) (U+000C).</td>
+  </tr>
+  <tr>
+   <td><a href="#special-line-feed" id="special-line-feed" name="special-line-feed"><code>\n</code></a></td>
+   <td>Coincide con un line feed (salto de linea) (U+000A).</td>
+  </tr>
+  <tr>
+   <td><a href="#special-carriage-return" id="special-carriage-return" name="special-carriage-return"><code>\r</code></a></td>
+   <td>Coincide con un carriage return (retorno de carro) (U+000D).</td>
+  </tr>
+  <tr>
+   <td><a href="#special-white-space" id="special-white-space" name="special-white-space"><code>\s</code></a></td>
+   <td>
+    <p>Coincide con un <em>carácter de espacio</em>, entre ellos incluidos espacio, tab, salto de página, salto de linea y retorno de carro. Equivalente a <code>[\f\n\r\t\v​\u00a0\u1680​\u180e\u2000​\u2001\u2002​\u2003\u2004​\u2005\u2006​\u2007\u2008​\u2009\u200a​\u2028\u2029​​\u202f\u205f​\u3000]</code>.</p>
+
+    <p>Por ejemplo, <code>/\s\w*/</code> coincide con ' bar' en "foo bar."</p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-non-white-space" id="special-non-white-space" name="special-non-white-space"><code>\S</code></a></td>
+   <td>
+    <p>Coincide con todo menos <em>caracteres de espacio</em>. Equivalente a <code>[^ \f\n\r\t\v​\u00a0\u1680​\u180e\u2000​\u2001\u2002​\u2003\u2004​\u2005\u2006​\u2007\u2008​\u2009\u200a​\u2028\u2029​\u202f\u205f​\u3000]</code>.</p>
+
+    <p>Por ejemplo, <code>/\S*/</code> coincide con 'foo' en "foo bar."</p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-tab" id="special-tab" name="special-tab"><code>\t</code></a></td>
+   <td>Coincide con tab (U+0009).</td>
+  </tr>
+  <tr>
+   <td><a href="#special-vertical-tab" id="special-vertical-tab" name="special-vertical-tab"><code>\v</code></a></td>
+   <td>Coincide con tab vertical (U+000B).</td>
+  </tr>
+  <tr>
+   <td><a href="#special-word" id="special-word" name="special-word"><code>\w</code></a></td>
+   <td>
+    <p>Coincide con cualquier carácter alfanumérico, incluyendo el guión bajo. Equivalente a <code>[A-Za-z0-9_]</code>.</p>
+
+    <p>Por ejemplo, <code>/\w/</code> coincide con 'a' en "apple," '5' en "$5.28," y '3' en "3D."</p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-non-word" id="special-non-word" name="special-non-word"><code>\W</code></a></td>
+   <td>
+    <p>Coincide con todo menos <em>caracteres de palabra</em>. Equivalente a <code>[^A-Za-z0-9_]</code>.</p>
+
+    <p>Por ejemplo, <code>/\W/</code> o <code>/[^A-Za-z0-9_]/</code> coinciden con '%' en "50%."</p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-backreference" id="special-backreference" name="special-backreference"><code>\<em>n</em></code></a></td>
+   <td>
+    <p>Cuando <em>n</em> es un entero positivo, es una referencia hacia alguna subcadena de paréntesis dentro de la misma expresion que coincida con el número (contando los paréntesis izquierdos).</p>
+
+    <p>Por ejemplo, <code>/apple(,)\sorange\1/</code> coincide con 'apple, orange,' en "apple, orange, cherry, peach."</p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-null" id="special-null" name="special-null"><code>\0</code></a></td>
+   <td>Coincide con el carácter NULL (U+0000). No preseda este por otro número, ya que <code>\0&lt;numero&gt;</code> se considera una secuencia octal <a href="https://developer.mozilla.org/en-US/docs/JavaScript/Guide/Values,_variables,_and_literals#Unicode_escape_sequences" title="https://developer.mozilla.org/en-US/docs/JavaScript/Guide/Values,_variables,_and_literals#Unicode_escape_sequences">escapada</a>.</td>
+  </tr>
+  <tr>
+   <td><a href="#special-hex-escape" id="special-hex-escape" name="special-hex-escape"><code>\xhh</code></a></td>
+   <td>Coincide con un carácter en exadecimal hh (dos dígitos hexadecimales)</td>
+  </tr>
+  <tr>
+   <td><a href="#special-unicode-escape" id="special-unicode-escape" name="special-unicode-escape"><code>\uhhhh</code></a></td>
+   <td>Coincide con un carácter unicode con el código hhhh (cuatro dígitos hexadecimales).</td>
+  </tr>
+ </tbody>
+</table>
+
+<p><span id="result_box" lang="es"><span class="alt-edited"><em>Escapar</em> la entrada del usuario para que sea tratada como una cadena literal en una expresión regular se puede lograr mediante la sustitución simple:</span></span></p>
+
+<pre class="brush: js"><font><font>función escapeRegExp(cadena) {
+  return cadena.replace</font></font><code>(/[.*+?^${}()|[\]\\]/g, '\\$&amp;'); // $&amp; significa la totalidad de la cadena coincidente</code>
+}</pre>
+
+<h3 id="Usando_paréntesis"><a id="usando_parentesis" name="usando_parentesis">Usando paréntesis</a></h3>
+
+<p>Los paréntesis alrededor de alguna parte del patrón de la expresión regular hacen que parte de la subcadena que coincida sea recordada. Una vez recordada, puede ser rellamada en otro uso, como se describe en {{ web.link("#Using_parenthesized_substring_matches", "Using Parenthesized Substring Matches") }}.</p>
+
+<p>Por ejemplo, el patrón <code>/Chapter (\d+)\.\d*/</code> ilustra caracteres de escape y especiales adicionales e indica que parte del patrón debe recordarse. Coincide con los caracteres 'Chapter ' seguidos por uno o más números, luego un punto decimal, seguido por cualquier número 0 o más veces (para más detalles vea la tabla 4.1). Además, se utilizaron paréntesis para recordar el primer grupo de números.</p>
+
+<p>Este patrón se encuentra dentro de la cadena "Open Chapter 4.3, paragraph 6" y se memoriza el '4'. El patrón no se encuentra en "Chapter 3 and 4", porque no tiene el punto despues del '3'.</p>
+
+<p>Si no quiere memorizar la subcadena, utilice <code>?:</code> al inicio de los paréntesis. Por ejemplo, <code>(?:\d+)</code> coincide con uno o más números pero no memoriza la coincidencia.</p>
+
+<h2 id="Trabajando_con_Expresiones_Regulares">Trabajando con Expresiones Regulares</h2>
+
+<p>Las expresiones regulares se utilizan con los métodos de <code>RegExp</code> <code>test</code> y <code>exec</code> y con los metodos de <code>String</code> <code>match</code>, <code>replace</code>, <code>search</code>, and <code>split</code>. Estos métodos son explicados en la <a href="/en-US/docs/JavaScript/Reference" title="en-US/docs/JavaScript/Reference">Referencia JavaScript</a>.</p>
+
+<table class="standard-table">
+ <caption>Tabla 4.2 Métodos que utilizan expresiones regulares</caption>
+ <thead>
+  <tr>
+   <th scope="col">Método</th>
+   <th scope="col">Descripción</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td><code><a href="/en-US/docs/JavaScript/Reference/Global_Objects/RegExp/exec" title="en-US/docs/JavaScript/Reference/Global_Objects/RegExp/exec">exec</a></code></td>
+   <td>Un método <code>RegExp</code> que ejecuta una búsqueda por una coincidencia en una cadena. Devuelve un array de información.</td>
+  </tr>
+  <tr>
+   <td><code><a href="/en-US/docs/JavaScript/Reference/Global_Objects/RegExp/test" title="en-US/docs/JavaScript/Reference/Global_Objects/RegExp/test">test</a></code></td>
+   <td>Un método <code>RegExp</code> que verifica una coincidencia en una cadena. Devuelve <code>true</code> o <code>false</code>.</td>
+  </tr>
+  <tr>
+   <td><code><a href="/en-US/docs/JavaScript/Reference/Global_Objects/String/match" title="en-US/docs/JavaScript/Reference/Global_Objects/String/match">match</a></code></td>
+   <td>Un método <code>String</code> que ejecuta una búsqueda por una coincidencia en una cadena. <span id="result_box" lang="es"><span class="hps">Devuelve</span> <span class="hps">un array de</span> <span class="hps">información o</span> <code><span class="hps">null</span></code> si no existe coincidencia alguna<span>.</span></span></td>
+  </tr>
+  <tr>
+   <td><code><a href="/en-US/docs/JavaScript/Reference/Global_Objects/String/search" title="en-US/docs/JavaScript/Reference/Global_Objects/String/search">search</a></code></td>
+   <td>Un método <code>String</code> que verifica una coincidencia en una cadena. <span id="result_box" lang="es"><span class="hps">Devuelve</span> <span class="hps">el índice de la coincidencia</span><span class="hps">,</span> <span class="hps">o -1 si</span> <span class="hps">la búsqueda falla</span><span>.</span></span></td>
+  </tr>
+  <tr>
+   <td><code><a href="/en-US/docs/JavaScript/Reference/Global_Objects/String/replace" title="en-US/docs/JavaScript/Reference/Global_Objects/String/replace">replace</a></code></td>
+   <td>Un método <code>String</code> que ejecuta una búsqueda por una coincidencia en una cadena, y reemplaza la subcadena encontrada con una subcadena de reemplazo.</td>
+  </tr>
+  <tr>
+   <td><code><a href="/en-US/docs/JavaScript/Reference/Global_Objects/String/split" title="en-US/docs/JavaScript/Reference/Global_Objects/String/split">split</a></code></td>
+   <td>Un método <code>String</code> que utiliza una expresión regular o una cadena fija para cortar una cadena y colocarlo en un array de subcadenas.</td>
+  </tr>
+ </tbody>
+</table>
+
+<p>Cuando quiera saber si un patrón se encuentra en una cadena, utilice los métodos <code>test</code> o <code>search</code>. Para obtener más información (pero ejecución más lenta) utilice los métodos <code>exec</code> o <code>match</code>. Si usted utiliza <code>exec</code> o <code>match</code> y se logra la coincidencia, estos métodos devuelven un array y actualizan las propiedades del objeto de la expresión regular asociada y también aquellas del objeto de la expresión regular predefinida, <code>RegExp</code>. Si la coincidencia falla, el método <code>exec</code> devuelve <code>null</code> (que coacciona a <code>false</code>).</p>
+
+<p>En el siguiente ejemplo, el script usa el método <code>exec</code> para buscar coincidencias en una cadena.</p>
+
+<pre class="brush: js">var myRe = /d(b+)d/g;<font><font>
+var myArray = myRe.exec('cdbbdbsbz');</font></font>
+</pre>
+
+<p>Si no necesita acceder a las propiedades de la expresión regular, una forma alternativa de crear <code>myArray</code> es con este script:</p>
+
+<pre class="brush: js"><font><font>var myArray = /d(b+)d/g.exec('cdbbdbsbz'); // equivalente a "cdbbdbsbz".match(/d(b+)d/g)  
+</font></font></pre>
+
+<p>Si quiere construir la expresión regular a partir de una cadena, otra alternativa es:</p>
+
+<pre class="brush: js"><font><font>var myRe = new RegExp('d(b+)d','g');</font></font><font><font>
+var myArray = myRe.exec('cdbbdbsbz');</font></font>
+</pre>
+
+<p>Todos estos ejemplos tienen coincidencias, por lo que se retorna un array, y se actualizan las propiedades mostradas en la siguiente tabla.</p>
+
+<table class="fullwidth-table">
+ <caption>Tabla 4.3 Resultados de la ejecución de la expresión regular.</caption>
+ <thead>
+  <tr>
+   <th scope="col">Objeto</th>
+   <th scope="col">Propie-dad o indice</th>
+   <th scope="col"><font><font>Descripción</font></font></th>
+   <th scope="col">En el ejemplo</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td rowspan="4"><code> my   Array</code></td>
+   <td></td>
+   <td>Las coincidencias y las subcadenas memorizadas.</td>
+   <td><code>['dbbd', 'bb', index: 1, input: 'cdbbdbsbz']</code></td>
+  </tr>
+  <tr>
+   <td><code>index</code></td>
+   <td>La posición de la coincidencia en la cadena de entrada.</td>
+   <td><code>1</code></td>
+  </tr>
+  <tr>
+   <td><code>input</code></td>
+   <td>La cadena original.</td>
+   <td><code>"cdbbdbsbz"</code></td>
+  </tr>
+  <tr>
+   <td><code>[0]</code></td>
+   <td>La última coincidencia de caracteres.</td>
+   <td><code>"dbbd"</code></td>
+  </tr>
+  <tr>
+   <td rowspan="2"><code> myRe</code></td>
+   <td><code>last Index</code></td>
+   <td>
+    <p>La posición de donde iniciar la próxima búsqueda. (Esta propiedad solo activa si la expresión utiliza la opción g, descrita en {{ web.link ("#Advanced_Searching_With_Flags", "Advanced Searching With Flags") }}.)</p>
+   </td>
+   <td><code>5</code></td>
+  </tr>
+  <tr>
+   <td><code>source</code></td>
+   <td>El texto del patrón. Actualizado al momento de creación, no al ejecutarse.</td>
+   <td><code>"d(b+)d"</code></td>
+  </tr>
+ </tbody>
+</table>
+
+<p>Como puede verse en la segunda línea de este ejemplo, puede usar una expresión regular creada con un inicializador de objeto sin asignarse a una variable.<span id="result_box" lang="es"><span> Si lo hace, sin embargo, cada ocurrencia será una nueva expresión regular. Por esta razón, si usa este método sin asignarlo a una variable, no podrá acceder posteriormente a las propiedades de estas expresiones regulares. Por ejemplo, suponga que tiene el siguiente script:</span></span></p>
+
+<pre class="brush: js"><font><font>var myRe = /d(b+)d/g;</font></font><font><font>
+var myArray = myRe.exec ( "cdbbdbsbz");</font></font><font><font>
+console.log ( "El valor de lastIndex es" + myRe.lastIndex);</font></font>
+</pre>
+
+<p>El script mostrará:</p>
+
+<pre><font><font>El valor de lastIndex es 5
+</font></font></pre>
+
+<p>Sin embargo, si el script utilizado es éste:</p>
+
+<pre class="brush: js"><font><font>var myArray = /d(b+)d/g.exec("cdbbdbsbz ");</font></font><font><font>
+console.log ( "El valor de lastIndex es" + /d(b+)d/g.lastIndex);</font></font>
+</pre>
+
+<p>Se mostrará lo siguiente:</p>
+
+<pre><font><font>El valor de lastIndex es 0
+</font></font></pre>
+
+<p>Las apariciones de <code>/d(b+)d/g </code>en las dos sentencias son objetos de expresiones regulares distintas y, por lo tanto, tienen diferentes valores en su propiedad <code>lastIndex</code>. Si necesita acceder a las propiedades de una expresión regular creada con un inicializador de objeto, deberá, previamente, asignarla a una variable.</p>
+
+<h3 id="Usar_coincidencias_de_subcadenas_entre_paréntesis"><a id="Usar_coincidencias_subcadenas_paréntesis" name="Usar_coincidencias_subcadenas_paréntesis"><span class="short_text" id="result_box" lang="es"><span>Usar coincidencias de subcadenas entre paréntesis</span></span></a></h3>
+
+<p><font><font>Incluir paréntesis, en un patrón de expresión regular hace que el subcoincidencia correspondiente para ser recordado. </font><font>Por ejemplo, </font></font><code>/a(b)c/</code><font><font>partidos 'ABC' recuerda a los personajes y 'b'. </font><font>Para recuperar estos partidos subcadena entre paréntesis, utilizar los </font></font><code>Array</code><font><font>elementos </font></font><code>[1]</code><font><font>, ..., </font></font><code>[n]</code><font><font>.</font></font></p>
+
+<p><font><font>El número de posibles subcadenas entre paréntesis es ilimitado. </font><font>La matriz devuelta contiene todo lo que se encuentra. </font><font>Los siguientes ejemplos ilustran cómo utilizar coincidencias de subcadenas entre paréntesis.</font></font></p>
+
+<h4 id="Ejemplo_1">Ejemplo 1</h4>
+
+<p>El siguiente script usa el método <a href="/en-US/docs/JavaScript/Reference/Global_Objects/String/replace" title="es-ES / docs / JavaScript / Referencia / Global Objetos / Cadena / reemplazar"><code>replace()</code></a> para intercambiar palabras en el string. <span id="result_box" lang="es"><span>Para el texto de reemplazo, el script utiliza </span></span><code>$1</code> <span lang="es"><span> y </span></span><code>$2</code> <span lang="es"><span> en el reemplazo para denotar la primera y segunda coincidencias de subcadena entre ubicadas entre paréntesis.</span></span></p>
+
+<pre class="brush: js"><font><font>var re = /(\w+)\s(\w+)/;</font></font><font><font>
+var str = "John Smith";</font></font><font><font>
+var newstr = str.replace (re, '$2, $1');</font></font><font><font>
+console.log (newstr);</font></font>
+</pre>
+
+<p>Esto devuelve "Smith, John".</p>
+
+<h3 id="Búsqueda_Avanzada_Con_'Banderas'_(Flags)">Búsqueda Avanzada Con 'Banderas' (Flags)</h3>
+
+<p><span id="result_box" lang="es"><span>Las expresiones regulares tienen cuatro banderas opcionales que permiten realizar búsquedas globales y sin distinción de mayúsculas y minúsculas.</span> <span>Estas banderas pueden utilizarse por separado o juntas y en cualquier orden; y se incluyen como parte de la expresión regular.</span></span></p>
+
+<table class="standard-table">
+ <caption><font><font>Tabla 4.4 Indicadores de expresiones regulares.</font></font></caption>
+ <thead>
+  <tr>
+   <th scope="col">Bandera</th>
+   <th scope="col"><font><font>Descripción</font></font></th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td><code>g</code></td>
+   <td>Búsqueda global.</td>
+  </tr>
+  <tr>
+   <td>i</td>
+   <td>Búsqueda 'case-insensitive' (no sensible a mayúsculas).</td>
+  </tr>
+  <tr>
+   <td><font><font>m</font></font></td>
+   <td>Búsqueda en multi-línea.</td>
+  </tr>
+  <tr>
+   <td>u</td>
+   <td>unicode; se trata el patrón como una secuencia de caracteres unicode.</td>
+  </tr>
+  <tr>
+   <td>y</td>
+   <td><font><font>Realizar una búsqueda "pegajosa" que se ajuste a partir de la posición actual en la cadena de destino. </font></font>Vea {{jsxref("RegExp.sticky", "sticky")}}</td>
+  </tr>
+ </tbody>
+</table>
+
+<p>Para incluir una bandera con la expresión regular, se usa la siguiente sintaxis:</p>
+
+<pre class="brush: js"><font><font>var re = /patrón/flags;
+</font></font></pre>
+
+<p>o</p>
+
+<pre class="brush: js"><font><font>var re = new RegExp('patrón', 'banderas');
+</font></font></pre>
+
+<p>Nótese que las banderas son una parte integral de la expresión regular. No se pueden agregar o eliminar a posteriori.</p>
+
+<p>Por ejemplo, <code>re = /\w+\s/g</code> crea una expresión regular que busca uno o más caracteres seguidos por un espacio; y busca esta combinación en la totalidad del string.</p>
+
+<pre class="brush: js"><font><font>var re = /\w+\s/g;</font></font><font><font>
+var str = "fee fi fo fum";</font></font><font><font>
+var myArray = str.match(re);</font></font><font><font>
+console.log (myArray);</font></font>
+<font><font>//["fee ", "fi ", "fo "]</font></font>
+</pre>
+
+<p>En este ejemplo, puede reemplazar la línea:</p>
+
+<pre class="brush: js"><font><font>var re = /\w+\s/g;
+</font></font></pre>
+
+<p>con:</p>
+
+<pre class="brush: js"><font><font>var re = new RegExp("\\w+\\s","g");
+</font></font></pre>
+
+<p>y obtener el mismo resultado.</p>
+
+<p>El comportamiento asociado con la bandera '<strong><code>g</code></strong>' es diferente cuando se utiliza el método  <code>.exec()</code>.  (Los roles de "clase" y "argumento" se invierten: En el caso de <code>.match()</code>, la cadena clase (o tipo de dato) posee el método y la expresión regular es solo un argumento, mientras que en el caso de <code>.exec()</code>, es la expresión regular la que posee el método, con la cadena como argumento. Contrasta <em><code>str.match(re)</code></em> con <em><code>re.exec(str)</code></em>.)  La bandera '<code><strong>g</strong></code>' se emplea en el método <strong><code>.exec()</code></strong> para obtener una progresión iterativa.</p>
+
+
+
+<pre><code>var xArray; while(xArray = re.exec(str)) console.log(xArray);
+// produce: 
+// ["fee ", index: 0, input: "fee fi fo fum"]
+// ["fi ", index: 4, input: "fee fi fo fum"]
+// ["fo ", index: 7, input: "fee fi fo fum"]</code></pre>
+
+
+
+<p>La bandera <code>m</code> se usa para especificar que una entrada de cadena multilineal se debe tratar como varias líneas independientes. Si se utiliza <code>m</code>, <code>^</code> y <code>$</code> actuarán al inicio y final de cada línea dentro de la cadena de entrada en vez de al inicio y final de la cadena completa.</p>
+
+<h2 id="Ejemplos">Ejemplos</h2>
+
+<p>Los siguientes ejemplos muestran algunos usos de las expresiones regulares:</p>
+
+<h3 id="Cambio_del_orden_de_una_cadena_de_entrada"><font><font>Cambio del orden de una cadena de entrada</font></font></h3>
+
+<p><font><font>El siguiente ejemplo ilustra la formación de expresiones regulares y el uso de </font></font><code>string.split()</code><font><font>y </font></font><code>string.replace()</code><font><font>. </font><font>Se limpia una cadena de entrada más o menos con formato que contiene los nombres (nombre primero) separados por espacios en blanco, pestañas y exactamente un punto y coma. </font><font>Por último, se invierte el orden de los nombres (apellido primero) y ordena la lista.</font></font></p>
+
+<pre class="brush: js"><font><font>// La cadena de nombre contiene múltiples espacios y las pestañas,</font></font><font><font>
+// y puede tener múltiples espacios entre nombres y apellidos.</font></font><font><font>
+nombres var = "Harry Trump; Fred Barney; Helen Rigby; Bill Abel; Chris Hand";</font></font>
+<font><font>
+salida var = [ "---------- original de cadena \n", nombres + "\n"];</font></font>
+<font><font>
+// Preparar dos patrones de expresión regular y de almacenamiento de matrices.</font></font><font><font>
+// Dividir la cadena en elementos de la matriz.</font></font>
+<font><font>
+// patrón: posible espacio en blanco a continuación, punto y coma entonces posible espacio en blanco</font></font><font><font>
+var pattern = /\s*;\s*/;</font></font>
+<font><font>
+// Romper la cadena en piezas separadas por el patrón de arriba y</font></font><font><font>
+// almacenar las piezas en una matriz llamada NAMELIST</font></font><font><font>
+var NAMELIST = names.split (patrón);</font></font>
+<font><font>
+// nuevo patrón: uno o más caracteres luego espacios luego caracteres.</font></font><font><font>
+// utilizar paréntesis para "memorizar" porciones del patrón.</font></font><font><font>
+// Las porciones memorizados se denominan más adelante.</font></font><font><font>
+pattern = /(\w +)\s+(\w+)/;</font></font>
+<font><font>
+// Nueva variedad de nombres que sostienen está procesando.</font></font><font><font>
+era bySurnameList = [];</font></font>
+<font><font>
+// Muestra la matriz nombre y poblar la nueva matriz</font></font><font><font>
+// con nombres separados por comas, durar primero.</font></font>
+//<font><font>
+// El método replace quita nada que coincida con el patrón</font></font><font><font>
+// y lo sustituye por la parte memorizado memorizado cadena segundos</font></font><font><font>
+// seguido de espacio coma seguida de porción primera memorizado.</font></font><font><font>
+//</font></font><font><font>
+// Las variables $1 y $2 se refieren a las porciones</font></font><font><font>
+// memorizado mientras que coincida con el patrón.</font></font>
+<font><font>
+output.push ( "---------- Después de Split por expresiones regulares");</font></font>
+<font><font>
+var i, len;</font></font><font><font>
+for (i = 0, len = nameList.length; i &lt;len; i ++) {</font></font><font><font>
+  output.push (NAMELIST [i]);</font></font><font><font>
+  bySurnameList [i] = NAMELIST [i] .replace (pattern, '$2, $1');</font></font><font><font>
+}</font></font>
+<font><font>
+// Mostrar la nueva matriz.</font></font><font><font>
+output.push ( "---------- Nombres Invertidos");</font></font><font><font>
+for (i = 0, len = bySurnameList.length; i &lt;len; i ++) {</font></font><font><font>
+  output.push (bySurnameList [i]);</font></font><font><font>
+}</font></font>
+<font><font>
+// Ordenar por apellido, a continuación, mostrar la matriz ordenada.</font></font><font><font>
+bySurnameList.sort();</font></font><font><font>
+output.push ( "---------- Ordenada");</font></font><font><font>
+for (i = 0, len = bySurnameList.length; i &lt;len; i ++) {</font></font><font><font>
+  output.push (bySurnameList[i]);</font></font><font><font>
+}</font></font>
+<font><font>
+output.push ( "---------- Fín");</font></font>
+<font><font>
+console.log (output.join ( "\n"));</font></font>
+</pre>
+
+<h3 id="Uso_de_caracteres_especiales_para_Verificar_entrada"><font><font>Uso de caracteres especiales para Verificar entrada</font></font></h3>
+
+<p><font><font>En el siguiente ejemplo, se espera que el usuario introduzca un número de teléfono. </font><font>Cuando el usuario pulsa el botón "Check", la secuencia de comandos comprueba la validez del número. </font><font>Si el número es válido (coincide con la secuencia de caracteres especificados por la expresión regular), el guión muestra un mensaje agradeciendo el usuario y confirmar el número. </font><font>Si el número no es válido, la secuencia de comandos informa al usuario de que el número de teléfono no es válido.</font></font></p>
+
+<p><font><font>Dentro de no capturar paréntesis </font></font><code>(?:</code><font><font>, la expresión regular se ve por tres caracteres numéricos </font></font><code>\d{3}</code><font><font>O </font></font><code>|</code><font><font>un paréntesis izquierdo </font></font><code>\(</code><font><font>seguido de tres dígitos </font></font><code> \d{3}</code><font><font>, seguido de un paréntesis de cierre </font></font><code>\)</code><font><font>, (extremo no capturar paréntesis </font></font><code>)</code><font><font>), seguido por una raya, barra inclinada, o punto decimal y cuando encontrado, recuerda el carácter </font></font><code>([-\/\.])</code><font><font>, seguido por tres dígitos </font></font><code>\d{3}</code><font><font>, seguido por el partido recordado de un guión, barra inclinada, o punto decimal </font></font><code>\1</code><font><font>, seguido de cuatro dígitos </font></font><code>\d{4}</code><font><font>.</font></font></p>
+
+<p><font><font>El </font></font><code>Change</code><font><font>evento activa cuando el usuario pulsa Intro establece el valor de </font></font><code>RegExp.input</code><font><font>.</font></font></p>
+
+<pre class="brush: html"><font><font>&lt;!DOCTYPE html&gt;</font></font><font><font>
+&lt;html&gt;  </font></font><font><font>
+  &lt;head&gt;  </font></font><font><font>
+    &lt;meta http-equiv = "Content-Type" content = "text / html; charset = ISO-8859-1"&gt;  </font></font><font><font>
+    &lt;meta http-equiv = "Content-Script-Type" content = "text / javascript"&gt;  </font></font><font><font>
+    &lt;script type = "text/javascript"&gt;  </font></font>
+      var re = /(?:\d{3}|\(\d{3}\))([-\/\.])\d{3}\1\d{4}/;  <font><font>
+      función testInfo (phoneInput) {  </font></font><font><font>
+        var OK = re.exec (phoneInput.value);  </font></font><font><font>
+        if (!OK)  </font></font><font><font>
+          window.alert(RegExp.input + "no es un número de teléfono con código de área!");  </font></font><font><font>
+        más</font></font><font><font>
+          window.alert("Gracias, su número de teléfono es" + OK[0]);  </font></font>
+      }  <font><font>
+    &lt;/script&gt;  </font></font><font><font>
+  &lt;/head&gt;  </font></font><font><font>
+  &lt;body&gt;  </font></font><font><font>
+    &lt;P&gt; Introduzca su número de teléfono (con el código de área) y haga clic en "Check".</font></font><font><font>
+        Francia El formato esperado es como ###-###-####. &lt;/ p&gt;</font></font><font><font>
+    &lt;form action = "#"&gt;  </font></font><font><font>
+      &lt;button onclick = "testInfo (document.getElementById ( 'teléfono'));"&gt; &lt;input id = "teléfono"&gt; Verificar &lt;/ button&gt;</font></font><font><font>
+    &lt;/ form&gt;  </font></font><font><font>
+  &lt;/ body&gt;  </font></font><font><font>
+&lt;/ html&gt;</font></font>
+</pre>
+
+<div>
+<article>
+<p>{{PreviousNext("Web/JavaScript/Guide/Text_formatting", "Web/JavaScript/Guide/Indexed_collections")}}</p>
+</article>
+
+<article>
+<header></header>
+</article>
+</div>

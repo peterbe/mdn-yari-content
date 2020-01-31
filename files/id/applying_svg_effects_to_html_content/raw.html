@@ -1,0 +1,110 @@
+<div>
+ {{gecko_minversion_header("1.9.1")}}</div>
+<p>Firefox 3.5 introduced support for using <a href="/en-US/docs/SVG" title="SVG">SVG</a> as a component of <a href="/en-US/docs/Web/CSS" title="CSS">CSS</a> styles in order to apply SVG effects to HTML content.</p>
+<p>You may specify SVG in styles either within the same document, or within an external style sheet.</p>
+<div class="note">
+ <strong>Note:</strong> References to SVG in external files must be to the same origin as the originating document.</div>
+<h2 id="Using_embedded_SVG">Using embedded SVG</h2>
+<p>To apply an SVG effect using CSS styles, you first need to create the CSS style that references the SVG to apply.</p>
+<pre class="brush: html">&lt;style&gt;.stylename { mask: url(#localstyle); }&lt;/style&gt;
+</pre>
+<p>In the above example, the new style, identified by "stylename," is an SVG mask referenced by the ID "localstyle". Once this is established, that mask will be applied to any elements using this CSS style.</p>
+<p>This sounds more complicated than it really is; take a look at the examples to get a good idea how this works.</p>
+<p>There are three styles you may apply: you may use <code>mask</code>, <code>clip-path</code>, or <code>filter</code>.</p>
+<h3 id="Example_Masking">Example: Masking</h3>
+<p>For example, you can establish a CSS style that provides a gradient mask for HTML content using SVG code similar to the following in your HTML document:</p>
+<p><strong><span style="color: rgb(255, 0, 0);">NOTE:</span> Namespacing is not valid in HTML5, leave off the "svg:" in tags for HTML-format documents.</strong></p>
+<pre class="brush: xml">&lt;style&gt;.target { mask: url(#m1); }&lt;/style&gt;
+&lt;svg:svg height="0"&gt;
+  &lt;svg:mask id="m1" maskUnits="objectBoundingBox" maskContentUnits="objectBoundingBox"&gt;
+    &lt;svg:linearGradient id="g" gradientUnits="objectBoundingBox" x2="0" y2="1"&gt;
+      &lt;svg:stop stop-color="white" offset="0"/&gt;
+      &lt;svg:stop stop-color="white" stop-opacity="0" offset="1"/&gt;
+    &lt;/svg:linearGradient&gt;
+    &lt;svg:circle cx="0.25" cy="0.25" r="0.25" id="circle" fill="white"/&gt;
+    &lt;svg:rect x="0.5" y="0.2" width="0.5" height="0.8" fill="url(#g)"/&gt;
+  &lt;/svg:mask&gt;
+&lt;/svg:svg&gt;
+</pre>
+<p>Note that in line 1, the mask is specified using a URL to the ID "#m1", which is the ID of the SVG mask specified below it. Everything else specifies details about the gradient mask itself.</p>
+<p>Actually applying the SVG effect to XHTML or HTML is done by simply assigning the <code>target</code> style defined above to the element, like this:</p>
+<pre class="brush: html">  &lt;iframe class="target" src="http://mozilla.org"/&gt;
+</pre>
+<p>This example embeds an <code>iframe</code> containing the Mozilla.org web site, which is rendered with the mask applied to it.</p>
+<p><a class="button liveSample" href="/@api/deki/files/3213/=maskdemo.xhtml">View this example live</a></p>
+<h3 id="Example_Clipping">Example: Clipping</h3>
+<p>This example demonstrates how to use SVG to clip HTML content. When you look at the <a href="/@api/deki/files/3214/=clipdemo.xhtml">live demo</a>, notice that even the hot areas for links are clipped.</p>
+<pre class="brush: xml">&lt;style&gt;.target { clip-path: url(#c1); }&lt;/style&gt;
+&lt;svg:svg height="0"&gt;
+  &lt;svg:clipPath id="c1" clipPathUnits="objectBoundingBox"&gt;
+    &lt;svg:circle cx="0.25" cy="0.25" r="0.25" id="circle"/&gt;
+    &lt;svg:rect x="0.5" y="0.2" width="0.5" height="0.8"/&gt;
+  &lt;/svg:clipPath&gt;
+&lt;/svg:svg&gt;
+</pre>
+<p>This establishes a clipping area comprised of a circle and rectangle, and assigns it the ID "#c1". This is then referenced from the style. Once the <code>target</code> style is established this way, the clip path can be assigned to any element.</p>
+<p>Note also that you can make changes to the SVG in real time and see those changes immediately affect the rendering of the HTML. For example, you can resize the circle in the clip path established above:</p>
+<pre class="brush: js">    var circle = document.getElementById("circle");
+    circle.r.baseVal.value = 0.40 - circle.r.baseVal.value;
+</pre>
+<p><a class="button liveSample" href="/@api/deki/files/3214/=clipdemo.xhtml">View this example live</a></p>
+<p>The example includes a button you can click to change the clip path and see the change take effect.</p>
+<h3 id="Example_Filtering">Example: Filtering</h3>
+<p>This example demonstrates how you can apply a filter to HTML content using SVG. It establishes several filters, which are applied using styles to each of three elements in both the normal and mouse hover states.</p>
+<p>Any SVG filter can be applied this way. For example, to apply a Gaussian blur effect, you might use:</p>
+<pre class="brush: xml">&lt;svg:filter id="f1"&gt;
+  &lt;svg:feGaussianBlur stdDeviation="3"/&gt;
+&lt;/svg:filter&gt;
+</pre>
+<p>You could also apply a color matrix, like this:</p>
+<pre class="brush: xml">&lt;svg:filter id="f2"&gt;
+  &lt;svg:feColorMatrix values="0.3333 0.3333 0.3333 0 0
+                             0.3333 0.3333 0.3333 0 0
+                             0.3333 0.3333 0.3333 0 0
+                             0      0      0      1 0"/&gt;
+&lt;/svg:filter&gt;
+</pre>
+<p>These are just two of the five filters demonstrated in this example. Be sure to take a look at the full code if you'd like to see more.</p>
+<p>The five filters are applied using the following CSS:</p>
+<pre class="brush: html">&lt;style&gt;
+    p.target { filter:url(#f3); }
+    p.target:hover { filter:url(#f5); }
+    b.target { filter:url(#f1); }
+    b.target:hover { filter:url(#f4); }
+    iframe.target { filter:url(#f2); }
+    iframe.target:hover { filter:url(#f3); }
+&lt;/style&gt;
+</pre>
+<p><a class="button liveSample" href="/files/3329/filterdemo.xhtml">View this example live</a></p>
+<h3 id="Example_Blurred_Text">Example: Blurred Text</h3>
+<p>In order to blur text webkit based browsers have a (prefixed) CSS filter called blur. You can achieve the same effect using SVG filters. </p>
+<pre class="brush: html"> &lt;p class="blur"&gt;Time to clean my glasses&lt;/p&gt;
+ &lt;svg xmlns="http://www.w3.org/2000/svg" version="1.1"&gt;
+  &lt;defs&gt;
+    &lt;filter id="wherearemyglasses" x="0" y="0"&gt;
+      &lt;feGaussianBlur in="SourceGraphic" stdDeviation="1" /&gt;
+    &lt;/filter&gt;
+  &lt;/defs&gt;
+&lt;/svg&gt;
+</pre>
+<p>You can apply the SVG and the CSS filter in the same class:</p>
+<pre class="brush: css">.blur {
+  filter:url(#wherearemyglasses);
+  /* ^ for Firefox */
+  -webkit-filter: blur(1px);  
+  /* ^ Webkit browsers */
+  filter: blur(1px);  
+}</pre>
+<p>{{ EmbedLiveSample('Example.3A_Blurred_Text', '', '', '') }}</p>
+<p>Blurring is computation heavy, so ensure to use it sparingly, especially in elements that get scrolled or animated.</p>
+<h2 id="Using_external_references">Using external references</h2>
+<p>The SVG elements being used for clipping, masking, and so forth can be loaded from an external document, as long as that document comes from the same origin as the HTML document to which it's applied.</p>
+<p>For example, if your CSS is in a file named <code>default.css</code>, it can look like this:</p>
+<pre class="brush: css" id="line1">.target { clip-path: url(resources.svg#c1); }</pre>
+<p>The SVG is then imported from a file named <code>resources.svg</code>, using the clip path with the ID <code>c1</code>.</p>
+<h2 id="See_also">See also</h2>
+<ul>
+ <li><a href="/en-US/docs/SVG" title="SVG">SVG</a></li>
+ <li><a class="external" href="http://robert.ocallahan.org/2008/06/applying-svg-effects-to-html-content_04.html">SVG Effects for HTML Content</a> (blog post)</li>
+ <li><del><a class="external" href="/web-tech/2008/10/10/svg-external-document-references">SVG External Document References</a></del> (blog post) (<a href="http://web.archive.org/web/20120512132948/https://developer.mozilla.org/web-tech/2008/10/10/svg-external-document-references/" title="Web Tech Blog » Blog Archive » SVG External Document References">[archive.org] Web Tech Blog » Blog Archive » SVG External Document References</a>)</li>
+</ul>

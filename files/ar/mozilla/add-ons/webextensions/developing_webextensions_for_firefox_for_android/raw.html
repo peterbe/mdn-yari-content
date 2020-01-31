@@ -1,0 +1,139 @@
+<div>{{AddonSidebar()}}</div>
+
+<p dir="ltr">You'll approach the coding of an extension for Firefox for Android in the same way as you would for a desktop extension; using a text editor or tool of your choice to write the code. However, when you want to test and debug your extension you need to follow a different process, this article walks you through that process.</p>
+
+<p dir="ltr">You can also use <a href="/en-US/docs/Mozilla/Add-ons/WebExtensions/Getting_started_with_web-ext">web-ext</a> in your extension development. If you choose to use that tool, you'll still follow the set up and debugging processes described here, but use <code><a href="/en-US/docs/Mozilla/Add-ons/WebExtensions/web-ext_command_reference#web-ext_run">web-ext </a></code><a href="/en-US/docs/Mozilla/Add-ons/WebExtensions/web-ext_command_reference#web-ext_run"><code>run</code></a> to execute your extension on Firefox for Android.</p>
+
+<h2 dir="ltr" id="Set_up_your_computer_and_Android_emulator_or_device">Set up your computer and Android emulator or device</h2>
+
+<p>You first need to complete some one-off setup tasks on your computer and Android device.</p>
+
+<p>On your development computer:</p>
+
+<ul>
+ <li dir="ltr">If you want to test on your computer by running Firefox for Android in the Android emulator:
+  <ul>
+   <li>Install <a href="https://developer.android.com/studio/index.html">Android Studio</a>.</li>
+   <li dir="ltr">Use the Android Studio<a href="https://developer.android.com/studio/intro/update.html#sdk-manager"> SDK Manager</a> or the<a href="https://developer.android.com/studio/command-line/sdkmanager.html"> sdkmanager</a> command-line tool to install the<a href="https://developer.android.com/studio/releases/platform-tools.html"> Android Platform Tools</a>.</li>
+  </ul>
+ </li>
+ <li dir="ltr">If you plan to test in Firefox for Android running on a device only:
+  <ul>
+   <li>Download and extract the <a href="https://developer.android.com/studio/releases/platform-tools.html">standalone Android SDK Platform-Tools package</a> to a suitable location on your computer.</li>
+   <li dir="ltr">On Windows, Mac, or Linux: Add the location into which you extracted the tools package to your operating system’s PATH environment variable.</li>
+   <li dir="ltr">Alternatively, on Mac or Linux: Link the binary to /usr/local/bin using <code>sudo ln -s /&lt;extract folder&gt;/platform-tools/adb /usr/local/bin</code>.</li>
+  </ul>
+ </li>
+</ul>
+
+<p dir="ltr">On your device or Android emulator:</p>
+
+<ul>
+ <li dir="ltr">Install <a href="https://play.google.com/store/apps/details?id=org.mozilla.firefox&amp;referrer=utm_source%3Dmozilla%26utm_medium%3DReferral%26utm_campaign%3Dmozilla-org">Firefox for Android</a> and, if you wish to test the latest features, <a href="https://play.google.com/store/apps/details?id=org.mozilla.firefox_beta">Firefox for Android Beta</a> or <a href="https://play.google.com/store/apps/details?id=org.mozilla.fennec_aurora">Firefox Nightly for Developers</a>.</li>
+ <li dir="ltr">(If you're using web-ext, you can skip this step.) Open Firefox for Android and turn off signing by browsing to <code>about:config</code> then locating and setting <code>xpinstall</code><code>.signatures.required</code> to false.<br>
+  <img alt="Firefox for Android with about:config open, showing xpinstall.signatures.required set to false." src="https://mdn.mozillademos.org/files/15101/set_xpinstall.png" style="display: block; height: 492px; margin-left: auto; margin-right: auto; width: 300px;"></li>
+</ul>
+
+<p dir="ltr">If you are using a device:</p>
+
+<ul>
+ <li><a href="https://developer.android.com/studio/run/device.html">Enable Android USB debugging on the device</a>. You need to follow step 2 only, but note that you may have to <a href="https://developer.android.com/studio/debug/dev-options.html">enable the developer options</a> if you do not see them on your device.</li>
+ <li>Attach your device to the development computer using a USB cable and on the device, when prompted, allow USB debugging for the connection.</li>
+</ul>
+
+<p dir="ltr">(If you're using web-ext, you can skip this step.) On your development computer:</p>
+
+<ul>
+ <li>Open a command shell.</li>
+ <li>Run <code>adb devices</code><br>
+  You should see output similar to:<br>
+  <code>List of devices attached<br>
+  51800F220F01564 device</code><br>
+  Where the hex string is your device’s (or emulator’s) code. This means adb has found your device (or emulator).</li>
+</ul>
+
+<h2 dir="ltr" id="Install_and_run_your_extension_in_Firefox_for_Android">Install and run your extension in Firefox for Android</h2>
+
+<p dir="ltr">In your extension, ensure that you've included an application ID using the <a href="/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/applications">applications</a> key in the manifest.json:</p>
+
+<pre class="brush: json" dir="ltr"> "applications": {
+    "gecko": {
+       "id": "<a href="mailto:borderify@example.com">borderify@example.com</a>"
+    }
+ },</pre>
+
+<p><a href="/en-US/docs/Mozilla/Add-ons/WebExtensions/Publishing_your_WebExtension#1._Zip_up_your_add-on%27s_files">Zip the content of your extension into an xpi file</a> named to match the application ID, for example, <code>borderify@example.com.xpi</code>.</p>
+
+<p>You now have two options for transferring and running your extension: using adb or a website.</p>
+
+<h3 dir="ltr" id="Transfer_your_extension_using_adb">Transfer your extension using adb</h3>
+
+<p>On your computer, execute <code>/path/to/adb push /path/to/&lt;extension file name&gt;.xpi /mnt/sdcard/</code>, which will transfer the extensions xpi file to your attached emulator or device.</p>
+
+<p dir="ltr">On your Android device or in the emulator, open Firefox for Android and browse to <code>file:///mnt/sdcard</code>:</p>
+
+<p dir="ltr"><img alt="Firefox for Android showing the add-on xpi file located on the memory card" src="https://mdn.mozillademos.org/files/15103/xpi%20file%20on%20memory%20card.png" style="display: block; height: 492px; margin-left: auto; margin-right: auto; width: 300px;"></p>
+
+<p dir="ltr">Tap on <code>&lt;extension file name&gt;.xpi</code> to install it. You will get a warning about the extension being blocked, tap ALLOW:</p>
+
+<p dir="ltr"><img alt="Firefox for Android blocked add-on message" src="https://mdn.mozillademos.org/files/15105/blocked-add-on-message.png" style="display: block; height: 492px; margin-left: auto; margin-right: auto; width: 300px;"></p>
+
+<p dir="ltr">An additional warning will tell you the extension is unverified, tap INSTALL:</p>
+
+<p dir="ltr"><img alt="Firefox for Android unverified add-on message" src="https://mdn.mozillademos.org/files/15107/unverified_add_on_messages.png" style="display: block; height: 492px; margin-left: auto; margin-right: auto; width: 300px;"></p>
+
+<p dir="ltr">Your extension will start running (in this case a copy of the <a href="https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Examples#borderify">borderify</a> example extension):</p>
+
+<p dir="ltr"><img alt="Borderify shown adding a red border to the www.mozilla.org home page" src="https://mdn.mozillademos.org/files/15109/borderify_in_action.png" style="display: block; height: 492px; margin-left: auto; margin-right: auto; width: 300px;"></p>
+
+<h3 dir="ltr" id="Transfer_your_extension_via_a_website.">Transfer your extension via a website.</h3>
+
+<p dir="ltr">Upload your xpi file to your website and make it accessible over HTTP. Browse to the file and download it. Follow the installation instructions, which will be similar to those for an extension transferred using adb.</p>
+
+<h2 dir="ltr" id="Debug_your_extension">Debug your extension</h2>
+
+<p dir="ltr">You can debug your extension in WebIDE and view any manifest.json validation messages using adb logcat. To make use of these features, first set up Firefox remote debugging <a href="https://developer.mozilla.org/en-US/docs/Tools/Remote_Debugging/Debugging_Firefox_for_Android_with_WebIDE#Enable_remote_debugging_in_Firefox_for_Android">over USB</a> or <a href="https://developer.mozilla.org/en-US/docs/Tools/Remote_Debugging/Debugging_Firefox_for_Android_over_Wifi">Wi-Fi</a>.</p>
+
+<h3 dir="ltr" id="Using_WebIDE_to_debug_your_extension">Using WebIDE to debug your extension</h3>
+
+<p dir="ltr">Open WebIDE from the Developer option on the desktop Firefox menu. Once open, select your connected device from the options in the right-hand sidebar.</p>
+
+<p dir="ltr"><img alt="Selecting the Firefox for Android device from the list in WebIDE" src="https://mdn.mozillademos.org/files/15111/Select%20Firefox%20on%20Android%20device.png" style="display: block; height: 259px; margin-left: auto; margin-right: auto; width: 422px;"></p>
+
+<p dir="ltr">Now, ensure you are viewing the Main Process, then load a page in which your extension will be exercised.</p>
+
+<div class="note">
+<p dir="ltr">Unlike desktop Firefox, where background scripts output their console messages and are debugged in the add-on debugger, while content scripts output their console messages and are debugged in the browser’s developer tools (see <a href="https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Debugging#Debugging_content_scripts">Debugging content scripts</a>), you can view all messages and debug all scripts in WebIDE when running extensions in Firefox for Android.</p>
+</div>
+
+<p dir="ltr">If you included any console messages in your extension (using <code>console.log()</code>), you can see these the Console tab, and can use the console filter (highlighted below) to hide other console messages:</p>
+
+<p dir="ltr"><img alt="WebIDE showing console with messages filtered for those including 'borderify'" src="https://mdn.mozillademos.org/files/15113/WebIDE%20console%20messages%20and%20filter.png" style="display: block; height: 564px; margin-left: auto; margin-right: auto; width: 679px;"></p>
+
+<p dir="ltr">The Debugger tab then enables you to access the background script and any content scripts:</p>
+
+<p dir="ltr"><img alt="The borderify.js script in the WebIDE debugger tab" src="https://mdn.mozillademos.org/files/15115/WebIDE%20script%20in%20debugger.png" style="display: block; height: 564px; margin-left: auto; margin-right: auto; width: 679px;"></p>
+
+<p dir="ltr">You can now apply breakpoints and observe the extension’s behavior.</p>
+
+<p dir="ltr">Also, you can also target the document related to an extension page, for example, the background page of the borderify example, using the same approach described for the <a href="https://developer.mozilla.org/en-US/docs/Tools/Browser_Toolbox#Targeting_a_document">Browser Toolbox</a>:</p>
+
+<p dir="ltr"><img alt="Selecting a specific page to examine in the WebIDE" src="https://mdn.mozillademos.org/files/15117/WebIDE%20selecting%20page.png" style="display: block; height: 637px; margin-left: auto; margin-right: auto; width: 679px;"></p>
+
+<p dir="ltr">Once you have switched to an extension page, you can inspect the extension page’s DOM elements from the Inspector panel (also the "inspect node" toggle button should work as expected) and execute WebExtension API calls from the Console panel:</p>
+
+<p dir="ltr"><img alt="Using the interactive console to test the effect of JavaScript on the open page" src="https://mdn.mozillademos.org/files/15119/WebIDE%20testing%20JavaScript.png" style="display: block; margin-left: auto; margin-right: auto;"></p>
+
+<p dir="ltr">For more details on using WebIDE, see the <a href="https://developer.mozilla.org/en-US/docs/Tools/WebIDE">WebIDE section</a>.</p>
+
+<h3 dir="ltr" id="Viewing_manifest_validation_messages_using_the_console">Viewing manifest validation messages using the console</h3>
+
+<p dir="ltr">In addition to the console messages output through WebIDE, there may also be messages relating to the validation of the extension’s manifest.json files. These messages can be viewed using the adb logcat command. To avoid receiving other, unrelated messages, you can pipe the output through grep, filtering by the extension’s ID, for example:</p>
+
+<p dir="ltr"><code>/path/to/adb logcat | grep borderify@example.com</code></p>
+
+<p dir="ltr"><code>This will give output similar to this:</code></p>
+
+<p dir="ltr"><code><code>I/Gecko   (30440): 1496056181889    addons.xpi    WARN    Addon with ID borderify@example.com already installed, older version will be disabled</code></code></p><code>
+
+<p dir="ltr"><code>If your add-on fails to run, check these messages as they may provide information explaining why.</code></p></code>

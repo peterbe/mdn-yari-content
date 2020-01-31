@@ -1,0 +1,542 @@
+<p>{{apiref("DOM Events")}}</p>
+
+<p><code><strong>EventTarget.addEventListener()</strong></code> 方法能將指定的事件監聽器註冊到 {{domxref("EventTarget")}} 實作物件上。<code>EventTarget</code> 可能是 Document 中的 {{domxref("Element")}} 物件、{{domxref("Document")}} 物件本身、{{domxref("Window")}} 物件，或是其它支援事件的物件（如：{{domxref("XMLHttpRequest")}}）。</p>
+
+<h2 id="Syntax" name="Syntax">語法</h2>
+
+<pre class="syntaxbox"><code><em>target</em>.addEventListener(<em>type</em>, <em>listener[</em>, <em>options</em>]);
+<em>target</em>.addEventListener(<em>type</em>, <em>listener[</em>, <em>useCapture</em>]);
+<em>target</em>.addEventListener(<em>type</em>, <em>listener[</em>, <em>useCapture</em>, <em>wantsUntrusted </em>{{Non-standard_inline}}]); // Gecko/Mozilla only</code>
+</pre>
+
+<h3 id="參數">參數</h3>
+
+<dl>
+ <dt><code>type</code></dt>
+ <dd>表示所監聽的 <a href="/zh-TW/docs/Web/Reference/Events" title="DOM/Event.type">event type</a> 名稱之字串。</dd>
+ <dt><code>listener</code></dt>
+ <dd>當監聽的事件發生時負責接收事件物件（{{domxref("Event")}} 的實作物件）的物件。這個物件必須是事件監聽器（實作了 {{domxref("EventListener")}} 介面），或是一個簡單的 JavaScript <a href="/zh-TW/docs/JavaScript/Guide/Functions">函式</a>。</dd>
+ <dt>options {{optional_inline}}</dt>
+ <dd>An options object that specifies characteristics about the event listener. The available options are:
+ <ul>
+  <li><code>capture</code>: A {{jsxref("Boolean")}} that indicates that events of this type will be dispatched to the registered <code>listener</code> before being dispatched to any <code>EventTarget</code> beneath it in the DOM tree.</li>
+  <li><code>once</code>: A {{jsxref("Boolean")}} indicating that the <code>listener</code> should be invoked at most once after being added. If it is <code>true</code>, the <code>listener</code> would be removed automatically when it is invoked.</li>
+  <li><code>passive</code>: A {{jsxref("Boolean")}} indicating that the <code>listener</code> will never call <code>preventDefault()</code>. If it does, the user agent should ignore it and generate a console warning.</li>
+  <li>{{non-standard_inline}}<code> mozSystemGroup</code>: Available only in code running in XBL or in Firefox's chrome, it is a {{jsxref("Boolean")}} defining if the listener is added to the system group.</li>
+ </ul>
+ </dd>
+ <dt><code>useCapture</code> {{optional_inline}}</dt>
+ <dd><code><font face="Open Sans, Arial, sans-serif">若為</font>true</code>, <code>useCapture</code>表示使用者想要初始接取機制。在初始接取機制後，所有指定型態的事件會在發送到任何上方DOM樹的<code>EventTarget</code>之前先發送到註冊的<code>listener</code>，從樹中冒泡而上的事件不會觸發用來接取機制的傾聽器，Event bubbling and capturing are two ways of propagating events that occur in an element that is nested within another element, when both elements have registered a handle for that event. The event propagation mode determines the order in which elements receive the event .參考<a href="http://www.w3.org/TR/DOM-Level-3-Events/#event-flow" title="http://www.w3.org/TR/DOM-Level-3-Events/#event-flow">DOM Level 3 Events</a>和 <a href="http://www.quirksmode.org/js/events_order.html#link4">JavaScript Event order</a>關於更詳盡的解釋。<code>useCapture</code>的初始值為<code>false</code>.
+ <div class="note"><strong>註：</strong>For event listeners attached to the event target; the event is in the target phase, rather than capturing and bubbling phases. Events in the target phase will trigger all listeners on an element regardless of the <code>useCapture</code> parameter.</div>
+
+ <div class="note"><strong>註：</strong><code>useCapture</code> became optional only in more recent versions of the major browsers; for example, it was not optional prior to Firefox 6. You should provide this parameter for broadest compatibility.</div>
+ </dd>
+ <dt><code>wantsUntrusted</code> {{Non-standard_inline}}</dt>
+ <dd>If <code>true</code>, the listener will receive synthetic events dispatched by web content (the default is <code>false</code> for chrome and <code>true</code> for regular web pages). This parameter is only available in Gecko and is mainly useful for the code in add-ons and the browser itself. See <a href="/en-US/docs/Code_snippets/Interaction_between_privileged_and_non-privileged_pages" title="Code snippets/Interaction between privileged and non-privileged pages">Interaction between privileged and non-privileged pages</a> for an example.</dd>
+</dl>
+
+<h2 id="Example" name="Example">範例</h2>
+
+<h3 id="addEventListenerBasic" name="addEventListenerBasic">一個簡易的事件監聽</h3>
+
+<h4 id="HTML_內容">HTML 內容</h4>
+
+<pre class="brush: html">&lt;table id="outside"&gt;
+    &lt;tr&gt;&lt;td id="t1"&gt;one&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td id="t2"&gt;two&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+</pre>
+
+
+<h4 id="JavaScript_內容">JavaScript 內容</h4>
+
+<pre class="brush: js">// Function to change the content of t2
+function modifyText() {
+  var t2 = document.getElementById("t2");
+  if (t2.firstChild.nodeValue == "three") {
+    t2.firstChild.nodeValue = "two";
+  } else {
+    t2.firstChild.nodeValue = "three";
+  }
+}
+
+// add event listener to table
+var el = document.getElementById("outside");
+el.addEventListener("click", modifyText, false);
+</pre>
+
+<p>{{EmbedLiveSample('Add_a_simple_listener')}}</p>
+
+<p>在上述的範例中，<code>modifyText()</code> 是一個監聽器，監聽透過 <code>addEventListener()</code> 註冊的 <code>click</code> 事件。任何在這個表格內的點擊都會冒泡（bubble up）到這個事件處理器（handler）並執行 <code>modifyText()</code>。</p>
+
+<p>如果你要傳入任何參數到監聽器函式，你可以使用一個匿名函式。</p>
+
+<h3 id="Event_Listener_with_anonymous_function" name="Event_Listener_with_anonymous_function">匿名函數的事件監聽</h3>
+
+<h4 id="HTML_內容_2">HTML 內容</h4>
+
+<pre class="brush: html">&lt;table id="outside"&gt;
+    &lt;tr&gt;&lt;td id="t1"&gt;one&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td id="t2"&gt;two&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;</pre>
+
+<h4 id="JavaScript_內容_2">JavaScript 內容</h4>
+
+<pre class="brush: js">// 改變 t2 內容的函數
+function modifyText(new_text) {
+  var t2 = document.getElementById("t2");
+  t2.firstChild.nodeValue = new_text;    
+}
+
+// 為表格增加事件監聽的函數
+var el = document.getElementById("outside");
+el.addEventListener("click", function(){modifyText("four")}, false);
+</pre>
+
+<p>{{EmbedLiveSample('Event_Listener_with_anonymous_function')}}</p>
+
+<h2 id="備註">備註</h2>
+
+<h3 id="Why_use_addEventListener.3F" name="Why_use_addEventListener.3F">為甚麼使用 <code>addEventListener</code>?</h3>
+
+<p><code>addEventListener</code> 是註冊一個事件監聽器的方式，正如 W3C DOM 中所定義的。他的好處有這些：</p>
+
+<ul>
+ <li>It allows adding more than a single handler for an event. This is particularly useful for <a href="/en-US/docs/DHTML">DHTML</a> libraries or <a href="/en-US/docs/Extensions">Mozilla extensions</a> that need to work well with other libraries/extensions.</li>
+ <li>It gives you finer-grained control of the phase when the listener gets activated (capturing vs. bubbling).</li>
+ <li>It works on any DOM element, not just HTML elements.</li>
+</ul>
+
+<p>The alternative, <a href="#Older_way_to_register_event_listeners">older way to register event listeners</a>, is described below.</p>
+
+<h3 id="Adding_a_listener_during_event_dispatch">Adding a listener during event dispatch</h3>
+
+<p>If an <code>EventListener</code> is added to an <code>EventTarget</code> while it is processing an event, that event does not trigger the listener. However, that same listener may be triggered during a later stage of event flow, such as the bubbling phase.</p>
+
+<h3 id="Multiple_identical_event_listeners">Multiple identical event listeners</h3>
+
+<p>If multiple identical <code>EventListener</code>s are registered on the same <code>EventTarget</code> with the same parameters, the duplicate instances are discarded. They do not cause the <code>EventListener</code> to be called twice, and they do not need to be removed manually with the <a href="/en-US/docs/DOM/EventTarget.removeEventListener">removeEventListener</a> method.</p>
+
+<h3 id="The_value_of_this_within_the_handler">The value of <code>this</code> within the handler</h3>
+
+<p>It is often desirable to reference the element on which the event handler was fired, such as when using a generic handler for a set of similar elements.</p>
+
+<p>When attaching a handler function to an element using <code>addEventListener()</code>, the value of <code>this</code> inside the handler is a reference to the element. It is the same as the value of the <code>currentTarget</code> property of the event argument that is passed to the handler.</p>
+
+<p>If an event attribute (e.g., <code>onclick</code>) is specified on an element in the HTML source, the JavaScript code in the attribute value is effectively wrapped in a handler function that binds the value of <code>this</code> in a manner consistent with the use of <code>addEventListener()</code>; an occurrence of <code>this</code> within the code represents a reference to the element. Note that the value of <code>this</code> inside a function <em>called by </em>the code in the attribute value behaves as per <a href="/en-US/docs/Web/JavaScript/Reference/Operators/this">standard rules</a>. Therefore, given the following example:</p>
+
+<pre class="brush: html">&lt;table id="t" onclick="modifyText();"&gt;
+  . . .
+</pre>
+
+<p>The value of <code>this</code> within <code>modifyText()</code> when called via the <code>onclick</code> event is a reference to the global (<code>window</code>) object (or <code>undefined</code> in the case of <a href="/en-US/docs/Web/JavaScript/Reference/Strict_mode">strict mode</a>).</p>
+
+<div class="note"><strong>Note:</strong> JavaScript 1.8.5 introduces the <code><a href="/en-US/docs/JavaScript/Reference/Global_Objects/Function/bind">Function.prototype.bind()</a></code> method, which lets you specify the value that should be used as <code>this</code> for all calls to a given function. This method lets you easily bypass problems where it's unclear what this will be, depending on the context from which your function was called. Note, however, that you'll need to keep a reference to the listener around so you can later remove it.</div>
+
+<p>This is an example with and without <code>bind</code>:</p>
+
+<pre class="brush: js">var Something = function(element) {
+  // |this| is a newly created object
+  this.name = 'Something Good';
+  this.onclick1 = function(event) {
+    console.log(this.name); // undefined, as |this| is the element
+  };
+  this.onclick2 = function(event) {
+    console.log(this.name); // 'Something Good', as |this| is bound to newly created object
+  };
+  element.addEventListener('click', this.onclick1, false);
+  element.addEventListener('click', this.onclick2.bind(this), false); // Trick
+}
+var s = new Something(document.body);
+</pre>
+
+<p>A problem in the example above is that you cannot remove the listener with <code>bind</code>. Another solution is using a special function called <code>handleEvent</code> to catch any events:</p>
+
+<pre class="brush: js">var Something = function(element) {
+  // |this| is a newly created object
+  this.name = 'Something Good';
+  this.handleEvent = function(event) {
+    console.log(this.name); // 'Something Good', as this is bound to newly created object
+    switch(event.type) {
+      case 'click':
+        // some code here...
+        break;
+      case 'dblclick':
+        // some code here...
+        break;
+    }
+  };
+
+  // Note that the listeners in this case are |this|, not this.handleEvent
+  element.addEventListener('click', this, false);
+  element.addEventListener('dblclick', this, false);
+
+  // You can properly remove the listeners
+  element.removeEventListener('click', this, false);
+  element.removeEventListener('dblclick', this, false);
+}
+var s = new Something(document.body);
+</pre>
+
+<p>Another way of handling the reference to <em>this </em>is to pass to the EventListener a function which calls the method of the object which fields want to be accessed:</p>
+
+<pre class="brush: js">class SomeClass {
+
+  constructor() {
+    this.name = 'Something Good';
+  }
+
+  register() {
+    var that = this;
+    window.addEventListener('keydown', function(e) {return that.someMethod(e);});
+  }
+
+  someMethod(e) {
+    console.log(this.name);
+    switch(e.keyCode) {
+      case 5:
+        // some code here...
+        break;
+      case 6:
+        // some code here...
+        break;
+    }
+  }
+
+}
+
+var myObject = new SomeClass();
+myObject.register();</pre>
+
+<h3 id="Legacy_Internet_Explorer_and_attachEvent" name="Legacy_Internet_Explorer_and_attachEvent">Internet Explorer 的 attachEvent 方法</h3>
+
+<p>在版本早於 IE 9 的 Internet Explorer, 必須使用 <code><a href="http://msdn.microsoft.com/en-us/library/ms536343(VS.85).aspx">attachEvent</a></code> 而非 <code>addEventListener</code> 監聽事件. 為了支援 IE, 可以參考下面的範例:</p>
+
+<pre class="brush: js">if (el.addEventListener) {
+  el.addEventListener('click', modifyText, false); 
+} else if (el.attachEvent)  {
+  el.attachEvent('onclick', modifyText);
+}
+</pre>
+
+<p>There is a drawback to <code>attachEvent:</code> the value of <code>this</code> will be a reference to the <code>window</code> object instead of the element on which it was fired.</p>
+
+<h3 id="Compatibility" name="Compatibility">瀏覽器相容性</h3>
+
+<p>You can work around <code>addEventListener</code>, <code>removeEventListener</code>, <code>Event.preventDefault</code> and <code>Event.stopPropagation</code> not being supported by IE 8 using the following code at the beginning of your script. The code supports the use of <code>handleEvent</code> and also the <code>DOMContentLoaded</code> event.</p>
+
+<div class="note">
+<p><strong>Note: </strong>useCapture is not supported, as IE 8 does not have any alternative method of it. Please also note that the following code only adds support to IE 8.</p>
+
+<p>Also note that this IE 8 polyfill ONLY works in standards mode: a doctype declaration is required.</p>
+</div>
+
+<pre class="brush: js">(function() {
+  if (!Event.prototype.preventDefault) {
+    Event.prototype.preventDefault=function() {
+      this.returnValue=false;
+    };
+  }
+  if (!Event.prototype.stopPropagation) {
+    Event.prototype.stopPropagation=function() {
+      this.cancelBubble=true;
+    };
+  }
+  if (!Element.prototype.addEventListener) {
+    var eventListeners=[];
+    
+    var addEventListener=function(type,listener /*, useCapture (will be ignored) */) {
+      var self=this;
+      var wrapper=function(e) {
+        e.target=e.srcElement;
+        e.currentTarget=self;
+        if (typeof listener.handleEvent != 'undefined') {
+          listener.handleEvent(e);
+        } else {
+          listener.call(self,e);
+        }
+      };
+      if (type=="DOMContentLoaded") {
+        var wrapper2=function(e) {
+          if (document.readyState=="complete") {
+            wrapper(e);
+          }
+        };
+        document.attachEvent("onreadystatechange",wrapper2);
+        eventListeners.push({object:this,type:type,listener:listener,wrapper:wrapper2});
+        
+        if (document.readyState=="complete") {
+          var e=new Event();
+          e.srcElement=window;
+          wrapper2(e);
+        }
+      } else {
+        this.attachEvent("on"+type,wrapper);
+        eventListeners.push({object:this,type:type,listener:listener,wrapper:wrapper});
+      }
+    };
+    var removeEventListener=function(type,listener /*, useCapture (will be ignored) */) {
+      var counter=0;
+      while (counter&lt;eventListeners.length) {
+        var eventListener=eventListeners[counter];
+        if (eventListener.object==this &amp;&amp; eventListener.type==type &amp;&amp; eventListener.listener==listener) {
+          if (type=="DOMContentLoaded") {
+            this.detachEvent("onreadystatechange",eventListener.wrapper);
+          } else {
+            this.detachEvent("on"+type,eventListener.wrapper);
+          }
+          eventListeners.splice(counter, 1);
+          break;
+        }
+        ++counter;
+      }
+    };
+    Element.prototype.addEventListener=addEventListener;
+    Element.prototype.removeEventListener=removeEventListener;
+    if (HTMLDocument) {
+      HTMLDocument.prototype.addEventListener=addEventListener;
+      HTMLDocument.prototype.removeEventListener=removeEventListener;
+    }
+    if (Window) {
+      Window.prototype.addEventListener=addEventListener;
+      Window.prototype.removeEventListener=removeEventListener;
+    }
+  }
+})();</pre>
+
+<h3 id="Older_way_to_register_event_listeners" name="Older_way_to_register_event_listeners">註冊 event listeners 的舊方法</h3>
+
+<p><code>addEventListener()</code> was introduced with the DOM 2 <a href="http://www.w3.org/TR/DOM-Level-2-Events">Events</a> 規範。在這之前，註冊 event listeners 的方法如下：</p>
+
+<pre class="brush: js">// Passing a function reference — do not add '()' after it, which would call the function!
+el.onclick = modifyText;
+
+// Using a function expression
+element.onclick = function() {
+  // ... function logic ...
+};
+</pre>
+
+<p>這個方法取代在元素上現有的 <code>click</code> event listener(s)。Similarly for other events and associated event handlers such as <code>blur</code> (<code>onblur</code>), <code>keypress</code> (<code>onkeypress</code>), and so on.</p>
+
+<p>因為這是 DOM 0 的一部份, 這個方法被廣泛的支援且不需跨瀏覽器的程式碼; hence it is normally used to register event listeners dynamically unless the extra features of <code>addEventListener()</code> are needed.</p>
+
+<h3 id="Memory_issues" name="Memory_issues">記憶體問題</h3>
+
+<pre class="brush: js">var i;
+var els = document.getElementsByTagName('*');
+
+// 案例 1
+for(i=0 ; i&lt;els.length ; i++){
+  els[i].addEventListener("click", function(e){/*do something*/}, false);
+}
+
+// 案例 2
+function processEvent(e){
+  /*do something*/
+}
+
+for(i=0 ; i&lt;els.length ; i++){
+  els[i].addEventListener("click", processEvent, false);
+}
+
+</pre>
+
+<p>In the first case, a new (anonymous) function is created at each iteration of the loop. In the second case, the same previously declared function is used as an event handler. This results in smaller memory consumption. Moreover, in the first case, it is not possible to call <code><a href="/en-US/docs/Web/API/EventTarget/removeEventListener">element.removeEventListener</a></code> because no reference to the anonymous function is kept. In the second case, it's possible to do <code>myElement.removeEventListener("click", processEvent, false)</code>.</p>
+
+<h3 id="Improving_scrolling_performance_with_passive_listeners">Improving scrolling performance with passive listeners</h3>
+
+<p>The default value for the passive option is <code>false</code>. Starting in Chrome 56 (desktop, Chrome for android, and android webview) the default value for {{event("touchstart")}} and {{event("touchmove")}} is <code>true</code> and calls to {{domxref("Event.preventDefault","preventDefault()")}} are not needed. To override this behavior, you simply set the <code>passive</code> option to <code>false</code> as shown in the example below. This change prevents the listener from blocking page rendering while a user is scrolling. A demo is available on the <a href="https://developers.google.com/web/updates/2016/06/passive-event-listeners">Google Developer</a> site.</p>
+
+<pre class="brush: js">var elem = document.getElementById('elem');
+elem.addEventListener('<code>touchmove</code>', function listener() {
+  /* do something */
+}, { passive: false });
+</pre>
+
+<h2 id="規範">規範</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th>Specification</th>
+   <th>Status</th>
+   <th>Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName("DOM WHATWG", "#dom-eventtarget-addeventlistener", "EventTarget.addEventListener()")}}</td>
+   <td>{{Spec2("DOM WHATWG")}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName("DOM4", "#dom-eventtarget-addeventlistener", "EventTarget.addEventListener()")}}</td>
+   <td>{{Spec2("DOM4")}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName("DOM2 Events", "#Events-EventTarget-addEventListener", "EventTarget.addEventListener()")}}</td>
+   <td>{{Spec2("DOM2 Events")}}</td>
+   <td>Initial definition</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">瀏覽器相容性</h2>
+
+<div>{{CompatibilityTable}}</div>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Edge</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari (WebKit)</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>1.0<sup>[1][2]</sup></td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatGeckoDesktop(1.0)}}<sup>[3]</sup></td>
+   <td>9.0<sup>[4]</sup></td>
+   <td>7</td>
+   <td>1.0<sup>[1]</sup></td>
+  </tr>
+  <tr>
+   <td><code>useCapture</code> made optional</td>
+   <td>1.0</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatGeckoDesktop(6)}}</td>
+   <td>9.0</td>
+   <td>11.60</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>options</code> parameter (with <code>capture</code> and <code>passive</code> values)<sup>[5]</sup></td>
+   <td>
+    <p>{{CompatChrome(49.0)}} (<code>capture</code>) {{CompatChrome(51.0)}} (<code>passive</code>)</p>
+   </td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatGeckoDesktop(49)}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>Landed in Nightly {{webkitbug(158601)}}</td>
+  </tr>
+  <tr>
+   <td><code>once</code> value in the <code>options</code> parameter</td>
+   <td>{{CompatChrome(55)}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatGeckoDesktop(50)}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatOpera(42)}}</td>
+   <td>Landed in Nightly {{webkitbug(149466)}}</td>
+  </tr>
+  <tr>
+   <td>Passive defaults to true for {{domxref("touchstart")}} and {{domxref("touchend")}}</td>
+   <td>{{CompatChrome(55)}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android Webview</th>
+   <th>Chrome for Android</th>
+   <th>Edge</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>
+    <p>{{CompatVersionUnknown}}<sup>[2]</sup></p>
+   </td>
+   <td>
+    <p>{{CompatVersionUnknown}}</p>
+   </td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatGeckoMobile(1.0)}}<sup>[3]</sup></td>
+   <td>9.0</td>
+   <td>6.0</td>
+   <td>1.0<sup>[1]</sup></td>
+  </tr>
+  <tr>
+   <td><code>useCapture</code> made optional</td>
+   <td>
+    <p>{{CompatVersionUnknown}}</p>
+   </td>
+   <td>
+    <p>{{CompatVersionUnknown}}</p>
+   </td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatGeckoMobile(6)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>options</code> parameter (with <code>capture</code> and <code>passive</code> values)<sup>[5]</sup></td>
+   <td>{{CompatChrome(49.0)}} (<code>capture</code>) {{CompatChrome(51.0)}} (<code>passive</code>)</td>
+   <td>{{CompatChrome(49.0)}} (<code>capture</code>) {{CompatChrome(51.0)}} (<code>passive</code>)</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatGeckoMobile(49)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>once</code> value in the <code>options</code> parameter</td>
+   <td>{{CompatChrome(55)}}</td>
+   <td>{{CompatChrome(55)}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatGeckoDesktop(50)}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatOperaMobile(42)}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td>Passive defaults to true for {{domxref("touchstart")}} and {{domxref("touchend")}}</td>
+   <td>{{CompatChrome(55)}}</td>
+   <td>{{CompatChrome(55)}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<p>[1] Although WebKit has explicitly added <code>[optional]</code> to the <code>useCapture</code> parameter <a href="http://trac.webkit.org/changeset/89781">as recently as June 2011</a>, it had been working before the change. The new change landed in Safari 5.1 and Chrome 13.</p>
+
+<p>[2] Before Chrome 49, the type and listener parameters were optional.</p>
+
+<p>[3] Prior to Firefox 6, the browser would throw an error if the <code>useCapture</code> parameter was not explicitly <code>false</code>. Prior to Gecko 9.0 {{geckoRelease("9.0")}}, <code>addEventListener()</code> would throw an exception if the <code>listener</code> parameter was <code>null</code>; now the method returns without error, but without doing anything.</p>
+
+<p>[4] Older versions of Internet Explorer support the proprietary {{domxref("EventTarget.attachEvent")}} method instead.</p>
+
+<p>[5] For backwards compatibility, browsers that support <code>options</code> allow the third parameter to be either <code>options</code> or {{jsxref("Boolean")}}.</p>
+
+<h2 id="Specification" name="Specification">參見</h2>
+
+<ul>
+ <li>{{domxref("EventTarget.removeEventListener()")}}</li>
+ <li><a href="/docs/DOM/Creating_and_triggering_events">Creating and triggering custom events</a></li>
+ <li><a href="http://www.quirksmode.org/js/this.html">More details on the use of <code>this</code> in event handlers</a></li>
+</ul>

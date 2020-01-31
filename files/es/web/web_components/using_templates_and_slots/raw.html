@@ -1,0 +1,321 @@
+<div>{{DefaultAPISidebar("Web Components")}}</div>
+
+<p class="summary">Este artículo explica como puedes usar los elementos {{htmlelement("template")}} y {{htmlelement("slot")}} para crear una plantilla flexible que luego puede ser usada para llenar el DOM de un componente web.</p>
+
+<h2 id="La_verdad_acerca_de_las_plantillas">La verdad acerca de las plantillas</h2>
+
+<p>Cuando tienes que reutilizar las mismas estructuras de lenguaje de marcado repetidas veces en una página web, tiene sentido utilizar algún tipo de plantilla en lugar de repetir la misma estructura una y otra vez. Así se hacia antes, pero es mucho mas facil hacerlo con el elemento HTML {{htmlelement("template")}} (el cual es compatible con los navegadores modernos). Este elemento y su contenido no son renderizados en el DOM, pero sí pueden ser referenciados via JavaScript.</p>
+
+<p>Echemos un vistazo a un ejemplo sencillo.</p>
+
+<pre class="brush: html">&lt;template id="my-paragraph"&gt;
+  &lt;p&gt;My paragraph&lt;/p&gt;
+&lt;/template&gt;</pre>
+
+<p>Esto no aparecerá en tu página hasta que hagas una referencia a él con JavaScript y luego lo agregues al DOM, usando algo parecido a lo siguiente.</p>
+
+<pre class="brush: js">let template = document.getElementById('my-paragraph');
+let templateContent = template.content;
+document.body.appendChild(templateContent);</pre>
+
+<p>Aunque simple, ya puedes comenzar a ver su utilidad.</p>
+
+<h2 id="Usando_plantillas_con_componentes_web">Usando plantillas con componentes web</h2>
+
+<p>Las plantillas son útiles por si mismas, pero estas trabajan aun mejor con componentes web. Definamos un componente web que usa nuestra plantilla con el contenido de su shadow DOM. Lo nombraremos <code>&lt;my-paragraph&gt;</code>:</p>
+
+<pre class="brush: js">customElements.define('my-paragraph',
+  class extends HTMLElement {
+    constructor() {
+      super();
+      let template = document.getElementById('my-paragraph');
+      let templateContent = template.content;
+
+      const shadowRoot = this.attachShadow({mode: 'open'})
+        .appendChild(templateContent.cloneNode(true));
+  }
+})</pre>
+
+<p>El punto clave a tener en cuenta aquí es que agregamos un clon del contenido de la plantilla al shadow root creado usando el método {{domxref("Node.cloneNode()")}}.</p>
+
+<p>Y debido a que estamos agregando su contenido a un shadow DOM, podemos incluir cierta información de estilo dentro de la plantilla en un elemento {{htmlelement("style")}}, que luego se encapsula dentro del elemento personalizado. Esto no funcionaría si nosotros solo lo agregásemos al DOM estandar.</p>
+
+<p>Por ejemplo:</p>
+
+<pre class="brush: html">&lt;template id="my-paragraph"&gt;
+  &lt;style&gt;
+    p {
+      color: white;
+      background-color: #666;
+      padding: 5px;
+    }
+  &lt;/style&gt;
+  &lt;p&gt;My paragraph&lt;/p&gt;
+&lt;/template&gt;</pre>
+
+<p>Ahora podemos usarlo simplemente agregándolo a nuestro documento HTML:</p>
+
+<pre class="brush: html">&lt;my-paragraph&gt;&lt;/my-paragraph&gt;
+</pre>
+
+<div class="note">
+<p><strong>Nota: </strong>Las plantillas son bien soportadas in navegadores: la API del DOM sombra es soportada por default en Firefox (version 63 onwards), Chrome, Opera, and Safari, Edge está trabajando en una implementación.</p>
+</div>
+
+<h2 id="Añadiendo_flexibilidad_con_slots">Añadiendo flexibilidad con slots</h2>
+
+<p>Hasta ahora todo bien, pero el elemento no es muy flexible. Solo podemos mostrar una parte de texto dentro de él, lo quiere decir que hasta el momento, es menos útil que un parrafo regular. Podemos mostrar texto diferente en cada instancia de elemento de una manera declarativa agradable usando el elemento {{htmlelement("slot")}} Este tiene un soporte mas limitado que el elemento {{htmlelement("template")}}, disponible desde Chrome 53, Opera 40, Safari 10, Firefox 59, aun no está disponible en Edge.</p>
+
+<p>Los slots son identificados por su atributo <code>name</code>, y te permiten definir marcadores de posición en tu plantilla que pueden rellenarse con cualquier fragmento de marcado que quieras cuando el elemento es usado en el marcado.</p>
+
+<p>Entonces, si queremos agregar un slot dentro de nuestro ejemplo sencillo, podemos actualizar el elemento de párrafo de la plantilla de la siguiente manera:</p>
+
+<pre class="brush: html">&lt;p&gt;&lt;slot name="my-text"&gt;My default text&lt;/slot&gt;&lt;/p&gt;</pre>
+
+<p>Si el contenido del slot no está definido cuando el elemento se agrega al marcado, o si el navegador no soporta el elemento slot, <code>&lt;my-paragraph&gt;</code> solo contiene el texto alternativo "My default text".</p>
+
+<p>Para definir el contenido de un slot, incluimos una estructura HTML dentro de el elemento <code>&lt;my-paragraph&gt;</code> con un {{htmlattrxref("slot")}} atributo cuyo valor es igual al nombre del slot que  queremos que rellene. Esto puede ser cualquier cosa que tu quieras, por ejemplo.</p>
+
+<pre class="brush: html">&lt;my-paragraph&gt;
+  &lt;span slot="my-text"&gt;Let's have some different text!&lt;/span&gt;
+&lt;/my-paragraph&gt;</pre>
+
+<p>o también</p>
+
+<pre class="brush: html">&lt;my-paragraph&gt;
+  &lt;ul slot="my-text"&gt;
+    &lt;li&gt;Let's have some different text!&lt;/li&gt;
+    &lt;li&gt;In a list!&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/my-paragraph&gt;
+</pre>
+
+<div class="note">
+<p><strong>Nota: </strong>Los elementos que pueden ser insertados en los slots son conocidos como {{domxref("Slotable")}}; cuando un elemento ha sido insertado en un slot, se dice que fue <em>eslotado </em>por su término en inlgés <em>slotted.</em></p>
+</div>
+
+<p>Y ese es nuestro ejemplo trivial. Si quieres jugar con él un poco más, puedes encontrarlo en <a href="https://github.com/mdn/web-components-examples/tree/master/simple-template">GitHub</a> (también puedes verlo en <a href="https://mdn.github.io/web-components-examples/simple-template/">vivo</a>).</p>
+
+<h2 id="Un_ejemplo_más_completo">Un ejemplo más completo</h2>
+
+<p>Para finalizar el artículo, veamos algo menos trivial.</p>
+
+<p>El siguiente conjunto de fragmentos de código muestran como usar {{HTMLElement("slot")}} junto con  {{HTMLElement("template")}} y algo de JavaScript para:</p>
+
+<ul>
+ <li>crear un elemento <strong><code>&lt;element-details&gt;</code></strong>  con <a href="/en-US/docs/Web/HTML/Element/slot#named-slot">slots nombrados</a> en su <a href="/en-US/docs/Web/API/ShadowRoot">nodo raíz</a></li>
+ <li>diseñe el elemento <strong><code>&lt;element-details&gt;</code></strong> de forma que, cuando se use en documentos, este sea renderizado desde la composición del contenido del elemento junto con el contenido de su <a href="/en-US/docs/Web/API/ShadowRoot">nodo raíz,</a> es decir, se utilizan partes del contenido del elemento para colocar en el <a href="/en-US/docs/Web/API/ShadowRoot">nodo raíz</a> de los <a href="/en-US/docs/Web/HTML/Element/slot#named-slot">slots </a>con atributo <em>name</em></li>
+</ul>
+
+<p>Observa que es técnicamente posible usar el elemento {{HTMLElement("slot")}} sin un elemento {{HTMLElement("template")}}, por ejemplo, dentro de un elemento {{HTMLElement("div")}} regular, y aun asi tomar ventaja de los indicadores de posición de el elemento {{HTMLElement("slot")}} para el contenido del <a href="https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_shadow_DOM">Shadow del DOM </a>y al hacerlo puedes evitar el problema de tener que acceder primero a la propiedad <code>content</code> del elemento de la plantilla y clonarlo. Sin embargo, es por lo general, más práctico agregar slots dentro de un elemento {{HTMLElement("template")}}, ya que es poco probable que necesites definir un patrón basado en un elemento ya renderizado.</p>
+
+<p>Además, aun si no está renderizado, el propósito del contenedor como plantilla debería ser semánticamente más claro cuando se usa el elemento {{HTMLElement("template")}}. Además, el elemento {{HTMLElement("template")}} puede tener elementos agregados directamente a el, como {{HTMLElement("td")}}, que desaparecerían al agregarse a {{HTMLElement ("div")}}.</p>
+
+<div class="note">
+<p><strong>Nota: </strong>Tu puedes encontrar el ejemplo completo en <a href="https://github.com/mdn/web-components-examples/tree/master/element-details">element-details </a>(también lo puedes<a href="https://github.com/mdn/web-components-examples/tree/master/element-details"> ver en vivo</a>)</p>
+</div>
+
+<h3 id="Creando_una_plantilla_con_algunos_elementos_slot">Creando una plantilla con algunos elementos slot</h3>
+
+<p>En primer lugar, usamos el elemento {{HTMLElement("slot")}} dentro de un elemento {{HTMLElement("template")}} para craer un nuevo elemento de tipo <a href="/en-US/docs/Web/API/DocumentFragment">document fragment</a> llamado "element-details-template" que contiene algunos <a href="/en-US/docs/Web/HTML/Element/slot#named-slot">named slots</a>:</p>
+
+<pre class="brush: html">&lt;template id="element-details-template"&gt;
+  &lt;style&gt;
+  details {font-family: "Open Sans Light",Helvetica,Arial}
+  .name {font-weight: bold; color: #217ac0; font-size: 120%}
+  h4 { margin: 10px 0 -8px 0; }
+  h4 span { background: #217ac0; padding: 2px 6px 2px 6px }
+  h4 span { border: 1px solid #cee9f9; border-radius: 4px }
+  h4 span { color: white }
+  .attributes { margin-left: 22px; font-size: 90% }
+  .attributes p { margin-left: 16px; font-style: italic }
+  &lt;/style&gt;
+  &lt;details&gt;
+    &lt;summary&gt;
+      &lt;span&gt;
+        &lt;code class="name"&gt;&amp;lt;&lt;slot name="element-name"&gt;NEED NAME&lt;/slot&gt;&amp;gt;&lt;/code&gt;
+        &lt;i class="desc"&gt;&lt;slot name="description"&gt;NEED DESCRIPTION&lt;/slot&gt;&lt;/i&gt;
+      &lt;/span&gt;
+    &lt;/summary&gt;
+    &lt;div class="attributes"&gt;
+      &lt;h4&gt;&lt;span&gt;Attributes&lt;/span&gt;&lt;/h4&gt;
+      &lt;slot name="attributes"&gt;&lt;p&gt;None&lt;/p&gt;&lt;/slot&gt;
+    &lt;/div&gt;
+  &lt;/details&gt;
+  &lt;hr&gt;
+&lt;/template&gt;
+</pre>
+
+<p>Ese elemento {{HTMLElement("template")}} tiene varias características.</p>
+
+<ul>
+ <li>El {{HTMLElement ("template")}} tiene un elemento {{HTMLElement ("style")}} con un conjunto de estilos CSS que tienen el alcance justo en el fragmento del documento que {{HTMLElement ("template")}} crea. .</li>
+ <li>El elemento {{HTMLElement("template")}} usa {{HTMLElement("slot")}} y su atributo {{htmlattrxref("name", "slot")}} para hacer árboles de <a href="/en-US/docs/Web/HTML/Element/slot#named-slot">slots nombrados</a> (<a href="/en-US/docs/Web/HTML/Element/slot#named-slot">named slots</a>):
+  <ul>
+   <li><code>&lt;slot name="element-name"&gt;</code></li>
+   <li><code>&lt;slot name="description"&gt;</code></li>
+   <li><code>&lt;slot name="attributes"&gt;</code></li>
+  </ul>
+ </li>
+ <li>El elemento {{HTMLElement("template")}} envuelve los slots nombrados dentro de un elemento {{HTMLElement("details")}}.</li>
+</ul>
+
+<h3 id="Crear_un_nuevo_&lt;element-details>_desde_el_elemento_&lt;template>">Crear un nuevo &lt;element-details&gt; desde el elemento &lt;template&gt;</h3>
+
+<p>A continuación, crearemos un nuevo elemento personalizado llamado <strong><code>&lt;element-details&gt;</code></strong> y usaremos {{DOMXref("Element.attachShadow")}} para anclarlo, como su <a href="/en-US/docs/Web/API/ShadowRoot">shadow root</a> ese fragmento de documento que nosotros creamos anteriormente con nuestro elemento {{HTMLElement("template")}}. Usa exáctamente el mismo patrón que vimos atrás en el ejemplo trivial.</p>
+
+<pre class="brush: js">customElements.define('element-details',
+  class extends HTMLElement {
+    constructor() {
+      super();
+      var template = document
+        .getElementById('element-details-template')
+        .content;
+      const shadowRoot = this.attachShadow({mode: 'open'})
+        .appendChild(template.cloneNode(true));
+  }
+})
+</pre>
+
+<h3 id="Usando_el_elemento_&lt;element-details>_con_slots_nombrados_(named_slots)">Usando el elemento &lt;element-details&gt; con slots nombrados (<em>named slots)</em></h3>
+
+<p>Ahora tomaremos el elemento <strong><code>&lt;element-details&gt;</code></strong> para usarlo en nuestro documento.</p>
+
+<pre class="brush: html">&lt;element-details&gt;
+  &lt;span slot="element-name"&gt;slot&lt;/span&gt;
+  &lt;span slot="description"&gt;A placeholder inside a web
+    component that users can fill with their own markup,
+    with the effect of composing different DOM trees
+    together.&lt;/span&gt;
+  &lt;dl slot="attributes"&gt;
+    &lt;dt&gt;name&lt;/dt&gt;
+    &lt;dd&gt;The name of the slot.&lt;/dd&gt;
+  &lt;/dl&gt;
+&lt;/element-details&gt;
+
+&lt;element-details&gt;
+  &lt;span slot="element-name"&gt;template&lt;/span&gt;
+  &lt;span slot="description"&gt;A mechanism for holding client-
+    side content that is not to be rendered when a page is
+    loaded but may subsequently be instantiated during
+    runtime using JavaScript.&lt;/span&gt;
+&lt;/element-details&gt; 
+</pre>
+
+<p>Observaciones del snippet anterior:</p>
+
+<ul>
+ <li>El snippet tiene dos instancias de elementos <strong><code>&lt;element-details&gt;</code></strong> las cuales usan el atributo {{htmlattrxref("slot")}} para referencias los <em>slots nombrados </em><code>"element-name"</code> y <code>"description"</code> que colocamos en el <a href="/en-US/docs/Web/API/ShadowRoot">nodo raíz</a> <code>&lt;element-details&gt;</code></li>
+ <li>Solo el primero de esos dos elementos <strong><code>&lt;element-details&gt;</code></strong> hace referencia a los <code>"attributes"</code> de <a href="/en-US/docs/Web/HTML/Element/slot#named-slot">slot nombrados. </a>El segundo elemento <code><strong>&lt;element-details</strong>&gt;</code> carece de cualquier referencia a <code>"attributes"</code> de <a href="/en-US/docs/Web/HTML/Element/slot#named-slot">slot nombrados</a>.</li>
+ <li>El primer elemento <code>&lt;<strong>element-details&gt;</strong></code> está referenciando los <code>"attributes"</code>  de <a href="/en-US/docs/Web/HTML/Element/slot#named-slot">slot nombrados</a> usando un elemento {{HTMLElement("dl")}} con {{HTMLElement("dt")}} and {{HTMLElement("dd")}} como hijos.</li>
+</ul>
+
+<h3 id="Agreguemos_algunos_estilos">Agreguemos algunos estilos</h3>
+
+<p>Como toque final,agregaremos algunos estilos CSS para {{HTMLElement("dl")}}, {{HTMLElement("dt")}}, y {{HTMLElement("dd")}}</p>
+
+<pre class="brush: css">  dl { margin-left: 6px; }
+  dt { font-weight: bold; color: #217ac0; font-size: 110% }
+  dt { font-family: Consolas, "Liberation Mono", Courier }
+  dd { margin-left: 16px }
+</pre>
+
+<div class="hidden">
+<pre class="brush: css">body { margin-top: 47px }</pre>
+</div>
+
+<h3 id="Resultado">Resultado</h3>
+
+<p>Finalmente, juntemos todos los fragmentos y veamos cómo se ve el resultado renderizado.</p>
+
+<p>{{ EmbedLiveSample('full_example', '300','400','https://mdn.mozillademos.org/files/14553/element-details.png','') }}</p>
+
+<p>Observa los siguientes puntos del resultado renderizado</p>
+
+<ul>
+ <li>Aún cuando las instancias del elemento <strong><code>&lt;element-details&gt;</code></strong> en el documento no usan directamente el elemento {{HTMLElement("details")}}, ellos se renderizan usando {{HTMLElement("details")}} porque el <a href="/en-US/docs/Web/API/ShadowRoot">shadow root</a> hace que ellos se llene con eso.</li>
+ <li>Dentro de la salida de {{HTMLElement ("details")}}, el contenido de los elementos &lt;elemento-detalles&gt; llena los <a href="/en-US/docs/Web/HTML/Element/slot#named-slot">named slots</a> desde el <a href="/en-US/docs/Web/API/ShadowRoot">shadow root</a>. En otras palabras, el árbol DOM de los elementos &lt;elemento-detalles&gt; se compone junto con el contenido del <a href="/en-US/docs/Web/API/ShadowRoot">shadow root</a>.</li>
+ <li>Para ambos elementos <strong><code>&lt;element-details&gt;</code></strong>, un encabezado de <strong>Attributos</strong> se agrega automáticamente desde el <a href="/en-US/docs/Web/API/ShadowRoot">shadow root</a> antes de la posición del <a href="/en-US/docs/Web/HTML/Element/slot#named-slot">named slot</a> <code>"attributes"</code>.</li>
+ <li>Ya que el primer elemento <strong><code>&lt;element-details&gt;</code></strong> tiene un elemento {{HTMLElement("dl")}} el cual hace referencia explicita al <a href="/en-US/docs/Web/HTML/Element/slot#named-slot">named slot</a> <code>"attributes"</code> desde su <a href="/en-US/docs/Web/API/ShadowRoot">shadow root</a>, el contenido de ese {{HTMLElement("dl")}} reemplaza los <a href="/en-US/docs/Web/HTML/Element/slot#named-slot">named slot</a> <code>"attributes"</code> desde el <a href="/en-US/docs/Web/API/ShadowRoot">shadow root</a></li>
+ <li>Ya que el segundo elemento <strong><code>&lt;element-details&gt;</code></strong> no hace referencia explicita al <a href="/en-US/docs/Web/HTML/Element/slot#named-slot">named slot</a> <code>"attributes"</code> desde su <a href="/en-US/docs/Web/API/ShadowRoot">shadow root</a>, su contenido para el que <a href="/en-US/docs/Web/HTML/Element/slot#named-slot">named slot</a> se llena con el contenido predeterminado desde <a href="/en-US/docs/Web/API/ShadowRoot">shadow root</a>.</li>
+</ul>
+
+<div class="hidden">
+<h5 id="full_example">full example</h5>
+
+<pre class="brush: html">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+  &lt;head&gt;
+    &lt;title&gt;slot example&lt;/title&gt;
+    &lt;style&gt;
+
+      dl { margin-left: 6px; }
+      dt { font-weight: bold; color: #217ac0; font-size: 110% }
+      dt { font-family: Consolas, "Liberation Mono", Courier }
+      dd { margin-left: 16px }
+
+    &lt;/style&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;template id="element-details-template"&gt;
+      &lt;style&gt;
+      details {font-family: "Open Sans Light",Helvetica,Arial}
+      .name {font-weight: bold; color: #217ac0; font-size: 120%}
+      h4 { margin: 10px 0 -8px 0; }
+      h4 span { background: #217ac0; padding: 2px 6px 2px 6px }
+      h4 span { border: 1px solid #cee9f9; border-radius: 4px }
+      h4 span { color: white }
+      .attributes { margin-left: 22px; font-size: 90% }
+      .attributes p { margin-left: 16px; font-style: italic }
+      &lt;/style&gt;
+      &lt;details&gt;
+        &lt;summary&gt;
+          &lt;span&gt;
+            &lt;code class="name"&gt;&amp;lt;&lt;slot name="element-name"&gt;NEED NAME&lt;/slot&gt;&amp;gt;&lt;/code&gt;
+            &lt;i class="desc"&gt;&lt;slot name="description"&gt;NEED DESCRIPTION&lt;/slot&gt;&lt;/i&gt;
+          &lt;/span&gt;
+        &lt;/summary&gt;
+        &lt;div class="attributes"&gt;
+          &lt;h4&gt;&lt;span&gt;Attributes&lt;/span&gt;&lt;/h4&gt;
+          &lt;slot name="attributes"&gt;&lt;p&gt;None&lt;/p&gt;&lt;/slot&gt;
+        &lt;/div&gt;
+      &lt;/details&gt;
+      &lt;hr&gt;
+    &lt;/template&gt;
+
+    &lt;element-details&gt;
+      &lt;span slot="element-name"&gt;slot&lt;/span&gt;
+      &lt;span slot="description"&gt;A placeholder inside a web
+        component that users can fill with their own markup,
+        with the effect of composing different DOM trees
+        together.&lt;/span&gt;
+      &lt;dl slot="attributes"&gt;
+        &lt;dt&gt;name&lt;/dt&gt;
+        &lt;dd&gt;The name of the slot.&lt;/dd&gt;
+      &lt;/dl&gt;
+    &lt;/element-details&gt;
+
+    &lt;element-details&gt;
+      &lt;span slot="element-name"&gt;template&lt;/span&gt;
+      &lt;span slot="description"&gt;A mechanism for holding client-
+        side content that is not to be rendered when a page is
+        loaded but may subsequently be instantiated during
+        runtime using JavaScript.&lt;/span&gt;
+    &lt;/element-details&gt;
+
+    &lt;script&gt;
+    customElements.define('element-details',
+      class extends HTMLElement {
+        constructor() {
+          super();
+          const template = document
+            .getElementById('element-details-template')
+            .content;
+          const shadowRoot = this.attachShadow({mode: 'open'})
+            .appendChild(template.cloneNode(true));
+        }
+      })
+    &lt;/script&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</pre>
+</div>

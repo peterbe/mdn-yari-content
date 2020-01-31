@@ -1,0 +1,308 @@
+<div>{{jsSidebar("More")}}</div>
+
+<p>あらゆるプログラミング言語は、それぞれ異なったデータ構造を持っています。この記事では、JavaScript で使用可能な組み込みデータ構造の一覧と、他のデータ構造の構築にも使えるように、それらがどのような性質を持ち合わせているかについて述べることにします。また可能である場合は、他のプログラミング言語におけるデータ構造との対比も行います。</p>
+
+<h2 id="Dynamic_typing" name="Dynamic_typing">動的型付け</h2>
+
+<p>JavaScript は<em>弱い型付け</em>あるいは<em>動的型付け</em>の言語です。JavaScript では、変数が直接的に特定のデータ型に関連付けられているわけではなく、いかなる変数にあらゆる型の値を代入(と再代入)できます:</p>
+
+<pre class="brush: js">var foo = 42;    // この foo は Number
+var foo = 'bar'; // この foo は String
+var foo = true;  // この foo は Boolean
+</pre>
+
+<h2 id="Data_types" name="Data_types">データ型</h2>
+
+<p>最新の ECMAScript 標準仕様では 7 つのデータ型が定義されています。</p>
+
+<ul>
+ <li>7 種類の{{Glossary("Primitive", "プリミティブ")}}データ型:
+  <ul>
+   <li>{{Glossary("Boolean")}}</li>
+   <li>{{Glossary("Null")}}</li>
+   <li>{{Glossary("Undefined")}}</li>
+   <li>{{Glossary("Number")}}</li>
+   <li>{{Glossary("BigInt")}}</li>
+   <li>{{Glossary("String")}}</li>
+   <li>{{Glossary("Symbol")}}</li>
+  </ul>
+ </li>
+ <li>{{Glossary("Object")}}</li>
+</ul>
+
+<h2 id="Primitive_values" name="Primitive_values">プリミティブ値</h2>
+
+<p>object 型をのぞく全ての型は不変 (immutable) な値 (変更することができない値) として定義されています。特筆すべき点としては、 string 型が（Cなどとは違って）不変な値である点です。これらの型の値を、プリミティブ値 (primitive value) と呼びます。詳細は {{anch("Strings")}} の節で触れることとします。</p>
+
+<h3 id="Boolean_type" name="Boolean_type">Boolean 型</h3>
+
+<p>Boolean は論理的な実体であり、<code>true</code>、<code>false</code> の 2 つの値があります。</p>
+
+<h3 id="Null_type" name="Null_type">Null 型</h3>
+
+<p>Null 型は値が <code>null</code> の 1 種類しかありません。詳しくは {{jsxref("null")}} および {{Glossary("Null")}} をご覧ください。</p>
+
+<h3 id="Undefined_type" name="Undefined_type">Undefined 型</h3>
+
+<p>値を代入していない変数の値は、<code>undefined</code> になります。詳しくは {{jsxref("undefined")}} および {{Glossary("Undefined")}} をご覧ください。</p>
+
+<h3 id="Numbers" name="Numbers">Number 型</h3>
+
+<p>ECMAScriptには、NumberとBigIntの2つの組み込み数値型があります（以下を参照）。</p>
+
+<p>ECMAScript 標準仕様によると、この型は「"<a href="https://ja.wikipedia.org/wiki/%E5%80%8D%E7%B2%BE%E5%BA%A6%E6%B5%AE%E5%8B%95%E5%B0%8F%E6%95%B0%E7%82%B9%E6%95%B0">倍精度 64 ビット形式による IEEE 754 値</a>"」 (-(2<sup>53</sup> -1) から 2<sup>53</sup> -1 の間の数値) となります。特筆すべきは<strong>整数であるとは定義されていない</strong>という点です。さらに言うならば、この型は浮動小数点数値にもなりますし、<code>+Infinity</code>、<code>-Infinity</code>、<a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/NaN"><code>NaN</code></a> (not-a-number) といった記号的な値も持ち合わせています。</p>
+
+<p><code>+/-Infinity</code> の範囲における最大値と最小値を調べるために、定数 {{jsxref("Number.MAX_VALUE")}} および {{jsxref("Number.MIN_VALUE")}} を使用できます。また ECMAScript 6 より、同様に {{jsxref("Number.isSafeInteger()")}}、{{jsxref("Number.MAX_SAFE_INTEGER")}}、{{jsxref("Number.MIN_SAFE_INTEGER")}} を使用して、数値が倍精度浮動小数点数値の範囲内にあるかを調べることもできます。この範囲を超えた整数値は、JavaScript では信頼できず、その値の倍精度浮動小数点数値に丸められます。</p>
+
+<p>Number 型には、2 種類の表現を持つ数値がひとつだけあります。それは 0 であり、-0 および +0 で表します ("0" は +0 の別名です)。実用上、影響はほとんどありません。例えば、<code>+0 === -0</code> は <code>true</code> です。ただし、ゼロ除算を行った場合は違いに気づくでしょう:</p>
+
+<pre class="brush: js">&gt; 42 / +0
+Infinity
+&gt; 42 / -0
+-Infinity
+</pre>
+
+<p>数値はたいてい数値としてのみ表されるものの、JavaScript はいくつかの<a href="/ja/docs/Web/JavaScript/Reference/Operators/Bitwise_Operators" title="JavaScript/Reference/Operators/Bitwise_Operators">バイナリ演算</a>を提供しています。そのため、<a href="https://ja.wikipedia.org/wiki/%E3%83%9E%E3%82%B9%E3%82%AF_(%E6%83%85%E5%A0%B1%E5%B7%A5%E5%AD%A6)">ビットマスク</a>を用いて、一つの数値で複数の真偽値を表現することも可能です。しかしながら、JavaScript が (真偽値の配列や真偽値のプロパティを複数持つオブジェクトのような) 真偽値の集合を表現する手段を提供しているため、この機能はたいてい、バッドプラクティスとして考えられています。ビットマスクはコードの可読性、わかりやすさ、保守性を大きく損なってしまいます。ローカルストレージの容量的制約への対処や、ビット単位での転送量を考える必要のある極限状態など、非常に特殊なケースにおいてはこうしたテクニックが必要となるでしょう。このテクニックは、あくまでも最適化が必要な場合の最終手段としてのみ考慮すべきです。</p>
+
+<h3 id="BigInt_型">BigInt 型</h3>
+
+<p>{{jsxref("BigInt")}} 型は、任意の精度で整数を表すことができるJavaScriptの数値プリミティブです。<code>BigInt</code>を使用すると、<code>Number</code>の安全な整数制限を超えても、大きな整数を安全に格納および操作できます。<code>BigInt</code>は、整数の末尾に<code>n</code>を追加するか、コンストラクターを呼び出すことによって作成されます。</p>
+
+<p>{{jsxref("Number.MAX_SAFE_INTEGER")}}定数を使用して、<code>Number</code>で安全に扱える最も大きい値を取得できます。<code>BigInt</code>の導入により、{{jsxref("Number.MAX_SAFE_INTEGER")}}を超える数値の操作が可能になります。以下の{{jsxref("Number.MAX_SAFE_INTEGER")}}に更に数値を足しても、期待される結果が返される例でこの挙動を確認できます。</p>
+
+<pre><code>&gt; const x = 2n ** 53n;
+9007199254740992n
+&gt; const y = x + 1n; 
+9007199254740993n</code></pre>
+
+<p><code>Number</code>と同じように<code>+<font face="Arial, x-locale-body, sans-serif"><span style="background-color: #ffffff;">, </span></font></code><code>*<font face="Arial, x-locale-body, sans-serif"><span style="background-color: #ffffff;">, </span></font>-<font face="Arial, x-locale-body, sans-serif"><span style="background-color: #ffffff;">, </span></font>**<font face="Arial, x-locale-body, sans-serif"><span style="background-color: #ffffff;">, </span></font>%</code>などの演算子を<code>BigInt</code>で使用できます。<code>BigInt</code>は<code>Number</code>と厳密に等しいわけではありませんが、ほとんど同じです。</p>
+
+<p><code>BigInt</code>は、<code>if</code>, <code>||</code>, <code>&amp;&amp;</code>, <code>Boolean</code>, <code>!</code>などで<code>Boolean</code>に変換される場合、<code>Number</code>と同じように動作します。</p>
+
+<p><code>BigInt</code>は、<code>Number</code>と同時に使用することはできません。代わりに、{{jsxref("TypeError")}}が発生します。</p>
+
+<h3 id="Strings" name="Strings">String 型</h3>
+
+<p>JavaScript の {{jsxref("Global_Objects/String", "String")}} 型は、テキストデータを表すために使用します。これは、16 ビット符号なし整数値の "要素" の集合体です。文字列内の各要素は、文字列内の位置を占めます。最初の要素はインデックス 0、次の要素がインデックス 1 となっていきます。また文字列の長さは、内部にある要素の数です。</p>
+
+<p>C のような言語とは異なり、 JavaScript の文字列は 不変 (immutable) です。これは一度生成した文字列は変更が不可能であるということを意味しています。しかしながら、オリジナルの文字列を操作することで別の文字列を生成することは可能となっています。例えば:</p>
+
+<ul>
+ <li>個別に文字を抜き出す、または {{jsxref("String.substr()")}} を用いて、オリジナルの部分文字列を切り出す</li>
+ <li>連結演算子 (<code>+</code>) または {{jsxref("String.concat()")}} を用いて、2 つの文字列を連結する</li>
+</ul>
+
+<h4 id="Beware_of_.22stringly-typing.22_your_code!" name="Beware_of_.22stringly-typing.22_your_code!">「文字列より」のコードに注意！</h4>
+
+<p>文字列を用いて複雑なデータ構造を表現したいと思うこともあるでしょう。文字列は以下のような使い勝手の良さを備えています。</p>
+
+<ul>
+ <li>文字列連結によって複雑な文字列の構築が簡単である</li>
+ <li>文字列はデバッグが簡単である（出力される情報は常に文字列の一種である）</li>
+ <li>文字列は（<a href="/ja/docs/DOM/HTMLInputElement" title="HTMLInputElement">インプットフィールド</a>、 <a href="/ja/docs/Storage" title="Storage">ローカルストレージ</a>の値、 {{domxref("XMLHttpRequest")}} の <code>responseText</code> など）数多くの API において基準として扱われており、全てを文字列で処理したいと思わせる</li>
+</ul>
+
+<p>理屈の上では、文字列を用いることで、あらゆるデータ型の表現が可能ではあります。ですが、あまり良い考えとはいえません。例として、セパレータ文字を使用することでリストの模倣が可能です（役割としては JavaScript の配列の方がよっぽど適していますが）が、残念なことにセパレータ文字が「リスト」の 要素となってしまった場合、そのリストは破綻します。エスケープした文字を使用することでこの問題に対処することは可能ですが、そのルールをすべてに用意する必要がある上、用途に応じて適切な道具を用いなかったことによるメンテナンスコストの増大を招きます。</p>
+
+<p>文字列型の使用はテキストデータや記号データを表すのには向いていますが、別のデータ構造を表す為に文字列のパースや正しい抽象化を用いる必要がある場合には向いていないと言えるでしょう。</p>
+
+<h3 id="Symbol_type" name="Symbol_type">Symbol 型</h3>
+
+<p>Symbols は、ECMAScript Edition 6 における JavaScript の新機能です。Symbol は<strong>ユニーク</strong>かつ<strong>不変</strong>なプリミティブ値で、オブジェクトのプロパティ識別子として使用します (後述)。Symbol のことを atom と呼ぶプログラミング言語があります。詳しくは {{Glossary("Symbol")}} および JavaScript における {{jsxref("Symbol")}} オブジェクトラッパーをご覧ください。</p>
+
+<h2 id="Object" name="Object">Object</h2>
+
+<p>コンピュータ科学において、オブジェクトは{{Glossary("Identifier", "識別子")}}によって参照可能なメモリ内の値とみなせます。</p>
+
+<h3 id="Properties" name="Properties">プロパティ</h3>
+
+<p>JavaScript において、オブジェクトはプロパティのバッグとみなせます。<a href="/ja/docs/Web/JavaScript/Guide/Values,_variables,_and_literals#Object_literals">オブジェクトリテラル構文</a>では、限定されたプロパティセットを初期化します。プロパティは追加および削除が可能です。プロパティの値は、他のオブジェクトを含むあらゆる型の値が設定可能であり、これにより複雑なデータ構造の構築が可能となっています。プロパティは、キー値を使用して識別します。キー値は String 値または Symbol 値です。</p>
+
+<p>オブジェクトには、特定の属性を持つ 2 種類のプロパティがあります。それは、データプロパティとアクセサプロパティです。</p>
+
+<h4 id="Data_property" name="Data_property">データプロパティ</h4>
+
+<p>キーと値を関連づけており、以下の属性を持ちます:</p>
+
+<table class="standard-table">
+ <caption>データプロパティの属性</caption>
+ <tbody>
+  <tr>
+   <th>属性</th>
+   <th>型</th>
+   <th>説明</th>
+   <th>既定値</th>
+  </tr>
+  <tr>
+   <td>[[Value]]</td>
+   <td>JavaScript の任意の型</td>
+   <td>プロパティにアクセスすると取り出される値です。</td>
+   <td>undefined</td>
+  </tr>
+  <tr>
+   <td>[[Writable]]</td>
+   <td>Boolean</td>
+   <td><code>false</code> であれば、プロパティの [[Value]] は変更できません。</td>
+   <td>false</td>
+  </tr>
+  <tr>
+   <td>[[Enumerable]]</td>
+   <td>Boolean</td>
+   <td><code>true</code> であれば、プロパティは <a href="/ja/docs/Web/JavaScript/Reference/Statements/for...in">for...in</a> ループで列挙されます。<a href="/ja/docs/Web/JavaScript/Enumerability_and_ownership_of_properties">Enumerability and ownership of properties</a> もご覧ください。</td>
+   <td>false</td>
+  </tr>
+  <tr>
+   <td>[[Configurable]]</td>
+   <td>Boolean</td>
+   <td><code>false</code> であれば、プロパティは削除できません。また、[[Value]] および [[Writable]] 以外の属性を変更できません。</td>
+   <td>false</td>
+  </tr>
+ </tbody>
+</table>
+
+<table class="standard-table">
+ <caption>廃止された属性 (ECMAScript 3 の属性であり、ECMAScript 5 で改名された)</caption>
+ <tbody>
+  <tr>
+   <th>属性</th>
+   <th>型</th>
+   <th>説明</th>
+  </tr>
+  <tr>
+   <td>Read-only</td>
+   <td>Boolean</td>
+   <td>ES5 の [[Writable]] 属性の状態を反転したもの。</td>
+  </tr>
+  <tr>
+   <td>DontEnum</td>
+   <td>Boolean</td>
+   <td>ES5 の [[Enumerable]] 属性の状態を反転したもの。</td>
+  </tr>
+  <tr>
+   <td>DontDelete</td>
+   <td>Boolean</td>
+   <td>ES5 の [[Configurable]] 属性の状態を反転したもの。</td>
+  </tr>
+ </tbody>
+</table>
+
+<h4 id="Accessor_property" name="Accessor_property">アクセサプロパティ</h4>
+
+<p>値を取り出しまたは保存するための 1 つまたは 2 つのアクセサ関数 (get および set) とキーを関連づけており、以下の属性を持ちます:</p>
+
+<table class="standard-table">
+ <caption>アクセサプロパティの属性</caption>
+ <tbody>
+  <tr>
+   <th>属性</th>
+   <th>型</th>
+   <th>説明</th>
+   <th>既定値</th>
+  </tr>
+  <tr>
+   <td>[[Get]]</td>
+   <td>Function オブジェクトまたは undefined</td>
+   <td>値に対して get アクセスが実行されると、関数が引数なしで呼び出されてプロパティの値を取り出します。<a href="/ja/docs/Web/JavaScript/Reference/Operators/get"><code>get</code></a> もご覧ください。</td>
+   <td>undefined</td>
+  </tr>
+  <tr>
+   <td>[[Set]]</td>
+   <td>Function オブジェクトまたは undefined</td>
+   <td>指定したプロパティを変更しようとしたときに、代入する値を引数に含めて関数が呼び出されます。<a href="/ja/docs/Web/JavaScript/Reference/Operators/set"><code>set</code></a> もご覧ください。</td>
+   <td>undefined</td>
+  </tr>
+  <tr>
+   <td>[[Enumerable]]</td>
+   <td>Boolean</td>
+   <td><code>true</code> であれば、プロパティは <a href="/ja/docs/Web/JavaScript/Reference/Statements/for...in">for...in</a> ループで列挙されます。</td>
+   <td>false</td>
+  </tr>
+  <tr>
+   <td>[[Configurable]]</td>
+   <td>Boolean</td>
+   <td><code>false</code> であれば、プロパティの削除やデータプロパティの変更はできません。</td>
+   <td>false</td>
+  </tr>
+ </tbody>
+</table>
+
+<div class="note">
+<p><strong>注記:</strong> 属性は通常 JavaScript エンジンが使用しますので、それらに直接アクセスすることはできません (詳しくは <a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty">Object.defineProperty()</a> をご覧ください。)。これが、属性に角括弧が 2 つついている理由です。</p>
+</div>
+
+<h3 id=".22Normal.22_objects.2C_and_functions" name=".22Normal.22_objects.2C_and_functions">「通常の」オブジェクトおよび関数</h3>
+
+<p>JavaScript オブジェクトはキーと値を所持しています。キーは文字列 (または {{jsxref("Symbol")}}) ですが、値はなんでもかまいません。これにより、オブジェクトは<a href="https://ja.wikipedia.org/wiki/%E3%83%8F%E3%83%83%E3%82%B7%E3%83%A5%E3%83%86%E3%83%BC%E3%83%96%E3%83%AB">ハッシュマップ</a>の様相を呈します。</p>
+
+<p>関数は呼び出し可能という付加機能を持つ、通常のオブジェクトです。</p>
+
+<h3 id="Dates" name="Dates">Date</h3>
+
+<p>日時についての表現を考慮するとき、組み込みの <a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/Date"><code>Date</code> オブジェクトのユーティリティメンバ</a>を用いるのが最も妥当でしょう。</p>
+
+<h3 id="Indexed_collections_Arrays_and_typed_Arrays" name="Indexed_collections_Arrays_and_typed_Arrays">インデックス付きコレクション: Array (配列) および Typed Array (型付き配列)</h3>
+
+<p><a href="/ja/docs/JavaScript/Reference/Global_Objects/Array" title="Array">Array</a> は整数値をキーにするプロパティと length プロパティの間に特殊な関係の存在する、標準オブジェクトです。加えて述べるなら、配列は、配列を操作するのに便利ないくつかのメソッドを提供する <code>Array.prototype</code> を継承しています。例えば <code><a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/Array/indexOf" title="JavaScript/Reference/Global_Objects/Array/indexOf">indexOf</a></code> (配列中の値の探索) や <code><a href="/ja/docs/JavaScript/Reference/Global_Objects/Array/push" title="JavaScript/Reference/Global_Objects/Array/push">push</a></code> (配列への要素の追加) などです。これにより配列はリストまたはセットとして表現するために必要な機能を備えることとなります。</p>
+
+<p><a href="/ja/docs/Web/JavaScript/Typed_arrays">Typed Arrays</a> は ECMAScript Edition 6 における JavaScript の新機能であり、バイナリデータバッファについて配列状のビューを提供します。以下の表で、同等の C データ型を見つけるのに役立つでしょう:</p>
+
+<p>{{page("/ja/docs/Web/JavaScript/Reference/Global_Objects/TypedArray", "TypedArray_objects", "", 0, 3)}}</p>
+
+<h3 id="Keyed_collections_Maps_Sets_WeakMaps_WeakSets" name="Keyed_collections_Maps_Sets_WeakMaps_WeakSets">キー付きコレクション: Map, Set, WeakMap, WeakSet</h3>
+
+<p>これらのデータ構造は、キーとしてオブジェクトへの参照を持ち、ECMAScript Edition 6 で導入されました。{{jsxref("WeakMap")}} および {{jsxref("Map")}} がオブジェクトと値を関連づける一方で、{{jsxref("Set")}} および {{jsxref("WeakSet")}} はオブジェクトのセットを表します。Map と WeakMap の相違点としては、前者がキーであるオブジェクトの列挙が可能であるのに対し、後者がガベージコレクションに最適化されている点です。</p>
+
+<p>Map と Set は純粋に ECMAScript 5 での実装も可能ではありますが、("完全" な意味での) オブジェクトの比較は不可能であり、キーとしたオブジェクトの線形探索が必要なことによるパフォーマンス上の問題があります。(WeakMap を含む) Map と Set のネイティブな実装では対数を用いることにより概して定数時間でのキーおよび関連する値の探索が可能となっています。</p>
+
+<p>従来ならば、DOM ノードにデータを結び付ける場合は、オブジェクトに直接プロパティを設定するか、<code>data-*</code> 属性を用いるのが普通でした。これらの手法は同じコンテクストで実行されるあらゆるスクリプトからデータの利用が可能であるため、不都合な面を持ち合わせていました。Map および WeakMap を使用することにより、オブジェクトへのプライベートなデータの結びつけを簡単に行うことができます。</p>
+
+<h3 id="Structured_data_JSON" name="Structured_data_JSON">構造化データ: JSON</h3>
+
+<p>JSON (JavaScript Object Notation) は軽量なデータ交換形式であり、JavaScript 由来ですが多くのプログラミング言語で使用されています。JSON は万能なデータ構造を構築します。詳しくは {{Glossary("JSON")}} および {{jsxref("JSON")}} をご覧ください。</p>
+
+<h3 id="More_objects_in_the_standard_library" name="More_objects_in_the_standard_library">標準ライブラリに含まれる他のオブジェクト</h3>
+
+<p>JavaScript には、組み込みオブジェクトの標準ライブラリがあります。それらのオブジェクトについては、<a href="/ja/docs/Web/JavaScript/Reference/Global_Objects">リファレンス</a>をご覧ください。</p>
+
+<h2 id="Determining_types_using_the_typeof_operator" name="Determining_types_using_the_typeof_operator"><code>typeof</code> 演算子を使用して型を検出する</h2>
+
+<p><code>typeof</code> 演算子は、変数の型を知るのに役立ちます。詳細および使用例については、<a href="/ja/docs/Web/JavaScript/Reference/Operators/typeof">リファレンスページ</a>をご覧ください。</p>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">策定状況</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES1')}}</td>
+   <td>{{Spec2('ES1')}}</td>
+   <td>最初期の定義</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-8', 'Types')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td></td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-ecmascript-data-types-and-values', 'ECMAScript Data Types and Values')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td></td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-ecmascript-data-types-and-values', 'ECMAScript Data Types and Values')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td></td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li><a class="link-https" href="https://github.com/nzakas/computer-science-in-javascript/">Nicholas Zakas による、JavaScript における一般的なデータ構造とアルゴリズムのまとめ</a></li>
+ <li><a href="https://github.com/monmohan/DataStructures_In_Javascript" title="https://github.com/monmohan/DataStructures_In_Javascript">Search Tre(i)es implemented in JavaScript</a></li>
+</ul>

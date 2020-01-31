@@ -1,0 +1,147 @@
+<p>{{APIRef("Service Workers API")}}{{SeeCompatTable}}</p>
+
+<p>La fonction <strong><code>match()</code></strong> de l'interface {{domxref("CacheStorage")}} qu'une {{domxref("Request")}} est la clé d'un objet {{domxref("Cache")}} object suivie par un objet {{domxref("CacheStorage")}} et retourne une {{jsxref("Promise")}} qui renvoie la {{domxref("Response")}} correspondante.</p>
+
+<p>Les objets du cache sont cherchés par ordre d'insertion.</p>
+
+<div class="note"><strong>Note</strong>: {{domxref("CacheStorage.match()")}} est une méthode utilitaire. Une fonctionnalité équivalente pour associer une entrée du cache peut être implémenté en ouvrant le cache avec {{domxref("CacheStorage.open()")}}, en récupérant les entrées avec {{domxref("CacheStorage.keys()")}}, et en filtrant celle voulue avec {{domxref("Cache.match()")}}.</div>
+
+<h2 id="Syntaxe">Syntaxe</h2>
+
+<pre class="syntaxbox">caches.match(<em>request</em>,{<em>options</em>}).then(function(<em>response</em>) {
+  // faire quelquechose avec la requête et la réponse
+});
+</pre>
+
+<h3 id="Retour">Retour</h3>
+
+<p>une {{jsxref("Promise")}} qui renvoie les {{domxref("Response")}} correspondante.</p>
+
+<h3 id="Paramètres">Paramètres</h3>
+
+<dl>
+ <dt>request</dt>
+ <dd>La {{domxref("Request")}} recherchée.</dd>
+ <dt>options {{optional_inline}}</dt>
+ <dd>Un objet dont les propriétés contrôlent comment la correspondance est fait avec l'opération <code>match</code>. Les options disponible sont:
+ <ul>
+  <li><code>ignoreSearch</code>: Un {{domxref("Boolean")}} qui détermine si le preocessus de rapprochement doit ignorer la chaîne de requête dans l'url. Défini à <code>true</code>, la partie <code>?value=bar</code> de <code>http://foo.com/?value=bar</code> sera ignoré lors d'un rapporchement. La valeur par défaut est <code>false</code>.</li>
+  <li><code>ignoreMethod</code>: Un {{domxref("Boolean")}} qui, quand défini à <code>true</code>, empêche l'opération de rapprochement de valider le verbe http de la {{domxref("Request")}} <code>http</code> (normalement, seulement <code>GET</code> et <code>HEAD</code> sont authorisés) La valeur par défaut est <code>false</code>.</li>
+  <li><code>ignoreVary</code>: Un {{domxref("Boolean")}} qui, quand défini à <code>true</code>, dit à l'opération de rapprochement de ne pas faire le rapprochement avec le header <code>VARY</code>. En d'autres termes, si une URL est sélectionnée elle sera conservée indépemment de la présence du header <code>VARY</code>. La valeur par défaut est <code>false</code>.</li>
+  <li><code>cacheName</code>: Un {{domxref("DOMString")}} qui représente le cache dans lequel on recherche.</li>
+ </ul>
+
+ <p>In Chrome only <code>cacheName</code> is supported.</p>
+
+ <div class="note">
+ <p><strong>Note</strong>: si un <code>cacheName</code> est défini dans les options et le cache n'existe pas, la promesse rejetée ({{domxref("cache.match()")}} renvoie <code>undefined</code> si aucune réponse n'est trouvée).</p>
+ </div>
+ </dd>
+</dl>
+
+<h2 id="Exemples" style="line-height: 30px; font-size: 2.14285714285714rem;">Exemples</h2>
+
+<p>Cet exemple est tiré du MDN <a href="https://github.com/mdn/sw-test/">sw-test example</a> (voir <a href="https://mdn.github.io/sw-test/">sw-test running live</a>). Nous attendons pour un évènement {{domxref("FetchEvent")}} et nous construisons une réponse comme suit:</p>
+
+<ol>
+ <li>Vérifier si une correspondance pour la requète est trouvée dans le {{domxref("CacheStorage")}} en utilisant {{domxref("CacheStorage.match")}}. Si oui, la servir.</li>
+ <li>Si non, ouvrire le cache <code>v1</code> avec <code>open()</code>, mettre le réseau par défaut dans le cache avec {{domxref("Cache.put")}} et retourner un clone du réseau par défaut en utilisant <code>return response.clone()</code> — obligatoire car <code>put()</code> détruit le corps de la réponse.</li>
+ <li>Si ceci échoue (e.g., parce que le réseau est inactif), retourner une réponse de secours.</li>
+</ol>
+
+<pre class="brush: js">var response;
+var cachedResponse = caches.match(event.request).catch(function() {
+  return fetch(event.request);
+}).then(function(r) {
+  response = r;
+  caches.open('v1').then(function(cache) {
+    cache.put(event.request, response);
+  });  
+  return response.clone();
+}).catch(function() {
+  return caches.match('/sw-test/gallery/myLittleVader.jpg');
+});</pre>
+
+<h2 id="Spécifications">Spécifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Spécification</th>
+   <th scope="col">Statut</th>
+   <th scope="col">Commentaire</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('Service Workers', '#cache-storage', 'CacheStorage')}}</td>
+   <td>{{Spec2('Service Workers')}}</td>
+   <td>Définition initiale.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Compatibilités_des_navigateurs">Compatibilités des navigateurs</h2>
+
+<p>{{CompatibilityTable}}</p>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Fonctionnalité</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>Support de base</td>
+   <td>{{CompatChrome(40.0)}}<sup>[1]</sup></td>
+   <td>{{CompatGeckoDesktop(44)}}<sup>[2]</sup></td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Fonctionnalité</th>
+   <th>Android</th>
+   <th>Android Webview</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+   <th>Chrome for Android</th>
+  </tr>
+  <tr>
+   <td>Support de base</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatGeckoMobile(44)}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatChrome(40.0)}} [1]</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<ul>
+ <li>[1] Le paramètre option ne supporte que <code>cacheName</code>. </li>
+ <li>[2] Les services workers (et <a href="/en-US/docs/Web/API/Push_API">Push</a>) on été désactivés dans la <a href="https://www.mozilla.org/en-US/firefox/organizations/">Sortie du support étendu de Firefox 45</a> (ESR.)</li>
+</ul>
+
+<h2 id="Voir_aussi">Voir aussi</h2>
+
+<ul>
+ <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorker_API/Using_Service_Workers">Utiliser les Service Workers</a></li>
+ <li>{{domxref("Cache")}}</li>
+ <li>{{domxref("WorkerGlobalScope.caches")}}</li>
+</ul>

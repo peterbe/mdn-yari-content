@@ -1,0 +1,263 @@
+<div>{{LearnSidebar}}</div>
+
+<div>{{PreviousMenuNext("Learn/JavaScript/Objects/Object-oriented_JS", "Learn/JavaScript/Objects/Inheritance", "Learn/JavaScript/Objects")}}</div>
+
+<p class="summary">プロトタイプは JavaScript オブジェクトが機能を互いに継承するメカニズムです。この記事ではプロトタイプチェーンの動作を説明し、prototype プロパティを使用して既存のコンストラクタにメソッドを追加する方法を見ていきます。</p>
+
+<table class="learn-box standard-table">
+ <tbody>
+  <tr>
+   <th scope="row">前提条件:</th>
+   <td>JavaScript 関数の理解、JavaScript の基礎知識 (<a href="/ja/docs/Learn/JavaScript/First_steps">JavaScript の第一歩</a>と<a href="/ja/docs/Learn/JavaScript/Building_blocks">JavaScript の構成要素</a>を参照)、OOJS の基礎 (<a href="/ja/docs/Learn/JavaScript/Objects/Basics">JavaScript オブジェクトの基本</a>を参照)</td>
+  </tr>
+  <tr>
+   <th scope="row">目的:</th>
+   <td>JavaScript のオブジェクトのプロトタイプ、プロトタイプチェーンの動作方法、prototype プロパティに新しいメソッドを追加する方法を理解する。</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="プロトタイプベースの言語とは">プロトタイプベースの言語とは?</h2>
+
+<p>JavaScript はよく<strong>プロトタイプベースの言語</strong>として記述されています。各オブジェクトには<strong>プロトタイプオブジェクト</strong>があり、メソッドとプロパティを継承するテンプレートオブジェクトとして機能します。 オブジェクトのプロトタイプオブジェクトはプロトタイプオブジェクトを持ち、そこからメソッドやプロパティを継承します。これはよく<strong>プロトタイプチェーン</strong>と呼ばれ、さまざまなオブジェクトが利用可能な他のオブジェクトで定義されたプロパティとメソッドを持つ理由を説明します。</p>
+
+<p>正確には、プロパティとメソッドはオブジェクトのインスタンスではなく、オブジェクトのコンストラクタ関数の <code>prototype</code> プロパティで定義されています。</p>
+
+<p>JavaScript では、オブジェクトインスタンスとそのプロトタイプ (その <code>__proto__</code> プロパティで、コンストラクタの <code>prototype</code> プロパティから派生しています) との間にリンクがあり、プロパティとメソッドはプロトタイプのチェーンを辿ることで見つけられます。</p>
+
+<div class="note">
+<p><strong>Note:</strong> オブジェクトのプロトタイプ(<code><a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/Object/getPrototypeOf">Object.getPrototypeOf(obj)</a></code>、または廃止予定の<code><a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/Object/proto">__proto__</a></code> プロパティを介して利用可能)とコンストラクタ関数のプロトタイププロパティとの間には区別があることを理解することが重要です。前者は各インスタンスのプロパティ、後者はコンストラクタのプロパティです。つまり、<code>Object.getPrototypeOf(new Foobar())</code> は、<code>Foobar.prototype</code> と同じオブジェクトを参照します。</p>
+</div>
+
+<p>これを少し明確にするための例を見てみましょう。</p>
+
+<h2 id="プロトタイプオブジェクトの理解">プロトタイプオブジェクトの理解</h2>
+
+<p>ここでは、<code>Person()</code> コンストラクタの記述を終了した例に戻って、ブラウザにサンプルをロードします。前回の記事で作業していない場合は、<a href="http://mdn.github.io/learning-area/javascript/oojs/introduction/oojs-class-further-exercises.html">oojs-class-further-exercises.html</a> の例 (<a href="https://github.com/mdn/learning-area/blob/master/javascript/oojs/introduction/oojs-class-further-exercises.html">ソースコード</a>も参照してください) を使用してください。</p>
+
+<p>この例では、次のようにコンストラクタ関数を定義しています。</p>
+
+<pre class="brush: js">function Person(first, last, age, gender, interests) {
+  
+  // property and method definitions
+  this.first = first;
+  this.last = last;
+//...
+}</pre>
+
+<p>次に、このようなオブジェクトインスタンスを作成します。</p>
+
+<pre class="brush: js">var person1 = new Person('Bob', 'Smith', 32, 'male', ['music', 'skiing']);</pre>
+
+<p>JavaScript コンソールに "<code>person1.</code>" と入力すると、ブラウザがこのオブジェクトで利用可能なメンバ名でこれを自動補完しようとするはずです：</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/13853/object-available-members.png" style="display: block; margin: 0 auto;"></p>
+
+<p>このリストには person1 のコンストラクタ — <code>Person()</code> — で定義されたメンバー <code>name</code>、<code>age</code>、<code>gender</code>、<code>interests</code>、<code>bio</code>、<code>greeting</code> が表示されます。ただし、他のメンバー (<code>watch</code>、<code>valueOf</code> など) も表示されます。これらは <code>Person()</code> コンストラクタのプロトタイプオブジェクトである <code><a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a> </code>で定義されています。</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/13891/MDN-Graphics-person-person-object-2.png" style="display: block; height: 150px; margin: 0px auto; width: 700px;"></p>
+
+<p>では、実際に <code>Object</code> で定義されている <code>person1</code> のメソッドを呼び出すとどうなるでしょうか？ 例えば：</p>
+
+<pre class="brush: js">person1.valueOf()</pre>
+
+<p>このメソッドは呼び出されたオブジェクトの値を返します。試してみてください！ この場合、何が起こるか：</p>
+
+<ul>
+ <li>ブラウザは、<code>person1</code>オブジェクトが<code>valueOf()</code>メソッドを利用できるかどうかを最初にチェックします</li>
+ <li>そうではないので、ブラウザは<code>person1</code>オブジェクトのプロトタイプオブジェクト (<code>Person()</code>コンストラクタのプロトタイプ) に<code>valueOf()</code>メソッドがあるかどうかを調べます</li>
+ <li>ブラウザは、<code>Person()</code>コンストラクタのプロトタイプオブジェクトのプロトタイプオブジェクト (<code>Object()</code> の <code>constructor</code> の<code>prototype</code>) に <code>valueOf()</code>メソッドがあるかどうかをチェックします。それは呼ばれ、すべてがうまく行きます！</li>
+</ul>
+
+<div class="note">
+<p><strong>Note</strong>: プロトタイプチェーンでメソッドとプロパティがオブジェクト間でコピー<strong>されていない</strong>ことを繰り返しておきたいと思います。</p>
+</div>
+
+<div class="note">
+<p><strong>Note</strong>: オブジェクトのプロトタイプオブジェクトに直接アクセスする正式な方法はありません。チェーン内のアイテム間の「リンク」は、JavaScript言語 ({{glossary("ECMAScript")}} を参照) の仕様で<code>[[prototype]]</code>と呼ばれる内部プロパティで定義されています。しかし最新のブラウザでは、オブジェクトのコンストラクタのプロトタイプオブジェクトを含む <code><a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/Object/proto">__proto__</a></code> (どちらも2つのアンダースコアがあります) という名前のプロパティがあります。例えば、<code>person1.__proto__</code>と<code>person1.__proto__.__proto__</code>を実行すると、コード内のチェーンの様子を見ることができます。<br>
+ <br>
+ ECMAScript 2015 以降、<code>Object.getPrototypeOf(obj)</code> を介してオブジェクトのプロトタイプオブジェクトに間接的にアクセスできます。</p>
+</div>
+
+<h2 id="prototypeプロパティ：継承されたメンバーが定義されている場所">prototypeプロパティ：継承されたメンバーが定義されている場所</h2>
+
+<p>では、継承されたプロパティとメソッドはどこに定義されているのでしょうか？ <code><a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></code>リファレンスページを見ると、左側に多数のプロパティとメソッドが表示されます。上のスクリーンショットで<code>person1</code>オブジェクトで使用できた継承されたメンバーの数を超えています。いくつかは継承されており、一部は継承されていません。これはなぜでしょうか？<br>
+ <br>
+ その答えは、継承されたものは<code>prototype</code>プロパティ (サブネームスペースと呼ぶことができます) で定義されているものです。つまり、<code>Object.prototype.</code>で始まるもので、単に<code>Object.</code>で始まるものではありません。<code>prototype</code>プロパティの値は基本的にプロパティとメソッドを格納するためのバケットであり、プロトタイプチェーンのさらに下にあるオブジェクトによって継承されることが期待されるオブジェクトです。<br>
+ <br>
+ したがって、<code><a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/Object/watch">Object.prototype.watch()</a></code>、<code><a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/Object/valueOf">Object.prototype.valueOf()</a></code>などは、コンストラクタから作成された新しいオブジェクトインスタンスを含め、<code>Object.prototype</code>を継承するすべてのオブジェクトタイプで使用できます。<br>
+ <br>
+ <code><a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/Object/is">Object.is()</a></code>、<code><a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/Object/keys">Object.keys()</a></code> および<code>prototype</code>バケット内で定義されていない他のメンバーは、<code>Object.prototype</code>から継承したオブジェクトインスタンスまたはオブジェクト型に継承されません。これらは、<code>Object()</code>コンストラクタ自体で使用できるメソッド/プロパティです。</p>
+
+<div class="note">
+<p><strong>Note</strong>: これは奇妙に思えます - それ自体が関数であるコンストラクタでメソッドを定義するにはどうすればいいのでしょうか？ そう、関数もオブジェクトの一種です。あなたが私たちを信じていない場合は、<code><a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/Function">Function()</a></code>コンストラクタリファレンスを参照してください。</p>
+</div>
+
+<ol>
+ <li>既存のプロトタイププロパティを自分でチェックアウトすることができます。前の例に戻り、JavaScriptコンソールに次のように入力してみてください。
+  <pre class="brush: js">Person.prototype</pre>
+ </li>
+ <li>出力はあなたにはあまり表示されません - 結局のところ、私たちはカスタムコンストラクタのプロトタイプで何も定義していません！デフォルトでは、コンストラクタの<code>prototype</code>は常に空になります。 次に、以下を試してみましょう：
+  <pre class="brush: js">Object.prototype</pre>
+ </li>
+</ol>
+
+<p><code>Object</code>の<code>prototype</code>プロパティで定義された多数のメソッドが表示されます。これらのメソッドは、前述のようにObjectから継承したオブジェクトで使用できます。<br>
+ <br>
+ JavaScript上のプロトタイプチェーン継承の他の例を見ることができます。例えば <code><a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></code>、<code><a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/Date">Date</a></code>、<code><a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/Number">Number</a></code>、<code><a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a></code>のグローバルオブジェクトのプロトタイプで定義されたメソッドやプロパティを探してみてください。 これらはすべて、プロトタイプで定義されたメンバーがいくつかあります。これは、たとえば、次のような文字列を作成する場合です。</p>
+
+<pre class="brush: js">var myString = 'This is my string.';</pre>
+
+<p><code>myString</code>には、<code><a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/String/split">split()</a></code>、<code><a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/String/indexOf">indexOf()</a></code>、<code><a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/String/replace">replace()</a></code>などの便利なメソッドが多数用意されています。</p>
+
+<div class="note">
+<p><strong>Note</strong>: このセクションを理解し、もっと詳しく知りたいとき、<a href="/ja/docs/Web/JavaScript/Guide/Inheritance_and_the_prototype_chain#Using_prototypes_in_JavaScript">JavaScriptでプロトタイプを使用する</a>ための詳細なガイドを読むことは価値があります。このセクションは、最初に会ったときに理解しやすいように意図的に簡素化されています。</p>
+</div>
+
+<div class="warning">
+<p><strong>重要</strong>: <code>prototype</code>プロパティは、JavaScriptの最も混乱した部分の1つです。<code>this</code>は現在のオブジェクトのプロトタイプオブジェクトを指していると思うかもしれませんが、そうではありません (<code>__proto__</code>でアクセスできる内部オブジェクトです。覚えていますか？) 。<code>prototype</code>は継承するメンバを定義するオブジェクトを含むプロパティです。</p>
+</div>
+
+<h2 id="create_の再訪">create() の再訪</h2>
+
+<p>先ほど<code><a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/Object/create">Object.create()</a></code>メソッドを使用して新しいオブジェクトインスタンスを作成する方法を示しました。</p>
+
+<ol>
+ <li>たとえば、前の例のJavaScriptコンソールでこれを試してください：
+  <pre class="brush: js">var person2 = Object.create(person1);</pre>
+ </li>
+ <li><code>create()</code>が実際に行うことは、指定されたプロトタイプオブジェクトから新しいオブジェクトを作成することです。 ここでは<code>person1</code>をプロトタイプオブジェクトとして使用して<code>person2</code>を作成しています。これを確認するには、コンソールに次のように入力します。
+  <pre class="brush: js">person2.__proto__</pre>
+ </li>
+</ol>
+
+<p><font face="consolas, Liberation Mono, courier, monospace"><span style="background-color: rgba(220, 220, 220, 0.5);">person1</span></font>を返します。</p>
+
+<h2 id="コンストラクタのプロパティ">コンストラクタのプロパティ</h2>
+
+<p>すべてのコンストラクタ関数にはprototypeプロパティがあり、その値は<code><a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/Object/constructor">constructor</a></code>プロパティを含むオブジェクトです。この constructor プロパティは、元のコンストラクタ関数を指し示します。 次のセクションでは、Person.prototype プロパティ(または一般に、コンストラクタ関数のprototypeプロパティで、上のセクションで説明したオブジェクト)で定義されたプロパティが、Person() コンストラクタを使用して作成されたすべてのインスタンスオブジェクトで使用できるようになります。 したがって、constructor プロパティは person1 と person2 の両方のオブジェクトで使用できます。</p>
+
+<ol>
+ <li>たとえば、次のコマンドをコンソールで試してみてください。
+  <pre class="brush: js">person1.constructor
+person2.constructor</pre>
+
+  <p>これらのインスタンスには元の定義が含まれているため、両方とも<code>Person()</code>コンストラクタを返す必要があります。<br>
+   <br>
+   巧妙なトリックは、<code>constructor</code>プロパティの末尾にかっこを入れて(必要なパラメータを含む)コンストラクタから別のオブジェクトインスタンスを作成できることです。結局のところ、コンストラクタは関数なので、かっこを使用して呼び出すことができます。この関数をコンストラクタとして使用することを指定するには、newキーワードを含める必要があります。</p>
+ </li>
+ <li>コンソールでこれを試してみてください：
+  <pre class="brush: js">var person3 = new person1.constructor('Karen', 'Stephenson', 26, 'female', ['playing drums', 'mountain climbing']);</pre>
+ </li>
+ <li>次に、新しいオブジェクトの機能にアクセスしてみましょう。
+  <pre class="brush: js">person3.name.first
+person3.age
+person3.bio()</pre>
+ </li>
+</ol>
+
+<p>これはうまくいきます。頻繁に使用する必要はありませんが、新しいインスタンスを作成したい場合や、何らかの理由で簡単に利用できる元のコンストラクターへの参照がない場合は本当に便利です。<br>
+ <br>
+ <code><a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/Object/constructor">constructor</a></code>プロパティには他の用途もあります。 たとえば、オブジェクトのインスタンスがあり、そのインスタンスであるコンストラクタの名前を返す場合は、次のようにします。</p>
+
+<pre class="brush: js">instanceName.constructor.name</pre>
+
+<p>たとえば、これを試してみてください：</p>
+
+<pre class="brush: js">person1.constructor.name
+</pre>
+
+<div class="note">
+<p><strong>Note</strong>: <code>constructor.name</code>の値は変更できます (プロトタイプの継承、バインディング、プリプロセッサ、トランスパイラなどのため) 。より複雑な例では、代わりに<code><a href="/ja/docs/JavaScript/Reference/Operators/instanceof">instanceof</a></code> 演算子を使用します。</p>
+</div>
+
+<ol>
+</ol>
+
+<h2 id="プロトタイプの変更">プロトタイプの変更</h2>
+
+<p>コンストラクタ関数の<code>prototype</code>プロパティを変更する例を見てみましょう(プロトタイプに追加されたメソッドは、コンストラクタから作成されたすべてのオブジェクトインスタンスで使用可能です)。</p>
+
+<ol>
+ <li><a href="http://mdn.github.io/learning-area/javascript/oojs/introduction/oojs-class-further-exercises.html">oojs-class-further-exercises.html</a>の例に戻り、<a href="https://github.com/mdn/learning-area/blob/master/javascript/oojs/introduction/oojs-class-further-exercises.html">ソースコード</a>のローカルコピーを作成します。既存のJavaScriptの下に、コンストラクタの<code>prototype</code>プロパティに新しいメソッドを追加する次のコードを追加します
+
+  <pre class="brush: js">Person.prototype.farewell = function() {
+  alert(this.name.first + ' has left the building. Bye for now!');
+};</pre>
+ </li>
+ <li>コードを保存してブラウザにページを読み込み、テキスト入力に次のように入力してみてください：
+  <pre class="brush: js">person1.farewell();</pre>
+ </li>
+</ol>
+
+<p>コンストラクタ内部で定義された人の名前を特徴とする警告メッセージが表示されます。 これは本当に便利ですが、さらに便利なのは、継承チェーン全体が動的に更新され、コンストラクタから派生したすべてのオブジェクトインスタンスでこの新しいメソッドを自動的に利用できることです。<br>
+ <br>
+ これについて少し考えてみてください。 コードではコンストラクタを定義し、次にコンストラクタからインスタンスオブジェクトを作成し、コンストラクタのプロトタイプに新しいメソッドを追加します。</p>
+
+<pre class="brush: js">function Person(first, last, age, gender, interests) {
+
+  // property and method definitions
+
+}
+
+var person1 = new Person('Tammi', 'Smith', 32, 'neutral', ['music', 'skiing', 'kickboxing']);
+
+Person.prototype.farewell = function() {
+  alert(this.name.first + ' has left the building. Bye for now!');
+};</pre>
+
+<p>しかし、<code>person1</code>オブジェクトインスタンスではまだ<code>farewell()</code>メソッドを使用できます。利用可能な機能は自動的に更新されます。</p>
+
+<div class="note">
+<p><strong>Note</strong>: この例がうまくいかない場合は <a href="https://github.com/mdn/learning-area/blob/master/javascript/oojs/advanced/oojs-class-prototype.html">oojs-class-prototype.html</a> の例を見てください (<a href="http://mdn.github.io/learning-area/javascript/oojs/advanced/oojs-class-prototype.html">ライブ実行</a>も参照してください) 。</p>
+</div>
+
+<p>このように定義されているとあまり柔軟ではないので、<code>prototype</code>プロパティで定義されたプロパティはめったにありません。たとえば、次のようなプロパティを追加できます。</p>
+
+<pre class="brush: js">Person.prototype.fullName = 'Bob Smith';</pre>
+
+<p>これは人がそう呼ばれないかもしれないので、あまり柔軟ではありません。このように <code>name.first</code>と<code>name.last</code>から<code>fullName</code>を構築する方がはるかに良いでしょう：</p>
+
+<pre class="brush: js">Person.prototype.fullName = this.name.first + ' ' + this.name.last;</pre>
+
+<p>ただしこれは機能しません。<code>this</code>は、この場合はグローバルスコープであり、関数スコープではありません。このプロパティを呼び出すと、<code>undefined</code> <code>undefined</code>が返されます。これは、プロトタイプの前半で定義したメソッドでうまく機能しました。これは関数スコープ内にあるため、オブジェクトインスタンススコープに正常に転送されます。したがって、プロトタイプ (つまり、決して変更する必要のないもの) で定数プロパティを定義することもできますが、一般にコンストラクタ内でプロパティを定義する方が効果的です。<br>
+ <br>
+ 実際、より多くのオブジェクト定義のためのかなり一般的なパターンは、コンストラクタ内のプロパティとプロトタイプのメソッドを定義することです。これにより、コンストラクタにはプロパティ定義のみが含まれ、メソッドは別々のブロックに分割されるため、コードを読みやすくなります。例えば：</p>
+
+<pre class="brush: js">// Constructor with property definitions
+
+function Test(a, b, c, d) {
+  // property definitions
+}
+
+// First method definition
+
+Test.prototype.x = function() { ... };
+
+// Second method definition
+
+Test.prototype.y = function() { ... };
+
+// etc.</pre>
+
+<p>このパターンは、Piotr Zalewaの<a href="https://github.com/zalun/school-plan-app/blob/master/stage9/js/index.js">学校計画のアプリ</a>の例で実際に見られます。</p>
+
+<h2 id="まとめ">まとめ</h2>
+
+<p>この記事では、プロトタイプオブジェクトのチェーンによってオブジェクトが互いに機能を継承できるようにする方法、プロトタイプのプロパティ、コンストラクタにメソッドを追加する方法、およびその他の関連トピックを含むJavaScriptオブジェクトのプロトタイプについて説明しました。</p>
+
+<p>次の記事では、独自の2つのカスタムオブジェクトの間で機能の継承を実装する方法について説明します。</p>
+
+<p>{{PreviousMenuNext("Learn/JavaScript/Objects/Object-oriented_JS", "Learn/JavaScript/Objects/Inheritance", "Learn/JavaScript/Objects")}}</p>
+
+<h2 id="In_this_module" name="In_this_module">このモジュール</h2>
+
+<ul>
+ <li><a href="/ja/docs/Learn/JavaScript/Objects/Basics">JavaScript オブジェクトの基本</a></li>
+ <li><a href="/ja/docs/Learn/JavaScript/Objects/Object-oriented_JS">初心者のためのオブジェクト指向 JavaScript</a></li>
+ <li><a href="/ja/docs/Learn/JavaScript/Objects/Object_prototypes">Object のプロトタイプ</a></li>
+ <li><a href="/ja/docs/Learn/JavaScript/Objects/Inheritance">JavaScript での継承</a></li>
+ <li><a href="/ja/docs/Learn/JavaScript/Objects/JSON">JSON データの操作</a></li>
+ <li><a href="/ja/docs/Learn/JavaScript/Objects/Object_building_practice">オブジェクト作成の練習</a></li>
+ <li><a href="/ja/docs/Learn/JavaScript/Objects/Adding_bouncing_balls_features">バウンスボールに機能を追加する</a></li>
+</ul>

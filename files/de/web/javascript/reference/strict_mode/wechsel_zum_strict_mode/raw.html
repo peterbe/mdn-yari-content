@@ -1,0 +1,132 @@
+<div>{{jsSidebar("More")}}</div>
+
+<p>Mit ECMAScript 5 wurde der <a href="/de/docs/JavaScript/Strict_mode" lang="de" title="/de/docs/JavaScript/Strict_mode">strict mode</a> eingeführt, welcher inzwischen in allen gängigen Web-Browsern (inkl. IE10) implementiert wurde. Während es einfach ist, im Web-Browser zum Strict mode zu wechseln (es genügt, die Zeile <code>"use strict";</code> am Anfang des Quellcodes hinzufügen), ist etwas mehr Arbeit erforderlich, um bestehenden Code für strict mode umzusetzen.</p>
+
+<p>Dieser Artikel soll Programmierern dafür eine Anleitung geben.</p>
+
+<h2 id="Schrittweiser_Wechsel">Schrittweiser Wechsel</h2>
+
+<p>Ein Design-Ziel des strict mode war, den Wechsel dorthin in kleinen Schritten zu ermöglichen. Man kann jede Datei einzeln oder sogar bis auf die Ebene von Funktionen hinunter Codestellen umsetzen.</p>
+
+<h2 id="Unterschiede_zwischen_nicht-strict_und_strict">Unterschiede zwischen nicht-strict und strict</h2>
+
+<h3 id="Syntaxfehler">Syntaxfehler</h3>
+
+<p>Wird <code>"use strict";</code> hinzugefügt, dann wird in den folgenden Fällen ein {{jsxref("SyntaxError")}} ausgelöst, bevor das Script ausgeführt wird:</p>
+
+<ul>
+ <li>Octal-Syntax für Integer: <code>var n = 023;</code></li>
+ <li>Statement <a href="/de/docs/Web/JavaScript/Reference/Statements/with" lang="de" title="/de/docs/JavaScript/Reference/Statements/with"><code>with</code></a></li>
+ <li><code><a href="/de/docs/Web/JavaScript/Reference/Operators/delete" lang="de" title="/de/docs/JavaScript/Reference/Operators/delete">delete</a></code> mit einem Variablennamen: <code>delete myVariable</code>;</li>
+ <li><a href="/de/docs/Web/JavaScript/Reference/Global_Objects/eval" lang="de" title="/de/docs/Web/JavaScript/Reference/Global_Objects/eval"><code>eval</code></a> oder <a href="/de/docs/Web/JavaScript/Reference/Functions/arguments" lang="de" title="/de/docs/Web/JavaScript/Reference/Functions/arguments"><code>arguments</code></a> als Variable or Name eines Funktionsarguments</li>
+ <li>Benutzen der neuen <a href="/de/docs/Web/JavaScript/Reference/Lexical_grammar#Keywords" lang="de" title="/de/docs/Web/JavaScript/Reference/Lexical_grammar#Keywords">reservierten Schlüsselworte</a> (im Vorgriff auf for ECMAScript 2015): <code>implements</code>, <code>interface</code>, <code>let</code>, <code>package</code>, <code>private</code>, <code>protected</code>, <code>public</code>, <code>static</code> und <code>yield</code></li>
+ <li>Funktions-Deklaration innerhalb von Anweisungsblöcken: <code>if(a&lt;b){ function f(){} }</code></li>
+ <li>Offensichtliche (Programmier-) Fehler
+  <ul>
+   <li>Mehrfache Deklaration von Properties mit demselben Namen in einem Objektliteral: <code>{a: 1, b: 3, a: 7}</code><br>
+    Das triff auf ECMAScript 6 nicht länger zu (siehe {{bug(1041128)}}).</li>
+   <li>Deklaration mehrerer Funktionsargumente mit dem selben Namen: <code>function f(a, b, b){}</code></li>
+  </ul>
+ </li>
+</ul>
+
+<p>Diese Fehler sind eine gute Sache, weil sie fehlerhaften Code offenbaren oder auch schlechte Angewohnheiten. Sie treten auf, bevor der Code ausgeführt wird.</p>
+
+<h3 id="Neue_Laufzeitfehler">Neue Laufzeitfehler</h3>
+
+<p>JavaScript used to silently fail in contexts where what was done was an error. Strict mode throws in such cases. If your code base contains such cases, testing will be necessary to be sure nothing is broken. Once again, it can happen at the function granularity level.</p>
+
+<h4 id="Setting_a_value_to_an_undeclared_variable">Setting a value to an undeclared variable</h4>
+
+<pre class="brush: js">function f(x){
+  "use strict";
+  var a = 12;
+  b = a + x*35; // error!
+}
+f(42);
+</pre>
+
+<p>This used to change a value on the global object which is rarely the expected effect. If you really want to set a value to the global object, pass it as an argument and explicitly assign it as a property:</p>
+
+<pre class="brush: js">var global = this; // in the top-level context, "this" always
+                   // refers to the global object
+function f(x){
+  "use strict";
+  var a = 12;
+  global.b = a + x*35;
+}
+f(42);
+</pre>
+
+<h4 id="Trying_to_delete_a_non-configurable_property">Trying to delete a non-configurable property</h4>
+
+<pre class="brush: js">"use strict";
+delete Object.prototype; // error!
+</pre>
+
+<p>In non-strict, this would silently fail, in contradiction with the user expectation.</p>
+
+<h4 id="Poisoned_arguments_and_function_properties">Poisoned arguments and function properties</h4>
+
+<p>Accessing <code>arguments.callee</code>, <code>arguments.caller</code>, <code>anyFunction.caller</code>, or <code>anyFunction.arguments</code> throws an error in strict mode. The only legitimate use case would be to reuse a function as in:</p>
+
+<pre class="brush: js">// example taken from vanillajs: http://vanilla-js.com/
+var s = document.getElementById('thing').style;
+s.opacity = 1;
+(function(){ 
+  if((s.opacity-=.1) &lt; 0)
+    s.display="none";
+  else
+    setTimeout(arguments.callee, 40);
+})();</pre>
+
+<p>which can be rewritten as:</p>
+
+<pre class="brush: js">"use strict";
+var s = document.getElementById('thing').style;
+s.opacity = 1;
+(function fadeOut(){ // name the function
+  if((s.opacity-=.1) &lt; 0)
+    s.display="none";
+  else
+    setTimeout(fadeOut, 40); // use the name of the function
+})();</pre>
+
+<h3 id="Semantic_differences">Semantic differences</h3>
+
+<p>These differences are very subtle differences. It's possible that a test suite doesn't catch this kind of subtle difference. Careful review of your code base will probably be necessary to be sure these differences don't affect the semantics of your code. Fortunately, this careful review can be done gradually down the function granularity.</p>
+
+<h4 id="this_in_function_calls"><code>this</code> in function calls</h4>
+
+<p>In function calls like <code>f()</code>, the <code>this</code> value was the global object. In strict mode, it is now <code>undefined</code>. When a function was called with <code><a href="/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call" title="/en-US/docs/Core_JavaScript_1.5_Reference/Global_Objects/Function/call">call</a></code> or <code><a href="/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/apply" title="/en-US/docs/Core_JavaScript_1.5_Reference/Global_Objects/Function/apply">apply</a></code>, if the value was a primitive value, this one was boxed into an object (or the global object for <code>undefined</code> and <code>null</code>). In strict mode, the value is passed directly without conversion or replacement.</p>
+
+<h4 id="arguments_doesn't_alias_named_function_arguments"><code>arguments</code> doesn't alias named function arguments</h4>
+
+<p>In non-strict mode, modifying a value in the <code>arguments</code> object modifies the corresponding named argument. This made optimizations complicated for JavaScript engine and made code harder to read/understand. In strict mode, the <code>arguments</code> object is created and initialized with the same values than the named arguments, but changes to either the <code>arguments</code> object or the named arguments aren't reflected in one another.</p>
+
+<h4 id="Change_to_eval">Change to <code>eval</code></h4>
+
+<p>In strict mode code, <code>eval</code> doesn't create a new variable in the scope from which it was called. Also, of course, in strict mode, the string is evaluated with strict mode rules. Thorough testing will need to be performed to make sure nothing breaks. Not using eval if you don't really need it may be another pragmatic solution.</p>
+
+<h2 id="Strictness-neutral_code">Strictness-neutral code</h2>
+
+<p>A potential "downside" of moving strict code to strict mode is that the semantics may be different in legacy browsers which do not implement strict mode. In some rare occasions (like bad concatenation or minification), your code also may not run in the mode you wrote and tested it in. Here are the rules to make your code strictness-neutral:</p>
+
+<ol>
+ <li>Write your code as strict and make sure no strict-only errors (from the above "New runtime errors" section) are thrown.</li>
+ <li>Stay away from semantic differences
+  <ol>
+   <li><code>eval</code>: use it only if you know what you're doing</li>
+   <li><code>arguments</code>: always access function arguments via their name or perform a copy of the arguments object using:<br>
+    <code>var args = Array.prototype.slice.call(arguments)</code><br>
+    as the first line of your function</li>
+   <li><code>this</code>: only use <code>this</code> when it refers to an object you created.</li>
+  </ol>
+ </li>
+</ol>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li><a href="/de/docs/Web/JavaScript/Reference/Strict_mode">Strict mode</a></li>
+</ul>

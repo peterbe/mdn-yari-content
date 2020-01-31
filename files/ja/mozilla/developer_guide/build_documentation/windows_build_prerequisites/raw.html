@@ -1,0 +1,223 @@
+<h2 class="heading-secondary" id="Windows_上での_Firefox_ビルド">Windows 上での Firefox ビルド</h2>
+
+<p>世界で最も有名な OS 上で動作し、世界で最も良いブラウザのビルドを作るお手伝いをしていただき、ありがとうございます。このドキュメントはローカルマシン上で自身のハックをしたり、ビルドのセットアップの手助けとなります。</p>
+
+<p>セットアップは難しいことではありません。しかし、多くのファイルをダウンロードする必要があるため多少時間がかかります。これは 10 ~ 15 分かかり、1 ~ 2時間になる場合があります。</p>
+
+<p>詳細はこのページの最後に記載しています。しかし、このクイックスタートガイドではあなたは以下のことをする必要があります。</p>
+
+<h3 class="heading-tertiary" id="始めるために">始めるために</h3>
+
+<p>Windows 版の Firefox をビルドするためには、64 ビット版の Windows 7 以上、40 GB の空きスペースがあるマシンが必要です。Windows 7 では、「スタート」メニュー内の「コンピュータ」を右クリックし、「プロパティ」をクリックして「システム」から Windows のバージョンを確認することができます。Windows 8.1 と Windows 10 の場合は、「ウィンドウズ」メニューボタンを右クリックし、「システム」を選択することで確認できます。もしくは、すべての Windows において、「ウィンドウズ」キーと「Pause Break」キーを同時に押すことで確認することができます。</p>
+
+<p>次に、確実な基盤作りから始めたいと思います。Windows Updateで最新の状態にして次の準備を始めてください。</p>
+
+<h3 id="Visual_Studio_2019">Visual Studio 2019</h3>
+
+<p>Visual Studio 2019 の<a href="https://www.visualstudio.com/downloads/">コミュニティ版をダウンロードしインストール</a>してください。プロフェッショナル版及びエンタープライズ版もサポートされています。</p>
+
+<p>インストールする際、下記のワークロードにチェックを入れてください:</p>
+
+<ul>
+ <li>"C++ によるデスクトップ開発" (一番上のグループにあります。)</li>
+ <li>"C++ によるゲーム開発" (最後から2番目のグループにあります。)</li>
+</ul>
+
+<p>これに加え、個々のコンポーネント タブ内のSDK、ライブラリ、およびフレームワーク以下にある下記のコンポーネントにチェックを入れてください:</p>
+
+<ul>
+ <li>"v142 ビルド ツール用 C++ v14.20 ATL (x86 および x64)" (ARM64向けのビルドも行いたい場合、ARM64にもチェックを入れてください)</li>
+ <li>"Windows 10 SDK (10.0.17134.0以降のもの)"</li>
+</ul>
+
+<p>インストールが終了したら必ず Visual Studio を起動してください。それですべてのインストール作業及び関連付けが完了します。</p>
+
+<h3 id="必須ツール">必須ツール</h3>
+
+<h4 id="MozillaBuild">MozillaBuild</h4>
+
+<p>最後に、<a href="https://ftp.mozilla.org/pub/mozilla.org/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe">MozillaBuild パッケージ</a>を Mozilla からダウンロードします。初期設定のままインストールしてください。特にインストールディレクトリは <code>c:\mozilla-build\</code> にしてください。いくつかの Windows のバージョンでは ‘reinstall with the correct settings’ という選択を警告するダイアログが表示されます。その場合は、同意して先に進んでください。</p>
+
+<div class="note">
+<p>一度この処理が終わると、デスクトップに <code>c:\mozilla-build\start-shell.bat</code> へのショートカットが作成され、より簡単に環境を実行できるようになります。</p>
+</div>
+
+<h3 class="heading-tertiary" id="接続する">接続する</h3>
+
+<p>最後のステップは多少時間がかかります。処理が終了する間、Bugzilla アカウントを作成を行なってください。</p>
+
+<p><a href="https://bugzilla.mozilla.org/">Bugzilla.mozilla.org</a> は Mozilla のバグ管理システムです。バグにコメントしたり、パッチを提出するためにはアカウントを作成する必要があります。もし Github アカウントを持って入れば、Github アカウントからログインできます。または <a href="https://bugzilla.mozilla.org/createaccount.cgi">Bugzilla アカウントを直接作成</a>してください。</p>
+
+<p>Bugzilla 同様に、多くの Mozilla のインターナルなコミュニティ手段として Internet Relay Chat (IRC) があります。<a href="http://limechat.net/mac/">ここから Limechat </a>をダウンロードできます。そして、<a href="https://wiki.mozilla.org/IRC">ここからIRC 経由で Mozilla に接続する方法</a>を学ぶことができます。もしセットアップを開始しようとして質問があれば、"#introduction channel" に参加することができ、そこでは新しい貢献者に対して回答をしてくれるコミュニティメンバーが接続しています。</p>
+
+<h3 class="heading-tertiary" id="ソースコードを取得する">ソースコードを取得する</h3>
+
+<p>最後の大きな手順です。<code>c:\mozilla-build</code> の <strong>start-shell.bat</strong> をダブルクリックしてターミナルウィンドウを開きます。(もしくは上述したショートカットから起動します)</p>
+
+<p>以下のように <code>C:/</code> 直下に "mozilla-source" ディレクトリを作成し、そこにディレクトリへ移動してください。</p>
+
+<pre>cd c:/
+
+mkdir mozilla-source
+
+cd mozilla-source</pre>
+
+<p>次に、以下のコマンドのように、Mozilla のバージョン管理システムとして使っている Mercurial を用いて Firefox のソースコードを Pull します。</p>
+
+<pre>hg clone https://hg.mozilla.org/mozilla-central</pre>
+
+<p><em><code>hg</code> </em>は水銀の化学式です。素敵。</p>
+
+<p>この処理が終了するまでの間、<a href="http://mozilla-version-control-tools.readthedocs.org/en/latest/hgmozilla/index.html">Mozilla の Mercurial ドキュメント</a>を読んでください。そこに Mozilla がソースコードをどのように管理して変更点をどのようにソースツリーに反映するかが説明されています。</p>
+
+<h3 class="heading-tertiary" id="Firefox_のビルド！">Firefox のビルド！</h3>
+
+<p>ここまでの作業の集大成です。ターミナルウィンドウで先ほど取得したソースディレクトリに<code>cd</code> して、以下のコマンドを実行します。</p>
+
+<pre>cd mozilla-central
+
+./mach bootstrap
+
+./mach build
+</pre>
+
+<p><code>./mach bootstrap</code> は依存関係にあるすべてのものを取得しますが、このドキュメントでは説明は省略します。注記: bootstrap は Mercurial リポジトリからソースを取得している場合のみ動作します。ダウンロードした tar ファイルや GitHub 上のミラーでは動作しません。あなたが何もいじらずにただ Firefox や Firefox for Android をビルドしたい場合、<code>./mach</code> を実行した際の最初の質問で <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Artifact_builds">Artifact Builds</a> を選択してください。Artifact Builds はより早くビルドが完了します。これは C++ コードを触ろうとしている人には不適切です。</p>
+
+<p>これで完成します。もし時間がかかったとしても落胆しないでください。どんなに最新の最速のマシンでも少し時間がかかります。古いマシンとなると2時間以上かかることもあります。Firefox は膨大なものです。なぜなら Web が大きいからです。</p>
+
+<h3 id="実行">実行</h3>
+
+<p>mach build が終了したら、ハードドライブ上にソースコードからビルドしたあなた自身のバージョンの Firefox が作成され、実行する準備は整いました。それを以下のコマンドで実行できます。</p>
+
+<pre>./mach run</pre>
+
+<p>これで、ホームビルドバージョンのFirefox ができました。</p>
+
+<p>もしここでエラーが表示された場合、このドキュメントの下にある "トラブルシューティング" セクションをみてください。(いくつかのアンチウイルスソフトは我々のいくつかのテストを隔離するので、"mozilla-source" や "mozilla-build" は例外にする必要があります。アンチウイルスソフトを無効にするのではなく、単に例外を追加するだけです！！</p>
+
+<h3 class="heading-tertiary" id="はじめの一歩">はじめの一歩</h3>
+
+<p>ソースコードを入手して、Firefox のビルドが終わり、<code>./mach run</code> でそれを実行することができたので、ハッキング開始の準備はできました。次のステップは IRC の "#introduction channel"に参加したり、<a href="https://twitter.com/StartMozilla">Twitter の StartMozilla</a> をフォローしたり、<a href="http://www.joshmatthews.net/bugsahoy/?simple=1">最初のバグを探したり</a>することです。</p>
+
+<p>Firefox 製品作成や、全ての人々にオープンな Web をより良いものにする協力をしていただき、ありがとうございます。</p>
+
+<h2 id="詳細・トラブルシューティング">詳細・トラブルシューティング</h2>
+
+<h3 id="ハードウェア・ソフトウェア推奨環境">ハードウェア・ソフトウェア推奨環境</h3>
+
+<p>Firefox のビルドプロセスは I/O と CPU を多く使います。そして、最新のマシンでも多くの時間が必要になります。Mozilla 開発で必要となる最小限のスペックは次の通りです。</p>
+
+<ul>
+ <li>少なくとも 4GB の RAM 。8 GB 以上を推奨します。それ以上あれば良いです。</li>
+ <li>35 GB の空きスペース。これは Visual Studio 2017 コミュニティエディション、必要な SDK 群、MozillaBuild パッケージ、Mercurial ソースコードレポジトリ、コンパイルに必要となるディスクスペースです。Firefox のビルドプロセスは I/O に負荷がかかるため、SSD を推奨します。</li>
+ <li>64 ビット版 Windows 7 (Service Pack 1) またはそれ以上。64 ビット Windows 上で 32 ビット版 Firefox のビルドを行うことができます。</li>
+</ul>
+
+<h3 id="概要">概要</h3>
+
+<p>Mozilla ビルドプロセスは多くの Windows システムに標準でインストールされていない多くのツール群を必要とします。Visual Studio に加えて、必要なバージョンの bash, GNU make, autoconf, Mercurial などのツールをバンドルした MozillaBuild をインストールする必要があります。</p>
+
+<p>Firefox 61 以降をビルドするには、Visual Studio 2017 Update 6 が必要です。</p>
+
+<p>Firefox 48 から 60 は、Visual Studio 2015 が使用されています。Visual Studio 2017 は Firefox 58 以降のビルドにも使用できます</p>
+
+<p>Firefox 37 〜 47 は Visual Studio 2013 (VC12) でビルドし、Visual Studio 2015 でもビルド可能です。(Visual Studio 2015 は全てのリビジョンをビルドできない可能性があります。)</p>
+
+<p>それ以前の Firefox はそれ以前の古い Visual Studio でビルドします。</p>
+
+<h3 id="ビルドに必要なインストール">ビルドに必要なインストール</h3>
+
+<p>これらの手順のそれぞれを完了しないと、正常にビルドできないことがあります。以下のソフトウェア要件に関する注意事項があります。</p>
+
+<ol>
+ <li>Windows アップデートを利用してシステムがアップデートされていること</li>
+ <li>Install <a href="https://www.visualstudio.com/downloads/">Visual Studio Community 2017</a> (free). Alternatively, you can also use a paid version of Visual Studio. Some additional components may be required to build Firefox, as noted in the "Visual Studio 2017" section above. Earlier versions of Visual Studio are not supported; the Firefox codebase relies on C++ features that are not supported in earlier releases.</li>
+ <li>オプションで、ビルドシステムで使用されるいくつかの Python 拡張をコンパイルするために、<a href="http://go.microsoft.com/?linkid=7729279">Visual C ++ 2008 Express（無料）</a>をインストールすることもできます。これは、Python 2.7.x for Windows がデフォルトでそのコンパイラで構築されるためです。 「mach resource-usage」、「mach doctor」、「mach android-emulator」、またはtalosテストをローカルで実行する場合は、psutilをビルドするためにインストールする必要があります。</li>
+ <li>追加のビルドツールを含む <a href="https://ftp.mozilla.org/pub/mozilla.org/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe">MozillaBuild</a> パッケージをダウンロードしてインストールします。 Cygwin がインストールされている場合は、ヒントのセクションの注意を読んでください。 「正しい設定」で再インストールするオプションを与える Windows のエラーダイアログが表示された場合は、MozillaBuild のインストーラが終了した後、オプションを選択してください。 MozillaBuild の詳細と新しいバージョンへのリンクはhttps://wiki.mozilla.org/MozillaBuild で入手できます。</li>
+</ol>
+
+<h3 id="トラブルシューティング">トラブルシューティング</h3>
+
+<p>場合によっては、次の問題が発生する可能性があります。</p>
+
+<p style="margin-left: 40px;"><strong>いくつかのアンチウイルスソフトとシステム保護ソフトは劇的に遅くしたり、ビルドプロセスを壊すかもしれません。</strong></p>
+
+<ul>
+ <li style="margin-left: 40px;">Windows Defenderおよび一部のウイルス対策製品のスキャンは、ビルド時間に大きな影響を与えることが知られています。たとえば、mozilla-centralを正常にクローン化しても、./mach buildがファイルの欠落を報告できない場合は、この問題が発生している可能性があります。よく知られているセキュリティバグの回帰テストには、ウイルス対策ソフトウェアによって脅威と認識されるコードサンプルが含まれており、関連するファイルを隔離したり破損したりすることがあります。これを解決するには、Windows Defenderまたはウイルス対策ソフトウェアでソースとオブジェクトのディレクトリ（mozilla-sourceとmozilla-buildディレクトリ）をホワイトリストに登録し、ファイルが見つからない場合は、ソースツリーを "hg update -C "コマンド。これが済むと、次の./machビルドが正常に完了するはずです。</li>
+</ul>
+
+<p style="margin-left: 40px;"><strong>システムと異なる言語で Visual Studio をインストールすると問題を引き起こす可能性があります。</strong></p>
+
+<ul>
+ <li style="margin-left: 40px;">例えば、英語環境にフランス語の Visual Studio をインストールするとインクルードエラーが発生し、リンクエラーとともに終了します。</li>
+</ul>
+
+<dl>
+</dl>
+
+<div class="note">
+<p>注意：ツール群のインストールフォルダに<strong>空白</strong>やプラスやクゥオートマーク / メタ文字などの改行文字などを含めると<strong> Mozilla はビルドできません。</strong>Visual Studio ツールと SDK 群は例外を出した時は、空白などを含むディレクトリにインストールされている可能性があります。全てのインストール場所は初期値のままであることを推奨します。</p>
+</div>
+
+<h3 id="MozillaBuild_2">MozillaBuild</h3>
+
+<p>MozillaBuild パッケージは Mozilla のビルドに必要となる MSYS ビルド環境 / <a href="https://www.mercurial-scm.org/">Mercurial</a> / autoconf-2.13 / CVS / Python / YASM / NSIS / UPX や wget や emacs のように使いやすいツールなども含まれています。</p>
+
+<p><a href="/ja/docs/">現行の MozillaBuild パッケージのインストールはここ</a></p>
+
+<p>初期値として、パッケージは <code>c:\mozilla-build</code> にインストールされ、そのまま利用することを推奨します。空白を含むパスにインストールしないでください。インストーラーは Windows のレジストリを変更しません。いくつかのバイナリは実行するために <a href="https://www.microsoft.com/downloads/en/details.aspx?FamilyID=a5c84275-3b97-4ab7-a40d-3802b2af5fc2&amp;displaylang=en">Visual C++ Redistributable package</a> を必要とすることに注意してください。</p>
+
+<p>MozillaBuild コマンドプロンプトの期待する設定:  MozillaBuild によって提供される「UNIX ライク」環境は Mozilla ソースコードをビルドしたり、コミットしやすくするために最適です。最新の Linux コントリビューションに含まれているような多くのコマンドツールは含まれていません。そして提供されているいくつかのツールはとても古いです(特に MSYS によって提供されているものなど)。これらの古いツールはしばしば正しい動作をしなかったり、バグが混在したり、数年間の間に追加した新しいコマンドラインの引数をサポートしていなかったりします。例えば、ソースツリーをコピーするために使う <code>cp -rf src1 src2</code>は動作しません。古いバージョンの cp ("cp: will not create hard link エラーをいくつかのファイルでは発生させます) のためです。短期間の間、 MozillaBuild は Mozilla ソースコードと開発者間でやりとりをしてきましたが、予想しない結果になったとしても驚かないでください。</p>
+
+<h3 id="MozillaBuild_コマンドプロンプトを開く">MozillaBuild コマンドプロンプトを開く</h3>
+
+<p>事前準備に必要なソフトをインストールしたら、Windows コマンドプロンプトを MozillaBuild をインストールしたディレクトリへ移動 (初期値では　<code>c:\mozilla-build</code>)し、<strong><code>start-shell.bat</code></strong> を実行してください。これは Firefox を正しい設定でビルドするための MSYS/BASH コマンドプロンプトを起動させます。その後のコマンドは全てこのコマンドプロンプトウィンドウから実行します。(Windows の CMD.exe シェルとは異なることに注意してください。)</p>
+
+<div class="note">
+<p>Windows の CMD.exe シェルとは異なることに注意してください。</p>
+</div>
+
+<h3 id="ソースコードディレクトリを作成する">ソースコードディレクトリを作成する</h3>
+
+<div class="note">注意:もしディレクトリを「Documents and Settings」のような空白を含むディレクトリに作成した場合、Firefox をビルドすることはできません。新規作成した「c:/mozilla-source」や「thunderbird-src」のような任意のフォルダを選択することができます。ビルドコマンドプロンプトは「c:/」と「/c/」を区別しませんが、後者は Windows コマンドプロンプトからは認識しません。またいくつかのツール(多くは MOZ_OBJDIR )は後者を誤認識します「C:/」構文は <strong>MozillaBuild</strong> コマンドプロンプトで設定された環境とツールを提供しているので、ここから引き継がれていることに注意を引くことに役たちます。</div>
+
+<p>「c:/mzilla-source」や「c:/thunderbird-src」のような深くない階層の新しいディレクトリを作成することは賢明なアイデアです。</p>
+
+<pre>cd c:/; mkdir mozilla-source; cd mozilla-source</pre>
+
+<p>以下のヒントは問題が発生した時に約立つかもしれません。ここでは Firefox ソースコードをを入手し、ビルドしています。</p>
+
+<h2 id="コマンドプロンプト_TIPS_と_注意">コマンドプロンプト TIPS と 注意</h2>
+
+<ul>
+ <li>このウィンドウに貼り付けする場合、ウィンドウのタイトルバーを右クリックし、「Edit」メニューの中から「貼り付け」を選択する必要があります。「Properties」で「Quick Edit Mode」を設定している場合、ウィンドウを右クリックすることで、選択した場所に貼り付けすることができます。</li>
+ <li>If you have Cygwin installed, make sure that the MozillaBuild directories come before any Cygwin directories in the search path enhanced by <code>start-shell-msvc2015.bat</code> (use <code>echo $PATH</code> to see your search path).</li>
+ <li>Cygwin がインストールされている場合は、MozillaBuild ディレクトリが、検索パスの Cygwin ディレクトリよりも <code>start-shell-msvc2015.bat</code> で拡張される前に来ていることを確認してください。(echo $PATH を使って検索パスを確認することができます) UNIXスタイルのスラッシュ（/）は、Windowsスタイルのバックスラッシュ（\）の代わりにパス区切り文字として使用されます。したがって、<code>c:\mydir</code> と <code>c:/mydir</code> の両方をサポートしていますが、明快さを向上させるためにMSYSシェルのディレクトリ <code>c:\mydir</code> に変更する場合は、<code>cd /c/mydir</code> を使用します。</li>
+ <li>The MSYS root directory is located in <code>/c/mozilla-build/msys</code> if you used the default installation directory. It's a good idea not to build anything under this directory. Instead use something like <code>/c/mydir</code>.</li>
+</ul>
+
+<h2 id="共通の問題_ヒント_制約">共通の問題 / ヒント / 制約</h2>
+
+<ul>
+ <li><a href="https://developer.mozilla.org/en-US/docs/Mozilla/Debugging/Debugging_Mozilla_on_Windows_FAQ">Windows での Mozilla のデバッグ FAQ</a> : Windows 上で Mozilla をデバッグするための Tips。</li>
+ <li>もし Visual Studio 2015 / 2017 両方インストールされている場合、ビルドシステムは 2017 をデフォルトとして使用します。mozconfig ファイルに以下の行を追加することで上書きすることができます。
+  <pre><span id="the-code">ac_add_options --with-visual-studio-version=2015</span></pre>
+ </li>
+ <li>もし間違ったアーキテクチャの設定がされた場合ビルドは失敗します。もし 64 ビットの Firefox をビルドしたい場合、以下の２行を mozconfig ファイルに追加します。
+  <pre><span id="the-code">ac_add_options --target=x86_64-pc-mingw32
+ac_add_options --host=x86_64-pc-mingw3</span><span>2</span></pre>
+ </li>
+ <li>もし PATH 環境変数にクゥオートマーク(")が含まれている場合、ビルドは失敗します。クゥオートマークは Mozilla ビルドのサブシェルに正しく変換して渡されず、通常不要なものが削除されません。</li>
+ <li>もし <code>PYTHON</code> 環境変数が設定されていると、ビルドが失敗することがあります。 「<code>The system cannot find the file specified</code>.」というエラーをすぐに表示します。 同じコマンドシェルでMozillaビルドツールを実行する前に "<code>unset PYTHON</code>"とタイプすると、これを修正する必要があります。 <code>PYTHON</code> が空の値に設定されるのではなく、設定されていないことを確認してください。</li>
+ <li>
+  <p>Cygwinがインストールされていると、ビルドが失敗することがあります。 MozillaBuild ディレクトリ（<code>/c/mozilla-build</code> とサブディレクトリ）がPATH 環境変数の Cygwin ディレクトリの前に来るようにしてください。 これで問題が解決しない場合は、PATH から Cygwin ディレクトリを削除するか、Cygwin を使用しないクリーンな PC でビルドを試してみてください。</p>
+ </li>
+ <li>サポートされている最新バージョンの MozillaBuild に付属するバージョン以外の NSIS のバージョンでのビルドはサポートされておらず、失敗する可能性があります</li>
+ <li>ビルドを他の人に配布する場合は、mozconfigに <code>WIN32_REDIST_DIR=$VCINSTALLDIR\redist\x86\Microsoft.VC80.CRT</code> を設定して、アプリケーションと共にパッケージ化されたMicrosoft CRT DLLを入手してください。</li>
+ <li>Microsoft Antimalware サービスはコンパイルを妨害する可能性があり、ビルド時に <code>conftest.exe</code> に関連するエラーとして表示されることがよくあります。 この問題を解決するには、少なくとも除外設定にオブジェクトディレクトリを追加します。</li>
+ <li>intrin.h と windows.h が一緒にインクルードされていると、「second C linkage of overloaded function '_interlockedbittestandset' not allowed」のようなエラーが発生します。 関数の名前の1つのインスタンスを再定義するには、＃define を使用します。</li>
+ <li>並列ビルド（<code>-jN</code>）は、Windows で GNU make で動作しません。 現在のバージョンの MozillaBuild に含まれている <code>mozmake</code> コマンドを使うべきです。 <code>mach</code> コマンドでビルドすると、常に利用可能な最良 のmakeコマンドが使用されます。</li>
+ <li>「ERROR：Can not find makecab.exe」のようなビルドエラーが発生した場合は、<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1383578">バグ1383578</a>のパッチを適用してください：<code>SET PATH="%PATH%;!LLVMDIR!\bin"</code> を <code>SET "PATH=%PATH%;!LLVMDIR!\bin"</code> に変更します。</li>
+</ul>
+
+<p><a href="/ja/docs/Developer_Guide/Build_Instructions">ビルドドキュメントに戻る</a></p>

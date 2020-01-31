@@ -1,0 +1,127 @@
+<div>{{jsSidebar("Statements")}}</div>
+
+<div>定数 (const) は、 <code><a href="/docs/Web/JavaScript/Reference/Statements/let">let</a></code> 文を使って定義する変数と同じ、ブロックスコープです。定数の値は、再代入による変更はできず、再宣言もできません。</div>
+
+<div>{{EmbedInteractiveExample("pages/js/statement-const.html")}}</div>
+
+<p class="hidden">この対話型サンプルのソースファイルは GitHub リポジトリに格納されています。対話型サンプルプロジェクトに協力したい場合は、 <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> をクローンしてプルリクエストを送信してください。</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="brush: js">const <em>name1 = value1 [, name2 = value2 [, ... [</em>, <em>nameN</em> = <em>valueN]]]</em>;</pre>
+
+<dl>
+ <dt><code>nameN</code></dt>
+ <dd>定数名。正当な {{Glossary("identifier", "識別子")}} なら、どんなものでもかまいません。</dd>
+ <dt><code>valueN</code></dt>
+ <dd>定数の値。 正当な <a href="/docs/Web/JavaScript/Guide/Expressions_and_Operators#Expressions">式</a> なら、どんなものでもかまいません。</dd>
+</dl>
+
+<h2 id="Description" name="Description">説明</h2>
+
+<p>この宣言は、グローバルか、宣言された関数内ローカルな定数を作ります。グローバルな定数は <code><a href="/ja/docs/Web/JavaScript/Reference/Statements/var">var</a></code> 変数と異なり、 window オブジェクトのプロパティにはなりません。つまり、宣言された同じ文の中で値を指定しなくてはいけません (あとで変更できません)。</p>
+
+<p><strong><code>const</code> 宣言</strong>は、値への読み取り専用の参照を作ります。その値が不変ということでは<strong>なく</strong>、その変数識別子が再代入できないというだけです。たとえば、定数がオブジェクトのコンテンツの場合、オブジェクトのコンテンツ(例 その引数)自体は変更可能です。</p>
+
+<p>「<a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Statements/let#Temporal_Dead_Zone">temporal dead zone</a>」の懸念事項はすべて、 <code><a href="/en-US/docs/Web/JavaScript/Reference/Statements/let">let</a></code> 及び <code>const</code> の両方に適用されます。</p>
+
+<p>定数は、同じスコープ内で関数や変数と同じ名前にできません。</p>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<p>次の例は、定数の動作の例です。ブラウザコンソールで試してください。</p>
+
+<pre class="brush:js">// メモ: 定数は大文字でも小文字でも宣言できるが、
+// 慣例的にすべて大文字を使う。
+
+// MY_FAV 定数を定義して、7 を値にする
+const MY_FAV = 7;
+
+// エラーになる - Uncaught TypeError: Assignment to constant variable.
+MY_FAV = 20;
+
+// MY_FAV は 7
+console.log('my favorite number is: ' + MY_FAV);
+
+// 定数を再宣言しようとするとエラーになる -  Uncaught SyntaxError: Identifier 'MY_FAV' has already been declared
+const MY_FAV = 20;
+
+// MY_FAV 変数名は定数として予約されているため、失敗する
+var MY_FAV = 20;
+
+// これもエラーになる
+let MY_FAV = 20;
+
+// ブロックスコープの性質に注意してほしい
+if (MY_FAV === 7) { 
+    // これは有効であり、ブロックスコープの MY_FAV を作る 
+    // (let を使って、定数でなく、ブロックスコープの変数として宣言することもできる)
+    let MY_FAV = 20;
+
+    // MY_FAV は現在 20
+    console.log('my favorite number is ' + MY_FAV);
+
+    // これはグローバルに巻き上げられて、エラーになる
+    var MY_FAV = 20;
+}
+
+// MY_FAV は 7 のまま
+console.log('my favorite number is ' + MY_FAV);
+
+// 定数宣言で初期化がないと、エラーになる
+const FOO; 
+
+// 定数はオブジェクトも設定できる
+const MY_OBJECT = {'key': 'value'};
+
+// オブジェクトの上書きはエラーになる - Uncaught TypeError: Assignment to constant variable.
+MY_OBJECT = {'OTHER_KEY': 'value'};
+
+// しかし、オブジェクトのキーは保護されていないので、
+// 次の文は問題なく実行される
+MY_OBJECT.key = 'otherValue'; // Use Object.freeze() to make object immutable
+
+// 配列も同じ
+const MY_ARRAY = [];
+// 配列にアイテムをプッシュすることができる
+MY_ARRAY.push('A'); // ["A"]
+// しかし、新しい配列を代入するのはエラーになる - Uncaught TypeError: Assignment to constant variable.
+MY_ARRAY = ['B'];</pre>
+
+<h2 id="Specifications" name="Specifications">仕様書</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">状態</th>
+   <th scope="col">備考</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-let-and-const-declarations', 'Let and Const Declarations')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td>初回定義。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-let-and-const-declarations', 'Let and Const Declarations')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td>変更なし。</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザーの対応</h2>
+
+<p class="hidden">このページの互換性一覧表は構造化データから生成されています。データに協力したいのであれば、 <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> をチェックアウトしてプルリクエストを送信してください。</p>
+
+<p>{{Compat("javascript.statements.const")}}</p>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li><a href="/ja/docs/Web/JavaScript/Reference/Statements/var"><code>var</code></a></li>
+ <li><a href="/ja/docs/Web/JavaScript/Reference/Statements/let"><code>let</code></a></li>
+ <li><a href="/ja/docs/Web/JavaScript/Guide/Grammar_and_types#Constants">JavaScript ガイド - 『値、変数、リテラル』 - 定数</a></li>
+</ul>

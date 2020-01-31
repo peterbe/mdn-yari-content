@@ -1,0 +1,300 @@
+<p><span class="comment">NOTE: Do not make substantive changes to this document without consulting Benjamin Smedberg &lt;<a class="link-mailto" href="mailto:benjamin@smedbergs.us" rel="freelink">benjamin@smedbergs.us</a>&gt; or one of the build-config peers.</span>Ejecutar la configuración y make con las opciones por defecto no te dará un buen resultado. Deberías usar un archivo .mozconfig para obtener una compilación razonable para la distribución. Por favor lee estas instrucciones cuidaadosamente antes de compilar.</p>
+
+<h3 id="Usando_un_archivo_de_configuraci.C3.B3n_.mozconfig" name="Usando_un_archivo_de_configuraci.C3.B3n_.mozconfig">Usando un archivo de configuración .mozconfig</h3>
+
+<p>Si bien es posible llamar configure desde la línea de comandos, no es recomendable. En lugar de eso, crea un archivo .mozconfig en tu directorio fuente (mozilla/.mozconfig) o en tu directorio HOME (~/.mozconfig).</p>
+
+<p>También puedes dar la variable de entorno MOZCONFIG con el path completo de tu archivo de configuración:</p>
+
+<pre class="eval">export MOZCONFIG=~/mozilla/mozconfig-firefox
+</pre>
+
+<p>Mas alla del nombre que le hayas dado a tu archivo, nos referiremos a él como .mozconfig.</p>
+
+<p>.mozconfig contiene dos tipos de opciones:</p>
+
+<ul>
+ <li>Opciones con prefijo mk_add_options, son pasadas a client.mk y, usualmente, son opciones para controlar las vistas y actualizaciones de cvs</li>
+ <li>Opciones con prefijo ac_add_options, son pasadas a configure y afectan el proceso de compilado.</li>
+</ul>
+
+<p>Estas opciones serán usadas de forma automática cuando se ejecute ./configure o make -f client.mk</p>
+
+<h3 id="Compilando_con_un_Objdir" name="Compilando_con_un_Objdir">Compilando con un Objdir</h3>
+
+<p>Se recomienda que uses un objdir cuando compiles mozilla. esto quiere decir que tu código fuente y tus archivos objeto no están todos mezclados en el directorio. Si usas un objdir puedes compilar múltiples aplicaciones (Firefox, Thunderbird, etc) desde el mismo árbol fuente.</p>
+
+<p>El usar un objdir significa que cada Makefile.in en tu árbol fuente se convertirá en un Makefile en el objdir. Los directorios superiores en el Makefile.in serán los mismos en objdir. Por ejemplo, para el archivo: mozilla/modules/plugin/base/src/Makefile.in con un objdir de valor @TOPSRCDIR@/obj-debug, se creará el archivo y el directorio mozilla/obj-debug/modules/plugin/base/src/Makefile. Este Makefile referirá a las fuentes en el directorio mozilla/modules/plugin/base/src por arte de magia.</p>
+
+<p>Si necesitas volver a ejecutar configure de forma manual, por favor pásalo desde dentro de tu objeto, y hazlo pasando al script el path completo. Por ejemplo, si ejecutas sobre Win32, y tu árbol fuente es /cygdrive/c/Projects/FIREFOX/mozilla, entonces, desde tu objdir, debes ejecutar /cygdrive/c/Projects/FIREFOX/mozilla/configure.</p>
+
+<p>La siguente opción crea un objdir:</p>
+
+<pre class="eval">mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-@CONFIG_GUESS@
+</pre>
+
+<h3 id="Elegir_una_aplicaci.C3.B3n" name="Elegir_una_aplicaci.C3.B3n">Elegir una aplicación</h3>
+
+<p> </p>
+
+<dl>
+ <dt>Suite Mozilla (SeaMonkey)</dt>
+ <dd>Debes especificar:
+ <pre class="eval">ac_add_options --enable-application=suite
+# Usa la siguiente línea para verificar SeaMonkey desde CVS:
+mk_add_options MOZ_CO_PROJECT=suite
+</pre>
+
+ <p> </p>
+ </dd>
+ <dt>Browser (Firefox)</dt>
+ <dd>Tu archivo .mozconfig debería contener el <a class="external" href="http://lxr.mozilla.org/mozilla/source/browser/config/mozconfig">archivo mozconfig de Firefox por defecto</a>:
+ <pre class="eval">. $topsrcdir/browser/config/mozconfig
+</pre>
+
+ <p>No copies y pegues directamente el contenido del archivo a tu propio archivo ya que estos cambian constantemente.</p>
+
+ <p> </p>
+ </dd>
+ <dt>Mail (Thunderbird)</dt>
+ <dd>Tu archivo .mozconfig debería contener el <a class="external" href="http://lxr.mozilla.org/mozilla/source/mail/config/mozconfig">archivo mozconfig de Thunderbird por defecto</a>:
+ <pre class="eval">. $topsrcdir/mail/config/mozconfig
+</pre>
+
+ <p>No copies y pegues directamente el contenido del archivo a tu propio archivo ya que estos cambian constantemente.</p>
+
+ <p> </p>
+ </dd>
+ <dt>Calendario (Sunbird)</dt>
+ <dd>Tu archivo .mozconfig debería contener el <a class="external" href="http://lxr.mozilla.org/mozilla/source/calendar/sunbird/config/mozconfig">archivo mozconfig de Sunbird por defecto</a>:
+ <pre class="eval">. $topsrcdir/calendar/sunbird/config/mozconfig
+</pre>
+
+ <p>No copies y pegues directamente el contenido del archivo a tu propio archivo ya que estos cambian constantemente.</p>
+
+ <p> </p>
+ </dd>
+ <dt>XULRunner</dt>
+ <dd>Tu archivo .mozconfig debería contener el <a class="external" href="http://lxr.mozilla.org/mozilla/source/xulrunner/config/mozconfig">archivo mozconfig de XULRunner por defecto</a>:
+ <pre class="eval">. $topsrcdir/xulrunner/config/mozconfig
+</pre>
+
+ <p>No copies y pegues directamente el contenido del archivo a tu propio archivo ya que estos cambian constantemente.</p>
+
+ <p> </p>
+ </dd>
+</dl>
+
+<h3 id="Seleccionando_las_opciones_para_compilar" name="Seleccionando_las_opciones_para_compilar">Seleccionando las opciones para compilar</h3>
+
+<p>Las opciones que selecciones dependerán de que aplicación estés compilando y para qué usarás esa compilación. Si vas a usarla regularmente, querrás una compilación para distribución sin información extra sobre depuración; si eres un desarrollador que desea "hackear" el código fuente, tal vez quieras una compilación sin optimizar y con información de depuración extra.</p>
+
+<p>El <a class="external" href="http://webtools.mozilla.org/build/config.cgi">Mozilla Build Configurator</a> es una herramienta que puede ayudarte a armar una buena configuración. Actualmente es útil pricinpalmente para compilar la suite Mozilla, para compilar Firefox u otras aplicaciones habría que editarla manualmente.</p>
+
+<p>El script de configuración reconoce muchas opciones que no deberían ser usadas para compilar la suite completa y aplicaciones XUL, ya que son para propósito-especial o ciertas situaciones. La lista completa de opciones puede ser vista ejecutando ./configure --help o mirando <a class="external" href="http://webtools.mozilla.org/build/config.cgi">Mozilla Build Configurator</a>.</p>
+
+<p><strong>Si no sabes lo que hace alguna opción de configuración, no la uses ! </strong> Las siguientes opciones son muy comunes:</p>
+
+<h4 id="Optimizaci.C3.B3n" name="Optimizaci.C3.B3n">Optimización</h4>
+
+<dl>
+ <dt>ac_add_options --enable-optimize </dt>
+ <dd>Habilita las opciones de optimización del compilador por defecto.</dd>
+ <dt>ac_add_options --enable-optimize=-O2 </dt>
+ <dd>Selecciona ciertas opciones en particular de optimización del compilador. Generalmente no da el resultado deseado, a menos que conozcas el código base de Mozilla.</dd>
+ <dt>ac_add_options --disable-debug </dt>
+ <dd>Desactiva las macros de depuración.</dd>
+ <dt>ac_add_options --disable-optimize </dt>
+ <dd>Desactiva la optimización del compilador. Facilita mucho revisar el código en un depurador.</dd>
+ <dt>ac_add_options --enable-debug </dt>
+ <dd>Habilita las macros de depuración y otros códigos de sólo-depuración. Puede que lentifique mucho la compilación pero es invaluable para escribir parches.</dd>
+</dl>
+
+<h4 id="Herramientas_gr.C3.A1ficas" name="Herramientas_gr.C3.A1ficas">Herramientas gráficas</h4>
+
+<p> </p>
+
+<dl>
+ <dt>ac_add_options --enable-default-toolkit=gtk|xlib|qt|cairo-gtk2|cairo-xlib|cairo-windows|windows|mac|cocoa|cairo-cocoa|os2|beos|photon</dt>
+ <dd>Selecciona la herramienta gráfica. No se necesita para Windows/OS2/BeOS/Photon desde que éstas plataforma seleccionan la herramienta correcta. Tampoco se necesita en Mac, a menos que estés compilando Camino en una versión vieja (Camino usa --enable-default-toolkit=cocoa).
+ <p>En plataformas *nix selecciona la herramienta adecuada. GTK2 y GTK han sido probadas con éxito. xlib se considera una <a class="external" href="http://www.mozilla.org/build/faq.html#supported">tier-3 platform</a>. Qt y Cairo son experimentales, vas a encontrar bugs. En el tronco usa Cairo-gtk2 (por defecto).</p>
+
+ <p> </p>
+ </dd>
+ <dt>ac_add_options --enable-xft</dt>
+ <dd>Habilita el rendering avanzado de fuente XFT. Sólo esta disponible con --enable-default-toolkit=gtk2, y se recomienda con gtk2.
+ <p> </p>
+ </dd>
+ <dt>ac_add_options --enable-freetype2</dt>
+ <dd>Habilita el rendering de fuente freetype. Es por defecto para GTK. No compatible con --enable-xft.</dd>
+</dl>
+
+<h4 id="Compilaci.C3.B3n_est.C3.A1tica" name="Compilaci.C3.B3n_est.C3.A1tica">Compilación estática</h4>
+
+<p> </p>
+
+<dl>
+ <dt>ac_add_options --enable-static --disable-shared</dt>
+ <dd>Estas opciones generan un único ejecutable muy grande, el cuál tiene componentes enlazados de forma estática. Esto significa que hay muy pocos DLLs. De todas formas, a menos que tengas mucha RAM, no se recomienda su uso. 512 RAM mínimo. Se recomienda 1 GB. Estas opciones se deberían usar siempre juntas, si usas --enable-static, se recomienda que también uses --disable-tests
+ <p> </p>
+ </dd>
+ <dt>ac_add_options --disable-static --enable-shared</dt>
+ <dd>Estas opciones generan componentes dentro de librerías compartidas separadas. Esto hace la depuración mucho mas fácil, pero la compilación resultante puede ser más lenta y a veces menos eficiente.
+ <p>Esta opción es por defecto.</p>
+ </dd>
+</dl>
+
+<h4 id="Extensiones" name="Extensiones">Extensiones</h4>
+
+<p> </p>
+
+<dl>
+ <dt>ac_add_options --enable-extensions=default|all|ext1,ext2,-skipext3</dt>
+ <dd>Hay muchas piezas de código opcionales que habitan en <a href="https://dxr.mozilla.org/mozilla-central/source/extensions/" rel="custom">las extensiones/ directorio</a> en el árbol fuente. Muchas de éstas se consideran ya, una parte integral de la navegación. Hay una lista por defecto de extensiones para la suite, y cada aplicación-específica de mozconfig especifica un conjunto diferente por defecto, algunas extensiones no son compatibles con todas las aplicaciones, por ejemplo:
+ <ul>
+  <li>cookie no es compatible con thunderbird</li>
+  <li>typeaheadfind no es compatible con ninguna herramienta (firefox, thunderbird, sunbird)</li>
+ </ul>
+
+ <p>A menos que conozcas qué extensión es compatible con cada aplicación, no uses --enable-extensions option; el sistema seleccionará automaticamente el conjunto de extesiones apropiado.</p>
+ </dd>
+</dl>
+
+<h4 id="Tests" name="Tests">Tests</h4>
+
+<p> </p>
+
+<dl>
+ <dt>ac_add_options --disable-tests</dt>
+ <dd>Activada por defecto. Se han creado muchas aplicaciones para testeo, las cuales pueden ayudar a depurar y crear parches para las fuentes de Mozilla. Desabilitando ésta opción ganarás tiempo al compilar y espacio en disco.</dd>
+</dl>
+
+<h4 id="Otras_opciones" name="Otras_opciones">Otras opciones</h4>
+
+<p> </p>
+
+<dl>
+ <dt>ac_add_options --disable-crypto</dt>
+ <dd>La criptografía está activada por defecto, en algunos paises puede ser ilegal usar o exportar software criptográfico. Deberías ponerte al tanto de las leyes de tu país.
+ <p>En la rama 1.7, la criptografía estaba desactivada, debes especificar --enable-crypto, si deseas SSL, SMIME, o alguna otra caracterísca que requiera criptografía.</p>
+
+ <p> </p>
+ </dd>
+ <dt>ac_add_options --disable-javaxpcom (No Java)</dt>
+ <dd>Por defecto, XULRunner compila el <a class="external" href="http://developer.mozilla.org/en/docs/JavaXPCOM">Java-XPCOM bridge</a>, que requiere tener instalado un JDK, si tienes el siguiente error al configurar: <code>The header jni.h was not found. Set $JAVA_HOME or use --with-java-include-path</code> puedes desactivar las dependencias de java usando <code>ac_add_options --disable-javaxpcom.</code></dd>
+</dl>
+
+<h3 id="Ejemplos_de_archivos_.mozconfig" name="Ejemplos_de_archivos_.mozconfig">Ejemplos de archivos .mozconfig</h3>
+
+<h4 id="Firefox_est.C3.A1tico_optimizado" name="Firefox_est.C3.A1tico_optimizado">Firefox estático optimizado</h4>
+
+<pre class="eval">. $topsrcdir/browser/config/mozconfig
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/ff-opt-static
+ac_add_options --enable-optimize
+ac_add_options --disable-debug
+ac_add_options --enable-static
+ac_add_options --disable-shared
+ac_add_options --disable-tests
+mk_add_options MOZ_CO_PROJECT=browser
+</pre>
+
+<h4 id="Thunderbird.2C_compilaci.C3.B3n_para_depurar" name="Thunderbird.2C_compilaci.C3.B3n_para_depurar">Thunderbird, compilación para depurar</h4>
+
+<pre class="eval">. $topsrcdir/mail/config/mozconfig
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/tbird-debug
+mk_add_options MOZ_CO_PROJECT=mail,calendar
+ac_add_options --disable-optimize
+ac_add_options --enable-debug
+</pre>
+
+<h4 id="SeaMonkey.2C_optimizado_.28pero_no_est.C3.A1tico.29" name="SeaMonkey.2C_optimizado_.28pero_no_est.C3.A1tico.29">SeaMonkey, optimizado (pero no estático)</h4>
+
+<pre class="eval">mk_add_options MOZ_CO_PROJECT=suite
+ac_add_options --enable-application=suite
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/suite-opt
+ac_add_options --enable-optimize
+ac_add_options --disable-debug
+</pre>
+
+<h3 id="Construyendo_varias_aplicaciones_desde_el_mismo_.C3.A1rbol_fuente" name="Construyendo_varias_aplicaciones_desde_el_mismo_.C3.A1rbol_fuente">Construyendo varias aplicaciones desde el mismo árbol fuente</h3>
+
+<p>Es posible compilar múltiples aplicaiones desde el mismo árbol fuente, siempre y cuando hayas verificado todos los recursos necesarios y <a href="#Compilando_con_un_Objdir">uses un objdir diferente</a> para cada aplicaión.</p>
+
+<p>También puedes crear múltiples archivos mozconfig, o usar la opción MOZ_BUILD_PROJECTS como alternativa.</p>
+
+<h4 id="Usando_MOZ_BUILD_PROJECTS_en_un_.C3.BAnico_mozconfig" name="Usando_MOZ_BUILD_PROJECTS_en_un_.C3.BAnico_mozconfig">Usando MOZ_BUILD_PROJECTS en un único mozconfig</h4>
+
+<p>Para usar MOZ_BUILD_PROJECTS, debes especificar un MOZ_OBJDIR y una opctión MOZ_BUILD_PROJECTS que contenga nombres separados por espacios. Cada nombre puede ser un nombre de directorio arbitrario. Para cada nombre se crea un subdirectorio debajo del objdir de nivel superior. Tienes que usar ac_add_app_options con los nombre especificados para habilitar cada aplicación en cada directorio objeto .</p>
+
+<p>Por ejemplo:</p>
+
+<pre class="eval"> ac_add_options --disable-optimize --enable-debug 
+ ac_add_options --enable-default-toolkit=gtk2 --disable-freetype2 --enable-xft
+ mk_add_options MOZ_OBJDIR=/home/amil082/mozilla_trunk/obj-@CONFIG_GUESS@
+ mk_add_options MOZ_BUILD_PROJECTS="xulrunner browser mail"
+ mk_add_options MOZ_CO_PROJECT="xulrunner browser mail"
+ ac_add_app_options browser --enable-application=browser
+ ac_add_app_options xulrunner --enable-application=xulrunner
+ ac_add_app_options mail --enable-application=mail
+</pre>
+
+<p>Si deseas compilar un solo projecto usando este mozconfig debes usar: <code>make -f client.mk build MOZ_CURRENT_PROJECT=browser</code>. Esto generará sólo el navegador.</p>
+
+<h4 id="Usando_m.C3.BAltiples_archivos_mozconfig" name="Usando_m.C3.BAltiples_archivos_mozconfig">Usando múltiples archivos mozconfig</h4>
+
+<p>Tal vez desees crear mozconfig separados.</p>
+
+<p>El siguiente ejemplo se puede usar para compilar Firefox y Thunderbird. Primero deberías crear tres archivos mozconfig.</p>
+
+<p>mozconfig-en común</p>
+
+<pre class="eval">mk_add_options MOZ_CO_PROJECT=browser,mail
+
+# agrega opciones en común aquí, como hacer una compilación estática para distribuir o 
+# desabilitar tests
+ac_add_options --enable-optimize --disable-debug
+ac_add_options --disable-tests
+</pre>
+
+<p>mozconfig-firefox</p>
+
+<pre class="eval"># incluye el mozconfig-en común
+. ./mozconfig-en común
+
+# compila Firefox
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/firefox-static
+ac_add_options --enable-application=browser
+</pre>
+
+<p>mozconfig-thunderbird</p>
+
+<pre class="eval"># incluye el mozconfig-en común
+. ./mozconfig-en común
+
+# compila Thunderbird
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/thunderbird-static
+ac_add_options --enable-application=mail
+</pre>
+
+<p>Para verificar, ejecuta:</p>
+
+<pre class="eval">export MOZCONFIG=/path/to/mozilla/mozconfig-en común
+make -f client.mk checkout
+</pre>
+
+<p>Para compilar Firefox, ejecuta:</p>
+
+<pre class="eval">export MOZCONFIG=/path/to/mozilla/mozconfig-firefox
+make -f client.mk build
+</pre>
+
+<p>Para compilar Thunderbird, ejecuta:</p>
+
+<pre class="eval">export MOZCONFIG=/path/to/mozilla/mozconfig-thunderbird
+make -f client.mk build
+</pre>
+
+<p> </p>
+
+<div class="noinclude"> </div>
+

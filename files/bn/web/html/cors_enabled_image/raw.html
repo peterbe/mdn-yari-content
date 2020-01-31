@@ -1,0 +1,101 @@
+<p><span class="seoSummary">The HTML specification introduces a {{ htmlattrxref("crossorigin", "img") }} attribute for images that, in combination with an appropriate {{Glossary("CORS")}} header, allows images defined by the {{ HTMLElement("img") }} element loaded from foreign origins to be used in canvas as if they were being loaded from the current origin.</span></p>
+
+<p>See <a href="/en/HTML/CORS_settings_attributes" title="CORS settings attributes">CORS settings attributes</a> for details on how the <code>crossorigin</code> attribute is used. Test another edit with mdn_* task queues.</p>
+
+<h2 id="What_is_a_tainted_canvas">What is a "tainted" canvas?</h2>
+
+<p>Although you can use images without CORS approval in your canvas, doing so <strong>taints</strong> the canvas. Once a canvas has been tainted, you can no longer pull data back out of the canvas. For example, you can no longer use the canvas <code>toBlob()</code>, <code>toDataURL()</code>, or <code>getImageData()</code> methods; doing so will throw a security error.</p>
+
+<p>This protects users from having private data exposed by using images to pull information from remote web sites without permission.</p>
+
+<h2 id="Example_Storing_an_image_from_a_foreign_origin">Example: Storing an image from a foreign origin</h2>
+
+<p>You must have a server hosting images with the appropriate <code>Access-Control-Allow-Origin</code> header.  Adding crossOrigin attribute makes a request header. You can use this excerpt from the <a href="https://github.com/h5bp/server-configs-apache/blob/fc379c45f52a09dd41279dbf4e60ae281110a5b0/src/.htaccess#L36-L53">HTML5 Boilerplate Apache server configs </a>to appropriately respond with this response header:</p>
+
+<pre class="brush:xml">&lt;IfModule mod_setenvif.c&gt;
+    &lt;IfModule mod_headers.c&gt;
+        <span class="nt">&lt;FilesMatch</span> <span class="s">"\.(cur|gif|ico|jpe?g|png|svgz?|webp)$"</span><span class="nt">&gt;</span>
+            SetEnvIf Origin ":" IS_CORS
+            Header set Access-Control-Allow-Origin "*" env=IS_CORS
+        &lt;/FilesMatch&gt;
+    &lt;/IfModule&gt;
+&lt;/IfModule&gt;</pre>
+
+<p>Given that's all sorted, you will be able to save those images to <a href="/en-US/docs/Web/Guide/API/DOM/Storage" title="/en-US/docs/Web/Guide/API/DOM/Storage">DOM Storage</a> as if they were served from your domain.</p>
+
+<pre class="brush: js">var img = new Image,
+    canvas = document.createElement("canvas"),
+    ctx = canvas.getContext("2d"),
+    src = "http://example.com/image"; // insert image url here
+
+img.crossOrigin = "Anonymous";
+
+img.onload = function() {
+    canvas.width = img.width;
+    canvas.height = img.height;
+    ctx.drawImage( img, 0, 0 );
+    localStorage.setItem( "savedImageData", canvas.toDataURL("image/png") );
+}
+img.src = src;
+// make sure the load event fires for cached images too
+if ( img.complete || img.complete === undefined ) {
+    img.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+    img.src = src;
+}</pre>
+
+<h2 id="ব্রাউসার_কম্পেটিবিলিটি">ব্রাউসার কম্পেটিবিলিটি</h2>
+
+<p>{{ CompatibilityTable() }}</p>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>13</td>
+   <td>8</td>
+   <td>{{ CompatNo() }}</td>
+   <td>{{ CompatNo() }}</td>
+   <td>{{ CompatUnknown() }}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{ CompatUnknown() }}</td>
+   <td>{{ CompatUnknown() }}</td>
+   <td>{{ CompatUnknown() }}</td>
+   <td>{{ CompatUnknown() }}</td>
+   <td>{{ CompatUnknown() }}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="আরও_দেখুন">আরও দেখুন</h2>
+
+<ul>
+ <li><a class="external" href="http://blog.chromium.org/2011/07/using-cross-domain-images-in-webgl-and.html">Using Cross-domain images in WebGL and Chrome 13</a></li>
+ <li><a class="external" href="http://whatwg.org/html#attr-img-crossorigin">HTML Specification - the <code>crossorigin</code> attribute</a></li>
+</ul>

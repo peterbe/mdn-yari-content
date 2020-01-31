@@ -1,0 +1,162 @@
+<div>{{JSRef("Global_Objects", "Proxy")}}</div>
+
+<h2 id="Summary" name="Summary">概要</h2>
+
+<p>{{jsxref("Object.getOwnPropertyNames()")}}に対するトラップです。</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="brush: js">var p = new Proxy(target, {
+  ownKeys: function(target) {
+  }
+});
+</pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<p>次の引数は<code>ownKeys</code> メソッドに渡されます。<code>this</code>はハンドラにバインドされます。</p>
+
+<dl>
+ <dt><code>target</code></dt>
+ <dd>ターゲットオブジェクト</dd>
+</dl>
+
+<h3 id="Return_value" name="Return_value">戻り値</h3>
+
+<p><code>ownKeys</code> メソッドは反復オブジェクトを返さなければなりません。</p>
+
+<h2 id="説明">説明</h2>
+
+<p><code><strong>handler.ownKeys()</strong></code> メソッドは{{jsxref("Object.getOwnPropertyNames()")}}に対するトラップです。</p>
+
+<h3 id="インターセプト">インターセプト</h3>
+
+<p>このトラップは下記の操作をトラップできます。:</p>
+
+<ul>
+ <li>{{jsxref("Object.getOwnPropertyNames()")}}</li>
+ <li>{{jsxref("Object.getOwnPropertySymbols()")}}</li>
+ <li>{{jsxref("Object.keys()")}}</li>
+ <li>{{jsxref("Reflect.ownKeys()")}}</li>
+</ul>
+
+<h3 id="不変条件">不変条件</h3>
+
+<p>次の不変条件に違反している場合、プロキシは{{jsxref("TypeError")}}をスローします。:</p>
+
+<ul>
+ <li><code>ownKeys</code>の結果はリストです。</li>
+ <li>結果リストのそれぞれの要素の型は{{jsxref("String")}} または {{jsxref("Symbol")}}のどちらかです。</li>
+ <li>結果リストはターゲットオブジェクトのすべての非設定の独自プロパティのキーを含みます。</li>
+ <li>ターゲットオブジェクトが拡張可能でないなら、結果リストはターゲットオブジェクトのすべての独自プロパティのキーを含まなければなりません。そして、他の値を含みません。</li>
+</ul>
+
+<h2 id="例">例</h2>
+
+<p>次のコードでは{{jsxref("Object.getOwnPropertyNames()")}}をトラップします。</p>
+
+<pre class="brush: js">var p = new Proxy({}, {
+  ownKeys: function(target) {
+    console.log("called");
+    return ["a", "b", "c"];
+  }
+});
+
+console.log(Object.getOwnPropertyNames(p)); // "called"
+</pre>
+
+<p>次のコードでは不変条件に違反します。</p>
+
+<pre class="brush: js">var obj = {};
+Object.defineProperty(obj, "a", { 
+  configurable: false, 
+  enumerable: true, 
+  value: 10 }
+);
+
+var p = new Proxy(obj, {
+  ownKeys: function(target) {
+    return [];
+  }
+});
+
+console.log(Object.getOwnPropertyNames(p)); // TypeError is thrown
+</pre>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">状況</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-proxy-object-internal-methods-and-internal-slots-ownpropertykeys', '[[OwnPropertyKeys]]')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザ実装状況</h2>
+
+<div>{{CompatibilityTable}}</div>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>機能</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>基本サポート</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatGeckoDesktop("18")}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>機能</th>
+   <th>Android</th>
+   <th>Chrome for Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>基本サポート</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatGeckoMobile("18")}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li>{{jsxref("Proxy")}}</li>
+ <li>{{jsxref("Proxy.handler", "handler")}}</li>
+ <li>{{jsxref("Object.getOwnPropertyNames()")}}</li>
+ <li>{{jsxref("Reflect.ownKeys()")}}</li>
+</ul>

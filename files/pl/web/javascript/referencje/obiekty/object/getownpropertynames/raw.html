@@ -1,0 +1,192 @@
+<div>{{JSRef}}</div>
+
+<p>The <strong><code>Object.getOwnPropertyNames()</code></strong> method returns an array of all properties (enumerable or not) found directly upon a given object.</p>
+
+<h2 id="Syntax">Syntax</h2>
+
+<pre class="syntaxbox"><code>Object.getOwnPropertyNames(<var>obj</var>)</code></pre>
+
+<h3 id="Parametry">Parametry</h3>
+
+<dl>
+ <dt><code>obj</code></dt>
+ <dd>The object whose enumerable <em>and non-enumerable</em> own properties are to be returned.</dd>
+</dl>
+
+<h2 id="Opis">Opis</h2>
+
+<p><code>Object.getOwnPropertyNames()</code> returns an array whose elements are strings corresponding to the enumerable <em>and non-enumerable</em> properties found directly upon <code>obj</code>. The ordering of the enumerable properties in the array is consistent with the ordering exposed by a {{jsxref("Statements/for...in", "for...in")}} loop (or by {{jsxref("Object.keys()")}}) over the properties of the object. The ordering of the non-enumerable properties in the array, and among the enumerable properties, is not defined.</p>
+
+<h2 id="Przykłady">Przykłady</h2>
+
+<h3 id="Uzycie_Object.getOwnPropertyNames()"><code>Uzycie Object.getOwnPropertyNames()</code></h3>
+
+<pre class="brush: js">var arr = ['a', 'b', 'c'];
+console.log(Object.getOwnPropertyNames(arr).sort()); // logs '0,1,2,length'
+
+// Array-like object
+var obj = { 0: 'a', 1: 'b', 2: 'c' };
+console.log(Object.getOwnPropertyNames(obj).sort()); // logs '0,1,2'
+
+// Logging property names and values using Array.forEach
+Object.getOwnPropertyNames(obj).forEach(function(val, idx, array) {
+  console.log(val + ' -&gt; ' + obj[val]);
+});
+// logs
+// 0 -&gt; a
+// 1 -&gt; b
+// 2 -&gt; c
+
+// non-enumerable property
+var my_obj = Object.create({}, {
+  getFoo: {
+    value: function() { return this.foo; },
+    enumerable: false
+  }
+});
+my_obj.foo = 1;
+
+console.log(Object.getOwnPropertyNames(my_obj).sort()); // logs 'foo,getFoo'
+</pre>
+
+<p>If you want only the enumerable properties, see {{jsxref("Object.keys()")}} or use a {{jsxref("Statements/for...in", "for...in")}} loop (although note that this will return enumerable properties not found directly upon that object but also along the prototype chain for the object unless the latter is filtered with {{jsxref("Object.prototype.hasOwnProperty()", "hasOwnProperty()")}}).</p>
+
+<p>Items on the prototype chain are not listed:</p>
+
+<pre class="brush: js">function ParentClass() {}
+ParentClass.prototype.inheritedMethod = function() {};
+
+function ChildClass() {
+  this.prop = 5;
+  this.method = function() {};
+}
+ChildClass.prototype = new ParentClass;
+ChildClass.prototype.prototypeMethod = function() {};
+
+console.log(
+  Object.getOwnPropertyNames(
+    new ChildClass() // ['prop', 'method']
+  )
+);
+</pre>
+
+<h3 id="Get_Non-Enumerable_Only">Get Non-Enumerable Only</h3>
+
+<p>This uses the {{jsxref("Array.prototype.filter()")}} function to remove the enumerable keys (obtained with {{jsxref("Object.keys()")}}) from a list of all keys (obtained with <code>Object.getOwnPropertyNames()</code>) leaving only the non-enumerable keys.</p>
+
+<pre class="brush: js">var target = myObject;
+var enum_and_nonenum = Object.getOwnPropertyNames(target);
+var enum_only = Object.keys(target);
+var nonenum_only = enum_and_nonenum.filter(function(key) {
+  var indexInEnum = enum_only.indexOf(key);
+  if (indexInEnum == -1) {
+    // not found in enum_only keys mean the key is non-enumerable,
+    // so return true so we keep this in the filter
+    return true;
+  } else {
+    return false;
+  }
+});
+
+console.log(nonenum_only);
+</pre>
+
+<h2 id="Notes">Notes</h2>
+
+<p>In ES5, if the argument to this method is not an object (a primitive), then it will cause a {{jsxref("TypeError")}}. In ES6, a non-object argument will be coerced to an object.</p>
+
+<pre class="brush: js">Object.getOwnPropertyNames('foo');
+// TypeError: "foo" is not an object (ES5 code)
+
+Object.getOwnPropertyNames('foo');
+// ['length', '0', '1', '2']  (ES6 code)
+</pre>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-15.2.3.4', 'Object.getOwnPropertyNames')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td>Initial definition. Implemented in JavaScript 1.8.5.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-object.getownpropertynames', 'Object.getOwnPropertyNames')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<div>{{CompatibilityTable}}</div>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatChrome("5")}}</td>
+   <td>{{CompatGeckoDesktop("2")}}</td>
+   <td>{{CompatIE("9")}}</td>
+   <td>{{CompatOpera("12")}}</td>
+   <td>{{CompatSafari("5")}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Chrome for Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="SpiderMonkey-specific_notes">SpiderMonkey-specific notes</h2>
+
+<p>Prior to SpiderMonkey 28 {{geckoRelease("28")}}, <code>Object.getOwnPropertyNames</code> did not see unresolved properties of {{jsxref("Error")}} objects. This has been fixed in later versions ({{bug("724768")}}).</p>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Enumerability_and_ownership_of_properties">Enumerability and ownership of properties</a></li>
+ <li>{{jsxref("Object.prototype.hasOwnProperty()")}}</li>
+ <li>{{jsxref("Object.prototype.propertyIsEnumerable()")}}</li>
+ <li>{{jsxref("Object.create()")}}</li>
+ <li>{{jsxref("Object.keys()")}}</li>
+ <li>{{jsxref("Array.forEach()")}}</li>
+</ul>

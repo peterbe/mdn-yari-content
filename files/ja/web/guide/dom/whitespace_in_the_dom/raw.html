@@ -1,0 +1,187 @@
+<h2 id="The_issue" name="The_issue">問題の核心</h2>
+<p>DOM 中に空白文字が存在すると、コンテントツリーの操作が予想外に困難なものとなります。 Mozilla では、元のドキュメントのテキストコンテント中の空白文字は全て DOM 中にも表現されます(タグ内部の空白文字は除く)。(これはエディタがドキュメントの体裁を保存できるようにしたり CSS の <code>white-space: pre</code> が機能するようにするために内部的に必要です。) これが意味するのは:</p>
+<ul>
+  <li>空白文字のみを含むテキストノードが存在し、</li>
+  <li>始めや終わりに空白文字を持つテキストノードがある。</li>
+</ul>
+<p>つまり、以下のドキュメントの DOM ツリーは下の画像のようになるということです ("\n" は改行を表しています):</p>
+<pre class="brush:html">&lt;!-- My document --&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;title&gt;My Document&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;Header&lt;/h1&gt;
+  &lt;p&gt;
+    Paragraph
+  &lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<p><img height="306" src="https://mdn.mozillademos.org/files/854/whitespace_tree.png" width="618"></p>
+<p>このため、DOM を使って空白文字以外のコンテントを順次反復処理したい場合には少々厄介なことになります。</p>
+<h2 id="Making_things_easier" name="Making_things_easier">処理の簡易化</h2>
+<p>JavaScript ファイル <a href="http://www.mozilla-japan.org/docs/dom/technote/whitespace/nodomws.js">nodomws.js</a> では DOM に於いて空白文字を手軽に取り扱えるようにする関数を幾つか定義しています:</p>
+<pre class="brush:js">/**
+ * スクリプト全体で、空白文字を以下のいずれかの文字として定義しています。
+ *  "\t" TAB \u0009
+ *  "\n" LF  \u000A
+ *  "\r" CR  \u000D
+ *  " "  SPC \u0020
+ *
+ * JavaScript の \s は非改行スペース(及び他の幾つかの文字)を含んでいる為
+ * このスクリプトでは使用しません。
+ */
+
+
+/**
+ * ノードのテキスト内容が完全に空白であるか判断
+ *
+ * @param nod  CharacterData インタフェースを実装したノード
+ *             (例: Text, Comment, CDATASection ノード)
+ * @return     nod のテキスト内容が全て空白文字であれば true
+ *             それ以外は false
+ */
+function is_all_ws( nod )
+{
+  // ECMA-262 第3版 の String 及び RegExp の機能を使用
+  return !(/[^\t\n\r ]/.test(nod.data));
+}
+
+
+/**
+ * 反復処理関数がノードを無視するべきかどうか判断
+ *
+ * @param nod  DOM1 の Node インタフェースを実装したノード
+ * @return     ノードが次のいずれかであれば true:
+ *                1) 全て空白文字である Text ノード
+ *                2) Comment ノード
+ *             それ以外は false
+ */
+function is_ignorable( nod )
+{
+  return ( nod.nodeType == 8) || // コメントノード
+         ( (nod.nodeType == 3) &amp;&amp; is_all_ws(nod) ); // 全空白テキストノード
+}
+
+/**
+ * 完全に空白或いはコメントのノードを無視するようにした previousSibling
+ * (通常 previousSibling は全ての DOM ノードが持つプロパティのことで、親が
+ * 同じで参照ノードの直前にある兄弟ノードを表します)
+ *
+ * @param sib  参照ノード
+ * @return     次のいずれか:
+ *               1) is_ignorable 検査で無視できないと判断された sib に
+ *                  最も近い前方の兄弟ノード、或いは
+ *               2) 該当するノードがなければ null
+ */
+function node_before( sib )
+{
+  while ((sib = sib.previousSibling)) {
+    if (!is_ignorable(sib)) return sib;
+  }
+  return null;
+}
+
+/**
+ * 完全に空白或いはコメントのノードを無視するようにした nextSibling
+ *
+ * @param sib  参照ノード
+ * @return     次のいずれか:
+ *               1) is_ignorable 検査で無視できないと判断された sib に
+ *                  最も近い後方の兄弟ノード、或いは
+ *               2) 該当するノードがなければ null
+ */
+function node_after( sib )
+{
+  while ((sib = sib.nextSibling)) {
+    if (!is_ignorable(sib)) return sib;
+  }
+  return null;
+}
+
+/**
+ * 完全に空白或いはコメントのノードを無視するようにした lastChild
+ * (通常 lastChild は全ての DOM ノードが持つプロパティのことで、参照ノードに
+ * 直接含まれる最後のノードを表します)
+ *
+ * @param sib  参照ノード
+ * @return     次のいずれか:
+ *               1) is_ignorable 検査で無視できないと判断された sib の
+ *                  最後の子供ノード、或いは
+ *               2) 該当するノードがなければ null
+ */
+function last_child( par )
+{
+  var res=par.lastChild;
+  while (res) {
+    if (!is_ignorable(res)) return res;
+    res = res.previousSibling;
+  }
+  return null;
+}
+
+/**
+ * 完全に空白或いはコメントのノードを無視するようにした firstChild
+ *
+ * @param sib  参照ノード
+ * @return     次のいずれか:
+ *               1) is_ignorable 検査で無視できないと判断された sib の
+ *                  最初の子供ノード、或いは
+ *               2) 該当するノードがなければ null
+ */
+function first_child( par )
+{
+  var res=par.firstChild;
+  while (res) {
+    if (!is_ignorable(res)) return res;
+    res = res.nextSibling;
+  }
+  return null;
+}
+
+/**
+ * 最初と最後に空白文字を含まず、全ての空白文字を単一スペースに正規化する
+ * ようにした data
+ * (通常 data はテキストノードが持つプロパティのことで、ノードのテキストを
+ * 表します)
+ *
+ * @param txt  data が返されるべきテキストノード
+ * @return     当該テキストノードの内容が与える空白文字を纏めた文字列
+ */
+function data_of( txt )
+{
+  var data = txt.data;
+  // ECMA-262 第3版 の String 及び RegExp の機能を使用
+  data = data.replace(/[\t\n\r ]+/g, " ");
+  if (data.charAt(0) == " ")
+    data = data.substring(1, data.length);
+  if (data.charAt(data.length - 1) == " ")
+    data = data.substring(0, data.length - 1);
+  return data;
+}
+</pre>
+<h2 id="Example" name="Example">例</h2>
+<p>次のコードでは上の関数の使用例を示しています。(その子供が全て要素である)要素の子供を反復処理していき、そのテキストが <code>"これは 3 つ目の段落です。"</code> であるものを見つけ、class 属性と段落の中身を変更します。(このコードの<a href="http://www.mozilla-japan.org/docs/dom/technote/whitespace/demo.html">デモページ</a>を参照してください)</p>
+<pre class="brush:js">function runtest()
+{
+    var cur = first_child(document.getElementById("test"));
+    while (cur)
+    {
+        if (data_of(cur.firstChild) == "これは 3 つ目の段落です。")
+        {
+            cur.className = "magic";
+            cur.firstChild.data = "これが鍵となる段落です。";
+        }
+        cur = node_after(cur);
+    }
+}
+</pre>
+<div class="originaldocinfo">
+  <h2 id="Original_Document_Information" name="Original_Document_Information">原著に関する情報</h2>
+  <ul>
+    <li>著者: <a href="http://dbaron.org">L. David Baron</a></li>
+    <li>最終更新日: January 1, 2003</li>
+    <li>著作権情報: © 1998-2005 by individual mozilla.org contributors; content available under a <a href="http://www.mozilla.org/foundation/licensing/website-content.html">Creative Commons license</a></li>
+  </ul>
+</div>

@@ -1,0 +1,166 @@
+<div>{{JsSidebar("More")}}</div>
+
+<p>Template-Strings sind String-Symbole, die eingebettete Ausdrücke erlauben. Mit diesen Ausdrücken können mehrzeilige Strings und String-Interpolation genutzt werden.</p>
+
+<h2 id="Syntax">Syntax</h2>
+
+<pre class="syntaxbox">`string text`
+
+`string text line 1
+ string text line 2`
+
+`string text ${expression} string text`
+
+tag `string text ${expression} string text`
+</pre>
+
+<h2 id="Beschreibung">Beschreibung</h2>
+
+<p>Template-Strings sind anstelle von doppelten bzw. einfachen Anführungszeichen in <em>Back-Ticks</em> (` `) (<a href="http://en.wikipedia.org/wiki/Grave_accent">grave accent</a>) eingeschlossen. Template-Strings können Platzhalter beinhalten, die durch das Dollarsymbol gefolgt von geschweiften Klammern gekennzeichnet sind (<code>${expression}</code>). Die Ausdrücke in den Platzhaltern und der Text innerhalb der Back-Ticks können an eine Funktion übergeben werden. Die Standardfunktion fügt die einzelnen Teile zu einem einzigen String zusammen. Falls vor dem Template-String ein Ausdruck vorhanden ist (hier als <code>tag</code> bezeichnet), wird der Template-String "Tagged Template-String" genannt. In diesem Fall wird der <code>tag</code>-Ausdruck (üblicherweise eine Funktion) mit dem verarbeiteten Template-String aufgerufen, den man anschließend vor der Ausgabe manipulieren kann. Um ein backtick in einem Template-String zu nutzen muss er mit einem <code>\ </code>geschützt werden:</p>
+
+<pre class="brush: js">`\`` === '`' // --&gt; true</pre>
+
+<h3 id="Mehrzeilige_Strings">Mehrzeilige Strings</h3>
+
+<p>Alle Zeichen, die einen Zeilenumbruch einleiten und sich zwischen Back-Ticks befinden, werden als Teil des Template Strings verwendet. Bei normalen Strings muss die folgende Syntax genutzt werden, um Strings mit Zeilenumbrücken über mehrere Codezeilen zu definieren:</p>
+
+<pre class="brush: js">console.log("string text line 1\n"+
+"string text line 2");
+// "string text line 1
+// string text line 2"</pre>
+
+<p>Um dasselbe Ergebnis mit Template-Strings zu erreichen, kann die folgende Schreibweise genutzt werden:</p>
+
+<pre class="brush: js">console.log(`string text line 1
+string text line 2`);
+// "string text line 1
+// string text line 2"</pre>
+
+<h3 id="Erweiterung_von_Ausdrücken">Erweiterung von Ausdrücken</h3>
+
+<p id="Um_Ausdrücke_in_normale_Strings_einzufügen_müsste_die_folgende_Syntax_genutzt_werden">Um Ausdrücke in normale Strings einzufügen, müsste die folgende Syntax genutzt werden:</p>
+
+<pre class="brush: js">var a = 5;
+var b = 10;
+console.log("Fifteen is " + (a + b) + " and\nnot " + (2 * a + b) + ".");
+// "Fifteen is 15 and
+// not 20."</pre>
+
+<p>Mit Template-Strings können nun die syntaktischen Vorteile genutzt werden um solche Ersetzungen leserlicher zu machen:</p>
+
+<pre class="brush: js">var a = 5;
+var b = 10;
+console.log(`Fifteen is ${a + b} and
+not ${2 * a + b}.`);
+// "Fifteen is 15 and
+// not 20."</pre>
+
+<h3 id="Tagged_Template-Strings">Tagged Template-Strings</h3>
+
+<p>Eine erweiterte Form der Template-Strings sind <em>Tagged</em> Template-Strings. Mit ihnen kann man die Ausgabe von Template Strings mit einer Funktion modifizieren. Das erste Argument enthält ein Array von Strings ("Hello" und "world" in diesem Beispiel). Alle Argumente nach dem ersten sind die Werte der verarbeiteten (manchmal auch <em>cooked </em>genannt) ersetzten Ausdrücke ("15" und "50"). Schlussendlich gibt die Funktion den manipulierten String zurück. Im folgenden Beispiel heißt die Funktion <code>tag</code>, was aber keinen besonderen Grund hat, da sie jeden gewünschten Namen haben kann.</p>
+
+<pre class="brush: js">var a = 5;
+var b = 10;
+
+function tag(strings, ...values) {
+  console.log(strings[0]); // "Hello "
+  console.log(strings[1]); // " world "
+  console.log(values[0]);  // 15
+  console.log(values[1]);  // 50
+
+  return "Bazinga!";
+}
+
+tag`Hello ${ a + b } world ${ a * b}`;
+// "Bazinga!"
+</pre>
+
+<p>Tag-Funktionen müssen keinen String zurückgeben, wie das folgende Beispiel zeigt.</p>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js">function template(strings, ...keys) {
+  return (function(...values) {
+    var dict = values[values.length - 1] || {};
+    var result = [strings[0]];
+    keys.forEach(function(key, i) {
+      var value = Number.isInteger(key) ? values[key] : dict[key];
+      result.push(value, strings[i + 1]);
+    });
+    return result.join('');
+  });
+}
+
+var t1Closure = template`${0}${1}${0}!`;
+t1Closure('Y', 'A');  // "YAY!"
+</code><code>var t2Closure = template`${0} ${'foo'}!`;
+t2Closure('Hello', {foo: 'World'});  // "Hello World!"</code>
+</pre>
+
+
+
+<h3 id="Raw_Strings">Raw Strings</h3>
+
+<p>Die Eigenschaft raw, verfügbar für das erste Argument eines tagged Template Strings, erlaubt den Zugriff auf den unverarbeiteten eingegebenen String, also ohne <a href="/de/docs/Web/JavaScript/Guide/Grammar_and_types#Using_special_characters_in_strings">Escape-Sequenzen</a> auszuwerten.</p>
+
+<pre class="brush: js"><code class="language-js">function tag(strings, ...values) {
+  console.log(strings.raw[0]); 
+  // "string text line 1 \\n string text line 2"
+}
+
+tag`string text line 1 \n string text line 2`;
+</code></pre>
+
+<p>Zusätzlich exisitert die Methode {{jsxref("String.raw()")}} um unverarbeitete Strings zu erstellen, genauso wie sie die standard Template-Funktion und String-Verknüpfung erstellen würde.</p>
+
+<pre class="brush: js"><code class="language-js">String.raw`Hi\n${2+3}!`;
+// "Hi\\n5!"
+
+str.length;
+// 6
+
+str.split('').join(',');
+// "H,i,\,n,5,!"
+</code></pre>
+
+<h2 id="Sicherheit">Sicherheit</h2>
+
+<p>Template Strings <strong>SOLLTEN NICHT </strong>von Nutzern erstellt werden, denen nicht vertraut werden kann, da diese Zugriff auf Variablen und Funktionen haben.</p>
+
+<pre class="brush: js"><code class="language-js">`${console.warn("this is",this)}`; // "this is" Window
+
+let a = 10;
+console.warn(`${a+=20}`); // "30"
+console.warn(a); // 30
+</code></pre>
+
+<h2 id="Spezifikationen">Spezifikationen</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Spezifikation</th>
+   <th scope="col">Status</th>
+   <th scope="col">Kommentar</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-template-literals', 'Template Literals')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td>Initiale Definition. Definiert in mehreren Abschnitten der Spezifikation: <a href="http://www.ecma-international.org/ecma-262/6.0/#sec-template-literals">Template Literals</a>, <a href="http://www.ecma-international.org/ecma-262/6.0/#sec-tagged-templates">Tagged Templates</a></td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browserkompatibilität">Browserkompatibilität</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.grammar.template_literals")}}</p>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li>{{jsxref("String")}}</li>
+ <li>{{jsxref("String.raw()")}}</li>
+ <li><a href="/en-US/docs/Web/JavaScript/Reference/Lexical_grammar">Lexical grammar</a></li>
+ <li><a href="https://gist.github.com/WebReflection/8f227532143e63649804">Template-like strings in ES3 compatible syntax</a></li>
+ <li><a href="https://hacks.mozilla.org/2015/05/es6-in-depth-template-strings-2/">"ES6 in Depth: Template strings" on hacks.mozilla.org</a></li>
+</ul>

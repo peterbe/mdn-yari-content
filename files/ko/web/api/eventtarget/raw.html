@@ -1,0 +1,106 @@
+<p>{{ApiRef("DOM Events")}}</p>
+
+<p><code>EventTarget</code>은 이벤트를 받고 그 이벤트 수신기(listener)를 가질 수 있는 객체에 의해 구현된 인터페이스입니다.</p>
+
+<p>{{domxref("Element")}}, {{domxref("document")}} 및 {{domxref("window")}}는 가장 흔한 이벤트 대상(target)이지만, 예를 들어 {{domxref("XMLHttpRequest")}}, {{domxref("AudioNode")}}, {{domxref("AudioContext")}} 및 나머지 다른 객체들도 이벤트 대상이 될 수 있습니다.</p>
+
+<p>많은 이벤트 대상(element, document 및 window 포함)도 <code>on...</code> property 및 attribute를 통해 <a href="/ko/docs/Web/Guide/Events/Event_handlers">이벤트 처리기</a> 설정을 지원합니다.</p>
+
+<h2 id="메서드">메서드</h2>
+
+<dl>
+ <dt>{{domxref("EventTarget.addEventListener()")}}</dt>
+ <dd><code>EventTarget</code>에 특정 이벤트 유형의 이벤트 처리기를 등록.</dd>
+ <dt>{{domxref("EventTarget.removeEventListener()")}}</dt>
+ <dd><code>EventTarget</code>에서 이벤트 수신기를 제거.</dd>
+ <dt>{{domxref("EventTarget.dispatchEvent()")}}</dt>
+ <dd>이 <code>EventTarget</code>에 이벤트를 디스패치.</dd>
+</dl>
+
+<h3 id="Mozilla_chrome_코드_용_추가_메서드">Mozilla chrome 코드 용 추가 메서드</h3>
+
+<p>on* property를 구현하는 JS로 구현된 이벤트 대상에 쓰이는 Mozilla 확장기능(extension). <a href="/ko/docs/Mozilla/WebIDL_bindings">WebIDL 바인딩</a>도 참조.</p>
+
+<ul>
+ <li>void <strong>setEventHandler</strong>(DOMString type, EventHandler handler) {{non-standard_inline}}</li>
+ <li>EventHandler <strong>getEventHandler</strong>(DOMString type) {{non-standard_inline}}</li>
+</ul>
+
+<h2 id="예제">예제</h2>
+
+<h3 id="_Simple_implementation_of_EventTarget" name="_Simple_implementation_of_EventTarget">간단한 EventTarget 구현</h3>
+
+<pre class="brush: js"><span style="background-color: #ffffff; font-family: open sans,arial,sans-serif; line-height: 1.5;">var EventTarget = function() {
+</span>this.listeners = {};
+};
+
+<span style="background-color: #ffffff; font-family: open sans,arial,sans-serif; line-height: 1.5;">EventTarget.prototype.listeners = null;</span>
+EventTarget.prototype.addEventListener = function(type, callback){
+  if(!(type in this.listeners)) {
+    this.listeners[type] = [];
+  }
+ this.listeners[type].push(callback);
+};
+
+EventTarget.prototype.removeEventListener = function(type, callback){
+  if(!(type in this.listeners)) {
+    return;
+  }
+  var stack = this.listeners[type];
+  for(var i = 0, l = stack.length; i &lt; l; i++){
+     if(stack[i] === callback){
+       stack.splice(i, 1);
+       return this.removeEventListener(type, callback);
+      }
+     }
+};
+
+EventTarget.prototype.dispatchEvent = function(event){
+  if(!(event.type in this.listeners)) {
+    return;
+  }
+    var stack = this.listeners[event.type];
+    event.target = this;
+    for(var i = 0, l = stack.length; i &lt; l; i++) {
+        stack[i].call(this, event);
+    }
+};</pre>
+
+<h2 id="명세">명세</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">명세</th>
+   <th scope="col">상태</th>
+   <th scope="col">설명</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('DOM WHATWG', '#interface-eventtarget', 'EventTarget')}}</td>
+   <td>{{Spec2('DOM WHATWG')}}</td>
+   <td>변화 없음.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('DOM3 Events', 'DOM3-Events.html#interface-EventTarget', 'EventTarget')}}</td>
+   <td>{{Spec2('DOM3 Events')}}</td>
+   <td>매개변수 약간이 이제 선택사항(<code>listener</code>) 또는 <code>null</code> 값을 받아들임(<code>useCapture</code>).</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('DOM2 Events', 'events.html#Events-EventTarget', 'EventTarget')}}</td>
+   <td>{{Spec2('DOM2 Events')}}</td>
+   <td>초기 정의.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="브라우저_호환성">브라우저 호환성</h2>
+
+<p>{{Compat("api.EventTarget")}}</p>
+
+<h2 id="같이_보기">같이 보기</h2>
+
+<ul>
+ <li><a href="/ko/docs/Web/Reference/Events">Event reference</a> - 플랫폼에서 이용 가능한 이벤트.</li>
+ <li><a href="/ko/docs/Web/Guide/Events">Event 개발자 안내서</a></li>
+ <li>{{domxref("Event")}} 인터페이스</li>
+</ul>

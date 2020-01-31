@@ -1,0 +1,336 @@
+<p>{{DefaultAPISidebar("HTML Drag and Drop API")}}</p>
+
+<p>下面描述了在拖放操作过程中发生的步骤。</p>
+
+<p class="note">本文档中描述的拖动操作使用 {{domxref("DataTransfer")}} 接口。本文档不使用 {{domxref("DataTransferItem")}} 接口，也不使用 {{domxref("DataTransferItemList")}} 接口。</p>
+
+<h2 id="draggableattribute" name="draggableattribute">可拖动属性</h2>
+
+<p>在一个web页面中，文本选择、图像和链接默认是可拖拽的。当一个图像或链接被拖动时，图像或链接的 URL 被设定为拖动数据。</p>
+
+<p>在HTML中，除了图像、链接和选择的文本具有默认的可拖拽行为之外，其他元素在默认情况下是不可拖动的。在<a href="/en-US/docs/Mozilla/Tech/XUL">XUL</a>中，所有元素都是可拖动的。</p>
+
+<p>要使其他的 HTML 元素可拖动，必须做三件事：</p>
+
+<ul>
+ <li>在你想要拖动的元素上，将 <code>{{htmlattrxref("draggable")}}</code> 属性设置成 <code>true</code> 。</li>
+ <li>为事件添加一个监听器 <code>{{event("dragstart")}}</code>。</li>
+ <li>在上面定义的监听器中{{domxref("DataTransfer.setData","设置拖动数据")}}。</li>
+</ul>
+
+<p>这里有一个例子：</p>
+
+<pre class="brush: html">&lt;div draggable="true" ondragstart="event.dataTransfer.setData('text/plain', 'This text may be dragged')"&gt;
+  This text &lt;strong&gt;may&lt;/strong&gt; be dragged.
+&lt;/div&gt;
+</pre>
+
+<p>属性 <code>{{htmlattrxref("draggable")}}</code> 设置为 true，所以这个元素变成可拖动的。如果该属性被省略或被设置为 false，则该元素将不会被拖动，而是只选中文本。</p>
+
+<p>注意，当一个元素被设置成可拖动的时候， 文本或者其中的其他元素不能再以正常的方式（通过鼠标点击和拖动）被选择。用户必须按住 <kbd>alt</kbd> 键，用鼠标选择文本，或者使用键盘来代替。</p>
+
+<p>对于XUL元素，您不需要使用 <code>{{htmlattrxref("draggable")}} </code>属性，因为所有XUL元素都是可拖动的。</p>
+
+<pre class="brush: html">&lt;button label="Drag Me" ondragstart="event.dataTransfer.setData('text/plain', 'Drag Me Button');"&gt;
+</pre>
+
+<h2 id="dragstart" name="dragstart">开始一个拖动操作</h2>
+
+<p>在这个例子中，通过使用 <code>{{domxref("GlobalEventHandlers.ondragstart","ondragstart")}}</code> 属性，为 {{event("dragstart")}} 事件添加侦听器。</p>
+
+<pre class="brush: html">&lt;div draggable="true" ondragstart="event.dataTransfer.setData('text/plain', 'This text may be dragged')"&gt;
+  This text &lt;strong&gt;may&lt;/strong&gt; be dragged.
+&lt;/div&gt;
+</pre>
+
+<p>当用户开始拖动时，会触发 {{event("dragstart")}} 事件。在这个例子中，{{event("dragstart")}} 事件监听器被添加到可拖动元素本身；然而，你可以监听一个更高父元素，就像大多数其他事件一样，拖拽事件会冒泡。在{{event("dragstart")}} 事件中，你可以指定要拖动的数据、反馈图像和拖动效果，所有这些都将在下面描述。不过，我们只需要设置拖动数据，因为在很多情况下默认的图像和拖动效果都是适用的。</p>
+
+<h2 id="dragdata" name="dragdata">拖动数据</h2>
+
+<p>所有{{domxref("DragEvent","拖拽事件")}}都有一个名为 {{domxref("DragEvent.dataTransfer","dataTransfer")}} 的属性，它持有拖曳数据（dataTransfer 是一个 {{domxref("DataTransfer")}} 对象）。</p>
+
+<p>当发生拖拽时，数据必须与被拖拽的项目相关联。例如，当在文本框中拖动选定的文本时，与拖动数据项相关联的数据就是文本本身。类似地，当在 Web 页面上拖动链接时，拖动数据项就是链接的 URL 。</p>
+
+<p>{{domxref("DataTransfer","拖拽数据")}} 包含两个信息，数据的类型（或格式）和数据值。格式是一个类型字符串（例如文本数据格式是 <a href="/en-US/docs/DragDrop/Recommended_Drag_Types#text" title="text/plain">text/plain</a>），值是一串文本。在拖放过程中，在<code>{{event("dragenter")}}</code> 和 <code>{{event("dragover")}}</code> 事件监听器中，你使用被拖动的数据的数据类型来检查是否允许 drop 。例如，接受链接的 drop 目标将检查链接类型 <a href="/en-US/docs/DragDrop/Recommended_Drag_Types#link" title="text/uri-list">text/uri-list</a>。在 drop 事件中，侦听器将检索被拖动的数据，并将其插入到 drop 位置。 {{domxref("DataTransfer","拖动数据")}} 的 {{domxref("DataTransfer.types","类型")}} 属性返回一个类似 {{domxref("DOMString")}}s 的 MIME-type 的列表，如 <a href="/en-US/docs/DragDrop/Recommended_Drag_Types#text" title="text/plain">text/plain</a> 或 <a href="/en-US/docs/DragDrop/Recommended_Drag_Types#image" title="image/jpeg">image/jpeg</a>。您还可以创建自己的类型。最常用的类型列在 <a href="/en-US/docs/DragDrop/Recommended_Drag_Types" title="/en-US/docs/DragDrop/Recommended_Drag_Types">Recommended Drag Types</a> 中。</p>
+
+<p>一个拖拽可能包括几个不同类型的数据项。这使得数据可以以更具体的类型提供，通常是自定义类型，但仍然为不支持更具体类型的 drop 目标提供回退数据。通常情况下，最不特定的类型将是使用 <a href="/en-US/docs/DragDrop/Recommended_Drag_Types#text" title="text/plain">text/plain</a> 类型的普通文本数据。这些数据将是一个简单的文本表示。</p>
+
+<p>要在 {{domxref("DragEvent.dataTransfer","dataTransfer")}} 中设置拖曳数据项，请使用{{domxref("DataTransfer.setData","setData()")}}方法。它需要两个参数，即数据类型和数据值。例如：</p>
+
+<pre class="brush: js">event.dataTransfer.setData("text/plain", "Text to drag");
+</pre>
+
+<p>在这个例子中，数据值是 “Text to drag”，数据类型是 <a href="/en-US/docs/DragDrop/Recommended_Drag_Types#text" title="text/plain">text/plain</a> 格式。</p>
+
+<p>您可以以多种格式提供数据。要做到这一点，可以用不同的格式多次调用 {{domxref("DataTransfer.setData","setData()")}} 方法。你应该用最具体的格式来调用它。</p>
+
+<pre class="brush: js">var dt = event.dataTransfer;
+dt.setData("application/x-bookmark", bookmarkString);
+dt.setData("text/uri-list", "http://www.mozilla.org");
+dt.setData("text/plain", "http://www.mozilla.org");
+</pre>
+
+<p>在这里，数据被添加到三种不同的类型中。第一个类型 “application/x-bookmark” 是一种自定义类型。你可以在同一站点或应用程序之间使用自定义类型。通过提供其他类型的数据，我们还可以以不太具体的形式支持拖拽到其他应用程序。“application/x-bookmark” 类型可以提供更多的数据，以便在应用程序中使用，而另两个类型只包含一个URL 或 文本。</p>
+
+<p>注意， <a href="/en-US/docs/DragDrop/Recommended_Drag_Types#link" title="text/uri-list">text/uri-list</a> 和<a href="/en-US/docs/DragDrop/Recommended_Drag_Types#text" title="text/plain">text/plain</a> 都在本例中包含相同的数据。这通常是正确的，但大多数情况下我们不必如此。</p>
+
+<p>如果您试图以相同的格式添加两次数据，那么新的数据将替换旧的数据。你可以使用 {{domxref("DataTransfer.clearData","clearData()")}} 方法清除这些数据，该方法接受一个参数，即要删除的数据类型。</p>
+
+<pre class="brush: js">event.dataTransfer.clearData("text/uri-list");
+</pre>
+
+<p>{{domxref("DataTransfer.clearData","clearData()")}} 方法的类型参数是可选的。如果没有指定类型，则所有类型相关联的数据将被删除。如果拖拽不包含拖动数据项，或者所有的数据项都被清除，那么就不会出现拖拽行为。</p>
+
+<h2 id="dragfeedback" name="dragfeedback">设置拖动反馈图像</h2>
+
+<p>当一个拖动发生时，一个半透明的图像是由拖拽目标生成的（"{{event("dragstart")}}" 事件被触发的元素），并在拖动过程中跟踪鼠标指针。这个映像是自动创建的，所以你不需要自己创建它。但是，您仍然可以使用 {{domxref("DataTransfer.setDragImage","setDragImage()")}} 方法来自定义拖动反馈图像。</p>
+
+<pre class="brush: js">event.dataTransfer.setDragImage(image, xOffset, yOffset);
+</pre>
+
+<p>三个参数是必要的。第一个是对图像的引用。这个引用通常是一个图像元素，但它也可以是画布（canvas）或任何其他元素。反馈图像将简单地从屏幕上生成，尽管对于图像，它们将以原始的大小绘制。{{domxref("DataTransfer.setDragImage","setDragImage()")}} 方法的第二和第三个参数是图像应该相对于鼠标指针出现位置的偏移量。</p>
+
+<p>也可以使用不在文档中的图像和画布。这种技术在使用 canvas 元素绘制定制的拖动反馈图像时非常有用，如下面的例子：</p>
+
+<pre class="brush: js">function dragWithCustomImage(event) {
+  var canvas = document.createElementNS("http://www.w3.org/1999/xhtml","canvas");
+  canvas.width = canvas.height = 50;
+
+  var ctx = canvas.getContext("2d");
+  ctx.lineWidth = 4;
+  ctx.moveTo(0, 0);
+  ctx.lineTo(50, 50);
+  ctx.moveTo(0, 50);
+  ctx.lineTo(50, 0);
+  ctx.stroke();
+
+  var dt = event.dataTransfer;
+  dt.setData('text/plain', 'Data to Drag');
+  dt.setDragImage(canvas, 25, 25);
+}
+</pre>
+
+<p>在这个例子中，我们做了一个是画布的拖动图像。当画布宽50像素，高50像素时，我们使用一半的偏移量（25和25），这样图像就会以鼠标指针为中心。</p>
+
+<p>{{h2_gecko_minversion("使用XUL面板作为拖动图像", "9.0")}}</p>
+
+<p>对于Gecko开发人员（无论你是在做一个附加组件还是Mozilla应用程序代码），{{geckoRelease("9.0")}} 增加了对使用XUL {{XULElem("panel")}} 元素作为拖曳反馈图像的支持。简单地将 {{XULElem("panel")}} 元素传递给{{domxref("DataTransfer.setDragImage","setDragImage()")}} 方法。</p>
+
+<p>考虑这个 XUL {{XULElem("panel")}}:</p>
+
+<pre class="brush: xml">&lt;<span class="start-tag">panel</span><span class="attribute-name"> id</span>=<span class="attribute-value">"panel" </span><span class="attribute-name">style</span>=<span class="attribute-value">"opacity: 0.6</span><span class="attribute-value">"</span>&gt;
+  &lt;<span class="start-tag">description</span><span class="attribute-name"> id</span>=<span class="attribute-value">"pb"</span>&gt;Drag Me&lt;/<span class="end-tag">description</span>&gt;
+&lt;/<span class="end-tag">panel</span>&gt;
+
+&lt;<span class="start-tag">vbox</span><span class="attribute-name"> align</span>=<span class="attribute-value">"start" </span><span class="attribute-name">style</span>=<span class="attribute-value">"border: 1px solid black;" </span><span class="attribute-name">ondragstart</span>=<span class="attribute-value">"startDrag(event)"</span>&gt;
+  &lt;<span class="start-tag">description</span>&gt;Drag Me&lt;/<span class="end-tag">description</span>&gt;
+&lt;/<span class="end-tag">vbox</span>&gt;
+</pre>
+
+<p>当用户从上面的 {{XULElem("vbox")}} 中单击并拖动时，会调用下面的 <code>startDrag()</code> 函数：</p>
+
+<pre class="brush: js"><span class="cdata">function startDrag(event) {
+  event.dataTransfer.setData("text/plain", "&lt;strong&gt;Body&lt;/strong&gt;");
+  event.dataTransfer.setDragImage(document.getElementById("panel"), 20, 20);
+}</span>
+</pre>
+
+<p>这将使用面板作为拖动图像，以HTML格式的字符串"<strong>Body</strong>"作为其数据。将面板拖放入文本编辑器中时，则文本 “<strong>Body</strong>” 将会被插入到 drop 位置的文本中。</p>
+
+<h2 id="drageffects" name="drageffects">拖动效果</h2>
+
+<p>当拖动时，可能会执行一些操作。 <code>copy</code> 操作用来指示被拖动的数据将从当前位置复制到 drop 位置。 <code>move</code> 操作指示被拖动的数据会被移动，<code>link</code> 操作是用来表示在源和 drop 位置之间将会创建某种形式的关系或连接。</p>
+
+<p>您可以通过在<code>{{event("dragstart")}}</code>事件监听器中设置 {{domxref("DataTransfer.effectAllowed","effectAllowed")}}  属性来指定被允许的操作。</p>
+
+<pre class="brush: js">event.dataTransfer.effectAllowed = "copy";
+</pre>
+
+<p>在这个例子中，只允许复制操作。您可以以不同的方式组合这些值：</p>
+
+<dl>
+ <dt>none</dt>
+ <dd>不允许操作</dd>
+ <dt>copy</dt>
+ <dd>复制</dd>
+ <dt>move</dt>
+ <dd>移动</dd>
+ <dt>link</dt>
+ <dd>链接</dd>
+ <dt>copyMove</dt>
+ <dd>复制或移动</dd>
+ <dt>copyLink</dt>
+ <dd>复制或链接</dd>
+ <dt>linkMove</dt>
+ <dd>链接或移动</dd>
+ <dt>all</dt>
+ <dd>复制、移动或链接</dd>
+</dl>
+
+<p>注意，这些值必须像上面列出的那样使用。例如，将 {{domxref("DataTransfer.effectAllowed","effectAllowed")}} 属性设置为copyMove 允许复制或移动操作，但阻止用户执行链接操作。默认是允许以上所有的操作（all），所以你不需要调整这个属性除非你想要排除某个特定操作。</p>
+
+<p>在拖动操作期间，事件的侦听器<code>{{event("dragenter")}}</code> 或 <code>{{event("dragover")}}</code> 事件可以检查 {{domxref("DataTransfer.effectAllowed","effectAllowed")}}  属性，以查看哪些操作是允许的。</p>
+
+<p>相关的 {{domxref("DataTransfer.dropEffect","dropEffect")}} 属性应该在其中的一个事件中设置，来指定应该执行哪一个单项操作。{{domxref("DataTransfer.dropEffect","dropEffect")}} 是 <code>none</code>, <code>copy</code>, <code>move</code>, 或 <code>link</code>。这个属性没有使用组合值。</p>
+
+<p>通过 <code>{{event("dragenter")}}</code> 和 <code>{{event("dragover")}}</code> 事件，{{domxref("DataTransfer.dropEffect","dropEffect")}} 属性被初始化为用户请求的效果。用户可以通过按下修改器键来修改所期望的效果。尽管使用的确切键不同于平台，但通常情况下，Shift 和 Control 键会被用于在复制、移动和链接之间切换。鼠标指针将会改变，以指示需要的操作；例如，对于一个"复制"，光标可能会在旁边出现加号。</p>
+
+<p>你可以在 <code>{{event("dragenter")}}</code> 或 <code>{{event("dragover")}}</code> 事件期间修改 {{domxref("DataTransfer.dropEffect","dropEffect")}} 属性，例如，一个特定的 drop 目标只支持某些操作。你可以修改 {{domxref("DataTransfer.dropEffect","dropEffect")}} 属性来覆盖用户效果，并强制执行一个特定的 drop 操作。 注意，这个效果必须是 {{domxref("DataTransfer.effectAllowed","effectAllowed")}} 属性中的一个。否则，它将被设置为允许的替代值。</p>
+
+<pre class="brush: js">event.dataTransfer.dropEffect = "copy";
+</pre>
+
+<p>在这个例子中，复制是执行的效果。</p>
+
+<p>你可以使用 <code>none</code> 表示在这个位置不允许任何 drop ，尽管在这种情况下，最好不要取消事件。</p>
+
+<p>在 <code>{{event("drop")}}</code> 和 <code>{{event("dragend")}}</code> 事件中，你可以检查 {{domxref("DataTransfer.dropEffect","dropEffect")}} 属性，以确定最终选择了哪种效果。如果所选的效果是 "move"，那么源数据应该从 <code>{{event("dragend")}}</code> 事件的拖动的源中删除。</p>
+
+<h2 id="droptargets" name="droptargets">指定放置目标</h2>
+
+<p>事件的侦听器 <code>{{event("dragenter")}}</code> 或 <code>{{event("dragover")}}</code> 事件被用来表示有效的 drop 目标，也就是拖放项目可能被 dropped 的地方。web页面或应用程序的大多数区域都不是 drop 数据的有效位置。因此，这些事件的默认处理是不允许出现 drop。</p>
+
+<p>如果您想要允许 drop，您必须通过取消事件来防止默认的处理。您可以通过从attribute-defined 事件监听器返回 <code>false</code>，或者通过调用事件的 {{domxref("Event.preventDefault","preventDefault()")}} 方法来实现这一点。后者在一个单独的脚本中定义的函数中可能更可行。</p>
+
+<pre class="brush: html">&lt;div ondragover="return false"&gt;
+&lt;div ondragover="event.preventDefault()"&gt;
+</pre>
+
+<p>在 <code>{{event("dragenter")}}</code> 和 <code>{{event("dragover")}}</code> 事件中调用  {{domxref("Event.preventDefault","preventDefault()")}} 方法将表明在该位置允许 drop 。但是，你通常希望只在某些情况下调用 {{domxref("Event.preventDefault","preventDefault()")}} 方法，例如，只有当一个链接被拖动时才会调用。要做到这一点，调用一个检查条件的函数，并且只有在满足条件时才取消事件。如果条件未满足，则不要取消该事件，如果用户释放鼠标按钮，则不会出现 drop。</p>
+
+<p>最常见的是接受或拒绝基于数据传输中的拖动数据类型的drop——例如，允许图像或链接，或者两者都有。要做到这一点，您可以检查{{domxref("DragEvent.dataTransfer","dataTransfer")}} 属性的{{domxref("DataTransfer.types","types")}}属性。{{domxref("DataTransfer.types","types")}} 属性返回一个字符串类型的数组，这些字符串类型是在拖动开始时添加的，顺序从最重要到最不重要。</p>
+
+<pre class="brush: js">function contains(list, value) {
+    for( var i = 0; i &lt; list.length; ++i ) {
+        if(list[i] === value) return true;
+    }
+    return false;
+}
+
+function doDragOver(event) {
+  var isLink = contains( event.dataTransfer.types, "text/uri-list");
+  if (isLink) {
+    event.preventDefault();
+  }
+}</pre>
+
+<p>在本例中，我们使用 <code>contains</code> 方法来检查类型列表中的 <a href="/en-US/docs/DragDrop/Recommended_Drag_Types#link" title="text/uri-list">text/uri-list</a> 是否出现在类型列表中。如果是的话，我们将取消这个活动，以便允许一个 drop。如果拖动数据不包含链接，事件将不会被取消，并且在该位置不会发生 drop。</p>
+
+<p>如果你希望对将要执行的操作类型更加具体的话。你可能还希望设置 {{domxref("DataTransfer.effectAllowed","effectAllowed")}} 、{{domxref("DataTransfer.dropEffect","dropEffect")}} 属性，或者同时。当然，如果你不取消这个事件，改变任何一个属性都不会有任何效果。</p>
+
+<h3 id="更新DataTransfer.types">更新DataTransfer.types</h3>
+
+<p>最新的规范现在规定 {{domxref("DataTransfer.types")}}  应该返回一个冻结的 {{domxref("DOMString")}}s，而不是 {{domxref("DOMStringList")}}（这在Firefox 52和更高版本中得到了支持）。</p>
+
+<p>因此，<a href="/en-US/docs/Web/API/Node/contains">contains</a> 方法不再适用于该属性；应该使用 <a href="/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/includes">includes</a> 方法来检查是否提供了特定类型的数据，使用如下代码：</p>
+
+<pre class="brush: js">if ([...event.dataTransfer.types].includes('text/html')) {
+  // Do something
+}</pre>
+
+<p>您总是可以使用一些特性检测来确定哪种方法在 <code>types</code> 上是受支持的，并在适当的时候运行代码。</p>
+
+<h2 id="dropfeedback" name="dropfeedback">放置反馈</h2>
+
+<p>有几种方法可以向用户表明在某个位置允许 drop。根据dropEffect属性的值，鼠标指针将根据 {{domxref("DataTransfer.dropEffect","dropEffect")}}  属性的值做必要的更新。尽管具体的外观取决于用户的平台，但典型的加号图标会出现在 'copy' 中，而 'cannot drop here' 的图标会出现在不允许的情况下。在许多情况下，鼠标指针反馈就足够了。</p>
+
+<p>但是，您还可以根据需要更新用户界面，并添加一个插入点或高亮显示。对于简单的突出显示，您可以在 drop 目标上使用 <code>-moz-drag-over</code> CSS伪类。</p>
+
+<pre class="brush: css">.droparea:-moz-drag-over {
+  border: 1px solid black;
+}
+</pre>
+
+<p>在这个例子中，带有 <code>droparea</code> 类的元素将收到一个1像素的黑色边框，而它是一个有效的 drop 目标，也就是说，如果在 <code>{{event("dragenter")}}</code> 事件中调用 {{domxref("Event.preventDefault","preventDefault()")}}  方法。 请注意，您必须取消这个伪类的 <code>{{event("dragenter")}}</code>事件，因为这个状态没有被检入 <code>{{event("dragover")}}</code> 事件。</p>
+
+<p>For more complex visual effects, you can also perform other operations during the <code>{{event("dragenter")}}</code> event, for example, by inserting an element at the location where the drop will occur. For example, this might be an insertion marker or an element that represents the dragged element in its new location. To do this, you could create an <a href="/en-US/docs/XUL/image" title="image">image</a> or <a href="/en-US/docs/XUL/separator" title="separator">separator</a> element, for example, and simply insert it into the document during the <code>{{event("dragenter")}}</code> event.</p>
+
+<p>The <code>{{event("dragover")}}</code> event will fire at the element the mouse is pointing at. Naturally, you may need to move the insertion marker around a <code>{{event("dragover")}}</code> event as well. You can use the event's {{domxref("MouseEvent.clientX","clientX")}} and {{domxref("MouseEvent.clientY","clientY")}} properties as with other mouse events to determine the location of the mouse pointer.</p>
+
+<p>Finally, the <code>{{event("dragleave")}}</code> event will fire at an element when the drag leaves the element. This is the time when you should remove any insertion markers or highlighting. You do not need to cancel this event. Any highlighting or other visual effects specified using the <code>-moz-drag-over</code> pseudoclass will be removed automatically. The <code>{{event("dragleave")}}</code> event will always fire, even if the drag is cancelled, so you can always ensure that any insertion point cleanup can be done during this event.</p>
+
+<h2 id="drop" name="drop">执行一个放置</h2>
+
+<p>When the user releases the mouse, the drag and drop operation ends. If the mouse was released over an element that is a valid drop target, that is, one that cancelled the last <code>{{event("dragenter")}}</code> or <code>{{event("dragover")}}</code> event, and then the drop will be successful, and a <code>{{event("drop")}}</code> event will fire at the target. Otherwise, the drag operation is cancelled, and no <code>{{event("drop")}}</code> event is fired.</p>
+
+<p>During the <code>{{event("drop")}}</code> event, you should retrieve that data that was dropped from the event and insert it at the drop location. You can use the {{domxref("DataTransfer.dropEffect","dropEffect")}} property to determine which drag operation was desired.</p>
+
+<p>As with all drag-related events, the event's <code>domxref("DragEvent.dataTransfer","dataTransfer")}}</code> property will hold the data that is being dragged. The {{domxref("DataTransfer.getData","getData()")}} method may be used to retrieve the data again.</p>
+
+<pre class="brush: js">function onDrop(event) {
+  var data = event.dataTransfer.getData("text/plain");
+  event.target.textContent = data;
+  event.preventDefault();
+}
+</pre>
+
+<p>The {{domxref("DataTransfer.getData","getData()")}} method takes one argument, the type of data to retrieve. It will return the string value that was set when {{domxref("DataTransfer.setData","setData()")}} was called at the beginning of the drag operation. An empty string will be returned if data of that type does not exist. Naturally, though, you would likely know that the right type of data was available, as it was previously checked during a <code>{{event("dragover")}}</code> event.</p>
+
+<p>In the example here, once we have retrieved the data, we insert the string as the textual content of the target. This has the effect of inserting the dragged text where it was dropped, assuming that the drop target is an area of text such as a <code>p</code> or <code>div</code> element.</p>
+
+<p>In a web page, you should call the {{domxref("Event.preventDefault","preventDefault()")}} method of the event if you have accepted the drop so that the default browser handling does not handle the dropped data as well. For example, when a link is dragged to a web page, Firefox will open the link. By cancelling the event, this behavior will be prevented.</p>
+
+<p>You can retrieve other types of data as well. If the data is a link, it should have the type <a href="/en-US/docs/DragDrop/Recommended_Drag_Types#link" title="text/uri-list">text/uri-list</a>. You could then insert a link into the content.</p>
+
+<pre class="brush: js">function doDrop(event) {
+  var lines = event.dataTransfer.getData("text/uri-list").split("\n");
+  for (let line of lines) {
+    if (line.startsWith("#"))
+      continue;
+
+    let link = document.createElement("a");
+    link.href = line;
+    link.textContent = line;
+    event.target.appendChild(link);
+  }
+  event.preventDefault();
+}
+</pre>
+
+<p>This example inserts a link from the dragged data. As you might be able to guess from the name, the <a href="/en-US/docs/DragDrop/Recommended_Drag_Types#link" title="text/uri-list">text/uri-list</a> type actually may contain a list of URLs, each on a separate line. In this code, we use the <a href="/en-US/docs/JavaScript/Reference/Global_Objects/String/split" title="split">split</a> to split the string into lines, then iterate over the list of lines, inserting each as a link into the document. Note also that we skip links starting with a number sign (#) as these are comments.</p>
+
+<p>For simple cases, you can use the special type <code>URL</code> just to retrieve the first valid URL in the list. For example:</p>
+
+<pre class="brush: js">var link = event.dataTransfer.getData("URL");
+</pre>
+
+<p>This eliminates the need to check for comments or iterate through lines yourself; however, it is limited to only the first URL in the list.</p>
+
+<p>The <code>URL</code> type is a special type used only as a shorthand, and it does not appear within the list of types specified in the {{domxref("DataTransfer.types","types")}} property.</p>
+
+<p>Sometimes you may support some different formats, and you want to retrieve the data that is most specific that is supported. In this example, three formats are supported by a drop target.</p>
+
+<p>The following example returns the data associated with the best-supported format:</p>
+
+<pre class="brush: js">function doDrop(event) {
+  var types = event.dataTransfer.types;
+  var supportedTypes = ["application/x-moz-file", "text/uri-list", "text/plain"];
+  types = supportedTypes.filter((value) =&gt; types.includes(value));
+  if (types.length)
+    var data = event.dataTransfer.getData(types[0]);
+  event.preventDefault();
+}
+</pre>
+
+<p>This method relies on JavaScript functionality available in Firefox 3. However, the code could be adjusted to support other platforms.</p>
+
+<h2 id="dragend" name="dragend">完成一个拖动</h2>
+
+<p>Once the drag is complete, a <code>{{event("dragend")}}</code> event is fired at the source of the drag (the same element that received the <code>{{event("dragstart")}}</code> event). This event will fire if the drag was successful[1] or if it was cancelled. However, you can use the {{domxref("DataTransfer.dropEffect","dropEffect")}} property to determine what drop operation occurred.</p>
+
+<p>If the {{domxref("DataTransfer.dropEffect","dropEffect")}} property has the value <code>none</code> during a <code>{{event("dragend")}}</code>, then the drag was cancelled. Otherwise, the effect specifies which operation was performed. The source can use this information after a move operation to remove the dragged item from the old location. The {{domxref("DataTransfer.mozUserCancelled","mozUserCancelled")}} property will be set to true if the user cancelled the drag (by pressing Escape), and false if the drag was cancelled for other reasons such as an invalid drop target, or if it was successful.</p>
+
+<p>A drop can occur inside the same window or over another application. The <code>{{event("dragend")}}</code> event will always fire regardless. The event's {{domxref("MouseEvent.screenX","screenX")}} and {{domxref("MouseEvent.screenY","screenY")}} properties will be set to the screen coordinate where the drop occurred.</p>
+
+<p>After the <code>{{event("dragend")}}</code> event has finished propagating, the drag and drop operation is complete.</p>
+
+<p>[1] In Gecko, {{event("dragend")}} is not dispatched if the source node is moved or removed during the drag (e.g. on drop or {{event("dragover")}}).  <a class="external" href="https://bugzilla.mozilla.org/show_bug.cgi?id=460801" title="New D&amp;D API: dragend is not dispatched if the source node was moved or removed during the drag session">bug 460801</a></p>
+
+<h2 id="See_also" name="See_also">也可以看看</h2>
+
+<ul>
+ <li><a class="internal" href="/Web/API/HTML_Drag_and_Drop_API" title="HTML Drag and Drop API">HTML Drag and Drop API (Overview)</a></li>
+ <li><a class="internal" href="/Web/Guide/HTML/Dragging_and_Dropping_Multiple_Items" title="Dragging and Dropping Multiple Items">Dragging and Dropping Multiple Items</a></li>
+ <li><a class="internal" href="/Web/Guide/HTML/Recommended_Drag_Types" title="Recommended Drag Types">Recommended Drag Types</a></li>
+ <li><a href="https://html.spec.whatwg.org/multipage/interaction.html#dnd" title="Drag and Drop Standard">HTML5 Living Standard: Drag and Drop</a></li>
+</ul>

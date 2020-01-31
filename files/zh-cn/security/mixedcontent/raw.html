@@ -1,0 +1,39 @@
+<p>当用户访问使用HTTPS的页面时，他们与web服务器之间的连接是使用SSL加密的，从而保护连接不受嗅探器和中间人攻击。</p>
+<p>如果HTTPS页面包括由普通明文HTTP连接加密的内容，那么连接只是被部分加密：非加密的内容可以被嗅探者入侵，并且可以被中间人攻击者修改，因此连接不再受到保护。当一个网页出现这种情况时，它被称为混合内容页面。</p>
+<h2 id="Web_控制台">Web 控制台</h2>
+<p>从Firefox 16起，当你的网站上的网页出现这种问题时，Web控制台将会显示混合内容警告消息。通过HTTP加载的混合内容资源将会用红色字体显示，同时用“混合内容”标明哪些资源将要链接到这个页面。</p>
+<p><a class="internal" href="/files/3794/mixed_content_webconsole.jpg"><img alt="Screen shot of the web console displaying a mixed content warning." src="/files/3794/mixed_content_webconsole.jpg" style="width: 700px; border-width: 1px; border-style: solid; height: 116px;"></a></p>
+<p>要修复这个错误，则应删除由HTTP请求的内容，而由HTTPS代替它。一些常见的混合内容的例子包括JavaScript文件、样式表、图像、视频和其他媒体。</p>
+<p>从Firefox 23开始，混合活动内容是被默认阻塞的（并且混合显示内容可以在偏好设置里被阻塞）。为了让web开发人员更容易找到混合内容错误，所有被阻塞的混合内容请求都被记录到了web控制台的安全窗格。</p>
+<p><a href="/files/5261/blocked-mixed-content-errors.png"><img alt="A screenshot of blocked mixed content errors in the Security Pane of the Web Console" src="https://mdn.mozillademos.org/files/5261/blocked-mixed-content-errors.png" style="width: 725px; height: 107px;"></a></p>
+<h2 id="混合内容的类型">混合内容的类型</h2>
+<p>主要有两种类型的混合内容：<u><strong>混合被动/显示内容</strong></u>和<u><strong>混合活动内容</strong></u>。区别在于最坏情况的危险级别，假如内容重写是中间人攻击的一部分。在被动内容的情况下，威胁很低(网页可能出现损坏或误导性的内容)。在活动内容的情况下，威胁会导致网络钓鱼、敏感数据披露,重定向到恶意网站，等等。</p>
+<h3 id="混合被动显示内容">混合被动/显示内容</h3>
+<p>混合的被动/显示内容是：使用HTTP的内容包含在一个HTTPS页面内，但它不能改变网页的其他部分。例如，攻击者可以用一个不适当的图像或消息替换网页中一个使用HTTP的图像。攻击者也可以通过提供给用户的图像推断出用户的活动状况；某些图像往往只会在一个网站的一个特定页面上。如果攻击者观察到用户以HTTP请求这些图像，他就可以确定用户正在访问哪些网页。</p>
+<h4 id="被动内容列表">被动内容列表</h4>
+<p>本节列出了所有类型的HTTP请求被认为是被动的内容:</p>
+<ul>
+ <li><a href="/en-US/docs/Web/HTML/Element/audio" title="/en-US/docs/Web/HTML/Element/audio">&lt;audio&gt;</a> (<code>src</code> attribute)</li>
+ <li><a href="/en-US/docs/Web/HTML/Element/Img" title="/en-US/docs/Web/HTML/Element/Img">&lt;img&gt;</a> (<code>src</code> attribute)</li>
+ <li><a href="/en-US/docs/Web/HTML/Element/video" title="/en-US/docs/Web/HTML/Element/Img">&lt;video&gt;</a> (<code>src</code> attribute)</li>
+ <li><a href="/en-US/docs/Web/HTML/Element/object" title="/en-US/docs/Web/HTML/Element/object">&lt;object&gt;</a> subresources (when an &lt;object&gt; performs HTTP requests)</li>
+</ul>
+<h3 id="混合活动内容">混合活动内容</h3>
+<p>混合活动内容是：访问全部或部分HTTPS页面文档对象模型的内容。这种类型的混合内容可以改变HTTPS页面的行为并可能向用户窃取敏感数据。因此,除了上述混合显示内容所描述的风险,混合活动内容还很容易受到其他一些攻击向量的攻击。</p>
+<p>在混合活动内容情况下,中间人攻击者可以拦截HTTP请求的内容。攻击者也可以重写响应来包含恶意的JavaScript代码。恶意的活动内容可以窃取用户的凭据,获得关于用户的敏感数据，甚至在用户的系统上安装恶意软件（例如，通过浏览器漏洞或插件）。</p>
+<p>混合内容的风险取决于用户访问网站的类型和网站数据暴漏的的敏感程度。网页可能有公共访问数据或需有通过身份验证的私有数据。如果网页是公开的并且没有关于用户的敏感数据，使用混合活动内容仍可能为攻击者提供将用户重定向到其他HTTP页面并从那些网站上窃取HTTP cookie的机会。</p>
+<h4 id="活动内容列表">活动内容列表</h4>
+<p>本节列出了一些类型的被认为是活动内容的HTTP请求：</p>
+<ul>
+ <li><a href="/en-US/docs/Web/HTML/Element/script" title="/en-US/docs/Web/HTML/Element/script">&lt;script&gt;</a> (<code>src</code> attribute)</li>
+ <li><a href="/en-US/docs/Web/HTML/Element/link" title="/en-US/docs/Web/HTML/Element/link">&lt;link&gt;</a> (<code>href</code> attribute) (this includes CSS stylesheets)</li>
+ <li><a href="/en-US/docs/Web/API/XMLHttpRequest" title="/en-US/docs/Web/API/XMLHttpRequest">XMLHttpRequest</a> object requests</li>
+ <li><a href="/en-US/docs/Web/HTML/Element/iframe" title="/en-US/docs/Web/HTML/Element/iframe">&lt;iframe&gt;</a> (<code>src</code> attributes)</li>
+ <li>All cases in CSS where a <a href="http://www.w3.org/TR/css3-values/#urls" title="http://www.w3.org/TR/css3-values/#urls">url</a> value is used (<a href="/en-US/docs/Web/CSS/@font-face" title="/en-US/docs/Web/CSS/@font-face">@font-face</a>, <a href="/en-US/docs/Web/CSS/cursor" title="/en-US/docs/Web/CSS/cursor">cursor</a>, <a href="/en-US/docs/Web/CSS/background-image" title="/en-US/docs/Web/CSS/background-image">background-image</a>, etc.)</li>
+ <li><a href="/en-US/docs/Web/HTML/Element/object" title="/en-US/docs/Web/HTML/Element/object">&lt;object&gt;</a> (<code>data</code> attribute)</li>
+</ul>
+<h2 id="另请参阅">另请参阅</h2>
+<div class="warning">
+ <p><a href="/en-US/docs/Security/MixedContent/fix_website_with_mixed_content">How to fix a website with blocked mixed content</a></p>
+</div>
+<p> </p>

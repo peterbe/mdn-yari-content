@@ -1,0 +1,109 @@
+<p>{{AddonSidebar}}</p>
+
+<p>拡張機能をテストする時、機能が拡張機能自身をリセットしたり、Firefox の再起動後に(再)読み込みすると動作が停止することがあるのに気づくでしょう。例えば、local storage を使っていて拡張機能を再起動すると以前の保存データが消えるのがわかります。あるいは、Firefox の再起動をまたいで拡張機能をテストしたいが、拡張機能がロードされないとわかることもあります。</p>
+
+<p>この記事ではこうしたふるまいがなぜ起きるのかを説明します。次に拡張機能が再読み込みされた時に機能を確実にするために何をすべきか、また再起動のふるまいのセットアップ方法を示します。</p>
+
+<p>Firefox がテストしている拡張機能をどう扱うのかを見る前に; Firefox と拡張機能について意識すべき機能がいくつかあります: アドオン ID と Firefox プロファイルです。</p>
+
+<h2 id="What_is_an_add-on_ID" name="What_is_an_add-on_ID">アドオン ID とは？</h2>
+
+<p>アドオン ID はそれぞれ拡張機能にユニークな ID として使われ、その次にその ID は拡張機能と WebExtension API の特定機能をリンクするのに使われます。この機能は次の通り:</p>
+
+<ul>
+ <li>{{WebExtAPIRef("storage.managed")}}—そのアドオン ID によってデータを拡張機能に属するものとして識別します</li>
+ <li>{{WebExtAPIRef("storage.sync")}}—そのアドオン ID によってデータを拡張機能に属するものとして識別します</li>
+ <li>{{WebExtAPIRef("identity.getRedirectURL")}}—リダイレクト URL には、内線番号のアドオン ID が含まれます</li>
+ <li><a href="https://developer.mozilla.org/ja/Add-ons/WebExtensions/Native_messaging">Native messaging</a>—ネイティブアプリはアドオン ID でそのアプリと通信できる拡張機能を識別します</li>
+ <li>{{WebExtAPIRef("pkcs11")}}—PKCS #11 モジュールはアドオン ID で通信できる拡張機能を識別します</li>
+ <li>{{WebExtAPIRef("runtime.onMessageExternal")}}—拡張機能はそのアドオン ID をアドレスとして別の拡張機能にメッセージを送信します</li>
+ <li>{{WebExtAPIRef("runtime.onConnectExternal")}}—拡張機能は、他の拡張機能のアドオン ID による拡張機能の接続を要求します</li>
+ <li>{{WebExtAPIRef("browserAction")}}—そのボタンの保存された位置は、そのアドオン ID に基づいて拡張機能に属するものとして識別されます</li>
+</ul>
+
+<p>拡張機能がアドオン ID を割り当てられるのに manifest.json ファイルの <code>"applications"</code> キーが使われます。</p>
+
+<pre class="brush: json">"applications": {
+  "gecko": {
+    "id": "addon@example.com"
+    }
+  }</pre>
+
+<p>拡張機能が <code>"applications"</code> キーで定義するアドオン ID を持たない場合、次のいずれかからアドオン ID を取得します:</p>
+
+<ul>
+ <li>拡張機能が AMO に提出され、署名されている場合は、署名されたときに ID が付与されます</li>
+ <li>拡張機能が about:debugging で Load Temporary Add-on を使用してロードされている場合、一時的なアドオン ID が割り当てられます<br>
+  <img alt="Example of a temporarily loaded extension showing its various IDs" src="https://mdn.mozillademos.org/files/15774/Temporary_extensions.png" style="height: 289px; width: 837px;"></li>
+</ul>
+
+<p>上記の画像には、内部 UUID の ID が追加されていることが分かります。これは、インストール時に拡張機能に与えられる固有の識別子です。これは、拡張機能に含まれるリソースの格納場所を定義し、<a href="/ja/docs/Web/API/Window/localStorage">window.localStorage</a> または <a href="/ja/docs/Web/API/IndexedDB_API">indexedDB</a> 内の拡張機能のデータを識別するために使用されます。しかし、その値を知る必要はありません。<code>window.localStorage</code> または <code>indexedDB</code> での使用は透過的で、拡張に含まれるリソースにアクセスするには、{{WebExtAPIRef("runtime.getURL")}} を使用します。これにより、リソースへのパスが返されます。また、インストールごとに固有のものであるため、他の目的に頼ることのできる ID を提供しません。</p>
+
+<h2 id="What_is_a_Firefox_profile" name="What_is_a_Firefox_profile">Firefox プロファイルとは？</h2>
+
+<p>ユーザーが Firefox をどのように設定したかを定義するデータと、履歴やクッキーなどの ウェブ を閲覧する際に生成される情報とともに、<a href="https://support.mozilla.org/ja/kb/profiles-where-firefox-stores-user-data">プロファイル</a>と呼ばれる特別なフォルダーに保存されます。cookie に加えて、プロファイルには、ローカルストレージおよびその他のプロファイル関連のコンテンツが保存されます。</p>
+
+<h2 id="Extension_behavior_in_Firefox" name="Extension_behavior_in_Firefox">Firefox の拡張機能</h2>
+
+<p>拡張機能を開発するときに、<code>"applications"</code> キーを使用してアドオン ID を定義していないと仮定すると、Firefox のデフォルトの動作は次のようになります。</p>
+
+<ul>
+ <li>about:debugging の Load Temporary Add-on 機能を使用すると、ロードするたびに拡張機能に新しいアドオン ID が割り当てられます</li>
+ <li>web-ext を使用する場合は、拡張機能を起動するたびに新しいアドオン ID を取得するだけでなく、新しいプロファイルにも起動されます</li>
+ <li>一時的な拡張機能がアンロードされたとき、<code>storage.local</code>, <code>window.localStorage</code>, <code>indexedDB</code>, などに使われるローカルストレージは削除されます。</li>
+ <li>Firefox を停止すると、一時的に読み込まれた拡張機能がアンロードされるので、Firefox を再起動すると利用できなくなります。これには、about:debugging の Load Temporary Add-on と web-ext でロードした拡張機能が含まれます</li>
+</ul>
+
+<p>拡張機能を再読み込みするときのこの動作の結果は次のとおりです。</p>
+
+<ul>
+ <li>ローカルや sync ストレージのあらゆるデータが失われる。</li>
+ <li>あらゆるリダイレクト URL が無効になる。</li>
+ <li>拡張機能はネイティブアプリや PKCS #11 モジュールと通信できなくなる。</li>
+ <li>拡張機能間でメッセージ送信やコネクション生成ができなくなる。</li>
+ <li>Firefox が停止して再起動した場合、拡張機能のテストはできない。</li>
+ <li><code>browserAction</code> の位置は持ち越されない。</li>
+</ul>
+
+<h2 id="What_do_I_do_to_ensure_I_can_test_my_extension" name="What_do_I_do_to_ensure_I_can_test_my_extension">拡張機能をテストできるようにするにはどうすればよいですか？</h2>
+
+<p>開発中のテストにて、拡張機能に署名付き拡張機能のふるまいをさせるには、下記のテクニックを使います:</p>
+
+<ul>
+ <li>例えばローカルストレージやネイティブアプリ通信などの、リロードごとに独立したアドオン ID を使えるようにします:
+  <ul>
+   <li>拡張機能の manifest.json の <code>"applications"</code> キーを用いてアドオン ID をセットする</li>
+   <li>web-ext を使うときは、同じプロファイルを使う</li>
+  </ul>
+ </li>
+ <li>web-ext を使って拡張機能の複数のテスト用に、同じプロファイルを使うには:
+  <ul>
+   <li>オプションで、新規Firefox プロファイルを作成するため <a href="https://support.mozilla.org/en-US/kb/profile-manager-create-and-remove-firefox-profiles">Profile Manager</a> を使う。</li>
+   <li><a href="https://support.mozilla.org/en-US/kb/profiles-where-firefox-stores-user-data#w_how-do-i-find-my-profile">How do I find my profile?</a> の手順に従って、新しいプロファイルのパスか、デフォルトの Firefox プロファイルのパスを見つける。</li>
+   <li><code>web-ext run</code> コマンドを使って Firefox プロファイルを追加する、やり方は次のように:<br>
+    <code>web-ext run --firefox-profile [A PATH TO A FIREFOX PROFILE] --keep-profile-changes</code></li>
+  </ul>
+ </li>
+ <li>一時アドオンを削除する(たとえばブラウザー再起動で)ときに、<code>storage.local</code> データを保存するには、<code>window.localStorage</code> か <code>indexedDB</code> データにアクセスする:
+  <ul>
+   <li>about:config に移動して <code>extensions.webextensions.keepStorageOnUninstall</code> と <code>extensions.webextensions.keepUuidOnUninstall</code> の両方を <code>true</code> にセットする</li>
+  </ul>
+ </li>
+ <li>再起動のふるまいをテストするには:
+  <ul>
+   <li>拡張機能の manifest.json の <code>"applications"</code> キーを用いてアドオン ID をセットする</li>
+   <li>Firefox の <a href="https://www.mozilla.org/firefox/nightly/all/">Nightly</a> か <a href="https://www.mozilla.org/firefox/developer/">Developer</a> エディションをインストールする。注意: <a href="https://wiki.mozilla.org/Add-ons/Extension_Signing#Unbranded_Builds">unbranded Beta and Release builds</a> も使える。</li>
+   <li>about:config に移動して <code>xpinstall.signatures.required</code> を <code>false</code> にセットする。</li>
+   <li><a href="https://developer.mozilla.org/ja/Add-ons/WebExtensions/web-ext_command_reference#web-ext_build">web-ext を使う</a>、または<a href="https://developer.mozilla.org/ja/Add-ons/WebExtensions/Publishing_your_WebExtension#1._Zip_up_your_extension's_files">手動で zip して</a>拡張機能を ZIP ファイルにする</li>
+   <li>アドオンマネージャー(about:addons)の Add-on From File を使って、拡張機能をインストールする。<br>
+    注意: 拡張機能を変更するたびに再起動する必要があります。<br>
+    注意: アドオン ID をセットしない場合、拡張機能を読み込んだときに次のようなエラーとなります:
+    <p><img alt="Example of the message displayed when an add-on ID cannot be found for an extension" src="https://mdn.mozillademos.org/files/15775/ID_failure.png" style="height: 163px; width: 429px;"></p>
+
+    <p>ブラウザーコンソールではそれに相当するエラーは次のものです。</p>
+
+    <p><img alt="Example of the message displayed in the browser console when an add-on ID cannot be found for an extension" src="https://mdn.mozillademos.org/files/15776/ID_failure_console.png" style="height: 116px; width: 1167px;"></p>
+   </li>
+  </ul>
+ </li>
+</ul>

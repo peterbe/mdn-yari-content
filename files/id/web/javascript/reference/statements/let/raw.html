@@ -1,0 +1,296 @@
+<div>{{jsSidebar("Statements")}}</div>
+
+<p>The <strong><code>let</code></strong> statement declares a block scope local variable, optionally initializing it to a value.</p>
+
+<h2 id="Syntax">Syntax</h2>
+
+<pre class="syntaxbox">let var1 [= value1] [, var2 [= value2]] [, ..., varN [= valueN]];</pre>
+
+<h3 id="Parameters">Parameters</h3>
+
+<dl>
+ <dt><code>var1</code>, <code>var2</code>, …, <code>varN</code></dt>
+ <dd>Variable name. It can be any legal identifier.</dd>
+ <dt><code>value1</code>, <code>value2</code>, …, <code>valueN</code></dt>
+ <dd>Initial value of the variable. It can be any legal expression.</dd>
+</dl>
+
+<h2 id="Description">Description</h2>
+
+<p><code>let</code> allows you to declare variables that are limited in scope to the block, statement, or expression on which it is used. This is unlike the <a href="/en-US/docs/JavaScript/Reference/Statements/var"><code>var</code></a> keyword, which defines a variable globally, or locally to an entire function regardless of block scope.</p>
+
+<p>An explanation of why the name "let" was chosen can be found <a href="https://stackoverflow.com/questions/37916940/js-why-let-have-this-name">here</a>.</p>
+
+<h3 id="Scoping_rules_2">Scoping rules</h3>
+
+<p>Variables declared by <code>let</code> have as their scope the block in which they are defined, as well as in any contained sub-blocks . In this way, <code>let</code> works very much like <code>var</code>. The main difference is that the scope of a <code>var</code> variable is the entire enclosing function:</p>
+
+<pre class="brush:js">function varTest() {
+  var x = 1;
+  if (true) {
+    var x = 2;  // same variable!
+    console.log(x);  // 2
+  }
+  console.log(x);  // 2
+}
+
+function letTest() {
+  let x = 1;
+  if (true) {
+    let x = 2;  // different variable
+    console.log(x);  // 2
+  }
+  console.log(x);  // 1
+}
+</pre>
+
+<h3 id="Cleaner_code_in_inner_functions">Cleaner code in inner functions</h3>
+
+<p><code>let</code> sometimes makes the code cleaner when inner functions are used.</p>
+
+<pre class="brush:js">var list = document.getElementById("list");
+
+for (let i = 1; i &lt;= 5; i++) {
+  let item = document.createElement("li");
+  item.appendChild(document.createTextNode("Item " + i));
+
+  item.onclick = function (ev) {
+    console.log("Item " + i + " is clicked.");
+  };
+  list.appendChild(item);
+}
+</pre>
+
+<p>The example above works as intended because the five instances of the (anonymous) inner function refer to five different instances of the variable <code>i</code>. Note that it does not work as intended if you replace <code>let</code> with <code>var</code>, since all of the inner functions would then return the same final value of <code>i</code>: 6. Also, we can keep the scope around the loop cleaner by moving the code that creates the new elements into the scope of each loop.</p>
+
+<p id="Scoping_rules">At the top level of programs and functions, <code>let</code>, unlike <code>var</code>, does not create a property on the global object. For example:</p>
+
+<pre class="brush:js">var x = 'global';
+let y = 'global';
+console.log(this.x); // "global"
+console.log(this.y); // undefined
+</pre>
+
+<h3 id="Emulating_private_members">Emulating private members</h3>
+
+<p>In dealing with <a href="/en-US/docs/Glossary/Constructor">constructors</a> it is possible to use the <code>let</code> statement to share one or more private members, through use of <a href="/en-US/docs/Web/JavaScript/Closures">closures</a>:</p>
+
+<pre class="brush:js">var SomeConstructor;
+
+{
+    let privateScope = {};
+
+    SomeConstructor = function SomeConstructor () {
+        this.someProperty = "foo";
+        privateScope.hiddenProperty = "bar";
+    }
+
+    SomeConstructor.prototype.showPublic = function () {
+        console.log(this.someProperty); // foo
+    }
+
+    SomeConstructor.prototype.showPrivate = function () {
+        console.log(privateScope.hiddenProperty); // bar
+    }
+
+}
+
+var myInstance = new SomeConstructor();
+
+myInstance.showPublic();
+myInstance.showPrivate();
+
+console.log(privateScope.hiddenProperty); // error</pre>
+
+<p>This technique only provides "static" private state - in the above example, all instances of <code>SomeConstructor</code> will share the same <code>privateScope</code>.</p>
+
+<h3 id="Temporal_dead_zone_and_errors_with_let">Temporal dead zone and errors with <code>let</code></h3>
+
+<p>Redeclaring the same variable within the same function or block scope raises a {{jsxref("SyntaxError")}}.</p>
+
+<pre class="brush: js">if (x) {
+  let foo;
+  let foo; // SyntaxError thrown.
+}</pre>
+
+<p>In ECMAScript 2015, <code>let</code> <strong>will hoist</strong> the variable to the top of the block. However, referencing the variable in the block before the variable declaration results in a <code><a href="/en-US/docs/JavaScript/Reference/Global_Objects/ReferenceError">ReferenceError</a></code>. The variable is in a "temporal dead zone" from the start of the block until the declaration is processed.</p>
+
+<pre class="brush: js">function do_something() {
+  console.log(foo); // ReferenceError
+  let foo = 2;
+}</pre>
+
+<p>You may encounter errors in <a href="/en-US/docs/JavaScript/Reference/Statements/switch"><code>switch</code></a> statements because there is only one underlying block.</p>
+
+<pre class="brush: js">switch (x) {
+  case 0:
+    let foo;
+    break;
+    
+  case 1:
+    let foo; // SyntaxError for redeclaration.
+    break;
+}</pre>
+
+<p>Using <code>let</code> with a variable name that is the same as a parameter passed to a function will result in <font face="Consolas, Liberation Mono, Courier, monospace">error </font>inside a <code>for</code> loop.</p>
+
+<pre class="brush: js example-bad">function go(n){
+  for (let n of n.a) { // TypeError: n is undefined
+    console.log(n);
+  }
+}
+
+go({a:[1,2,3]});
+</pre>
+
+<h2 id="Another_example">Another example</h2>
+
+<p>When used inside a block, <em>let</em> limits the variable's scope to that block. Note the difference between <em>var </em>whose scope is inside the function where it is declared.</p>
+
+<pre class="brush: js">var a = 1;
+var b = 2;
+
+if (a === 1) {
+  var a = 11; // the scope is global
+  let b = 22; // the scope is inside the if-block
+
+  console.log(a);  // 11
+  console.log(b);  // 22
+} 
+
+console.log(a); // 11
+console.log(b); // 2</pre>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-let-and-const-declarations', 'Let and Const Declarations')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td>Initial definition. Does not specify let expressions or let blocks.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-let-and-const-declarations', 'Let and Const Declarations')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<p>{{CompatibilityTable}}</p>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Edge</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatChrome(41.0)}}</td>
+   <td>12</td>
+   <td>{{ CompatGeckoDesktop(44) }}</td>
+   <td>11</td>
+   <td>17</td>
+   <td>{{CompatSafari(10.0)}}</td>
+  </tr>
+  <tr>
+   <td>Temporal dead zone</td>
+   <td>{{CompatUnknown}}</td>
+   <td>12</td>
+   <td>{{ CompatGeckoDesktop(35) }}</td>
+   <td>11</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td>Allowed in {{Glossary("sloppy mode")}}</td>
+   <td>{{CompatChrome(49.0)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatGeckoDesktop(44)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Android Webview</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+   <th>Chrome for Android</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatChrome(41.0)}}</td>
+   <td>{{ CompatGeckoMobile(44) }}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatSafari(10.0)}}</td>
+   <td>{{CompatChrome(41.0)}}</td>
+  </tr>
+  <tr>
+   <td>Temporal dead zone</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{ CompatGeckoMobile(35) }}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td>Allowed in {{Glossary("sloppy mode")}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatChrome(49.0)}}</td>
+   <td>{{CompatGeckoDesktop(44)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatChrome(49.0)}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="Firefox-specific_notes">Firefox-specific notes</h2>
+
+<ul>
+ <li>Prior to SpiderMonkey 46 {{geckoRelease(46)}}, a {{jsxref("TypeError")}} was thrown on redeclaration instead of a {{jsxref("SyntaxError")}} ({{bug(1198833)}}, {{bug(1275240)}}).</li>
+ <li>Prior to SpiderMonkey 44 {{geckoRelease(44)}}, <code>let</code> was only available to code blocks in HTML wrapped in a <code>&lt;script type="application/javascript;version=1.7"&gt;</code> block (or higher version) and had different semantics.</li>
+ <li>Support in {{domxref("Worker")}} code is hidden behind the <code>dom.workers.latestJSVersion</code> flag ({{bug(487070)}}). With version free <code>let</code>, this flag is going to be removed in the future ({{bug(1219523)}}).</li>
+</ul>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Web/JavaScript/Reference/Statements/var"><code>var</code></a></li>
+ <li><a href="/en-US/docs/Web/JavaScript/Reference/Statements/const"><code>const</code></a></li>
+ <li><a href="https://hacks.mozilla.org/2015/07/es6-in-depth-let-and-const/">ES6 In Depth: <code>let</code> and <code>const</code></a></li>
+ <li><a href="https://blog.mozilla.org/addons/2015/10/14/breaking-changes-let-const-firefox-nightly-44/">Breaking changes in <code>let</code> and <code>const</code> in Firefox 44</a></li>
+ <li><a href="https://github.com/getify/You-Dont-Know-JS/blob/master/scope%20%26%20closures/ch3.md">You Don't Know JS: Scope &amp; Closures: Chapter 3: Function vs. Block Scope</a></li>
+</ul>

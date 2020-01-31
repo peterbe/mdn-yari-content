@@ -1,0 +1,290 @@
+<h3 id="Introduction" name="Introduction"> Introduction </h3>
+<p>この文書では、強力で基本的な DOM レベル 1.0 のメソッドと、それを JavaScript からどのように使用するかざっと見ていきます。どのようにして HTML 要素を動的に生成、アクセス、制御、削除するかを学ぶことができます。ここで紹介する DOM メソッドは HTML に限ったものではなく、XML に対しても用いることができます。ここで用意しているデモは、Mozilla ブラウザ や他の Netscape の次世代 Navigator ブラウザ {{ 訳注("Netscape 6 のことを指しています") }} のような Mozilla ベースブラウザなど、DOM レベル 1 を完全にサポートするブラウザであればどれでも正常に動作します。この文書のコードサンプルは IE5 でも動作します {{ 訳注("現在では Opera や Safari なども含めほとんどのブラウザで DOM レベル 1 がサポートされています") }}。
+</p>
+<div class="note">ここで紹介する DOM メソッドは ドキュメントオブジェクトモデル (コア) レベル 1 仕様の一部に過ぎません。 DOM レベル 1 には HTML ドキュメント特有のメソッド (DOM 1 HTML) と共に、一般的なドキュメントアクセスと操作 (DOM 1 コア) のためのメソッドが含まれています。</div>
+<h3 id="Sample1.html_.E3.81.AE.E6.A6.82.E8.A6.81" name="Sample1.html_.E3.81.AE.E6.A6.82.E8.A6.81"> Sample1.html の概要 </h3>
+<p>この文書はサンプルコードを通して DOM を紹介するものです。始めに、以下の HTML サンプル (sample1.html) から見ていきましょう。 HTML の table を動的に生成するために JavaScript から DOM レベル 1 メソッドを使用しています。このサンプルでは、各セルの中にテキスト内容がある 4 つのセルからなる小さな表を作っています。セルのテキスト内容は当該セルの表中での行と列を示す "セルは y 行 x 列 です" というものです。
+</p>
+<pre>&lt;html&gt;
+&lt;head&gt;
+&lt;title&gt;サンプルコード - 基本的 DOM インターフェイスによる HTML 要素の動的操作法&lt;/title&gt;
+&lt;script&gt;
+    function start() {
+        // get the reference for the body
+        var body = document.getElementsByTagName("body")[0];
+
+        // creates a &lt;table&gt; element and a &lt;tbody&gt; element
+        var tbl     = document.createElement("table");
+        var tblBody = document.createElement("tbody");
+
+        // creating all cells
+        for (var j = 0; j &lt; 2; j++) {
+            // creates a table row
+            var row = document.createElement("tr");
+
+            for (var i = 0; i &lt; 2; i++) {
+                // Create a &lt;td&gt; element and a text node, make the text
+                // node the contents of the &lt;td&gt;, and put the &lt;td&gt; at
+                // the end of the table row
+                var cell = document.createElement("td");
+                var cellText = document.createTextNode("セルは "+j+" 行 "+i+" 列 です");
+                cell.appendChild(cellText);
+                row.appendChild(cell);
+            }
+
+            // add the row to the end of the table body
+            tblBody.appendChild(row);
+        }
+
+        // put the &lt;tbody&gt; in the &lt;table&gt;
+        tbl.appendChild(tblBody);
+        // appends &lt;table&gt; into &lt;body&gt;
+        body.appendChild(tbl);
+        // sets the border attribute of tbl to 2;
+        tbl.setAttribute("border", "2");
+    }
+&lt;/script&gt;
+&lt;/head&gt;
+&lt;body onload="start()"&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<p>要素とテキストノードを生成する順序を意識しながら確認していってください。
+</p>
+<ol><li> まず、&lt;table&gt; 要素を生成します。
+</li><li> 次に、&lt;table&gt; 要素の子供である &lt;tbody&gt; 要素を生成します。
+</li><li> 次に、&lt;tbody&gt; 要素の子供である &lt;tr&gt; 要素を生成するループを使用します。
+</li><li> 各 &lt;tr&gt; 要素に対して、その子供である &lt;td&gt; 要素を生成するループを使用します。
+</li><li> そして各 &lt;td&gt; 要素に対して、表中セルのテキストと共にテキストノードを生成します。
+</li></ol>
+<p>まずは &lt;table&gt;、&lt;tbody&gt;、&lt;tr&gt;、&lt;td&gt; 要素、さらにテキストノードを生成し、それから逆の順番で各オブジェクトをその親に適用していきます。
+</p>
+<ol>
+<li>まず、各テキストノードをその親である &lt;td&gt; 要素へと次のようにして付加します
+<pre>cell.appendChild(cellText);</pre></li>
+<li>次に、各 &lt;td&gt; 要素をその親である &lt;tr&gt; 要素へと次のようにして付加します
+<pre>row.appendChild(cell);</pre></li>
+<li>次に、各 &lt;tr&gt; 要素をその親である &lt;tbody&gt; 要素へと次のようにして付加します
+<pre>tblBody.appendChild(row);</pre></li>
+<li>次に、&lt;tbody&gt; 要素をその親である &lt;table&gt; 要素へと次のようにして付加します
+<pre>tbl.appendChild(tblBody);</pre></li>
+<li>次に、&lt;table&gt; 要素をその親である &lt;body&gt; 要素へと次のようにして付加します
+<pre>body.appendChild(tbl);</pre></li>
+</ol>
+<p>この手法を覚えておきましょう。 W3C DOM によるプログラミングでは頻繁に使うことになります。まず、トップダウンで要素を作成し、子供を親へとボトムアップで付加していくのです。
+</p><p>JavaScript コードによって生成される HTML マークアップはこのようになります。
+</p>
+<pre>...
+&lt;table border="2"&gt;
+&lt;tr&gt;&lt;td&gt;セルは 0 行 0 列 です&lt;/td&gt;&lt;td&gt;セルは 0 行 1 列 です&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;セルは 1 行 0 列 です&lt;/td&gt;&lt;td&gt;セルは 1 行 1 列 です&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+...
+</pre>
+<p>このコードによって生成される TABLE 要素とその子要素を示す DOM オブジェクトツリーはこのようになります。
+</p><p><img alt="Image:sample1-tabledom.jpg">
+</p><p>ほんの幾つかの DOM メソッドを使用するだけでこのように表と内部の子要素を構築できます。生成しようと計画している構造のツリーモデルを頭に置いておくことを忘れないようにしてください。そうすれば必要なコードを書くのは簡単です。図 1 の &lt;table&gt; ツリーでは &lt;table&gt; 要素は &lt;tbody&gt; 要素という子を 1 つ持ちます。&lt;tbody&gt; は 2 つ子を持ちます。各 &lt;tbody&gt; の子 (&lt;tr&gt;) は子を 1 つ (&lt;td&gt;) 持ちます。最後に各 &lt;td&gt; はテキストノードという子を 1 つ持ちます。
+</p>
+<h3 id=".E5.9F.BA.E6.9C.AC.E7.9A.84_DOM_.E3.83.A1.E3.82.BD.E3.83.83.E3.83.89_-_Sample2.html" name=".E5.9F.BA.E6.9C.AC.E7.9A.84_DOM_.E3.83.A1.E3.82.BD.E3.83.83.E3.83.89_-_Sample2.html"> 基本的 DOM メソッド - Sample2.html </h3>
+<p><code>getElementsByTagName</code> は Document インターフェイス 及び Element インターフェイス両方のメソッドであり、従って全ての Element オブジェクトだけではなくルートドキュメントオブジェクトも <code>getElementsByTagName</code> メソッドを持っています。ある要素の子供リストをタグ名により選択して取得するには <code><var>element</var>.getElementsByTagName(<var>tagname</var>)</code> が利用できます。
+</p><p><code>getElementsByTagName</code> は指定されたタグ名を持つ子要素のリストを返します。返して欲しい項目番号のインデックスを渡して <code>item</code> メソッドを呼ぶことで、その子要素のリストから個別の要素を取り出すことができます。リストにある最初の子要素は 0 番目の要素となります。簡単でとても単純ですが、大きな構造が対象となる場合には注意が必要になります。次のトピックでは Table の例を続けて扱っていきますが、幾つか基本的なメソッドを紹介するためにより単純な例を示します。
+</p>
+<pre>&lt;html&gt;
+&lt;head&gt;
+&lt;title&gt;サンプルコード - 基本的 DOM インターフェイスによる HTML 要素の動的操作法&lt;/title&gt;
+&lt;script&gt;
+    function start() {
+        // body 要素全てのリストを取得します (あるのは 1 つだけですが)
+        // それからその要素の 0 番目 (最初) の要素を選択します
+        myBody = document.getElementsByTagName("body")[0];
+
+        // 今度は body の子供である p 要素を全て取得します
+        myBodyElements = myBody.getElementsByTagName("p");
+
+        // p 要素のリストから 2 番目の項目を取得します
+        myP = myBodyElements[1];
+    }
+&lt;/script&gt;
+&lt;/head&gt;
+&lt;body onload="start()"&gt;
+&lt;p&gt;hi&lt;/p&gt;
+&lt;p&gt;hello&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<p>この例では、<code>myP</code> 変数を body 中の 2 つ目の <code>p</code> 要素を表す DOM オブジェクトに設定しています。
+</p>
+<ol>
+<li>まず、全ての body 要素リストをこのようにして取得します。
+<pre>myBody = document.getElementsByTagName("body")[0]</pre>
+全ての有効な HTML ドキュメントでは body 要素は 1 つしかないため、このリストは 1 項目だけを持ちます。つまり、<code>{{ mediawiki.external(0) }}</code> を使って、そのリストの最初の要素を選択することで取得できます。</li>
+<li>次に、body の子供である全ての p 要素をこのようにして取得します。
+<pre>myBodyElements = myBody.getElementsByTagName("p");</pre></li>
+<li>そして p 要素のリストから二つ目の項目をこのようにして取得します。
+<pre>myP = myBodyElements[1];</pre></li>
+</ol>
+<p><img alt="Image:sample2a2.jpg">
+</p><p>一旦 HTML 要素に対応する DOM オブジェクトを取得すれば、そのプロパティを設定することできます。例えば、背景色のスタイルプロパティを設定したいのであればこのように加えるだけです。
+</p>
+<pre>myP.style.background = "rgb(255,0,0)";
+// インラインの STYLE 属性を設定
+</pre>
+<h4 id="document.createTextNode.28.22...22.29_.E3.81.AB.E3.82.88.E3.82.8B.E3.83.86.E3.82.AD.E3.82.B9.E3.83.88.E3.83.8E.E3.83.BC.E3.83.89.E3.81.AE.E7.94.9F.E6.88.90" name="document.createTextNode.28.22...22.29_.E3.81.AB.E3.82.88.E3.82.8B.E3.83.86.E3.82.AD.E3.82.B9.E3.83.88.E3.83.8E.E3.83.BC.E3.83.89.E3.81.AE.E7.94.9F.E6.88.90"> <code>document.createTextNode("..")</code> によるテキストノードの生成 </h4>
+<p>document オブジェクトを createTextNode メソッドを読んでテキストノードを生成するのに使用します。テキスト内容を渡す必要があるだけです。返り値はそのテキストノードを表すオブジェクトとなります。
+</p>
+<pre>myTextNode = document.createTextNode("world");
+</pre>
+<p>これはそのテキストデータが「world」である TEXT_NODE 型 (テキスト断片) {{ 訳注("TEXT_NODE はノードの型を表す定数の 1 つとして定義されていますが、厳密には型ではありません") }} のノードを生成し、myTextNode がこのノードオブジェクトへの参照だということです。このテキストを HTML ページに挿入するには、このテキストノードを何か他のノード要素の子供にする必要があります。
+</p>
+<h4 id="appendChild.28...29_.E3.81.AB.E3.82.88.E3.82.8B.E8.A6.81.E7.B4.A0.E3.81.AE.E6.8C.BF.E5.85.A5" name="appendChild.28...29_.E3.81.AB.E3.82.88.E3.82.8B.E8.A6.81.E7.B4.A0.E3.81.AE.E6.8C.BF.E5.85.A5"> appendChild(..) による要素の挿入 </h4>
+<p>そこで myP.appendChild({{ mediawiki.external('ノード要素') }}) を使って、その要素を 2 つ目の &lt;p&gt; 要素の子供とします。
+</p>
+<pre>myP.appendChild(myTextNode);
+</pre>
+<p>例を見て頂いたところで、単語 hello と world が一緒になっていることに注目して下さい: helloworld。ご覧のように外見的には、HTML ページを見ると 2 つのテキスト hello と world は単一ノードのように見えますが、ドキュメントモデルでは 2つのノードがあるのです。 2つ目のノードは TEXT_NODE 型の新しいノードで、2つ目の &lt;p&gt; タグの 2つ目の子供です。以下の図はドキュメントツリー中につい先程生成された Text Node オブジェクトを表しています。
+</p><p><img alt="Image:sample2b2.jpg">
+</p>
+<div class="note">hello と world の 2つの語の間に空白を付け加えるには createTextNode と appendChild を使うと簡単です。但し appendChild メソッドは丁度単語 world が 単語 hello の後に追加されたように子供を最後の子供の後に追加するものであり、Text ノードを hello と world の間に追加しようとするのであれば、appendChild ではなく insertBefore を使わなければならないことにも注意が必要です。</div>
+<h4 id=".E3.83.89.E3.82.AD.E3.83.A5.E3.83.A1.E3.83.B3.E3.83.88.E3.82.AA.E3.83.96.E3.82.B8.E3.82.A7.E3.82.AF.E3.83.88.E3.81.A8_createElement.28...29_.E3.83.A1.E3.82.BD.E3.83.83.E3.83.89.E3.81.AB.E3.82.88.E3.82.8B.E6.96.B0.E3.81.97.E3.81.84.E8.A6.81.E7.B4.A0.E3.81.AE.E7.94.9F.E6.88.90" name=".E3.83.89.E3.82.AD.E3.83.A5.E3.83.A1.E3.83.B3.E3.83.88.E3.82.AA.E3.83.96.E3.82.B8.E3.82.A7.E3.82.AF.E3.83.88.E3.81.A8_createElement.28...29_.E3.83.A1.E3.82.BD.E3.83.83.E3.83.89.E3.81.AB.E3.82.88.E3.82.8B.E6.96.B0.E3.81.97.E3.81.84.E8.A6.81.E7.B4.A0.E3.81.AE.E7.94.9F.E6.88.90"> ドキュメントオブジェクトと <code>createElement(..)</code> メソッドによる新しい要素の生成 </h4>
+<p>createElement によって HTML 要素やその他好きな要素を新しく生成できます。例えば、新しい &lt;p&gt; 要素を &lt;body&gt; 要素の子供として生成したければ、先の例では myBody を使用して新しい要素ノードを追加できます。新しいノードを生成するには単に <code>document.createElement("タグ名")</code> を呼びます。例を挙げると:
+</p>
+<pre>myNewPTAGnode = document.createElement("p");
+myBody.appendChild(myNewPTAGnode);
+</pre>
+<p><img alt="Image:sample2c.jpg">
+</p>
+<h4 id="removeChild.28...29_.E3.83.A1.E3.82.BD.E3.83.83.E3.83.89.E3.81.AB.E3.82.88.E3.82.8B.E3.83.8E.E3.83.BC.E3.83.89.E3.81.AE.E5.89.8A.E9.99.A4" name="removeChild.28...29_.E3.83.A1.E3.82.BD.E3.83.83.E3.83.89.E3.81.AB.E3.82.88.E3.82.8B.E3.83.8E.E3.83.BC.E3.83.89.E3.81.AE.E5.89.8A.E9.99.A4"> <code>removeChild(..)</code> メソッドによるノードの削除 </h4>
+<p>各ノードを削除することができます。次の行は myP (2 つ目の &lt;p&gt; 要素) の単語 world を含むテキストノードを削除します。
+</p>
+<pre>myP.removeChild(myTextNode);
+</pre>
+<p>最後に、先程生成した &lt;p&gt; 要素中に myTextNode (単語 world を含む) を追加する事ができます。
+</p>
+<pre>myNewPTAGnode.appendChild(myTextNode);
+</pre>
+<p>最終的に変更されたオブジェクトツリーはこのような状態なります:
+</p><p><img alt="Image:sample2d.jpg">
+</p>
+<h3 id=".E3.83.86.E3.83.BC.E3.83.96.E3.83.AB.E3.81.AE.E5.8B.95.E7.9A.84.E7.94.9F.E6.88.90_.28Sample1.html_.E3.81.AB.E6.88.BB.E3.81.A3.E3.81.A6.29" name=".E3.83.86.E3.83.BC.E3.83.96.E3.83.AB.E3.81.AE.E5.8B.95.E7.9A.84.E7.94.9F.E6.88.90_.28Sample1.html_.E3.81.AB.E6.88.BB.E3.81.A3.E3.81.A6.29"> テーブルの動的生成 (Sample1.html に戻って) </h3>
+<p>この文書ではこれ以降再び sample1.html を扱っていきます。以下の図はこの例で生成される table オブジェクトツリー構造を表しています。
+</p>
+<h4 id="HTML_.E3.83.86.E3.83.BC.E3.83.96.E3.83.AB.E6.A7.8B.E9.80.A0.E3.81.AE.E5.86.8D.E7.A2.BA.E8.AA.8D" name="HTML_.E3.83.86.E3.83.BC.E3.83.96.E3.83.AB.E6.A7.8B.E9.80.A0.E3.81.AE.E5.86.8D.E7.A2.BA.E8.AA.8D"> HTML テーブル構造の再確認 </h4>
+<p><img alt="Image:sample1-tabledom.jpg">
+</p>
+<h4 id=".E8.A6.81.E7.B4.A0.E3.83.8E.E3.83.BC.E3.83.89.E3.81.AE.E7.94.9F.E6.88.90.E3.81.A8.E3.81.9D.E3.81.AE.E3.83.89.E3.82.AD.E3.83.A5.E3.83.A1.E3.83.B3.E3.83.88.E3.83.84.E3.83.AA.E3.83.BC.E3.81.B8.E3.81.AE.E6.8C.BF.E5.85.A5" name=".E8.A6.81.E7.B4.A0.E3.83.8E.E3.83.BC.E3.83.89.E3.81.AE.E7.94.9F.E6.88.90.E3.81.A8.E3.81.9D.E3.81.AE.E3.83.89.E3.82.AD.E3.83.A5.E3.83.A1.E3.83.B3.E3.83.88.E3.83.84.E3.83.AA.E3.83.BC.E3.81.B8.E3.81.AE.E6.8C.BF.E5.85.A5"> 要素ノードの生成とそのドキュメントツリーへの挿入 </h4>
+<p>sample1.html に於ける基本的な table 生成の手順は:
+</p>
+<ul><li> body オブジェクトを取得する (document オブジェクトの最初の項目)。
+</li><li> 全ての要素を生成する。
+</li><li> 最後に、各子供を (上の図のように) table 構造に従って付加していきます。以下のソースコードは sample1.html のコメント付き版になります。
+</li></ul>
+<p><br>
+</p>
+<div class="note">start 関数の最後には新たなコードがあります。 DOM のメソッド setAttribute を用いて table の border プロパティが設定されており、<code>setAttribute</code> は属性名と属性値という 2 つの引数を取ります。<code>setAttribute</code> メソッドを用いて任意の要素の任意の属性を設定することができます。</div>
+<pre>&lt;head&gt;
+&lt;title&gt;サンプルコード - 基本的 DOM インターフェイスによる HTML 要素の動的操作法&lt;/title&gt;
+&lt;script&gt;
+    function start() {
+        // body への参照を取得します
+        var mybody = document.getElementsByTagName("body")[0];
+
+        // &lt;table&gt; と &lt;tbody&gt; 要素を生成します
+        mytable     = document.createElement("table");
+        mytablebody = document.createElement("tbody");
+
+        // 全てのセルを生成します
+        for(var j = 0; j &lt; 2; j++) {
+            // &lt;tr&gt; 要素を生成します
+            mycurrent_row = document.createElement("tr");
+
+            for(var i = 0; i &lt; 2; i++) {
+                // &lt;td&gt; 要素を生成します
+                mycurrent_cell = document.createElement("td");
+                // テキストノードを生成します
+                currenttext = document.createTextNode("cell is row " + j + ", column " + i);
+                // 生成したテキストノードを &lt;td&gt; セルへと付加します
+                mycurrent_cell.appendChild(currenttext);
+                // その &lt;td&gt; セルを &lt;tr&gt; 行へと付加します
+                mycurrent_row.appendChild(mycurrent_cell);
+            }
+            // その &lt;tr&gt; 行を &lt;tbody&gt; へと付加します
+            mytablebody.appendChild(mycurrent_row);
+        }
+
+        // &lt;tbody&gt; を &lt;table&gt; へと付加します
+        mytable.appendChild(mytablebody);
+        // &lt;table&gt; を &lt;body&gt; へと付加します
+        mybody.appendChild(mytable);
+        // mytable の border 属性を 2 に設定します
+        mytable.setAttribute("border","2");
+    }
+&lt;/script&gt;
+&lt;/head&gt;
+&lt;body onload="start()"&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<h3 id="DOM_.E3.81.A8_CSS_.E3.81.AB.E3.82.88.E3.82.8B.E3.83.86.E3.83.BC.E3.83.96.E3.83.AB.E3.81.AE.E6.93.8D.E4.BD.9C" name="DOM_.E3.81.A8_CSS_.E3.81.AB.E3.82.88.E3.82.8B.E3.83.86.E3.83.BC.E3.83.96.E3.83.AB.E3.81.AE.E6.93.8D.E4.BD.9C"> DOM と CSS によるテーブルの操作 </h3>
+<h4 id=".E3.83.86.E3.83.BC.E3.83.96.E3.83.AB.E3.81.8B.E3.82.89.E3.81.AE.E3.83.86.E3.82.AD.E3.82.B9.E3.83.88.E5.8F.96.E5.BE.97" name=".E3.83.86.E3.83.BC.E3.83.96.E3.83.AB.E3.81.8B.E3.82.89.E3.81.AE.E3.83.86.E3.82.AD.E3.82.B9.E3.83.88.E5.8F.96.E5.BE.97"> テーブルからのテキスト取得 </h4>
+<p>この例では 2つの新しい DOM 属性を紹介します。まず mycel の子ノードリストを取得するのに <code>childNodes</code> 属性を使用します。<code>childNodes</code> リストはその名前や型が何であるかにかかわらず全ての子ノードを含んでいます。getElementsByTagName のように、ノードのリストを返します。違いは getElementsByTagName が指定したタグ名の要素だけを返すということです。リストが返されれば、望みの子項目を検索するのに <code>{{ mediawiki.external('x') }}</code> メソッドを使用します。この例では table 2 行目 2 つ目のセルのテキストノードを myceltext に格納します。そして結果を表示するためにこの例では、myceltext のデータを内容とする新しいテキストノードを生成してそれを &lt;body&gt; 要素の子供として付加します。
+</p>
+<div class="note">オブジェクトがテキストノードである場合、data 属性を使用して当該ノードのテキスト内容を得ることができます。</div>
+<pre>mybody      = document.getElementsByTagName("body")[0];
+mytable     = mybody.getElementsByTagName("table")[0];
+mytablebody = mytable.getElementsByTagName("tbody")[0];
+myrow       = mytablebody.getElementsByTagName("tr")[1];
+mycel       = myrow.getElementsByTagName("td")[1];
+
+// mycel の childNodes リスト中の最初の項目要素
+myceltext=mycel.childNodes[0];
+
+// currenttext の中身は myceltext の data 内容
+currenttext=document.createTextNode(myceltext.data);
+mybody.appendChild(currenttext);
+</pre>
+<h4 id=".E5.B1.9E.E6.80.A7.E5.80.A4.E3.81.AE.E5.8F.96.E5.BE.97" name=".E5.B1.9E.E6.80.A7.E5.80.A4.E3.81.AE.E5.8F.96.E5.BE.97"> 属性値の取得 </h4>
+<p>sample1 の最後に mytable オブジェクト上で setAttribute が呼び出されています。この呼び出しは table の border プロパティを設定するのに使用されています。属性を取得するには、属性オブジェクトを返す getAttribute メソッドを使います。属性の値を得るには、value プロパティを使用します:
+</p>
+<pre>mytable.getAttribute("border");
+</pre>
+<h4 id=".E3.82.B9.E3.82.BF.E3.82.A4.E3.83.AB.E3.83.97.E3.83.AD.E3.83.91.E3.83.86.E3.82.A3.E5.A4.89.E6.9B.B4.E3.81.AB.E3.82.88.E3.82.8B.E5.88.97.E3.81.AE.E9.9D.9E.E8.A1.A8.E7.A4.BA.E5.8C.96" name=".E3.82.B9.E3.82.BF.E3.82.A4.E3.83.AB.E3.83.97.E3.83.AD.E3.83.91.E3.83.86.E3.82.A3.E5.A4.89.E6.9B.B4.E3.81.AB.E3.82.88.E3.82.8B.E5.88.97.E3.81.AE.E9.9D.9E.E8.A1.A8.E7.A4.BA.E5.8C.96"> スタイルプロパティ変更による列の非表示化 </h4>
+<p>JavaScript 変数にオブジェクトを納めさえすれば、スタイルプロパティを直接設定できます。以下のコードは 2 列目の各セル非表示とされ 1 行目の各セルが赤い背景色を持つように変更された sample1.html です。style プロパティが直接設定されていることに注意して下さい。
+</p>
+<pre>&lt;html&gt;
+&lt;body onload="start()"&gt;
+&lt;/body&gt;
+&lt;script&gt;
+    function start() {
+       var mybody =document.getElementsByTagName("body")[0];
+       mytable     = document.createElement("table");
+       mytablebody = document.createElement("tbody");
+
+       for(var j = 0; j &lt; 2; j++) {
+           mycurrent_row=document.createElement("tr");
+           for(var i = 0; i &lt; 2; i++) {
+               mycurrent_cell = document.createElement("td");
+               currenttext = document.createTextNode("cell is:" + i + j);
+               mycurrent_cell.appendChild(currenttext);
+               mycurrent_row.appendChild(mycurrent_cell);
+               // 0 列目であればセルの背景色を設定し、
+               // 1 列目であればセルを非表示とする
+               if (i == 0) {
+                   mycurrent_cell.style.background = "rgb(255,0,0)";
+               } else {
+                   mycurrent_cell.style.display = "none";
+               }
+           }
+           mytablebody.appendChild(mycurrent_row);
+       }
+       mytable.appendChild(mytablebody);
+       mybody.appendChild(mytable);
+    }
+&lt;/script&gt;
+&lt;/html&gt;
+</pre>
+<p><br>
+<span class="comment">Interwiki</span>
+</p>
+<div class="noinclude">
+</div>
+{{ languages( { "fr": "fr/Explorer_un_tableau_HTML_avec_des_interfaces_DOM_et_JavaScript", "en": "en/Traversing_an_HTML_table_with_JavaScript_and_DOM_Interfaces", "zh-cn": "cn/\u4f7f\u7528Javascript\u548cDOM_Interfaces\u6765\u5904\u7406HTML" } ) }}

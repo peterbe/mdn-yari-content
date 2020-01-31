@@ -1,0 +1,146 @@
+<div>{{APIRef("File API")}}</div>
+
+<p><code>Blob</code> オブジェクトはファイルに似たオブジェクトで、immutable な生データです。データを表す blob は必ずしも JavaScript ネイティブなフォーマットではありません。{{domxref("File")}} インターフェイスは <code>Blob</code> を基礎にしており、その機能を継承する一方で、ユーザーのシステム上のファイルをサポートするための機能を拡張しています。</p>
+
+<h2 id="Blob_の利用">Blob の利用</h2>
+
+<dl>
+</dl>
+
+<p>blob ではないオブジェクトやデータから <code>Blob</code> を生成する簡単な方法は {{domxref("Blob.Blob", "Blob()")}} コンストラクターを使用することです。他にも、{{domxref("Blob.slice()", "slice()")}} メソッドを利用し、他の blob データからその一部を blob として生成する方法があります。ユーザーのファイルシステム上のファイルの <code>Blob</code> オブジェクトを取得するには、{{domxref("File")}} のドキュメントをご覧ください。</p>
+
+<p><code>Blob</code> オブジェクトを受け入れる API も、{{domxref("File")}} のドキュメントに掲載しています。</p>
+
+<h2 id="コンストラクター">コンストラクター</h2>
+
+<dl>
+ <dt>{{domxref("Blob.Blob", "Blob(blobParts[, options])")}}</dt>
+ <dd>引数に取ったデータの連続する配列を内包する、新しく生成した <code>Blob</code> オブジェクトを返します。</dd>
+</dl>
+
+<h2 id="プロパティ">プロパティ</h2>
+
+<dl>
+ <dt>{{domxref("Blob.size")}} {{readonlyinline}}</dt>
+ <dd><code>Blob</code> オブジェクトが含むデータのバイトサイズ</dd>
+ <dt>{{domxref("Blob.type")}} {{readonlyinline}}</dt>
+ <dd><code>Blob</code> に含まれるデータの MIME タイプを表す文字列。もしタイプが不明な場合は空文字列となる。</dd>
+</dl>
+
+<h2 id="メソッド" style="margin-bottom: 20px; line-height: 30px; font-size: 2.14285714285714rem;">メソッド</h2>
+
+<dl>
+ <dt>{{domxref("Blob.slice()", "Blob.slice([start[, end[, contentType]]])")}}</dt>
+ <dd>sourceBlob 内の指定した範囲のデータを含む新しい <code>Blob</code> オブジェクトを返す。</dd>
+ <dt>{{domxref("Blob.stream()", "Blob.stream()")}}</dt>
+ <dd>Returns a {{domxref("ReadableStream")}} that can be used to read the contents of the blob.</dd>
+ <dt>{{domxref("Blob.text()", "Blob.text()")}}</dt>
+ <dd>Returns a promise that resolves with a {{domxref("USVString")}} containing the entire contents of the blob interpreted as UTF-8 text.</dd>
+ <dt>{{domxref("Blob.arrayBuffer()", "Blob.arrayBuffer()")}}</dt>
+ <dd>Returns a promise that resolves with an {{domxref("ArrayBuffer")}} containing the entire contents of the blob as binary data.</dd>
+</dl>
+
+<h2 id="使用例" style="margin-bottom: 20px; line-height: 30px; font-size: 2.14285714285714rem;">使用例</h2>
+
+<h3 id="Blob_コンストラクターの使用例" style="line-height: 24px; font-size: 1.71428571428571rem;">Blob コンストラクターの使用例</h3>
+
+<p>{{domxref("Blob.Blob", "Blob() コンストラクター")}} で、他のオブジェクトから blob を生成できます。例えば、文字列から blob を生成するには以下のようにします:</p>
+
+<pre class="brush: js">var debug = {hello: "world"};
+var blob = new Blob([JSON.stringify(debug, null, 2)], {type : 'application/json'});
+</pre>
+
+<h3 id="Blob_を用いて_Typed_Array_の_URL_を生成する例。" style="line-height: 24px; font-size: 1.71428571428571rem;">Blob を用いて Typed Array の URL を生成する例。</h3>
+
+<p>The following code creates a JavaScript <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Typed_arrays">typed array</a> and creates a new <code>Blob</code> containing the typed array's data. It then calls {{domxref("URL.createObjectURL", "createObjectURL()")}} to convert the blob into a URL.</p>
+
+<h4 id="HTML">HTML</h4>
+
+<pre class="brush: html"><code>&lt;p&gt;This example creates a typed array containing the ASCII codes
+   for the space character through the letter Z, then converts it
+   to an object URL. A link to open that object URL is created.
+   Click the link to see the decoded object URL.&lt;/p&gt;</code></pre>
+
+<h4 id="JavaScript">JavaScript</h4>
+
+<p>The main piece of this code for example purposes is the <code>typedArrayToURL()</code> method, which creates a <code>Blob</code> from the given typed array and returns an object URL for it. Having converted the data into an object URL, it can be used in a number of ways, including as the value of the {{HTMLElement("img")}} element's {{htmlattrxref("src", "img")}} attribute (assuming the data contains an image, of course).</p>
+
+<pre class="brush: js"><code>let typedArrayToURL = (typedArray, mimeType) =&gt; {
+  return URL.createObjectURL(new Blob([typedArray.buffer], {type: mimeType}))
+}
+
+let bytes = new Uint8Array(59);
+
+for (let i=0; i&lt;59; i++) {
+  bytes[i] = 32+i;
+}
+
+let url = typedArrayToURL(bytes, "text/plain");
+let link = document.createElement("a");
+link.href = url;
+link.innerText = "Open the array URL";
+document.body.appendChild(link);</code></pre>
+
+<h4 id="Result">Result</h4>
+
+<p>Click the link in the example to see the browser decode the object URL.</p>
+
+<p>{{EmbedLiveSample("Creating_a_URL_representing_the_contents_of_a_typed_array", 600, 200)}}</p>
+
+<h3 id="Blob_からデータを読み出す例" style="line-height: 24px; font-size: 1.71428571428571rem;">Blob からデータを読み出す例</h3>
+
+<p>Blob からコンテンツを読み出す唯一の方法は、 {{domxref("FileReader")}} を用いることです。次のコードは、 Blob からコンテンツを typed array として読み出します。</p>
+
+<pre class="brush: js">var reader = new FileReader();
+reader.addEventListener("loadend", function() {
+   // reader.result contains the contents of blob as a typed array
+});
+reader.readAsArrayBuffer(blob);</pre>
+
+<p>{{domxref("FileReader")}} の他のメソッドを用いることで、 Blob のコンテンツを文字列や data URL で取り出すこともできます。</p>
+
+<pre class="brush: js"><code>var text = await (new Response(blob)).text();</code></pre>
+
+<p>By using other methods of {{domxref("FileReader")}}, it is possible to read the contents of a Blob as a string or a data URL.</p>
+
+<h3 id="Obsolete_Creating_blobs_with_BlobBuilder">Obsolete: Creating blobs with BlobBuilder</h3>
+
+<p>Before the <code>Blob()</code> constructor was available, creating a new blob was performed using the {{domxref("BlobBuilder")}} API, which is now deprecated and should no longer be used:</p>
+
+<pre class="brush: js"><code>var builder = new BlobBuilder();
+var fileParts = ['&lt;a id="a"&gt;&lt;b id="b"&gt;hey!&lt;/b&gt;&lt;/a&gt;'];
+builder.append(fileParts[0]);
+var myBlob = builder.getBlob('text/xml');</code></pre>
+
+<h2 id="Browser_Compatibility" name="Browser_Compatibility" style="margin-bottom: 20px; line-height: 30px; font-size: 2.14285714285714rem;">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">策定状況</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('File API','#blob','Blob')}}</td>
+   <td>{{Spec2('File API')}}</td>
+   <td>初期定義</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility" style="margin-bottom: 20px; line-height: 30px; font-size: 2.14285714285714rem;">ブラウザー実装状況</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("api.Blob")}}</p>
+
+<h2 id="関連項目" style="margin-bottom: 20px; line-height: 30px; font-size: 2.14285714285714rem;">関連項目</h2>
+
+<ul>
+ <li>{{domxref("BlobBuilder")}}</li>
+ <li>{{domxref("FileReader")}}</li>
+ <li>{{domxref("File")}}</li>
+ <li>{{domxref("URL.createObjectURL")}}</li>
+ <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/File/Using_files_from_web_applications">Using files from web applications</a></li>
+</ul>

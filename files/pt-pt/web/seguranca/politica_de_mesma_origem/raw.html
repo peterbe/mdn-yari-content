@@ -1,0 +1,333 @@
+<p>A política de <strong><em>mesma origem</em></strong> restringe a forma de como um documento ou <em>script </em>carregado de uma origem pode interagir com um recurso de outra origem. É um mecanismo crítico de segurança para isolar documentos potencialmente maliciosos .</p>
+
+<h2 id="Definição_de_uma_origem">Definição de uma origem</h2>
+
+<p>Two pages have the same origin if the protocol, port (if one is specified), and host are the same for both pages. You'll see this referred to as the "scheme/host/port tuple" at times (where a "tuple" is a set of three components that together comprise a whole).</p>
+
+<p>A tabela seguinte dá exemplos de comparações de origem para o URL <code>http://store.company.com/dir/page.html</code>:</p>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th>URL</th>
+   <th>Resultado</th>
+   <th>Motivo</th>
+  </tr>
+  <tr>
+   <td><code>http://store.company.com/dir2/other.html</code></td>
+   <td>Success</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td><code>http://store.company.com/dir/inner/another.html</code></td>
+   <td>Success</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td><code>https://store.company.com/secure.html</code></td>
+   <td>Failure</td>
+   <td>Different protocol</td>
+  </tr>
+  <tr>
+   <td><code>http://store.company.com:81/dir/etc.html</code></td>
+   <td>Failure</td>
+   <td>Different port</td>
+  </tr>
+  <tr>
+   <td><code>http://news.company.com/dir/other.html</code></td>
+   <td>Failure</td>
+   <td>Different host</td>
+  </tr>
+ </tbody>
+</table>
+
+<p>See also <a href="/en-US/docs/Same-origin_policy_for_file:_URIs" title="Same-origin_policy_for_file:_URIs">origin definition for <code>file:</code> URLs</a>.</p>
+
+<h3 id="Origens_herdadas">Origens herdadas</h3>
+
+<p>Content from <code>about:blank</code> and <code>javascript:</code> URLs inherits the origin from the document that loaded the URL, since the URL itself does not give any information about the origin. <code>data:</code> URLs get a new, empty, security context.</p>
+
+<div class="note">
+<p><strong>Note:</strong> Prior to {{Gecko("6.0")}}, <code>data</code> URLs inherited the security context of the page currently in the browser window if the user enters a <code>data</code> URL into the location bar.</p>
+</div>
+
+<h3 id="Exceções_de_IE" style="line-height: 30px;">Exceções de IE</h3>
+
+<p>Internet Explorer has two major exceptions when it comes to same origin policy</p>
+
+<ul>
+ <li>Trust Zones: if both domains are in highly trusted zone e.g, corporate domains, then the same origin limitations are not applied</li>
+ <li>Port: IE doesn't include port into Same Origin components, therefore <span style="background-color: rgba(212, 221, 228, 0.14902); font-family: courier new,andale mono,monospace; font-size: 12px; line-height: normal;">http://company.com:81/index.html <span style="background-color: #ffffff; font-family: open sans,sans-serif; line-height: 21px;">and </span></span><span style="background-color: rgba(212, 221, 228, 0.14902); font-family: courier new,andale mono,monospace; font-size: 12px; line-height: normal;">http://company.com/index.html </span>are considered from same origin and no restrictions are applied.</li>
+</ul>
+
+<p>These exceptions are non-standard and not supported in any other browser but would be helpful if developing an app for Windows RT (or) IE based web application.</p>
+
+<h2 id="Alteração_de_origem">Alteração de origem</h2>
+
+<p>A page may change its own origin with some limitations. A script can set the value of {{domxref("document.domain")}} to its current domain or a superdomain of its current domain. If it sets it to a superdomain of its current domain, the shorter domain is used for subsequent origin checks. For example, assume a script in the document at <code>http://store.company.com/dir/other.html</code> executes the following statement:</p>
+
+<pre>document.domain = "company.com";
+</pre>
+
+<p>After that statement executes, the page can pass the origin check with <code>http://company.com/dir/page.html</code> (assuming <code>http://company.com/dir/page.html</code> sets its <code>document.domain</code> to "<code>company.com</code>" to indicate that it wishes to allow that - see {{domxref("document.domain")}} for more). However, <code>company.com</code> could <strong>not</strong> set <code>document.domain</code> to <code>othercompany.com</code> since that is not a superdomain of <code>company.com</code>.</p>
+
+<p>The port number is kept separately by the browser. Any call to the setter, including <code>document.domain = document.domain</code> causes the port number to be overwritten with <code>null</code>. Therefore one <strong>cannot</strong> make <code>company.com:8080</code> talk to <code>company.com</code> by only setting <code>document.domain = "company.com"</code> in the first. It has to be set in both so that port numbers are both <code>null</code>.</p>
+
+<div class="note">
+<p><strong>Note:</strong> When using <code>document.domain</code> to allow a subdomain to access its parent securely, you need to set <code>document.domain</code> to the same value in both the parent domain and the subdomain. This is necessary even if doing so is simply setting the parent domain back to its original value. Failure to do this may result in permission errors.</p>
+</div>
+
+<h2 id="Cross-origin_network_access">Cross-origin network access</h2>
+
+<p>The same-origin policy controls interactions between two different origins, such as when you use {{domxref("XMLHttpRequest")}} or an {{htmlelement("img")}} element. These interactions are typically placed in three categories:</p>
+
+<ul>
+ <li>Cross-origin <em>writes </em>are typically allowed. Examples are links, redirects and form submissions. Certain rarely used HTTP requests require <a href="/en-US/docs/HTTP/Access_control_CORS#Preflighted_requests" title="HTTP/Access_control_CORS#Preflighted_requests">preflight</a>.</li>
+ <li>Cross-origin <em>embedding </em>is typically allowed. Examples are listed below.</li>
+ <li>Cross-origin <em>reads </em>are typically not allowed, but read access is often leaked by embedding. For example you can read the width and height of an embedded image, the actions of an embedded script, or the <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=629094" title="https://grepular.com/Abusing_HTTP_Status_Codes_to_Expose_Private_Information">availability of an embedded resource</a>.</li>
+</ul>
+
+<p>Here are some examples of resources which may be embedded cross-origin:</p>
+
+<ul>
+ <li>JavaScript with <code>&lt;script src="..."&gt;&lt;/script&gt;</code>. Error messages for syntax errors are only available for same-origin scripts.</li>
+ <li>CSS with <code>&lt;link rel="stylesheet" href="..."&gt;</code>. Due to the <a href="http://scarybeastsecurity.blogspot.dk/2009/12/generic-cross-browser-cross-domain.html" title="http://scarybeastsecurity.blogspot.dk/2009/12/generic-cross-browser-cross-domain.html">relaxed syntax rules</a> of CSS, cross-origin CSS requires a correct <code>Content-Type</code> header. Restrictions vary by browser: <a href="http://msdn.microsoft.com/en-us/library/ie/gg622939%28v=vs.85%29.aspx" title="http://msdn.microsoft.com/en-us/library/ie/gg622939%28v=vs.85%29.aspx">IE</a>, <a href="http://www.mozilla.org/security/announce/2010/mfsa2010-46.html" title="http://www.mozilla.org/security/announce/2010/mfsa2010-46.html">Firefox</a>, <a href="http://code.google.com/p/chromium/issues/detail?id=9877" title="http://code.google.com/p/chromium/issues/detail?id=9877">Chrome</a>, <a href="http://support.apple.com/kb/HT4070" title="http://support.apple.com/kb/HT4070">Safari</a> (scroll down to CVE-2010-0051) and <a href="http://www.opera.com/support/kb/view/943/" title="http://www.opera.com/support/kb/view/943/">Opera</a>.</li>
+ <li>Images with {{htmlelement("img")}}. Supported image formats include PNG, JPEG, GIF, BMP, SVG, ...</li>
+ <li>Media files with {{htmlelement("video")}} and {{htmlelement("audio")}}.</li>
+ <li>Plug-ins with <a href="/en-US/docs/HTML/Element/object" title="HTML/Element/object"><code>&lt;object&gt;</code></a>, <a href="/en-US/docs/HTML/Element/embed" title="HTML/Element/embed"><code>&lt;embed&gt;</code></a> and <a href="/en-US/docs/HTML/Element/applet" title="HTML/Element/applet"><code>&lt;applet&gt;</code></a>.</li>
+ <li>Fonts with <a href="/en-US/docs/CSS/@font-face" title="CSS/@font-face"><code>@font-face</code></a>. Some browsers allow cross-origin fonts, others require same-origin fonts.</li>
+ <li>Anything with <a href="/en-US/docs/HTML/Element/frame" title="HTML/Element/frame"><code>&lt;frame&gt;</code></a> and <a href="/en-US/docs/HTML/Element/iframe" title="HTML/Element/iframe"><code>&lt;iframe&gt;</code></a>. A site can use the <code><a href="/en-US/docs/HTTP/X-Frame-Options" title="HTTP/X-Frame-Options">X-Frame-Options</a></code> header to prevent this form of cross-origin interaction.</li>
+</ul>
+
+<h3 id="How_to_allow_cross-origin_access">How to allow cross-origin access</h3>
+
+<p>Use <a href="/en-US/docs/HTTP/Access_control_CORS" title="HTTP/Access_control_CORS">CORS</a> to allow cross-origin access.</p>
+
+<h3 id="How_to_block_cross-origin_access">How to block cross-origin access</h3>
+
+<ul>
+ <li>To prevent cross-origin writes, check for an unguessable token in the request, known as a <a href="https://www.owasp.org/index.php/Cross-Site_Request_Forgery_%28CSRF%29" title="https://www.owasp.org/index.php/Cross-Site_Request_Forgery_%28CSRF%29">Cross-Site Request Forgery (CSRF)</a> token. You must prevent cross-origin reads of pages that know this token.</li>
+ <li>To prevent cross-origin reads of a resource, ensure that it is not embeddable. It is often necessary to prevent embedding, because embedding a resource always leaks some information about it.</li>
+ <li>To prevent cross-origin embedding, ensure that your resource can not be interpreted as one of the embeddable formats listed above. The browser does not respect the <code>Content-Type</code> in most cases. For example if you point a <code>&lt;script&gt;</code> tag at an HTML document, the browser will try to parse the HTML as JavaScript. When your resource is not an entry point to your site, you can also use a CSRF token to prevent embedding.</li>
+</ul>
+
+<h2 id="Cross-origin_script_API_access">Cross-origin script API access</h2>
+
+<p>JavaScript APIs such as <a href="/en-US/docs/DOM/HTMLIFrameElement" title="DOM/HTMLIFrameElement"><code>iframe.contentWindow</code></a>, {{domxref("window.parent")}}, {{domxref("window.open")}} and {{domxref("window.opener")}} allow documents to directly reference each other. When the two documents do not have the same origin, these references provide very limited access to <a href="/en-US/docs/Web/API/Window"><code>Window</code></a> and <a href="/en-US/docs/Web/API/Location"><code>Location</code></a> objects, as described in the next two sections.</p>
+
+<p>To communicate further between documents from different origins, use {{domxref("window.postMessage")}}.</p>
+
+<h3 id="Window">Window</h3>
+
+<p>Especificação:  <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/browsers.html#security-window">http://www.whatwg.org/specs/web-apps/current-work/multipage/browsers.html#security-window</a>.</p>
+
+<p>The following cross-origin access to <code>Window</code> properties is allowed:</p>
+
+<table class="fullwidth-table standard-table">
+ <thead>
+  <tr>
+   <th scope="col">Métodos</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{domxref("window.blur")}}</td>
+  </tr>
+  <tr>
+   <td>{{domxref("window.close")}}</td>
+  </tr>
+  <tr>
+   <td>{{domxref("window.focus")}}</td>
+  </tr>
+  <tr>
+   <td>{{domxref("window.postMessage")}}</td>
+  </tr>
+ </tbody>
+</table>
+
+<table class="fullwidth-table standard-table">
+ <thead>
+  <tr>
+   <th scope="col">Atributos</th>
+   <th scope="col"> </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{domxref("window.closed")}}</td>
+   <td>Read only.</td>
+  </tr>
+  <tr>
+   <td>{{domxref("window.frames")}}</td>
+   <td>Read only.</td>
+  </tr>
+  <tr>
+   <td>{{domxref("window.length")}}</td>
+   <td>Read only.</td>
+  </tr>
+  <tr>
+   <td>{{domxref("window.location")}}</td>
+   <td>Read/write.</td>
+  </tr>
+  <tr>
+   <td>{{domxref("window.opener")}}</td>
+   <td>Read only.</td>
+  </tr>
+  <tr>
+   <td>{{domxref("window.parent")}}</td>
+   <td>Read only.</td>
+  </tr>
+  <tr>
+   <td>{{domxref("window.self")}}</td>
+   <td>Read only.</td>
+  </tr>
+  <tr>
+   <td>{{domxref("window.top")}}</td>
+   <td>Read only.</td>
+  </tr>
+  <tr>
+   <td>{{domxref("window.window")}}</td>
+   <td>Read only.</td>
+  </tr>
+ </tbody>
+</table>
+
+<p>Some browsers allow access to more properties than the specification allows.</p>
+
+<h3 id="Localização">Localização</h3>
+
+<p>Especificação:  <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/browsers.html#security-location">http://www.whatwg.org/specs/web-apps/current-work/multipage/browsers.html#security-location</a>.</p>
+
+<p>The following cross-origin access to <code>Location</code> properties is allowed:</p>
+
+<table class="fullwidth-table standard-table">
+ <thead>
+  <tr>
+   <th scope="col">Métodos</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{domxref("location.replace")}}</td>
+  </tr>
+ </tbody>
+</table>
+
+<table class="fullwidth-table standard-table">
+ <thead>
+  <tr>
+   <th scope="col">Atributos</th>
+   <th scope="col"> </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{domxref("URLUtils.href")}}</td>
+   <td>Write only.</td>
+  </tr>
+ </tbody>
+</table>
+
+<p>Some browsers allow access to more properties than the specification allows.</p>
+
+<h2 id="Cross-origin_data_storage_access">Cross-origin data storage access</h2>
+
+<p>Access to data stored in the browser such as <a href="/en-US/docs/Web/Guide/API/DOM/Storage">localStorage</a> and <a href="/en-US/docs/IndexedDB">IndexedDB</a> are separated by origin. Each origin gets its own separate storage, and JavaScript in one origin cannot read from or write to the storage belonging to another origin.</p>
+
+<p>Cookies use a separate definition of origins. A page can set a cookie for its own domain or any parent domain, as long as the parent domain is not a public suffix. Firefox and Chrome use the <a href="http://publicsuffix.org/">Public Suffix List</a> to determine if a domain is a public suffix. Internet Explorer uses its own internal method to determine if a domain is a public suffix. The browser will make a cookie available to the given domain including any sub-domains, no matter which protocol (http/https) or port is used. When you set a cookie, you can limit its availability using the Domain, Path, Secure and Http-Only flags. When you read a cookie, you cannot see from where it was set. Even if you use only secure https connections, any cookie you see may have been set using an insecure connection.</p>
+
+<h2 id="Consulte_também">Consulte também</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Same-origin_policy_for_file:_URIs" title="Same-origin policy for file: URIs">Same-origin policy for file: URIs</a></li>
+ <li><a href="http://www.w3.org/Security/wiki/Same_Origin_Policy" title="http://www.w3.org/Security/wiki/Same_Origin_Policy">Same-Origin Policy at W3C</a></li>
+</ul>
+
+<div class="originaldocinfo">
+<h2 id="Original_Document_Information" name="Original_Document_Information">Original Document Information</h2>
+
+<ul>
+ <li>Author(s): Jesse Ruderman</li>
+</ul>
+</div>
+
+<p>{{QuickLinksWithSubpages("/en-US/docs/Web/Security")}}</p>
+
+<div id="SL_balloon_obj" style="display: block;">
+<div class="SL_ImTranslatorLogo" id="SL_button" style="background: rgba(0, 0, 0, 0)  repeat scroll 0% 0%; opacity: 0; display: block; left: -8px; top: -25px; transition: visibility 2s ease 0s, opacity 2s linear 0s;"> </div>
+
+<div id="SL_shadow_translation_result2" style="display: none;"> </div>
+
+<div id="SL_shadow_translator" style="display: none;">
+<div id="SL_planshet">
+<div id="SL_arrow_up" style="background: rgba(0, 0, 0, 0)  repeat scroll 0% 0%;"> </div>
+
+<div id="SL_Bproviders">
+<div class="SL_BL_LABLE_ON" id="SL_P0" title="Google">G</div>
+
+<div class="SL_BL_LABLE_ON" id="SL_P1" title="Microsoft">M</div>
+
+<div class="SL_BL_LABLE_ON" id="SL_P2" title="Translator">T</div>
+</div>
+
+<div id="SL_alert_bbl" style="display: none;">
+<div id="SLHKclose" style="background: rgba(0, 0, 0, 0)  repeat scroll 0% 0%;"> </div>
+
+<div id="SL_alert_cont"> </div>
+</div>
+
+<div id="SL_TB">
+<table id="SL_tables">
+ <tbody><tr>
+  <td class="SL_td"><input></td>
+  <td class="SL_td"><select><option value="auto">Detectar idioma</option><option value="af">Africâner</option><option value="sq">Albanês</option><option value="de">Alemão</option><option value="ar">Arabe</option><option value="hy">Armênio</option><option value="az">Azerbaijano</option><option value="eu">Basco</option><option value="bn">Bengali</option><option value="be">Bielo-russo</option><option value="my">Birmanês</option><option value="bs">Bósnio</option><option value="bg">Búlgaro</option><option value="ca">Catalão</option><option value="kk">Cazaque</option><option value="ceb">Cebuano</option><option value="ny">Chichewa</option><option value="zh-CN">Chinês (Simp)</option><option value="zh-TW">Chinês (Trad)</option><option value="si">Cingalês</option><option value="ko">Coreano</option><option value="ht">Crioulo haitiano</option><option value="hr">Croata</option><option value="da">Dinamarquês</option><option value="sk">Eslovaco</option><option value="sl">Esloveno</option><option value="es">Espanhol</option><option value="eo">Esperanto</option><option value="et">Estoniano</option><option value="fi">Finlandês</option><option value="fr">Francês</option><option value="gl">Galego</option><option value="cy">Galês</option><option value="ka">Georgiano</option><option value="el">Grego</option><option value="gu">Gujarati</option><option value="ha">Hauça</option><option value="iw">Hebraico</option><option value="hi">Hindi</option><option value="hmn">Hmong</option><option value="nl">Holandês</option><option value="hu">Húngaro</option><option value="ig">Igbo</option><option value="id">Indonésio</option><option value="en">Inglês</option><option value="yo">Ioruba</option><option value="ga">Irlandês</option><option value="is">Islandês</option><option value="it">Italiano</option><option value="ja">Japonês</option><option value="jw">Javanês</option><option value="kn">Kannada</option><option value="km">Khmer</option><option value="lo">Laosiano</option><option value="la">Latim</option><option value="lv">Letão</option><option value="lt">Lituano</option><option value="mk">Macedônico</option><option value="ml">Malaiala</option><option value="ms">Malaio</option><option value="mg">Malgaxe</option><option value="mt">Maltês</option><option value="mi">Maori</option><option value="mr">Marathi</option><option value="mn">Mongol</option><option value="ne">Nepalês</option><option value="no">Norueguês</option><option value="fa">Persa</option><option value="pl">Polonês</option><option value="pt">Português</option><option value="pa">Punjabi</option><option value="ro">Romeno</option><option value="ru">Russo</option><option value="sr">Sérvio</option><option value="st">Sesotho</option><option value="so">Somália</option><option value="sw">Suaíli</option><option value="su">Sudanês</option><option value="sv">Sueco</option><option value="tg">Tadjique</option><option value="tl">Tagalo</option><option value="th">Tailandês</option><option value="ta">Tâmil</option><option value="cs">Tcheco</option><option value="te">Telugo</option><option value="tr">Turco</option><option value="uk">Ucraniano</option><option value="ur">Urdu</option><option value="uz">Uzbeque</option><option value="vi">Vietnamita</option><option value="yi">Yiddish</option><option value="zu">Zulu</option></select></td>
+  <td class="SL_td">
+   <div id="SL_switch_b" style="background: rgba(0, 0, 0, 0)  repeat scroll 0% 0%;" title="Alternar Idiomas"> </div>
+  </td>
+  <td class="SL_td"><select><option value="af">Africâner</option><option value="sq">Albanês</option><option value="de">Alemão</option><option value="ar">Arabe</option><option value="hy">Armênio</option><option value="az">Azerbaijano</option><option value="eu">Basco</option><option value="bn">Bengali</option><option value="be">Bielo-russo</option><option value="my">Birmanês</option><option value="bs">Bósnio</option><option value="bg">Búlgaro</option><option value="ca">Catalão</option><option value="kk">Cazaque</option><option value="ceb">Cebuano</option><option value="ny">Chichewa</option><option value="zh-CN">Chinês (Simp)</option><option value="zh-TW">Chinês (Trad)</option><option value="si">Cingalês</option><option value="ko">Coreano</option><option value="ht">Crioulo haitiano</option><option value="hr">Croata</option><option value="da">Dinamarquês</option><option value="sk">Eslovaco</option><option value="sl">Esloveno</option><option value="es">Espanhol</option><option value="eo">Esperanto</option><option value="et">Estoniano</option><option value="fi">Finlandês</option><option value="fr">Francês</option><option value="gl">Galego</option><option value="cy">Galês</option><option value="ka">Georgiano</option><option value="el">Grego</option><option value="gu">Gujarati</option><option value="ha">Hauça</option><option value="iw">Hebraico</option><option value="hi">Hindi</option><option value="hmn">Hmong</option><option value="nl">Holandês</option><option value="hu">Húngaro</option><option value="ig">Igbo</option><option value="id">Indonésio</option><option selected value="en">Inglês</option><option value="yo">Ioruba</option><option value="ga">Irlandês</option><option value="is">Islandês</option><option value="it">Italiano</option><option value="ja">Japonês</option><option value="jw">Javanês</option><option value="kn">Kannada</option><option value="km">Khmer</option><option value="lo">Laosiano</option><option value="la">Latim</option><option value="lv">Letão</option><option value="lt">Lituano</option><option value="mk">Macedônico</option><option value="ml">Malaiala</option><option value="ms">Malaio</option><option value="mg">Malgaxe</option><option value="mt">Maltês</option><option value="mi">Maori</option><option value="mr">Marathi</option><option value="mn">Mongol</option><option value="ne">Nepalês</option><option value="no">Norueguês</option><option value="fa">Persa</option><option value="pl">Polonês</option><option value="pt">Português</option><option value="pa">Punjabi</option><option value="ro">Romeno</option><option value="ru">Russo</option><option value="sr">Sérvio</option><option value="st">Sesotho</option><option value="so">Somália</option><option value="sw">Suaíli</option><option value="su">Sudanês</option><option value="sv">Sueco</option><option value="tg">Tadjique</option><option value="tl">Tagalo</option><option value="th">Tailandês</option><option value="ta">Tâmil</option><option value="cs">Tcheco</option><option value="te">Telugo</option><option value="tr">Turco</option><option value="uk">Ucraniano</option><option value="ur">Urdu</option><option value="uz">Uzbeque</option><option value="vi">Vietnamita</option><option value="yi">Yiddish</option><option value="zu">Zulu</option></select></td>
+  <td class="SL_td">
+   <div id="SL_TTS_voice" style="background: rgba(0, 0, 0, 0)  repeat scroll 0% 0%;" title="Ouça"> </div>
+  </td>
+  <td class="SL_td">
+   <div class="SL_copy" id="SL_copy" style="background: rgba(0, 0, 0, 0)  repeat scroll 0% 0%;" title="Copiar"> </div>
+  </td>
+  <td class="SL_td">
+   <div id="SL_bbl_font_patch"> </div>
+
+   <div class="SL_bbl_font" id="SL_bbl_font" style="background: rgba(0, 0, 0, 0)  repeat scroll 0% 0%;" title="Tamanho da fonte"> </div>
+  </td>
+  <td class="SL_td">
+   <div id="SL_bbl_help" style="background: rgba(0, 0, 0, 0)  repeat scroll 0% 0%;" title="Ajuda"> </div>
+  </td>
+  <td class="SL_td">
+   <div class="SL_pin_off" id="SL_pin" style="background: rgba(0, 0, 0, 0)  repeat scroll 0% 0%;" title="Fixar a janela de pop-up"> </div>
+  </td>
+ </tr>
+</tbody></table>
+</div>
+</div>
+
+<div id="SL_shadow_translation_result" style=""> </div>
+
+<div class="SL_loading" id="SL_loading" style="background: rgba(0, 0, 0, 0)  repeat scroll 0% 0%;"> </div>
+
+<div id="SL_player2"> </div>
+
+<div id="SL_alert100">A função de fala é limitada a 200 caracteres</div>
+
+<div id="SL_Balloon_options" style="background: rgb(255, 255, 255)  repeat scroll 0% 0%;">
+<div id="SL_arrow_down" style="background: rgba(0, 0, 0, 0)  repeat scroll 0% 0%;"> </div>
+
+<table id="SL_tbl_opt" style="width: 100%;">
+ <tbody><tr>
+  <td><input></td>
+  <td>
+   <div id="SL_BBL_IMG" style="background: rgba(0, 0, 0, 0)  repeat scroll 0% 0%;" title="Mostrar o botão do ImTranslator 3 segundos"> </div>
+  </td>
+  <td><a class="SL_options" title="Mostrar opções">Opções</a> : <a class="SL_options" title="Histórico de tradução">Histórico</a> : <a class="SL_options" title="Comentários">Comentários</a> : <a class="SL_options" href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&amp;hosted_button_id=GD9D8CPW8HFA2" title="Faça sua contribuição">Donate</a></td>
+  <td><span id="SL_Balloon_Close" title="Encerrar">Encerrar</span></td>
+ </tr>
+</tbody></table>
+</div>
+</div>
+</div>

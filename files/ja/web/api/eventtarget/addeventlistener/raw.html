@@ -1,0 +1,639 @@
+<div>{{APIRef("DOM Events")}}</div>
+
+<p><span class="seoSummary">{{domxref("EventTarget")}} の <strong><code>addEventListener()</code></strong> メソッドは、特定のイベントが対象に配信されるたびに呼び出される関数を設定します。</span> 対象としてよくあるものは {{domxref("Element")}}, {{domxref("Document")}}, {{domxref("Window")}} ですが、イベントに対応したあらゆるオブジェクトが対象になることができます (<code><a href="/ja/docs/Web/API/XMLHttpRequest">XMLHttpRequest</a></code>など)。</p>
+
+<p><code>addEventListener()</code> は関数または {{domxref("EventListener")}} を実装したオブジェクトを、呼び出される {{domxref("EventTarget")}} における指定されたイベント種別のイベントリスナーのリストに加えることで動作します。</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox"><em>target</em>.addEventListener(<em>type</em>, <em>listener[</em>, <em>options</em>]);
+<em>target</em>.addEventListener(<em>type</em>, <em>listener[</em>, <em>useCapture</em>]);
+<em>target</em>.addEventListener(<em>type</em>, <em>listener[</em>, <em>useCapture</em>, <em>wantsUntrusted </em>{{Non-standard_inline}}]); // Gecko/Mozilla のみ</pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<dl>
+ <dt><code>type</code></dt>
+ <dd>対象とする<a href="/ja/docs/Web/API/event.type">イベントの種類</a>を表す文字列</dd>
+ <dt><code>listener</code></dt>
+ <dd>指定された型のイベントが発生するときに通知 ({{domxref("Event")}} インターフェースに準拠しているオブジェクト) を受け取るオブジェクト。これは、 {{domxref("EventListener")}} インタフェースを実装するオブジェクト、あるいは、単純に、JavaScript の<a href="/ja/docs/Web/JavaScript/Guide/Functions">関数</a>でなければなりません。コールバックについて詳しくは、{{anch("The event listener callback", "イベントリスナーのコールバック")}}を参照してください。</dd>
+ <dt><code>options</code> {{optional_inline}}</dt>
+ <dd>対象のイベントリスナーの特性を指定する、オプションのオブジェクトです。次のオプションが使用できます。
+ <ul>
+  <li><code>capture</code>: {{jsxref("Boolean")}} 値で、この型のイベントが DOM ツリーで下に位置する <code>EventTarget</code> に<ruby>発送<rp> (</rp><rt>dispatch</rt><rp>) </rp></ruby>される前に、登録された <code>listener</code> に発送されることを示します。</li>
+  <li><code>once</code>: {{jsxref("Boolean")}} 値で、 <code>listener</code> の呼び出しを一回のみのとしたいかどうかを値で指定します。 <code>true</code> を指定すると、 <code>listener</code> は一度実行された時に自動的に削除されます。</li>
+  <li><code>passive</code>: {{jsxref("Boolean")}} 値で、 <code>true</code> ならば、 <code>listener</code> で指定された関数が {{domxref("Event.preventDefault", "preventDefault()")}} を呼び出さないことを示します。呼び出されたリスナーが <code>preventDefault()</code> を呼び出すと、ユーザーエージェントは何もせず、コンソールに警告を出力します。詳細は{{anch("Improving scrolling performance with passive listeners", "パッシブリスナーによるスクロール性能の改善")}}をご覧ください。</li>
+  <li>{{non-standard_inline}} <code>mozsystemgroup</code>: {{jsxref("Boolean")}} 値で、リスナーをシステムグループに追加するべきであることを示します。コードが XBL または Firefox ブラウザーの {{glossary("chrome")}} で実行されている場合のみ利用できます。</li>
+ </ul>
+ </dd>
+ <dt><code>useCapture</code> {{optional_inline}}</dt>
+ <dd>{{jsxref("Boolean")}} 値で、この型のイベントが DOM ツリーの下の <code>EventTarget</code> に発送される<em>前に</em>、登録された <code>listener</code> に発送されることを示します。ツリーを上方向にバブリングするイベントは、キャプチャを使用するように指定されたリスナーを起動しません。イベント伝播モードは、要素がイベントを受信する順序を決定します。詳細については、 <a href="http://www.w3.org/TR/DOM-Level-3-Events/events.html#Events-flow">DOM Level 3 Events</a> および <a href="http://www.quirksmode.org/js/events_order.html#link4">JavaScript Event order</a> を参照してください。省略した場合、 <code>useCapture</code> は <code>false</code> となります。</dd>
+ <dd>
+ <div class="note"><strong>メモ:</strong> イベントターゲットに登録されたイベントリスナーは、補足フェーズや{{訳語("浮上", "bubbling")}}フェーズではなく、ターゲットフェーズのイベントになります。ターゲットフェーズのイベントは、<code>useCapture</code> パラメーターにかかわらず、すべてのリスナーを追加された順序で実行します。</div>
+
+ <div class="note"><strong>メモ:</strong> <code>useCapture</code> はどんなブラウザでもオプションになっているわけではありません。完全で最大限の互換性を得たいなら、パラメーターを指定するようにしてください。</div>
+ </dd>
+ <dt><code>wantsUntrusted</code> {{Non-standard_inline}}</dt>
+ <dd><code>true</code> の場合、このリスナーはウェブコンテンツによって発火された合成イベント (カスタムイベント) を受け取ります (chrome ではデフォルトで <code>false</code> ですが、一般のウェブページでは <code>true</code> です)。このパラメーターは Gecko でのみ利用可能であり、主にアドオンやブラウザー自身の役に立つものです。<a href="/ja/docs/Code_snippets/Interaction_between_privileged_and_non-privileged_pages">特権ページと非特権ページの間のやり取り</a>を参照してください。</dd>
+</dl>
+
+<h3 id="Return_value" name="Return_value">返値</h3>
+
+<p><code>undefined</code></p>
+
+<h2 id="Usage_notes" name="Usage_notes">使用方法のメモ</h2>
+
+<h3 id="The_event_listener_callback" name="The_event_listener_callback">イベントリスナーのコールバック</h3>
+
+<p>The event listener can be specified as either a callback function or as an object that implements {{domxref("EventListener")}}, whose {{domxref("EventListener.handleEvent", "handleEvent()")}} method serves as the callback function.</p>
+
+<p>The callback function itself has the same parameters and return value as the <code>handleEvent()</code> method; that is, the callback accepts a single parameter: an object based on {{domxref("Event")}} describing the event which has occurred, and it returns nothing.</p>
+
+<p>For example, an event handler callback that can be used to handle both {{event("fullscreenchange")}} and {{event("fullscreenerror")}} might look like this:</p>
+
+<pre class="brush: js">function eventHandler(event) {
+  if (event.type == fullscreenchange) {
+    /* handle a full screen toggle */
+  } else /* fullscreenerror */ {
+    /* handle a full screen toggle error */
+  }
+}</pre>
+
+<h3 id="Safely_detecting_option_support" name="Safely_detecting_option_support">Safely detecting option support</h3>
+
+<p>In older versions of the DOM specification, the third parameter of <code>addEventListener()</code> was a Boolean value indicating whether or not to use capture. Over time, it became clear that more options were needed. Rather than adding more parameters to the function (complicating things enormously when dealing with optional values), the third parameter was changed to an object which can contain various properties defining the values of options to configure the process of removing the event listener.</p>
+
+<p>Because older browsers (as well as some not-too-old browsers) still assume the third parameter is a Boolean, you need to build your code to handle this scenario intelligently. You can do this by using feature detection for each of the options you're interested in.</p>
+
+<p>For example, if you want to check for the <code>passive</code> option:</p>
+
+<pre class="brush: js">var passiveSupported = false;
+
+try {
+  var options = Object.defineProperty({}, "passive", {
+    get: function() {
+      passiveSupported = true;
+    }
+  });
+
+  window.addEventListener("test", options, options);
+  window.removeEventListener("test", options, options);
+} catch(err) {
+  passiveSupported = false;
+}
+</pre>
+
+<p>This creates an <code>options</code> object with a getter function for the <code>passive</code> property; the getter sets a flag, <code>passiveSupported</code>, to <code>true</code> if it gets called. That means that if the browser checks the value of the <code>passive</code> property on the <code>options</code> object, <code>passiveSupported</code> will be set to <code>true</code>; otherwise, it will remain <code>false</code>. We then call <code>addEventListener()</code> to set up a fake event handler, specifying those options, so that the options will be checked if the browser recognizes an object as the third parameter. Then, we call <code>removeEventListener()</code> to clean up after ourselves. (Note that <code>handleEvent()</code> is ignored on event listeners that aren't called.)</p>
+
+<p>You can check whether any option is supported this way. Just add a getter for that option using code similar to what is shown above.</p>
+
+<p>Then, when you want to create an actual event listener that uses the options in question, you can do something like this:</p>
+
+<pre class="brush: js">someElement.addEventListener("mouseup", handleMouseUp, passiveSupported
+                               ? { passive: true } : false);</pre>
+
+<p>Here we're adding a listener for the {{event("mouseup")}} event on the element <code>someElement</code>. For the third parameter, if <code>passiveSupported</code> is <code>true</code>, we're specifying an <code>options</code> object with <code>passive</code> set to <code>true</code>; otherwise, we know that we need to pass a Boolean, and we pass <code>false</code> as the value of the <code>useCapture</code> parameter.</p>
+
+<p>If you'd prefer, you can use a third-party library like <a href="https://modernizr.com/docs">Modernizr</a> or <a href="https://github.com/rafrex/detect-it">Detect It</a> to do this test for you.</p>
+
+<p>You can learn more from the article about <code><a href="https://github.com/WICG/EventListenerOptions/blob/gh-pages/explainer.md#feature-detection">EventListenerOptions</a></code> from the <a href="https://wicg.github.io/admin/charter.html">Web Incubator Community Group</a>.</p>
+
+<h2 id="Example" name="Example">例</h2>
+
+<h3 id="Add_a_simple_listener" name="Add_a_simple_listener">シンプルなリスナーの追加</h3>
+
+<p>この例は、要素上でのマウスクリックを監視するための <code>addEventListener()</code> の使い方を紹介します。</p>
+
+<h4 id="HTML">HTML</h4>
+
+<pre class="brush: html">&lt;table id="outside"&gt;
+    &lt;tr&gt;&lt;td id="t1"&gt;one&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td id="t2"&gt;two&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+</pre>
+
+<h4 id="JavaScript">JavaScript</h4>
+
+<pre class="brush: js">// t2 のコンテンツを変更する関数
+function modifyText() {
+  var t2 = document.getElementById("t2");
+  if (t2.firstChild.nodeValue == "three") {
+    t2.firstChild.nodeValue = "two";
+  } else {
+    t2.firstChild.nodeValue = "three";
+  }
+}
+
+// イベントリスナーを table に追加
+var el = document.getElementById("outside");
+el.addEventListener("click", modifyText, false);
+</pre>
+
+<p>このコードの中で、 <code>modifyText()</code> が <code>addEventListener()</code> を使用して登録された <code>click</code> イベントのリスナーです。表の中のどこかをクリックすると、ハンドラーに上がり、 <code>modifyText()</code> を実行します。</p>
+
+<h4 id="Result" name="Result">結果</h4>
+
+<p>{{EmbedLiveSample('Add_a_simple_listener')}}</p>
+
+<h3 id="Event_listener_with_anonymous_function" name="Event_listener_with_anonymous_function">無名関数を使用したイベントリスナー</h3>
+
+<p>ここで、無名関数を使用してイベントリスナーに引数を渡す方法を見てみましょう。</p>
+
+<h4 id="HTML_2">HTML</h4>
+
+<pre class="brush: html">&lt;table id="outside"&gt;
+    &lt;tr&gt;&lt;td id="t1"&gt;one&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td id="t2"&gt;two&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;</pre>
+
+<h4 id="JavaScript_2">JavaScript</h4>
+
+<pre class="brush: js">// t2 のコンテンツを変更する関数
+function modifyText(new_text) {
+  var t2 = document.getElementById("t2");
+  t2.firstChild.nodeValue = new_text;    
+}
+ 
+// イベントリスナーを table に追加する関数
+var el = document.getElementById("outside");
+el.addEventListener("click", function(){modifyText("four")}, false);
+</pre>
+
+<p>なお、リスナーは実際にイベントに応答する <code>modifyText()</code> 関数に引数を送信することができるコードをカプセル化している無名関数であることに注意してください。</p>
+
+<h4 id="Result_2" name="Result_2">結果</h4>
+
+<p>{{EmbedLiveSample('Event_listener_with_anonymous_function')}}</p>
+
+<h3 id="Event_listener_with_an_arrow_function" name="Event_listener_with_an_arrow_function">アロー関数を使用したイベントリスナー</h3>
+
+<p>この例はアロー関数表記を使用して実装された、簡単なイベントリスナーを紹介しています。</p>
+
+<h4 id="HTML_3">HTML</h4>
+
+<pre class="brush: html">&lt;table id="outside"&gt;
+    &lt;tr&gt;&lt;td id="t1"&gt;one&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td id="t2"&gt;two&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;</pre>
+
+<h4 id="JavaScript_3">JavaScript</h4>
+
+<pre class="brush: js">// t2 の中身を変更するための関数
+function modifyText(new_text) {
+  var t2 = document.getElementById("t2");
+  t2.firstChild.nodeValue = new_text;    
+}
+ 
+// アロー関数で table にイベントリスナーを追加
+var el = document.getElementById("outside");
+el.addEventListener("click", () =&gt; { modifyText("four"); }, false);
+</pre>
+
+<h4 id="結果">結果</h4>
+
+<p>{{EmbedLiveSample('Event_listener_with_an_arrow_function')}}</p>
+
+<p>なお、無名関数とアロー関数は似ており、違いは <code>this</code> のバインドです。無名関数 (及び伝統的なすべての JavaScript 関数) は自身の <code>this</code> を作成するのに対し、アロー関数はそれを含む関数の <code>this</code> を継承します。</p>
+
+<p>つまり、アロー関数を使用したときは、それを含む関数の変数や定数をイベントハンドラーで利用することができます。</p>
+
+<h3 id="Example_of_options_usage">Example of options usage</h3>
+
+<h4 id="HTML_4">HTML</h4>
+
+<pre class="brush: html">&lt;div class="outer"&gt;
+    outer, once &amp; none-once
+    &lt;div class="middle" target="_blank"&gt;
+        middle, capture &amp; none-capture
+        &lt;a class="inner1" href="https://www.mozilla.org" target="_blank"&gt;
+            inner1, passive &amp; preventDefault(which is not allowed)
+        &lt;/a&gt;
+        &lt;a class="inner2" href="https://developer.mozilla.org/" target="_blank"&gt;
+            inner2, none-passive &amp; preventDefault(not open new page)
+        &lt;/a&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+</pre>
+
+<h4 id="CSS">CSS</h4>
+
+<pre class="brush: css">    .outer, .middle, .inner1, .inner2 {
+        display:block;
+        width:520px;
+        padding:15px;
+        margin:15px;
+        text-decoration:none;
+    }
+    .outer{
+        border:1px solid red;
+        color:red;
+    }
+    .middle{
+        border:1px solid green;
+        color:green;
+        width:460px;
+    }
+    .inner1, .inner2{
+        border:1px solid purple;
+        color:purple;
+        width:400px;
+    }
+</pre>
+
+<h4 id="JavaScript_4">JavaScript</h4>
+
+<pre class="brush: js">    let outer  = document.getElementsByClassName('outer') [0];
+    let middle = document.getElementsByClassName('middle')[0];
+    let inner1 = document.getElementsByClassName('inner1')[0];
+    let inner2 = document.getElementsByClassName('inner2')[0];
+
+    let capture = {
+        capture : true
+    };
+    let noneCapture = {
+        capture : false
+    };
+    let once = {
+        once : true
+    };
+    let noneOnce = {
+        once : false
+    };
+    let passive = {
+        passive : true
+    };
+    let nonePassive = {
+        passive : false
+    };
+    
+    
+    outer .addEventListener('click', onceHandler, once);
+    outer .addEventListener('click', noneOnceHandler, noneOnce);
+    middle.addEventListener('click', captureHandler, capture);
+    middle.addEventListener('click', noneCaptureHandler, noneCapture);
+    inner1.addEventListener('click', passiveHandler, passive);
+    inner2.addEventListener('click', nonePassiveHandler, nonePassive);
+
+    function onceHandler(event)
+    {
+        alert('outer, once');
+    }
+    function noneOnceHandler(event)
+    {
+        alert('outer, none-once, default');
+    }
+    function captureHandler(event)
+    {
+        //event.stopImmediatePropagation();
+        alert('middle, capture');
+    }
+    function noneCaptureHandler(event)
+    {
+        alert('middle, none-capture, default');
+    }
+    function passiveHandler(event)
+    {
+        // Unable to preventDefault inside passive event listener invocation.
+        event.preventDefault();
+        alert('inner1, passive, open new page');
+    }
+    function nonePassiveHandler(event)
+    {
+        event.preventDefault();
+        //event.stopPropagation();
+        alert('inner2, none-passive, default, not open new page');
+    }
+</pre>
+
+<h4 id="Result_3">Result</h4>
+
+<p>Click the outer, middle, inner containers respectively to see how the options work.</p>
+
+<p>{{ EmbedLiveSample('Example_of_options_usage', 600, 310, '', 'Web/API/EventTarget/addEventListener') }}</p>
+
+<p>Before using a particular value in the <code>options</code> object, it's a good idea to ensure that the user's browser supports it, since these are an addition that not all browsers have supported historically. See {{anch("Safely detecting option support")}} for details.</p>
+
+<h2 id="Notes" name="Notes">メモ</h2>
+
+<h3 id="Why_use_addEventListener" name="Why_use_addEventListener">なぜ <code>addEventListener</code> を使うのか</h3>
+
+<p><code>addEventListener()</code> は、 W3C DOM で仕様化されている、イベントリスナーを登録するための方法です。その利点は以下の通りです。</p>
+
+<ul>
+ <li>イベントに複数のハンドラーを追加することができます。これは、特に、他のライブラリ/拡張で利用しても上手く動作する必要がある {{Glossary("AJAX")}} ライブラリや JavaScript モジュール、その他のライブラリや拡張機能と共に動作させる必要があるコードに役立ちます。</li>
+ <li>リスナーがアクティブ化されたときに、その動きを細かくコントロールすることを可能にします（キャプチャリング 対 バブリング）。</li>
+ <li>HTML 要素だけでなく、任意の DOM 要素 で動作します。</li>
+</ul>
+
+<p>別の方法である、<a href="#Older_way_to_register_event_listeners">イベントリスナーを登録するための古い方法</a> は、後で説明します。</p>
+
+<h3 id="Adding_a_listener_during_event_dispatch" name="Adding_a_listener_during_event_dispatch">イベント発送中のリスナーの追加</h3>
+
+<p>{{domxref("EventListener")}} がイベント処理中に {{domxref("EventTarget")}} に追加された場合、それが現在のアクションによって実行されることはありませんが、浮上フェーズのように、後の段階のイベントフローで実行されるかもしれません。</p>
+
+<h3 id="Multiple_identical_event_listeners" name="Multiple_identical_event_listeners">複数の同一のイベントリスナー</h3>
+
+<p>複数の同一の <code>EventListener</code> が、同じ <code>EventTarget</code> に同じ引数で登録された場合、重複するインスタンスは反映されません。 <code>EventListener</code> が2回呼び出されることはなく、重複するインスタンスは反映されないので、 {{domxref("EventTarget.removeEventListener", "removeEventListener()")}} で手動で削除する必要はありません。</p>
+
+<h3 id="The_value_of_this_within_the_handler" name="The_value_of_this_within_the_handler">ハンドラー内での <code>this</code> の値</h3>
+
+<p>一連の類似した要素に対して一般的なハンドラーを使いたい場合のように、イベントハンドラーが実行される要素を参照したいということがたびたびあります。</p>
+
+<p><code>addEventListener()</code> を使って要素にハンドラー関数を設定したとき、ハンドラーの中の <code><a href="/ja/docs/Web/JavaScript/Reference/Operators/this">this</a></code> の値は要素への参照となります。これはハンドラーに渡された event 引数の currentTarget プロパティの値と同じです。</p>
+
+<p>{{domxref("Element.onclick", "onclick")}} のようなイベントハンドラーが HTML 要素に指定されていた場合、イベント属性の Javascirpt コードの値は、事実上 <code>addEventListener()</code> を使用するような方法で <code>this</code> の値をバインドするハンドラー関数に置き換えられます。つまり、コード内に直接 <code>this</code> が現れた場合には、要素への参照に置き換えられます。けれど、属性の値のコード<em>によって呼ばれた先の</em>関数の内側では、<code>this</code> の値は<a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Operators/this">ふつうのルール</a>に従って決まることに注意してください。したがって、以下のような場合:</p>
+
+<pre class="brush: html">&lt;table id="t" onclick="modifyText();"&gt;
+  . . .
+</pre>
+
+<p>onclick イベントで呼び出されたときの <code>modifyText()</code> 内の <code>this</code> の値は、グローバルオブジェクト{{domxref("Window")}}への参照となります。 (もしくは <a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Strict_mode">strict mode</a> の場合、<code>undefined</code> になります。)</p>
+
+<h4 id="Specifying_this_using_bind()" name="Specifying_this_using_bind()"><code>bind()</code> を使用した <code>this</code> の指定</h4>
+
+<p><code><a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/Function/bind">Function.prototype.bind()</a></code> メソッドで、その関数のすべての呼び出しにおいて <code>this</code> として使用される値を指定できます。これを使えば、関数がどこから呼び出されるかによって <code>this</code> の値が変わってしまうというややこしい問題を簡単に回避できます。ただし、リスナーを後で削除できるように、そのリスナーへの参照を残しておく必要があります。</p>
+
+<p>以下は <code>bind()</code> を使った場合と使わない場合の例です。</p>
+
+<pre class="brush: js">var Something = function(element) {
+  // |this| is a newly created object
+  this.name = 'Something Good';
+  this.onclick1 = function(event) {
+    console.log(this.name); // this は element なので undefined になります
+  };
+  this.onclick2 = function(event) {
+    console.log(this.name); // this はバインドされた Something オブジェクトなので「Something Good」と出力されます
+  };
+  element.addEventListener('click', this.onclick1, false);
+  element.addEventListener('click', this.onclick2.bind(this), false); // これが仕掛けです
+}
+var s = new Something(document.body);
+</pre>
+
+<p>上の例の問題は、 <code>bind()</code> の付いたリスナーを削除できないということです。もうひとつの解決策は、あらゆるイベントを捕捉する <code>handleEvent()</code> という特別な関数を使用することです。</p>
+
+<pre class="brush: js">var Something = function(element) {
+  // |this| is a newly created object
+  this.name = 'Something Good';
+  this.handleEvent = function(event) {
+    console.log(this.name); // this は Something オブジェクトなので「Something Good」と出力されます
+    switch(event.type) {
+      case 'click':
+        // 処理
+        break;
+      case 'dblclick':
+        // 処理
+        break;
+    }
+  };
+
+  // この場合のリスナーは this であって this.handleEvent でないことに注意してください
+  element.addEventListener('click', this, false);
+  element.addEventListener('dblclick', this, false);
+
+  // リスナーは適切に削除できます
+  element.removeEventListener('click', this, false);
+  element.removeEventListener('dblclick', this, false);
+}
+var s = new Something(document.body);
+</pre>
+
+<p><em>this</em> の参照を扱うためのもう一つの方法は、 <code>EventListener</code> にアクセスする必要のあるフィールドを含むオブジェクトのメソッドを呼び出す関数を渡すことです。</p>
+
+<pre class="brush: js">class SomeClass {
+
+  constructor() {
+    this.name = 'Something Good';
+  }
+
+  register() {
+    var that = this;
+    window.addEventListener('keydown', function(e) {return that.someMethod(e);});
+  }
+
+  someMethod(e) {
+    console.log(this.name);
+    switch(e.keyCode) {
+      case 5:
+        // some code here...
+        break;
+      case 6:
+        // some code here...
+        break;
+    }
+  }
+
+}
+
+var myObject = new SomeClass();
+myObject.register();</pre>
+
+<h3 id="Legacy_Internet_Explorer_and_attachEvent" name="Legacy_Internet_Explorer_and_attachEvent">古い Internet Explorer と attachEvent</h3>
+
+<p>IE9 より前の Internet Explorer では、標準の <code>addEventListener</code> ではなく、 {{domxref("EventTarget.attachEvent", "attachEvent()")}} を使わなければなりません。 IE に対応するためには、上記の例を以下のように修正しなけれなりません。</p>
+
+<pre class="brush: js">if (el.addEventListener) {
+  el.addEventListener('click', modifyText, false); 
+} else if (el.attachEvent)  {
+  el.attachEvent('onclick', modifyText);
+}
+</pre>
+
+<p><code>attachEvent()</code> の欠点が 1 つあります。 <code>this</code> の値がイベントを起こした要素ではなく、 <code>window</code> オブジェクトへの参照になってしまうことです。</p>
+
+<p>The <code>attachEvent()</code> method could be paired with the <code>onresize</code> event to detect when certain elements in a webpage were resized. The proprietary <code>mselementresize</code> event, when paired with the <code>addEventListener </code>method of registering event handlers, provides similar functionality as <code>onresize</code>, firing when certain HTML elements are resized.</p>
+
+<h3 id="Compatibility" name="Compatibility">互換性</h3>
+
+<p>次のコードをスクリプトの初めに書いておくと、 Internet Explorer 8 では対応していない <code>addEventListener</code>, <code>removeEventListener</code>, {{domxref("Event.preventDefault()")}}, {{domxref("Event.stopPropagation()")}} が動作するようになります。このコードは、 <code>handleEvent()</code> と <code>DOMContentLoaded</code> イベントにも対応します。</p>
+
+<div class="note">
+<p><strong>メモ: </strong><code>useCapture</code> に対応していないため、 IE 8 では代わりの方法はありません。以下のコードは IE 8 への対応を追加するだけです。また、 IE 8 用の代替モジュールは、標準モードのみで動作します。 doctype 宣言が必要です。</p>
+</div>
+
+<pre class="brush: js">(function() {
+  if (!Event.prototype.preventDefault) {
+    Event.prototype.preventDefault=function() {
+      this.returnValue=false;
+    };
+  }
+  if (!Event.prototype.stopPropagation) {
+    Event.prototype.stopPropagation=function() {
+      this.cancelBubble=true;
+    };
+  }
+  if (!Element.prototype.addEventListener) {
+    var eventListeners=[];
+    
+    var addEventListener=function(type,listener /*, useCapture (will be ignored) */) {
+      var self=this;
+      var wrapper=function(e) {
+        e.target=e.srcElement;
+        e.currentTarget=self;
+        if (typeof listener.handleEvent != 'undefined') {
+          listener.handleEvent(e);
+        } else {
+          listener.call(self,e);
+        }
+      };
+      if (type=="DOMContentLoaded") {
+        var wrapper2=function(e) {
+          if (document.readyState=="complete") {
+            wrapper(e);
+          }
+        };
+        document.attachEvent("onreadystatechange",wrapper2);
+        eventListeners.push({object:this,type:type,listener:listener,wrapper:wrapper2});
+        
+        if (document.readyState=="complete") {
+          var e=new Event();
+          e.srcElement=window;
+          wrapper2(e);
+        }
+      } else {
+        this.attachEvent("on"+type,wrapper);
+        eventListeners.push({object:this,type:type,listener:listener,wrapper:wrapper});
+      }
+    };
+    var removeEventListener=function(type,listener /*, useCapture (will be ignored) */) {
+      var counter=0;
+      while (counter&lt;eventListeners.length) {
+        var eventListener=eventListeners[counter];
+        if (eventListener.object==this &amp;&amp; eventListener.type==type &amp;&amp; eventListener.listener==listener) {
+          if (type=="DOMContentLoaded") {
+            this.detachEvent("onreadystatechange",eventListener.wrapper);
+          } else {
+            this.detachEvent("on"+type,eventListener.wrapper);
+          }
+          eventListeners.splice(counter, 1);
+          break;
+        }
+        ++counter;
+      }
+    };
+    Element.prototype.addEventListener=addEventListener;
+    Element.prototype.removeEventListener=removeEventListener;
+    if (HTMLDocument) {
+      HTMLDocument.prototype.addEventListener=addEventListener;
+      HTMLDocument.prototype.removeEventListener=removeEventListener;
+    }
+    if (Window) {
+      Window.prototype.addEventListener=addEventListener;
+      Window.prototype.removeEventListener=removeEventListener;
+    }
+  }
+})();</pre>
+
+<h3 id="Older_way_to_register_event_listeners" name="Older_way_to_register_event_listeners">イベントリスナーを登録するための古い方法</h3>
+
+<p><code>addEventListener()</code> は、DOM 2 <a href="http://www.w3.org/TR/DOM-Level-2-Events">Events</a> 仕様で導入されました。それ以前は、以下のようにイベントリスナーを登録していました。</p>
+
+<pre class="brush: js">// 関数へのリファレンスを利用する方法—'()' が無いことに注意してください
+el.onclick = modifyText;
+
+// 関数式を利用する方法
+element.onclick = function() {
+   /* ...文... */
+};
+</pre>
+
+<p>このメソッドは、要素上に <code>click</code> イベントリスナーが既に存在する場合、置き換えてしまいます。 他のイベント、<code>blur</code> (<code>onblur</code>)、<code>keypress</code> (<code>onkeypress</code>)、などのような関連するイベントハンドラも同様です。</p>
+
+<p>これは本質的には DOM 0 の一部分なので、この方法は、非常に広くサポートされており、特別なクロスブラウザ用のコードも必要ありません。それ故、<code>addEventListener()</code> の独自の機能が必要でない場合に、動的にイベントリスナーを登録する方法として普通に使われています。</p>
+
+<h3 id="Memory_issues" name="Memory_issues">メモリに関する問題</h3>
+
+<pre class="brush: js">var i;
+var els = document.getElementsByTagName('*');
+
+// ケース 1
+for(i=0 ; i&lt;els.length ; i++){
+  els[i].addEventListener("click", function(e){/*関数の処理*/}, false);
+}
+
+// ケース 2
+function processEvent(e){
+  /*関数の処理*/
+}
+
+for(i=0 ; i&lt;els.length ; i++){
+  els[i].addEventListener("click", processEvent, false);
+}
+
+</pre>
+
+<p>最初の例では、新しい匿名関数がループごとに作られています。これに対して 2 番目の例では、前に宣言された同じ関数がイベントハンドラとして使われています。そのため、メモリの消費が抑えられます。その上、最初の例では匿名関数への参照が保存されておらず、ハンドラーへの参照がないため、 {{domxref("EventTarget.removeEventListener", "removeEventListener()")}} を実行することが不可能になってしまっています。一方、2番目の例では、 <code>myElement.removeEventListener("click", processEvent, false)</code> とすることができます。</p>
+
+<h3 id="Improving_scrolling_performance_with_passive_listeners" name="Improving_scrolling_performance_with_passive_listeners">パッシブリスナーを用いたスクロールの性能改善</h3>
+
+<p>According to the specification, the default value for the <code>passive</code> option is always false. However, this introduces the potential for event listeners handling certain touch events (among others) to block the browser's main thread while it is attempting to handle scrolling, resulting in possibly enormous reduction in performance during scroll handling.</p>
+
+<p>To prevent this problem, some browsers (specifically, Chrome and Firefox) have changed the default value of the <code>passive</code> option to <code>true</code> for the {{event("touchstart")}} and {{event("touchmove")}} events on the document-level nodes {{domxref("Window")}}, {{domxref("Document")}}, and {{domxref("Document.body")}}. This prevents the event listener from being called, so it can't block page rendering while the user is scrolling.</p>
+
+<div class="note">
+<p><strong>Note:</strong> See the compatibility table below if you need to know which browsers (and/or which versions of those browsers) implement this altered behavior.</p>
+</div>
+
+<p>You can override this behavior by explicitly setting the value of <code>passive</code> to <code>false</code>, as shown here:</p>
+
+<pre class="brush: js">/* Feature detection */
+var passiveSupported = false;
+
+try {
+  window.addEventListener("test", null, Object.defineProperty({}, "passive", { get: function() { passiveSupported = true; } }));
+} catch(err) {}
+
+/* リスナーを登録 */
+var elem = document.getElementById('elem');
+
+elem.addEventListener('<code>touchmove</code>', function listener() {
+  /* do something */
+}, passiveSupported ? { passive: false } : false);
+</pre>
+
+<p>On older browsers that don't support the <code>options</code> parameter to <code>addEventListener()</code>, attempting to use it prevents the use of the <code>useCapture</code> argument without proper use of <a href="#Safely_detecting_option_support">feature detection</a>.</p>
+
+<p>You don't need to worry about the value of <code>passive</code> for the basic {{event("scroll")}} event. Since it can't be canceled, event listeners can't block page rendering anyway.</p>
+
+<h2 id="Specifications" name="Specifications">仕様書</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">状態</th>
+   <th scope="col">備考</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName("DOM WHATWG", "#dom-eventtarget-addeventlistener", "EventTarget.addEventListener()")}}</td>
+   <td>{{Spec2("DOM WHATWG")}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName("DOM4", "#dom-eventtarget-addeventlistener", "EventTarget.addEventListener()")}}</td>
+   <td>{{Spec2("DOM4")}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName("DOM2 Events", "#Events-EventTarget-addEventListener", "EventTarget.addEventListener()")}}</td>
+   <td>{{Spec2("DOM2 Events")}}</td>
+   <td>初回定義</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザーの対応</h2>
+
+<div class="hidden">このページの互換性一覧表は構造化データから生成されています。データに協力したいのであれば、 <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> をチェックアウトしてプルリクエストを送信してください。</div>
+
+<p>{{Compat("api.EventTarget.addEventListener", 3)}}</p>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li>{{domxref("EventTarget.removeEventListener()")}}</li>
+ <li><a href="/ja/docs/Web/Guide/DOM/Events/Creating_and_triggering_events">カスタムイベントの作成と軌道</a></li>
+ <li><a href="http://www.quirksmode.org/js/this.html">イベントハンドラー内での <code>this</code> の使用方法のさらに詳細な解説</a></li>
+</ul>

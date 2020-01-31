@@ -1,0 +1,156 @@
+<p>{{ APIRef("Web Audio API") }}</p>
+
+<div>
+<p>{{ domxref("AudioContext") }}インターフェースの<code>createMediaStreamDestination()</code>メソッドは、<a href="/en-US/docs/WebRTC">WebRTC</a> {{domxref("MediaStream")}}で表されたローカルファイルまたは他のコンピュータへの送信に関連付けられた{{domxref("MediaStreamAudioDestinationNode")}}オブジェクトを生成します。</p>
+</div>
+
+<p>{{domxref("MediaStream")}}は、ノードが生成されたときと、{{domxref("MediaStreamAudioDestinationNode")}}の<code>stream</code>プロパティを通じでアクセスできるようになったときに生成されます。このストリームは{{domxref("navigator.getUserMedia") }}で得られた<code>MediaStream</code>と同じような使い方ができます—例えば、<code>RTCPeerConnection</code>インターフェースの<code>addStream()</code>メソッドでリモートの端末に送ることができます。</p>
+
+<p>詳細は{{domxref("MediaStreamAudioDestinationNode")}}のページを参照してください。</p>
+
+<h2 id="構文">構文</h2>
+
+<pre class="brush: js">var audioCtx = new AudioContext();
+var desintation = audioCtx.createMediaStreamDestination();</pre>
+
+<h3 id="戻り値">戻り値</h3>
+
+<p>{{domxref("MediaStreamAudioDestinationNode")}}</p>
+
+<h2 id="例">例</h2>
+
+<p>次の簡単な例では、{{domxref("MediaStreamAudioDestinationNode")}}と{{ domxref("OscillatorNode") }}と{{ domxref("MediaRecorder") }}(現時点ではこのサンプルはFirefoxでしか動作しません)を生成しています。<code>MediaRecorder</code>は<code>MediaStreamDestinationNode</code>からの情報を記録するように設定されています。</p>
+
+<p>ボタンをクリックするとオシレーター(振動子)が開始し、<code>MediaRecorder</code>も開始します。再びボタンを押して止めると、オシレーターと<code>MediaRecorder</code>の両方が停止し、<code>MediaRecorder</code>はデータを要求します。これは<code>dataavailable</code>イベントが発火したときに行われ、イベントデータは<code>chunks</code>配列にプッシュされます。その後、<code>stop</code>イベントが発火すると、新しい<code>blob</code>がopusタイプで作られます—そこには<code>chunks</code>配列のデータが書き込まれていて、そのblobのURLを指す新しいウィンドウ(タブ)が開きます。</p>
+
+<p>そこでopusファイルの再生と保存ができます。</p>
+
+<pre class="brush: html;highlight[17]">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+  &lt;head&gt;
+    &lt;title&gt;createMediaStreamDestination() demo&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;h1&gt;createMediaStreamDestination() demo&lt;/h1&gt;
+
+    &lt;p&gt;Encoding a pure sine wave to an Opus file &lt;/p&gt;
+    &lt;button&gt;Make sine wave&lt;/button&gt;
+    &lt;script&gt;
+     var b = document.querySelector("button");
+     var clicked = false;
+     var chunks = [];
+     var ac = new AudioContext();
+     var osc = ac.createOscillator();
+     var dest = ac.createMediaStreamDestination();
+     var mediaRecorder = new MediaRecorder(dest.stream);
+     osc.connect(dest);
+
+     b.addEventListener("click", function(e) {
+       if (!clicked) {
+           mediaRecorder.start();
+           osc.start(0);
+           e.target.innerHTML = "Stop recording";
+           clicked = true;
+         } else {
+           mediaRecorder.stop();
+           mediaRecorder.requestData();
+           osc.stop(0);
+           e.target.disabled = true;
+         }
+     });
+
+     mediaRecorder.ondataavailable = function(evt) {
+       // それぞれのchunk(blobs)を配列に入れる
+       chunks.push(evt.data);
+     };
+
+     mediaRecorder.onstop = function(evt) {
+       // blobを作成し開く
+       var blob = new Blob(chunks, { 'type' : 'audio/ogg; codecs=opus' });
+       window.location.href = URL.createObjectURL(blob);
+     };
+    &lt;/script&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</pre>
+
+<div class="note">
+<p><strong>注:</strong> Githubで<a href="http://mdn.github.io/create-media-stream-destination/">この例の閲覧</a>と<a href="https://github.com/mdn/create-media-stream-destination">ソースコードを読む</a>ことができます。</p>
+</div>
+
+<h2 id="仕様">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('Web Audio API', '#widl-AudioContext-createMediaStreamDestination-MediaStreamAudioDestinationNode', 'createMediaStreamDestination()')}}</td>
+   <td>{{Spec2('Web Audio API')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="ブラウザ互換性">ブラウザ互換性</h2>
+
+<div>{{CompatibilityTable}}</div>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari (WebKit)</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatChrome(10.0)}}{{property_prefix("webkit")}}</td>
+   <td>{{CompatGeckoDesktop(25.0)}} </td>
+   <td>{{CompatNo}}</td>
+   <td>15.0{{property_prefix("webkit")}}<br>
+    22 (unprefixed)</td>
+   <td>6.0{{property_prefix("webkit")}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>Firefox OS</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+   <th>Chrome for Android</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatUnknown}}</td>
+   <td>26.0</td>
+   <td>1.2</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>33.0</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="参考">参考</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Web_Audio_API/Using_Web_Audio_API">Using the Web Audio API</a></li>
+</ul>

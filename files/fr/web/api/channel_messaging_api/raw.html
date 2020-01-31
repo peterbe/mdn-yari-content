@@ -1,0 +1,138 @@
+<p>L'API Channel Messaging permet à deux scripts séparés s'exécutant dans des contextes de navigation attachés au même document (e.g., deux IFrames, ou le document principal et un IFrame, deux documents via un {{domxref("SharedWorker")}}, ou deux workers) de communiquer directement, en se passant des messages de l'un à l'autre à travers des canaux bidirectionnels (ou pipes) pourvus d'un port à chaque extrémité.</p>
+
+<h2 id="Canal_de_communication_-_concepts_et_utilisation">Canal de communication - concepts et utilisation</h2>
+
+<p>Un canal de communication est crée en utilisant le constructeur {{domxref("MessageChannel.MessageChannel", "MessageChannel()")}}. Une fois crée, les deux ports du canal peuvent être accessible via les propriétés {{domxref("MessageChannel.port1")}} et {{domxref("MessageChannel.port2")}} (lesquelles retournent un objet {{domxref("MessagePort")}}.) L'application qui créée le canal utilise le <code>port1</code>, et l'autre utilise le <code>port2</code> — Vous envoyez un message à <code>port2</code>, qui le transfert à l'autre contexte en utilisant {{domxref("window.postMessage")}} avec deux arguments (le message à envoyer, et l'objet à transférer, dans ce cas, il s'agit du port lui-même).</p>
+
+<p>When these transferable objects are transferred, they are 'neutered' on the previous context — the one they previously belonged to. For instance a port, when is sent, cannot be used anymore by the original context. Note that the only two objects that can currently be transferred are {{domxref("ArrayBuffer")}} and {{domxref("MessagePort")}}.</p>
+
+<p>The other browsing context can listen for the message using {{domxref("MessagePort.onmessage")}}, and grab the contents of the message using the event's <code>data</code> attribute. You could then respond by sending a message back to the original document using {{domxref("MessagePort.postMessage")}}.</p>
+
+<p>When you want to stop sending messages down the channel, you can invoke {{domxref("MessagePort.close")}} to close the ports.</p>
+
+<p>Find out more about how to use this API in <a href="/en-US/docs/Web/API/Channel_Messaging_API/Using_channel_messaging">Using channel messaging</a>.</p>
+
+<h2 id="Channel_messaging_interfaces">Channel messaging interfaces</h2>
+
+<dl>
+ <dt>{{domxref("MessageChannel")}}</dt>
+ <dd>Creates a new message channel to send messages across.</dd>
+ <dt>{{domxref("MessagePort")}}</dt>
+ <dd>Controls the ports on the message channel, allowing sending of messages from one port and listening out for them arriving at the other.</dd>
+ <dt>{{domxref("PortCollection")}}</dt>
+ <dd>An array of <code>MessagePort</code>s; an experimental solution to allow broadcasting of a message to multiple ports simultaneously.</dd>
+</dl>
+
+<h2 id="Examples">Examples</h2>
+
+<ul>
+ <li>We have published a <a href="https://github.com/mdn/channel-messaging-basic-demo">channel messaging basic demo</a> on Github (<a href="http://mdn.github.io/channel-messaging-basic-demo/">run it live too</a>), which shows a really simple single message transfer between a page and an embedded {{htmlelement("iframe")}}.</li>
+ <li>You can also see a <a href="https://github.com/mdn/channel-messaging-multimessage">multimessaging demo</a> (<a href="http://mdn.github.io/channel-messaging-multimessage/">run this live</a>), which shows a slightly more complex setup that can send multiple messages between main page and IFrame.</li>
+</ul>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('HTML WHATWG', '#toc-comms')}}<br>
+    Channel messaging defined in section 9.5</td>
+   <td>{{Spec2('HTML WHATWG')}}</td>
+   <td>No difference from {{SpecName("HTML5 Web Messaging")}}.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('HTML5 Web Messaging', '#channel-messaging')}}</td>
+   <td>{{Spec2('HTML5 Web Messaging')}}</td>
+   <td>W3C version of the spec</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<div>{{CompatibilityTable}}</div>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari (WebKit)</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>4</td>
+   <td>{{CompatNo}}</td>
+   <td>10.0</td>
+   <td>10.6</td>
+   <td>5</td>
+  </tr>
+  <tr>
+   <td>PortCollection</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Chrome Mobile</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>Firefox OS (Gecko)</th>
+   <th>IE Phone</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>4.4</td>
+   <td>4</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>10.0</td>
+   <td>11.5</td>
+   <td>5.1</td>
+  </tr>
+  <tr>
+   <td>PortCollection</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h3 id="Compatibility_notes">Compatibility notes</h3>
+
+<p>Channel messaging support for Firefox is close; {{domxref("MessagePort")}} is already being used in <a href="/en-US/docs/Web/API/Web_Workers_API/basic_usage#Shared_workers">shared workers</a>. See {{Bug("952139")}} for progress.</p>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Web/API/Channel_Messaging_API/Using_channel_messaging">Using channel messaging</a></li>
+ <li><a href="/en-US/docs/Web/API/Web_Workers_API">Web Workers API</a></li>
+ <li><a href="/en-US/docs/Web/API/Broadcast_Channel_API">Broadcast Channel API</a></li>
+</ul>

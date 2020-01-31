@@ -1,0 +1,314 @@
+<div>{{jsSidebar("More")}}</div>
+
+<p>Alla programmeringsspråk har inbyggda datastrukturer, men dessa skiljer sig ofta mellan olika programmeringsspråk. Den här artikeln tar upp de inbyggda datastrukturer som finns i JavaScript och dess egenskaper. Dessa kan användas för att bygga andra datastrukturer. Där möjligt kommer jömförelser med andra programmeringssråk göras.</p>
+
+<h2 id="Dynamisk_typning">Dynamisk typning</h2>
+
+<p>JavaScript är ett <em>löst typat</em> eller <em>dynamiskt</em> språk. I JavaScript är variabler inte bundna till att innehålla värden av någon särskild typ, alla variabler kan defineras och tilldelas värden av godtycklig typ:</p>
+
+<pre class="brush: js">let foo = 42;    // foo innehåller ett nummer
+foo     = 'bar'; // foo innehåller en sträng
+foo     = true;  // foo innehåller ett sanningsvärde/booleskt värde
+</pre>
+
+<h2 id="Datatyper">Datatyper</h2>
+
+<p>Senaste ECMAScript standarden beskriver åtta inbyggda datatyper:</p>
+
+<ul>
+ <li>Sju {{Glossary("Primitive", "primitiva")}} datatyper:
+  <ul>
+   <li>Sanningsvärden / Booleska värden: {{Glossary("Boolean")}}</li>
+   <li>Noll (i bemärkelsen "noll och intet", inte siffran noll): {{Glossary("Null")}}</li>
+   <li>Odefinerad: {{Glossary("Undefined")}}</li>
+   <li>Nummer: {{Glossary("Number")}}</li>
+   <li>Stora heltal: {{Glossary("BigInt")}}</li>
+   <li>Strängar: {{Glossary("String")}}</li>
+   <li>Symboler: {{Glossary("Symbol")}}</li>
+  </ul>
+ </li>
+ <li>och en sammansatt datatyp:
+  <ul>
+   <li>Objekt: {{Glossary("Object")}}</li>
+   <li>som i sin tur har ett flertal härledda typer.</li>
+  </ul>
+ </li>
+</ul>
+
+<h2 id="Primitiva_värden">Primitiva värden</h2>
+
+<p>Alla typer förutom förutom sammansatta/objekt är oföränderliga värden.Till exempel är strängar i JavaScript oföränderliga, till skillnad från språk som C. De här datatyperna kallas sammanfattande som primitiva typer.</p>
+
+<h3 id="Sanningsvärden_Booleska_typen_Boolean">Sanningsvärden / Booleska typen (Boolean)</h3>
+
+<p>Booleska värden representerar logiska sanningsvärden antingen: sann (<code>true</code>) eller falsk (<code>false</code>). Se {{Glossary("Boolean")}} och {{jsxref("Boolean")}} för fler detaljer.</p>
+
+<h3 id="Nolltypen_Null">Nolltypen (Null)</h3>
+
+<p>Nolltypen har ett enda värde: noll (<code>null</code>). Se {{jsxref("null")}} och {{Glossary("Null")}} för fler detaljer.</p>
+
+<h3 id="Odefinerade_typen_Undefined">Odefinerade typen (Undefined)</h3>
+
+<p>En deklarerad variabel som inte har tilldelats ett värde kommer innehålla värdet odefinerad (<code>undefined</code>). Se {{jsxref("undefined")}} och {{Glossary("Undefined")}} för fler detaljer.</p>
+
+<h3 id="Nummertypen_Number">Nummertypen (Number)</h3>
+
+<p>ECMAScript har två inbyggda numeriska typer: Nummer (Number) och stora heltal (BigInt) (se nedan).</p>
+
+<p>Nummertypen är <a href="http://en.wikipedia.org/wiki/Double_precision_floating-point_format">binära flyttalsvärden enligt 64-bitars dubbelprecisionsformatet IEEE 754</a> (tal mellan -(2<sup>53</sup> -1) och 2<sup>53</sup> -1). Förutom att representera flyttal kan nummertypen också representera tre symboliska värden: Positiv oändlighet (<code>+Infinity</code>), negativ oändlighet (<code>-Infinity</code>), och icke-nummer {{jsxref("NaN")}} (eng. Not-a-Number).</p>
+
+<p>Test för största tillgängliga värde eller minsta tillgängliga värde mellan positiv och negativ oändlighet {{jsxref("Infinity", "+/-Infinity")}}, kan använda konstanterna {{jsxref("Number.MAX_VALUE")}} och {{jsxref("Number.MIN_VALUE")}} respektive. Sedan ECMAScript 2015 är det möjligt att testa om tal ligger inom intervallet där dubbelprecisionsflyttal kan exakt representera heltal genom funktionen {{jsxref("Number.isSafeInteger()")}} eller jämförelse med konstanterna {{jsxref("Number.MAX_SAFE_INTEGER")}} och {{jsxref("Number.MIN_SAFE_INTEGER")}}. Utanför det här intervallet kan dubbelprecisionsflyttal inte representera alla heltal med unika representationer per heltal, utan kommer att använda en representation där fler än ett helttal kommer ge exakt samma binära representation och därmed inte kan skiljas åt.</p>
+
+<p>Nummertypen har bara ett heltal som har fler än en representation: talet noll 0 representeras som antingen -0 eller +0. ("0" är en underförstådd +0). I nästan all kod kommer detta inte vara av någon som helst betydelse. Till exempel är jämförelsen <code>+0 === -0</code>  sann (<code>true</code>). Skillnaden mellan positive och negativ nolla kan dock observeras vid division med positiv eller negativ nolla:</p>
+
+<pre class="brush: js">&gt; 42 / +0
+Infinity
+&gt; 42 / -0
+-Infinity
+</pre>
+
+<p>Även om de flesta tal bara representerar ett värde kan JavaScript utföra <a href="/en-US/docs/Web/JavaScript/Reference/Operators/Bitwise_Operators" title="en/JavaScript/Reference/Operators/Bitwise_Operators">flera binära operationer</a>. Dessa kan användas för att representera flera sanningsvärden i ett enda tal genom <a class="external" href="http://en.wikipedia.org/wiki/Mask_%28computing%29">bitmaskning</a>. Det anses dock vara dålig sed eftersom JavaScript har andra sätt att representera uppsättningar av sanningsvärden, som rader (<code>Array</code>) av sanningsvärden (<code>Boolean</code>) eller sanningsvärden tilldelade till namngivna egenskaper på objekt. Bitmaskning tenderar att göra kod svårare att läsa, förstå och underhålla. Det kan vara nödvändigt att använda sådana tekniker i begränsade miljöer, som vid lagringsstorleksbegränsningar eller då kraftiga begränsningar i datamängd änd över nätverket gäller. Tekniken bör ses som en sista åtgärd vid utrymmesoptimering.</p>
+
+<h3 id="Stora_heltal_BigInt">Stora heltal (BigInt)</h3>
+
+<p>Stora heltalstypen ({{jsxref("BigInt")}}) är en numerisk primitiv i JavaScript som kan representera heltal med godtycklig precision. Stora heltal (<code>BigInt</code>) tillåter exakt lagring av helttal större än de som exakt kan representeras i nummer (<code>Number</code>). Ett stort heltal(<code>BigInt</code>) skapas genom att lägga till ett <code>n</code> efter en nummerliteral eller genom att anropa stora heltal-konstruktören (<code>new BigInt</code>).</p>
+
+<p>Största värdet som exakt kan representeras med nummer (<code>Number</code>) lagras i konstanten  {{jsxref("Number.MAX_SAFE_INTEGER")}}. I och med stora heltal (<code>BigInt</code>) blir det möjligt att göra exakta beräkningar med större heltal än {{jsxref("Number.MAX_SAFE_INTEGER")}}. Detta kan observeras genom att öka tt stort heltal från {{jsxref("Number.MAX_SAFE_INTEGER")}} och se det förväntade resultatet:</p>
+
+<pre class="brush: js">&gt; const x = 2n ** 53n;
+9007199254740992n
+&gt; const y = x + 1n; 
+9007199254740993n
+</pre>
+
+<p>Operatorerna <code>+</code>, <code>*</code>, <code>-</code>, <code>**</code> och <code>%</code> kan användas med stora heltal (<code>BigInt</code>) precis som med nummer (<code>Number</code>). Ett stort heltal (<code>BigInt</code>) jämförs som löst lika med (<code>==</code>) med inte strikt lika med (<code>===</code>) motsvarande nummer (<code>Number</code>).</p>
+
+<p>Ett stort heltal (<code>BigInt</code>) konverteras till sanningsvärden enligt samma beteendet som nummer (<code>Number</code>)  då tal omvandlas till sanningsvärden (<code>Boolean</code>): <code>if</code>, <code>||</code>, <code>&amp;&amp;</code>, <code>Boolean</code>, <code>!</code>.</p>
+
+<p>Stora heltal (<code>BigInt</code>) ger ett typfel ({{jsxref("TypeError")}}) om blandat  med nummer (<code>Number</code>) i numeriska operationer.</p>
+
+<h3 id="Strängtypen_String">Strängtypen (String)</h3>
+
+<p>Strängtypen {{jsxref("String")}} används för data i textform i JavaScript. En sträng är en sekvens av element i form av 16-bitar kodenheter enligt UCS-2, i grunden icke teckenbärande 16-bitars heltal. Varje kodenhet upptar en position i strängen. Första kodenheten ligger på plats 0, andra på plats 1, sista på strängens längd minus ett. Strängens längd är antalet kodenheter.</p>
+
+<p>Till skillnad från språk som C är strängar i JavaScript oföränderliga. Det går inte att förändra sekvensen av kodenheter i strängen efter att den skapades, däremot går det att skapa en ny sträng baserad på originalsträngen. Till exempel:</p>
+
+<ul>
+ <li>En delsträng av originalsträngen genom att välja en enstaka kodenhet (<code>strängvariabel[elementindex]</code>) eller använda en strängmetod som  {{jsxref("String.substr()")}}.</li>
+ <li>En sammanlänkning av två strängar genom att använda sammanlänkningsoperatorn  (<code>+</code>) eller strängmetoden {{jsxref("String.concat()")}}.</li>
+</ul>
+
+<h4 id="Akta_för_sträng-typning_av_er_kod!">Akta för "sträng-typning" av er kod!</h4>
+
+<p>Det kan ibland bli frestande tt använda strängar för att representera komplex data. Detta kan ses ge några kortsiktiga fördelar:</p>
+
+<ul>
+ <li>Lätt att bygga complexa strängar genom sammanlänkning.</li>
+ <li>Strängar är lätta att avlusa (det som skrivs ut är alltid innehållet i strängen).</li>
+ <li>Strängar är den gemensamma nämnaren mellan många APIer (<a href="/en-US/docs/Web/API/HTMLInputElement" title="HTMLInputElement">inmatningsfält</a>, värden från <a href="/en-US/docs/Storage" title="Storage">lokal lagring</a>, svar från {{ domxref("XMLHttpRequest") }} genom <code>responseText</code>, o.s.v.) så det kan bli frestande att hålla sig inom strängtypen.</li>
+</ul>
+
+<p>Med konventioner kan alla datastrukturer bli strängar, men det betyder inte att det är en god idé. Man skulle till exempel med en separator efterlikna en lista, men en rad (<code>Array</code>) i JavaScript skulle vara mer lämplig. Om en separator dyker upp i en delsträng som används för att bygga listan skulle tyvärr listan bli felaktig, och ett utbrytningstecken skulle då bli nödvändigt, o.s.v. Detta skapar extra konventioner som måste följas och kodas för och blir en onödig börda vid underhåll av koden.</p>
+
+<p>Använd strängar för data i form av text. Vid mer komplex data är det lämpligt att använda en tolk och lagra som lämplig abstraktion istället.</p>
+
+<h3 id="Symbol_typen_Symbol">Symbol typen (Symbol)</h3>
+
+<p>Symboler är en ny datatyp i JavaScript introducerad i ECMAScript 2015. En symbol är et <strong>unikt</strong> och <strong>oföränderligt</strong> primitivt värde som kan användas som nyckel till en egenskap i ett objekt (se nedan). I vissa programmeringsspråk kallas symboler atomer. För fler detaljer se {{Glossary("Symbol")}} och {{jsxref("Symbol")}}-objektomslaget i JavaScript.</p>
+
+<h2 id="Objects">Objects</h2>
+
+<p>In computer science, an object is a value in memory which is possibly referenced by an {{Glossary("Identifier", "identifier")}}.</p>
+
+<h3 id="Properties">Properties</h3>
+
+<p>In JavaScript, objects can be seen as a collection of properties. With the <a href="/en-US/docs/Web/JavaScript/Guide/Values,_variables,_and_literals#Object_literals">object literal syntax</a>, a limited set of properties are initialized; then properties can be added and removed. Property values can be values of any type, including other objects, which enables building complex data structures. Properties are identified using key values. A key value is either a String or a Symbol value.</p>
+
+<p>There are two types of object properties which have certain attributes: The data property and the accessor property.</p>
+
+<h4 id="Data_property">Data property</h4>
+
+<p>Associates a key with a value and has the following attributes:</p>
+
+<table class="standard-table">
+ <caption>Attributes of a data property</caption>
+ <tbody>
+  <tr>
+   <th>Attribute</th>
+   <th>Type</th>
+   <th>Description</th>
+   <th>Default value</th>
+  </tr>
+  <tr>
+   <td>[[Value]]</td>
+   <td>Any JavaScript type</td>
+   <td>The value retrieved by a get access of the property.</td>
+   <td>undefined</td>
+  </tr>
+  <tr>
+   <td>[[Writable]]</td>
+   <td>Boolean</td>
+   <td>If <code>false</code>, the property's [[Value]] can't be changed.</td>
+   <td>false</td>
+  </tr>
+  <tr>
+   <td>[[Enumerable]]</td>
+   <td>Boolean</td>
+   <td>If <code>true</code>, the property will be enumerated in <a href="/en-US/docs/Web/JavaScript/Reference/Statements/for...in">for...in</a> loops. See also <a href="/en-US/docs/Web/JavaScript/Enumerability_and_ownership_of_properties">Enumerability and ownership of properties</a></td>
+   <td>false</td>
+  </tr>
+  <tr>
+   <td>[[Configurable]]</td>
+   <td>Boolean</td>
+   <td>If <code>false</code>, the property can't be deleted, can't be changed to an accessor property and attributes other than [[Value]] and [[Writable]] can't be changed.</td>
+   <td>false</td>
+  </tr>
+ </tbody>
+</table>
+
+<table class="standard-table">
+ <caption>Obsolete attributes (as of ECMAScript 3, renamed in ECMAScript 5)</caption>
+ <tbody>
+  <tr>
+   <th>Attribute</th>
+   <th>Type</th>
+   <th>Description</th>
+  </tr>
+  <tr>
+   <td>Read-only</td>
+   <td>Boolean</td>
+   <td>Reversed state of the ES5 [[Writable]] attribute.</td>
+  </tr>
+  <tr>
+   <td>DontEnum</td>
+   <td>Boolean</td>
+   <td>Reversed state of the ES5 [[Enumerable]] attribute.</td>
+  </tr>
+  <tr>
+   <td>DontDelete</td>
+   <td>Boolean</td>
+   <td>Reversed state of the ES5 [[Configurable]] attribute.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h4 id="Accessor_property">Accessor property</h4>
+
+<p>Associates a key with one or two accessor functions (get and set) to retrieve or store a value and has the following attributes:</p>
+
+<table class="standard-table">
+ <caption>Attributes of an accessor property</caption>
+ <tbody>
+  <tr>
+   <th>Attribute</th>
+   <th>Type</th>
+   <th>Description</th>
+   <th>Default value</th>
+  </tr>
+  <tr>
+   <td>[[Get]]</td>
+   <td>Function object or undefined</td>
+   <td>The function is called with an empty argument list and retrieves the property value whenever a get access to the value is performed. See also <a href="/en-US/docs/Web/JavaScript/Reference/Operators/get"><code>get</code></a>.</td>
+   <td>undefined</td>
+  </tr>
+  <tr>
+   <td>[[Set]]</td>
+   <td>Function object or undefined</td>
+   <td>The function is called with an argument that contains the assigned value and is executed whenever a specified property is attempted to be changed. See also <a href="/en-US/docs/Web/JavaScript/Reference/Operators/set"><code>set</code></a>.</td>
+   <td>undefined</td>
+  </tr>
+  <tr>
+   <td>[[Enumerable]]</td>
+   <td>Boolean</td>
+   <td>If <code>true</code>, the property will be enumerated in <a href="/en-US/docs/Web/JavaScript/Reference/Statements/for...in">for...in</a> loops.</td>
+   <td>false</td>
+  </tr>
+  <tr>
+   <td>[[Configurable]]</td>
+   <td>Boolean</td>
+   <td>If <code>false</code>, the property can't be deleted and can't be changed to a data property.</td>
+   <td>false</td>
+  </tr>
+ </tbody>
+</table>
+
+<div class="note">
+<p><strong>Note: </strong>Attribute is usually used by JavaScript engine, so you can't directly access it (see more about {{jsxref("Object.defineProperty()")}}). That's why the attribute is put in double square brackets instead of single.</p>
+</div>
+
+<h3 id="Normal_objects_and_functions">"Normal" objects, and functions</h3>
+
+<p>A JavaScript object is a mapping between keys and values. Keys are strings (or {{jsxref("Symbol")}}s) and values can be anything. This makes objects a natural fit for <a class="external" href="http://en.wikipedia.org/wiki/Hash_table">hashmaps</a>.</p>
+
+<p>Functions are regular objects with the additional capability of being callable.</p>
+
+<h3 id="Dates">Dates</h3>
+
+<p>When representing dates, the best choice is to use the built-in <a href="/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date"><code>Date</code> utility</a> in JavaScript.</p>
+
+<h3 id="Indexed_collections_Arrays_and_typed_Arrays">Indexed collections: Arrays and typed Arrays</h3>
+
+<p><a href="/en-US/docs/JavaScript/Reference/Global_Objects/Array" title="Array">Arrays</a> are regular objects for which there is a particular relationship between integer-key-ed properties and the 'length' property. Additionally, arrays inherit from <code>Array.prototype</code> which provides to them a handful of convenient methods to manipulate arrays. For example, <code><a href="/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/indexOf" title="en/JavaScript/Reference/Global_Objects/Array/indexOf">indexOf</a></code> (searching a value in the array) or <code><a href="/en-US/docs/JavaScript/Reference/Global_Objects/Array/push" title="en/JavaScript/Reference/Global_Objects/Array/push">push</a></code> (adding an element to the array), etc. This makes Arrays a perfect candidate to represent lists or sets.</p>
+
+<p><a href="/en-US/docs/Web/JavaScript/Typed_arrays">Typed Arrays</a> are new to JavaScript with ECMAScript 2015 and present an array-like view of an underlying binary data buffer. The following table helps you to find the equivalent C data types:</p>
+
+<p>{{page("/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray", "TypedArray_objects", "", 0, 3)}}</p>
+
+<h3 id="Keyed_collections_Maps_Sets_WeakMaps_WeakSets">Keyed collections: Maps, Sets, WeakMaps, WeakSets</h3>
+
+<p>These data structures take object references as keys and are introduced in ECMAScript Edition 6. {{jsxref("Set")}} and {{jsxref("WeakSet")}} represent a set of objects, while {{jsxref("Map")}} and {{jsxref("WeakMap")}} associate a value to an object. The difference between Maps and WeakMaps is that in the former, object keys can be enumerated over. This allows garbage collection optimizations in the latter case.</p>
+
+<p>One could implement Maps and Sets in pure ECMAScript 5. However, since objects cannot be compared (in the sense of "less than" for instance), look-up performance would necessarily be linear. Native implementations of them (including WeakMaps) can have look-up performance that is approximately logarithmic to constant time.</p>
+
+<p>Usually, to bind data to a DOM node, one could set properties directly on the object or use <code>data-*</code> attributes. This has the downside that the data is available to any script running in the same context. Maps and WeakMaps make it easy to privately bind data to an object.</p>
+
+<h3 id="Structured_data_JSON">Structured data: JSON</h3>
+
+<p>JSON (JavaScript Object Notation) is a lightweight data-interchange format, derived from JavaScript but used by many programming languages. JSON builds universal data structures. See {{Glossary("JSON")}} and {{jsxref("JSON")}} for more details.</p>
+
+<h3 id="More_objects_in_the_standard_library">More objects in the standard library</h3>
+
+<p>JavaScript has a standard library of built-in objects. Please have a look at the <a href="/en-US/docs/Web/JavaScript/Reference/Global_Objects">reference</a> to find out about more objects.</p>
+
+<h2 id="Determining_types_using_the_typeof_operator">Determining types using the <code>typeof</code> operator</h2>
+
+<p>The <code>typeof</code> operator can help you to find the type of your variable. Please read the <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/typeof">reference page</a> for more details and edge cases.</p>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES1')}}</td>
+   <td>{{Spec2('ES1')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-8', 'Types')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td></td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-ecmascript-data-types-and-values', 'ECMAScript Data Types and Values')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td>Added Symbol.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-ecmascript-data-types-and-values', 'ECMAScript Data Types and Values')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td></td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li><a class="link-https" href="https://github.com/nzakas/computer-science-in-javascript/">Nicholas Zakas collection of common data structure and common algorithms in JavaScript.</a></li>
+ <li><a href="https://github.com/monmohan/DataStructures_In_Javascript" title="https://github.com/monmohan/DataStructures_In_Javascript">Search Tre(i)es implemented in JavaScript</a></li>
+</ul>

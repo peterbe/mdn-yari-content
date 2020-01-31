@@ -1,0 +1,228 @@
+<p>{{ApiRef}}</p>
+
+<h2 id="Qu'est_ce_qu'Address_Sanitizer">Qu'est ce qu'Address Sanitizer?</h2>
+
+<p>Address Sanitizer (ASan) est un détecteur d'erreurs de mémoire rapide qui détecte les bogues libres et hors limites dans les programmes C/C++. Il utilise une instrumentation de compilation pour vérifier toutes les lectures et écritures pendant l'exécution. De plus, la partie runtime remplace les fonctions <code>malloc</code> et <code>free</code> pour vérifier la mémoire allouée dynamiquement. Plus d'informations sur le fonctionnement d'ASan peuvent être trouvées sur la page de wiki : <a class="external" href="http://code.google.com/p/address-sanitizer/wiki/AddressSanitizerAlgorithm" title="http://code.google.com/p/address-sanitizer/wiki/AddressSanitizerAlgorithm">the Address Sanitizer</a>.</p>
+
+<h2 id="Télécharger_des_versions_d'artefacts">Télécharger des versions d'artefacts</h2>
+
+<p>Pour les utilisateurs Linux, la façon la plus simple d'obtenir des versions Firefox avec Address Sanitizer est de télécharger une intégration continue comme une compilation de mozilla-central (mise à jour au moins une fois par jour) :</p>
+
+<ul>
+ <li><a href="https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.latest.firefox.linux64-asan-opt/artifacts/public/build/target.tar.bz2">mozilla-central optimized builds</a> (recommandé pour les tests)</li>
+ <li><a href="https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.latest.firefox.linux64-asan-debug/artifacts/public/build/target.tar.bz2">mozilla-central debug builds</a> (recommandé pour le débogage si les builds optimisés ne font pas le travail)</li>
+</ul>
+
+<h2 id="Création_de_votre_version">Création de votre version</h2>
+
+<p>Si, pour une raison quelconque, vous ne pouvez pas utiliser les binaires pré-compilés mentionnés dans la section précédente (par exemple, vous voulez une compilation non-Linux ou vous devez tester un patch), vous pouvez soit construire Firefox vous-même (voir la section suivante) soit utiliser le <a href="https://wiki.mozilla.org/ReleaseEngineering/TryServer">try server</a> pour créer la compilation personnalisée pour vous. Pousser pour essayer nécessite l'accès au commit L1. Si vous n'avez pas encore cet accès, vous pouvez en faire la demande (voir <a href="https://www.mozilla.org/en-US/about/governance/policies/commit/">Becoming A Mozilla Committer</a> et <a href="https://www.mozilla.org/en-US/about/governance/policies/commit/access-policy/">Mozilla Commit Access Policy</a> pour connaître les exigences). Notez que ce type d'accès est principalement pour les développeurs et autres contributeurs réguliers.</p>
+
+<p>L'arbre contient <a href="https://dxr.mozilla.org/mozilla-central/search?q=path%3Abrowser%2Fconfig%2Fmozconfigs%2F+path%3Aasan">plusieurs fichiers mozconfig pour créer des versions asan</a> (les fichiers « nightly-asan » créent des versions, tandis que les fichiers « debug-asan » créent des versions debug+opt). Pour les verisons Linux, Le fichier de configuration approprié est utilisé par la cible <code>linux64-asan</code>. Si vous voulez créer une compilation macOS ou Windows, vous devrez copier le fichier de configuration approprié sur la configuration de débogage régulière avant de pousser pour essayer. Par exemple :</p>
+
+<pre>cp browser/config/mozconfigs/macosx64/debug-asan browser/config/mozconfigs/macosx64/debug</pre>
+
+<p>Vous pouvez ensuite <a href="https://wiki.mozilla.org/Build:TryServer#How_to_push_to_try">pousser pour essayer de la manière habituelle </a>et, une fois la compilation terminée, télécharger l'artefact de compilation approprié.</p>
+
+<h2 id="Creation_de_versions_locales_pour_Windows">Creation de versions locales pour Windows</h2>
+
+<p>Sous Windows, ASan n'est supporté que dans les versions 64 bits.</p>
+
+<p>Lancez <code>mach bootstrap</code> pour obtenir un clang-cl mis à jour dans votre répertoire   <code>~/.mozbuild</code>, puis utilisez la <a href="/fr/docs/Mozilla/Developer_guide/Documentation_sur_la_compilation/Configuration_des_options_de_compilation">mozconfig</a> suivante :</p>
+
+<pre>ac_add_options --target=x86_64-pc-mingw32
+ac_add_options --host=x86_64-pc-mingw32
+
+ac_add_options --enable-address-sanitizer
+ac_add_options --disable-jemalloc
+
+export CC="clang-cl.exe"
+export CXX="clang-cl.exe"
+
+export LDFLAGS="clang_rt.asan_dynamic-x86_64.lib clang_rt.asan_dynamic_runtime_thunk-x86_64.lib"
+CLANG_LIB_DIR="$(cd ~/.mozbuild/clang/lib/clang/*/lib/windows &amp;&amp; pwd)"
+export MOZ_CLANG_RT_ASAN_LIB_PATH="${CLANG_LIB_DIR}/clang_rt.asan_dynamic-x86_64.dll"
+export LIB=$LIB:$CLANG_LIB_DIR
+</pre>
+
+<p>Si vous voulez utiliser une autre LLVM (voir les <a href="/fr/docs/Mozilla/Developer_guide/Documentation_sur_la_compilation/Building_Firefox_on_Windows_with_clang-cl">insctruction clang-cl</a>), modifiez CLANG_LIB_DIR comme il convient.</p>
+
+<p>Si vous lancez une version d'ASan sous WinDbg, vous pouvez voir de fausses exceptions de violation d'accès de première chance. Ceux-ci proviennent d'ASan créant des pages de mémoire fantôme à la demande, et peuvent être ignorés. Lancez <code>sxi av</code> pour ignorer ces exceptions (vous attraperez toujours les exceptions de violation d'accès de seconde chance si vous vous plantez réellement).</p>
+
+<p>Le LeakSanitizer (LSan) n'est pas pris en charge sur Windows.</p>
+
+<h2 id="Création_de_versions_locales_sur_Linux_ou_Mac">Création de versions locales sur Linux ou Mac</h2>
+
+<h3 id="Construire_les_pre-requis">Construire les pre-requis</h3>
+
+<h4 id="LLVMClang">LLVM/Clang</h4>
+
+<p>L'instrumentation ASan est implémentée en tant que LLVM pass et intégrée dans Clang. Toute version de Clang qui est capable de compiler Firefox a tout ce qu'il faut pour faire une compilation ASAN.</p>
+
+<h3 id="Compilation_Firefox">Compilation Firefox</h3>
+
+<h4 id="Obtenir_les_sources">Obtenir les sources</h4>
+
+<p>En utilisant cela ou n'importe quelle révision ultérieure, tout ce que vous avez à faire est de vous procurer un clone de mozilla-central.</p>
+
+<h4 id="Ajustement_de_la_configuration_de_construction">Ajustement de la configuration de construction</h4>
+
+<p>Créez le fichier de configuration <code>mozconfig</code> avec le contenu suivant dans votre répertoire mozilla-central :</p>
+
+<pre># Combined .mozconfig file for ASan on Linux+Mac
+
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/objdir-ff-asan
+
+# Adjust this to the number of CPU cores + 2
+mk_add_options MOZ_MAKE_FLAGS=-j10
+
+# Enable ASan specific code and build workarounds
+ac_add_options --enable-address-sanitizer
+
+# Ensure you set this to your LLVM_HOME path
+export LLVM_HOME="/path/to/your/llvm"
+
+# Set CC/CXX based on LLVM_HOME
+export CC="$LLVM_HOME/build/bin/clang"
+export CXX="$LLVM_HOME/build/bin/clang++"
+
+# This will ensure the symbolizer is packaged with the binary
+export LLVM_SYMBOLIZER="$LLVM_HOME/build/bin/llvm-symbolizer"
+
+# Add ASan to our compiler flags
+export CFLAGS="-fsanitize=address -Dxmalloc=myxmalloc -fPIC"
+export CXXFLAGS="-fsanitize=address -Dxmalloc=myxmalloc -fPIC"
+
+# Additionally, we need the ASan flag during linking. Normally, our C/CXXFLAGS would
+# be used during linking as well but there is at least one place in our build where
+# our CFLAGS are not added during linking.
+# Note: The use of this flag causes Clang to automatically link the ASan runtime :)
+export LDFLAGS="-fsanitize=address"
+
+# These three are required by ASan
+ac_add_options --disable-jemalloc
+ac_add_options --disable-crashreporter
+ac_add_options --disable-elf-hack
+
+# Keep symbols to symbolize ASan traces later
+export MOZ_DEBUG_SYMBOLS=1
+ac_add_options --enable-debug-symbols
+ac_add_options --disable-install-strip
+
+# Settings for an opt build (preferred)
+# The -gline-tables-only ensures that all the necessary debug information for ASan
+# is present, but the rest is stripped so the resulting binaries are smaller.
+ac_add_options --enable-optimize="-O2 -gline-tables-only"
+ac_add_options --disable-debug
+
+# Settings for a debug+opt build
+#ac_add_options --enable-optimize
+#ac_add_options --enable-debug
+
+# MacOSX only: Uncomment and adjust this path to match your SDK
+# ac_add_options --with-macos-sdk=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk
+</pre>
+
+<p>Vous pouvez aussi en avoir besoin, comme on peut le voir dans <code>browser/config/mozconfigs/linux64/nightly-asan</code> (le fichier de configuration utilisé pour les versions d'Addresse Sanitizer utilisées pour les tests automatisés) :</p>
+
+<pre># ASan specific options on Linux
+ac_add_options --enable-valgrind</pre>
+
+<h4 id="Démarrer_le_processus_de_compilation">Démarrer le processus de compilation</h4>
+
+<p>Maintenant vous lancez le processus de compilation en utilisant la commande régulière <code>./mach build</code>.</p>
+
+<h4 id="Démarrer_Firefox">Démarrer Firefox</h4>
+
+<p>Une fois la compilation terminée, <code>./mach run</code> s'exécute avec les options habituelles pour s'exécuter dans un débogueur (<code>gdb</code>, <code>lldb</code>, <code>rr</code>, etc.) fonctionnent correctement, tout comme les options <code>--disable-e10s</code> et autres.</p>
+
+<h4 id="Construire_uniquement_l'interpréteur_de_commandes_JavaScript">Construire uniquement l'interpréteur de commandes JavaScript</h4>
+
+<p>Si vous voulez construire uniquement le shell JavaScript au lieu de faire une construction Firefox complète, le script de construction ci-dessous vous aidera probablement à le faire. Exécutez ce script dans le sous-répertoire <code>js/src/</code> et passez un nom de répertoire comme premier paramètre. La compilation sera alors créée dans un nouveau sous-répertoire portant ce nom.</p>
+
+<pre>#! /bin/sh
+
+if [ -z $1 ] ; then
+    echo "usage: $0 &lt;dirname&gt;"
+elif [ -d $1 ] ; then
+    echo "directory $1 already exists"
+else
+    autoconf2.13
+    mkdir $1
+    cd $1
+    LLVM_ROOT="/path/to/llvm"
+    CC="$LLVM_ROOT/build/Release/bin/clang" \
+    CXX="$LLVM_ROOT/build/Release/bin/clang++" \
+    CFLAGS="-fsanitize=address" \
+    CXXFLAGS="-fsanitize=address" \
+    LDFLAGS="-fsanitize=address" \
+            ../configure --enable-debug --enable-optimize --enable-address-sanitizer --disable-jemalloc
+    make -j 8
+fi
+</pre>
+
+<h3 id="Obtenir_des_symboles_dans_les_traces_de_Sanitizer_Address">Obtenir des symboles dans les traces de Sanitizer Address</h3>
+
+<p>Par défaut, les traces ASan sont non symbolisées et n'impriment que le binaire/bibliothèque et un décalage mémoire à la place. Pour obtenir des traces plus utiles, contenant des symboles, il y a deux approches.</p>
+
+<h4 id="Utilisation_du_symbole_LLVM_(recommandé)">Utilisation du symbole LLVM (recommandé)</h4>
+
+<p>LLVM est livré avec un binaire symboliseur qu'ASan utilisera facilement pour produire immédiatement des traces symbolisées. Pour l'utiliser, il suffit de définir la variable d'environnement  <code>ASAN_SYMBOLIZER_PATH</code> pour refléter l'emplacement de votre binaire <code>llvm-symbolizer</code>, avant d'exécuter le processus. Si vous avez téléchargé un paquet précompilé ou fait une compilation d'essai, alors le binaire sera inclus dans l'archive (même emplacement que le binaire <code>firefox</code>). Si vous avez construit ASan vous-même, alors vous voudrez définir la variable à <code>$LLVM_HOME/build/bin/llvm-symbolizer</code> à la place.</p>
+
+<div class="warning">
+<div class="note">
+<p><strong>Avertissement :</strong> Sous OS X, le bac à sable du contenu empêche le symboliseur de fonctionner.  Pour utiliser llvm-symbolizer sur l'affichage  ASan d'un processus de contenu, le sandbox de contenu doit être désactivé. Ceci peut être fait en définissant <code>MOZ_DISABLE_CONTENT_SANDBOX=1</code> dans votre environnement d'exécution. Le réglage de ce paramètre dans  .mozconfig n'a aucun effet.</p>
+</div>
+</div>
+
+<h4 id="Traces_de_Post-traitement_avec_asan_symbolize.py">Traces de Post-traitement avec asan_symbolize.py</h4>
+
+<p>Au lieu d'utiliser le binaire llvm-symbolizer, vous pouvez aussi utiliser le script  <code>asan_symbolize.py</code>, livré avec LLVM (<code>$LLVM_HOME/projects/compiler-rt/lib/asan/scripts/asan_symbolize.py</code>). L'inconvénient est que le script devra utiliser  <code>addr2line</code> pour obtenir les symboles, ce qui signifie que chaque bibliothèque devra être chargée en mémoire (y compris<code> libxul</code>, qui prend un peu de temps).</p>
+
+<p>Cependant, dans certaines situations, il est logique d'utiliser ce script. Par exemple, si vous avez/reçu une trace non symbolisée, alors vous pouvez toujours utiliser le script pour la transformer en une trace symbolisée, étant donné que vous pouvez obtenir les binaires originaux qui ont produit la trace non symbolisée. Pour que le script fonctionne dans de tels cas, vous devez vous assurer que les chemins dans la trace pointent vers les binaires réels ou changer les chemins en conséquence.</p>
+
+<p>Puisque la sortie du script <code>asan_symbolize.py</code> est toujours mangled, vous voudrez peut-être aussi passer la sortie par <code>c++filt</code> par la suite.</p>
+
+<h3 id="Dépannage_Problèmes_connus">Dépannage / Problèmes connus</h3>
+
+<h4 id="Impossible_de_spécifier_-o_lors_de_la_génération_de_plusieurs_fichiers_de_sortie">Impossible de spécifier -o lors de la génération de plusieurs fichiers de sortie</h4>
+
+<p>Si vous obtenez l'erreur "<code>cannot specify -o when generating multiple output files"</code> à partir de clang, désactivez <code>elf-hack</code> dans votre <code>mozconfig</code> pour contourner le problème :</p>
+
+<pre><code>ac_add_options --disable-elf-hack</code>
+</pre>
+
+<h4 id="Construction_optimisée">Construction optimisée</h4>
+
+<p>Depuis qu'<a class="external" href="http://code.google.com/p/address-sanitizer/issues/detail?id=20" title="http://code.google.com/p/address-sanitizer/issues/detail?id=20">un problème avec -O2/-Os et ASan</a> a été résolu, les optimisations régulières utilisées par Firefox devraient fonctionner sans problème. Le build optimisé n'a qu'une pénalité de vitesse à peine perceptible et semble être encore plus rapide que les builds de débogage réguliers.</p>
+
+<h4 id="Pas_d'«_AddressSanitizer_libc_interceptors_initialized_»_affiché_après_l'exécution_de_.mach_run">Pas d'« AddressSanitizer: <strong>libc</strong> interceptors initialized » affiché après l'exécution de  ./mach run</h4>
+
+<pre>$ ASAN_OPTIONS=verbosity=2 ./mach run</pre>
+
+<p>Utilisez plutôt la commande ci-dessus</p>
+
+<h4 id="«_An_admin_user_name_and_password_»_nécessaire_pour_accéder_au_mode_Développeur">« An admin user name and password » nécessaire pour accéder au mode Développeur</h4>
+
+<p>Veuillez activer le <strong>mode Développeur</strong> par :</p>
+
+<pre>$ /usr/sbin/DevToolsSecurity -enable
+Developer mode is now enabled.
+</pre>
+
+<h2 id="Problèmes_de_débogage_qu'ASan_trouve">Problèmes de débogage qu'ASan trouve</h2>
+
+<p>Lorsque ASan découvre un problème, il n'imprime qu'un message d'erreur et quitte l'application. Pour arrêter l'application dans un débogueur avant que ASan ne la quitte, définissez un point d'arrêt sur <code>__asan::ReportGenericError</code>. Pour plus d'informations sur l'utilisation d'ASan et les problèmes de débogage qu'il détecte, voir la page <a href="https://github.com/google/sanitizers/wiki/AddressSanitizerAndDebugger">Address sanitizer and a debugger</a> sur le wiki en amont.</p>
+
+<p><code>__asan_describe_address(pointer) </code>émis à l'invite du débogueur ou même directement dans le code permet de sortir beaucoup d'informations sur cette adresse mémoire (thread et pile d'allocation, de désallocation, si elle est un peu en dehors d'un buffer connu, thread et pile d'allocation de ce buffer, etc.). Cela peut être utile pour comprendre où un tampon qui n'est pas aligné a été alloué, lors de l'exécution de travaux SIMD, par exemple.</p>
+
+<p><a href="https://rr-project.org/">rr</a> (seulement Linux x86) fonctionne très bien avec ASan et combiné, ce combo permet de faire quelques stratégies de débogage très puissantes.</p>
+
+<h2 id="LeakSanitizer">LeakSanitizer</h2>
+
+<p>LeakSanitizer (LSan) est un mode d'exécution spécial pour ASan standard. Il tire parti de la façon dont ASan suit l'ensemble des blocs sous tension à n'importe quel point donné pour imprimer la pile d'allocation de tout bloc qui est encore vivant à l'arrêt, mais qui n'est pas accessible à partir de la pile, selon un balayage conservateur.  Ceci est très utile pour détecter les fuites d'objets tels que les <code>char*</code> qui ne participent pas à la détection des fuites de l'arrêt de Gecko.</p>
+
+<p>Pour qu'une construction ASan exécute LSan, définissez la variable d'environnement  <code>ASAN_OPTIONS</code> à <code>detect_leaks=1</code> (ou ajoutez-la comme une entrée dans une liste <code>:</code>-séparée si elle est déjà définie sur quelque chose). Si vous utilisez une construction sans débogage, vous voudrez également définir la variable d'environnement  <code>MOZ_CC_RUN_DURING_SHUTDOWN=1</code>, pour s'assurer que nous exécutons des GCs et des CCs d'arrêt pour éviter les fuites intempestives.</p>
+
+<p>Si un objet signalé par LSan n'est intentionnellement jamais libéré, un symbole peut être ajouté à <code>build/sanitizers/lsan_suppressions.txt</code> pour que LSan l'ignore.</p>
+
+<p>Pour plus d'informations sur LSan, voir la <a href="https://github.com/google/sanitizers/wiki/AddressSanitizerLeakSanitizer">page wiki Leak Sanitizer</a>.</p>

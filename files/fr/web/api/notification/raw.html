@@ -1,0 +1,244 @@
+<p>{{ ApiRef() }}</p>
+
+<p>{{ SeeCompatTable() }}</p>
+
+<h2 id="Résumé">Résumé</h2>
+
+<p>L'objet <code>Notification </code>est utilisé pour configurer et afficher les notifications desktop à l'utilisateur.</p>
+
+<h2 id="Method_overview" name="Method_overview">Constructeur</h2>
+
+<pre>var notification = new Notification(title, options)</pre>
+
+<h3 id="Paramètres">Paramètres</h3>
+
+<dl>
+ <dt><code>title</code></dt>
+ <dd>L'intitulé qui doit être montré avec la notification.</dd>
+ <dt><code>options</code> {{optional_inline}}</dt>
+ <dd>C'est un objet qui permet de configurer la notification. Il peut avoir les propriétés suivantes :<br>
+ <code>dir</code> : Le sens du texte de la notification ; Ce peut être <code>auto</code>, <code>ltr</code>, or <code>rtl</code>.<br>
+ <code>lang</code> : Spécifie la langue utilisée dans la notification. Cette chaîne doit être un <a href="http://tools.ietf.org/html/bcp47" title="http://tools.ietf.org/html/bcp47">BCP 47 language tag</a>.<br>
+ <code>body</code> : Une chaîne représentant un contenu supplémentaire à afficher dans la notification.<br>
+ <code>tag</code> : Un identifiant pour une notification donnée qui permet de la récupérer, la remplacer ou la supprimer si besoin.<br>
+ <code>icon </code>: l'URL d'une image à utiliser comme icône par la notification.</dd>
+</dl>
+
+<h2 id="Propriétés">Propriétés</h2>
+
+<h3 id="Static_properties">Static properties</h3>
+
+<p>Those properties are available only on the <code>Notification</code> object itself.</p>
+
+<dl>
+ <dt>{{domxref("Notification.permission")}} {{readonlyinline}}</dt>
+ <dd>A string representing the current permission to display notifications. Possible value are: <code>denied</code> (the user refuses to have notifications displayed), <code>granted</code> (the user accepts to have notifications displayed), or <code>default</code> (the user choice is unknown and therefore the browser will act as if the value was denied).</dd>
+</dl>
+
+<h3 id="Instance_properties">Instance properties</h3>
+
+<p>Those properties are available only on instances of the <code>Notification</code> object.</p>
+
+<dl>
+ <dt>{{domxref("Notification.dir")}} {{readonlyinline}}</dt>
+ <dd>The direction used by the notification as defined within the constructor options.</dd>
+ <dt>{{domxref("Notification.lang")}} {{readonlyinline}}</dt>
+ <dd>The code lang used by the notification as defined within the constructor options.</dd>
+ <dt>{{domxref("Notification.body")}} {{readonlyinline}}</dt>
+ <dd>The body string used by the notification as defined within the constructor options.</dd>
+ <dt>{{domxref("Notification.tag")}} {{readonlyinline}}</dt>
+ <dd>The id of the notification (if any) as defined within the constructor options.</dd>
+ <dt>{{domxref("Notification.icon")}} {{readonlyinline}}</dt>
+ <dd>The URL of the image used as an icon as defined within the constructor options.</dd>
+</dl>
+
+<h4 id="Event_handlers">Event handlers</h4>
+
+<dl>
+ <dt>{{domxref("Notification.onclick")}}</dt>
+ <dd>A handler for the {{event("click")}} event. It is triggered each time the user clicks on the notification.</dd>
+ <dt>{{domxref("Notification.onshow")}}</dt>
+ <dd>A handler for the {{event("show")}} event. It is triggered when the notification is displayed.</dd>
+ <dt>{{domxref("Notification.onerror")}}</dt>
+ <dd>A handler for the {{event("error")}} event. It is triggered each time the notification encounters an error.</dd>
+ <dt>{{domxref("Notification.onclose")}}</dt>
+ <dd>A handler for the {{event("close")}} event. It is triggered when the user closes the notification.</dd>
+</dl>
+
+<h2 id="Méthodes">Méthodes</h2>
+
+<h3 id="Static_methods">Static methods</h3>
+
+<p>Those methods are available only on the <code>Notification</code> object itself.</p>
+
+<dl>
+ <dt>{{domxref("Notification.requestPermission()")}}</dt>
+ <dd>This method is used to ask the user if he allows the page to display notifications.</dd>
+</dl>
+
+<h3 id="Instance_methods">Instance methods</h3>
+
+<p>Those properties are available only on an instance of the <code>Notification</code> object or through its <a href="/en-US/docs/Web/JavaScript/Guide/Inheritance_and_the_prototype_chain" title="/en-US/docs/Web/JavaScript/Guide/Inheritance_and_the_prototype_chain"><code>prototype</code></a>.</p>
+
+<dl>
+ <dt>{{domxref("Notification.close()")}}</dt>
+ <dd>This method allows to programmatically close a notification.</dd>
+</dl>
+
+<p>The <code>Notification</code> objects also inherit from the {{domxref("EventTarget")}} interface.</p>
+
+<p>{{page("/en-US/docs/Web/API/EventTarget","Methods")}}</p>
+
+<h2 id="Exemple">Exemple</h2>
+
+<p>Voici un peu de HTML :</p>
+
+<pre class="brush: html">&lt;button onclick="notifyMe()"&gt;Notifie moi !&lt;/button&gt;</pre>
+
+<p>Il est possible d'envoyer une notification comme suit :</p>
+
+<pre class="brush: js">function notifyMe() {
+  // Voyons si le navigateur supporte les notifications
+  if (!("Notification" in window)) {
+    alert("Ce navigateur ne supporte pas les notifications desktop");
+  }
+
+  // Voyons si l'utilisateur est OK pour recevoir des notifications
+  else if (Notification.permission === "granted") {
+    // Si c'est ok, créons une notification
+    var notification = new Notification("Salut toi !");
+  }
+
+  // Sinon, nous avons besoin de la permission de l'utilisateur
+  // Note : Chrome n'implémente pas la propriété statique permission
+  // Donc, nous devons vérifier s'il n'y a pas 'denied' à la place de 'default'
+  else if (Notification.permission !== 'denied') {
+    Notification.requestPermission(function (permission) {
+
+      // Quelque soit la réponse de l'utilisateur, nous nous assurons de stocker cette information
+      if(!('permission' in Notification)) {
+        Notification.permission = permission;
+      }
+
+      // Si l'utilisateur est OK, on crée une notification
+      if (permission === "granted") {
+        var notification = new Notification("Salut toi !");
+      }
+    });
+  }
+
+  // Comme ça, si l'utlisateur a refusé toute notification, et que vous respectez ce choix,
+  // il n'y a pas besoin de l'ennuyer à nouveau.
+}</pre>
+
+<h3 id="See_the_live_result">See the live result</h3>
+
+<p>{{ EmbedLiveSample('Exemple', '100%', 30) }}</p>
+
+<h2 id="Spécifications">Spécifications</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName('Web Notifications')}}</td>
+   <td>{{Spec2('Web Notifications')}}</td>
+   <td>Initial specification.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Permissions" name="Permissions">Permissions</h2>
+
+<p>When using notifications  in an open web app, be sure to add the <code>desktop-notification</code> permission in your manifest file. Notifications can be used at any permission level, hosted or above.</p>
+
+<pre class="default prettyprint prettyprinted"><code><span class="str">"permissions"</span><span class="pun">:</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+    </span><span class="str">"desktop-notification"</span><span class="pun">:{}</span><span class="pln">
+</span><span class="pun">}</span></code></pre>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<p>{{ CompatibilityTable() }}</p>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>5 {{ property_prefix("webkit") }} (see notes)<br>
+    22</td>
+   <td>4.0 {{ property_prefix("moz") }} (see notes)<br>
+    22</td>
+   <td>{{ CompatNo() }}</td>
+   <td>{{ CompatUnknown() }}</td>
+   <td>6 (see notes)</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{ CompatUnknown() }}</td>
+   <td>4.0 {{ property_prefix("moz") }} (see notes)<br>
+    22</td>
+   <td>{{ CompatNo() }}</td>
+   <td>{{ CompatUnknown() }}</td>
+   <td>{{ CompatUnknown() }}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h3 id="Gecko_notes">Gecko notes</h3>
+
+<ul>
+ <li>Prior to Firefox 22 (Firefox OS &lt;1.2), the instantiation of a new notification must be done with the {{ domxref("window.navigator.mozNotification","navigator.mozNotification") }} object through its <code>createNotification</code> method.</li>
+ <li>Prior to Firefox 22 (Firefox OS &lt;1.2), the Notification was displayed when calling the <code>show</code> method and was supporting the <code>click</code> and <code>close</code> events only.</li>
+ <li>Nick Desaulniers has written a <a href="https://github.com/nickdesaulniers/fxos-irc/blob/master/js/notification.js">Notification shim</a> to cover both newer and older implementations.</li>
+ <li>One particular Firefox OS issue is that you can <a href="https://github.com/nickdesaulniers/fxos-irc/blob/0160cf6c3a2b5c9fe33822aaf6bcba3b7e846da9/my.js#L171">pass a path to an icon</a> to use in the notification, but if the app is packaged you cannot use a relative path like <code>/my_icon.png</code>. You also can't use <code>navigator.location.origin + "/my_icon.png"</code> because <code>navigator.location.origin</code> is null in packaged apps. The <a href="https://developer.mozilla.org/en-US/Apps/Developing/Manifest#origin">manifest origin field</a> fixes this, but it is only available in Firefox OS 1.1+. A potential solution for supporting Firefox OS &lt;1.1 is to <a href="https://github.com/nickdesaulniers/fxos-irc/blob/0160cf6c3a2b5c9fe33822aaf6bcba3b7e846da9/my.js#L168">pass an absolute URL to an externally hosted version of the icon</a>. This is less than ideal as the notification is displayed immediately with the icon missing, then the icon is fetched, but it works on all versions of Firefox OS.</li>
+</ul>
+
+<h3 id="Chrome_notes">Chrome notes</h3>
+
+<ul>
+ <li>Prior to Chrome 22, the support for notification was following an <a href="http://www.chromium.org/developers/design-documents/desktop-notifications/api-specification" title="http://www.chromium.org/developers/design-documents/desktop-notifications/api-specification">old prefixed version of the specification</a> and was using the {{domxref("window.navigator.webkitNotifications","navigator.webkitNotifications")}} object to instantiate a new notification.</li>
+ <li>Prior to Chrome 32, {{domxref("Notification.permission")}} was not supported.</li>
+</ul>
+
+<h3 id="Safari_notes">Safari notes</h3>
+
+<ul>
+ <li>Safari started supporting notification with Safari 6 but only on Mac OSX 10.8+ (Mountain Lion).</li>
+</ul>
+
+<h2 id="Voir_aussi">Voir aussi</h2>
+
+<ul>
+ <li><a href="/en-US/docs/WebAPI/Using_Web_Notifications" title="/en-US/docs/WebAPI/Using_Web_Notifications">Using Web Notifications</a></li>
+</ul>

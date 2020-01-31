@@ -1,0 +1,203 @@
+<p>Llevando la tecnología mozilla al infinito y más allá, este artículo describe como desarrollar aplicaciones distribuidas (SOA) con Firefox o xulrunner y OpenESB, los arquitectos de soluciones encontrarán una guía para hacer aplicaciones distribuidas que tendrán el performance de una aplicación de escritorio y una interfaz más rica y personalizable de lo que puede ser por ejemplo swing, aspectos en que resulta muy superior; verán que el tiempo requerido para desarrollo en esta arquitectura es mucho menor a la mayoría de lo conocido, si piensas que tiempo es dinero llegaste al lugar indicado. A los desarrolladores conocedores de mozilla, podrán ver un nuevo mundo de posibilidades. Se que XUL Remoto ya no está habilitado por default en firefox, pero puedo decirles solamente una cosa, si quieren seguir con XUL remoto usen ample sdk, o traten de usar el administrador de XUL remoto, está bien si van a hacer aplicaciones privadas, un nivel más de seguridad pero si no, esta es la página de ampleSDK:</p>
+
+<p><a class="external" href="http://www.amplesdk.com/" rel="freelink">http://www.amplesdk.com/</a></p>
+
+<p>Necesitamos algunas herramientas para este desarrollo:</p>
+
+<p>XULRunner que puede ser descargado desde: <a href="http://ftp.mozilla.org/pub/xulrunner/releases/">http://ftp.mozilla.org/pub/xulrunner/releases/</a></p>
+
+<p>OpenESB: <a href="http://www.open-esb.net/">http://www.open-esb.net/</a></p>
+
+<p>Xul Gear</p>
+
+<h2 id="Arquitectura">Arquitectura</h2>
+
+<p><span style="font-size: medium;"><span style="font-family: calibri,sans-serif; line-height: 115%;">Esta es una arquitectura Enterprise basada en el concepto SOA, donde los sistemas funcionan en una nube de datos y la lógica requiere de una orquestación de servicios. Para ello se propone el uso de OpenESB que es gratuito y es una extensión para el servidor de aplicaciones Glassfish.</span></span> Estos servicios serán consumidos en clientes basados en XUL por medio de AJAX, DOM y XSLT. Las tecnologías que involucra la arquitectura son las siguientes:</p>
+
+<p><img alt="tech.jpg" class="default internal" src="/@api/deki/files/5587/=tech.jpg"></p>
+
+<p>En un principio nos centraremos en XULRunner y firefox así como la interfaz gráfica XUL, de manera similar se pueden usar HTML o SVG, para el caso del XUL multibrowser con ampleSDK que además incluye otros elementos de interfaz gráfica será visto en un apartado más adelante.</p>
+
+<p>Una arquitectura SOA tiene como principio que los procesos son distribuidos, pero al mismo tiempo se necesita una orquestación e Integración de los mismos para obtener un sistema funcional, dichos sistemas pueden ser de índole bancaria, gobierno, comercial, maquiladoras y desde luego proyectos Open Source de índoles que muchos tal vez aún no hemos conceptualizado si quiera. La arquitectura se basa en estándares conocidos o tecnologías bastante aplicadas, AJAX, SOAP, XML, XUL, XSLT, XML-DOM, referencias a ellas son:</p>
+
+<p>XSLT: <a class="external" href="http://www.w3schools.com/xsl/" rel="freelink">http://www.w3schools.com/xsl/</a></p>
+
+<p>SOAP: <a class="external" href="http://www.w3schools.com/soap/default.asp" rel="freelink">http://www.w3schools.com/soap/default.asp</a></p>
+
+<p>AJAX: <a class="external" href="http://www.w3schools.com/ajax/default.asp" rel="freelink">http://www.w3schools.com/ajax/default.asp</a></p>
+
+<p>XML-DOM: <a class="external" href="http://www.w3schools.com/dom/default.asp" rel="freelink">http://www.w3schools.com/dom/default.asp</a></p>
+
+<p>XUL: http://developer.mozilla.org/es/xul</p>
+
+<p>Mostraré el diagrama de la arquitectura general para luego abordar cada punto en específico, este es el diagrama:</p>
+
+<p><img alt="openarchitecture.jpg" class="default internal" src="/@api/deki/files/5601/=openarchitecture.jpg"></p>
+
+<p></p>
+
+<p align="left" class="MsoNormal" style="text-align: left;">Esta arquitectura muestra como el core es totalmente independiente de las demás capas, la ventaja de usa r XUL es que se puede usar una arquitectura de front web lo mismo que una cliente – servidor. Esto nos da la flexibilidad de extender y extraer la lógica como sea necesario sin afectar el funcionamiento de la aplicación y reutilizar todos los componentes del core en otras aplicaciones cualquiera que sea su índole por ejemplo en un cliente móvil como el caso de un PDA. Y dado que usa datasources configurados en el servidor de aplicaciones puede migrarse de base de datos siempre y cuando la lógica de la nueva base se adapte a las funciones de la previa, es decir: tablas, funciones, Stored Procedures, etc, con cambios mínimos a los servicios.</p>
+
+<p align="left" class="MsoNormal" style="text-align: left;">AJAX</p>
+
+<p align="left" class="MsoNormal" style="text-align: left;">El proceso de la comunicación SOAP en esta arquitectura se basa en AJAX es decir, se envían los mensajes SOAP por medio del objeto XmlHttpRequest, para transformar la información de XUL a SOAP y la respuesta SOAP en XUL se usa XSLT, el siguiente diagrama tal vez lo haga un poco más entendible:</p>
+
+<p align="left" class="MsoNormal" style="text-align: left;"><img alt="ProcesoSOAP.jpg" class="default internal" src="/@api/deki/files/5603/=ProcesoSOAP.jpg"></p>
+
+<p class="MsoNormal">Aquí se muestra un ejemplo de un XSLT que genera un SOAP a partir de XUL:</p>
+
+<table style="width: 100%;">
+ <tbody>
+  <tr>
+   <td>
+    <pre class="brush: xml">
+{C}</pre>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+<p> </p>
+
+<p class="MsoNormal"> El siguiente XSLT muestra la operación inversa, de SOAP a XUL:</p>
+
+<table style="width: 100%;">
+ <tbody>
+  <tr>
+   <td>
+    <pre class="brush: xml">
+ {C}</pre>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+<p class="MsoNormal">Vamos a explicar cómo funcionan la comunicación y las transformaciones, El cliente transforma la vista XUL en un Mensaje SOAP por medio de un XSLT que procesa el XSLTProcessor de Firefox, después se envía ese mensaje SOAP por medio de xmlHttprequest remoto al ESB, es decir AJAX remoto; luego el ESB responde un mensaje SOAP, mismo que es transformado en una vista XUL de nuevo por medio de XSLT y el XSLTProcessor, al final la salida XUL generada se añade a la vista por medio del DOM, una técnica muy conocida en AJAX. A continuación se muestra un ejemplo javascript de cómo hacer la comunicación AJAX-SOAP:</p>
+
+<table style="width: 100%;">
+ <tbody>
+  <tr>
+   <td>
+    <pre class="brush: js">
+xhttp=new XMLHttpRequest();
+netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead UniversalBrowserWrite");
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+var xslproc=new XSLTProcessor;
+var xsl = document.implementation.createDocument("", "", null);
+xsl.async = false;
+xsl.onload = new XMLSerializer().serializeToString(xsl);
+xsl.load("req/"+soap);
+xslproc.importStylesheet(xsl);
+var docIn=document.implementation.createDocument("", "", null);
+docIn.async = false;\ndocIn.onload = new XMLSerializer().serializeToString(docIn);
+docIn.load(ample.documentElement);
+reqMsg = xslproc.transformToDocument(docIn);
+xhttp.open(\"POST\", port, false);
+xhttp.onreadystatechange = state_Change();
+xhttp.setRequestHeader("Content-Type", "text/xml");
+xhttp.setRequestHeader("SOAPAction", '""');
+xhttp.send(reqMsg);
+switch(xhttp.readyState) {
+  case 1,2,3:
+    alert('Bad Ready State: '+xhttp.status);
+    return false;
+    break;
+  case 4:
+    if(xhttp.status !=200) {
+      alert('The server respond with a bad status code: '+xhttp.status);
+      return false;
+    } else {
+      xml=xhttp.responseXML;
+      displayResult(xml, xslt, cont);
+    }
+    break;
+  }</pre>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Preparación_del_ambiente.">Preparación del ambiente.</h2>
+
+<pre class="brush: xml"> </pre>
+
+<p>Necesitaremos una base de datos, en el ejemplo usaré mysql, deberías conocer SQL, javascript y XUL, aunque XUL es muy sencillo y ver el código en la tabla periódica de XUL te bastará para iniciar, la tabla está aquí: <a class="external" href="http://www.hevanet.com/acorbin/xul/top.xul" rel="freelink">http://www.hevanet.com/acorbin/xul/top.xul</a> verás los elementos XUL y una pestaña source donde puedes ver el código fuente XUL de lo que estás viendo.</p>
+
+<p>Empezaremos creando la estructura de directorios de la aplicación XUL de la siguiente forma:</p>
+
+<p><img alt="XULAPP-STRUCTURE.png" class="default internal" src="/@api/deki/files/4345/=XULAPP-STRUCTURE.png"></p>
+
+<p>Los dos elementos que están al final, la carpeta xulrunner y el ejecutable xulapp, los obtienes de la versión de xulrunner que hayas bajado para linux o windows, el ejecutable es un archivo que viene dentro de la carpeta xulrunner llamado xulrunner-stub y basta con ponerlo en la carpeta raíz de la aplicación xul junto al archivo application.ini y renombrarlo con el nombre de tu aplicación, este será el ejecutable de tu aplicación sea en linux o windows. en este caso lo renombramos como xulapp. En mi caso bajé el xulrunner de linux. Lo siguiente es instalar el Open-ESB, para ello pues simplemente es ejecutar el instalador de windows o linux y seguir las instrucciones. Crearemos una base de datos llamada XULAPPDB y después hay que crear una tabla de usuarios en la base de datos, pueden usar cualquier base para la que tengan un driver JDBC para configurar el datasource en el ESB. La tabla se compondrá de sólo dos campos, usuario y password, ambos de tipo varchar al menos en mysql, oracle, mssql, sybase, etc. Este sería el script en mysql:</p>
+
+<table style="width: 100%;">
+ <tbody>
+  <tr>
+   <td>
+    <pre class="brush: sql">
+CREATE TABLE IF NOT EXISTS `usuarios` (
+  `USR` varchar(15) NOT NULL,
+  `PWD` varchar(30) NOT NULL,
+  PRIMARY KEY (`USR`,`PWD`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;</pre>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+<p>Después de la creación de la tabla debemos instalar el openesb.</p>
+
+<h2 id="Creación_de_un_módulo_BPEL"><br>
+ Creación de un módulo BPEL</h2>
+
+<p style="margin-bottom: 0cm;">BPEL es un lenguaje de ejecución de procesos de negocio, con él se hacen las orquestaciones para las operaciones requeridas, para hacer un bpel se debe crear un proyecto SOA en el netbeans y seleccionar BPEL Module como se muestra a continuación:</p>
+
+<p style="margin-bottom: 0cm;"> </p>
+
+<p style="margin-bottom: 0cm;"><img alt="createBpelMod.jpg" class="default internal" src="/@api/deki/files/6108/=createBpelMod.jpg"></p>
+
+<p style="margin-bottom: 0cm;"> </p>
+
+<p style="margin-bottom: 0cm;">Se avanza a la siguiente pantalla del wizard que nos pide el nombre del módulo y con eso se crea el BPEL.</p>
+
+<p style="margin-bottom: 0cm;">Luego se crean los servicios de origen y destino de datos por ejemplo un WSDL del componente Database BC y un WSDL SOAP. Ver las secciones de cada uno de los componentes para su respectiva creación. A continuación muestro el proceso de elaboración de un BPEL:</p>
+
+<p style="margin-bottom: 0cm;"> </p>
+
+<p style="margin-bottom: 0cm;"><img alt="flowBpel1.jpg" class="default internal" src="/@api/deki/files/6109/=flowBpel1.jpg"></p>
+
+<p style="margin-bottom: 0cm;"> </p>
+
+<p style="margin-bottom: 0cm;"><img alt="flowBpel2.jpg" class="default internal" src="/@api/deki/files/6110/=flowBpel2.jpg"></p>
+
+<p style="margin-bottom: 0cm;"> </p>
+
+<p style="margin-bottom: 0cm;"> </p>
+
+<h3 id="Crear_un_servicio_de_acceso_a_base_de_datos_DatabaseBC" style="margin-bottom: 0cm;">Crear un servicio de acceso a base de datos DatabaseBC</h3>
+
+<p> </p>
+
+<p style="margin-bottom: 0cm;">Este componente hace un mapeo de base de datos a xml, similar a como funciona un ORM para objetos java, este componente genera un WSDL a partir de uno de los siguientes componentes:</p>
+
+<ul>
+ <li>
+  <p style="margin-bottom: 0cm;">Tabla de la base.</p>
+ </li>
+ <li>
+  <p style="margin-bottom: 0cm;">Stored Procedure o función</p>
+ </li>
+ <li>
+  <p style="margin-bottom: 0cm;">SQL Statement.</p>
+ </li>
+ <li>
+  <p style="margin-bottom: 0cm;">SQL plano.</p>
+ </li>
+</ul>
+
+<p style="margin-bottom: 0cm;">En nuestro proyecto BPEL creamos un nuevo service seleccionando crear un nuevo WSDL como dice el flujo y en el diálogo que aparece seleccionamos el binding DATABASE y el tipo que deseamos por ejemplo para una tabla Table:</p>
+
+<p style="margin-bottom: 0cm;"> </p>
+
+<p style="margin-bottom: 0cm;"><img alt="createDB.jpg" class="default internal" src="/@api/deki/files/6111/=createDB.jpg"></p>
+
+<p> </p>

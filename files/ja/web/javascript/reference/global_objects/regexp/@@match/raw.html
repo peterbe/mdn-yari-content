@@ -1,0 +1,149 @@
+<div>{{JSRef}}</div>
+
+<p><strong><code>[@@match]()</code></strong> メソッドは、<em>文字列</em>と<em>正規表現</em>が一致したマッチを取得します。</p>
+
+<h2 id="構文">構文</h2>
+
+<pre class="syntaxbox"><var>regexp</var>[Symbol.match](str)</pre>
+
+<h3 id="パラメーター">パラメーター</h3>
+
+<dl>
+ <dt><code>str</code></dt>
+ <dd>マッチの対象となる {{jsxref("String")}}。</dd>
+</dl>
+
+<h3 id="戻り値">戻り値</h3>
+
+<p>マッチした全体の結果と括弧が捕捉したマッチの結果を含む {{jsxref("Array")}}。一致するものがなかった場合は、{{jsxref("null")}}。</p>
+
+<h2 id="説明">説明</h2>
+
+<p>このメソッドは、{{jsxref("String.prototype.match()")}} で内部的に呼び出されます。たとえば、次の 2 つの例は同じ結果を返します：</p>
+
+<pre class="brush: js">'abc'.match(/a/);
+
+/a/[Symbol.match]('abc');</pre>
+
+<p>このメソッドは、<code>RegExp</code> サブクラス内でマッチの振る舞いをカスタマイズするために存在しています。</p>
+
+<h2 id="例">例</h2>
+
+<h3 id="直接呼出し">直接呼出し</h3>
+
+<p>このメソッドは、<code>this</code> の違いと引数の並び順の違いを除いて、{{jsxref("String.prototype.match()")}} とほとんど同じ使い方ができます。</p>
+
+<pre class="brush: js">var re = /[0-9]+/g;
+var str = '2016-01-02';
+var result = re[Symbol.match](str);
+console.log(result);  // ["2016", "01", "02"]
+</pre>
+
+<h3 id="サブクラスで_match_を使用する">サブクラスで <code>@@match</code> を使用する</h3>
+
+<p>{{jsxref("RegExp")}} のサブクラスは、既定の動作を修正するために <code>[@@match]()</code> メソッドをオーバーライドできます。</p>
+
+<pre class="brush: js">class MyRegExp extends RegExp {
+  [Symbol.match](str) {
+    var result = RegExp.prototype[Symbol.match].call(this, str);
+    if (!result) return null;
+    return {
+      group(n) {
+        return result[n];
+      }
+    };
+  }
+}
+
+var re = new MyRegExp('([0-9]+)-([0-9]+)-([0-9]+)');
+var str = '2016-01-02';
+var result = str.match(re); // String.prototype.match calls re[@@match].
+console.log(result.group(1)); // 2016
+console.log(result.group(2)); // 01
+console.log(result.group(3)); // 02
+</pre>
+
+<h2 id="仕様">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">状態</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-regexp.prototype-@@match', 'RegExp.prototype[@@match]')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td>初期定義。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-regexp.prototype-@@match', 'RegExp.prototype[@@match]')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="ブラウザ実装状況">ブラウザ実装状況</h2>
+
+<div>{{CompatibilityTable}}</div>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>機能</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>基本サポート</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatGeckoDesktop(49)}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>機能</th>
+   <th>Android</th>
+   <th>Chrome for Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>基本サポート</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatGeckoMobile(49)}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="関連項目">関連項目</h2>
+
+<ul>
+ <li>{{jsxref("String.prototype.match()")}}</li>
+ <li>{{jsxref("RegExp.prototype.@@replace()", "RegExp.prototype[@@replace]()")}}</li>
+ <li>{{jsxref("RegExp.prototype.@@search()", "RegExp.prototype[@@search]()")}}</li>
+ <li>{{jsxref("RegExp.prototype.@@split()", "RegExp.prototype[@@split]()")}}</li>
+ <li>{{jsxref("RegExp.prototype.exec()")}}</li>
+ <li>{{jsxref("RegExp.prototype.test()")}}</li>
+</ul>

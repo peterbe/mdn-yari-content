@@ -1,0 +1,56 @@
+
+<p>Multiple Item Package는 사용자에 의해 다운로드하고 설치될수 있거나, 제공된 응용프로그램과 함께 또는 외부 프로그램에 의해 미리 package된 여러 <a href="../../../../en/Bundles" rel="internal">Installable Bundle</a>을 package할 수 있는 능력을 제공한다. 각 Multiple Item Package는 <a href="../../../../en/Install.rdf" rel="internal">install.rdf</a> file (예전 스타일의 install.js가 아님!)을 제공해야하고 다음에 나오는 내용을 제외하고는 <a href="../../../../en/Extension_Packaging" rel="internal">Extension</a>과 같은 사항들이 요구된다.</p>
+<p>현재로선, extension의 이전버전을 설치할 때 사용자들에게 예방하거나 경고하는 장치가 없다.</p>
+<h3 class="editable" id="Multiple_Item_Package_File_Layout"><span> Multiple Item Package File Layout </span>
+<div class="editIcon"><a href="../../../../en/Multiple_Item_Packaging#" style="" title="Edit section"><span class="icon"><img alt="Edit section" class="sectionedit" src="../../../../skins/common/icons/icon-trans.gif"></span></a></div>
+</h3>
+<p>Multiple Item Package file layout은 <a href="../../../../en/Bundles" rel="internal">Installable Bundle</a>의 단순화된 형태이고 xpi file 확장자를 요구한다. Multiple Item Package는 아마 extensions(예를 들면, <code>xpi</code> file 확장자) 와 themes (예를 들면, <code>jar</code> file 확장자) 둘 다 갖을 것이다. 그 기본 구조는 다음과 같다.</p>
+<pre class="eval">/<a href="../../../../en/Install.rdf" rel="internal">install.rdf</a>                        <em>Install Manifest</em>
+/extension1.xpi                     <em><a href="../../../../en/Extension_Packaging" rel="internal">Extension</a></em>
+/extension2.xpi                     <em><a href="../../../../en/Extension_Packaging" rel="internal">Extension</a></em>
+/theme1.jar                         <em><a href="../../../../en/Theme_Packaging" rel="internal">Theme</a></em>
+/theme2.jar                         <em><a href="../../../../en/Theme_Packaging" rel="internal">Theme</a></em>
+...
+</pre>
+<p>확장기능 관리자는<span style="font-family: monospace;"> Extension이</span> Multiple Item Package 라면 그 것이 갖고 있는 개별 package들의 설치를 자동적으로 시작하는지를 결정하기 위해 <a href="../../../../en/Install.rdf" rel="internal">install.rdf</a><code> Install Manifest</code>를 읽을 것이다. <a href="../../../../en/Install.rdf" rel="internal">install.rdf</a> 가 아닌 다른 파일들과 jar와 xpi file extension을 갖는 다른 파일들은 압축이 풀리거나 이용될 것이다.</p>
+<p> </p>
+<h3 class="editable" id="install.rdf"><span> <a href="../../../../en/Install.rdf" rel="internal">install.rdf</a> </span>
+<div class="editIcon"><a href="../../../../en/Multiple_Item_Packaging#" style="" title="Edit section"><span class="icon"><img alt="Edit section" class="sectionedit" src="../../../../skins/common/icons/icon-trans.gif"></span></a></div>
+</h3>
+<p>Multiple Item Package <a href="../../../../en/Extension_Packaging" rel="internal">Extension</a>로서 그것의 <a href="../../../../en/Install.rdf" rel="internal">install.rdf</a>에 대해 같은 요구사항들을 갖지 않는다. 요구되는 항목들은 오직 <code>em:id</code>, <code>em:targetApplication</code>, 그리고 <code>em:type</code>.</p>
+<p>Firefox와 Thunderbird 1.5 Extension Manager에서 이 package가 Multiple Item Package인지 결정하기 위해 <a href="../../../../en/Install.rdf" rel="internal">install.rdf</a> <code>em:type</code> 이 <code>32</code> 이고, <code>&lt;em:type NC:parseType="Integer"&gt;32&lt;/em:type&gt; 이처럼 명세한다</code>. XML namespace <code>xmlns:NC="<a class=" external" href="http://home.netscape.com/NC-rdf#" rel="freelink">http://home.netscape.com/NC-rdf#</a>"</code> 또한 <a href="../../../../en/Install.rdf" rel="internal">install.rdf</a> 에서 다음과 같이 정의되야 한다.</p>
+<pre>...
+&lt;RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:NC="http://home.netscape.com/NC-rdf#"
+     xmlns:em="http://www.mozilla.org/2004/em-rdf#"&gt;
+
+  &lt;Description about="urn:mozilla:install-manifest"&gt;
+    &lt;!-- nsIUpdateItem type for a Multiple Item Package --&gt;
+    &lt;em:type NC:parseType="Integer"&gt;32&lt;/em:type&gt;
+...</pre>
+<p>Firefox 와 Thunderbird 2.0 Extension Manager에서 이전 구문이나 <code>다음처럼 &lt;em:type&gt;32&lt;/em:type&gt;</code>로 사용할 수도 있다.</p>
+<pre>...
+&lt;RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:em="http://www.mozilla.org/2004/em-rdf#"&gt;
+
+  &lt;Description about="urn:mozilla:install-manifest"&gt;
+    &lt;!-- nsIUpdateItem type for a Multiple Item Package --&gt;
+    &lt;em:type&gt;32&lt;/em:type&gt;
+...</pre>
+<p><code>em:targetApplication</code>를 명세할 때 그 Multiple Item Package에 의해 담겨진 모든 <a href="../../../../en/Bundles" rel="internal">Installable Bundles</a>로부터 명세된 <code>minVersion</code>은 가장 높은 <code>minVersion</code>, 그리고 <code>명세된 maxVersion</code>은 가장 낮은 <code>maxVersion</code> 이어야 할 것이다. 만약 이렇게 되지 않으면 호환성 문제가 발생할 수 있다.</p>
+<div id="section_3">
+<h3 class="editable" id="Installation"><span> Installation </span>
+<div class="editIcon"><a href="../../../../en/Multiple_Item_Packaging#" style="" title="Edit section"><span class="icon"><img alt="Edit section" class="sectionedit" src="../../../../skins/common/icons/icon-trans.gif"></span></a></div>
+</h3>
+<p>Installation은 extension들과 theme들 설치에 사용되는 방법과 같은 user interface로 Multiple Item Package가 설치된다. (Multiple Item Package안에 있는 개별 Package들은 목록에 들어가지 않는다.). 이것은 또한 Multiple Item Package에 대한 서명 정보의 표시를 허가한다.</p>
+<p>If a manager (e.g. Extension / Theme Manager) is displayed then after the download of the Multiple Item Package completes the manager will display the individual items contained by the Multiple Item Package in the same manner that it would if the user had chosen to install multiple items simultaneously. 그 manager는 Multiple item Package의 다운로드가 완료된 후에 item들의 목록안에 Multiple Item Package를 보여주지 않을 것이다.</p>
+</div>
+<div id="section_4">
+<h3 class="editable" id="Official_References_for_Toolkit_API"><span> Official References for <a href="../../../../en/Toolkit_API" rel="internal">Toolkit API</a> </span>
+<div class="editIcon"><a href="../../../../en/Multiple_Item_Packaging#" style="" title="Edit section"><span class="icon"><img alt="Edit section" class="sectionedit" src="../../../../skins/common/icons/icon-trans.gif"></span></a></div>
+</h3>
+<p> </p>
+<ul> <li><a href="../../../../en/Bundles" rel="internal">Structure of an Installable Bundle</a>: describes the common structure of installable bundles, including extensions, themes, and XULRunner applications</li> <li><a href="../../../../en/Extension_Packaging" rel="internal">Extension Packaging</a>: specific information about how to package extensions</li> <li><a href="../../../../en/Theme_Packaging" rel="internal">Theme Packaging</a>: specific information about how to package themes</li> <li><a href="../../../../en/Multiple_Item_Packaging" rel="internal">Multiple-item Extension Packaging</a>: specific information about multiple-item extension XPIs</li> <li><a href="../../../../en/XUL_Application_Packaging" rel="internal">XUL Application Packaging</a>: specific information about how to package XULRunner applications</li> <li><a href="../../../../en/Chrome_Registration" rel="internal">Chrome Registration</a></li>
+</ul>
+</div>
+<p> </p>

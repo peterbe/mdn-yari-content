@@ -1,0 +1,202 @@
+<div>
+<div>{{jsSidebar("Statements")}}</div>
+
+<p><span class="seoSummary"> Die <code><strong>async function</strong></code> Deklaration leitet eine <strong>asynchrone Funktion</strong> ein, die ein {{jsxref("Global_Objects/AsyncFunction","AsyncFunction")}} Objekt ergibt.</span> Eine asynchrone Funktion arbeitet außerhalb des Kontrollflusses, und teilt ihr Ergebnis durch ein unausgedrücktes, in die Ereignisschleife eingefügtes {{jsxref("Promise")}} mit.  Die Gestalt des Codes bei einer asynchronen Funktion ähnelt allerdings der der standardmässigen synchronen Funktionen.</p>
+
+<div class="noinclude">
+<p>Eine <strong><code>async function</code></strong> kann auch durch den {{jsxref("Operators/async_function", "async function expression", "", 1)}} Ausdruck erklärt werden.</p>
+</div>
+</div>
+
+<div>{{EmbedInteractiveExample("pages/js/statement-async.html", "taller")}}</div>
+
+<p class="hidden">The source for this interactive demo is stored in a GitHub repository. If you'd like to contribute to the interactive demo project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<h2 id="Syntax">Syntax</h2>
+
+<pre class="syntaxbox">async function <em>name</em>([<em>param</em>[, <em>param</em>[, ... <em>param</em>]]]) {
+   <em>statements</em>
+}
+</pre>
+
+<h3 id="Die_Parameter">Die Parameter</h3>
+
+<dl>
+ <dt><code>name</code></dt>
+ <dd>Der Name der Funktion.</dd>
+</dl>
+
+<dl>
+ <dt><code>param</code></dt>
+ <dd>Der Name eines Arguments, welches der Funktion übergeben wird.</dd>
+</dl>
+
+<dl>
+ <dt><code>statements</code></dt>
+ <dd>Die Ausdrücke, aus denen der Funktionskörper besteht.</dd>
+</dl>
+
+<h3 id="Der_zurückgegebene_Wert">Der zurückgegebene Wert</h3>
+
+<p>Ein <code><a href="https://developer.mozilla.org/de/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a></code> Objekt. Das Promise wird entweder eingehalten (Engl: "resolved"), wobei die Funktion den in dem Funktionskörper berechneten Wert übermittelt, oder verworfen (Engl: "rejected"), in welchem Falle die Funktion einen unbehandelten Fehler aufwirft.</p>
+
+<h2 id="Beschreibung">Beschreibung</h2>
+
+<p>Eine <code>async</code> Funktion darf einen {{jsxref("Operators/await", "await")}} Ausdruck enthalten, der die Ausführung der Funktion anhält. Die Funktion wartet auf den zurückgegebenen ("resolved") Wert des <code>Promise</code>, das der <code>await</code> Ausdruck erzeugt, worauf die Funktion ihre Arbeit wieder aufnimmt.</p>
+
+<p>Das Schlüsselwort <code>await</code> gilt nur innerhalb der <code>async</code> Funktionen. Die Verwendung außerhalb solcher Funktion wirft einen <code><a href="/de/docs/Web/JavaScript/Reference/Global_Objects/SyntaxError">SyntaxError</a></code> auf.</p>
+
+<div class="note">
+<p>Das Ziel der <code>async</code>/<code>await</code> Funktionen ist zweifach. Erstens vereinfachen sie die Anwendung von <code>Promises</code> im Rahmen eines synchronen Verfahrens. Zweitens ermöglichen sie die kollektive Verarbeitung einer Gruppe von <code>Promises</code>. Genau wie die <code>Promises</code> dem Verhalten von callbacks ("Rückruffunktionen") ähneln, so ähnelt die <code>async</code>/<code>await</code> Methode der Zusammensetzung von Generatoren und <code>Promises</code>.</p>
+</div>
+
+<h2 id="Beispiele">Beispiele</h2>
+
+<h3 id="Einfaches_Beispiel">Einfaches Beispiel</h3>
+
+<pre class="brush: js">var resolveAfter2Seconds = function() {
+  //nach 2 Sek. einlösen
+  console.log("langsames Promise beginnt");
+  return new Promise(resolve =&gt; {
+    setTimeout(function() {
+      resolve(20); //"20" taucht als der zurückgegebene Wert der Fkn. auf
+      console.log("langsames Promise fertig");
+    }, 2000);
+  });
+};
+
+var resolveAfter1Second = function() {
+  //nach 1 Sek. einlösen
+  console.log("schnelles Promise beginnt");
+  return new Promise(resolve =&gt; {
+    setTimeout(function() {
+      resolve(10); //"10" taucht als der zurückgegebene Wert der Fkn. auf
+      console.log("schnelles Promise fertig");
+    }, 1000);
+  });
+};
+
+var sequentialStart = async function() {
+  console.log('==ANEINANDER GEREIHT ANFANGEN==');
+  // Falls der dem await Operator folgende Ausdruck kein Promise ist,
+  // wird jener Ausdruck in ein eingelöstes ("resolved") Promise umgewandelt
+  const slow = await resolveAfter2Seconds();
+
+  const fast = await resolveAfter1Second();
+  console.log(slow);
+  console.log(fast);
+}
+
+var concurrentStart = async function() {
+  console.log('==ZEITGLEICH ANFANGEN mit await==');
+  const slow = resolveAfter2Seconds(); // die Stoppuhr lässt sich unmittelbar an
+  const fast = resolveAfter1Second();
+
+  console.log(await slow);
+  console.log(await fast); // wartet auf "slow", obwohl "fast" schon 
+  //fertig ist!
+}
+
+var stillConcurrent = function() {
+  console.log('==ZEITGLEICH ANFANGEN mit Promise.all==');
+  Promise.all([resolveAfter2Seconds(), resolveAfter1Second()]).then((messages) =&gt; {
+    console.log(messages[0]); // langsam
+    console.log(messages[1]); // schnell
+  });
+}
+
+var parallel = function() {
+  console.log('==PARALLEL mit Promise.then==');
+  resolveAfter2Seconds().then((message)=&gt;console.log(message));
+  resolveAfter1Second().then((message)=&gt;console.log(message));
+}
+
+sequentialStart(); // loggt "langsam" nach 2 Sek., dann "schnell" nach einer weiteren Sek.
+// wartet, bis das obige Verfahren abschließt
+setTimeout(concurrentStart, 4000); // loggt "langsam", dann "schnell" nach 2 Sek.
+// wieder warten
+setTimeout(stillConcurrent, 7000); // genau wie concurrentStart
+// wieder warten
+setTimeout(parallel, 10000); // echt parallel: loggt "schnell" nach 1 Sek., dann "langsam" nach einer weitern Sek.
+</pre>
+
+<div class="warning">
+<h4 id="Merke_await_mit_Promisethen_nicht_verwechseln">Merke: <code>await</code> mit <code>Promise#then</code> nicht verwechseln</h4>
+
+<p>Bei <code>sequentialStart</code> wird die Programmausführung auf 2 Sek. aufgehalten wegen des ersten <code>await</code>, dann wieder auf 1 Sek. wegen des zweiten <code>await</code>. Die zweite Stoppuhr wird erst nach Ablauf der ersten Stoppuhr erstellt.</p>
+
+<p>Bei <code>concurrentStart</code> werden beide Stoppuhren gleichzeitig erstellt, dann in <code>await</code> versetzt. Obwohl beide Uhren nebeneinander laufen, laufen die <code>await</code> Abrufe serienweise. Das bedeutet, dass die zweite <code>await</code> Anweisung auf Ablauf der ersten wartet. Die Laufzeit dieses Abschnitts lautet daher 2--nicht 3--Sekunden, weil das langsamere Verfahren 2 Sek. braucht. Das Gleiche ereignet sich bei <code>stillConcurrent</code>, welcher Abschnitt die <code>Promise.all</code> Methode verwendet.</p>
+
+<p>Wenn man auf mehrfache <code>Promises</code> parallel warten (<code>await</code>) will, muss man <code>Promise#then</code> verwenden, gerade wie die <code>parallel</code> Funktion am Ende dieses Beispiels.</p>
+</div>
+
+<h3 id="Umschreiben_einer_Promise-Kette_mittels_einer_async_Funktion">Umschreiben einer Promise-Kette mittels einer <code>async</code> Funktion</h3>
+
+<p>Eine API die ein {{jsxref("Promise")}} zurückgibt resultiert in einer vielteiligen Promise-Kette. Man beachte den folgenden Code:</p>
+
+<pre class="brush: js">function getProcessedData(url) {
+  return downloadData(url) // returns a promise
+    .catch(e =&gt; {
+      return downloadFallbackData(url)  // returns a promise
+    })
+    .then(v =&gt; {
+      return processDataInWorker(v); // returns a promise
+    });
+}
+</pre>
+
+<p>das kann mit einer <code>async</code> Funktion folgendermaßen umgeschrieben werden:</p>
+
+<pre class="brush: js">async function getProcessedData(url) {
+  let v;
+  try {
+    v = await downloadData(url); 
+  } catch(e) {
+    v = await downloadFallbackData(url);
+  }
+  return processDataInWorker(v);
+}
+</pre>
+
+<p>Im obigen Beispiel ist zu beachten, dass es keinen <code>await</code> Ausdruck auf dem <code>return</code> Ausdruck gibt, weil der Rückgabewert einer <code>async function</code> implizit im {{jsxref("Promise.resolve")}} eingeschlossen ist.</p>
+
+<h2 id="Spezifikationen">Spezifikationen</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-async-function-definitions', 'async function')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td>Initial definition in ES2017.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES8', '#sec-async-function-definitions', 'async function')}}</td>
+   <td>{{Spec2('ES8')}}</td>
+   <td></td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browserkompatibilität">Browserkompatibilität</h2>
+
+<div>
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.statements.async_function")}}</p>
+</div>
+
+<h2 id="Siehe_auch">Siehe auch</h2>
+
+<ul>
+ <li>{{jsxref("Operators/async_function", "async function expression")}}</li>
+ <li>{{jsxref("AsyncFunction")}} object</li>
+ <li>{{jsxref("Operators/await", "await")}}</li>
+ <li><a href="http://innolitics.com/10x/javascript-decorators-for-promise-returning-functions/">"Decorating Async Javascript Functions" on "innolitics.com"</a></li>
+</ul>

@@ -1,0 +1,236 @@
+<div>{{JSRef}}</div>
+
+<p><strong><code>RegExp</code></strong> コンストラクターは、パターンに従ったテキストにマッチする正規表現オブジェクトを生成します。</p>
+
+<p>正規表現を詳しく知りたい方は <a href="/ja/docs/Web/JavaScript/Guide/Regular_Expressions">JavaScript ガイド</a> の <a href="/ja/docs/Web/JavaScript/Guide/Regular_Expressions">正規表現</a> を参考にしてください。</p>
+
+<div>{{EmbedInteractiveExample("pages/js/regexp-constructor.html")}}</div>
+
+<p class="hidden">このデモのソースファイルは GitHub リポジトリに格納されています。デモプロジェクトに協力していただける場合は、 <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> をクローンしてプルリクエストを送信してください。</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<p>リテラル記法およびコンストラクタ記法を使用できます:</p>
+
+<pre class="syntaxbox">/<var>pattern</var>/<var>flags</var>
+new RegExp(<var>pattern</var>[, <var>flags</var>])
+RegExp(<var>pattern</var>[, <var>flags</var>])
+</pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<dl>
+ <dt><code><var>pattern</var></code></dt>
+ <dd>正規表現のテキスト、または ES5 以降では、その他の RegExp オブジェクト (またはリテラル) (後者は 2 つの RegExp コンストラクターのみ) です。パターンには<a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Guide/Regular_Expressions#Using_special_characters">特殊文字</a>を含めることができるため、文字列リテラルよりも広い範囲の値にマッチすることができます。</dd>
+ <dt><code><var>flags</var></code></dt>
+ <dd>
+ <p>指定された場合、 <code><var>flags</var></code> は追加するフラグを含む文字列、またはパターン用のオブジェクトが供給された場合は <code>flags</code> の文字列は他のオブジェクトのフラグを置き換えます (そして <code>lastIndex</code> は 0 にリセットされます) (ES2015以降)。 <code>flags</code> が指定されず正規表現オブジェクトが供給されない場合、オブジェクトのフラグ (と <code>lastIndex</code>) はコピーされます。</p>
+
+ <p><code><var>flags</var></code> は以下の値を任意の組み合わせで含んだ文字列で指定できます。</p>
+
+ <dl>
+  <dt><code>g</code></dt>
+  <dd>グローバルなマッチ。最初のマッチの後に止まることなくすべてのマッチを探す。</dd>
+  <dt><code>i</code></dt>
+  <dd>大文字・小文字の無視。 <code>u</code> フラグが有効の場合、 Unicode による大文字・小文字の扱いを行います。</dd>
+  <dt><code>m</code></dt>
+  <dd>複数行に渡るマッチ。先頭および終端を示す文字 (^ や $) が、複数の行で機能します（すなわち、入力文字列全体の先頭および終端だけでなく<em>各々の</em>行 (\n や \r で区切られる) の先頭および末尾にマッチします）。</dd>
+  <dt><code>s</code></dt>
+  <dd>ドットオール。 <code>.</code> は改行文字にマッチします。</dd>
+  <dt><code>u</code></dt>
+  <dd>Unicode。パターンを Unicode コードポイントの羅列として扱います (<a href="/ja/docs/Web/API/DOMString/Binary">Binary 文字列</a>も参照)。</dd>
+  <dt><code>y</code></dt>
+  <dd><ruby>先頭固定 <rp>(</rp><rt>sticky</rt><rp>)</rp></ruby>。対象文字列中の正規表現の <code>lastIndex</code> プロパティによって示された位置からのみマッチするようになります (それより後の位置からのマッチは試みません)。</dd>
+ </dl>
+ </dd>
+</dl>
+
+<h2 id="Description" name="Description">解説</h2>
+
+<p><code>RegExp</code> オブジェクトを作成する場合、正規表現リテラルを利用する方法とコンストラクター関数を利用する方法の 2 通りがあります。正規表現リテラルではスラッシュで囲む代わり、引用符は必要ありません。コンストラクタ関数を利用する場合はスラッシュで囲まない代わりに引用符が必要になります。</p>
+
+<p>以下の例では、同じ正規表現オブジェクトが作成されます。:</p>
+
+<pre class="brush: js">/ab+c/i;
+new RegExp(/ab+c/, 'i'); // リテラル記法
+new RegExp('ab+c', 'i'); // コンストラクター
+</pre>
+
+<p>リテラル記法では、正規表現が評価されるときにコンパイルを行います。正規表現が不変である場合に、リテラル記法を使用してください。例えばループ内で使用する正規表現を生成するためにリテラル記法を使用すると、反復処理のたびに正規表現を再コンパイルすることはありません。</p>
+
+<p><code>new RegExp('ab+c')</code> といった正規表現オブジェクトのコンストラクタは、実行時に正規表現をコンパイルします。正規表現パターンが変わることがわかっている場合や、パターンが不明でありユーザー入力など別のソースからパターンを取得する場合は、コンストラクタ関数を使用してください。</p>
+
+<p>ECMAScript 6 より、第 1 引数が <code>RegExp</code> で第 2 引数に <code>flags</code> を指定する場合 (<code>new RegExp(/ab+c/, 'i')</code>) に {{jsxref("TypeError")}} ("can't supply flags when constructing one RegExp from another") が発生しません。代わりに、引数を元に新たな <code>RegExp</code> を生成します。</p>
+
+<p>コンストラクタ関数を使用する場合は、通常の文字エスケープ規則 (文字列内に特殊文字が含まれるとき、前に \ を付加する) が必須です。例えば、以下 2 つの構文は同等です:</p>
+
+<pre class="brush: js">var re = /\w+/;
+var re = new RegExp('\\w+');
+</pre>
+
+<h2 id="Special_characters_meaning_in_regular_expressions" name="Special_characters_meaning_in_regular_expressions">プロパティ</h2>
+
+<dl>
+ <dt>{{jsxref("RegExp.prototype")}}</dt>
+ <dd>すべてのオブジェクトへプロパティを追加することを許可します。</dd>
+ <dt><code>RegExp.length</code></dt>
+ <dd><code>RegExp.length</code> の値は 2 です。</dd>
+ <dt>{{jsxref("RegExp.@@species", "get RegExp[@@species]")}}</dt>
+ <dd>派生オブジェクトを生成するために使用するコンストラクタ関数です。</dd>
+ <dt>{{jsxref("RegExp.lastIndex")}}</dt>
+ <dd>次のマッチングを開始する位置です。</dd>
+</dl>
+
+<h2 id="Methods" name="Methods">メソッド</h2>
+
+<p>グローバル <code>RegExp</code> オブジェクトは、自分自身のメソッドを持っていませんが、プロトタイプチェーンを通していくつかのメソッドを継承しています。</p>
+
+<h2 id="RegExp_prototype_objects_and_instances" name="RegExp_prototype_objects_and_instances"><code>RegExp</code> プロトタイプオブジェクトとインスタンス</h2>
+
+<h3 id="Properties" name="Properties">プロパティ</h3>
+
+<div>{{page('/ja/docs/Web/JavaScript/Reference/Global_Objects/RegExp/prototype', 'Properties')}}</div>
+
+<h3 id="Methods" name="Methods">メソッド</h3>
+
+<div>{{page('/ja/docs/Web/JavaScript/Reference/Global_Objects/RegExp/prototype', 'Methods')}}</div>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<h3 id="Using_a_regular_expression_to_change_data_format" name="Using_a_regular_expression_to_change_data_format">データフォーマットを変更するための正規表現の使用</h3>
+
+<p>以下のスクリプトは、{{jsxref("Global_Objects/String", "String")}} インスタンスから継承された {{jsxref("String.prototype.replace()", "replace()")}} メソッドを使用して、<em>first last</em> 形式のフォーマットでの名前にマッチさせ、<em>last, first</em> 形式のフォーマットで出力しています。置換テキスト中で、そのスクリプトは、<code>$1</code> と <code>$2</code> を使用して、それぞれ対応する正規表現パターンでマッチする括弧がキャプチャした結果を指定しています。</p>
+
+<pre class="brush: js">var re = /(\w+)\s(\w+)/;
+var str = 'John Smith';
+var newstr = str.replace(re, '$2, $1');
+console.log(newstr);
+</pre>
+
+<p>これは、"Smith, John" を表示します。</p>
+
+<h3 id="Using_regular_expression_to_split_lines_with_different_line_endingsends_of_lineline_breaks" name="Using_regular_expression_to_split_lines_with_different_line_endingsends_of_lineline_breaks">正規表現を使用してさまざまな<strong>行末/行の終端/改行</strong>で行を分割する</h3>
+
+<p>デフォルトの行末は、プラットフォーム (Unix、Windows など) によって異なります。この例で実行する行分割は、あらゆるプラットフォームで動作します。</p>
+
+<pre class="brush: js">var text = 'Some text\nAnd some more\r\nAnd yet\rThis is the end';
+var lines = text.split(/\r\n|\r|\n/);
+console.log(lines); // logs [ 'Some text', 'And some more', 'And yet', 'This is the end' ]
+</pre>
+
+<p>正規表現内のパターンの順序が重要であることに注意してください。</p>
+
+<h3 id="Using_regular_expression_on_multiple_lines" name="Using_regular_expression_on_multiple_lines">複数行で正規表現を使用する</h3>
+
+<pre class="brush: js">var s = 'Please yes\nmake my day!';
+s.match(/yes.*day/);
+// Returns null
+s.match(/yes[^]*day/);
+// Returns ["yes\nmake my day"]
+</pre>
+
+<h3 id="Using_a_regular_expression_with_the_sticky_flag" name="Using_a_regular_expression_with_the_sticky_flag">"sticky" フラグ付きの正規表現の使用</h3>
+
+<p><a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/RegExp/sticky">sticky フラグ</a>は、対象文字列で {{jsxref("RegExp.prototype.lastIndex")}} からマッチングを試みることにより、正規表現の sticky マッチングを実行することを示します。</p>
+
+<pre class="brush: js">var str = '#foo#';
+var regex = /foo/y;
+
+regex.lastIndex = 1;
+regex.test(str); // true
+regex.lastIndex = 5;
+regex.test(str); // false (lastIndex is taken into account with sticky flag)
+regex.lastIndex; // 0 (reset after match failure)</pre>
+
+<h3 id="Regular_expression_and_Unicode_characters" name="Regular_expression_and_Unicode_characters">正規表現と Unicode 文字</h3>
+
+<p>上の表にもある通り、<code>\w</code> や <code>\W</code> は ASCII 文字にのみマッチします。具体的には 'a' から 'z' 、'A' から 'Z' 、0 から 9 および '_' です。キリル語やヘブライ語で使われるような非 ASCII 文字にマッチさせるには <code>\uhhhh</code> 形式 ('hhhh' の部分は 16進表記の Unicode 値) を使ってください。この例は、文字列全体から Unicode 文字列だけを抜き出す方法をデモしています。</p>
+
+<pre class="brush: js">var text = 'Образец text на русском языке';
+var regex = /[\u0400-\u04FF]+/g;
+
+var match = regex.exec(text);
+console.log(match[0]);        // logs 'Образец'
+console.log(regex.lastIndex); // logs '7'
+
+var match2 = regex.exec(text);
+console.log(match2[0]);       // logs 'на' [did not log 'text']
+console.log(regex.lastIndex); // logs '15'
+
+// and so on
+</pre>
+
+<p><a href="/ja/docs/Web/JavaScript/Guide/Regular_Expressions/Unicode_Property_Escapes">Unicode プロパティエスケープ</a>機能は <code>\p{scx=Cyrl}</code> のように単純な表記を可能にする解決策を導入しています。スクリプト別の完全な Unicode コードブロック (範囲) を知ることができる外部リソースも、 <a href="http://kourge.net/projects/regexp-unicode-block">Regexp-Unicode-block</a> などがあります。</p>
+
+<h3 id="Extracting_sub-domain_name_from_URL" name="Extracting_sub-domain_name_from_URL">URL からサブドメイン名を抽出する</h3>
+
+<pre class="brush: js">var url = 'http://xxx.domain.com';
+console.log(/[^.]+/.exec(url)[0].substr(7)); // logs 'xxx'
+</pre>
+
+<h2 id="Specifications" name="Specifications">仕様書</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">状態</th>
+   <th scope="col">備考</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-regexp-regular-expression-objects', 'RegExp')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td></td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-regexp-regular-expression-objects', 'RegExp')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td>第 1 引数が <code>RegExp</code> で第 2 引数も指定したとき、<code>RegExp</code> で例外が発生しないようになりました。Unicode および sticky フラグを導入。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-15.10', 'RegExp')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td></td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES3')}}</td>
+   <td>{{Spec2('ES3')}}</td>
+   <td>初回定義。 JavaScript 1.1 で実装。</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザーの互換性</h2>
+
+<div>
+<div class="hidden">このページの互換性一覧表は構造化データから生成されています。データに協力していただけるのであれば、 <a class="external" href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> をチェックアウトしてプルリクエストを送信してください。</div>
+
+<p>{{Compat("javascript.builtins.RegExp")}}</p>
+</div>
+
+<h3 id="Firefox-specific_notes" name="Firefox-specific_notes">Firefox固有の注意事項</h3>
+
+<p>Firefox 34 より、量指定子を伴うキャプチャグループが動作を妨げている場合に、キャプチャグループにマッチしたテキストが空文字列ではなく <code>undefined</code> になります:</p>
+
+<pre class="brush: js">// Firefox 33 以前
+'x'.replace(/x(.)?/g, function(m, group) {
+  console.log("'group:" + group + "'");
+}); // 'group:'
+
+// Firefox 34 以降
+'x'.replace(/x(.)?/g, function(m, group) {
+  console.log("'group:" + group + "'");
+}); // 'group:undefined'
+</pre>
+
+<p>ウェブの互換性のため <code>RegExp.$N</code> は引き続き、<code>undefined</code> ではなく空文字列を返します ({{bug(1053944)}})。</p>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li><a href="/ja/docs/Web/JavaScript/Guide">JavaScript ガイド</a>内の<a href="/ja/docs/Web/JavaScript/Guide/Regular_Expressions">正規表現</a>の章</li>
+ <li>{{jsxref("String.prototype.match()")}}</li>
+ <li>{{jsxref("String.prototype.replace()")}}</li>
+</ul>

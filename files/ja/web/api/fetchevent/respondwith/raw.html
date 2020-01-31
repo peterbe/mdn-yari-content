@@ -1,0 +1,111 @@
+<p>{{APIRef("Service Workers API")}}{{SeeCompatTable}}</p>
+
+<p><span class="seoSummary">{{domxref("FetchEvent")}} インターフェイスの <strong><code>respondWith()</code></strong> メソッドは、ブラウザー既定の fetch ハンドリングを抑止して、自身の {{domxref("Response")}} 用の Promise を提供できるようにします。</span></p>
+
+<p>たいていの場合、受け手が理解できるレスポンスを提供できます。例えば、{{HTMLElement('img')}} がリクエストを開始する場合、レスポンスボディは画像データが必要です。セキュリティの理由から、少しのグローバルルールがあります:</p>
+
+<ul>
+ <li>{{domxref("fetchEvent.request")}} オブジェクトの {{domxref("request.mode", "mode")}} が "<code>no-cors</code>"の場合にだけ、"<code>opaque</code>" {{domxref("Response.type", "type")}}(不透過型) の{{domxref("Response")}} オブジェクトを返すことができます。これはプライベートデータの漏えいを防ぎます。</li>
+ <li>{{domxref("fetchEvent.request")}} オブジェクトの {{domxref("request.mode", "mode")}} が "<code>manual</code>"の場合にだけ "<code>opaqueredirect</code>" {{domxref("Response.type", "type")}}(不透過直接型) の {{domxref("Response")}} オブジェクトを返すことができます。</li>
+ <li>{{domxref("fetchEvent.request")}} オブジェクトの{{domxref("request.mode", "mode")}} t が "<code>same-origin</code>"の場合、"<code>cors</code>" {{domxref("Response.type", "type")}} の{{domxref("Response")}} オブジェクトを返すことはできません。</li>
+</ul>
+
+<h3 id="Specifying_the_final_URL_of_a_resource" name="Specifying_the_final_URL_of_a_resource">リソースの最終 URL を指定する</h3>
+
+<p>Firefox 59 以降は、service worker が {{domxref("FetchEvent.respondWith()")}} への {{domxref("Response")}} を提供する時、{{domxref("Response.url")}} の値は中断されたネットワークリクエストに最終 URL として伝搬します。{{domxref("Response.url")}} の値が空文字の場合、{{domxref("Request.url","FetchEvent.request.url")}} が最終 URL として使われます。</p>
+
+<p>過去では {{domxref("Request.url","FetchEvent.request.url")}} がすべての場合に最終 URL として使われていました。{{domxref("Response.url")}} は効率よく無視されていました。</p>
+
+<p>つまり、例えば service worker がスタイルシートや worker スクリプトを中断すると、与えられた {{domxref("Response.url")}} が、サブリソースが読み込む相対的な {{cssxref("@import")}} や {{domxref("WorkerGlobalScope.importScripts()","importScripts()")}} の代わりに使われます ({{bug(1222008)}})。</p>
+
+<p>たいていのネットワークリクエストに対して、最終 URL を観測できないためこの変更は影響ありません。しかし、少しだけ関係する場合があります:</p>
+
+<ul>
+ <li>{{domxref("WindowOrWorkerGlobalScope.fetch()", "fetch()")}} が中断された場合、結果の {{domxref("Response.url")}}で最終 URL を観測できます。</li>
+ <li><a href="https://developer.mozilla.org/ja/docs/Web/API/Web_Workers_API">worker</a> スクリプトが中断された場合、最終 URL は <code><a href="https://developer.mozilla.org/ja/docs/Web/API/WorkerGlobalScope/location">self.location</a></code> をセットするのに使われ、worker スクリプトの相対 URL の代わりのベース URL として使われます。</li>
+ <li>スタイルシートが中断された場合、最終 URL は相対的な {{cssxref("@import")}} 読み込みの代わりのベース URL として使われます。</li>
+</ul>
+
+<p>{{domxref("Window","Windows")}} と {{domxref("HTMLIFrameElement","iframes")}} のナビゲーションリクエストは最終 URL として使われ「ない」ことに注意します。HTML 仕様がナビゲーションのリダイレクトを処理する方法は、{{domxref("Window.location")}} のリクエスト URL を使うことになります。つまりサイトはオフラインの時にユーザーに見える URL を変更することなく「代替の」ウェブページを提供します。</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="brush: js">FetchEvent.respondWith(
+  // Response かネットワークエラーで解決されるコード。
+​)</pre>
+
+<h3 id="Parameters" name="Parameters">パラメーター</h3>
+
+<p>{{domxref("Response")}} の{{jsxref("Promise")}}。</p>
+
+<h3 id="Return_value" name="Return_value">返り値</h3>
+
+<p>Void。</p>
+
+<h3 id="Exceptions" name="Exceptions">例外</h3>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">例外</th>
+   <th scope="col">注記</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td><code>NetworkError</code></td>
+   <td>ネットワークエラーは{{domxref("Request.mode","FetchEvent.request.mode")}} と {{domxref("Response.type")}}  の値の組み合わせでトリガーされ、それは上記の "グローバルルール" にヒントが載っています。</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<p>この fetch イベントはキャッシュ API からのレスポンスを返そうとして、そうでないネットワークに縮退します。</p>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js"><span class="function token">addEventListener</span><span class="punctuation token">(</span><span class="string token">'fetch'</span><span class="punctuation token">,</span> event <span class="operator token">=</span><span class="operator token">&gt;</span> <span class="punctuation token">{</span>
+  <span class="comment token">// Prevent the default, and handle the request ourselves.</span>
+  event<span class="punctuation token">.</span><span class="function token">respondWith</span><span class="punctuation token">(</span><span class="keyword token">async</span> <span class="keyword token">function</span><span class="punctuation token">(</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+    <span class="comment token">// Try to get the response from a cache.</span>
+    <span class="keyword token">const</span> cachedResponse <span class="operator token">=</span> <span class="keyword token">await</span> caches<span class="punctuation token">.</span><span class="function token">match</span><span class="punctuation token">(</span>event<span class="punctuation token">.</span>request<span class="punctuation token">)</span><span class="punctuation token">;</span>
+    <span class="comment token">// Return it if we found one.</span>
+    <span class="keyword token">if</span> <span class="punctuation token">(</span>cachedResponse<span class="punctuation token">)</span> <span class="keyword token">return</span> cachedResponse<span class="punctuation token">;</span>
+    <span class="comment token">// If we didn't find a match in the cache, use the network.</span>
+    <span class="keyword token">return</span> <span class="function token">fetch</span><span class="punctuation token">(</span>event<span class="punctuation token">.</span>request<span class="punctuation token">)</span><span class="punctuation token">;</span>
+  <span class="punctuation token">}</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+<span class="punctuation token">}</span><span class="punctuation token">)</span><span class="punctuation token">;</span></code>
+</pre>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">状態</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('Service Workers', '#fetch-event-respondwith-method', 'respondWith()')}}</td>
+   <td>{{Spec2('Service Workers')}}</td>
+   <td>初期定義。</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザー実装状況</h2>
+
+<div>
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("api.FetchEvent.respondWith")}}</p>
+</div>
+
+<h2 id="See_also" name="See_also">関連項目</h2>
+
+<ul>
+ <li><a href="https://developer.mozilla.org/ja/docs/Web/API/ServiceWorker_API/Using_Service_Workers">Service Worker の利用について</a></li>
+ <li><a class="external external-icon" href="https://jakearchibald.github.io/isserviceworkerready/">Is ServiceWorker ready?</a></li>
+ <li>{{jsxref("Promise")}}</li>
+ <li><a href="https://developer.mozilla.org/ja/docs/Web/API/Fetch_API">Fetch API</a></li>
+</ul>

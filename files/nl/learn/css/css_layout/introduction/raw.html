@@ -1,0 +1,485 @@
+<div>{{LearnSidebar}}</div>
+
+<div>{{NextMenu("Learn/CSS/CSS_layout/Floats", "Learn/CSS/CSS_layout")}}</div>
+
+<p class="summary">Dit hoofdstuk zal enkele van de CSS layoutmogelijkheden herhalen die we al zagen in vorige modules, zoals de verschillende waarden voor {{cssxref("display")}}.  We introduceren ook enkele concepten die we later in de module dieper zullen verkennen.</p>
+
+<table class="learn-box standard-table">
+ <tbody>
+  <tr>
+   <th scope="row">Vereisten:</th>
+   <td>
+    <p>De basis van hoe HTML werkt, zoals gezien in de <a href="https://developer.mozilla.org/nl/docs/Learn/HTML/Introduction_to_HTML">Introductie tot HTML</a> module en de fundamenten van CSS kennen, zoals besproken in de <a href="https://developer.mozilla.org/nl/docs/Learn/CSS/Introduction_to_CSS">Introductie tot CSS</a> module.</p>
+   </td>
+  </tr>
+  <tr>
+   <th scope="row">Doelstelling:</th>
+   <td>Je een overzicht geven van de CSS layouttechnieken.  Elke techniek kan in meer detail geleerd worden in volgende tutorials.</td>
+  </tr>
+ </tbody>
+</table>
+
+<p>CSS layouttechnieken staan ons toe om elementen te nemen in een pagina en te bepalen waar die moeten gepositioneerd worden ten opzichte van hun normale positie, ten opzichte van andere elementen rondom hen, hun ouder of de viewport.  De layouttechnieken de we in meer detail zullen zien in deze module zijn:</p>
+
+<ul>
+ <li>Floats</li>
+ <li>Positionering</li>
+ <li>CSS tabellen</li>
+ <li>Flexbox</li>
+ <li>Grid</li>
+</ul>
+
+<p>Elke techniek heeft zijn voor- en nadelen.</p>
+
+<h2 id="Normale_stroom_van_de_layout">Normale stroom van de layout</h2>
+
+<p>Normale stroom is hoe de browser de HTML pagina standaard toont, wanneer je niks doet om die opmaak te controleren.  Laten we kijken naar een vlug HTML voorbeeld:</p>
+
+<pre class="brush: html">&lt;p&gt;I love my cat.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Buy cat food&lt;/li&gt;
+  &lt;li&gt;Exercise&lt;/li&gt;
+  &lt;li&gt;Cheer up friend&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The end!&lt;/p&gt;</pre>
+
+<p>Standaard zal de browser die code als volgt tonen:</p>
+
+<p>{{ EmbedLiveSample('Normal_layout_flow', '100%', 200) }}</p>
+
+<p>Merk op dat de HTML hier wordt weergegeven in de volgorde waarin die in de broncode staat, met de elementen boven elkaar: de eerste paragraaf, gevolgd door de ongeordende lijst, gevolgd door de tweede paragraaf.</p>
+
+<p>Layouttechnieken hebben de neiging om dit standaardgedrag te overschrijven met behulp van:</p>
+
+<ul>
+ <li>De {{cssxref("position")}} eigenschap, <code>static</code> is de normale waarde, maarje kan er ook voor zorgen dat elementen op een andere manier worden weergegeven met behulp van andere waarden.  Bv. er voor zorgen dat elementen standaard altijd linksboven in de viewport zichtbaar zijn.</li>
+ <li>Floats (drijvers): door een {{cssxref("float")}} waarde zoals <code>left</code> te gebruiken kunnen blokelementen naast elkaar weergegeven worden ipv. boven elkaar. </li>
+ <li>De {{cssxref("display")}} eigenschap, met als standaardwaarden <code>block</code>, <code>inline</code> of <code>inline-block</code>, kan veranderen hoe elementen zich gedragen in de normale stroom (zie <a href="/en-US/docs/Learn/CSS/Introduction_to_CSS/Box_model#Types_of_CSS_boxes">Soorten CSS dozen</a> voor meer informatie), waar niet veel voorkomende of gespecialiseerde waarden ons toe laten om elementen op een radicaal andere manier te gaan weergeven met behulp van hulpmiddelen zoals Flexbox.</li>
+</ul>
+
+<h2 id="Floats_Drijvers">Floats / Drijvers</h2>
+
+<p>Floats is a technique that allows the elements to float to the left or right of one another, rather than the default of sitting on top of one another. The main uses of floats are to lay out columns and float text around an image. To get you started, let's take a quick look at the {{cssxref("float")}} property and then look at a simple example.</p>
+
+<p>The float property has four possible values:</p>
+
+<ul>
+ <li><code>left</code> — floats the element to the left.</li>
+ <li><code>right</code> — floats the element to the right.</li>
+ <li><code>none</code> — specified no floating at all. This is the default value.</li>
+ <li>inherit — specifies that the value of the <code>float</code> property should be inherited from the parent element.</li>
+</ul>
+
+<h3 id="Simple_HTML_example">Simple HTML example</h3>
+
+<p>Let's show how we can create a simple two column layout using floats. First, some HTML:</p>
+
+<pre class="brush: html">&lt;h1&gt;2 column layout example&lt;/h1&gt;
+&lt;div&gt;
+  &lt;h2&gt;First column&lt;/h2&gt;
+  &lt;p&gt; Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla luctus aliquam dolor, eu lacinia lorem placerat vulputate. &lt;/p&gt;
+&lt;/div&gt;
+
+&lt;div&gt;
+  &lt;h2&gt;Second column&lt;/h2&gt;
+  &lt;p&gt;Nam vulputate diam nec tempor bibendum. Donec luctus augue eget malesuada ultrices. Phasellus turpis est, posuere sit amet dapibus ut.&lt;/p&gt;
+&lt;/div&gt;</pre>
+
+<p>Here we have a top-level heading, and two simple <code>&lt;div&gt;</code>s, each containing a second-level heading and a paragraph. By default, the content will be laid out in source order, from top to bottom going down the page:</p>
+
+<p>{{ EmbedLiveSample('Simple_HTML_example', '100%', 300) }}</p>
+
+<h3 id="Making_the_columns_float">Making the columns float</h3>
+
+<p>Let's change things — we instead want our two <code>&lt;div&gt;</code>s to sit side by side. To do this, we can use the following code. Note how the two <code>&lt;div&gt;</code>s are floated one with a value of <code>left</code>, and one with a value of <code>right</code>, meaning that one will fly to the left, and one will fly to the right. They are also given {{cssxref("width")}} values that allow them to fit on the same line as one another and have a gutter in between (the total width will never be more than 100!)</p>
+
+<pre class="brush: css">div:nth-of-type(1) {
+  width: 48%;
+  float: left;
+}
+
+div:nth-of-type(2) {
+  width: 48%;
+  float: right;
+}
+</pre>
+
+<p>The updated example will look like so:</p>
+
+<div class="hidden">
+<pre class="brush: html">&lt;h1&gt;2 column layout example&lt;/h1&gt;
+&lt;div&gt;
+  &lt;h2&gt;First column&lt;/h2&gt;
+  &lt;p&gt; Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla luctus aliquam dolor, eu lacinia lorem placerat vulputate.&lt;/p&gt;
+&lt;/div&gt;
+
+&lt;div&gt;
+  &lt;h2&gt;Second column&lt;/h2&gt;
+  &lt;p&gt;Nam vulputate diam nec tempor bibendum. Donec luctus augue eget malesuada ultrices. Phasellus turpis est, posuere sit amet dapibus ut.&lt;/p&gt;
+&lt;/div&gt;
+</pre>
+
+<pre class="brush: css">body {
+  width: 90%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+div:nth-of-type(1) {
+  width: 48%;
+  float: left;
+}
+
+div:nth-of-type(2) {
+  width: 48%;
+  float: right;
+}</pre>
+</div>
+
+<p>{{ EmbedLiveSample('Making_the_columns_float', '100%', 300) }}</p>
+
+<div class="note">
+<p><strong>Note</strong>: To learn more about CSS floats, see our <a href="https://developer.mozilla.org/en-US/docs/Learn/CSS/CSS_layout/Floats">Floats article</a>.</p>
+</div>
+
+<h2 id="Positioneringstechnieken">Positioneringstechnieken</h2>
+
+<p>Positioning allows you to move an element from it's original spot on the page to another spot with great accuracy.</p>
+
+<p>There are four main types of positioning you should know about:</p>
+
+<ul>
+ <li><strong>Static positioning</strong> is the default that every element gets — it just means "put the element into it's normal position in the document layout flow — nothing special to see here".</li>
+ <li><strong>Relative positioning</strong> allows you to modify an element's position on the page, moving it relative to its position in normal flow — including making it overlap other elements on the page. This is useful for minor layout tweaks and design pinpointing.</li>
+ <li><strong>Absolute positioning</strong> moves an element completely out of the page's normal layout flow, like it is sitting on its own separate layer. From there, you can fix it in a position relative to the edges of the page's <code>&lt;html&gt;</code> element (or it's nearest positioned ancestor element). This is useful for creating complex layout effects such as tabbed boxes where different content panels sit on top of one another and are shown and hidden as desired, or information panels that sit off screen by default, but can be made to slide on screen using a control button.</li>
+ <li><strong>Fixed positioning</strong> is very similar to absolute positioning, except that it fixes an element relative to the browser viewport, not another element. This is useful for creating effects such as a persistent navigation menu that always stays in the same place on the screen as the rest of the content scrolls.</li>
+</ul>
+
+<h3 id="Simple_positioning_example">Simple positioning example</h3>
+
+<p>To provide familiarity with these page layout techniques, we'll show you a couple of quick examples. Our examples will all feature the same HTML, which is as follows:</p>
+
+<pre class="brush: html">&lt;h1&gt;Positioning&lt;/h1&gt;
+
+&lt;p&gt;I am a basic block level element.&lt;/p&gt;
+&lt;p class="positioned"&gt;I am a basic block level element.&lt;/p&gt;
+&lt;p&gt;I am a basic block level element.&lt;/p&gt;</pre>
+
+<p>This HTML will be styled by default using the following CSS:</p>
+
+<pre class="brush: css">body {
+  width: 500px;
+  margin: 0 auto;
+}
+
+p {
+  background: aqua;
+  border: 3px solid blue;
+  padding: 10px;
+  margin: 10px;
+}
+</pre>
+
+<p>The rendered output is as follows:</p>
+
+<p>{{ EmbedLiveSample('Simple_positioning_example', '100%', 300) }}</p>
+
+<h3 id="Relative_Positioning">Relative Positioning</h3>
+
+<p>A very common use of relative positioning is to make small tweaks in your layout, such as moving an icon down a bit so it lines up with a text label. To do this, we could add the following rule to add relative positioning:</p>
+
+<pre>.positioned {
+  position: relative;
+  background: yellow;
+  top: 30px;
+  left: 30px;
+}</pre>
+
+<p>Here we give our middle paragraph a {{cssxref("position")}} value of <code>relative</code> — this doesn't do anything on its own, so we also add {{cssxref("top")}} and {{cssxref("left")}} properties. These serve to move the affected element down and to the right — this might seem like the opposite of what you were expecting, but you need to think of it as the element being pushed on it's left and top sides, which result in it moving right and down.</p>
+
+<p>Adding this code will give the following result:</p>
+
+<div class="hidden">
+<h6 id="Relative_positioning_example">Relative positioning example</h6>
+
+<pre class="brush: html">&lt;h1&gt;Relative positioning&lt;/h1&gt;
+
+&lt;p&gt;I am a basic block level element.&lt;/p&gt;
+&lt;p class="positioned"&gt;This is my relatively positioned element.&lt;/p&gt;
+&lt;p&gt;I am a basic block level element.&lt;/p&gt;</pre>
+
+<pre class="brush: css">body {
+  width: 500px;
+  margin: 0 auto;
+}
+
+p {
+  background: aqua;
+  border: 3px solid blue;
+  padding: 10px;
+  margin: 10px;
+}
+
+span {
+  background: red;
+  border: 1px solid black;
+}
+
+.positioned {
+  position: relative;
+  background: yellow;
+  top: 30px;
+  left: 30px;
+}</pre>
+</div>
+
+<p>{{ EmbedLiveSample('Relative_positioning_example', '100%', 300) }}</p>
+
+<h3 id="Absolute_Positioning">Absolute Positioning</h3>
+
+<p>Absolute positioning is used to move your elements anywhere around the web page, to create complex layouts. Interestingly, it is often used in concert with relative positioning and floats.</p>
+
+<p>Going back to our original non-positioned example, we could add the following CSS rule to implement absolute positioning:</p>
+
+<pre class="brush: css">.positioned {
+  position: absolute;
+  background: yellow;
+  top: 30px;
+  left: 30px;
+}</pre>
+
+<p>Here we give our middle paragraph a {{cssxref("position")}} value of <code>absolute</code>, and the same {{cssxref("top")}} and {{cssxref("left")}} properties as before. Adding this code, however, will give the following result:</p>
+
+<div class="hidden">
+<h6 id="Absolute_positioning_example">Absolute positioning example</h6>
+
+<pre class="brush: html">&lt;h1&gt;Absolute positioning&lt;/h1&gt;
+
+&lt;p&gt;I am a basic block level element.&lt;/p&gt;
+&lt;p class="positioned"&gt;This is my absolutely positioned element.&lt;/p&gt;
+&lt;p&gt;I am a basic block level element.&lt;/p&gt;</pre>
+
+<pre class="brush: css">body {
+  width: 500px;
+  margin: 0 auto;
+}
+
+p {
+  background: aqua;
+  border: 3px solid blue;
+  padding: 10px;
+  margin: 10px;
+}
+
+span {
+  background: red;
+  border: 1px solid black;
+}
+
+.positioned {
+  position: absolute;
+  background: yellow;
+  top: 30px;
+  left: 30px;
+}</pre>
+</div>
+
+<p>{{ EmbedLiveSample('Absolute_positioning_example', '100%', 300) }}</p>
+
+<p>This is very different! The positioned element has now been completely separated from the rest of the page layout, and sits over the top of it. The other two paragraphs now sit together as if their positioned sibling doesn't exist. The {{cssxref("top")}} and {{cssxref("left")}} properties have a different effect on absolutely positioned elements than they do on relatively positioned elements. In this case they don't specify how much the element moves relative to its original position; instead they specify  the distance the element should sit from the top and left sides of the page's boundaries (the <code>&lt;html&gt;</code> element, to be exact).</p>
+
+<p>We'll leave fixed positioning for now — it basically works in the same way, except that it remains fixed to the browser viewport's edges, not its positioned parent's edges.</p>
+
+<div class="note">
+<p><strong>Note</strong>: to find more out about positioning, see our <a href="/en-US/docs/Learn/CSS/CSS_layout/Positioning">Positioning</a> and <a href="/en-US/docs/Learn/CSS/CSS_layout/Practical_positioning_examples">Practical positioning examples</a> articles.</p>
+</div>
+
+<h2 id="CSS_tabellen">CSS tabellen</h2>
+
+<p>HTML tables are fine for displaying tabular data, but many years ago — before even basic CSS was supported reliably across browsers — web developers used to also use tables for entire web page layouts — putting their headers, footers, different columns, etc. in various table rows and columns. This worked at the time, but it has many problems — table layouts are inflexible, very heavy on markup, difficult to debug, and semantically wrong (e.g. screen reader users have problems navigating table layouts).</p>
+
+<p>CSS tables exist to allow you to layout elements like they were a table, without any of the issues described above — this may sound strange, and you should use table elements for tabular data, but sometimes this can be useful. For example, you might want to lay out a form with the labels and text inputs lined up; this can be tricky, but CSS tables make it easy.</p>
+
+<p>Let's look at an example. First, some simple markup that creates an HTML form. Each input element has a label, and we've also included a caption inside a paragraph. Each label/input pair is wrapped in a {{htmlelement("div")}}, for layout purposes.</p>
+
+<pre class="brush: html">&lt;form&gt;
+  &lt;p&gt;First of all, tell us your name and age.&lt;/p&gt;
+  &lt;div&gt;
+    &lt;label for="fname"&gt;First name:&lt;/label&gt;
+    &lt;input type="text" id="fname"&gt;
+  &lt;/div&gt;
+  &lt;div&gt;
+    &lt;label for="lname"&gt;Last name:&lt;/label&gt;
+    &lt;input type="text" id="lname"&gt;
+  &lt;/div&gt;
+  &lt;div&gt;
+    &lt;label for="age"&gt;Age:&lt;/label&gt;
+    &lt;input type="text" id="age"&gt;
+  &lt;/div&gt;
+&lt;/form&gt;</pre>
+
+<p>Now, the CSS for our example. Most of the CSS is fairly ordinary, except for the uses of the {{cssxref("display")}} property. The {{htmlelement("form")}}, {{htmlelement("div")}}s, and {{htmlelement("label")}}s and {{htmlelement("input")}}s have been told to display like a table, table rows, and table cells respectively — basically they'll act like HTML table markup, causing the labels and inputs to nicely line up by default. All we then have to do is add a bit of sizing, margin, etc. to make everything look a bit nicer and we're done.</p>
+
+<p>You'll notice that the caption paragraph has been given <code>display: table-caption;</code> — which makes it act like a table {{htmlelement("caption")}} — and <code>caption-side: bottom;</code> to tell the caption to sit on the bottom of the table for styling purposes, even though the markup is before the inputs in the source. This allows for a nice bit of flexibility.</p>
+
+<pre class="brush: css">html {
+  font-family: sans-serif;
+}
+
+form {
+  display: table;
+  margin: 0 auto;
+}
+
+form div {
+  display: table-row;
+}
+
+form label, form input {
+  display: table-cell;
+  margin-bottom: 10px;
+}
+
+form label {
+  width: 200px;
+  padding-right: 5%;
+  text-align: right;
+}
+
+form input {
+  width: 300px;
+}
+
+form p {
+  display: table-caption;
+  caption-side: bottom;
+  width: 300px;
+  color: #999;
+  font-style: italic;
+}</pre>
+
+<p>This gives us the following result:</p>
+
+<p>{{ EmbedLiveSample('CSS_tables', '100%', '170') }}</p>
+
+<p>You can also see this example live at <a href="https://mdn.github.io/learning-area/css/styling-boxes/box-model-recap/css-tables-example.html">css-tables-example.html</a> (see the <a href="https://github.com/mdn/learning-area/blob/master/css/styling-boxes/box-model-recap/css-tables-example.html">source code</a> too.)</p>
+
+<div class="note">
+<p><strong>Note</strong>: We won't cover CSS tables in any more detail in this module.</p>
+</div>
+
+<h2 id="Flexibele_dozen">Flexibele dozen</h2>
+
+<p>CSS is a powerful language that can do many things, but it has traditionally fallen down in terms of layout. Traditional old-fashioned layout methods like {{cssxref("float")}} and {{cssxref("positioning")}} work, but sometimes they feel more complex, fiddly, inflexible and hacky than they need to be. For example, what if you wanted to:</p>
+
+<ul>
+ <li>Vertically center a box of content (not just text; <code>line-height</code> won't work).</li>
+ <li>Make several columns containing different amounts of content have the same height, without using a fixed height, or faking it with background images.</li>
+ <li>Make several boxes in a line take up the same amount of the available space, regardless of how many of them there are, and if they have padding, margin, etc. applied.</li>
+</ul>
+
+<p>The examples above are pretty much impossible to achieve with regular CSS — Flexible boxes (or flexbox) was invented to allow such things to be more easily achieved.</p>
+
+<p>Let's look at an example; first, some simple HTML:</p>
+
+<pre class="brush: html">&lt;section&gt;
+  &lt;div&gt;This is a box&lt;/div&gt;
+  &lt;div&gt;This is a box&lt;/div&gt;
+  &lt;div&gt;This is a box&lt;/div&gt;
+&lt;/section&gt;
+
+&lt;button class="create"&gt;Create box&lt;/button&gt;
+&lt;button class="reset"&gt;Reset demo&lt;/button&gt;</pre>
+
+<p>Here we've got a {{htmlelement("section")}} element with three {{htmlelement("div")}}s inside, plus a couple of buttons to create a new box, and reset the demo. By default, the child elements would not be laid out or sized at all, and using old traditional methods we'd have to carefully size each one, allowing for width, padding, border and margin, and if we added another child element we'd have to completely change all the values.</p>
+
+<p>Let's instead do this with Flexbox:</p>
+
+<pre class="brush: css">html {
+  font-family: sans-serif;
+}
+
+section {
+  width: 93%;
+  height: 240px;
+  margin: 20px auto;
+  background: purple;
+  display: flex;
+}
+
+div {
+  color: white;
+  background: orange;
+  flex: 1;
+  margin-right: 10px;
+  text-shadow: 1px 1px 1px black;
+}
+
+div:last-child {
+  margin-right: 0;
+}
+
+section, div {
+  border: 5px solid rgba(0,0,0,0.85);
+  padding: 10px;
+}</pre>
+
+<p>Two lines of this CSS are really interesting:</p>
+
+<ul>
+ <li><code>display: flex;</code> tells the {{htmlelement("section")}} element's children to be laid out as flexible boxes — by default, they will all stretch to fill the available height of the parent, whatever that is, and be laid out in a row — with enough width to wrap their content.</li>
+ <li><code>flex: 1;</code> tells each {{htmlelement("div")}} element to take up an equal amount of the space available in the row, no matter how many there are.</li>
+</ul>
+
+<p>To illustrate further how amazing this is, we'll also add a little JavaScript so that you can add further child <code>&lt;div&gt;</code>s  by pressing the <em>Create box</em> button. You can also reset the demo if you add too many <code>&lt;div&gt;</code>s, by pressing the <em>Reset demo</em> button.</p>
+
+<div class="hidden">
+<pre class="brush: js">var section = document.querySelector('section');
+var createBtn = document.querySelector('.create');
+var resetBtn = document.querySelector('.reset');
+
+function createBox() {
+  var box = document.createElement('div');
+  box.textContent = 'This is a box';
+  section.appendChild(box);
+}
+
+createBtn.onclick = createBox;
+
+resetBtn.onclick = function() {
+  while (section.firstChild) {
+      section.removeChild(section.firstChild);
+  }
+  createBox();
+  createBox();
+  createBox();
+}</pre>
+</div>
+
+<p>Here's the example live — have a play, to witness how powerful Flexbox is as a layout tool.</p>
+
+<p>{{ EmbedLiveSample('Flexible_boxes', '100%', '350') }}</p>
+
+<p>You can also find this demo at <a href="https://mdn.github.io/learning-area/css/styling-boxes/box-model-recap/flexbox-example.html">flexbox-example.html</a> (see also the <a href="https://github.com/mdn/learning-area/blob/master/css/styling-boxes/box-model-recap/flexbox-example.html">source code</a>).</p>
+
+<div class="note">
+<p><strong>Note</strong>: To find more out about Flexbox, see our <a href="/en-US/docs/Learn/CSS/CSS_layout/Flexbox">Flexbox</a> article.</p>
+</div>
+
+<h2 id="Rasters">Rasters</h2>
+
+<p>The most experimental feature to mention here is CSS Grids, which aren't supported very widely across browsers yet. Web pages are often laid out using grid systems, in the same manner as print media, and the idea here is to make this process easier and more natural, by defining a grid, and then defining which parts of the content sit within each area of the grid.</p>
+
+<p>CSS Grids in their present state aren't really supported anywhere yet (except in experimental versions of Firefox and Chrome). IE and Edge support an older, obsolete version of the technology. This is something we can look forward to in the future!</p>
+
+<div class="note">
+<p><strong>Note</strong>: To find more out about the current grid frameworks and other technologies in use today, and the upcoming native CSS Grids specification, see our <a href="/en-US/docs/Learn/CSS/CSS_layout/Grids">Grids</a> article.</p>
+</div>
+
+<h2 id="Samenvatting">Samenvatting</h2>
+
+<p>Dit hoofdstuk verschaft een kort overzicht van alle layouttechnieken die je zou moeten kennen.  Lees door voor meer informatie over elke specifieke techniek!</p>
+
+<p>{{NextMenu("Learn/CSS/CSS_layout/Floats", "Learn/CSS/CSS_layout")}}</p>

@@ -1,0 +1,276 @@
+<div class="summary">
+<p><span class="seoSummary"><a href="/en-US/docs/Web_Audio_API">Web Audio API</a>は</span>、webアプリケーション内にオーディオコンテンツを実装し操作するためのシンプルで強力なメカニズムを提供します。複雑なミキシング、エフェクト、パンニングなどの開発もできます。この記事では、Web Audio APIの基礎的な使い方を、2つのシンプルな例で説明します。</p>
+</div>
+
+<div>
+<p>Web Audio API は <a href="/en-US/docs/Web/HTML/Element/audio">&lt;audio&gt;</a> 要素の代替ではなく、むしろその機能を補完するものです。 <a href="/en-US/docs/Web/HTML/Element/Img">&lt;img&gt;</a> と <a href="/en-US/docs/Web/HTML/Element/canvas">&lt;canvas&gt;</a> のような関係です。どちらを利用するかは、その目的によります。音声再生をコントロールするだけなら、 &lt;audio&gt; の方が向いているでしょう。より複雑な音声処理も伴う場合は、Web Audio API を利用することになります。</p>
+
+<p>Web Audio APIの強力な要素の1つは、厳格な「音声の呼び出しの制限」がないことです。例えば、一度に32音や64音の呼び出しにも上限がありません。プロセッサの能力があれば、1000以上の音を詰まることなく再生することもできます。このまま進歩すれば、数年後のミドル・ハイクラスのサウンドカードならば、これらはわずかな負荷でしかなくなるでしょう。</p>
+</div>
+
+<h2 id="利用例">利用例</h2>
+
+<p>Web Audio API の利用例を示すために、我々は多くのデモンストレーションを作成しました。デモの数は増え続けています。</p>
+
+<p>まず <a href="https://github.com/mdn/voice-change-o-matic">Voice-change-O-matic</a> を紹介します。これはおもしろボイスチェンジャーで、音声の可視化もおこなうアプリです。声にかかるエフェクトや、どのように可視化するかを選べます。このアプリには改善の余地が多くありますが、それでも Web Audio API  のいくつかの機能を一緒に利用する好例と言えます。 (<a href="http://mdn.github.io/voice-change-o-matic/">Voice-change-O-matic はこちらで実行できます</a>)</p>
+
+<p><img alt="A UI with a sound wave being shown, and options for choosing voice effects and visualizations." src="https://mdn.mozillademos.org/files/7921/voice-change-o-matic.png" style="display: block; height: 500px; margin: 0px auto; width: 640px;"></p>
+
+<p>Web Audioを理解するために作られたもう一つの例が、この<a href="http://mdn.github.io/violent-theremin/">Violent Theremin</a>です。これはマウスポインタを動かして音のピッチとボリュームを変えるシンプルなアプリです。それはサイケデリックな光のショーでもあります。(<a href="https://github.com/mdn/violent-theremin">Violent Thereminのソースコードの参照</a>)</p>
+
+<p><img alt="A page full of rainbow colours, with two buttons labeled Clear screen and mute. " src="https://mdn.mozillademos.org/files/7919/violent-theremin.png" style="display: block; height: 458px; margin: 0px auto; width: 640px;"></p>
+
+<h2 id="基本的な考え方">基本的な考え方</h2>
+
+<div class="note">
+<p><strong>付記</strong>: 例として利用しているコードスニペットのほとんどは、 <a href="https://github.com/mdn/violent-theremin">Violent Theremin</a> で使用されているものです。</p>
+</div>
+
+<p>Web Audio APIは、<strong>オーディオコンテキスト</strong>内に音声を扱うオペレータとして含まれていて、<strong>モジューラールーティング</strong>を作れるように設計されています。基本的な音声の編集は<strong>オーディオノード</strong>で行われ、それは互いに結びつき、<strong>オーディオルーティンググラフ</strong>を構成しています。複数の音源—異なる種類のチャンネルレイアウト—も1つのコンテキストで対応できます。このモジューラーの設計は、動的なエフェクトを持つ複雑な音声編集機能を生成する柔軟性を提供します。</p>
+
+<p>オーディオノードは、入力と出力がつながれチェーンを構成しており、1つか複数の音源から、1つか複数のノードを通り、送り先へと向かって行きます。(もし望むならば、送り先を設定しないこともできます。例えば、音声データをグラフィックで表示したい場合などです。) webオーディオの単純で典型的な流れは次のようになっています:</p>
+
+<ol>
+ <li>オーディオコンテキストを生成する</li>
+ <li>コンテキスト内に音源を生成する—例えば<code>&lt;audio&gt;</code>、オシレーター、ストリーム</li>
+ <li>エフェクトノードを生成する。例えば、リハーブ、BiQuadフィルタ、パン、コンプレッサ</li>
+ <li>音の最終的な送り先を選択する。例えば、あなたのコンピュータのスピーカー</li>
+ <li>音源をエフェクトに、そしてエフェクトを送り先に接続する</li>
+</ol>
+
+<h3 id="オーディオコンテキストの作成">オーディオコンテキストの作成</h3>
+
+<p>まず、オーディオグラフを構築するために<a href="/en-US/docs/Web/API/AudioContext"><code>AudioContext</code></a><code>の</code>インスタンスを生成します。その最も簡単な方法は次のようになります:</p>
+
+<pre class="brush: js">var audioCtx = new AudioContext();
+</pre>
+
+<div class="note">
+<p><strong>注:</strong> 1つのドキュメントで複数のオーディオコンテキストのインスタンスを生成することは可能です。しかし、恐らくそれは無駄なことです。</p>
+</div>
+
+<p>しかし、Webkit/Blinkブラウザではプレフィックス版が、Firefox(desktop/mobile/OS)ではプレフィックスなし版を提供する必要があります。次のようにすればよいでしょう:</p>
+
+<pre class="brush: js">var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+</pre>
+
+<div class="note">
+<p><strong>注:</strong> <span style="line-height: 1.5;">Safariでは、コンテキストを生成するとき</span><code style="line-height: 1.5; font-style: normal;">window</code><span style="line-height: 1.5;">オブジェクトを明記しなければなりません!</span></p>
+</div>
+
+<h3 id="オーディオソースの作成">オーディオソースの作成</h3>
+
+<p>作成したオーディオコンテキストの持つメソッドを利用して、様々な操作を行います。最初に行う操作は、再生する音源を用意することです。音源としては以下のものが利用できます：</p>
+
+<ul>
+ <li>オシレータなどを利用して、JavaScript で作成する場合。{{ domxref("OscillatorNode") }} を {{ domxref("AudioContext.createOscillator") }} で作成することで、オシレータを利用できるようになります。</li>
+ <li>生の PCM データを利用する場合：対応しているフォーマットであれば、オーディオコンテキストの持つデコード用のメソッドを利用することで、PCM データを取得できます。詳しくは {{ domxref("AudioContext.createBuffer()") }}、{{ domxref("AudioContext.createBufferSource()") }}、{{ domxref("AudioContext.decodeAudioData()") }} をご覧ください。</li>
+ <li>{{HTMLElement("video")}} や {{HTMLElement("audio")}} といった HTML 要素を利用する場合：詳しくは {{ domxref("AudioContext.createMediaElementSource()") }} をご覧ください。</li>
+ <li><a href="/en-US/docs/WebRTC" title="/en-US/docs/WebRTC">WebRTC</a> {{domxref("MediaStream")}} からの入力を利用する場合：マイクやWeb カメラの入力を利用できます。詳しくは {{ domxref("AudioContext.createMediaStreamSource()") }} をご覧ください。</li>
+</ul>
+
+<p>単純な音を出力するオシレータを音源として、その音量を gain ノードでコントロールする例は次のようになります：</p>
+
+<pre class="brush: js">oscillator = audioCtx.createOscillator();
+var gainNode = audioCtx.createGain();
+</pre>
+
+<div class="note">
+<p><strong>付記</strong>: 音楽ファイルを再生するには、一般的には XHR を利用してファイルをロードしておき、それから BufferSource を作成します。その例を <a href="https://github.com/mdn/voice-change-o-matic/blob/gh-pages/scripts/app.js#L48-L68">Voice-change-O-matic</a> で見られます。</p>
+</div>
+
+<div class="note">
+<p><strong>付記</strong>: Scott Michaud がロードとデコード用のライブラリ <a href="https://github.com/ScottMichaud/AudioSampleLoader">AudioSampleLoader </a>を作成し、公開しています。これを利用することで、XHR やバッファの操作を単純に記述することができます。</p>
+</div>
+
+<h3 id="入力と出力の接続">入力と出力の接続</h3>
+
+<p>音声をスピーカから出力するためには、両者を接続する必要があります。接続先のノードを引数に指定して、接続元のノードの持つ connect メソッドを呼ぶことで、接続ができます。このメソッドは、ほとんどの種類のノードが持っています。</p>
+
+<p>標準の出力先は、{{ domxref("AudioContext.destination") }} で参照できます。通常はデバイス付属のスピーカが標準の出力先となっています。oscillator を gainNode に接続し、gainNode の出力を標準の出力先から出力するには、以下のように記述します：</p>
+
+<pre class="brush: js">oscillator.connect(gainNode);
+gainNode.connect(audioCtx.destination);
+</pre>
+
+<p><a href="http://mdn.github.io/voice-change-o-matic/">Voice-change-O-matic</a> のような、より複雑な場合は次のように多くのノードをつないでグラフを作成します：</p>
+
+<pre class="brush: js">source = audioCtx.createMediaStreamSource(stream);
+source.connect(analyser);
+analyser.connect(distortion);
+distortion.connect(biquadFilter);
+biquadFilter.connect(convolver);
+convolver.connect(gainNode);
+gainNode.connect(audioCtx.destination);
+</pre>
+
+<p>上記のコードで作成されるオーディオグラフは次のようになります：</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/7949/voice-change-o-matic-graph.png" style="display: block; height: 563px; margin: 0px auto; width: 232px;">複数のノードを同時に 1 つのノードへ接続できます。複数の音源を、1 つのエフェクトノードを通じて 1 つにミックスする、といったことも可能です。</p>
+
+<div class="note">
+<p><strong>付記</strong>:  Firefox 32 以降、Firefox 開発ツールで <a href="/en-US/docs/Tools/Web_Audio_Editor">Web Audio エディタ</a> が利用できるようになりました。これを利用すると、オーディオグラフに対するデバッグがより効率的に行えます。</p>
+</div>
+
+<h3 id="再生とピッチの設定">再生とピッチの設定</h3>
+
+<p>オーディオグラフを作成したら、オーディオノードの属性値を設定やメソッド呼び出しによってイフェクトの調整を行います。次の例では、オシレータの出力する音の高さを Hz で指定してます：</p>
+
+<pre class="brush: js">oscillator.type = 0; // sine wave
+oscillator.frequency.value = 2500; // value in hertz
+oscillator.start();
+</pre>
+
+<p>Violent Theremin では音量と、周波数の最大値を指定しています：</p>
+
+<pre class="brush: js">var WIDTH = window.innerWidth;
+var HEIGHT = window.innerHeight;
+
+var maxFreq = 6000;
+var maxVol = 1;
+
+var initialFreq = 3000;
+var initialVol = 0.5;
+
+// set options for the oscillator
+
+oscillator.type = 0; // sine wave
+oscillator.frequency.value = initialFreq; // value in hertz
+oscillator.start();
+
+gainNode.gain.value = initialVol;
+</pre>
+
+<p>次にマウスカーソルの動きに合わせて、周波数が設定されるように変更を加えます。カーソルの X 座標と Y 座標、周波数と音量の最大値から、出力する音の周波数と音量を決定します：</p>
+
+<pre class="brush: js">// Mouse pointer coordinates
+
+var CurX;
+var CurY;
+
+// Get new mouse pointer coordinates when mouse is moved
+// then set new gain and putch values
+
+document.onmousemove = updatePage;
+
+function updatePage(e) {   
+    CurX = (window.Event) ? e.pageX : event.clientX + (document.documentElement.scrollLeft ? document.documentElement.scrollLeft : document.body.scrollLeft);
+    CurY = (window.Event) ? e.pageY : event.clientY + (document.documentElement.scrollTop ? document.documentElement.scrollTop : document.body.scrollTop);
+    
+    oscillator.frequency.value = (CurX/WIDTH) * maxFreq;
+    gainNode.gain.value = (CurY/HEIGHT) * maxVol;
+
+    canvasDraw();
+}
+</pre>
+
+<h3 id="Canvasを利用した簡単な可視化">Canvasを利用した簡単な可視化</h3>
+
+<p><code>canvasDraw()</code>はマウスが移動するたびに呼び出される関数です。この関数が呼び出されると、マウスカーソルのある位置に、周波数と音量を大きさと色で表現した円を描きます。</p>
+
+<pre class="brush: js">function random(number1,number2) {
+  var randomNo = number1 + (Math.floor(Math.random() * (number2 - number1)) + 1);
+  return randomNo;
+}
+
+var canvas = document.querySelector('.canvas');
+canvas.width = WIDTH;
+canvas.height = HEIGHT;
+
+var canvasCtx = canvas.getContext('2d');
+
+function canvasDraw() {
+  rX = CurX;
+  rY = CurY;
+  rC = Math.floor((gainNode.gain.value/maxVol)*30);
+ 
+  canvasCtx.globalAlpha = 0.2;
+ 
+  for(i=1;i&lt;=15;i=i+2) {
+    canvasCtx.beginPath();
+    canvasCtx.fillStyle = 'rgb(' + 100+(i*10) + ',' + Math.floor((gainNode.gain.value/maxVol)*255) + ',' + Math.floor((oscillator.frequency.value/maxFreq)*255) + ')';
+    canvasCtx.arc(rX+random(0,50),rY+random(0,50),rC/2+i,(Math.PI/180)*0,(Math.PI/180)*360,false);
+    canvasCtx.fill();
+    canvasCtx.closePath();     
+  }    
+}</pre>
+
+<h3 id="ミュート">ミュート</h3>
+
+<p>ミュートボタンが押された時に、以下の関数が実行されます。Gain ノードと接続先との接続を切ることによって、音声が出力されなくなります。ボタンをもう一度押すと接続され、音が出るようになります。</p>
+
+<pre class="brush: js">var mute = document.querySelector('.mute');
+
+mute.onclick = function() {
+  if(mute.id == "") {
+    gainNode.disconnect(audioCtx.destination);
+    mute.id = "activated";
+    mute.innerHTML = "Unmute";
+  } else {
+    gainNode.connect(audioCtx.destination);
+    mute.id = "";    
+    mute.innerHTML = "Mute";
+  }
+}
+</pre>
+
+<h2 id="その他のノード">その他のノード</h2>
+
+<p>他にも多くの種類のノードを Web Audio API で利用できます。ノードを作成し、他のノードと接続してグラフを作成し、属性やメソッドを操作して音に変更を加える、という点は、変わりません。</p>
+
+<p>以下、いくつかのノードを概観します。各ノードの詳細については {{ domxref("Web_Audio_API") }} を参照してください。</p>
+
+<h3 id="Wave_shaper_ノード">Wave shaper ノード</h3>
+
+<p> {{ domxref("AudioContext.createWaveShaper") }} メソッドを利用することで、WaveShaper ノードを作成できます。</p>
+
+<pre class="brush: js">var distortion = audioCtx.createWaveShaper();
+</pre>
+
+<p>このオブジェクトを動作させるには、波形を決める関数を与える必要があります。この関数を入力の波形に適用することによって、WaveShaper ノードは音を歪ませます。この関数を 1 から作成することは難しいでしょう。Web を検索して、適切なアルゴリズムを見つける方がよいでしょう。次の例は <a href="http://stackoverflow.com/questions/22312841/waveshaper-node-in-webaudio-how-to-emulate-distortion">Stack Overflow</a> に掲載されていました：</p>
+
+<pre class="brush: js">function makeDistortionCurve(amount) {
+  var k = typeof amount === 'number' ? amount : 50,
+    n_samples = 44100,
+    curve = new Float32Array(n_samples),
+    deg = Math.PI / 180,
+    i = 0,
+    x;
+  for ( ; i &lt; n_samples; ++i ) {
+    x = i * 2 / n_samples - 1;
+    curve[i] = ( 3 + k ) * x * 20 * deg / ( Math.PI + k * Math.abs(x) );
+  }
+  return curve;
+};
+</pre>
+
+<p>Voice-change-O-matic のデモでは、<code>distortion</code> という名前の WaveShaper  ノードを作成し、必要に応じてディストーション効果をつけています：</p>
+
+<pre class="brush: js">source.connect(analyser);
+analyser.connect(distortion);
+distortion.connect(biquadFilter);
+
+...
+
+distortion.curve = makeDistortionCurve(400);
+</pre>
+
+<h3 id="双二次フィルタ">双二次フィルタ</h3>
+
+<p>双二次フィルタは内部にいくつかのオプションを持っています。{{ domxref("AudioContext.createBiquadFilter") }} メソッドを通じて作成できます:</p>
+
+<pre class="brush: js">var biquadFilter = audioCtx.createBiquadFilter();
+</pre>
+
+<p>Voice-change-o-matic デモでも用いられていた典型的なものはローシェルフフィルタです。これは基本的に低音を増幅するために用いられます:</p>
+
+<pre class="brush: js">biquadFilter.type = "lowshelf";
+biquadFilter.frequency.value = 1000;
+biquadFilter.gain.value = 25;
+</pre>
+
+<p>この例ではフィルタの種類、周波数、およびゲインの値を指定しています。ローシェルフフィルタの場合、指定された周波数より低い音は 25 デシベル増幅されます。</p>
+
+<h2 id="その他_Web_Audio_API_に関する情報">その他 Web Audio API に関する情報</h2>
+
+<p>Web Audio API を利用すると、可視化や空間化（音のパンニングなど）といったことも行えます。これらについては、他のドキュメントで解説します。</p>

@@ -1,0 +1,132 @@
+<div>{{JSRef}}{{Deprecated_header}}
+<div class="blockIndicator warning">
+<p><strong>Застереження:</strong> Зміна властивості об'єкта <code>[[Prototype]]</code>, за природою того, як сучасні рушії JavaScript оптимізують доступ до властивостей, є дуже повільною операцією в <strong><em>кожному</em></strong> переглядачі та рушії JavaScript. Ефект для продуктивності від зміни спадкування є витонченим та обширним, і не обмежується лише часом, витраченим на команду  <code>obj.__proto__ = ...</code>, але може поширюватися на <strong><em>будь-який</em></strong> код, що має доступ до <strong><em>будь-якого</em></strong> об'єкта, чия властивість <code>[[Prototype]]</code> була змінена. Якщо ви дбаєте про продуктивність, вам варто уникати присвоювати  <code>[[Prototype]]</code> об'єкта. Замість цього створіть новий об'єкт з бажаною властивістю <code>[[Prototype]]</code>, використовуючи {{JSxRef("Object.create()")}}.</p>
+</div>
+
+<div class="blockIndicator warning">
+<p><strong>Застереження: </strong>В той час, як властивість <code>Object.prototype.__proto__</code> підтримується більшістю нинішніх переглядачів, її існування та точна поведінка були стандартизовані у специфікації ECMAScript 2015 тільки в якості legacy-функціональності для сумісності з веб-переглядачами. Для кращої підтримки рекомендовано натомість використовувати {{JSxRef("Object.getPrototypeOf()")}}.</p>
+</div>
+</div>
+
+<p>Властивість {{JSxRef("Object.prototype")}} <code>__proto__</code> - це властивість-аксесор (функція-гетер та функція-сетер), яка відкриває внутрішню властивість <code>[[Prototype]]</code> (або об'єкт, або {{JSxRef("Global_Objects/null", "null")}}) об'єкта, через який до неї звертаються.</p>
+
+<p>Використання <code>__proto__</code> є суперечливим і не заохочується. Ця властивість ніколи не включалась у специфікації мови EcmaScript, але сучасні переглядачі вирішили все одно її реалізувати. Тільки останнім часом властивість <code>__proto__</code> була стандартизована у специфікації мови ECMAScript 2015 для сумісності веб-переглядачів, і буде підтримуватись у майбутньому. Її використання не рекомендоване на користь  {{JSxRef("Object.getPrototypeOf")}}/{{JSxRef("Reflect.getPrototypeOf")}} та {{JSxRef("Object.setPrototypeOf")}}/{{JSxRef("Reflect.setPrototypeOf")}} (хоча, все одно, присвоєння <code>[[Prototype]]</code> об'єкта є повільною операцією, якої бажано уникати, якщо продуктивність має значення).</p>
+
+<p>Властивість <code>__proto__</code> також може бути використана при визначенні об'єктного літералу, щоб встановити властивість об'єкта <code>[[Prototype]]</code> при створенні, як альтернатива {{JSxRef("Object.create()")}}. Дивіться: <a href="/uk/docs/Web/JavaScript/Reference/Operators/Object_initializer">Ініціалізація об'єктів / синтаксис літералів</a>.</p>
+
+<h2 id="Синтаксис">Синтаксис</h2>
+
+<pre class="brush: js">var Circle = function () {};
+var shape = {};
+var circle = new Circle();
+
+// Присвоїти прототип об'єкта.
+// НЕ РЕКОМЕНДОВАНО. Цей код написаний лише для прикладу. НЕ РОБІТЬ ЦЬОГО у справжньому коді.
+shape.__proto__ = circle;
+
+// Отримати прототип об'єкта
+console.log(shape.__proto__ === circle); // true
+</pre>
+
+<pre class="brush: js">var shape = function () {};
+var p = {
+    a: function () {
+        console.log('aaa');
+    }
+};
+shape.prototype.__proto__ = p;
+
+var circle = new shape();
+circle.a(); // aaa
+console.log(shape.prototype === circle.__proto__); // true
+
+// або
+var shape = function () {};
+var p = {
+    a: function () {
+        console.log('a');
+    }
+};
+
+var circle = new shape();
+circle.__proto__ = p;
+circle.a(); // a
+console.log(shape.prototype === circle.__proto__); // false
+
+// або
+function test() {};
+test.prototype.myname = function () {
+    console.log('myname');
+};
+
+var a = new test();
+console.log(a.__proto__ === test.prototype); // true
+a.myname(); // myname
+
+
+// або
+var fn = function () {};
+fn.prototype.myname = function () {
+    console.log('myname');
+};
+
+var obj = {
+    __proto__: fn.prototype
+};
+
+obj.myname(); // myname
+</pre>
+
+<p>Заувага: це два підкреслення, за ними п'ять літер "proto", за ними ще два підкреслення.</p>
+
+<h2 id="Опис">Опис</h2>
+
+<p>Функція-гетер <code>__proto__</code> відкриває значення внутрішньої властивості об'єкта <code>[[Prototype]]</code>. Для об'єктів, що були створені об'єктним літералом, ця величина дорівнює {{JSxRef("Object.prototype")}}. Для об'єктів, створених літералами масивів, це значення дорівнює {{JSxRef("Array.prototype")}}. Для функцій воно дорівнює {{JSxRef("Function.prototype")}}. Для об'єктів, створених через <code>new fun</code>, де <code>fun</code> є однією з вбудованих функцій-конструкторів JavaScript ({{JSxRef("Array")}}, {{JSxRef("Boolean")}}, {{JSxRef("Date")}}, {{JSxRef("Number")}}, {{JSxRef("Object")}}, {{JSxRef("String")}} і так далі — в тому числі нові конструктори, додані з розвитком JavaScript), це значення завжди дорівнює <code>fun.prototype</code>. Для об'єктів, створених за допомогою <code>new fun</code>, де <code>fun</code> - це функція, визначена у скрипті, це значення дорівнює значенню <code>fun.prototype</code>. (Якщо тільки конструктор не повернув явно інший об'єкт, або значення <code>fun.prototype</code> не було переприсвоєне після створення екземпляра).</p>
+
+<p>Сетер <code>__proto__</code> дозволяє змінювати властивість об'єкта <code>[[Prototype]]</code>. Об'єкт має бути розширюваним згідно з {{JSxRef("Object.isExtensible()")}}: якщо це не так, викидається {{JSxRef("Global_Objects/TypeError", "TypeError")}}. Надана величина має бути об'єктом або {{JSxRef("Global_Objects/null", "null")}}. Передача будь-якого іншого значення не дасть ніякого результату.</p>
+
+<p>Щоб зрозуміти, як прототипи використовуються для наслідування, дивіться статтю посібника <a href="/uk/docs/Web/JavaScript/Inheritance_and_the_prototype_chain">Наслідування та ланцюжок прототипів</a>.</p>
+
+<p>Властивість <code>__proto__</code> - це проста властивість-аксесор {{JSxRef("Object.prototype")}}, що складається з функції-гетера та функції-сетера. Звернення до властивості <code>__proto__</code>, яке зрештою звертається до {{JSxRef("Object.prototype")}}, знайде цю властивість, але звернення, яке не звертається до {{JSxRef("Object.prototype")}}, не знайде її. Якщо інша властивість <code>__proto__</code> буде знайдена до того, як відбудеться звернення до {{JSxRef("Object.prototype")}}, то ця властивість сховає знайдену у {{JSxRef("Object.prototype")}}.</p>
+
+<h2 id="Специфікації">Специфікації</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">Специфікації</th>
+   <th scope="col">Статус</th>
+   <th scope="col">Коментар</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-additional-properties-of-the-object.prototype-object', 'Object.prototype.__proto__')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td>Включено у (нормативний) додаток для legacy-функціональності ECMAScript для веб-переглядачів (зауважте, що специфікація кодифікує те, що вже реалізовано).</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-additional-properties-of-the-object.prototype-object', 'Object.prototype.__proto__')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td></td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Сумісність_з_веб-переглядачами">Сумісність з веб-переглядачами</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.builtins.Object.proto")}}</p>
+
+<h2 id="Примітки_щодо_сумісності">Примітки щодо сумісності</h2>
+
+<p>Хоча специфікація ECMAScript 2015 вказує, що підтримка властивості <code>__proto__</code> обов'язкова тільки для веб-переглядачів (хоча є нормативною), інші середовища також можуть її підтримувати для використання legacy-коду.</p>
+
+<h2 id="Див._також">Див. також</h2>
+
+<ul>
+ <li>{{JSxRef("Object.prototype.isPrototypeOf()")}}</li>
+ <li>{{JSxRef("Object.getPrototypeOf()")}}</li>
+ <li>{{JSxRef("Object.setPrototypeOf()")}}</li>
+</ul>

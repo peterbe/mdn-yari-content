@@ -1,0 +1,110 @@
+<p>Vous pouvez compiler une version de développement "bleeding-edge" de Firefox avec les commandes qui suivent. Pour avoir toute l'information allez sur <a class="internal" href="/En/Developer_Guide/Build_Instructions" title="En/Build Documentation">build documentation</a>.</p>
+
+<p> </p>
+
+<h2 id="Installation_des_outils_de_compilation">Installation des outils de compilation</h2>
+
+<p>Si votre système n'est pas listé, regardez la page <a class="internal" href="/En/Developer_Guide/Build_Instructions#Build_prerequisites" title="En/Build
+Documentation#Build prerequisites">build prerequisites</a>.</p>
+
+<table style="margin-left: 2.5em;">
+ <tbody>
+  <tr>
+   <td style="vertical-align: baseline;">Ubuntu Linux:</td>
+   <td>
+    <pre style="overflow: auto;">
+sudo apt-get build-dep firefox
+sudo apt-get install mercurial libasound2-dev libcurl4-openssl-dev libnotify-dev libxt-dev libiw-dev mesa-common-dev autoconf2.13
+# ou, une fois le dépôt cloné:
+./mach boostrap
+
+</pre>
+   </td>
+  </tr>
+  <tr>
+   <td style="vertical-align: baseline;">
+    <p>Fedora Linux:</p>
+   </td>
+   <td>
+    <pre>
+# Fedora &lt; 22
+sudo yum groupinstall 'Development Tools' 'Development Libraries' 'GNOME Software Development'
+sudo yum install mercurial autoconf213 glib-static yasm alsa-lib-devel pulseaudio-libs-devel
+# Fedora 22 et +
+sudo dnf group install 'Development Tools' 'Development Libraries' 'GNOME Software Development'
+sudo dnf install mercurial autoconf213 yasm alsa-lib-devel pulseaudio-libs-devel
+</pre>
+   </td>
+  </tr>
+  <tr>
+   <td style="vertical-align: baseline;">Mac:</td>
+   <td>
+    <ul>
+     <li>Installez Xcode Tools. Insérez "Mac OS X Install Disc 2", puis ouvrez <code>XcodeTools.mpkg</code>. (Pour certaines versions de Mac OS X, vous le trouverez dans le dossier nommé "Optional Installs".)</li>
+     <li>Installez <a class="external" href="http://www.macports.org/install.php">MacPorts</a>.</li>
+     <li>Lancez ces commandes pour installer le reste des outils :
+      <pre class="eval">
+sudo port sync
+sudo port install mercurial libidl autoconf213
+</pre>
+     </li>
+    </ul>
+
+    <p>Des problèmes? Regardez <a class="internal" href="/En/Developer_Guide/Build_Instructions/Mac_OS_X_Prerequisites" title="en/Mac_OS_X_Build_Prerequisites">Mac OS X build prerequisites</a>.</p>
+   </td>
+  </tr>
+  <tr>
+   <td style="vertical-align: baseline;">Windows:</td>
+   <td>
+    <ul>
+     <li>Installez Visual C++ 2005 ou 2008. Visual C++ professional edition tout autant que <a class="external" href="http://www.microsoft.com/Express/vc/" title="http://www.microsoft.com/Express/vc/">express edition</a> marcheront.</li>
+     <li>Vous allez devoir installer un ou plusieurs Windows SDKs. Allez sur <a class="internal" href="/En/Windows_SDK_versions" title="En/Windows SDK versions">Windows SDK versions</a> pour avoir une explication rapide.</li>
+     <li>Installez <a class="external" href="http://ftp.mozilla.org/pub/mozilla.org/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe" title="http://ftp.mozilla.org/pub/mozilla.org/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe">MozillaBuild</a>, un paquet d'outils de compilation supplémentaires. (Si vous obtenez un message indiquant que l'installation ne s'est pas faite correctement, vous devriez avoir une boîte de dialogue vous proposant de les réinstaller avec les "paramètres corrects" après quoi tout devrait aller.)</li>
+     <li>Ouvrez un terminal windows en lançant : <code>c:\mozilla-build\start-msvcX.bat</code> (Où X vaut 8 pour VS 2005 et 9 pour VS 2008). <strong>Même si vous êtes sur un </strong><strong> Windows </strong><strong>64 bits, n'utilisez pas les fichiers finissant par <code>-x64.bat</code>.</strong></li>
+    </ul>
+
+    <p>Des problèmes? Regardez <a class="internal" href="/En/Developer_Guide/Build_Instructions/Windows_Prerequisites" title="en/Windows_Build_Prerequisites">Windows build prerequisites</a>.</p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Compiler_Firefox">Compiler Firefox</h2>
+
+<p>Compiler Firefox nécessite au moins 30 GB d'espace disque, 1G de RAM et beaucoup d'espace dans le fichier d'échanges.</p>
+
+<pre># Récupération des sources
+hg clone http://hg.mozilla.org/mozilla-central/
+cd mozilla-central
+
+# Création d'un fichier mozconfig basique
+echo '<code>mk_add_options MOZ_OBJDIR=./objdir-ff-release/</code>' &gt; .mozconfig
+
+# Pour faciliter le développement:
+echo '<code class="language-html">ac_add_options --disable-optimize' &gt;&gt; </code>.mozconfig<code class="language-html">
+</code>echo '<code class="language-html">ac_add_options --enable-debug' &gt;&gt; </code>.mozconfig
+
+# Compilation
+<code>./mach build
+
+# Démarrer Firefox</code>
+./mach run
+</pre>
+
+<ul>
+ <li>
+  <div class="syntaxbox">Sur Windows, certains répertoires (et certains chemins) comportent des espaces (ex : "Documents and Settings"). Or ces espaces sont difficiles à gérer. Nous vous conseillons de cloner le référenciel dans un répertoire dont le chemin ne comporte pas d'espace. Par exemple directement à la racine du disque c:\ avec un "<code>cd /c</code>" puis le <code>hg clone</code> qui créera le répertoire <code>C:\mozilla-central</code>.</div>
+ </li>
+ <li><span style="font-family: monospace;">L'exécutable </span><code>firefox</code> se trouvera dans <code>objdir-ff-release/dist/bin</code>/ (Sur Mac, <code>objdir-ff-release/dist/Minefield.app/Contents/MacOS/</code>).</li>
+</ul>
+
+<h2 id="Comment_recompiler_plus_tard">Comment recompiler plus tard?</h2>
+
+<p>Dans le dossier <code>mozilla-central</code> , lancez ces commandes:</p>
+
+<pre># Récupérer les dernières sources
+hg pull -r default
+hg update
+</pre>
+
+<p>Puis relancez simplement la commande "./mach build". <code>make</code> ne recompilera que les nouveaux fichiers (mais ça peut être tout de même assez long). Une  <a class="internal" href="/en/Incremental_Build" title="En/Incremental Build">compilation incrémentale</a> peut s'avérer plus rapide.</p>

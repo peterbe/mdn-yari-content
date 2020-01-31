@@ -1,0 +1,318 @@
+<p>{{WebGLSidebar}}</p>
+
+<p>행렬은 공간에서 오브젝트들의 변환을 표현하기 위해 사용되고, 웹에서 시각화에 쓰이는 중요한 도구입니다.  이 문서에서는 행렬을 어떻게 생성하고 <a href="/en-US/docs/Web/Guide/CSS/Using_CSS_transforms">CSS3 transforms</a>, <code>matrix3d</code> transform 타입과 함께 사용하는지 살펴보겠습니다.</p>
+
+<p>이 문서에서는 설명을 보다 쉽게 하기 위해 CSS3를 이용하고 있지만, 행렬은 WebGL과 셰이더를 포함한 많은 기술에서 사용하는 개념입니다. 이 문서는 <a href="https://github.com/TatumCreative/mdn-matrix-math">MDN content kit</a>에서도 볼 수 있습니다. 라이브 예제들은 "MDN"이라는 전역 객체가 가지고 있는 <a href="https://github.com/TatumCreative/mdn-webgl">utility functions</a>들을 사용하고 있습니다.</p>
+
+<h2 id="변환_행렬이란">변환 행렬이란?</h2>
+
+<p> 행렬에는 여러 종류가 있지만 우리가 관심 있는 것은 3D 변환 행렬입니다. 이 행렬들은 4x4 그리드에 채워넣은 16개의 값들로 이뤄져있습니다. JavaScript에서는 array를 이용해 행렬을 쉽게 표현할 수 있습니다. 전형적인 예제인 단위 행렬에서 시작해보겠습니다. 어떤 행렬을 점이나 다른 행렬에 곱했을 때 결과가 동일한 행렬을 단위행렬이라 부릅니다.</p>
+
+<pre>var identityMatrix = [
+  1, 0, 0, 0,
+  0, 1, 0, 0,
+  0, 0, 1, 0,
+  0, 0, 0, 1
+];
+</pre>
+
+<p>잠시 행렬에서 곱셈이 어떻게 되는지 보고 넘어갈까요? 가장 쉬운 예제는 한 점에 행렬을 곱해보는 것입니다. 여러분들이 이미 3D공간상의 점이 4x4 행렬과 곱셈을 하기에 적합하지 않다는 걸 눈치채셨을 지도 모르겠습니다. 그래서 4번째 차원으로 W가 들어갑니다. 전형적인 예제에서는 이 값을 1로 두어도 계산할 수 있습니다. W가 특별하게 사용되는 경우도 있지만 이 문서에서 다루는 범주에서 벗어나기 때문에, 이 값이 얼마나 편리하게 쓰이는지 보시려면 <a href="/en-US/docs/Web/API/WebGL_API/WebGL_model_view_projection">WebGL model view projection</a> 을 참고하시기 바랍니다.</p>
+
+<p>행렬과 점이 어떻게 나열되어있는지 눈여겨 보세요.:</p>
+
+<pre>[1, 0, 0, 0,
+ 0, 1, 0, 0,
+ 0, 0, 1, 0,
+ 0, 0, 0, 1]
+
+[4, 3, 2, 1]
+</pre>
+
+<h3 id="곱셈_함수_정의하기">곱셈 함수 정의하기</h3>
+
+<p>예제 코드에서 곱셈 함수를 다음과 같이 정의했습니다.  — <code>multiplyMatrixAndPoint()</code>:</p>
+
+<pre>function multiplyMatrixAndPoint(matrix, point) {
+  
+  //행렬의 모든 원소에 행번호와 열번호로 이뤄진 간단한 변수 명을 부여.
+  var c0r0 = matrix[ 0], c1r0 = matrix[ 1], c2r0 = matrix[ 2], c3r0 = matrix[ 3];
+  var c0r1 = matrix[ 4], c1r1 = matrix[ 5], c2r1 = matrix[ 6], c3r1 = matrix[ 7];
+  var c0r2 = matrix[ 8], c1r2 = matrix[ 9], c2r2 = matrix[10], c3r2 = matrix[11];
+  var c0r3 = matrix[12], c1r3 = matrix[13], c2r3 = matrix[14], c3r3 = matrix[15];
+  
+  //점을 이루는 좌푯값들마다 간단한 변수명을 부여
+  var x = point[0];
+  var y = point[1];
+  var z = point[2];
+  var w = point[3];
+  
+  //각각의 좌푯값을 첫번째 열의 원소들과 곱한 뒤 더한다.
+  var resultX = (x * c0r0) + (y * c0r1) + (z * c0r2) + (w * c0r3);
+  
+ //각각의 좌푯값을 두번째 열의 원소들과 곱한 뒤 더한다. 
+  var resultY = (x * c1r0) + (y * c1r1) + (z * c1r2) + (w * c1r3);
+  
+ //각각의 좌푯값을 세번째 열의 원소들과 곱한 뒤 더한다.
+  var resultZ = (x * c2r0) + (y * c2r1) + (z * c2r2) + (w * c2r3);
+  
+ //각각의 좌푯값을 네번째 열의 원소들과 곱한 뒤 더한다.
+  var resultW = (x * c3r0) + (y * c3r1) + (z * c3r2) + (w * c3r3);
+  
+  return [resultX, resultY, resultZ, resultW];
+}
+</pre>
+
+<p>이제 위의 함수를 이용해 점에 행렬을 곱할 수 있게 되었습니다. 단위 행렬을 이용한다면 정확히 같은 값이 나와야 합니다:</p>
+
+<pre>// 단위행렬은 [4,3,2,1] 로 설정됩니다.
+var identityResult = multiplyMatrixAndPoint(identityMatrix, [4, 3, 2, 1]);
+</pre>
+
+<p>같은 점을 반환하는 것은 그렇게 유용하지 않지만, 점에 대해 곱할 수 있는 다른 행렬들 중에는 유용한 것들이 많습니다. 다음 장에서 이런 행렬들을 알아보겠습니다.</p>
+
+<h3 id="두_개의_행렬을_곱하기">두 개의 행렬을 곱하기</h3>
+
+<p>게다가 행렬 그리고 두 점을 같이 곱해야 한다면, 물론 두 행렬을 같이 곱할 수 있습니다. 이 함수는 위와 같은 상황에서 이 과정을 도와주도록 재사용 할 수 있게 합니다.</p>
+
+<p>In addition to multiplying a matrix and a point together, you can also multiply two matrices together. The function from above can be re-used to help out in this process:</p>
+
+<pre>function multiplyMatrices(matrixA, matrixB) {
+  
+  // 두 번째 행렬을 열로 나눕니다.
+  var column0 = [matrixB[0], matrixB[4], matrixB[8], matrixB[12]];
+  var column1 = [matrixB[1], matrixB[5], matrixB[9], matrixB[13]];
+  var column2 = [matrixB[2], matrixB[6], matrixB[10], matrixB[14]];
+  var column3 = [matrixB[3], matrixB[7], matrixB[11], matrixB[15]];
+  
+  // 행렬에 의해 다른 열과 곱합니다.
+  var result0 = multiplyMatrixAndPoint(matrixA, column0);
+  var result1 = multiplyMatrixAndPoint(matrixA, column1);
+  var result2 = multiplyMatrixAndPoint(matrixA, column2);
+  var result3 = multiplyMatrixAndPoint(matrixA, column3);
+  
+  // 결과에서 나온 열들을 하나의 행렬로 되돌립니다.
+  return [
+    result0[0], result1[0], result2[0], result3[0],
+    result0[1], result1[1], result2[1], result3[1],
+    result0[2], result1[2], result2[2], result3[2],
+    result0[3], result1[3], result2[3], result3[3]
+  ];
+}
+</pre>
+
+<h3 id="사용하기">사용하기</h3>
+
+<p>이 함수가 어떻게 작동되는지 봐 주세요.</p>
+
+<pre>var someMatrix = [
+  4, 0, 0, 0,
+  0, 3, 0, 0,
+  0, 0, 5, 0,
+  4, 8, 4, 1
+]
+
+var identityMatrix = [
+  1, 0, 0, 0,
+  0, 1, 0, 0,
+  0, 0, 1, 0,
+  0, 0, 0, 1
+];
+
+// 행렬과 동등한 새로운 배열들을 리턴합니다.
+var someMatrixResult = multiplyMatrices(identityMatrix, someMatrix);
+</pre>
+
+<div class="warning">
+<p><strong>중요함 </strong>: 이런 행렬 함수들은 명확한 설명을 위해 작성되었으며, 메모리 관리와 속도가 고려되어있지는 않습니다. 이 함수들은 실시간으로 연산 되며 특히 많은 비용을 요구하는 가비지 수집을 필요로 하는 많은 배열들을 생성하게 될 것 입니다. 실제로 사용될 코드들은 최적화 된 함수로 사용하는 것이 좋습니다. <a href="http://glmatrix.net/">glMatrix</a>는 하나의 예제로서 속도와 성능에 중점을 두도록 하였습니다. <a href="http://glmatrix.net/">glMatrix</a> 라이브러리의 이 초점은 업데이트 루프 이전에 대상 배열들이 할당되어지도록 합니다.</p>
+</div>
+
+<h2 id="이동_행렬">이동 행렬</h2>
+
+<p>A translation matrix is based off the identity matrix. It moves the object in one of 3 directions, x, y, or z. The easiest way to think of a translation is like picking up a coffee cup. The coffee cup must be kept upright and oriented the same way so that no coffee is spilled. It can move up in the air off the table and around the air in space.</p>
+
+<p>Now the coffee can't actually be drank with only a translation matrix because the cup cannot be tilted. In a later section, a new matrix will be discussed that will be able to handle that task.</p>
+
+<pre>var x = 50;
+var y = 100;
+var z = 0;
+
+var translationMatrix = [
+    1,    0,    0,   0,
+    0,    1,    0,   0,
+    0,    0,    1,   0,
+    x,    y,    z,   1
+];
+</pre>
+
+<h2 id="행렬과_함께_하는_DOM의_조작">행렬과 함께 하는 DOM의 조작</h2>
+
+<p>A really easy way to start using a matrix is to use the CSS3 <code>matrix3d</code> <a href="/en-US/docs/Web/CSS/transform">transform</a>. First we'll set up a simple {{htmlelement("div")}} with some content. The style is not shown. But it is set to a fixed width and height and centered on the page. The <code>&lt;div&gt;</code> has a transition set for the transform so that matrix is animated in making it easy to see what is being done.</p>
+
+<pre>&lt;div id='move-me' class='transformable'&gt;
+  &lt;h2&gt;Move me with a matrix&lt;/h2&gt;
+  &lt;p&gt;Lorem ipsum dolor sit amet, consectetur adipisicing elit...&lt;/p&gt;
+&lt;/div&gt;
+</pre>
+
+<p>Finally for each of the examples we will generate a 4x4 matrix, then update the <code>&lt;div&gt;</code>'s style to have a transform applied to it, set to a <code>matrix3d</code>. Bear in mind that even though the matrix is made up of 4 rows and 4 columns, it collapses into a single line of 16 values.</p>
+
+<pre>// Create the matrix3d style property from a matrix array
+function matrixArrayToCssMatrix(array) {
+  return 'matrix3d(' + array.join(',') + ')';
+}
+	
+// Grab the DOM element
+var moveMe = document.getElementById('move-me');
+
+// Returns a result like: "matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 50, 100, 0, 1);"
+var matrix3dRule = matrixArrayToCssMatrix(translationMatrix);
+
+// Set the transform
+moveMe.style.transform = matrix3dRule;
+</pre>
+
+<p><a href="https://jsfiddle.net/g24mgw6y">JSFiddle에서보기</a></p>
+
+<p><img alt="An example of matrix translation" src="https://mdn.mozillademos.org/files/11409/matrix-translation.jpg" style="height: 385px; width: 339px;"></p>
+
+<h2 id="크기_행렬">크기 행렬</h2>
+
+<p>A scale matrix makes something larger or smaller in one of 3 dimension: width, height, and depth. In typical (cartesian) coordinates this would be stretching and shrinking in x, y, and z.</p>
+
+<pre>var w = 1.5; // width  (x)
+var h = 0.7; // height (y)
+var d = 1;   // depth  (z)
+
+var scaleMatrix = [
+    w,    0,    0,   0,
+    0,    h,    0,   0,
+    0,    0,    d,   0,
+    0,    0,    0,   1
+];
+</pre>
+
+<p><a href="https://jsfiddle.net/fndd6e1b">JSFiddle에서보기</a></p>
+
+<p><img alt="An example of matrix scaling" src="https://mdn.mozillademos.org/files/11407/matrix-scale.jpg" style="height: 291px; width: 398px;"></p>
+
+<h2 id="회전_행렬">회전 행렬</h2>
+
+<p>Rotation matrices start looking a little bit more complicated than scaling and transform matrices. They use trigonometric functions to perform the rotation. While this section won't break the steps down into exhaustive detail, take this example for illustration.</p>
+
+<pre>// Manually rotating a point about the origin without matrices
+var point = [10, 2];
+
+// Calculate the distance from the origin
+var distance = Math.sqrt(point[0] * point[0] + point[1] * point[1]);
+
+// 60 degrees
+var rotationInRadians = Math.PI / 3; 
+
+var transformedPoint = [
+  Math.cos(rotationInRadians) * distance,
+  Math.sin(rotationInRadians) * distance
+];
+</pre>
+
+<p>It is possible to encode these type of steps into a matrix, and do it each of the x, y, and z dimensions. Below is the representation of a rotation about the X axis:</p>
+
+<pre>var sin = Math.sin;
+var cos = Math.cos;
+
+// NOTE: There is no perspective in these transformations, so a rotation
+//       at this point will only appear to only shrink the div
+
+var a = Math.PI * 0.3; //Rotation amount
+
+// Rotate around Z axis
+var rotateZMatrix = [
+  cos(a), -sin(a),    0,    0,
+  sin(a),  cos(a),    0,    0,
+       0,       0,    1,    0,
+       0,       0,    0,    1
+];
+</pre>
+
+<p><a href="https://jsfiddle.net/9vr2dorz">JSFiddle에서보기</a></p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/11405/matrix-rotation.jpg" style="height: 363px; width: 417px;"></p>
+
+<p>Here are a set of functions that return the rotation matrices. One big note is that there is no perspective applied, so it might not feel very 3D yet. The flatness is equivalent to when a camera zooms in really close onto an object in the distance — the sense of perspective disappears.</p>
+
+<pre>function rotateAroundXAxis(a) {
+  
+  return [
+       1,       0,        0,     0,
+       0,  cos(a),  -sin(a),     0,
+       0,  sin(a),   cos(a),     0,
+       0,       0,        0,     1
+  ];
+}
+
+function rotateAroundYAxis(a) {
+  
+  return [
+     cos(a),   0, sin(a),   0,
+          0,   1,      0,   0,
+    -sin(a),   0, cos(a),   0,
+          0,   0,      0,   1
+  ];
+}
+
+function rotateAroundZAxis(a) {
+  
+  return [
+    cos(a), -sin(a),    0,    0,
+    sin(a),  cos(a),    0,    0,
+         0,       0,    1,    0,
+         0,       0,    0,    1
+  ];
+}
+</pre>
+
+<p><a href="https://jsfiddle.net/tk072doc">JSFiddle에서보기</a></p>
+
+<h2 id="행렬_결합하기">행렬 결합하기</h2>
+
+<p>The real power of matrices come from matrix composition. When matrices of a certain class are multiplied together they preserve the history of the transformations and are reversible. This means that if a translation, rotation, and scale matrix are all combined together, when the order of the matrices is reversed and re-applied then the original points are returned.</p>
+
+<p>The order that matrices are multiplied in matters. When multiplying numbers a * b = c, and b * a = c are both true. For example 3 * 4 = 12, and 4 * 3 = 12. In math these numbers would be described as <strong>commutative</strong>. Matrices are not guaranteed to be the same if the order is switched, so matrices are <strong>non-commutative</strong>.</p>
+
+<p>Another mind-bender is that matrix multiplication in WebGL and CSS3 needs to happen in the reverse order that the operations intuitively happen. For instance, to scale something down by 80%, move it down 200 pixels, and then rotate about the origin 90 degrees would look something like the following in pseudo-code.</p>
+
+<pre>  transformation = rotate * translate * scale
+</pre>
+
+<h3 id="Composing_multiple_transformations">Composing multiple transformations</h3>
+
+<p>The function that we will be using is part of the <a href="https://github.com/TatumCreative/mdn-webgl">utility functions</a>. It takes an array of matrices and multiplies them together. In WebGL shader code, this is built into the language and the * operator can be used. Additionally this example uses a scale and translate function which return matrices as defined above.</p>
+
+<pre>var transformMatrix = MDN.multiplyArrayOfMatrices([
+  rotateAroundZAxis(Math.PI * 0.5),    // Step 3: rotate around 90 degrees
+  translate(0, 200, 0),                // Step 2: move down 100 pixels
+  scale(0.8, 0.8, 0.8),                // Step 1: scale down
+]);
+
+</pre>
+
+<p><a href="https://jsfiddle.net/qxxg3yvc">JSFiddle에서보기</a></p>
+
+<p><img alt="An example of matrix composition" src="https://mdn.mozillademos.org/files/11403/matrix-composition.jpg" style="height: 292px; width: 488px;"></p>
+
+<p>Finally a fun step to show how matrices work is to reverse the steps to bring the matrix back to the original identity matrix.</p>
+
+<pre>var transformMatrix = MDN.multiplyArrayOfMatrices([
+  scale(1.25, 1.25, 1.25),             // Step 6: scale back up
+  translate(0, -200, 0),               // Step 5: move back up
+  rotateAroundZAxis(-Math.PI * 0.5),   // Step 4: rotate back
+  rotateAroundZAxis(Math.PI * 0.5),    // Step 3: rotate around 90 degrees
+  translate(0, 200, 0),                // Step 2: move down 100 pixels
+  scale(0.8, 0.8, 0.8),                // Step 1: scale down
+]);
+</pre>
+
+<h2 id="왜_행렬이_중요한가">왜 행렬이 중요한가</h2>
+
+<p>행렬은 설정될 수 있는 작은 숫자들로 구성되어있으며 광범위한 변환에 대해서 설명 할 수 있는 것이기 때문에 중요합니다. 이것은 프로그램 아울러 서로 공유되기 쉽게 해줍니다. 좌표 공간이 다르더라도 행렬을 통하여 서술 할 수 있으며, 행렬의 곱셈으로 하나의 좌표 공간으로 부터 또 다른 좌표 공간까지의 이동하는 데이터들의 이동을 제어 할 수 있습니다. 행렬은 모든 부분의  변환으로 부터 효과적이라는 것을 기억하고, 그것들을 사용하여 좌표계를 생성하세요.</p>
+
+<p>WebGL에서 사용함으로서, 그래픽카드는 행렬에 의해 공간에서 점으로 이루어진 큰 숫자들의 곱에 특히 좋습니다. 점의 위치를 잡거나, 빛을 연산하거나, 애니메이션된 캐릭터가 포즈를 취하는 것과 같은 이 다른 연산들이 모두 행렬에 의존하게 됩니다.</p>

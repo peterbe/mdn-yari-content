@@ -1,0 +1,188 @@
+<div>{{DefaultAPISidebar("Web Components")}}</div>
+
+<p class="summary">Web components的一个重要特性是封装——可以将html标签结构、css样式和行为隐藏起来，并从页面上的其他代码中分离开来，这样不同的功能不会混在一起，代码看起来也会更加干净整洁。其中，Shadow DOM接口是关键所在，它可以将一个隐藏的、独立的DOM添加到一个元素上。本篇文章将会介绍 Shadow DOM的基础部分。</p>
+
+<div class="note">
+<p><strong>注意：</strong> Firefox (从63版本开始)，Chrome，Opera 和 Safari默认就支持 Shadow DOM。而 Edge还在实现阶段。</p>
+</div>
+
+<h2 id="概况">概况</h2>
+
+<p>本文章假设你对<a href="/en-US/docs/Web/API/Document_Object_Model/Introduction">DOM (文档对象模型)</a> 有一定的了解，它是不同的元素节点、文本节点连接而成的一个树状结构，应用于标记文档中（例如 web文档中经常用到的HTML文档）。请看如下示例，一个 HTML片段：</p>
+
+<pre class="brush: html">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+  &lt;head&gt;
+    &lt;meta charset="utf-8"&gt;
+    &lt;title&gt;Simple DOM example&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+      &lt;section&gt;
+        &lt;img src="dinosaur.png" alt="A red Tyrannosaurus Rex: A two legged dinosaur standing upright like a human, with small arms, and a large head with lots of sharp teeth."&gt;
+        &lt;p&gt;Here we will add a link to the &lt;a href="https://www.mozilla.org/"&gt;Mozilla homepage&lt;/a&gt;&lt;/p&gt;
+      &lt;/section&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</pre>
+
+<p>这个片段会生成如下 DOM结构：</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/14559/dom-screenshot.png" style="border-style: solid; border-width: 1px; display: block; margin: 0px auto;"></p>
+
+<p><em>Shadow</em> DOM允许将隐藏的DOM树添加到常规的DOM树中——它以shadow root为起始根节点，在这个根节点的下方，可以是任意元素，和普通的DOM元素一样。</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/15788/shadow-dom.png" style="height: 543px; width: 1138px;"></p>
+
+<p> </p>
+
+<p>需要了解的 Shadow DOM相关技术：</p>
+
+<ul>
+ <li>Shadow host： 一个常规 DOM节点，Shadow DOM会被添加到这个节点上。</li>
+ <li>Shadow tree：Shadow DOM内部的DOM树。</li>
+ <li>Shadow boundary：Shadow DOM结束的地方，也是常规 DOM开始的地方。</li>
+ <li>Shadow root: Shadow tree的根节点。</li>
+</ul>
+
+<p>你可以使用同样的方式来操作Shadow DOM，就和操作常规DOM一样——例如添加子节点、设置属性，以及为节点添加自己的样式（例如通过 element.style.foo属性），或者为整个 Shadow DOM添加样式（例如在{{htmlelement("style")}} 元素内添加样式）。不同的是，Shadow DOM内部的元素始终不会影响到它外部的元素，这为封装提供了便利。</p>
+
+<p>注意，不管从哪个方面来看，Shadow DOM 都不是一个新事物——在过去的很长一段时间里，浏览器用它来封装一个元素的内部结构。以一个有着默认播放控制按钮的{{htmlelement("video")}}元素为例。你所能看到的只是一个 <code>&lt;video&gt;</code>标签，实际上，在它的Shadow DOM中，包含来一系列的按钮和其他控制器。Shadow DOM标准允许你为你自己的元素（custom element）维护一组 Shadow DOM。</p>
+
+<h2 id="基本用法">基本用法</h2>
+
+<p>可以使用{{domxref("Element.attachShadow()")}} 方法来将一个 shadow root 附加到任何一个元素上。它接受一个配置对象作为参数，该对象有一个<code>mode</code>属性，值可以是<code>open</code>或者<code>closed</code>：</p>
+
+<pre class="brush: js">let shadow = elementRef.attachShadow({mode: 'open'});
+let shadow = elementRef.attachShadow({mode: 'closed'});</pre>
+
+<p><code>open</code> 表示你可以通过页面内的 JavaScript 方法来获取 Shadow DOM，例如使用{{domxref("Element.shadowRoot")}} 属性：</p>
+
+<pre class="brush: js">let myShadowDom = myCustomElem.shadowRoot;</pre>
+
+<p>如果你将一个 Shadow root 添加到一个 Custom element 上，并且将 <code>mode</code>设置为<code>closed</code>，那么就不可以在外部获取 Shadow DOM了——<code>myCustomElem.shadowRoot</code> 将会返回 <code>null</code>。浏览器中的某些内置元素就是这样的，例如<code>&lt;video&gt;</code>，包含了不可访问的 Shadow DOM。</p>
+
+<div class="note">
+<p><strong>注意：</strong> 正如<a href="https://blog.revillweb.com/open-vs-closed-shadow-dom-9f3d7427d1af">这篇文章所阐述的</a>，处理 closed Shadow DOMs 实际上很简单，往往也很值得这么做。</p>
+</div>
+
+<p>如果你想将一个Shadow DOM添加到 custom element上，可以在 custom element的构造函数添加如下实现（这往往也是最有用的做法）：</p>
+
+<pre class="brush: js">let shadow = this.attachShadow({mode: 'open'});</pre>
+
+<p>当你将一个 Shadow DOM添加到一个元素上，那么之后，就可以使用 DOM APIs 对它进行操作，就和处理常规DOM一样。</p>
+
+<pre class="brush: js">var para = document.createElement('p');
+shadow.appendChild(para);
+etc.</pre>
+
+<h2 id="编写简单示例">编写简单示例</h2>
+
+<p>现在，让我们着手实现一个示例——<code><a href="https://github.com/mdn/web-components-examples/tree/master/popup-info-box-web-component">&lt;popup-info-box&gt;</a></code>（也可以查看<a href="https://mdn.github.io/web-components-examples/popup-info-box-web-component/">在线示例</a>），来说明 Shadow DOM在 custom element 中的实际运用。它包含一个图片 icon和一段文字，这个图片 icon用于在页面上显示。每当 icon获取到焦点时，文字会在一个弹框中显示，以提供更加详细的信息。首先，在 JavaScript文件中，我们需要定义一个叫做 <code>PopUpInfo</code>的类，它继承自<code>HTMLElement</code>：</p>
+
+<pre class="brush: js">class PopUpInfo extends HTMLElement {
+  constructor() {
+    // 必须首先调用 super方法
+    super();
+
+    // 元素的具体功能写在下面
+
+    ...
+  }
+}</pre>
+
+<p>在上面的类中，我们将会在它的构造函数中定义元素所有的功能。当类实例化后，所有的实例元素都会有相同功能。</p>
+
+<h3 id="创建_shadow_root">创建 shadow root</h3>
+
+<p>在构造函数中，我们首先将 Shadow root 添加到 custom element上：</p>
+
+<pre class="brush: js">// 创建 shadow root
+var shadow = this.attachShadow({mode: 'open'});</pre>
+
+<h3 class="brush: js" id="创建_shadow_DOM_结构">创建 shadow DOM 结构</h3>
+
+<p class="brush: js">接下来，我们会使用相关DOM 操作来创建元素的 Shadow DOM结构：</p>
+
+<pre class="brush: js">// 创建 span
+var wrapper = document.createElement('span');
+wrapper.setAttribute('class','wrapper');
+var icon = document.createElement('span');
+icon.setAttribute('class','icon');
+icon.setAttribute('tabindex', 0);
+var info = document.createElement('span');
+info.setAttribute('class','info');
+
+// 获取属性的内容并将内容添加到 info元素内
+var text = this.getAttribute('text');
+info.textContent = text;
+
+// 插入 icon
+var imgUrl;
+if(this.hasAttribute('img')) {
+  imgUrl = this.getAttribute('img');
+} else {
+  imgUrl = 'img/default.png';
+}
+var img = document.createElement('img');
+img.src = imgUrl;
+icon.appendChild(img);
+</pre>
+
+<h3 class="brush: js" id="为_shadow_DOM_添加样式">为 shadow DOM 添加样式</h3>
+
+<p class="brush: js">之后，我们将要创建{{htmlelement("style")}}元素，并加入一些 CSS样式：</p>
+
+<pre class="brush: js">// 为 shadow dom添加一些 CSS样式
+var style = document.createElement('style');
+
+style.textContent = '.wrapper {' +
+                           'position: relative;' +
+                        '}' +
+
+                         '.info {' +
+                            'font-size: 0.8rem;' +
+                            'width: 200px;' +
+                            'display: inline-block;' +
+                            'border: 1px solid black;' +
+                            'padding: 10px;' +
+                            'background: white;' +
+                            'border-radius: 10px;' +
+                            'opacity: 0;' +
+                            'transition: 0.6s all;' +
+                            'position: absolute;' +
+                            'bottom: 20px;' +
+                            'left: 10px;' +
+                            'z-index: 3;' +
+                          '}' +
+
+                          'img {' +
+                            'width: 1.2rem' +
+                          '}' +
+
+                          '.icon:hover + .info, .icon:focus + .info {' +
+                            'opacity: 1;' +
+                          '}';</pre>
+
+<h3 id="将_Shadow_DOM添加到_Shadow_root上">将 Shadow DOM添加到 Shadow root上</h3>
+
+<p>最后，将所有创建的元素添加到 Shadow root上：</p>
+
+<pre class="brush: js">// 将所创建的元素添加到 Shadow DOM上
+shadow.appendChild(style);
+shadow.appendChild(wrapper);
+wrapper.appendChild(icon);
+wrapper.appendChild(info);</pre>
+
+<h3 id="使用我们的_custom_element">使用我们的 custom element</h3>
+
+<p>完成类的定义之后，使用元素也是同样的简单，只需将 custom element放在页面上，正如<a href="/en-US/docs/Web/Web_Components/Using_custom_elements">Using custom elements</a>中讲解的那样：</p>
+
+<pre class="brush: js">// 定义新的元素
+customElements.define('popup-info', PopUpInfo);</pre>
+
+<pre class="brush: html">&lt;<span class="pl-ent">popup-info</span> <span class="pl-e">img</span>=<span class="pl-s"><span class="pl-pds">"</span>img/alt.png<span class="pl-pds">"</span></span> <span class="pl-e">text</span>=<span class="pl-s"><span class="pl-pds">"</span>Your card validation code (CVC) is an extra 
+                                    security feature — it is the last 3 or 4
+                                    numbers on the back of your card.<span class="pl-pds">"</span></span>&gt;</pre>
+
+<div>
+<div id="tap-translate"> </div>
+</div>

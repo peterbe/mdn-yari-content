@@ -1,0 +1,497 @@
+<p>{{ gecko_minversion_header("2.0") }}</p>
+
+<p>在内容安全策略 (CSP) 中，网站管理员可以定义多种策略范围。这些策略可以被任意组合来满足需求；您并不需要指定全部策略。</p>
+
+<h2 id="内容源">内容源</h2>
+
+<p>大多数策略指令需要一个或多个内容源。内容源是一串表明内容可能从哪里加载的字符串。</p>
+
+<h3 id="源列表">源列表</h3>
+
+<p>源列表是一个字符串，指定了一个或多个互联网主机（通过主机名或 IP 地址），和可选的 <a href="/zh-CN/docs/URIs_and_URLs" title="en/URIs and URLs">URL 协议</a>和/或端口号。站点地址可以包含可选的通配符前缀 (星号, <code>'*'</code>)，端口号也可以使用通配符 (同样是 <code>'*'</code>) 来表明所有合法端口都是有效来源。主机通过空格分隔。</p>
+
+<p>有效的主机表达式包括：</p>
+
+<dl>
+ <dt><span class="nowiki">http://*.foo.com</span></dt>
+ <dd>匹配所有使用 <code>http:</code> 协议加载 foo.com 任何子域名的尝试。</dd>
+ <dt><span class="nowiki">mail.foo.com:443</span></dt>
+ <dd>匹配所有访问 mail.foo.com 的 443 端口 的尝试。</dd>
+ <dt><span class="nowiki">https://store.foo.com</span></dt>
+ <dd>匹配所有使用 <code>https:</code> 协议访问 store.foo.com 的尝试。</dd>
+</dl>
+
+<p>如果端口号没有被指定，浏览器会使用指定协议的默认端口号。如果协议没有被指定，浏览器会使用访问该文档时的协议。</p>
+
+<dl>
+</dl>
+
+<h3 id="关键字">关键字</h3>
+
+<p>有一些关键字可以用来描述某类特别的内容源。它们是：</p>
+
+<dl>
+ <dt><code>'none'</code></dt>
+ <dd>代表空集；即不匹配任何 URL。两侧单引号是必须的。</dd>
+ <dt><code>'self'</code></dt>
+ <dd>代表和文档同源，包括相同的 URL 协议和端口号。两侧单引号是必须的。</dd>
+ <dt><code>'unsafe-inline'</code></dt>
+ <dd>允许使用内联资源，如内联的 {{ HTMLElement("script") }} 元素、<code>javascript:</code> URL、内联的事件处理函数和内联的 {{ HTMLElement("style") }} 元素。两侧单引号是必须的。</dd>
+ <dt><code>'unsafe-eval'</code></dt>
+ <dd>允许使用 <code>eval()</code> 等通过字符串创建代码的方法。两侧单引号是必须的。</dd>
+</dl>
+
+<div class="note"><strong>注意:</strong> 使用 'unsafe-inline' 和 'unsafe-eval' 都是不安全的，它们会使您的网站有跨站脚本攻击风险。</div>
+
+<p>例如，您可以指定内容能从文档源和 trustedscripts.foo.com 加载：</p>
+
+<pre>Content-Security-Policy: default-src 'self' trustedscripts.foo.com
+</pre>
+
+<dl>
+</dl>
+
+<h3 id="数据">数据</h3>
+
+<div class="note"><strong>注意:</strong> <code>data:</code> URI 是不安全的，如果它们被允许成为脚本来源，则会使您的网站有跨站脚本攻击风险。</div>
+
+<dl>
+ <dt>data:</dt>
+ <dd>允许 <a href="/zh-CN/docs/Web/HTTP/data_URIs" title="en/data URIs"><code>data:</code> URI</a> 作为内容来源。这是不安全的，因为攻击者可以精心构造 data: URI 来攻击。请谨慎地使用这个源，并确保不要用于脚本。</dd>
+ <dt>mediastream:</dt>
+ <dd>允许 <a href="/en-US/docs/Web/API/MediaStream_API" title="/en/WebRTC/MediaStream_API"><code>mediastream:</code> URI</a> 作为内容源。</dd>
+</dl>
+
+<pre>Content-Security-Policy: default-src 'self'; img-src 'self' data:; media-src mediastream:
+</pre>
+
+<h2 id="支持的策略指令">支持的策略指令</h2>
+
+<p>以下策略指令可以为多种策略范围配置安全策略。</p>
+
+<h3 id="base-uri"><code>base-uri</code></h3>
+
+<p><code>base-uri</code> 指令定义了 URI，它可以作为文档的基准 URL。如果没有指定值，那么任何 URI 都被允许。如果没有指定这条指令，浏览器会使用 <code><a href="/en-US/docs/Web/HTML/Element/base">base</a></code> 元素中的 URL。</p>
+
+<pre>base-uri <em>source-list</em></pre>
+
+<h3 id="child-src"><code>child-src</code></h3>
+
+<p><code>child-src</code> 指定定义了 web workers 以及嵌套的浏览上下文（如 {{ HTMLElement("frame") }} 和 {{ HTMLElement("iframe") }} ）的源。推荐使用该指令，而不是被废弃的 <code>frame-src</code> 指令。对于 web workers，不符合要求的请求会被当做致命网络错误。</p>
+
+<div class="note"><strong>注意: </strong>如果没有指定这条指令，浏览器会查询 <code>default-src</code> 指令。</div>
+
+<pre>​child-src <em>source-list</em></pre>
+
+<h3 id="connect-src"><code>connect-src</code></h3>
+
+<p><code>connect-src</code> 指令定义了请求、<a href="/en/nsIXMLHttpRequest" title="en/XMLHttpRequest"><code>XMLHttpRequest</code></a>、WebSocket 和 EventSource 的连接来源。</p>
+
+<div class="note"><strong>注意: </strong>如果没有指定这条指令，浏览器会查询 <code>default-src</code> 指令。</div>
+
+<div class="note"><strong>Note: </strong>Prior to Firefox 23, <code>xhr-src</code> was used in place of the <code>connect-src</code> directive and only restricted the use of <a href="/en/nsIXMLHttpRequest" title="en/XMLHttpRequest"><code>XMLHttpRequest</code></a>.</div>
+
+<pre><code>connect-src</code> <em><code>source-list</code></em></pre>
+
+<h3 id="default-src"><code>default-src</code></h3>
+
+<p><code>default-src</code> 指令定义了那些没有被更精确指令指定的（默认）安全策略。该指令包含了以下指令：</p>
+
+<ul>
+ <li><code>child-src</code></li>
+ <li><code>connect-src</code></li>
+ <li><code>font-src</code></li>
+ <li><code>img-src</code></li>
+ <li><code>media-src</code></li>
+ <li><code>object-src</code></li>
+ <li><code>script-src</code></li>
+ <li><code>style-src</code></li>
+</ul>
+
+<pre><code>default-src</code> <em><code>source-list</code></em></pre>
+
+<h3 id="font-src"><code>font-src</code></h3>
+
+<p> <code>font-src</code> 指令定义了通过 {{ cssxref("@font-face") }}加载字体的有效源。</p>
+
+<div class="note"><strong>注意：如果这个指令未指定，用户代理（user agent）会查询<code>default-src</code>指令。 </strong></div>
+
+<pre style="font-size: 14px;"><code>font-src</code> <em><code>source-list</code></em></pre>
+
+<h3 id="form-action" style="line-height: 24px; font-size: 1.71428571428571rem;"><code>form-action</code></h3>
+
+<p><code>form-action</code>{{experimental_inline}} directive specifies valid endpoints for {{ HTMLElement("form") }} submissions.</p>
+
+<pre id="script-src"><code><code style="font-size: 14px; line-height: 19px; white-space: pre; font-style: normal;">form-action</code><span style="background-color: #fafbfc; font-size: 14px; line-height: 19px; white-space: pre;"> </span><em><code>source-list</code></em></code></pre>
+
+<h3 id="frame-ancestors" style="line-height: 24px; font-size: 1.71428571428571rem;"><span style="font-family: consolas,monaco,andale mono,monospace; font-size: 1.71428571428571rem; font-style: inherit; font-weight: inherit;">frame-ancestors</span></h3>
+
+<p>The <code>frame-ancestors</code>{{experimental_inline}} directive specifies valid parents that may embed a page using the {{ HTMLElement("frame") }} and {{ HTMLElement("iframe") }} elements. This directive is not supported in the element or by the <code>Content-Security-policy-Report-Only</code> header field.</p>
+
+<pre style="font-size: 14px;"><code>frame-ancestors</code> <em><code>source-list</code></em></pre>
+
+<h3 id="frame-src"><span style="font-family: consolas,monaco,andale mono,monospace; font-size: 1.71428571428571rem; font-style: inherit; font-weight: inherit; letter-spacing: -0.5px; line-height: 24px;">frame-src</span></h3>
+
+<p>The <code style="font-style: normal;">frame-src{{obsolete_inline}}</code> directive specifies <span style="line-height: 1.5;">valid sources for web workers and nested browsing contexts loading using elements such as </span><span style="line-height: 1.5;">{{ HTMLElement("frame") }} and {{ HTMLElement("iframe") }}.</span></p>
+
+<div class="note">
+<div><strong style="line-height: 1.5;">Note: </strong>This directive is deprecated. Use <code>child-src</code> instead.</div>
+</div>
+
+<pre>frame-src <em>source-list</em></pre>
+
+<h3 id="img-src"><span style="font-family: consolas,monaco,andale mono,monospace; font-size: 1.71428571428571rem; font-style: inherit; font-weight: inherit; letter-spacing: -0.5px; line-height: 24px;">img-src</span></h3>
+
+<p><code>img-src</code> 指令定义了能被 img 标签加载的有效源。</p>
+
+<div class="note"><strong>Note: </strong>If this directive is absent, the user agent will look for the <code>default-src</code> directive.</div>
+
+<pre><code>img-src</code> <em><code>source-list</code></em></pre>
+
+<h3 id="media-src"><code>media-src</code></h3>
+
+<p>The <code>media-src</code> directive specifies valid sources for loading media using the {{ HTMLElement("audio") }} and {{ HTMLElement("video") }} elements.</p>
+
+<div class="note"><strong>Note: </strong>If this directive is absent, the user agent will look for the <code>default-src</code> directive.</div>
+
+<pre><code>media-src</code> <em><code>source-list</code></em></pre>
+
+<h3 id="object-src" style="line-height: 24px; font-size: 1.71428571428571rem;"><span style="font-family: consolas,monaco,andale mono,monospace; font-size: 1.71428571428571rem; font-style: inherit; font-weight: inherit;">object-src</span></h3>
+
+<p>The <code>object-src</code> directive specifies valid sources for the {{ HTMLElement("object") }}, {{ HTMLElement("embed") }}, and {{ HTMLElement("applet") }} elements. </p>
+
+<div class="note"><strong>Note: </strong>If this directive is absent, the user agent will look for the <code>default-src</code> directive.</div>
+
+<pre style="font-size: 14px;"><code>object-src</code> <em><code>source-list</code></em></pre>
+
+<h3 id="plugin-types" style="line-height: 24px; font-size: 1.71428571428571rem;"><code>plugin-types</code></h3>
+
+<p>The <code>plugin-types</code> directive specifies the valid plugins that the user agent may invoke.</p>
+
+<pre>plugin-types <em>type-list</em></pre>
+
+<h3 id="referrer" style="line-height: 24px; font-size: 1.71428571428571rem;"><code>referrer</code></h3>
+
+<p>The <code>referrer</code> directive specifies information in the referrer header for links away from a page.</p>
+
+<pre>​referrer <em>value</em></pre>
+
+<h3 id="reflected-xss" style="line-height: 24px; font-size: 1.71428571428571rem;"><code>reflected-xss</code></h3>
+
+<p>The <code>reflected-xss</code> directive instructs a user agent to activate or deactivate any heuristics used to filter or block reflected cross-site scripting attacks. Valid values are <code>allow</code>, <code>block</code>, and <code>filter</code>. <span style="line-height: 1.5;">This directive is not supported in the </span><span style="line-height: 1.5;"> element.</span></p>
+
+<div class="note"><strong style="line-height: 1.5;">Note: </strong>This directive is ignored if it is contained in a <code>meta</code> element.</div>
+
+<pre>reflected-xss <em>value</em></pre>
+
+<h3 id="report-uri" style="line-height: 24px; font-size: 1.71428571428571rem;"><code>report-uri</code></h3>
+
+<p>The <code>report-uri</code> directive instructs the user agent to report attempts to violate the Content Security Policy. These violation reports consist of <a href="/en/JSON" title="en/JSON">JSON</a> documents sent via an HTTP <code>POST</code> request to the specified URI. See <a href="/en/Security/CSP/Using_CSP_violation_reports" title="en/Security/CSP/Using CSP violation reports">Using CSP violation reports</a> for details. <span style="line-height: 1.5;">This directive is not supported in the </span><span style="line-height: 1.5;"> element.</span></p>
+
+<pre style="font-size: 14px;"><code>report-uri</code> <em><code><a class="external" href="http://tools.ietf.org/html/rfc2396" title="http://tools.ietf.org/html/rfc2396">uri</a></code></em></pre>
+
+<h3 id="sandbox"><span style="font-family: consolas,monaco,andale mono,monospace; font-size: 1.71428571428571rem; font-style: inherit; font-weight: inherit; letter-spacing: -0.5px; line-height: 24px;">sandbox</span></h3>
+
+<p>The sandbox directive applies restrictions to a page's actions including preventing popups, preventing the execution of plugins and scripts, and enforcing a same-origin policy. <span style="line-height: 1.5;">This directive is not supported in the </span><span style="line-height: 1.5;"> element or by the </span><code style="font-style: normal; line-height: 1.5;">Content-Security-policy-Report-Only</code><span style="line-height: 1.5;"> header field.</span></p>
+
+<pre>sandbox <em>value</em></pre>
+
+<h3 id="script-src_2"><span style="font-family: consolas,monaco,andale mono,monospace; font-size: 1.71428571428571rem; font-style: inherit; font-weight: inherit; letter-spacing: -0.5px; line-height: 24px;">script-src</span></h3>
+
+<div> </div>
+
+<p>The <code>script-src</code> directive specifies valid sources for JavaScript. When either the <code>script-src</code> or the <code>default-src</code> directive is included, inline script and <code>eval()</code> are disabled unless you specify 'unsafe-inline' and 'unsafe-eval', respectively.</p>
+
+<div class="note"><strong>Note: </strong>If this directive is absent the user agent will look for the <code>default-src</code> directive.</div>
+
+<pre style="font-size: 14px;"><code>script-src</code> <em><code>source-list</code></em></pre>
+
+<h3 id="style-src"><span style="font-family: consolas,monaco,andale mono,monospace; font-size: 1.71428571428571rem; font-style: inherit; font-weight: inherit;">style-src</span></h3>
+
+<p>The <code>style-src</code> directive specifies valid sources for stylesheets. <span style="line-height: 1.5;">This includes both externally-loaded stylesheets and inline use of the {{ HTMLElement("style") }} element and HTML </span><code style="font-style: normal; line-height: 1.5;">style</code><span style="line-height: 1.5;"> attributes. Stylesheets from sources that aren't included in the source list are not requested or loaded. When either the </span><code style="font-style: normal; line-height: 1.5;">style-src</code><span style="line-height: 1.5;"> or the </span><code style="font-style: normal; line-height: 1.5;">default-src</code><span style="line-height: 1.5;"> directive is included, inline use of the {{ HTMLElement("style") }} element and HTML </span><code style="font-style: normal; line-height: 1.5;">style</code><span style="line-height: 1.5;"> attributes are disabled unless you specify 'unsafe-inline'.</span></p>
+
+<div class="note"><strong>Note: </strong>If this directive is absent, the user agent will look for the <code>default-src</code> directive.</div>
+
+<pre><code>style-src</code> <em><code>source-list</code></em></pre>
+
+<div class="note"><strong>Note:</strong> Firefox currently requires using the same URL scheme and port for the <code>report-uri</code> as the content being protected by Content Security Policy.</div>
+
+<h3 id="upgrade-insecure-requests_non-standard_inline">upgrade-insecure-requests {{non-standard_inline}}</h3>
+
+<p>只有Chrome支持的策略，指示浏览器自动升级网站所有的不安全URL请求（通过HTTP服务的URL）到安全URL请求（通过HTTPS提供的URL）。此指令适用于需要重写遗留大量不安全URL的网站。此功能已在Chrome 43.0 中添加</p>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('CSP 1.1', '#directives', 'CSP directives')}}</td>
+   <td>{{Spec2('CSP 1.1')}}</td>
+   <td>Added <code>base-uri</code>, <code>child-src</code>, <code>form-action</code>, <code>frame-ancestors</code>, <code>plugin-types</code>, <code>referrer</code>, <code>reflected-xss</code>.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('CSP 1.0', '#directives', 'CSP directives')}}</td>
+   <td>{{Spec2('CSP 1.0')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<p>{{CompatibilityTable}}</p>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>
+    <p>14 (X-Webkit-CSP)</p>
+
+    <p>25</p>
+   </td>
+   <td>
+    <p>{{CompatGeckoDesktop("2.0")}} (X-Content-Security-Policy)</p>
+
+    <p>{{CompatGeckoDesktop("24.0")}}</p>
+   </td>
+   <td>12</td>
+   <td>15</td>
+   <td>
+    <p>6 (X-Webkit-CSP)</p>
+
+    <p>7</p>
+   </td>
+  </tr>
+  <tr>
+   <td>base-uri</td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>child-src</td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>connect-src</td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>default-src</td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>font-src</td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>form-action</td>
+   <td>41</td>
+   <td>{{CompatGeckoDesktop("36.0")}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>frame-ancestors</code></td>
+   <td>41</td>
+   <td>{{CompatGeckoDesktop("2.0")}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td>frame-src</td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>img-src</td>
+   <td> </td>
+   <td> </td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td>media-src</td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>object-src</td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>plugin-types</td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>referrer</td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>reflected-xss</td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>report-uri</td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>sandbox</td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>script-src</td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>style-src</td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatGeckoMobile("2.0")}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>iOS 7.1</td>
+  </tr>
+  <tr>
+   <td><code>frame-ancestors</code> {{experimental_inline}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatGeckoMobile("2.0")}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>form-action</code> {{experimental_inline}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatGeckoMobile("36.0")}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="Specifications_2" style="line-height: 30px; font-size: 2.14285714285714rem;">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{ spec("http://www.w3.org/TR/CSP2/", "Content Security Policy Level 2.0") }}</td>
+   <td>{{Spec2('CSP 1.1')}}</td>
+   <td>Adds <code>base-uri</code>, <code>child-src</code>, <code>form-action</code>, <code>frame-ancestors</code>, <code>plugin-types</code>, <code>referrer</code>, <code>reflected-xss</code>, and <code>report-uri</code>. Deprecates <code>frame-src</code>.</td>
+  </tr>
+  <tr>
+   <td>{{ spec("http://www.w3.org/TR/CSP/", "Content Security Policy 1.0") }}</td>
+   <td>{{Spec2('CSP 1.0')}}</td>
+   <td>Defines <code style="font-style: normal; line-height: 1.5;">connect-src</code><span style="line-height: 1.5;">, </span><code style="font-style: normal; line-height: 1.5;">default-src</code><span style="line-height: 1.5;">, </span><code style="font-style: normal; line-height: 1.5;">font-src</code><span style="line-height: 1.5;">, </span><code style="font-style: normal; line-height: 1.5;">frame-src</code><span style="line-height: 1.5;">, </span><code style="font-style: normal; line-height: 1.5;">img-src</code><span style="line-height: 1.5;">, </span><code style="font-style: normal; line-height: 1.5;">media-src</code><span style="line-height: 1.5;">, </span><code style="font-style: normal; line-height: 1.5;">objects-src</code><span style="line-height: 1.5;">, </span><span style="font-family: consolas,monaco,andale mono,monospace;">report-uri,</span><code style="font-style: normal; line-height: 1.5;">sandbox</code><span style="line-height: 1.5;">, </span><code style="font-style: normal; line-height: 1.5;">script-src,</code><span style="line-height: 1.5;"> and </span><code style="font-style: normal; line-height: 1.5;">style-src</code><span style="line-height: 1.5;">.</span></td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li><a href="/en/Security/CSP/Introducing_Content_Security_Policy" title="en/Security/CSP/Introducing Content Security Policy">Introducing Content Security Policy</a></li>
+ <li><a href="/en/Security/CSP/Using_Content_Security_Policy" title="en/Security/CSP/Using Content Security Policy">Using Content Security Policy</a></li>
+ <li><a href="/en/Security/CSP/Using_CSP_violation_reports" title="en/Security/CSP/Using CSP violation reports">Using CSP violation reports</a></li>
+</ul>
+
+<p> </p>

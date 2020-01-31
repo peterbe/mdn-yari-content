@@ -1,0 +1,67 @@
+<p>Pour communiquer de manière sécurisée, un client TLS et un serveur TLS doivent s'accorder sur les algorithmes cryptographiques et les clés qu'ils utiliseront dans leur connexion sécurisée. Ils doivent négocier sur les points suivants :</p>
+<ul>
+ <li>Algorithme d'établissement des clés (comme RSA, DH, ou ECDH) ;</li>
+ <li>Algorithme d'authentification du tiers (comme RSA, DSA ou ECDSA) ;</li>
+ <li>Algorithme de chiffrement des données (comme RC4, DES, AES) et taille de clés ;</li>
+ <li>Algorithme de hachage permettant l'authentification et la vérification des messages (SHA1, SHA256).</li>
+</ul>
+<p>Il y a beaucoup de choix possibles pour chacunes de ces catégories, ce qui offre de nombreuses combinaisons. TLS ne permet pas toutes les combinaisons possibles. Au lieu de celà TLS permet seulement certaines combinaisons bien précises connues sous le nom de Suite de chiffrement définit dans les standards IETF RFC.</p>
+<p>Chaque Suite de chiffrement est représentée par un nombre de 16 bits. Le nombre de Suites de chiffrement standardisées augmente avec le temps, aucune implémentation TLS ne permet la mise en œuvre de toutes les Suites de chiffrement ayant été définies. Une implémentation prétendant à la mise en œuvre de toutes les suites de chiffrement ne pourra tenir ce discours que provisoirement, jusqu'à ce que de nouvelles Suites de chiffrement soient définies. À un instant donné, une réelle implémentation met en œuvre une sous-partie seulement de toutes les Suites de chiffrement standards.</p>
+<p>Chaque nouvelle version d'une implémentation TLS peut contenir le support d'une nouvelle Suite de chiffrement non supportée dans les versions précédentes. Quand une nouvelle version d'une implémentation TLS est disponible à l'utilisation dans des applications, ces dernières peuvent souhaiter utiliser immédiatement les suites de chiffrement nouvellement supportées dans la nouvelle version sans que l'application soit modifiée ni republiée pour prendre en compte ces nouvelles Suites de chiffrement. Dans ce but, la librairie libSSL de NSS propose un moyen pour les applications de décourvrir à l'exécution l'ensemble des suites de chiffrement supportées par libSSL. libSSL contient suffisament d'informations sur chacune des suites de chiffrement, de sorte que l'application peut construire un affichage de ces informations à partir desquelles l'utilisateur pourra choisir la Suite de chiffrement que l'application tentera d'utiliser.</p>
+<p>Here are the details of how an NSS-based application learns what cipher suites are supported and obtains the information to display to the user.</p>
+<p>libSSL offers a public table of well defined cipher suite numbers. The cipher suites are listed in the table in order of preference, from the most preferred cipher suite to the least preferred. The size of this table varies from release to release, and so libSSL makes the number of entries in that table publicly available too. The table and the number of entries are declared in "ssl.h", as follows:</p>
+<pre>  /* constant table enumerating all implemented SSL 2 and 3 cipher suites. */
+  SSL_IMPORT const PRUint16 SSL_ImplementedCiphers[];
+  
+  /* number of entries in the above table. */
+  SSL_IMPORT const PRUint16 SSL_NumImplementedCiphers;
+</pre>
+<p>Of course, the raw integer numbers of the cipher suites are not likely to be known to most users, so libSSL provides a function by which the application can obtain a wealth of information about any supported cipher suite, by its number. This function is declared in "ssl.h" as follows:</p>
+<pre> SSL_IMPORT SECStatus 
+ SSL_GetCipherSuiteInfo(
+       PRUint16 cipherSuite, 
+       SSLCipherSuiteInfo *info, 
+       PRUintn len);
+</pre>
+<p>The application provides</p>
+<ul>
+ <li>the cipher suite number for which it wants information,</li>
+ <li>the address of a block of memory allocated to receive that information, and</li>
+ <li>the size in bytes of that block of memory.</li>
+</ul>
+<p><code>SSL_GetCipherSuiteInfo</code> fills that caller-supplied memory with information from the <code>SSLCipherSuiteInfo</code> structure for that cipher suite. The <code>SSLCipherSuiteInfo</code> structure contains this information, declared in "sslt.h":</p>
+<pre> typedef struct SSLCipherSuiteInfoStr {
+     PRUint16             length;
+     PRUint16             cipherSuite;
+ 
+     /* Cipher Suite Name */
+     const char *         cipherSuiteName;
+ 
+     /* server authentication info */
+     const char *         authAlgorithmName;
+     SSLAuthType          authAlgorithm;
+ 
+     /* key exchange algorithm info */
+     const char *         keaTypeName;
+     SSLKEAType           keaType;
+ 
+     /* symmetric encryption info */
+     const char *         symCipherName;
+     SSLCipherAlgorithm   symCipher;
+     PRUint16             symKeyBits;
+     PRUint16             symKeySpace;
+     PRUint16             effectiveKeyBits;
+ 
+     /* MAC info */
+     const char *         macAlgorithmName;
+     SSLMACAlgorithm      macAlgorithm;
+     PRUint16             macBits;
+ 
+     PRUintn              isFIPS       : 1;
+     PRUintn              isExportable : 1;
+     PRUintn              nonStandard  : 1;
+     PRUintn              reservedBits :29;
+ 
+ } SSLCipherSuiteInfo;
+</pre>
+<p>(Unfinished, To be completed here)</p>

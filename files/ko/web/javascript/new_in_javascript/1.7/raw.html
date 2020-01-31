@@ -1,0 +1,588 @@
+<p>{{jsSidebar("New_in_JS")}}</p>
+
+<p>JavaScript 1.7은 발생자(generator), 반복자(iterator), array  comprehensions, let 표현식(let expression), destructing assignment를 포함한 새로운 기능이 도입되었습니다. 또한, <a href="/en/New_in_JavaScript_1.6" title="en/New_in_JavaScript_1.6">JavaScript 1.6</a>에서 지원했던 모든 기능을 지원합니다.</p>
+
+<p>JavaScript 1.7은  Firefox 2부터 사용할 수 있습니다.</p>
+
+<p>이 글에 포함된 코드 예제는 JavaScript 쉘에서 시험했습니다. 쉘을 빌드하고 사용하는 법을 배우려면 <a class="internal" href="/Ko/SpiderMonkey/Introduction%20to%20the%20JavaScript%20shell" title="Ko/SpiderMonkey/Introduction to the JavaScript shell">JavaScript 쉘 소개</a>를 읽어보세요.</p>
+
+<h3 id="Using_JavaScript_1.7" name="Using_JavaScript_1.7">JavaScript 1.7  사용</h3>
+
+<p>JavaScript 1.7의 새 기능을 사용하려면, HTML이나 XUL 코드에서 JavaScript 1.7을 사용하겠다고 명시해주어야 합니다.</p>
+
+<pre>&lt;script type="application/javascript;version=1.7"/&gt;</pre>
+
+<p>JavaScript shell을 사용한다면, 명령줄에서 -version 170을 사용하거나 다음과 같이 version() 함수를 사용해서 버전을 설정해야 합니다:</p>
+
+<pre>version(170);
+</pre>
+
+<p>현재의 코드가 이들 키워드를 변수나 함수 이름으로 사용하고 있을 수 있으므로, "yield"와 "let"과 같은 새로운 키워드를 사용하는 기능들을 사용하려면 버전을 1.7로 명시해야 합니다. 새로운 키워드를 사용하지 않는 기능들(destructing assignment와 array comprehensions)은 JavaScript 버전을 지정하지 않고 사용할 수 있습니다.</p>
+
+<h3 id="Generators_and_iterators" name="Generators_and_iterators">발생자와 반복자(Generators and iterators)</h3>
+
+<p>반복 알고리듬(목록을 훑거나 똑같은 데이터 셋에 반복 계산을 수행할 때)을 포함한 코드를 개발할 때는 계산을 진행하는 동안 유지해야할 상태 변수가 필요합니다. 전통적으로는 반복 알고리듬의 중간값을 구하기 위해서 콜백 함수를 사용했어야 했습니다.</p>
+
+<h4 id="Generators" name="Generators">발생자(Generators)</h4>
+
+<p>피보나치 수열을 계산하는 반복 알고리듬을 생각해보세요:</p>
+
+<pre class="brush: js">function do_callback(num) {
+  document.write(num + "&lt;br&gt;\n");
+}
+
+function fib() {
+  var i = 0, j = 1, n = 0;
+  while (n &lt; 10) {
+    do_callback(i);
+    var t = i;
+    i = j;
+    j += t;
+    n++;
+  }
+}
+
+fib();
+</pre>
+
+<p>이 코드는 콜백(callback) 루틴을 사용해서 알고리듬의 반복적인 과정을 수행했습니다. 여기서는 각각의 피보나치 수가 콘솔에 출력될 것입니다.</p>
+
+<p>발생자와 반복자를 사용하면 이 작업을 새롭고 좀 더 좋게 바꿀 수 있습니다. 발생자를 사용한 피보나치 수열을 보겠습니다:</p>
+
+<pre class="brush: js">function fib() {
+  var i = 0, j = 1;
+  while (true) {
+    yield i;
+    var t = i;
+    i = j;
+    j += t;
+  }
+}
+
+var g = fib();
+for (var i = 0; i &lt; 10; i++) {
+  document.write(g.next() + "&lt;br&gt;\n");
+}
+</pre>
+
+<p>위에서 <code>yield</code> 키워드를  포함한 함수가 바로 발생자입니다. When you call it, its formal parameters are bound to actual arguments, but its body isn't actually evaluated. Instead, a generator-iterator is returned. Each call to the generator-iterator's <code>next()</code> method performs another pass through the iterative algorithm. Each step's value is the value specified by the <code>yield</code> keyword. Think of <code>yield</code> as the generator-iterator version of <code>return</code>, indicating the boundary between each iteration of the algorithm. Each time you call <code>next()</code>, the generator code resumes from the statement following the <code>yield</code>.</p>
+
+<p>You cycle a generator-iterator by repeatedly calling its <code>next()</code> method until you reach your desired result condition. In this example, we can obtain however many Fibonacci numbers we want by continuing to call <code>g.next()</code> until we have the number of results we want.</p>
+
+<h5 id="Resuming_a_generator_at_a_specific_point" name="Resuming_a_generator_at_a_specific_point">Resuming a generator at a specific point</h5>
+
+<p>Once a generator has been started by calling its <code>next()</code> method, you can use <code>send()</code>, passing a specific value that will be treated as the result of the last <code>yield</code>. The generator will then return the operand of the subsequent <code>yield</code>.</p>
+
+<p>You can't start a generator at an arbitrary point; you must start it with <code>next()</code> before you can <code>send()</code> it a specific value.</p>
+
+<div class="note"><strong>Note:</strong> As a point of interest, calling <code>send(undefined)</code> is equivalent to calling <code>next()</code>. However, starting a newborn generator with any value other than undefined when calling <code>send()</code> will result in a <code>TypeError</code> exception.</div>
+
+<h5 id="Exceptions_in_generators" name="Exceptions_in_generators">Exceptions in generators</h5>
+
+<p>You can force a generator to throw an exception by calling its <code>throw()</code> method, passing the exception value it should throw. This exception will be thrown from the current suspended context of the generator, as if the <code>yield</code> that is currently suspended were instead a <code>throw <em>value</em></code> statement.</p>
+
+<p>If a yield is not encountered during the processing of the thrown exception, then the exception will propagate up through the call to <code>throw()</code>, and subsequent calls to <code>next()</code> will result in <code>StopIteration</code> being thrown.</p>
+
+<h5 id="Closing_a_generator" name="Closing_a_generator">Closing a generator</h5>
+
+<p>Generators have a <code>close()</code> method that forces the generator to close itself. The effects of closing a generator are:</p>
+
+<ol>
+ <li>Any <code>finally</code> clauses active in the generator function are run.</li>
+ <li>If a <code>finally</code> clause throws any exception other than <code>StopIteration</code>, the exception is propagated to the caller of the <code>close()</code> method.</li>
+ <li>The generator terminates.</li>
+</ol>
+
+<h5 id="Generator_Example" name="Generator_Example">Generator Example</h5>
+
+<p>This code drives a generator that will yield every 100 loops.</p>
+
+<pre class="brush: js">var gen = generator();
+
+function driveGenerator() {
+  if (gen.next()) {
+    window.setTimeout(driveGenerator, 0);	
+  } else {
+    gen.close();	
+  }
+}
+
+function generator() {
+  while (i &lt; something) {
+    /** stuff **/
+
+    ++i;
+    /** 100 loops per yield **/
+    if ((i % 100) == 0) {
+      yield true;
+    } 
+  }
+  yield false;
+}
+</pre>
+
+<h4 id="Iterators" name="Iterators">Iterators</h4>
+
+<p>An <em>iterator</em> is a special object that lets you iterate over data.</p>
+
+<p>In normal usage, iterator objects are "invisible"; you won't need to operate on them explicitly, but will instead use JavaScript's <a href="/en/Core_JavaScript_1.5_Guide/Object_Manipulation_Statements" title="en/Core_JavaScript_1.5_Guide/Object_Manipulation_Statements"><code>for...in</code> and <code>for each...in</code> statements</a> to loop naturally over the keys and/or values of objects.</p>
+
+<pre class="brush: js">var objectWithIterator = getObjectSomehow();
+
+for (var i in objectWithIterator)
+{
+  document.write(objectWithIterator[i] + "&lt;br&gt;\n");
+}
+</pre>
+
+<p>If you are implementing your own iterator object, or have another need to directly manipulate iterators, you'll need to know about the <code>next</code> method, the <code>StopIteration</code> exception, and the <code>__iterator__</code> method.</p>
+
+<p>You can create an iterator for an object by calling <code>Iterator(<em>objectname</em>)</code>; the iterator for an object is found by calling the object's <code>__iterator__</code> method. If no <code>__iterator__</code> method is present, a default iterator is created. The default iterator yields the object's properties, according to the usual <code>for...in</code> and <code>for each...in</code> model. If you wish to provide a custom iterator, you should override the <code>__iterator__</code> method to return an instance of your custom iterator. To get an object's iterator from script, you should use <code>Iterator(<em>obj</em>)</code> rather than accessing the <code>__iterator__</code> property directly. The former works for Arrays; the latter doesn't.</p>
+
+<p>Once you have an iterator, you can easily fetch the next item in the object by calling the iterator's <code>next()</code> method. If there is no data left, the <code>StopIteration</code> exception is thrown.</p>
+
+<p>Here's a simple example of direct iterator manipulation:</p>
+
+<pre class="brush: js">var obj = {name:"Jack Bauer", username:"JackB", id:12345, agency:"CTU",
+          region:"Los Angeles"};
+
+var it = Iterator(obj);
+
+try {
+  while (true) {
+    print(it.next() + "\n");
+  }
+} catch (err if err instanceof StopIteration) {
+  print("End of record.\n");
+} catch (err) {
+  print("Unknown error: " + err.description + "\n");
+}
+</pre>
+
+<p>The output from this program looks like this:</p>
+
+<pre class="eval">name,Jack Bauer
+username,JackB
+id,12345
+agency,CTU
+region,Los Angeles
+End of record.
+</pre>
+
+<p>You can, optionally, specify a second parameter when creating your iterator, which is a boolean value that indicates whether or not you only want the keys returned each time you call its <code>next()</code> method. This parameter is passed in to user-defined <code>__iterator__</code> functions as its single argument. Changing <code>var it = Iterator(obj);</code> to <code>var it = Iterator(obj, true);</code> in the above sample results in the following output:</p>
+
+<pre>name
+username
+id
+agency
+region
+End of record.
+</pre>
+
+<p>In both cases, the actual order in which the data is returned may vary based on the implementation. There is no guaranteed ordering of the data.</p>
+
+<p>Iterators are a handy way to scan through the data in objects, including objects whose content may include data you're unaware of. This can be particularly useful if you need to preserve data your application isn't expecting.</p>
+
+<h3 id="Array_comprehensions" name="Array_comprehensions">Array comprehensions</h3>
+
+<p>Array comprehensions are a use of generators that provides a convenient way to perform powerful initialization of arrays. For example:</p>
+
+<pre class="brush: js">function range(begin, end) {
+  for (let i = begin; i &lt; end; ++i) {
+    yield i;
+  }
+}
+</pre>
+
+<p><code>range()</code> is a generator that returns all the values between <var>begin</var> and <var>end</var>. Having defined that, we can use it like this:</p>
+
+<pre class="brush: js">var ten_squares = [i * i for each (i in range(0, 10))];
+</pre>
+
+<p>This pre-initializes a new array, <var>ten_squares</var>, to contain the squares of the values in the range <code>0..9</code>.</p>
+
+<p>You can use any conditional when initializing the array. If you want to initialize an array to contain the even numbers between 0 and 20, you can use this code:</p>
+
+<pre class="brush: js">var evens = [i for each (i in range(0, 21)) if (i % 2 == 0)];
+</pre>
+
+<p>Prior to JavaScript 1.7, this would have to be coded something like this:</p>
+
+<pre class="brush: js">var evens = [];
+for (var i=0; i &lt;= 20; i++) {
+  if (i % 2 == 0)
+    evens.push(i);
+}
+</pre>
+
+<p>Not only is the array comprehension much more compact, but it's actually easier to read, once you're familiar with the concept.</p>
+
+<h4 id="Scoping_rules" name="Scoping_rules">Scoping rules</h4>
+
+<p>Array comprehensions have an implicit block around them, containing everything inside the square brackets, as well as implicit <code>let</code> declarations.</p>
+
+<h3 id="Block_scope_with_let" name="Block_scope_with_let">Block scope with <code>let</code></h3>
+
+<p>There are several ways in which <code>let</code> can be used to manage block scope of data and functions:</p>
+
+<ul>
+ <li>The <strong><code>let</code> statement</strong> provides a way to associate values with variables within the scope of a block, without affecting the values of like-named variables outside the block.</li>
+ <li>The <strong><code>let</code> expression</strong> lets you establish variables scoped only to a single expression.</li>
+ <li>The <strong><code>let</code> definition</strong> defines variables whose scope is constrained to the block in which they're defined. This syntax is very much like the syntax used for <code>var</code>.</li>
+ <li>You can also use <code>let</code> to establish variables that exist only within the context of a <code>for</code> loop.</li>
+</ul>
+
+<h4 id="let_statement" name="let_statement"><code>let</code> statement</h4>
+
+<p>The <code>let</code> statement provides local scoping for variables. It works by binding zero or more variables in the lexical scope of a single block of code; otherwise, it is exactly the same as a <a href="/en/Core_JavaScript_1.5_Reference/Statements/block" title="en/Core_JavaScript_1.5_Reference/Statements/block">block statement</a>. Note in particular that the scope of a variable declared inside a <code>let</code> statement using <code>var</code> is still the same as if it had been declared outside the <code>let</code> statement; such variables still have function scoping.</p>
+
+<p>For example:</p>
+
+<pre class="brush: js">var x = 5;
+var y = 0;
+
+let (x = x+10, y = 12) {
+  print(x+y + "\n");
+}
+
+print((x + y) + "\n");
+</pre>
+
+<p>The output from this program will be:</p>
+
+<pre class="eval">27
+5
+</pre>
+
+<p>The rules for the code block are the same as for any other code block in JavaScript. It may have its own local variables established using the <code>let</code> declarations.</p>
+
+<div class="note"><strong>Note:</strong> When using the <code>let</code> statement syntax, the parentheses following <code>let</code> are required. Failure to include them will result in a syntax error.</div>
+
+<h5 id="Scoping_rules_2" name="Scoping_rules_2">Scoping rules</h5>
+
+<p>The scope of variables defined using <code>let</code> is the <code>let</code> block itself, as well as any inner blocks contained inside it, unless those blocks define variables by the same names.</p>
+
+<h4 id="let_expressions" name="let_expressions"><code>let</code> expressions</h4>
+
+<p>You can use <code>let</code> to establish variables that are scoped only to a single expression:</p>
+
+<pre class="brush: js">var x = 5;
+var y = 0;
+document.write( let(x = x + 10, y = 12) x+y  + "&lt;br&gt;\n");
+document.write(x+y + "&lt;br&gt;\n");
+</pre>
+
+<p>The resulting output is:</p>
+
+<pre>27
+5
+</pre>
+
+<p>In this case, the binding of the values of <var>x</var> and <var>y</var> to <code>x+10</code> and <code>12</code> are scoped solely to the expression <code>x+y</code>.</p>
+
+<h5 id="Scoping_rules_3" name="Scoping_rules_3">Scoping rules</h5>
+
+<p>Given a <code>let</code> expression:</p>
+
+<pre class="eval">let (<var>decls</var>) <var>expr</var>
+</pre>
+
+<p>There is an implicit block created around <var>expr</var>.</p>
+
+<h4 id="let_definitions" name="let_definitions"><code>let</code> definitions</h4>
+
+<p>The <code>let</code> keyword can also be used to define variables inside a block.</p>
+
+<div class="note"><strong>Note:</strong> If you have more interesting examples of ways to use <code>let</code> definitions, please consider adding them here.</div>
+
+<pre class="brush: js">if (x &gt; y) {
+  let gamma = 12.7 + y;
+  i = gamma * x;
+}
+</pre>
+
+<p><code>let</code> statements, expressions and definitions sometimes make the code cleaner when inner functions are used.</p>
+
+<pre class="brush: js">var list = document.getElementById("list");
+
+for (var i = 1; i &lt;= 5; i++) {
+  var item = document.createElement("LI");
+  item.appendChild(document.createTextNode("Item " + i));
+
+  let j = i;
+  item.onclick = function (ev) {
+    alert("Item " + j + " is clicked.");
+  };
+  list.appendChild(item);
+}
+</pre>
+
+<p>The example above works as intended because the five instances of the (anonymous) inner function refer to five different instances of variable <code>j</code>. Note that it does not work as intended if you replace <code>let</code> by <code>var</code> or if you remove the variable <code>j</code> and simply use the variable <code>i</code> in the inner function.</p>
+
+<h5 id="Scoping_rules_4" name="Scoping_rules_4">Scoping rules</h5>
+
+<p>Variables declared by <code>let</code> have as their scope the block in which they are defined, as well as in any sub-blocks in which they aren't redefined. In this way, <code>let</code> works very much like <code>var</code>. The main difference is that the scope of a <code>var</code> variable is the entire enclosing function:</p>
+
+<pre class="brush: js">  function varTest() {
+    var x = 31;
+    if (true) {
+      var x = 71;  // same variable!
+      alert(x);  // 71
+    }
+    alert(x);  // 71
+  }
+
+  function letTest() {
+    let x = 31;
+    if (true) {
+      let x = 71;  // different variable
+      alert(x);  // 71
+    }
+    alert(x);  // 31
+  }
+</pre>
+
+<p>The expression to the right of the <code>=</code> is inside the block. This is different from how <code>let</code>-expressions and <code>let</code>-statements are scoped:</p>
+
+<pre class="brush: js">  function letTests() {
+    let x = 10;
+
+    // let-statement
+    let (x = x + 20) {
+      alert(x);  // 30
+    }
+
+    // let-expression
+    alert(let (x = x + 20) x);  // 30
+
+    // let-definition
+    {
+      let x = x + 20;  // x here evaluates to undefined
+      alert(x);  // undefined + 20 ==&gt; NaN
+    }
+  }
+</pre>
+
+<p>In programs and classes <code>let</code> does not create properties on the global object like <code>var</code> does; instead, it creates properties in an implicit block created for the evaluation of statements in those contexts. This essentially means that <code>let</code> won't override variables previously defined using <code>var</code>. For example:</p>
+
+<pre class="brush: js">var x = 'global';
+let x = 42;
+document.write(this.x + "&lt;br&gt;\n");
+</pre>
+
+<p>The output displayed by this code will display "global", not "42".</p>
+
+<blockquote>
+<p><span style="color: #ff0000;">I copied and pasted this code into an xhtml page </span></p>
+
+<pre>&lt;script type="text/javascript;version=1.7"&gt;
+   var x = 'global'; 
+   let x = 42; 
+   document.write(x + "&lt;br&gt;\n"); 
+&lt;/script&gt;
+</pre>
+
+<p><span style="color: #ff0000;">and the output was "42" . I'm not sure </span><span style="color: #ff0000;">"let" </span><span style="color: #ff0000;">works correctly here. Please check. (Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3)</span></p>
+</blockquote>
+
+<p>An <em>implicit block</em> is one that is not bracketed by braces; it's created implicitly by the JavaScript engine.</p>
+
+<p>In functions, <code>let</code> executed by <code>eval()</code> does not create properties on the variable object (activation object or innermost binding rib) like <code>var</code> does; instead, it creates properties in an implicit block created for the evaluation of statements in the program. This is a consequence of <code>eval()</code> operating on programs in tandem with the previous rule.</p>
+
+<p>In other words, when you use <code>eval()</code> to execute code, that code is treated as an independent program, which has its own implicit block around its code.</p>
+
+<h4 id="let-scoped_variables_in_for_loops" name="let-scoped_variables_in_for_loops"><code>let</code>-scoped variables in <code>for</code> loops</h4>
+
+<p>You can use the <code>let</code> keyword to bind variables locally in the scope of <code>for</code> loops, just like you can with <code>var</code>.</p>
+
+<pre class="brush: js">var i=0;
+for ( let i=i ; i &lt; 10 ; i++ )
+  document.write(i + "&lt;br&gt;\n");
+
+for ( let [name,value] in Iterator(obj) )
+  document.write("Name: " + name + ", Value: " + value + "&lt;br&gt;\n");
+</pre>
+
+<h5 id="Scoping_rules_5" name="Scoping_rules_5">Scoping rules</h5>
+
+<pre class="eval">for (let <var>expr1</var>; <var>expr2</var>; <var>expr3</var>) <var>statement</var>
+</pre>
+
+<p>In this example, <var>expr2</var>, <var>expr3</var>, and <var>statement</var> are enclosed in an implicit block that contains the block local variables declared by <code>let <var>expr1</var></code>. This is demonstrated in the first loop above.</p>
+
+<pre class="eval">for (let <var>expr1</var> in <var>expr2</var>) <var>statement</var>
+for each(let <var>expr1</var> in <var>expr2</var>) <var>statement</var>
+</pre>
+
+<p>In both these cases, there are implicit blocks containing each <var>statement</var>. The first of these is shown in the second loop above.</p>
+
+<h3 id="Destructuring_assignment" name="Destructuring_assignment">Destructuring assignment</h3>
+
+<p>Destructuring assignment makes it possible to extract data from arrays or objects using a syntax that mirrors the construction of array and object literals.</p>
+
+<p>The object and array literal expressions provide an easy way to create ad-hoc packages of data. Once you've created these packages of data, you can use them any way you want to. You can even return them from functions.</p>
+
+<p>One particularly useful thing you can do with destructuring assignment is to read an entire structure in a single statement, although there are a number of interesting things you can do with them, as shown in the section full of examples that follows.</p>
+
+<p>This capability is similar to features present in languages such as Perl and Python.</p>
+
+<h4 id="Examples" name="Examples">Examples</h4>
+
+<p>Destructuring assignment is best explained through the use of examples, so here are a few for you to read over and learn from.</p>
+
+<h5 id="Avoiding_temporary_variables" name="Avoiding_temporary_variables">Avoiding temporary variables</h5>
+
+<p>You can use destructuring assignment, for example, to swap values:</p>
+
+<pre class="brush: js">var a = 1;
+var b = 3;
+
+[a, b] = [b, a];
+</pre>
+
+<p>After executing this code, <var>b</var> is 1 and <var>a</var> is 3. Without destructuring assignment, swapping two values requires a temporary variable (or, in some low-level languages, the <a class="external" href="http://en.wikipedia.org/wiki/XOR_swap">XOR-swap trick</a>).</p>
+
+<p>Similarly, it can be used to rotate three or more variables:</p>
+
+<pre class="brush: js">var a = 'o';
+var b = "&lt;span style='color:green;'&gt;o&lt;/span&gt;";
+var c = 'o';
+var d = 'o';
+var e = 'o';
+var f = "&lt;span style='color:blue;'&gt;o&lt;/span&gt;";
+var g = 'o';
+var h = 'o';
+
+for (lp=0;lp&lt;40;lp++)
+	{[a, b, c, d, e, f, g, h] = [b, c, d, e, f, g, h, a];
+	 document.write(a+''+b+''+c+''+d+''+e+''+f+''+g+''+h+''+"&lt;br /&gt;");}
+</pre>
+
+<p>After executing this code, a visual colorful display of the variable rotation will be displayed.</p>
+
+<p>Returning to our Fibonacci generator example from above, we can eliminate the temporary "t" variable by computing the new values of "i" and "j" in a single group-assignment statement:</p>
+
+<pre class="brush: js">function fib() {
+  var i = 0, j = 1;
+  while (true) {
+    yield i;
+    [i, j] = [j, i + j];
+  }
+}
+
+var g = fib();
+for (let i = 0; i &lt; 10; i++)
+  print(g.next());
+</pre>
+
+<h5 id="Multiple-value_returns" name="Multiple-value_returns">Multiple-value returns</h5>
+
+<p>Thanks to destructuring assignment, functions can return multiple values. While it's always been possible to return an array from a function, this provides an added degree of flexibility.</p>
+
+<pre class="brush: js">function f() {
+  return [1, 2];
+}
+</pre>
+
+<p>As you can see, returning results is done using an array-like notation, with all the values to return enclosed in brackets. You can return any number of results in this way. In this example, <code>f()</code> returns the values <code>{{ mediawiki.external('1, 2') }}</code> as its output.</p>
+
+<pre class="brush: js">var a, b;
+[a, b] = f();
+document.write ("A is " + a + " B is " + b + "&lt;br&gt;\n");
+</pre>
+
+<p>The command <code>{{ mediawiki.external('a, b') }} = f()</code> assigns the results of the function to the variables in brackets, in order: <var>a</var> is set to 1 and <var>b</var> is set to 2.</p>
+
+<p>You can also retrieve the return values as an array:</p>
+
+<pre class="brush: js">var a = f();
+document.write ("A is " + a);
+</pre>
+
+<p>In this case, <var>a</var> is an array containing the values 1 and 2.</p>
+
+<h5 id="Looping_across_objects" name="Looping_across_objects">Looping across objects</h5>
+
+<p>You can also use destructuring assignment to pull data out of an object:</p>
+
+<pre class="brush: js">let obj = { width: 3, length: 1.5, color: "orange" };
+
+for (let [name, value] in Iterator(obj)) {
+  document.write ("Name: " + name + ", Value: " + value + "&lt;br&gt;\n");
+}
+</pre>
+
+<p>This loops over all the key/value pairs in the object <var>obj</var> and displays their names and values. In this case, the output looks like the following:</p>
+
+<pre class="eval">Name: width, Value: 3
+Name: length, Value: 1.5
+Name: color, Value: orange
+</pre>
+
+<p>The <code>Iterator()</code> around <code>obj</code> is not necessary in JavaScript 1.7; however, it is needed for <a href="/en/New_in_JavaScript_1.8" title="en/New_in_JavaScript_1.8">JavaScript 1.8</a>. This is to allow destructuring assignment with arrays (see {{ Bug(366941) }}).</p>
+
+<h5 id="Looping_across_values_in_an_array_of_objects" name="Looping_across_values_in_an_array_of_objects">Looping across values in an array of objects</h5>
+
+<p>You can loop over an array of objects, pulling out fields of interest from each object:</p>
+
+<pre class="brush: js">var people = [
+  {
+    name: "Mike Smith",
+    family: {
+      mother: "Jane Smith",
+      father: "Harry Smith",
+      sister: "Samantha Smith"
+    },
+    age: 35
+  },
+  {
+    name: "Tom Jones",
+    family: {
+      mother: "Norah Jones",
+      father: "Richard Jones",
+      brother: "Howard Jones"
+    },
+    age: 25
+  }
+];
+
+for each (let {name: n, family: { father: f } } in people) {
+  document.write ("Name: " + n + ", Father: " + f + "&lt;br&gt;\n");
+}
+</pre>
+
+<p>This pulls the <var>name</var> field into <var>n</var> and the <var>family.father</var> field into <var>f</var>, then prints them. This is done for each object in the <var>people</var> array. The output looks like this:</p>
+
+<pre>Name: Mike Smith, Father: Harry Smith
+Name: Tom Jones, Father: Richard Jones
+</pre>
+
+<h5 id="Ignoring_some_returned_values" name="Ignoring_some_returned_values">Ignoring some returned values</h5>
+
+<p>You can also ignore return values that you're not interested in:</p>
+
+<pre class="brush: js">function f() {
+  return [1, 2, 3];
+}
+
+var [a, , b] = f();
+document.write ("A is " + a + " B is " + b + "&lt;br&gt;\n");
+</pre>
+
+<p>After running this code, a is 1 and b is 3. The value 2 is ignored. You can ignore any (or all) returned values this way. For example:</p>
+
+<pre class="brush: js">[,,] = f();
+</pre>
+
+<h5 id="Pulling_values_from_a_regular_expression_match" name="Pulling_values_from_a_regular_expression_match">Pulling values from a regular expression match</h5>
+
+<p>When the regular expression <code><a href="/en/Core_JavaScript_1.5_Reference/Global_Objects/RegExp/exec" title="en/Core_JavaScript_1.5_Reference/Global_Objects/RegExp/exec"> exec()</a></code> method finds a match, it returns an array containing first the entire matched portion of the string and then the portions of the string that matched each parenthesized group in the regular expression. Destructuring assignment allows you to pull the parts out of this array easily, ignoring the full match if it is not needed.</p>
+
+<pre class="brush: js">// Simple regular expression to match http / https / ftp-style URLs.
+var parsedURL = /^(\w+)\:\/\/([^\/]+)\/(.*)$/.exec(url);
+if (!parsedURL)
+  return null;
+var [, protocol, fullhost, fullpath] = parsedURL;
+</pre>
+
+<p>{{ languages( { "en":"en/New_in_JavaScript_1.7", "es": "es/Novedades_en_JavaScript_1.7", "fr": "fr/Nouveaut\u00e9s_dans_JavaScript_1.7", "it": "it/Novit\u00e0_in_JavaScript_1.7", "ja": "ja/New_in_JavaScript_1.7", "pl": "pl/Nowo\u015bci_w_JavaScript_1.7", "zh-tw": "zh_tw/JavaScript_1.7_\u65b0\u9bae\u4e8b" } ) }}</p>

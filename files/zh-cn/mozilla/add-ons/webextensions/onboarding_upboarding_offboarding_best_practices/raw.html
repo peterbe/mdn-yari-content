@@ -1,0 +1,199 @@
+<p>{{AddonSidebar}}</p>
+
+<p>有人安装您的插件成功的关键在几分钟之后，您的新用户需要知道怎么去开始以及怎么去使用您的浏览器插件的特点</p>
+
+<p>一个由Mozilla于2018年8月进行的公开的研究，发现了糟糕的安装选项卡会削弱人们在 <a href="http://addons.mozilla.org/">addons.mozilla.org</a> 中获得的信任， 因此有些研究参与者希望立即移除这些插件。 研究还发现太多的信息和过多的设置要求会对人们关于插件的认知产生负面影响。</p>
+
+<p>最好的插件为人们提供他们所需要的开始信息，而不是需要花费太多的时间或者精力去设置。 同样的，如果插件有什么限制，应该在安装的时候就提及，以防止不必要的支持请求或者更糟糕的审查。</p>
+
+<p>但是，与用户互动让他们知道这些情况不仅仅是在安装后的前几分钟，也要在更新你的插件甚至用户移除你的插件的时候。</p>
+
+<h2 id="上门服务">上门服务</h2>
+
+<p>一个好的使用体验对于每一个浏览器插件来说是必不可少和难度不大的，你可以通过新的选项卡或者弹出窗口让用户登录。</p>
+
+<h3 id="检查安装">检查安装</h3>
+
+<p>你可以使用 <code>runtime.</code><code>onInstalled</code> 监听您的插件安装，代码如下:</p>
+
+<pre class="brush: js line-numbers language-js">browser.runtime.onInstalled.addListener(async ({ reason, temporary, }) =&gt; {
+  if (temporary) return; // skip during development
+  switch (reason) {
+    case "install": {
+      const url = browser.runtime.getURL("views/installed.html");
+      await browser.tabs.create({ url, });
+      // or: await browser.windows.create({ url, type: "popup", height: 600, width: 600, });
+    } break;
+    // see below
+  }
+});</pre>
+
+<h3 id="新手页面内容">新手页面内容</h3>
+
+<p>您的新手页面或者弹出窗口应该提供人们开始所需要的必要信息。因此，内容应该简短切中要害。如果你的插件有许多独特功能，请提供单独的帮助文档。这个页面还应该补充 <a href="http://addons.mozilla.org/">addons.mozilla.org</a>上提供的细节而不是去重复这些，启动页面关注的重点应该是怎么去使用你的插件，而不是它的作用。</p>
+
+<p>请考虑将以下信息添加到新手页面，大致按照下面列出的顺序：</p>
+
+<ul>
+ <li>在 <a href="http://addons.mozilla.org/">addons.mozilla.org</a> 上显示的插件名称以及图标或者徽章。</li>
+ <li>简要的概述你的插件的特点和功能，提供足够的信息让新用户确信他们安装的正确的插件</li>
+ <li>有关于如何使用拓展的实用信息，包括怎么从工具栏按钮、地址栏按钮、边栏或上下文菜单访问其功能的详细信息。至少包括一个用户可以立即执行的功能。如果你的插件有很多功能，请专注于为用户首先进行的操作提供说明。<br>
+  <u>提示</u> ：提供一个介绍性视频：向用户展示如何去使用你的插件比告诉他们更加有效。如果您制作了视频，请提供封闭字幕或者文字记录，以确保其可以访问。</li>
+ <li>如果你的插件可以自定义功能，请解释可用的选项并提供指向设置页面的链接。如果设置是插件的重要功能，或者设置的范围很大，请不要指望新用户现在就对多个页面的设置进行工作: 考虑提供指向特定配置的快速链接。<br>
+  <u>提示</u>： 使用 <code>runtime.openOptionsPage()</code> 去打开设置页面</li>
+ <li>如果用户需要您的 web 服务的帐户来使用扩展, 请为他们提供登录或注册的链接。</li>
+ <li>如果您的扩展具有付费功能, 请让用户知道这些功能是什么以及它们的成本。如果您有分层付款, 请提供比较图表或指向扩展网站上的比较图表或链接。<br>
+  <u>提示</u>：如果你通过捐款资助后续的发展, 现在是告诉人们并提供捐款页面链接的好时机。</li>
+ <li>提供指向其他信息 (如插件支持页面、帮助文档、教程等) 的链接。<br>
+  <u>提示</u>： 如果你有其他扩展, 给他们一个提及。</li>
+</ul>
+
+<p>在阅读了您的新手页面后, 您的新用户应该有信心立即开始使用扩展, 并知道如果他们需要更多信息或支持, 他们要去哪里。如果可能的话, 他们应该对关键功能有一些亲身经历。</p>
+
+<h3 id="页面设计">页面设计</h3>
+
+<p>注意页面的设计和风格。保持其与扩展的网页和 AMO 列表保持一致。例如, 使用一致的图标和颜色。这有助于让您的用户放心, 他们已经安装并使用了正确的产品。 按照 <a href="http://design.firefox.com/photon/">Photon Design System</a>, 在这种情况下, 这不会与您的产品的设计相抵触。</p>
+
+<p>不要在安装后页面上包含广告。广告会降低人们对插件的信任, 在人们对插件感兴趣之前将其吸引开, 并在其他缺点中制造对安装了哪些插件的混乱。</p>
+
+<h3 id="新手页面示例">新手页面示例</h3>
+
+<p>以下是一些比较好的新手页面的示例：</p>
+
+<div>
+<table>
+ <tbody>
+  <tr>
+   <td>
+    <h4 id="激光猫"><a href="https://addons.mozilla.org/en-US/firefox/addon/the-laser-cat/">激光猫</a></h4>
+     
+
+    <p>本页提供了插件的简洁描述, 关于如何发射猫的激光, 以及如何打开和关闭你的激光猫的明确说明。</p>
+   </td>
+   <td>
+    <p><img alt="Example onboarding page that details how to use the extension's features and turn them on and off" src="https://mdn.mozillademos.org/files/16218/Laser_cat_onboarding.png" style="height: 448px; width: 480px;"></p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <h4 id="幽灵_–_隐私广告拦截器"><a href="https://addons.mozilla.org/en-US/firefox/addon/ghostery/">幽灵 – 隐私广告拦截器</a></h4>
+     
+
+    <p>由于幽灵的功能大多是静默的, 这个登录屏幕为用户提供了两个初始设置选项: 一个简单的一键选项和一个指向完整设置的链接, 以便他们可以自定义幽灵的工作方式。</p>
+   </td>
+   <td>
+    <p><img alt="Example onboarding page that gives the user options for a one-click set up or the option to proceed to the settings page" src="https://mdn.mozillademos.org/files/16219/Ghostery_onboarding.png" style="height: 355px; width: 480px;"></p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<p> </p>
+
+<h2 id="升级">升级</h2>
+
+<p> </p>
+
+<p>当你更新你的插件时, 请借此机会向您的用户介绍新功能和任何修复的问题。除了有机会与活跃用户互动外, 您还可以重新与可能已停止或从未开始使用您的插件的人员进行互动。</p>
+
+<h3 id="检测升级">检测升级</h3>
+
+<p>您可以使用 <code>runtime.</code><code>onInstalled</code>来检测你的插件升级具体如下：</p>
+
+<pre class="brush: js line-numbers language-js">browser.runtime.onInstalled.addListener(async ({ reason, temporary, }) =&gt; {
+  if (temporary) return; // skip during development
+  switch (reason) {
+    // see above
+    case "update": {
+      const url = browser.runtime.getURL("views/updated.html");
+      await browser.tabs.create({ url, });
+      // or: await browser.windows.create({ url, type: "popup", height: 600, width: 600, });
+    } break;
+  }
+});</pre>
+
+<h3 id="更新页面内容">更新页面内容</h3>
+
+<p>请考虑将以下信息添加到更新页:</p>
+
+<ul>
+ <li>插件的简要说明。这应该足够了, 这样您的常规用户就可以确定哪个插件已更新, 并且足以吸引流失的用户返回到使用插件。</li>
+ <li>此更新中修正的新的或改进的功能或问题的列表。包括有关如何查找和使用新功能或改进功能的信息。</li>
+ <li>如果任何新功能需要付费才能使用, 请让用户知道这些功能是什么以及它们的成本。如果您有分层付款, 请提供比较图表或指向插件网站上的比较图表或链接。这也是一个很好的时间, 要求捐赠, 记得添加一个链接到捐赠页面。</li>
+ <li>提供指向关键信息 (如插件支持页面、帮助指南、教程等) 的链接。</li>
+</ul>
+
+<h3 id="更新页面示例">更新页面示例</h3>
+
+<p>这里是一些比较好的更新页面的例子：</p>
+
+<div>
+<table>
+ <tbody>
+  <tr>
+   <td>
+    <h4 id="Snap_Links_Plus"><a href="https://addons.mozilla.org/en-US/firefox/addon/snaplinksplus/">Snap Links Plus</a></h4>
+     
+
+    <p>本页提供了 "Snap Lingk Plus" 的简要说明, 然后列出了在版本中所做的改进。开发商Clint也明确表示, 该项目是一个无偿的个人项目, 并为用户提供了他们可以贡献的细节。他还亲切地提到了帮助创建插件的人员。</p>
+   </td>
+   <td>
+    <p><img alt="Example upboarding page that includes a summary of the extension's features, details of the improvements and updates, and a request for donations." src="https://mdn.mozillademos.org/files/16220/snaplinks_upboarding.jpg"></p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="卸载">卸载</h2>
+
+<p>当用户决定删除您的插件时, 不要错过机会收集有关为什么插件对他们无效的反馈: 您可能无法找回此用户, 但是, 通过解决他们的问题, 您可以希望减少可能的用户数量在之后删除您的插件。</p>
+
+<h3 id="设置卸载页面链接">设置卸载页面链接</h3>
+
+<p>若要从离开用户中收集信息, 您需要设置外部网页, 然后在 <a href="https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/Runtime/setUninstallURL"><code>runtime.setUninstallURL()</code></a>具体说明。之后， 当用户删除插件时, 将打开此页。</p>
+
+<h3 id="页面内容">页面内容</h3>
+
+<p>请考虑将以下信息添加到卸载页面:</p>
+
+<ul>
+ <li>一个"帮助我们改进" 的信息。</li>
+ <li>有关用户删除插件的原因的调查。为他们提供最可能的原因列表和可选的自由文本区域, 以提供更多详细信息。</li>
+</ul>
+
+<p>记住要使一切都简短。即将离开的用户不可能回答关于他们为什么要去的多个问题测验。</p>
+
+<h3 id="卸载页面示例">卸载页面示例</h3>
+
+<p>这里是一些比较好的卸载页面的示例</p>
+
+<div>
+<table>
+ <tbody>
+  <tr>
+   <td>
+    <h4 id="Grammarly_for_Firefox"><a href="https://addons.mozilla.org/en-US/firefox/addon/grammarly-1/">Grammarly for Firefox</a></h4>
+     
+
+    <p>此页提供了来自 Grammarly开发人员之一的个人消息、用户可能删除插件的原因的简短列表, 以及他们可以提供更多信息的文本框。</p>
+   </td>
+   <td>
+    <p><img alt='Example of boarding page with a "help us improve" message and simple survey with a list of reasons the extension is being removed.' src="https://mdn.mozillademos.org/files/16221/grammarly_offboarding.png" style="height: 278px; width: 480px;"></p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <h4 id="Adblock_Plus"><a href="https://addons.mozilla.org/en-US/firefox/addon/adblock-plus/">Adblock Plus</a></h4>
+     
+
+    <p>此页提供了重新安装插件的链接, 防止意外删除。然后, 它提供了用户可能已删除插件的原因列表, 最后一个选项将展开到文本框中, 以了解其他原因的详细信息。还有一个方便的提醒, 这些信息被发送到 Adblock Plus, 并链接到他们的隐私政策。</p>
+   </td>
+   <td>
+    <p> <img alt="Example offboarding page that includes a reinstall button and request information about the removal with a simple questionnaire." src="https://mdn.mozillademos.org/files/16222/ADB_offboarding.png" style="height: 404px; width: 480px;"></p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+</div>

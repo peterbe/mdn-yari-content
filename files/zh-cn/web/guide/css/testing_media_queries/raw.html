@@ -1,0 +1,89 @@
+<p>DOM有这样一种特性，可以通过程序来获得媒体查询的结果。这是通过 {{domxref("MediaQueryList") }} 接口和它的方法来实现的。一旦你创建了{{domxref("MediaQueryList") }} 对象， 你就可以通过它来检查查询结果，或者，你也可以一些设置，来实现当查询结果变化时，自动接收到通知。</p>
+<div class="note">
+ <strong>注意:</strong> 本文讨论的这种特性目前还处于草案状态，最终的实现可能跟这里的讨论有区别。</div>
+<h2 id="Creating_a_media_query_list" name="Creating_a_media_query_list">创建媒体查询列表</h2>
+<p>在获取查询结果前，你先要创建 {{domxref("MediaQueryList") }} 对象来存放媒体查询。为了实现这个目的，需要使用{{domxref("window.matchMedia") }} 方法。</p>
+<p>举个例子，比如你想设置一个查询列表用来判定设备屏幕处于横屏还是竖屏，那你可以像下面这样编码：</p>
+<pre>var mql = window.matchMedia("(orientation: portrait)");
+</pre>
+<h2 id="Checking_the_result_of_a_query" name="Checking_the_result_of_a_query">检查查询结果</h2>
+<p>一旦你创建了一个媒体查询列表，你就可以通过检查相应查询的 <code>matches</code> 属性来获取查询结果，上述属性会直接返回查询结果：</p>
+<pre class="brush: js">if (mql.matches) {
+  /* The device is currently in portrait orientation */
+} else {
+  /* The device is currently in landscape orientation */
+}
+</pre>
+<h2 id="Receiving_query_notifications" name="Receiving_query_notifications">接收查询提醒</h2>
+<p>如果你需要持续观察查询结果值的变化情况，那么就很有必要来注册一个监听器，这比手动检查查询结果要有效很多。 如何实现呢？你需要在{{domxref("MediaQueryList") }}对象上使用 <code>addListener()</code> 方法 ，这样就通过实现{{domxref("MediaQueryListListener") }} 接口来指定了一个监听器。</p>
+<pre class="brush: js">var mql = window.matchMedia("(orientation: portrait)");
+mql.addListener(handleOrientationChange);
+handleOrientationChange(mql); 
+</pre>
+<p>上述代码创建了一个屏幕方向的测试查询列表<code>mql，并且添加了事件监听。需要注意的是，当我们添加监听后，我们其实直接调用了一次监听。这会让我们的监听器以目前设备的屏幕方向来初始化判定代码。换句话说，如果我们代码中设定设备处于竖屏模式，而实际上它在启动时处于横屏模式，那么我们在后面的判定就会出现矛盾。</code></p>
+<p><code>然后，我们可以在handleOrientationChange()</code> 方法中来查看查询结果，并且可以设置屏幕方向变化后的逻辑处理代码：</p>
+<pre class="brush: js">function handleOrientationChange(mql) {
+  if (mql.matches) {
+    /* The device is currently in portrait orientation */
+  } else {
+    /* The device is currently in landscape orientation */
+  }
+}
+</pre>
+<h2 id="Ending_query_notifications" name="Ending_query_notifications">终止查询通知</h2>
+<p>如果你不需要再接收媒体查询值变化的相关通知，那你可以方便的通过在{{domxref("MediaQueryList") }}上调用<code>removeListener()</code> 方法来移除监听：</p>
+<pre>mql.removeListener(handleOrientationChange);
+</pre>
+<h2 id="Browser_compatibility" name="Browser_compatibility">浏览器兼容性</h2>
+<p>{{CompatibilityTable}}</p>
+<div id="compat-desktop">
+ <table class="compat-table">
+  <tbody>
+   <tr>
+    <th>特性</th>
+    <th>Chrome</th>
+    <th>Firefox (Gecko)</th>
+    <th>Internet Explorer</th>
+    <th>Opera</th>
+    <th>Safari</th>
+   </tr>
+   <tr>
+    <td>最低支持版本</td>
+    <td>9</td>
+    <td>{{CompatGeckoDesktop("6.0") }}</td>
+    <td>10</td>
+    <td>{{CompatUnknown}}</td>
+    <td>5.1</td>
+   </tr>
+  </tbody>
+ </table>
+</div>
+<div id="compat-mobile">
+ <table class="compat-table">
+  <tbody>
+   <tr>
+    <th>Feature</th>
+    <th>Android</th>
+    <th>Firefox Mobile (Gecko)</th>
+    <th>IE Mobile</th>
+    <th>Opera Mobile</th>
+    <th>Safari Mobile</th>
+   </tr>
+   <tr>
+    <td>最低支持版本</td>
+    <td>{{CompatUnknown}}</td>
+    <td>{{CompatUnknown}}</td>
+    <td>{{CompatUnknown}}</td>
+    <td>{{CompatUnknown}}</td>
+    <td>5</td>
+   </tr>
+  </tbody>
+ </table>
+</div>
+<h2 id="See_also" name="See_also">另见</h2>
+<ul>
+ <li><a href="/en-US/docs/CSS/Media_queries" title="CSS/Media queries">Media queries</a></li>
+ <li>{{domxref("window.matchMedia()") }}</li>
+ <li>{{domxref("MediaQueryList") }}</li>
+ <li>{{domxref("MediaQueryListListener") }}</li>
+</ul>

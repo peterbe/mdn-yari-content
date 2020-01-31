@@ -1,0 +1,168 @@
+<p>The aim of this document is to outline the coding standards we use for writing demos, sample code, code snippets, and so forth for use on MDN. The goal isn't to recommend one way of coding as being "the right way," because there are so many different technologies, practices, styles, tools, frameworks, and libraries to use, and different people have different favorites. Instead, this article presents a way that works; it's a single minimalist way that is predictable, transparent, and simple enough to not get in the way of learning the main aspects of web development that each demo (and associated article) is trying to teach.</p>
+<div class="note">
+ <p><strong>Note:</strong> Again, this article's recommendations are just that: recommendations. We don't police sample code and demos for adherence to this guide.</p>
+</div>
+<p>The biggest advantage to adhering to these guidelines is that it will foster consistency across our samples and demos on MDN, which increases readability overall.</p>
+<p>If you are looking for a template to pick up and use, you can of course feel free to use {{anch("Apps template", "our template")}}.</p>
+<div class="note">
+ <p><strong>Important:</strong> In several places in this article, we recommend using various shims, libraries, and so forth to simplify tasks. These are great for demos, but should <strong>not</strong> be used in live samples or code snippets on MDN, with few exceptions. The most obvious exception is if your example is, literally, demonstrating how to use these libraries.</p>
+</div>
+<h2 id="Client-side_web_technologies">Client-side web technologies</h2>
+<p>Client-side technologies are the core focus of what many of us do, and of most of the docs on MDN. The following guidelines are not hard and fast rules, but they make sense to us.</p>
+<div class="note">
+ <p><strong>Note:</strong> You should of course comment all your code to make it as clear as possible how your app works, and what you are intending with each major section. There is no such thing as too many comments, as long as they are concise, clear comments, and you can always strip them out as part of your build process, before you deploy your app.</p>
+</div>
+<h3 id="HTML">HTML</h3>
+<p>Here are some guidelines about writing HTML documents that make sense to us.</p>
+<h4 id="Use_the_HTML_DOCTYPE">Use the HTML DOCTYPE</h4>
+<p>Unless you are working on some kind of CMS system where you don't get to choose such page fundamentals, you should use the HTML5 DOCTYPE. It is short, easy to remember, and backwards compatible:</p>
+<pre class="brush: html">&lt;!DOCTYPE html&gt;</pre>
+<p>See <a href="/en-US/docs/Web/Guide/HTML/HTML5/Introduction_to_HTML5">Introduction to HTML5</a> for further information.</p>
+<h4 id="Include_a_basic_document_structure">Include a basic document structure</h4>
+<p>Include {{HTMLElement("html")}}, {{HTMLElement("head")}}, {{HTMLElement("body")}}, and static HTML for elements that don't need dynamic updating. It is tempting in this day and age to just generate everything with JavaScript, but this is bad for backwards compatibility and graceful degredation and just makes your browser work harder.</p>
+<pre class="brush: html">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+
+  &lt;p&gt;This is my content!&lt;/p&gt;
+    
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+<h4 id="Include_a_document_language">Include a document language</h4>
+<p>In your <code>&lt;html&gt;</code> element, set a document language with the {{htmlattrxref('lang')}} attribute:</p>
+<pre class="brush: html">&lt;html lang="en-us"&gt;</pre>
+<p>This is good for accessibility and search engines, and helps with localizing content.</p>
+<h4 id="Define_your_document's_character_set">Define your document's character set</h4>
+<p>In HTML5, you can define a document's character set like so:</p>
+<pre class="brush: html">&lt;meta charset="utf-8"&gt;</pre>
+<p>Use UTF-8 unless you have a very good reason not to; it will cover your character needs pretty much regardless of what language you are using in your document. In addition, you should always specify the character set as early as possible within your HTML's {{HTMLElement("head")}} block (within the first kilobyte), as it protects against a rather <a href="http://support.microsoft.com/kb/928847">nasty Internet Explorer security vulnerability</a>.</p>
+<h4 id="General_element_coding_style">General element coding style</h4>
+<p>HTML5 permits usage of HTML and XHTML markup styles, so it is really up to you what you use. For readability and maximum compatibility, we tend to use a hybrid approach. Specifics are follows:</p>
+<ul>
+ <li><strong>DO</strong> use lowercase for all element and attribute names, as it looks neater and means you can write markup out faster.</li>
+ <li><strong>DON'T</strong> include trailing slashes for empty elements (e.g. <code>&lt;hr /&gt;</code>), as they are unnecessary and slow things down. They can also break old browsers if you are not careful (although from what we can recall, this hasn't been a problem since Netscape 4).</li>
+ <li><strong>DO</strong> put all attribute values in quotes. It is tempting to omit quotes since HTML5 allows this, but markup is easier to read if you do include them, and it can cause problems sometimes if you don't. For example, if you have a class attribute with two values in it such as <code>class="important header"</code>, this can be misconstrued if the quotes were ommitted.</li>
+ <li><strong>DON'T</strong> worry about writing out attributes in full, if the value is the same as the name. For example, <code>required="required"</code> is not really necessary; just <code>required</code> is perfectly understandable and works fine.</li>
+</ul>
+<h4 id="Add_the_HTML_Shiv_for_cross-browser_HTML5_element_support">Add the HTML Shiv for cross-browser HTML5 element support</h4>
+<p>HTML5 elements are fun and funky, and supported natively in all modern browsers. Unfortunately they are not supported by older browsers, which treat them as anonymous inline elements ({{cssxref("display")}}<code>: block</code> can fix this). Internet Explorer versions 9 and below however go one stage further, and don't even allow you to style them with CSS. A fix is to create an instance of each one in the DOM, using {{domxref("document.createElement()")}}. Fortunately, Remy Sharp's <a href="http://code.google.com/p/html5shiv/">HTML5 Shiv</a> does all of this for you, plus it includes Jonathan Neal's <a href="https://code.google.com/p/ie-print-protector/">Print Protector</a>, prevents HTML5 content from being scrambled when printed out. Include it using an Internet Explorer conditional comment, so that only the browsers that need it download it:</p>
+<pre class="brush: html">&lt;!--[if le IE 9]&gt;
+  &lt;script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"&gt;
+  &lt;/script&gt;
+&lt;![endif]--&gt;</pre>
+<h4 id="Add_the_viewport_meta_tag">Add the viewport meta tag</h4>
+<p>Especially if you are creating an app-style experience, you will probably want to optimize your layout for viewing on different viewport sizes (and other differences in media features) using media queries. To make mobile browsers interpret media queries properly, you will need to include the viewport {{HTMLElement("meta")}} tag in your HTML {{HTMLElement("head")}}. You should include at least the following in your document, which can be modified later on as the need arises:</p>
+<pre class="brush: html">&lt;meta name="viewport" content="width=device-width"&gt;</pre>
+<p>See <a href="/en-US/docs/Mozilla/Mobile/Viewport_meta_tag">Using the viewport meta tag to control layout on mobile browsers</a> for further details.</p>
+<h3 id="CSS">CSS</h3>
+<p>Below are some CSS guidelines to make your code understandable and maintainable. In terms of efficient CSS code, you should read <a href="/en-US/docs/Web/Guide/CSS/Writing_efficient_CSS">Writing efficent CSS</a>.</p>
+<h4 id="Use_expanded_syntax">Use expanded syntax</h4>
+<p>There are a variety of CSS writing styles you can use, but for development we prefer the expanded style, with the selector/opening brace, close brace, and each declaration on a separate line. This maximizes readability (and, again, promotes consistency on MDN):</p>
+<pre class="brush: css">p {
+  color: white;
+  background-color: black;
+  padding: 10px;
+}</pre>
+<h4 id="Use_CSS_flags">Use CSS flags</h4>
+<p>There are a variety of ways to break up the CSS inside each stylesheet, but whichever you choose, we would advise using a system of flags — use a comment to mark the start of each major section, and include inside each one a string that is highly unlikely to appear inside any CSS code, so that you can search for this string to browse through section beginnings. Optionally, you could also add a TOC at the start of your CSS outlining the structure of the whole styleheet.</p>
+<p>A typical flag system looks like this:</p>
+<pre class="brush: css">/* || general layout styles */
+
+/* CSS general layout styles go here */
+
+/* || typography */
+
+/* CSS typography styles go here*/</pre>
+<p>So searching for a double pipe character would allow you to browser the different sections of the document.</p>
+<h4 id="Use_mobile_first_media_queries">Use "mobile first" media queries</h4>
+<p>When including different sets of styles for different target viewport sizes using media queries inside the same stylesheet, it is good idea to make the default styling before any media queries have been applied to the document the narrow screen/mobile styling, and then overwrite this for wider viewports inside successive media queries.</p>
+<pre class="brush: css">/*Default CSS layout for narrow screens*/
+
+@media (min-width: 480px) {
+  /*CSS for medium width screens*/
+}
+
+@media (min-width: 800px) {
+  /*CSS for wide screens*/
+}
+
+@media (min-width: 1100px) {
+  /*CSS for really wide screens*/
+}</pre>
+<p>This has many advantages, outlined in our <a href="/en-US/docs/Web/Apps/Mobile_First">Mobile First</a> article.</p>
+<p>We appreciate that this is not ideal for every situation. A number of people have issues with Mobile First media queries because older desktop browsers such as Internet Explorer 6-8 do not support media queries, therefore these would be served the mobile view, which would be no good. To mitigate this problem, we would also recommend conditionally applying a media query polyfill such as <a href="https://github.com/scottjehl/Respond">respond.js</a> to your app, inside a conditional comment:</p>
+<pre class="brush: html">&lt;!--[if le IE 9]&gt;
+  &lt;script src="scripts/respond.js"&gt;&lt;/script&gt;
+&lt;![endif]--&gt;</pre>
+<h4 id="Use_flexiblerelative_units">Use flexible/relative units</h4>
+<p>For maximum flexibility over the widest possible range of devices, it is a good idea to size containers, padding, etc. using relative units like ems and rems, or percentages and viewport units if you want them to vary depending on viewport width. You can read some more about this in our <a href="/en-US/docs/Web/Apps/app_layout/responsive_design_building_blocks#Fluid_grids">Responsive design building blocks</a> article.</p>
+<h4 id="Think_carefully_before_using_resets">Think carefully before using resets</h4>
+<p>For maximum control over CSS across platforms, a lot of people use CSS resets to remove every style, before then building things back up themselves. This certainly has its merits, but CSS resets can often be overkill, resulting in lots of extra time spent reimplementing things that weren't completely broken in the first place, like default margins, list styles, etc.</p>
+<p>A more reasoned approach that we'd like to recommend you at least take a look at is <a href="http://necolas.github.io/normalize.css/">normalize.css by Nicolas Gallagher</a>, which aims to just make things more consistent across browsers, fix some default annoyances that we always get rid of (the margins on <code>&lt;html&gt;</code> and <code>&lt;body&gt;</code>, for example) and get rid of a few bugs.</p>
+<h4 id="Plan_your_CSS_-_avoid_overriding">Plan your CSS - avoid overriding</h4>
+<p>Before diving in and writing huge chunks of CSS, plan your styles carefully. What general styles are going to be needed, what different layouts do you need to create, what specific overrides need to be created, and are they reusable? Above all, you need to try to avoid too much overriding. If you keep finding yourself writing styles and then cancelling them again a few rulesets down, you probably need to rethink your strategy.</p>
+<h3 id="JavaScript">JavaScript</h3>
+<p>This current crop of JavaScript guidelines is taken from our <a href="/en-US/docs/Developer_Guide/Coding_Style#JavaScript_practices">Mozilla Coding Style page</a>, which is dedicated more towards creating code specifically for Mozilla projects such as the Firefox browser. The two will probably diverge in the future.</p>
+<ul>
+ <li>Make sure you are aware of the <a href="/en/JavaScript_Tips" title="en/JavaScript Tips">JavaScript Tips</a>.</li>
+ <li>Do not compare <code>x == true</code> or <code>x == false</code>. Use <code>(x)</code> or <code>(!x)</code> instead. <code>x == true</code>, in fact, is different from <code>if (x)</code>! Compare objects to <code>null</code>, numbers to <code>0</code> or strings to <code>""</code> if there is chance for confusion.</li>
+ <li>Make sure that your code doesn't generate any strict JavaScript warnings, such as:
+  <ul>
+   <li>Duplicate variable declaration</li>
+   <li>Mixing <code>return;</code> with <code>return value;</code></li>
+   <li>Undeclared variables or members. If you are unsure if an array value exists, compare the index to the array's length. If you are unsure if an object member exists, use <code>"name" in aObject</code>, or if you are expecting a particular type you may use <code>typeof(aObject.name) == "function"</code> (or whichever type you are expecting).</li>
+  </ul>
+ </li>
+ <li>Use <code>{{ mediawiki.external('value1, value2') }}</code> to create a JavaScript array in preference to using <code>new Array(value1, value2)</code> which can be confusing, as <code>new Array(length)</code> will actually create a physically empty array with the given logical length, while <code>{{ mediawiki.external('value') }}</code> will always create a 1-element array. You cannot actually guarantee to be able to preallocate memory for an array.</li>
+ <li>Use <code>{ member: value, ... }</code> to create a JavaScript object; a useful advantage over <code>new Object()</code> is the ability to create initial properties and use extended JavaScript syntax to define getters and setters.</li>
+ <li>If having defined a constructor you need to assign default properties, it is preferred that you assign an object literal to the prototype property.</li>
+ <li>Use regular expressions, but use them wisely. For instance, to check that <code>aString</code> is not completely whitespace use <code>/\S/.test(aString);</code> only use <code>aString.search()</code> if you need to know the position of the result, or <code>aString.match()</code> if you need to collect matching substrings (delimited by parentheses in the regular expression). Regular expressions are less useful if the match is unknown in advance, or to extract substrings in known positions in the string. For instance, <code>aString.slice(-1)</code> returns the last letter in <code>aString</code>, or the empty string if <code>aString</code> is empty.</li>
+</ul>
+<h3 id="More_to_come">More to come</h3>
+<p>Other sections will be added as we get to them, and they are deemed necessary. Please feel free to add your own ideas if you wish.</p>
+<h2 id="Tools_and_libraries">Tools and libraries</h2>
+<p>There are many tools and libraries out there, and different developers have their own preferences. Therefore, we don't really want to recommend any single toolchain as being the right one to use. We'd rather present demos that use mostly vanilla HTML, CSS, JavaScript, etc., so that it is as easy to follow the subject matter as possible, and apply it to your own particular workflow, rather than becoming frustrated by setting up and working through a load of unfamiliar JavaScript libraries, build tools, etc.</p>
+<p>Therefore we have created a simple app template to help speed up app development. There are a few things that we include in our basic template, to make life easier for rapid app prototyping, but this is only one way to do it, and not the only right way.</p>
+<h3 id="অ্যাপ_টেম্পলেট">অ্যাপ টেম্পলেট</h3>
+<p>গিটহাব থেকে অ্যাপ টেম্পলেট টি ডাউনলোড করুন - <a href="https://github.com/chrisdavidmills/mdn-app-template">mdn-app-template এর গিটহাব পাতা</a> দেখুন।</p>
+<p>নমুনাটিতে নিচের মত করে ডিরেক্টরি সাজানো হয়েছে।</p>
+<ul>
+ <li><strong><span style="background-color: #dda0dd;">index.html</span></strong> - contains a minimalist markup structure, as outlined in our {{anch("HTML","HTML best practices")}} section, above, plus an install {{HTMLElement("button")}} (<code>id="install-btn"</code>), which is styled and scripted by the appropriate CSS and JavaScript files mentioned below.</li>
+ <li><strong><span style="background-color: #dda0dd;">webapp.manifest</span></strong> - a minimal manifest, as required by installable apps. If you don't want to make an installable app, you can delete this, but it is useful to outline the basics for those that do.</li>
+ <li><strong><span style="background-color: #dda0dd;">.htaccess</span></strong> - a simple <code>.htaccess</code> file containing a few universal rules that you should always include, such as Adding video Mime types so videos will play without hassle across browsers, and adding manifest file Mime type.</li>
+ <li><strong><span style="background-color: #dda0dd;">favicon.ico</span></strong> - a simple favicon, just as a reminder.</li>
+ <li><strong><span style="background-color: #dda0dd;">app-icons</span></strong> - a separate folder containing app icons, in three sizes appropriate for Firefox OS apps: 16, 48 and 128 px.</li>
+ <li><strong><span style="background-color: #dda0dd;">images</span></strong> - A folder for your images.</li>
+ <li><strong><span style="background-color: #dda0dd;">styles</span></strong> - a folder for your styles.
+  <ul>
+   <li><strong><span style="background-color: #dda0dd;">normalize.css</span></strong> - as outlined above, in {{anch("Think carefully before using resets")}}, normalize provides consistency and bugfixes, as a slightly more sane alternative to resets.</li>
+   <li><strong><span style="background-color: #dda0dd;">app.css</span></strong> - the main stylesheet for the app. Inside here we've included a minimal mobile first media query structure as a reminder.</li>
+   <li><strong><span style="background-color: #dda0dd;">install-button.css</span></strong> - the CSS for styling our install button, delete if you don't want your app installable.</li>
+  </ul>
+ </li>
+ <li><strong><span style="background-color: #dda0dd;">scripts</span></strong> - a folder for your JavaScript.
+  <ul>
+   <li><strong><span style="background-color: #dda0dd;">app.js</span></strong> - the main JavaScript file for our app; empty to begin with.</li>
+   <li><strong><span style="background-color: #dda0dd;">respond.js</span></strong> - added in to provide width/height media query support for older browsers that don't support media queries natively.</li>
+   <li><strong><span style="background-color: #dda0dd;">install.js</span></strong> - checks whether the app is installed or not; if so, it hides the install button. If not, it adds a click handler to the button so that the app is installed on the device when clicked (currently only works with Firefox OS and Firefox Aurora/Nightly).</li>
+  </ul>
+ </li>
+</ul>
+<div class="note">
+ <p><strong>Note:</strong> We think CSS preprocessors like <a href="http://sass-lang.com/">Sass</a> and <a href="http://lesscss.org/">Less</a> are awesome. Build systems and automation tools like <a href="http://volojs.org/">Volo</a> and <a href="http://gruntjs.com/">Grunt</a> are also cool. And, yes, linters like <a href="http://www.jshint.com/" style="line-height: 24.44444465637207px;">JSHint</a><span style="line-height: 24.44444465637207px;"> and </span><a href="http://www.jslint.com/" style="line-height: 24.44444465637207px;">JSLint</a> are also great. However, we avoided using these in our template because we don't want them to present a barrier to those who don't use them. By and large, our goal is to teach Web technologies, not specific libraries and tools.</p>
+</div>
+<h2 id="Quick_Links">Quick Links</h2>
+<ol>
+ <li><a href="#">Development tips</a>
+  <ol>
+   <li><a href="/en-US/docs/Developer_Guide/Coding_Style">Coding Style</a></li>
+   <li><a href="/en-US/docs/JavaScript_Tips">JavaScript Tips</a></li>
+   <li><a href="/en-US/docs/Web/Apps/Mobile_First">Mobile First</a></li>
+  </ol>
+ </li>
+ <li><a href="https://github.com/chrisdavidmills/mdn-app-template">MDN sample app template</a></li>
+ <li><a href="/en-US/docs/Project:MDN/Contributing/Editor_guide#Using_the_live_sample_system">Using the live sample system</a></li>
+</ol>

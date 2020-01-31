@@ -1,0 +1,266 @@
+<h2 class="heading-secondary" id="Windows_için_Firefox'u_Derlemek">Windows için Firefox'u Derlemek</h2>
+
+<p>Dünyanın en iyi tarayıcısını dünyanın en popüler işletim sistemi üzerinde derlemeye bize yardım ettiğin için teşekkürler. Bu doküman, yerel makinenizi Firefox'un kendi sürümünüzü derlemeye ve hacklemeye hazır hale getirmeniz için yardımcı olacak.</p>
+
+<p>Hazırlanmak zor olmayacak fakat çok zaman alacak - çok fazla byte indireceğiz! Hızlı bir bağlantıda bile bu işlem on-on beş dakikadan, bir iki saate varacak şekilde sürebilir.</p>
+
+<p>Detayları sayfanın aşağısında bulabilirsiniz, ancak bu hızlı başlangıç kılavuzu sizi hazır hale getirip, çalışmaya başlatabilir:</p>
+
+<h3 class="heading-tertiary" id="Hazırlık">Hazırlık</h3>
+
+<p>Firefox'u Windows üzerinde derleyebilmek için, Window 7 ve üzeri, 64-bit sisteme, diskinizde 40 GB kadar boş alana ihtiyacınız var. 64-bit Windows kullandığınızı doğrulayabilmek için Windows 7'de "Başlat Menüsü"nde yer alan "Bilgisayar"a sağ tıklayın, "Özellikler" ve "Sistem" yolunu takip edebilirsiniz. Windows 8.1 ve Windows 10'da ise "Windows" menüsüne sağ tıklayın ve "Sistem"i seçerek aynı bilgiye ulaşabilirsiniz. Alternatif olarak klavyenizdeki "Windows" ve "Pause Break" tuşlarına aynı anda basarak bu bilgiyi görüntüleyebilirsiniz.</p>
+
+<p>Sağlam temeller üzerine başlamak istiyoruz, Windows Update ile bilgisayarınızın güncelliğinden emin olun ve sonra devam edebiliriz.</p>
+
+<h3 id="Visual_Studio_2017">Visual Studio 2017</h3>
+
+<p>Şuanki resmi derlemeler Visual Studio 2017 kullanıyorlar. Kullanabilmek için, <a href="https://www.visualstudio.com/downloads/">Community sürümünü indirin ve yükleyin</a>. Kurulum yaparken aşağıda belirtilen iş yüklerini mutlaka seçin:</p>
+
+<ul>
+ <li>"C++ ile masaüstü geliştirme" (üstte)</li>
+ <li>"C++ ile oyun geliştirme" (üçüncü grupta)</li>
+</ul>
+
+<p>Ek olarak masaüstü geliştirme paketi için aşağıdaki bileşenlerin seçili ve yüklenecek olduğundan emin olun:</p>
+
+<ul>
+ <li>VC++ 2017 v&lt;sürüm&gt; araç takımı(x86,x64)</li>
+ <li>Masaüstü C++ [x86 ve x64] için Windows 10 SDK (&lt;sürüm&gt;)</li>
+ <li>Visual C++ ATL desteği</li>
+</ul>
+
+<p>Yükleme tamamlandıktan sonra Visual Studio'yu başlatmayı unutmayın. Böylece ilk hazırlıklar yapılabilir ve yükleme hesabınızla eşleştirilebilir.</p>
+
+<h3 class="heading-tertiary" id="Visual_Studio_2015">Visual Studio 2015</h3>
+
+<p>Ayrıca Visual Studio 2015 ile de derleyebilirsiniz. <a href="https://www.visualstudio.com/vs/older-downloads/">Visual Studio Community 2015 Update 3</a>'ü Microsoft'dan indirin ve yükleyin (uyarı: şuanki sürüm Visual Studio 2017 olduğu için Visual Studio 2015 Update 3 sürümünü indirebilmek için, "İndirmeler" bölümüne gidin ve "Visual Studio Community 2015 with Update 3" sürümünü indirin, ama Visual Studio 2017 sürümünü de kullanabileceğinizi unutmayın (yukarıdaki bölüme bakın). Visual Studio'nun daha eski sürümlerine sahipseniz güncellemeniz gerekmektedir; Firefox, eski Visual Studio sürümlerinde desteklenmeyen C++ özelliklerine ihtiyaç duymaktadır.</p>
+
+<p>Varsayılan konfigurasyonu kabul etmeyin. Bunları seçin:</p>
+
+<ul>
+ <li><strong>Programlama Dilleri</strong> &gt; <strong>Visual C++</strong> &gt; <strong>Visual C++ 2015 için Ortak Araçlar. </strong> Bu seçenek Rust için gereklidir.</li>
+ <li><strong>Windows ve Web Geliştirmesi &gt; Universal Windows App Geliştirme Araçları &gt; Araçlar (1.4.1) ve Windows 10 SDK (10.0.14393).</strong>  Firefox'u derlemek için minimum gereksinimdir.</li>
+</ul>
+
+<p>Yüklemeyi tamamladıktan sonra Visual Studio 2015'i açın ve ilk kurulum aşamalarını tamamlayın, hesabınızı eşleştirin.  İlk adım işlemlerini yapmazsanız, Visual Studio değerlendirme modunda başlar ve Windows Update üzerinden güncellemeleri almaz.</p>
+
+<p>Daha sonra bunu indirip yüklemeniz gerekmektedir: <a href="https://msdn.microsoft.com/en-us/library/mt752379.aspx">Cumulative Servicing Release for Microsoft Visual Studio 2015 Update 3 (KB3165756)</a>.</p>
+
+<h3 id="Gereken_araçlar">Gereken araçlar</h3>
+
+<h4 id="Rust">Rust</h4>
+
+<p><a href="https://rustup.rs">Rust</a>'ı yükleyin.  <a href="https://forge.rust-lang.org/platform-support.html">Rust Platform Desteği</a> sayfasına bakın ve sisteminiz için gereken üçüzü(<em>triplet</em>) inceleyin. Eğer Rust yüklü değilse, aşağıdaki <code>./mach bootstrap</code> komutu kaynak kontrolü için kullanılabilir bir sürümü yüklemeye veya güncellemeye çalışacak.</p>
+
+<h4 id="MAPI_başlık_dosyaları_(Thunderbird_veya_SeaMonkey_derlemeleri_için)">MAPI başlık dosyaları (Thunderbird veya SeaMonkey derlemeleri için)</h4>
+
+<p>Eğer Thunderbird veya SeaMonkey derlemesi yapacaksanız, <code>C:\Program Files (x86)\Windows Kits\8.1\Include\shared\MAPIX.h</code> dosyası var mı diye kontrol edin. Eğer dosya yoksa, <a href="http://www.microsoft.com/en-us/download/details.aspx?id=12905">Outlook 2010: MAPI Header Files</a> kitini yükleyin. Daha sonra <code>C:\Office 2010 Developer Resources\Outlook 2010 MAPI Headers</code> içindeki başlık(<em>header</em>) dosyalarını aşağıda belirtilen iki yola da kopyalayın:</p>
+
+<ul>
+ <li><code>C:\Program Files (x86)\Windows Kits\8.1\Include\shared</code></li>
+ <li><code>C:\Program Files (x86)\Windows Kits\10\Include\10.0.</code><em>nnnnn</em><code>.0\shared</code>, <em>nnnnn </em>sistemdeki en yüksek numarayı temsil etmektedir.</li>
+</ul>
+
+<h4 id="MozillaBuild">MozillaBuild</h4>
+
+<p>Son olarak, Mozilla'dan <a href="https://ftp.mozilla.org/pub/mozilla.org/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe">MozillaBuild Package</a> indirin. Varsayılan ayarları kabul edin, özellikle de varsayılanı <code>c:\mozilla-build\</code> olan yükleme konumunu tercih edin. Bazı Windows sürümlerinde 'doğru ayarları kullanarak tekrar yükle' seçeneği sunan bir hata mesajı alabilirsiniz, bu seçeneği seçip devam etmelisiniz.</p>
+
+<div class="note">
+<p>Bu adımı tamamladıktan sonra <code>c:\mozilla-build\start-shell.bat</code> dosyasının masaüstünde bir kısayolunu oluşturmak işinizi kolaylaştıracaktır.</p>
+</div>
+
+<h3 class="heading-tertiary" id="Bağlantı_kurma">Bağlantı kurma</h3>
+
+<p>Son adım zaman alabilir. Son adım devam ederken, Bugzilla hesabına kayıt olabilirsiniz!</p>
+
+<p><a href="https://bugzilla.mozilla.org/">Bugzilla.mozilla.org</a> Mozilla'nın hata takip sistemidir. Bir hata üzerine yorum yapmak veya bir düzeltme gönderebilmek için Bugzilla hesabına ihtiyacınız olacak; GitHub hesabınız varsa onunla giriş yapabilirsiniz veya <a href="https://bugzilla.mozilla.org/createaccount.cgi">Bugzilla hesabına kayıt olabilirsiniz.</a></p>
+
+<p>Bugzilla gibi, Mozilla iç görüşmelerinin çoğunu IRC kanalı üzerinden yapmaktadır. <a href="https://hexchat.github.io/">Hexchat'i buradan indirebilirsiniz</a> ve <a href="https://wiki.mozilla.org/IRC">Mozilla'nın IRC kanalına nasıl bağlanabileceğinizi buradan öğrenebilirsiniz</a>. Daha yeni başladıysanız veya hazırlık aşamaları hakkında sorularınız varsa bize "<em>#introduction channel</em>" üzerinden ulaşabilirsiniz, bazı topluluk üyeleri yeni destekçilere yardım edebilmek için burada takılırlar.</p>
+
+<h3 class="heading-tertiary" id="Kaynak_kodlarını_indirme">Kaynak kodlarını indirme</h3>
+
+<p>Son ve büyük bir adım. <code>c:\mozilla-build</code> (veya oluşturduğunuz masaüstü kısayoluna) içindeki <strong>start-shell.bat</strong>'a çift tıklamak yeni bir komut istemi penceresi açacaktır.</p>
+
+<p>Aşağıdaki satırı</p>
+
+<pre class="brush: bash">export PATH=$PATH:~/.cargo/bin</pre>
+
+<p><code>~/.bash_profile</code>, <code>~/.bash_login</code>, veya <code>~/.profile</code>'dan birine ekleyin.</p>
+
+<p>Not: Dosyalar yoksa, oluşturulmaları gerekmektedir.</p>
+
+<p>Not2: <code>~</code>'in ne anlama geldiğini bilmiyorsanız, konsola <code>echo ~</code> yazabilirsiniz.</p>
+
+<p><code>C:\</code>'de "mozilla-source" isminde klasör oluşturarak ve içine cd yaparak başlayalım:</p>
+
+<pre>cd c:/
+
+mkdir mozilla-source
+
+cd mozilla-source</pre>
+
+<p>Daha sonra Mercurial, bizim sürüm kontrol sistemimiz, ile Firefox kaynak kodlarını aşağıdaki komut ile indirebiliriz:</p>
+
+<pre>hg clone https://hg.mozilla.org/mozilla-central</pre>
+
+<p><em><code>hg</code> </em>cıvanın kimyasal sembolüdür.</p>
+
+<p>İndirme işleminin bitmesini beklerken <a href="http://mozilla-version-control-tools.readthedocs.org/en/latest/hgmozilla/index.html">Mercurial dokümantasyonuna</a> göz atabilirsiniz. Mozilla'da kodlarımızın yönetimi ve değişikliklerin uygulanması için sürüm kontrolünü nasıl kullandığımızı açıklar.</p>
+
+<h3 class="heading-tertiary" id="Firefox'u_Derleme!">Firefox'u Derleme!</h3>
+
+<p>Artık her şey tamam. Komut isteminizde, kaynak klasörünüze <code>cd</code> yapın ve</p>
+
+<pre>cd mozilla-central
+
+./mach bootstrap
+
+./mach build
+</pre>
+
+<p><code>./mach bootstrap</code> adımı bu dokümantasyonda belirtilmeyen tüm gereksinimleri halledecektir.</p>
+
+<p>Çok yaklaştınız. Çok uzun sürerse sakın bezmeyin; çok güçlü modern makinelerde bile uzun zaman alabilir ve eski makinelerde bu süre iki saat veya üzerini bulabilir. Firefox oldukça büyük, çünkü Web büyük.</p>
+
+<h3 class="heading-tertiary" id="Mozillians.org'a_katılın!">Mozillians.org'a katılın!</h3>
+
+<p>Beklerken yapabileceğiniz bir şey daha var, <a href="https://mozillians.org/">Mozillians'a </a>kayıt olmak. Mozillians, seninle aynı ilgi alanlarını, projeleri veya ülkeleri paylaşan, Mozilla topluluğundan, insanları bulabileceğiniz bir yerdir. Bu adım opsiyoneldir fakat zaman ayırdığınıza değeceğini düşünüyoruz.</p>
+
+<h3 id="Hazırsınız">Hazırsınız</h3>
+
+<p>mach derlemesi tamamlandığında, diskinizde çalışmaya hazır bir şekilde kaynak kodundan derlenmiş, Firefox'un kendinize özel bir sürümü hazır olur. Bu komut ile çalıştırabilirsiniz</p>
+
+<pre>./mach run</pre>
+
+<p class="heading-tertiary"> </p>
+
+<p>Artık Firefox'un evde yapılmış sana ait bir sürümüne sahipsiniz.</p>
+
+<p>Eğer bir hatayla karşılaşırsanız, bu dokümanın aşağısında yer alan "Sorun giderme" bölümüne bakabilirsiniz - bazı antivirüs programları bazı testlerimizi karantinaya alabilir, bu nedenle "mozilla-source" ve "mozilla-build" klasörleri için istisnalar eklemeniz gerekebilir. Antivirüs programınızı kapatmanıza gerek yok! Sadece istisna ekleyin.</p>
+
+<h3 class="heading-tertiary" id="Şimdi_eğlence_zamanı">Şimdi eğlence zamanı</h3>
+
+<p>Kaynak kodlara sahipsiniz ve Firefox'u derlediniz. <code>./mach run</code> komutu ile başlatın ve artık hacklemeye başlamak için hazırsınız. Gelecek adımları uygulamak size kalmış: IRC kanalımız “<em>#introduction</em><em> channel</em>”'da bize katılın, <a href="https://twitter.com/StartMozilla">StartMozilla Twitter'da</a> takip edin ve <a href="http://www.joshmatthews.net/bugsahoy/?simple=1">üzerinde çalışmak için bir hata</a> bulun.</p>
+
+<p>Bize katıldığınız ve Firefox'u ve açık Web'i herkes için daha iyi bir yer haline getirmemizde bize yardımcı olduğunuz için teşekkürler.</p>
+
+<h2 id="Detaylar_ve_sorun_giderme">Detaylar ve sorun giderme</h2>
+
+<h3 id="Donanım_ve_yazılım_gereksinimleri">Donanım ve yazılım gereksinimleri</h3>
+
+<p>Firefox derlemesi yoğun CPU ve G/Ç kullanımına ihtiyaç duyar, modern sistemlerde bile uzun sürebilir. Mozilla geliştirilmesi için gereken minimum ve önerilen sistem gereksinimleri:</p>
+
+<ul>
+ <li>En az 4 GB RAM. 8 GB veya daha fazlası önerilir, daha fazlası her zaman iyidir.</li>
+ <li>35 GB boş disk alanı. Bu hesaba Visual Studio 2015 Community sürümü, gereken SDKler, MozillaBuild paketi, Mercurial sürüm kontrol sistemi ve derleme için gereken alan dahildir. Firefox derlemesi yoğun G/Ç kullanımına ihtiyaç duyduğu için SSD kullanımı önerilir.</li>
+ <li>64-bit olmak koşuluyla Windows 7 (Service Pack 1) veya daha üstü. <span style="background-color: #f5f6f5;">32-bit Firefox'u hala 64-bit Windows'da derleyebileceksiniz.</span></li>
+</ul>
+
+<h3 id="Genel_bakış">Genel bakış</h3>
+
+<p> </p>
+
+<p>Mozilla derlemesi için Windows sistemlerde önyüklü gelmeyen birçok araca ihtiyaç duyulmaktadır. Visual Studio'a ek olarak, MozillaBuild - bash, GNU make, autoconf, Mercurial ve daha fazla aracı içeren bir program - yüklenmesi gerekmektedir.</p>
+
+<p>Resmi olarak, Firefox 48 ve sonrası bütün sürümler Visual Studio 2015 ile derlenebilir. Firefox'un güncel tüm sürümleri için Visual Studio 2015'i kullanabilirsiniz.</p>
+
+<p>Firefox 37'den 47'e kadar olan sürümler Visual Studio 2013 (VC12) sürümüyle derlenebilir, eski sürümlerden her tipi derleyemese de Visual Studio 2015 de eski sürümler için kullanılabilir.</p>
+
+<p> </p>
+
+<p>Firefox'un daha önceki sürümleri, Visual Studio'nun daha eski sürümleri ile derlenir.</p>
+
+<h3 id="Derleme_için_gereksinimleri_yükleme">Derleme için gereksinimleri yükleme</h3>
+
+<p>Firefox'u başarılı bir şekilde derleyebilmek için her adımı tamamlamanız gerekmektedir. Aşağıda yazılım gereksinimleri ile ilgili notlar verilmiştir.</p>
+
+<ol>
+ <li>Sisteminizin güncel olduğunu Windows Update aracılığıyla doğrulayın.</li>
+ <li><a href="https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx#d-community">Visual Studio Community 2015 (ücretsiz)</a> yükleyin. <strong>"Visual C++ 2015 için Ortak Araçlar"ı yüklemeyi unutmayın, bu adım yükleme sırasında özelleştirme ister.</strong> Alternatif olarak Visual Studio'nun ücretli sürümlerini de kullanabilirsiniz. VS2015 Community yüklemesinin isteğe bağlı parçaları (Microsoft Foundation Classes for C++ da dahil), Firefox'u derlemek için gerekli değildir. Visual Studio'nun önceki sürümleri desteklenmez, Firefox'un kodu VS2012 veya daha önceki sürümlerde desteklenmeyen C++ özelliklerini kullanır.</li>
+ <li>İsteğe bağlı olarak, VS2015'in yanında Python eklentilerini derlemek için <a href="http://go.microsoft.com/?linkid=7729279">Visual C++ 2008 Express</a> (ücretsiz) kurabilirsiniz. Unutmayın, "mach-resource-usage", "mach doctor", "mach android-emulator"ü kullanmak isterseniz veya talos testlerini yerel olarak çalıştırmak isterseniz, psutil'i derleyebilmek için yüklemeniz gerekmektedir.</li>
+ <li>Ek derleme paketleri için <a href="https://ftp.mozilla.org/pub/mozilla.org/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe">MozillaBuild </a>paketini indirin ve yükleyin. Eğer Cygwin kurulumunuz varsa, ipuçları bölümünde verilen notu inceleyin. Eğer MozillaBuild yüklemesi tamamlandıktan sonra 'doğru ayarları kullanarak tekrar yükle' mesajını içeren bir Windows hata mesajı alırsanız, bu seçeneği seçin; yükleme doğru bir şekilde tamamlanacaktır. MozillaBuild hakkında daha fazla bilgi ve daha yeni sürümlerin bağlantıları için bu adresi ziyaret edebilirsiniz <a href="https://wiki.mozilla.org/MozillaBuild">https://wiki.mozilla.org/MozillaBuild</a></li>
+</ol>
+
+<h3 id="Sorun_giderme">Sorun giderme</h3>
+
+<p>Bazı durumlarda, aşağıdaki problemler oluşabilir:</p>
+
+<p style="margin-left: 40px;"><strong>Bazı antivirüs ve sistem koruma yazılımları derleme sürecini aşırı şekilde yavaşlatabilir veya süreci bozabilir</strong></p>
+
+<ul>
+ <li style="margin-left: 40px;">Windows Defender ve bazı antivirüs tarama yazılımlarının derleme zamanlarını uzattıkları bilinmektedir. Örneğin, <code>mozilla-central</code>'i başarıyla kopyaladınız fakat <code>./mach build</code> komutu eksik dosya hatasıyla iptal oluyorsa, bunun gibi bir sorunla karşılaşıyorsunuz demektir. Çok bilinen güvenlik açıkları için hazırladığımız regresyon testleri, antivirüs yazılımlarının tehlike olarak algılayabilecekleri kod örnekleri içerebilirler ve antivirüs yazılımları bu dosyaları karantinaya alabilir veya dosyaları bozabilirler. Bunu önlemek için kaynak kodu ve çıktı klasörlerinizi (<code>mozilla-source</code> ve <code>mozilla-build</code> klasörleri) Windows Defender veya kullandığınız antivirüs yazılımlarında istisnalara eklemeniz gerekir. Eğer eksik dosyalarınız varsa bu dosyaları <code>hg update -C</code> komutu ile tekrar indirebilirsiniz. Bu komut tamamlandıktan sonra <code>./mach build</code> komutu başarıyla derlemeyi gerçekleştirir.</li>
+</ul>
+
+<p style="margin-left: 40px;"><strong>Visual Studio'u sistem dilinden farklı bir dilde yüklemek sorunlara yol açabilir</strong></p>
+
+<ul>
+ <li style="margin-left: 40px;">Örneğin İngilizce sisteme Fransızca dilinde yüklenen Visual Studio, derleme sırasında birçok hata mesajı gösterebilir ve sonuç olarak bağlama(<em>link</em>) hatası verebilir.</li>
+</ul>
+
+<dl>
+</dl>
+
+<div class="note">
+<p><strong>Not: </strong>Eğer gereken araçların yüklendiği klasörlerin isimleri <strong>boşluk </strong>veya artılar, tırnak işaretleri veya diğer özel karakterleri içerirse <strong>Mozilla derlenmeyecektir. </strong>Visual Studio araçları ve SDKler bu duruma dahil değildir - onlar isimleri boşluk karakterleri içeren klasörlere yüklenebilirler. Tüm yükleme noktaları için yükleyicilerin varsayılan yükleme noktalarını kullanmanız şiddetle tavsiye edilir.</p>
+</div>
+
+<h3 id="MozillaBuild_2">MozillaBuild</h3>
+
+<p>MozillaBuild paketi, derleme için gereken birçok aracı içermektedir. MSYS derleme ortamı, <a href="https://www.mercurial-scm.org/">Mercurial</a>, autoconf-2.13, CVS, Python, YASM, NSIS ve UPX, ayrıca isteğe bağlı ama kullanışlı wget ve emacs araçları içerilir.</p>
+
+<p><a href="https://ftp.mozilla.org/pub/mozilla.org/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe">Güncel MozillaBuild paketini indirin.</a></p>
+
+<p>Varsayılan olarak paket <code>c:\mozilla-build</code> klasörüne yüklenir ve varsayılan yolu kullanmanız tavsiye edilir. İsminde boşluk karakteri içeren yolları kullanmayın. Yükleyici Windows Kayıt Defterinde değişiklik yapmaz. Bazı çalıştırılabilirler <a href="https://www.microsoft.com/downloads/en/details.aspx?FamilyID=a5c84275-3b97-4ab7-a40d-3802b2af5fc2&amp;displaylang=en">Visual C++ Redistributable package</a>'a ihtiyaç duyabilir.</p>
+
+<p><strong>MozillaBuild komut istemi beklentileri: </strong>Unutmayın MozillaBuild tarafından sunulan "UNIX-gibi" ortamı sadece Mozilla kaynak kodlarını derlemek ve işlemek için kullanışlıdır. Modern Linux dağıtımlarında bulunan birçok komut satırı araçları sağlanmaz ve sağlanan araçlar da onyıl veya daha eski ömürdedir (özellikle MSYS tarafından sağlanan araçlar). Bu eski araçlar hatalarından dolayı veya güncel komut satırı argümanlarını desteklemedikleri için genellikle sorun çıkarırlar. Örneğin kaynak ağacını <code>cp -rf src1 src2</code> komutuyla kopyalamak eski sürüm cp programından dolayı çalışmaz (bazı dosyalar için "cp: will not create hard link" hatasını verir). Kısacası MozillaBuild, Mozilla kodunun geliştirilebilmesi için gerekli geliştirici işlemlerinin yapılmasını sağlar.</p>
+
+<h3 id="MozillaBuild_komut_istemini_açma">MozillaBuild komut istemini açma</h3>
+
+<p>Gereken programlar yüklendikten sonra <code><strong>star-shell.bat</strong></code> toplu iş dosyasını Windows komut istemini MozillaBuild'i yüklediğiniz klasörde (varsayılan olarak <code>c:\mozilla-build</code>) açarak başlatabilirsiniz. Firefox derlemeleri için optimize edilmiş MSYS/BASH komut istemi açılacaktır. Geri kalan tüm komutlar bu pencere üzerinden çalıştırılmalıdır. (Unutmayın bu pencere Windows'un CMD.EXE'si ile aynı pencere değildir.)</p>
+
+<div class="note">
+<p>Not: Unutmayın bu Windows'un CMD.EXE'si ile aynı değildir.</p>
+</div>
+
+<h3 id="Kaynak_kodları_için_klasör_oluşturma">Kaynak kodları için klasör oluşturma</h3>
+
+<div class="note"><strong>Not:</strong> Firefox kaynak kodu örneğin "Belgelerim ve Ayarlarım" gibi isminde boşluk karakterleri içeren bir klasörün içindeyse derlenmeyecektir. Bunun dışında <code>c:/mozilla-source</code> veya <code>c:/thunderbird</code> gibi klasörleri seçebilirsiniz. Derleme komut istemi "c:\" ve "/c/" yazım biçimlerini tolere edebilir fakat ilki Windows komut istemiyle karışıklığa, ikincisi ise bazı araçlarda sorunlara yol açabilir. "C:/" yazım biçimi <strong>MozillaBuild</strong> ortamında çalıştığımızı daha net belirtir.</div>
+
+<p>Çok derinlerde olmayan ve yalnızca kaynak kodu için ayrılmış, <code>c:/mozilla-source</code> veya <code>c:/thunderbird-src</code> gibi, klasörleri oluşturmak mantıklıdır:</p>
+
+<pre>cd c:/; mkdir mozilla-source; cd mozilla-source
+</pre>
+
+<h2 id="Komut_istemi_ipuçları_ve_uyarıları">Komut istemi ipuçları ve uyarıları</h2>
+
+<ul>
+ <li>Komut istemine yazı yapıştırmak için, pencerenin başlık çubuğuna sağ tıkladıktan sonra farenizi "Düzenle" menüsüne getirip, "Yapıştır"a basmanız gerekmektedir. "Seçenekler"den "Hızlı Düzenleme Modu"nu açarak pencereye sağ tıklayarak da yazıları yapıştırabilirsiniz. </li>
+ <li>Eğer Cygwin kurulumunuz varsa, <code>start-shell-msvc2015.bat</code> ile genişletilen arama yolunda MozillaBuild klasörlerinin herhangi bri Cygwin klasöründen daha önce geldiğinden emin olun (<code>echo $PATH</code> komutu ile arama yolunu görüntüleyebilirsiniz).</li>
+ <li><code>start-shell-msvc2015.bat</code> tarafından başlatılan MSYS/BASH isteminde, yol ayrımı için Windows-stili geri eğik çizgi (\) yerine UNIX-stili eğik çizgiler (/) kullanılır. Yani <code>c:\mydir</code> klasörüne gitmek istiyorsanız, MSYS isteminde, <code>cd /c/mydir</code> komutunu kullanabilirsiniz, bunun yanında <code>c:\mydir</code> ve <code>c:/mydir</code> de desteklenir.</li>
+ <li>Eğer varsayılan yükleme noktasını kullandıysanız, MSYS tepe klasörü <code>/c/mozilla-build/msys</code> dir. Bu klasör içinde herhangi bir derleme yapmanız önerilmez. Bunun yerine <code>/c/mydir</code> gibi klasörler kullanabilirsiniz.</li>
+</ul>
+
+<h2 id="Bilinen_problemler_ipuçları_ve_kısıtlamalar">Bilinen problemler, ipuçları ve kısıtlamalar</h2>
+
+<ul>
+ <li><a href="https://developer.mozilla.org/en-US/docs/Mozilla/Debugging/Debugging_Mozilla_on_Windows_FAQ">Windows'da Mozilla Hata Ayıklama SSS</a>: Windows'da, Mozilla hata ayıklama hakkında ipuçları.</li>
+ <li>Eğer sisteminizde hem Visual Studio 2015 hem de 2017 sürümleri yüklüyse, derleme sistemi varsayılan olarak 2017 sürümünü kullanır. Aşağıdaki satırı mozconfig dosyasına ekleyerek bu durumu değiştirebilirsiniz:
+  <pre><span id="the-code">ac_add_options --with-visual-studio-version=2015</span></pre>
+ </li>
+ <li>Eğer makineniz yanlış mimariye ayarlanmışsa derlemek başarız olabilir. Eğer 64-bit Firefox'u derlemek istiyorsanız aşağıdaki komutları mozconfig dosyasına ekleyin:
+  <pre><span id="the-code">ac_add_options --target=x86_64-pc-mingw32
+ac_add_options --host=x86_64-pc-mingw3</span><span>2</span></pre>
+ </li>
+ <li><code>PATH</code> ortam değişkeniniz tırnak işaretleri(") içeriyorsa derleme başarısız olabilir. Tırnak işaretleri MozillaBuild için doğru bir şekilde çevrilemez ve genelde bunlar gereksizdir, yani ortam değişkeninizden tırnak işaretlerini silebilirsiniz.</li>
+ <li>Eğer <code>PYTHON</code> ortam değişkeniniz ayarlıysa derleme başarısız olabilir. Hemen <code>"The system cannot find the file specified"</code> mesajına benzer bir hata mesajı gösterilir. Mozilla derleme araçlarının başlatıldığı aynı komut istemine araçlar başlatılmadan <code>unset PYTHON</code> komutu yazılırsa problem çözülür. <code>PYTHON</code> değerinin olmadığına dikkat edin, boş bir değer vermek sorunu çözmez.</li>
+ <li>Cygwin yüklüyse derleme başarısız olabilir. <code>PATH</code> ortam değişkeninizde MozillaBuild klasörlerinin (<code>/c/mozilla-build</code> ve alt klasörleri) herhangi bir Cygwin klasöründen önce geldiğine emin olun. Eğer sorun çözülmezse, Cygwin klasörlerini <code>PATH</code> den silin veya Cygwin kurulmamış temiz bir PC'de derlemeyi deneyin.</li>
+ <li>Son MozillaBuild sürümünün dışında gelen NSIS sürümleri desteklenmez ve büyük olasılıkla derleme hatayla biter.</li>
+ <li>Eğer derlenmiş programı başkalarına dağıtmak isterseniz, Microsoft CRT DLLlerinin pakete eklenmesi için mozconfig dosyasında <code>WIN32_REDIST_DIR=$VCINSTALLDIR\redist\x86\Microsoft.VC80.CRT</code> ayarını yapın.</li>
+ <li>Microsoft Antimalware servisi derlemeyi bölebilir ve genelde <code>conftest.exe</code> ile ilgili bir hata oluşabilir. Bu sorunu çözmek için çıktı klasörünüzü istisnalara ekleyin.</li>
+ <li><code>"second C linkage of overloaded function '_interlockedbittestandset' not allowed"</code> gibi hatalar <code>intrin.h</code> ve <code>windows.h</code> dosyalarının birlikte dahil edilmesi (<em>include</em>) sonucu oluşur. <em>#define</em> ile sorun çıkaran fonksiyonun adını tekrar tanımlayarak problemi çözebilirsiniz.</li>
+ <li>Paralel derlemeler (<code>-jN</code>) Windows için GNU araçlarında çalışmaz. MozillaBuild ile birlikte gelen <code>mozmake</code> komutunu kullanmalısınız. mach komutu ile derlemek her zaman en iyi ve uygun <code>make</code> komutunu seçecektir.</li>
+ <li>Eğer "ERROR: Cannot find makecab.exe" gibi bir hata ile karşılaşırsanız, <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1383578">bug 1383578</a> ile belirtilen düzeltmeyi uygulayın, diğer bir deyişle: <code>SET PATH="%PATH%;!LLVMDIR!\bin"</code>ı <code>SET "PATH=%PATH%;!LLVMDIR!\bin"</code> olarak değiştirin.</li>
+ <li><span class="message"><span class="content">Eğer  <code>LINK: fatal error LNK1181: cannot open input file ..\..\..\..\..\security\nss3.lib</code> gibi derleme hatasıyla karşılaşırsanız, bu durum büyük ihtimalle Kullanıcılar gibi şifreli klasörler altında bulunan <code>mozilla-central</code> kopyasından kaynaklanır. Kullanıcılar klasöründen dışarı taşımayı deneyin. Dokümantasyon <code>C:\mozilla-source\mozilla-central</code> yolunu tavsiye etmektedir.</span></span></li>
+</ul>
+
+<p><a href="https://developer.mozilla.org/en-US/docs/Developer_Guide/Build_Instructions">Derleme dokümanına geri dönün</a></p>

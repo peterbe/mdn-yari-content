@@ -1,0 +1,113 @@
+<p>{{ApiRef}}</p>
+
+<h2 id="What_is_Code_Coverage">What is Code Coverage?</h2>
+
+<p><strong>Code coverage</strong> essentially measures how often certain lines are hit, branches taken or conditions met in a program, given some test that you run on it.</p>
+
+<p>There are two very important things to keep in mind when talking about code coverage:</p>
+
+<ul>
+ <li>If a certain branch of code is not hit at all while running tests, then those tests will never be able to find a bug in this particular piece of the code.</li>
+ <li>If a certain branch of code is executed (even very often), this still is not a clear indication of the <em>quality of a test</em>. It could be that a test exercises the code but does not actually check that the code performs <em>correctly</em>.</li>
+</ul>
+
+<p>As a conclusion, we can use code coverage to find areas that need (more) tests, but we cannot use it to confirm that certain areas are well tested.</p>
+
+<h2 id="Firefox_Code_Coverage_reports">Firefox Code Coverage reports</h2>
+
+<p>We automatically run code coverage builds and tests on all mozilla-central runs, for Linux and Windows. C/C++, Rust and JavaScript are supported.</p>
+
+<p>The generated reports can be found at <a href="https://coverage.moz.tools/">https://coverage.moz.tools/</a>. The reports can be filtered by platform and/or test suite.</p>
+
+<p>We also generate a report of all totally uncovered files, which can be found at <a href="https://coverage.moz.tools/#view=zero">https://coverage.moz.tools/#view=zero</a>. You can use this to find areas of code that should be tested, or code that is no longer used (dead code, which could be removed).</p>
+
+<h2 id="CC_Code_Coverage_on_Firefox">C/C++ Code Coverage on Firefox</h2>
+
+<p>There are several ways to get C/C++ coverage information for mozilla-central, including creating your own coverage builds. The next sections describe the available options.</p>
+
+<h3 id="Generate_Code_Coverage_report_from_a_try_build_or_any_other_CI_build">Generate Code Coverage report from a try build (or any other CI build)</h3>
+
+<p>To spin a code coverage build, you need to select the linux64-ccov platform (use --full when using the fuzzy selector to get the ccov builds to show up).</p>
+
+<p>E.g. for a try build:</p>
+
+<pre>./mach try fuzzy -q 'linux64-ccov'
+</pre>
+
+<p>There are two options now, you can either generate the report locally or use a one-click loaner.</p>
+
+<h4 id="Generate_report_using_a_one-click_loaner">Generate report using a one-click loaner</h4>
+
+<p>Select the B job on Treeherder and get a one-click loaner.</p>
+
+<p>In the loaner, download and execute the script <a href="https://github.com/mozilla/code-coverage/blob/master/report/firefox_code_coverage/codecoverage.py">https://github.com/mozilla/code-coverage/blob/master/report/firefox_code_coverage/codecoverage.py</a>:</p>
+
+<pre>wget https://raw.githubusercontent.com/mozilla/code-coverage/master/report/firefox_code_coverage/codecoverage.py
+python codecoverage.py
+</pre>
+
+<p>This command will automatically generate a HTML report of the code coverage information in the <strong>report</strong> subdirectory in your current working directory.</p>
+
+<h4 id="Generate_report_locally">Generate report locally</h4>
+
+<p>Prerequisites:</p>
+
+<ul>
+ <li>Download the Python script at <a href="https://github.com/marco-c/firefox-code-coverage/blob/master/codecoverage.py">https://github.com/marco-c/firefox-code-coverage/blob/master/codecoverage.py.</a></li>
+</ul>
+
+<p>Given a treeherder linux64-ccov build (with its branch, e.g. `mozilla-central` or `try`, and revision, the tip commit hash of your push), run the following command:</p>
+
+<pre>python codecoverage.py PATH/TO/MOZILLA/SRC/DIR/ BRANCH REVISION</pre>
+
+<p>This command will automatically download code coverage artifacts from the treeherder build and generate an HTML report of the code coverage information. The report will be stored in the <strong>report</strong> subdirectory in your current working directory.</p>
+
+<h3 id="Creating_your_own_Coverage_Build">Creating your own Coverage Build</h3>
+
+<p>On Linux, Windows and Mac OS X it is straightforward to generate an instrumented build using GCC or Clang. Adding the following lines to your <code>.mozconfig</code> file should be sufficient:</p>
+
+<pre class="brush: bash"># Enable code coverage
+ac_add_options --enable-coverage
+
+# Needed for e10s:
+# With the sandbox, content processes can't write updated coverage counters in the gcda files.
+ac_add_options --disable-sandbox
+</pre>
+
+<p>Some additional options might be needed, check the code-coverage mozconfigs used on CI to be sure: browser/config/mozconfigs/linux64/code-coverage, browser/config/mozconfigs/win64/code-coverage, browser/config/mozconfigs/macosx64/code-coverage.</p>
+
+<p>Make sure you are not running with <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Artifact_builds">artifact builds</a> enabled, as it can prevent coverage artifacts from being created.</p>
+
+<p>You can then create your build as usual. Once the build is complete, you can run any tests/tools you would like to run and the coverage data gets automatically written to special files. In order to view/process this data, we recommend using the <a href="https://github.com/mozilla/grcov">grcov</a> tool, a tool to manage and visualize gcov results. You can also use the same process explained earlier for CI builds.</p>
+
+<h3 id="Debugging_Failing_Tests_on_the_Try_Server">Debugging Failing Tests on the Try Server</h3>
+
+<p>When code coverage is run through a push to try, all the data that is created is ingested by ActiveData and processed into a different data format for analysis. Anytime a code coverage run generates *.gcda and *.gcno files, ActiveData starts working. Now, sometimes, a test will permanently fail when it is running on a build that is instrumented with GCOV. To debug these issues without overloading ActiveData with garbage coverage data, open the file <a href="https://dxr.mozilla.org/mozilla-central/source/taskcluster/taskgraph/transforms/tests.py#516">taskcluster/taskgraph/transforms/tests.py</a> and add the following line,</p>
+
+<pre><code class="last-selected highlighted" id="line-516">test[<span class="str">'</span><span class="str">mozharness</span><span class="str">'</span>].setdefault(<span class="str">'</span><span class="str">extra-options</span><span class="str">'</span>, []).append(<span class="str">'</span><span class="str">--disable-ccov-upload</span><span class="str">'</span>)</code></pre>
+
+<p>right after this line of code:</p>
+
+<pre><code class="last-selected highlighted" id="line-516">test[<span class="str">'</span><span class="str">mozharness</span><span class="str">'</span>].setdefault(<span class="str">'</span><span class="str">extra-options</span><span class="str">'</span>, []).append(<span class="str">'</span><span class="str">--code-coverage</span><span class="str">'</span>)</code></pre>
+
+<p>Now when you push to try to debug some failing tests, or anything else, there will not be any code coverage artifacts uploaded from the build machines or from the test machines.</p>
+
+<h2 id="JS_Debugger_Per_Test_Code_Coverage_on_Firefox">JS Debugger Per Test Code Coverage on Firefox</h2>
+
+<p>There are two ways to get javascript per test code coverage information for mozilla-central. The next sections describe these options.</p>
+
+<h3 id="Generate_Per_Test_Code_Coverage_from_a_try_build_or_any_other_treeherder_build">Generate Per Test Code Coverage from a try build (or any other treeherder build)</h3>
+
+<p>To spin a code coverage build, you need to select the linux64-jsdcov platform. E.g. for a try build:</p>
+
+<pre>./mach try fuzzy -q 'linux64-jsdcov'</pre>
+
+<p>This produces JavaScript Object Notation (JSON) files that can be downloaded from the treeherder testing machines and processed or analyzed locally.</p>
+
+<h3 id="Generate_Per_Test_Code_Coverage_Locally">Generate Per Test Code Coverage Locally</h3>
+
+<p>To generate the JSON files containg coverage information locally, simply add an extra argument called <code>--jscov-dir-prefix</code> which accepts a directory as it's input and stores the resulting data in that directory. For example, to collect code coverage for the entire Mochitest suite:</p>
+
+<pre>./mach mochitest --jscov-dir-prefix /PATH/TO/COVERAGE/DIR/</pre>
+
+<p>Currently, only the Mochitest and Xpcshell test suites have this capability.</p>

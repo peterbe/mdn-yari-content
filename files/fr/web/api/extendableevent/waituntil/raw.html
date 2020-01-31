@@ -1,0 +1,134 @@
+<p>{{APIRef("Service Workers API")}}</p>
+
+<p>The <code><strong>ExtendableEvent.waitUntil()</strong></code> method extends the lifetime of the event. When called in an {{domxref("EventHandler")}} associated to the {{event("install")}} event, it delays treating the {{domxref("ServiceWorkerRegistration.installing", "installing")}} worker as installed until the passed {{jsxref("Promise")}} resolves successfully. This is primarily used to ensure that a service worker is not considered installed until all of the core caches it depends on are populated.</p>
+
+<p>When called in an {{domxref("EventHandler")}} associated to the {{event("activate")}} event, it delays treating the {{domxref("ServiceWorkerRegistration.active", "active")}} worker as activated until the passed {{jsxref("Promise")}} resolves successfully. This is primarily used to ensure that any functional events are not dispatched to the {{domxref("ServiceWorkerGlobalScope")}} object until it upgrades database schemas and deletes the outdated {{domxref("Cache")}} entries.</p>
+
+<p>When the method runs, if the {{jsxref("Promise")}} is resolved, nothing happens. If the {{jsxref("Promise")}} is rejected, the {{domxref("ServiceWorker.state", "state")}} of the {{domxref("ServiceWorkerRegistration.installing", "installing")}} or {{domxref("ServiceWorkerRegistration.active", "active")}} worker is set to <code>redundant</code>.</p>
+
+<p>If <code>waitUntil()</code> is called outside of the {{domxref("ExtendableEvent")}} handler, the browser should throw an <code>InvalidStateError</code>; note also that multiple calls will stack up, and the resulting promises will be added to the list of <a href="https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#dfn-extend-lifetime-promises">extend lifetime promises</a>.</p>
+
+<div class="note">
+<p><strong>Note</strong>: The behaviour described in the above paragraph was fixed in Firefox 43 (see {{bug(1180274)}}.)</p>
+</div>
+
+<h2 id="Syntax">Syntax</h2>
+
+<pre class="syntaxbox">event.waitUntil(promise)</pre>
+
+<h3 id="Returns">Returns</h3>
+
+<p>None.</p>
+
+<h3 id="Parameters">Parameters</h3>
+
+<p>A {{jsxref("Promise")}}.</p>
+
+<h2 id="Example">Example</h2>
+
+<pre class="brush: js;highlight:[9,10,11,12,13,14,15]">self.addEventListener('push', function(event) {
+  console.log('Received a push message', event);
+
+  var title = 'Yay a message.';
+  var body = 'We have received a push message.';
+  var icon = '/images/icon-192x192.png';
+  var tag = 'simple-push-demo-notification-tag';
+
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body: body,
+      icon: icon,
+      tag: tag
+    })
+  );
+});</pre>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('Service Workers', '#extendable-event-waituntil-method', 'waitUntil()')}}</td>
+   <td>{{Spec2('Service Workers')}}</td>
+   <td>Initial definition</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<p>{{CompatibilityTable}}</p>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari (WebKit)</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatChrome(40.0)}}<sup>[1]</sup></td>
+   <td>{{CompatGeckoDesktop("44.0")}}<sup>[2]</sup></td>
+   <td>{{CompatNo}}</td>
+   <td>24</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Android Webview</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>Firefox OS</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+   <th>Chrome for Android</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatGeckoMobile("44.0")}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatChrome(40.0)}} [1]</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<ul>
+ <li>[1] Before Chrome 46, <code>waitUntil()</code> would take any value rather than just {{jsxref("Promise", "promises")}}.</li>
+ <li>[2] Service workers (and <a href="/en-US/docs/Web/API/Push_API">Push</a>) have been disabled in the <a href="https://www.mozilla.org/en-US/firefox/organizations/">Firefox 45 Extended Support Release</a> (ESR.)</li>
+</ul>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorker_API/Using_Service_Workers">Using Service Workers</a></li>
+ <li><a class="external external-icon" href="https://github.com/mdn/sw-test">Service workers basic code example</a></li>
+ <li><a class="external external-icon" href="https://jakearchibald.github.io/isserviceworkerready/">Is ServiceWorker ready?</a></li>
+ <li>{{jsxref("Promise")}}</li>
+ <li><a href="https://developer.mozilla.org/en-US/docs/Web/Guide/Performance/Using_web_workers">Using web workers</a></li>
+</ul>
+
+<p> </p>

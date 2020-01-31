@@ -1,0 +1,314 @@
+<div>
+<p>{{JSRef}}</p>
+
+<p>De <code><strong>bind() </strong></code>methode creëert een nieuwe functie waarbij, wanneer uitgevoerd, het <code>this</code> keyword verwijst naar de gegeven waarde, met de gegeven lijst van arguments uit de vorige functie.</p>
+
+<h2 id="Syntaxis">Syntaxis</h2>
+
+<pre><var>fun</var>.bind(<var>thisArg</var>[, <var>arg1</var>[, <var>arg2</var>[, ...]]])</pre>
+
+<h3 id="Parameters">Parameters</h3>
+
+<dl>
+ <dt><code>thisArg</code></dt>
+ <dd>De gegeven waarde die doorgegeven moet worden als de <code>this</code> parameter aan de aangewezen functie wanneer de gebonden functie wordt uitgevoerd. De waarde wordt genegeerd als de gebonden functie is opgebouwd doormiddel van de {{jsxref("Operators/new", "new")}} operator.</dd>
+ <dt><code>arg1, arg2, ...</code></dt>
+ <dt> </dt>
+ <dd>Argumenten die worden toegekend aan argumenten die aan de gebonden functie worden toegekend wanneer de doelfunctie wordt ingeschakeld.</dd>
+</dl>
+
+<h3 id="Return_value">Return value</h3>
+
+<p>Een kopie van de gegeven functie met de gespecificeerde <strong><code>this</code></strong> waarde en de argumenten.</p>
+
+<h2 id="Beschrijving">Beschrijving</h2>
+
+<p>De <strong>bind() </strong>functie creëert een nieuwe <strong>bound function</strong> <strong>(BF). </strong>Een <strong>BF</strong> is een <strong>exotic function object </strong>(een term van <strong>ECMAScript 2015</strong>) die het originele functie object omhult. Een <strong>BF</strong> uitvoeren resulteert meestal in de uitvoering van zijn omhulde functie.<br>
+ Een <strong>BF</strong> heeft de volgende interne eigenschappen:</p>
+
+<ul>
+ <li><strong>[[BoundTargetFunction]] </strong>- het gebonden functie object;</li>
+ <li><strong>[[BoundThis]]</strong> - De waarde die altijd als de <strong>this</strong> waarde wordt gegeven wanneer de omhulde functie wordt uitgevoerd.</li>
+ <li><strong>[[BoundArguments]]</strong> - een lijst van waardes die worden gebruikt als de eerste argumenten in elke omhulde functie.</li>
+ <li><strong>[[Call]]</strong> - voert de code uit die geassocieerd wordt met dit object. Aangeroepen via een functie-aangeroepen expressie. De argumenten van de interne methode zijn een <strong>this</strong> waarde en een lijst bestaande uit de argumenten uit de <em>call expression.</em></li>
+</ul>
+
+<p>Wanneer een gebonden functie wordt uitgevoerd, roept hij een interne methode <strong>[[Call]]</strong> met de volgende argumenten: <strong>Call(<em>target</em>, <em>boundThis</em>, <em>args</em>)</strong>. Waarin <strong><em>target </em>[[BoundTargetFunction]] </strong>is, <strong><em>boundThis</em></strong> <strong>[[BoundThis]]</strong> is en <strong><em>args</em></strong> <strong>[[BoundArguments]]</strong> is.</p>
+
+<p>Een gebonden functie mag ook gemaakt worden door de <a href="/en-US/docs/Web/JavaScript/Reference/Operators/new" title="The new operator creates an instance of a user-defined object type or of one of the built-in object types that has a constructor function."><code>new</code></a> operator: Dit doet alsof de doelfunctie is opgebouwd. De gegeven <code><strong>this</strong></code>  waarde wordt genegeerd, terwijl de voorgevoegde argumenten aan de geëmuleerde functie worden gegeven.</p>
+
+<h2 id="Voorbeelden">Voorbeelden</h2>
+
+<h3 id="Een_gebonden_functie_creëren">Een gebonden functie creëren</h3>
+
+<p>Het simpelste gebruik van de <code>bind()</code> functie is een functie maken die, maakt niet uit hoe aangeroepen, wordt met een gespecificeerde <strong><code>this</code></strong> waarde geroepen. A common mistake for new JavaScript programmers is to extract a method from an object, then to later call that function and expect it to use the original object as its <code>this</code> (e.g. by using that method in callback-based code). Without special care, however, the original object is usually lost. Creating a bound function from the function, using the original object, neatly solves this problem:</p>
+
+<pre>this.x = 9;    // this refers to global "window" object here in the browser
+var module = {
+  x: 81,
+  getX: function() { return this.x; }
+};
+
+module.getX(); // 81
+
+var retrieveX = module.getX;
+retrieveX();   
+// returns 9 - The function gets invoked at the global scope
+
+// Create a new function with 'this' bound to module
+// New programmers might confuse the
+// global var x with module's property x
+var boundGetX = retrieveX.bind(module);
+boundGetX(); // 81
+</pre>
+
+<h3 id="Partially_applied_functions">Partially applied functions</h3>
+
+<p>The next simplest use of <code>bind()</code> is to make a function with pre-specified initial arguments. These arguments (if any) follow the provided <code>this</code> value and are then inserted at the start of the arguments passed to the target function, followed by the arguments passed to the bound function, whenever the bound function is called.</p>
+
+<pre>function list() {
+  return Array.prototype.slice.call(arguments);
+}
+
+var list1 = list(1, 2, 3); // [1, 2, 3]
+
+// Create a function with a preset leading argument
+var leadingThirtysevenList = list.bind(null, 37);
+
+var list2 = leadingThirtysevenList(); 
+// [37]
+
+var list3 = leadingThirtysevenList(1, 2, 3);
+// [37, 1, 2, 3]
+</pre>
+
+<h3 id="With_setTimeout">With <code>setTimeout</code></h3>
+
+<p>By default within {{domxref("window.setTimeout()")}}, the <code>this</code> keyword will be set to the {{ domxref("window") }} (or <code>global</code>) object. When working with class methods that require <code>this</code> to refer to class instances, you may explicitly bind <code>this</code> to the callback function, in order to maintain the instance.</p>
+
+<pre>function LateBloomer() {
+  this.petalCount = Math.ceil(Math.random() * 12) + 1;
+}
+
+// Declare bloom after a delay of 1 second
+LateBloomer.prototype.bloom = function() {
+  window.setTimeout(this.declare.bind(this), 1000);
+};
+
+LateBloomer.prototype.declare = function() {
+  console.log('I am a beautiful flower with ' +
+    this.petalCount + ' petals!');
+};
+
+var flower = new LateBloomer();
+flower.bloom();  
+// after 1 second, triggers the 'declare' method</pre>
+
+<h3 id="Bound_functions_used_as_constructors">Bound functions used as constructors</h3>
+
+<p><strong>Warning:</strong> This section demonstrates JavaScript capabilities and documents some edge cases of the <code>bind()</code> method. The methods shown below are not the best way to do things and probably should not be used in any production environment.</p>
+
+<p>Bound functions are automatically suitable for use with the {{jsxref("Operators/new", "new")}} operator to construct new instances created by the target function. When a bound function is used to construct a value, the provided <code>this</code> is ignored. However, provided arguments are still prepended to the constructor call:</p>
+
+<pre>function Point(x, y) {
+  this.x = x;
+  this.y = y;
+}
+
+Point.prototype.toString = function() { 
+  return this.x + ',' + this.y; 
+};
+
+var p = new Point(1, 2);
+p.toString(); // '1,2'
+
+// not supported in the polyfill below,
+
+// works fine with native bind:
+
+var YAxisPoint = Point.bind(null, 0/*x*/);
+
+
+var emptyObj = {};
+var YAxisPoint = Point.bind(emptyObj, 0/*x*/);
+
+var axisPoint = new YAxisPoint(5);
+axisPoint.toString(); // '0,5'
+
+axisPoint instanceof Point; // true
+axisPoint instanceof YAxisPoint; // true
+new Point(17, 42) instanceof YAxisPoint; // true
+</pre>
+
+<p>Note that you need do nothing special to create a bound function for use with {{jsxref("Operators/new", "new")}}. The corollary is that you need do nothing special to create a bound function to be called plainly, even if you would rather require the bound function to only be called using {{jsxref("Operators/new", "new")}}.</p>
+
+<pre>// Example can be run directly in your JavaScript console
+// ...continuing from above
+
+// Can still be called as a normal function 
+// (although usually this is undesired)
+YAxisPoint(13);
+
+emptyObj.x + ',' + emptyObj.y;
+// &gt;  '0,13'
+</pre>
+
+<p>If you wish to support the use of a bound function only using {{jsxref("Operators/new", "new")}}, or only by calling it, the target function must enforce that restriction.</p>
+
+<h3 id="Creating_shortcuts">Creating shortcuts</h3>
+
+<p><code>bind()</code> is also helpful in cases where you want to create a shortcut to a function which requires a specific <strong><code>this</code></strong> value.</p>
+
+<p>Take {{jsxref("Array.prototype.slice")}}, for example, which you want to use for converting an array-like object to a real array. You could create a shortcut like this:</p>
+
+<pre>var slice = Array.prototype.slice;
+
+// ...
+
+slice.apply(arguments);
+</pre>
+
+<p>With <code>bind()</code>, this can be simplified. In the following piece of code, <code>slice</code> is a bound function to the {{jsxref("Function.prototype.apply()", "apply()")}} function of {{jsxref("Function.prototype")}}, with the <strong><code>this</code></strong> value set to the {{jsxref("Array.prototype.slice()", "slice()")}} function of {{jsxref("Array.prototype")}}. This means that additional <code>apply()</code> calls can be eliminated:</p>
+
+<pre>// same as "slice" in the previous example
+var unboundSlice = Array.prototype.slice;
+var slice = Function.prototype.apply.bind(unboundSlice);
+
+// ...
+
+slice(arguments);
+</pre>
+
+<h2 id="Polyfill">Polyfill</h2>
+
+<p>You can partially work around this by inserting the following code at the beginning of your scripts, allowing use of much of the functionality of <code>bind()</code> in implementations that do not natively support it.</p>
+
+<pre>if (!Function.prototype.bind) {
+  Function.prototype.bind = function(oThis) {
+    if (typeof this !== 'function') {
+      // closest thing possible to the ECMAScript 5
+      // internal IsCallable function
+      throw new TypeError('Function.prototype.bind - what is trying to be bound is not callable');
+    }
+
+    var aArgs   = Array.prototype.slice.call(arguments, 1),
+        fToBind = this,
+        fNOP    = function() {},
+        fBound  = function() {
+          return fToBind.apply(this instanceof fNOP
+                 ? this
+                 : oThis,
+                 aArgs.concat(Array.prototype.slice.call(arguments)));
+        };
+
+    if (this.prototype) {
+      // Function.prototype doesn't have a prototype property
+      fNOP.prototype = this.prototype; 
+    }
+    fBound.prototype = new fNOP();
+
+    return fBound;
+  };
+}
+</pre>
+
+<p>Some of the many differences (there may well be others, as this list does not seriously attempt to be exhaustive) between this algorithm and the specified algorithm are:</p>
+
+<ul>
+ <li>The partial implementation relies on {{jsxref("Array.prototype.slice()")}}, {{jsxref("Array.prototype.concat()")}}, {{jsxref("Function.prototype.call()")}} and {{jsxref("Function.prototype.apply()")}}, built-in methods to have their original values.</li>
+ <li>The partial implementation creates functions that do not have immutable "poison pill" {{jsxref("Function.caller", "caller")}} and <code>arguments</code> properties that throw a {{jsxref("Global_Objects/TypeError", "TypeError")}} upon get, set, or deletion. (This could be added if the implementation supports {{jsxref("Object.defineProperty")}}, or partially implemented [without throw-on-delete behavior] if the implementation supports the {{jsxref("Object.defineGetter", "__defineGetter__")}} and {{jsxref("Object.defineSetter", "__defineSetter__")}} extensions.)</li>
+ <li>The partial implementation creates functions that have a <code>prototype</code> property. (Proper bound functions have none.)</li>
+ <li>The partial implementation creates bound functions whose {{jsxref("Function.length", "length")}} property does not agree with that mandated by ECMA-262: it creates functions with length 0, while a full implementation, depending on the length of the target function and the number of pre-specified arguments, may return a non-zero length.</li>
+</ul>
+
+<p>If you choose to use this partial implementation, <strong>you must not rely on those cases where behavior deviates from ECMA-262, 5th edition!</strong> With some care, however (and perhaps with additional modification to suit specific needs), this partial implementation may be a reasonable bridge to the time when <code>bind()</code> is widely implemented according to the specification.</p>
+
+<p>Please check <a href="https://github.com/Raynos/function-bind">https://github.com/Raynos/function-bind</a> for a more thorough solution!</p>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table>
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-15.3.4.5', 'Function.prototype.bind')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td>Initial definition. Implemented in JavaScript 1.8.5.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-function.prototype.bind', 'Function.prototype.bind')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-function.prototype.bind', 'Function.prototype.bind')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<p>{{CompatibilityTable}}</p>
+
+<table>
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Edge</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatChrome("7")}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatGeckoDesktop("2")}}</td>
+   <td>{{CompatIE("9")}}</td>
+   <td>{{CompatOpera("11.60")}}</td>
+   <td>{{CompatSafari("5.1")}}</td>
+  </tr>
+ </tbody>
+</table>
+
+<table>
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Chrome for Android</th>
+   <th>Edge</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatAndroid("4.0")}}</td>
+   <td>{{CompatChrome("1")}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatGeckoMobile("2")}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatOperaMobile("11.5")}}</td>
+   <td>{{CompatSafari("6.0")}}</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li>{{jsxref("Function.prototype.apply()")}}</li>
+ <li>{{jsxref("Function.prototype.call()")}}</li>
+ <li>{{jsxref("Functions", "Functions", "", 1)}}</li>
+</ul>
+</div>

@@ -1,0 +1,416 @@
+<div>{{jsSidebar("Operators")}}</div>
+
+<p><strong>分割代入</strong> (Destructuring assignment) 構文は、配列から値を取り出して、あるいはオブジェクトからプロパティを取り出して別個の変数に代入することを可能にする JavaScript の式です。</p>
+
+<div>{{EmbedInteractiveExample("pages/js/expressions-destructuringassignment.html")}}</div>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="brush:js">var a, b, rest;
+[a, b] = [10, 20];
+console.log(a); // 10
+console.log(b); // 20
+
+[a, b, ...rest] = [10, 20, 30, 40, 50];
+console.log(a); // 10
+console.log(b); // 20
+console.log(rest); // [30, 40, 50]
+
+({ a, b } = { a: 10, b: 20 });
+console.log(a); // 10
+console.log(b); // 20
+
+
+// Stage 4(finished) proposal
+({a, b, ...rest} = {a: 10, b: 20, c: 30, d: 40});
+console.log(a); // 10
+console.log(b); // 20
+console.log(rest); // {c: 30, d: 40}
+</pre>
+
+<h2 id="Description" name="Description">説明</h2>
+
+<p>オブジェクトリテラルと配列リテラルによって、いくつかのデータをアドホックにまとめられます。</p>
+
+<pre class="brush: js">var x = [1, 2, 3, 4, 5];</pre>
+
+<p>分割代入の構文はオブジェクトや配列のリテラルと似ています。右辺の各要素が代入される変数を、左辺に記述します。</p>
+
+<pre class="brush: js">var x = [1, 2, 3, 4, 5];
+var [y, z] = x;
+console.log(y); // 1
+console.log(z); // 2
+</pre>
+
+<p>この機能は、Perl や Python などの言語に存在する機能に似ています。</p>
+
+<h2 id="Array_destructuring" name="Array_destructuring">配列の分割代入</h2>
+
+<h3 id="Basic_variable_assignment" name="Basic_variable_assignment">簡単な例</h3>
+
+<pre class="brush: js">var foo = ['one', 'two', 'three'];
+
+var [one, two, three] = foo;
+console.log(one); // "one"
+console.log(two); // "two"
+console.log(three); // "three"
+</pre>
+
+<h3 id="Assignment_separate_from_declaration" name="Assignment_separate_from_declaration">宣言後の割り当て</h3>
+
+<p>変数の宣言とは別に分割代入で値を代入できます。</p>
+
+<pre class="brush:js">var a, b;
+
+[a, b] = [1, 2];
+console.log(a); // 1
+console.log(b); // 2
+</pre>
+
+<h3 id="Default_values" name="Default_values">既定値の設定</h3>
+
+<p>配列から取り出した値が <code>undefined</code> だった場合に使用される既定値を指定できます。</p>
+
+<pre class="brush: js">var a, b;
+
+[a=5, b=7] = [1];
+console.log(a); // 1
+console.log(b); // 7
+</pre>
+
+<h3 id="Swapping_variables" name="Swapping_variables">変数の入れ替え</h3>
+
+<p>分割代入を使用して、複数の変数の値を入れ替えることができます。</p>
+
+<p>分割代入なしで、2 つの値をスワップするにはテンポラリ変数が必要です。(または、一部の低レベルの言語では、<a href="https://en.wikipedia.org/wiki/XOR_swap_algorithm">XOR-swap trick</a> (<a href="https://ja.wikipedia.org/wiki/XOR%E4%BA%A4%E6%8F%9B%E3%82%A2%E3%83%AB%E3%82%B4%E3%83%AA%E3%82%BA%E3%83%A0">日本語版</a>) があります)。</p>
+
+<pre class="brush:js">var a = 1;
+var b = 3;
+
+[a, b] = [b, a];
+console.log(a); // 3
+console.log(b); // 1
+</pre>
+
+<h3 id="Parsing_an_array_returned_from_a_function" name="Parsing_an_array_returned_from_a_function">関数から返された配列の解析</h3>
+
+<p>関数は配列を返すことができます。分割代入によって、返された配列の使用をより簡潔に記述できます。</p>
+
+<p>この例では、<code>f()</code> は出力として値 <code>[1, 2]</code> を返しており、分割代入により 1 行で解析できます。</p>
+
+<pre class="brush:js">function f() {
+  return [1, 2];
+}
+
+var a, b; 
+[a, b] = f(); 
+console.log(a); // 1
+console.log(b); // 2
+</pre>
+
+<h3 id="Ignoring_some_returned_values" name="Ignoring_some_returned_values">返り値の無視</h3>
+
+<p>興味を持っていない戻り値を無視することができます:</p>
+
+<pre class="brush:js">function f() {
+  return [1, 2, 3];
+}
+
+var [a, , b] = f();
+console.log(a); // 1
+console.log(b); // 3
+</pre>
+
+<p>このようにすべての返り値を無視することもできます:</p>
+
+<pre class="brush:js">[,,] = f();
+
+</pre>
+
+<h3 id="Assigning_the_rest_of_an_array_to_a_variable" name="Assigning_the_rest_of_an_array_to_a_variable">配列の残余部分を変数に代入する</h3>
+
+<p>配列を分割するときに残余パターンを使用して、配列の残りの部分を取り出して変数に代入できます:</p>
+
+<pre class="brush: js">var [a, ...b] = [1, 2, 3];
+console.log(a); // 1
+console.log(b); // [2, 3]</pre>
+
+<p>左辺側で残余要素とともに末尾のカンマが使用されていると、{{jsxref("SyntaxError")}} が発生しますので注意してください:</p>
+
+<pre class="brush: js example-bad">var [a, ...b,] = [1, 2, 3];
+// SyntaxError: rest element may not have a trailing comma</pre>
+
+<h3 id="Unpacking_values_from_a_regular_expression_match" name="Unpacking_values_from_a_regular_expression_match">正規表現のマッチからの値取得</h3>
+
+<p>正規表現オブジェクトの <code><a href="/docs/Web/JavaScript/Reference/Global_Objects/RegExp/exec"> exec()</a></code> メソッドはマッチを見つけ、最初にマッチした文字列全体の一部と、正規表現内の各括弧で囲まれたグループにマッチした文字列の部分を含む配列を返します。分割代入によって、簡単にこの配列の一部分を取り出せます。また必要でない場合は、完全一致を無視できます。</p>
+
+<pre class="brush:js">function parseProtocol(url) { 
+  var parsedURL = /^(\w+)\:\/\/([^\/]+)\/(.*)$/.exec(url);
+  if (!parsedURL) {
+    return false;
+  }
+  console.log(parsedURL); // ["https://developer.mozilla.org/ja/Web/JavaScript", "https", "developer.mozilla.org", "en-US/Web/JavaScript"]
+
+  var [, protocol, fullhost, fullpath] = parsedURL;
+  return protocol;
+}
+
+console.log(parseProtocol('https://developer.mozilla.org/ja/Web/JavaScript')); // "https"
+</pre>
+
+<h2 id="Object_destructuring" name="Object_destructuring">オブジェクトの分割代入</h2>
+
+<h3 id="Basic_assignment" name="Basic_assignment">簡単な例</h3>
+
+<pre class="brush: js">var o = {p: 42, q: true};
+var {p, q} = o;
+
+console.log(p); // 42
+console.log(q); // true 
+</pre>
+
+<h3 id="Assignment_without_declaration" name="Assignment_without_declaration">宣言のない割り当て</h3>
+
+<p>分割代入は代入文で宣言することなく行うことができます。</p>
+
+<pre class="brush:js">var a, b;
+
+({a, b} = {a: 1, b: 2});</pre>
+
+<div class="note">
+<p><strong>注記</strong>: 代入文の周りの <code>( ... )</code> は宣言のないオブジェクトリテラル分割代入を使用するときに必要な構文です。</p>
+
+<p><code>{a, b} = {a: 1, b: 2}</code> は有効なスタンドアロンの構文ではありません。というのも、左辺の <code>{a, b}</code> はブロックでありオブジェクトリテラルではないと考えられるからです。</p>
+
+<p>ですが、<code>({a, b} = {a: 1, b: 2})</code> 形式は有効です。<code>var {a, b} = {a: 1, b: 2}</code> と考えられるためです。</p>
+
+<p><code>( ... )</code> の式の前にセミコロンが必要です。そうしなければ、前の行の関数を実行するために使用される可能性があります。</p>
+</div>
+
+<h3 id="Assigning_to_new_variable_names" name="Assigning_to_new_variable_names">異なる名前を持つ変数への代入</h3>
+
+<p>オブジェクトから変数を取り出して、オブジェクトのプロパティとは異なる名前の変数に代入することができます。</p>
+
+<pre class="brush: js">var o = {p: 42, q: true};
+var {p: foo, q: bar} = o;
+ 
+console.log(foo); // 42 
+console.log(bar); // true</pre>
+
+<h3 id="Default_values_2" name="Default_values_2">既定値の設定</h3>
+
+<p>オブジェクトから取り出した値が <code>undefined</code> であるときの既定値を、変数に割り当てることができます。</p>
+
+<pre class="brush: js">var {a = 10, b = 5} = {a: 3};
+
+console.log(a); // 3
+console.log(b); // 5</pre>
+
+<h3 id="Assigning_to_new_variables_names_and_providing_default_values" name="Assigning_to_new_variables_names_and_providing_default_values">異なる名前の変数に代入して既定値を設定する</h3>
+
+<p>プロパティに対して、1) オブジェクトから取り出して異なる名前の変数に代入することと、2) 取り出した値が <code>undefined</code> である場合に既定値を代入することの両方が可能です。</p>
+
+<pre class="brush: js">var {a: aa = 10, b: bb = 5} = {a: 3};
+
+console.log(aa); // 3
+console.log(bb); // 5
+</pre>
+
+<h3 id="Setting_a_function_parameter's_default_value" name="Setting_a_function_parameter's_default_value">関数の引数に対する規定値の設定</h3>
+
+<h4 id="ES5_version" name="ES5_version">ES5 バージョン</h4>
+
+<pre class="brush: js">function drawES5Chart(options) {
+  options = options === undefined ? {} : options;
+  var size = options.size === undefined ? 'big' : options.size;
+  var coords = options.coords === undefined ? {x: 0, y: 0} : options.coords;
+  var radius = options.radius === undefined ? 25 : options.radius;
+  console.log(size, coords, radius);
+  // now finally do some chart drawing
+}
+
+drawES5Chart({
+  coords: {x: 18, y: 30},
+  radius: 30
+});</pre>
+
+<h4 id="ES2015_version" name="ES2015_version">ES2015 バージョン</h4>
+
+<pre class="brush: js">function drawES2015Chart({size = 'big', coords = {x: 0, y: 0}, radius = 25} = {}) {
+  console.log(size, coords, radius);
+  // do some chart drawing
+}
+
+drawES2015Chart({
+  coords: { x: 18, y: 30 },
+  radius: 30
+});</pre>
+
+<div class="note">
+<p><strong><code>drawES2015Chart</code></strong> の関数シグネチャでは分割した左辺が、右辺にあるからのオブジェクトリテラルに代入されます: <code>{size = 'big', cords = {x: 0, y: 0}, radius = 25} = {}</code>。右辺の代入がない関数を記入することもできます。しかし右辺の代入を取り除くと、関数は実行されたときに少なくともひとつの引数が提供されることを期待します。一方、この形式では引数を与えずに <code><strong>drawES2015Chart()</strong></code> を呼び出せます。この設計は引数を指定せずに関数を呼び出せるようにしたい場合に役に立ちます。またもう一方の形式は、オブジェクトを確実に関数に渡したい場合に役に立ちます。</p>
+</div>
+
+<h3 id="Nested_object_and_array_destructuring" name="Nested_object_and_array_destructuring">入れ子になったオブジェクトと配列の分割代入</h3>
+
+<pre class="brush:js">const metadata = {
+    title: 'Scratchpad',
+    translations: [
+       {
+        locale: 'de',
+        localization_tags: [],
+        last_edit: '2014-04-14T08:43:37',
+        url: '/de/docs/Tools/Scratchpad',
+        title: 'JavaScript-Umgebung'
+       }
+    ],
+    url: '/en-US/docs/Tools/Scratchpad'
+};
+
+let {
+  title: englishTitle, // rename
+  translations: [
+    {
+        title: localeTitle // rename
+    },
+  ],
+} = metadata;
+
+console.log(englishTitle); // "Scratchpad"
+console.log(localeTitle);  // "JavaScript-Umgebung"</pre>
+
+<h3 id="Nested_object_and_array_destructuring" name="Nested_object_and_array_destructuring">イテレーターでの分割代入の利用</h3>
+
+<pre class="brush: js">var people = [
+  {
+    name: 'Mike Smith',
+    family: {
+      mother: 'Jane Smith',
+      father: 'Harry Smith',
+      sister: 'Samantha Smith'
+    },
+    age: 35
+  },
+  {
+    name: 'Tom Jones',
+    family: {
+      mother: 'Norah Jones',
+      father: 'Richard Jones',
+      brother: 'Howard Jones'
+    },
+    age: 25
+  }
+];
+
+for (var {name: n, family: {father: f}} of people) {
+  console.log('Name: ' + n + ', Father: ' + f);
+}
+
+// "Name: Mike Smith, Father: Harry Smith"
+// "Name: Tom Jones, Father: Richard Jones"</pre>
+
+<h3 id="Unpacking_fields_from_objects_passed_as_function_parameter" name="Unpacking_fields_from_objects_passed_as_function_parameter">引数に指定されたオブジェクトの属性への参照</h3>
+
+<pre class="brush:js">function userId({id}) {
+  return id;
+}
+
+function whois({displayName, fullName: {firstName: name}}) {
+  console.log(displayName + ' is ' + name);
+}
+
+var user = { 
+  id: 42, 
+  displayName: 'jdoe',
+  fullName: { 
+      firstName: 'John',
+      lastName: 'Doe'
+  }
+};
+
+console.log('userId: ' + userId(user)); // "userId: 42"
+whois(user); // "jdoe is John"</pre>
+
+<p>上記では <code>id</code>、<code>displayName</code>、<code>firstName</code> をオブジェクトから取得し、出力します。</p>
+
+<h3 id="Computed_object_property_names_and_destructuring" name="Computed_object_property_names_and_destructuring">計算されたオブジェクトのプロパティの名前と分割代入</h3>
+
+<p><a href="/docs/Web/JavaScript/Reference/Operators/Object_initializer#Computed_property_names">オブジェクトリテラル</a>のような計算されたプロパティの名前も分割代入で使用できます。</p>
+
+<pre class="brush: js">let key = 'z';
+let {[key]: foo} = {z: 'bar'};
+
+console.log(foo); // "bar"
+</pre>
+
+<h3 id="Rest_in_Object_Destructuring" name="Rest_in_Object_Destructuring">オブジェクトの分割代入の残余</h3>
+
+<p><a class="external external-icon" href="https://github.com/tc39/proposal-object-rest-spread">Rest/Spread Properties for ECMAScript</a> 提案 (ステージ 3) は、分割代入に <a href="/ja/docs/Web/JavaScript/Reference/Functions/rest_parameters">rest</a> 構文を追加します。残余プロパティは、分割パターンによってすでに取り出されていない、残りの列挙可能なプロパティのキーを収集します。</p>
+
+<pre class="brush: js">let {a, b, ...rest} = {a: 10, b: 20, c: 30, d: 40}
+a; // 10 
+b; // 20 
+rest; // { c: 30, d: 40 }</pre>
+
+<h3 id="Invalid_JavaScript_identifier_as_a_property_name" name="Invalid_JavaScript_identifier_as_a_property_name">無効な JavaScript 識別子をプロパティ名として使用する</h3>
+
+<p>JavaScript で有効な代替識別子を与えることにより、JavaScript で有効ではない<a href="/ja/docs/Glossary/Identifier">識別子</a>であるプロパティ名を分割代入で使用できます。</p>
+
+<pre class="brush: js">const foo = { 'fizz-buzz': true };
+const { 'fizz-buzz': fizzBuzz } = foo;
+
+console.log(fizzBuzz); // "true"
+</pre>
+
+<h3 id="Combined_Array_and_Object_Destructuring" name="Combined_Array_and_Object_Destructuring">配列とオブジェクトの分割代入を組み合わせる</h3>
+
+<p>配列とオブジェクトの分割代入は組み合わせることができます。配列 <code>props</code> の 3 番目の要素にあるオブジェクトの <code>name</code> プロパティが欲しい場合、次の操作ができます。</p>
+
+<pre class="brush: js">const props = [
+  { id: 1, name: 'Fizz'},
+  { id: 2, name: 'Buzz'},
+  { id: 3, name: 'FizzBuzz'}
+];
+
+const [,, { name }] = props;
+
+console.log(name); // "FizzBuzz"
+</pre>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">策定状況</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-destructuring-assignment', 'Destructuring assignment')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td>初期定義</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-destructuring-assignment', 'Destructuring assignment')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザー実装状況</h2>
+
+<div>
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.operators.destructuring")}}</p>
+</div>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li><a href="/docs/Web/JavaScript/Reference/Operators/Assignment_Operators">代入演算子</a></li>
+ <li><a href="https://hacks.mozilla.org/2015/05/es6-in-depth-destructuring/">"ES6 in Depth: Destructuring" on hacks.mozilla.org</a></li>
+</ul>

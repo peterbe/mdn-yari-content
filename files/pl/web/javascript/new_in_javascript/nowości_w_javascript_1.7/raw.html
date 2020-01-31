@@ -1,0 +1,574 @@
+<p>{{ Fx_minversion_header(2) }} JavaScript 1.7 jest aktualizacją języka wprowadzającą kilka nowych funkcji, w szczególności generatory, iteratory, uproszczenia składni dla tablic, wyrażenia <code>let</code>, oraz rozpakowywanie struktur. Obsługuje również wszystkie nowe funkcje <a href="pl/Nowo%c5%9bci_w_JavaScript_1.6">JavaScript 1.6</a>.</p>
+
+<p>JavaScript 1.7 jest obsługiwany począwszy od <a href="pl/Firefox_2">Firefoksa 2.0</a> beta 1 i kolejne oraz wersje "nightly" z gałęzi "trunk".</p>
+
+<p>Przykłady znajdujące się w tym artykule mogą być wypróbowane w powłoce JavaScript. Przeczytaj <a href="pl/Wprowadzenie_do_pow%c5%82oki_JavaScript">Wprowadzenie do powłoki JavaScript</a>, aby nauczyć się jak kompilować i używać tą powłokę.</p>
+
+<h3 id="U.C5.BCycie_JavaScript_1.7" name="U.C5.BCycie_JavaScript_1.7">Użycie JavaScript 1.7</h3>
+
+<p>Aby używać nowych funkcji JavaScriptu 1.7, musisz określić, że chcesz używać właśnie tej wersji. W pliku HTML lub XUL użyj:</p>
+
+<pre class="eval">&lt;script type="application/javascript;version=1.7"/&gt;
+</pre>
+
+<p>Jeśli pracujesz w <a href="pl/Wprowadzenie_do_pow%c5%82oki_JavaScript">powłoce JavaScript</a> , musisz określić wersję, której chcesz użyć poprzez funkcję <code>version()</code>:</p>
+
+<pre class="eval">version(170);
+</pre>
+
+<p>The features that require the use of the new keywords "yield" and "let" require you to specify version 1.7 because existing code might use those keywords as variable or function names. The features that do not introduce new keywords (destructuring assignment and array comprehensions) can be used without specifying the JavaScript version.</p>
+
+<h3 id="Generatory_i_iteratory" name="Generatory_i_iteratory">Generatory i iteratory</h3>
+
+<p>Podczas pisania kodu, który zawiera algorytmy iteracyjne (takie jak iteracja listy, albo powtarzane wykonywanie obliczeń na zestawie danych), często używane są zmienne stanu, których wartości są potrzebne na czas trwania obliczeń. Dotychczas, trzeba było ustawić funkcję zwrotną, która obsłuży pośrednie wartości algorytmu iteracyjnego.</p>
+
+<h4 id="Generatory" name="Generatory">Generatory</h4>
+
+<p>Rozważmy ten algorytm iteracyjny, który tworzy liczby Fibonacciego:</p>
+
+<pre>function do_callback(num) {
+  document.write(num + "&lt;br&gt;\n");
+}
+
+function fib() {
+  var i = 0, j = 1, n = 0;
+  while (n &lt; 10) {
+    do_callback(i);
+    var t = i;
+    i = j;
+    j += t;
+    n++;
+  }
+}
+
+fib();
+</pre>
+
+<p>Ten kod używa funkcji zwrotnej do wykonania operacji w każdym kolejnym kroku algorytmu. W tym przypadku, każdy numer Fibonacciego jest po prostu wyświetlany na konsoli.</p>
+
+<p>Generatory i iteratory współpracują dając nowy, lepszy sposób na wykonanie tego. Zobaczmy jak to będzie wyglądało przy użyciu generatora:</p>
+
+<pre>function fib() {
+  var i = 0, j = 1;
+  while (true) {
+    yield i;
+    var t = i;
+    i = j;
+    j += t;
+  }
+}
+
+var g = fib();
+for (var i = 0; i &lt; 10; i++) {
+  document.write(g.next() + "&lt;br&gt;\n");
+}
+</pre>
+
+<p>Funkcja posiadająca słowo kluczowe <code>yield</code> jest generatorem. Kiedy ją wywołasz, jej parametry zostają powiązane z argumentami, ale ciało funkcji nie jest wykonywane. Zamiast tego, zwracana jest para generator-iterator. Każde wywołanie metody <code>next()</code> tego generatora-iteratora wykonuje kolejny cykl iterowanego algorytmu. Wartość każdego kroku jest wartością zmiennej określonej słowem kluczowym <code>yield</code>. Myśl o <code>yield</code> jak o <code>return</code> w modelu generatora-iteratora, zwracającym wartość każdej iteracji algorytmu. Za każdym razem gdy wywołujesz <code>next()</code>, kod generatora zostaje uruchomiony od linii następującej po wyrażeniu <code>yield</code>.</p>
+
+<p>Iteracja przez generator-iterator jest wykonywana poprzez wielokrotne wywoływanie metody <code>next()</code>, dopóki nie osiągniesz potrzebnego wyniku. W tym przypadku, możemy otrzymać liczby Fibonacciego, kontynuując wywoływanie <code>g.next()</code>, aż dostaniemy tyle wyników ile chcemy.</p>
+
+<h5 id="Resuming_a_generator_at_a_specific_point" name="Resuming_a_generator_at_a_specific_point">Resuming a generator at a specific point</h5>
+
+<p>Once a generator has been started by calling its <code>next()</code> function, you can use <code>send()</code>, passing a specific value that will be treated as the result of the last <code>yield</code>. The generator will then return the operand of the subsequent <code>yield</code>.</p>
+
+<p>You can't start a generator at an arbitrary point; you must start it with <code>next()</code> before you can <code>send()</code> it a specific value.</p>
+
+<div class="note"><strong>Note:</strong> As a point of interest, calling <code>send(undefined)</code> is equivalent to calling <code>next()</code>. However, starting a newborn generator with any value other than undefined when calling <code>send()</code> will result in a <code>TypeError</code> exception.</div>
+
+<h5 id="Exceptions_in_generators" name="Exceptions_in_generators">Exceptions in generators</h5>
+
+<p>You can force a generator to throw an exception by calling its <code>throw()</code> method, passing the exception value it should throw. This exception will be thrown from the current suspended context of the generator, as if the <code>yield</code> that is currently suspended were instead a <code>throw<em>value</em></code> statement.</p>
+
+<p>If a yield is not encountered during the processing of the thrown exception, then the exception will propagate up through the call to <code>throw()</code>, and subsequent calls to <code>next()</code> will result in <code>StopIteration</code> being thrown.</p>
+
+<h5 id="Closing_a_generator" name="Closing_a_generator">Closing a generator</h5>
+
+<p>Generators have a <code>close()</code> method that forces the generator to close itself. The effects of closing a generator are:</p>
+
+<ol>
+ <li>Any <code>finally</code> clauses active in the generator function are run.</li>
+ <li>If a <code>finally</code> clause throws any exception other than <code>StopIteration</code>, the exception is propagated to the caller of the <code>close()</code> method.</li>
+ <li>The generator terminates.</li>
+</ol>
+
+<h5 id="Generator_Example" name="Generator_Example">Generator Example</h5>
+
+<p>This code drives a generator that will yield every 100 loops.</p>
+
+<pre>var gen = generator();
+
+function driveGenerator() {
+	if (gen.next()) {
+		window.setTimeout(driveGenerator, 0);	
+	} else {
+		gen.close();	
+	}
+}
+
+function generator() {
+	while (i &lt; something) {
+		/** stuff **/
+
+		++i;
+		/** 100 loops per yield **/
+		if ((i % 100) == 0) {
+			yield true;
+		} 
+	}
+
+	yield false;
+}
+</pre>
+
+<h4 id="Iteratory" name="Iteratory">Iteratory</h4>
+
+<p><em>Iterator</em>jest specjalnym obiektem, który pozwala Ci iterować się przez dane.</p>
+
+<p>W normalnym użyciu, obiekty iteratora są "niewidzialne"; nie jest konieczne bezpośrednie operowanie na nich. Zamiast tego, możesz użyć JavaScriptowego <a href="pl/Przewodnik_po_j%c4%99zyku_JavaScript_1.5/Instrukcje_manipulacji_obiektem">wyrażenia <code>for...in</code> oraz <code>for each...in</code></a>, by pobrać wszystkie klucze i/lub wartości obiektów.</p>
+
+<pre>var obiektZIteratorem = getObjectSomehow();
+
+for (var i in obiektZIteratorem)
+{
+  document.write(obiektZIteratorem[i] + "&lt;br&gt;\n");
+}
+</pre>
+
+<p>Jeżeli implementujesz swój własny obiekt iteratora, lub masz inne potrzeby dotyczące bezpośredniego manipulowania iteratorami, prawdopodobnie będziesz chciał się zapoznać z metodą <code>next</code>, wyjątkiem <code>StopIteration</code> oraz metodą <code>__iterator__</code>.</p>
+
+<p>Możesz stworzyć iterator dla dowolnego obiektu wywołując <code>Iterator(<em>nazwaobiektu</em>)</code>; iterator obiektu jest znajdywany poprzez wywołanie metody <code>__iterator__</code>. Jeśli metoda <code>__iterator__</code> nie występuje tworzony jest domyślny iterator. Wywołuje on własności obiektu zgodnie ze zwykłym modelem używanym w wyrażeniach <code>for...in</code> i <code>for each...in</code>. Jeżeli chcesz dodać własny iterator, powinieneś przeciążyć metodę <code>__iterator__</code>, aby zwracała instancję Twojego własnego iteratora. Aby pobrać iterator obiektu ze skryptu, lepiej jest użyć <code>Iterator(<em>obj</em>)</code> niż pobierać bezpośrednio własność <code>__iterator__</code>.Pierwszy działa z Arrays; drugi nie.</p>
+
+<p>Kiedy masz już iterator, możesz z łatwością pobierać następny element z obiektu wywołując jego metodę <code>next()</code>. Jeśli w obiekcie nie ma już więcej elementów, zostanie zwrócony wyjątek <code>StopIteration</code>.</p>
+
+<p>Prosty przykład bezpośredniej manipulacji iteratorem:</p>
+
+<pre>var obj = {name:"Jack Bauer", username:"JackB", id:12345, agency:"CTU", region:"Los Angeles"};
+
+var it = Iterator(obj);
+
+try {
+  while (true) {
+    document.write(it.next() + "\n");
+  }
+} catch (err if err instanceof StopIteration) {
+  document.write("Koniec rekordu.\n");
+} catch (err) {
+  document.write("Nieznany błąd: " + err.description + "\n");
+}
+</pre>
+
+<p>Wynik działania programu wygląda tak:</p>
+
+<pre class="eval">name,Jack Bauer
+username,JackB
+id,12345
+agency,CTU
+region,Los Angeles
+End of record.
+</pre>
+
+<p>Możesz, opcjonalnie, określić drugi parametr przy tworzeniu swojego iteratora, typu boolean, który określa czy chcesz tylko zwracać klucze jako wynik metody <code>next()</code>, czy także wartości. Zmiana <code>var it = Iterator(obj);</code> na <code>var it = Iterator(obj, true);</code> w powyższym przykładzie zmienia wynik na następujący:</p>
+
+<pre>name
+username
+id
+agency
+region
+End of record.
+</pre>
+
+<p>W obu przypadkach, kolejność w jakiej zwracane są dane jest zależna od implementacji. Nie ma żadnej gwarancji, że dane zostaną zwrócone w takiej kolejności.</p>
+
+<p>Iteratory są wygodną metodą do skanowania danych w obiektach, włączając w to obiekty, które mogą zawierać dane, o których nie wiesz. Jest to szczególnie przydatne, jeśli musisz zachować dane, których Twoja aplikacja może się nie spodziewać.</p>
+
+<h3 id="U.C5.82atwienia_sk.C5.82adni_dla_tablic" name="U.C5.82atwienia_sk.C5.82adni_dla_tablic">Ułatwienia składni dla tablic</h3>
+
+<p>Ułatwienia składni dla tablic to wykorzystanie generatorów, pozwalające w wygodny sposób wykonywać skomplikowane inicjalizacje tablic. Na przykład:</p>
+
+<pre class="eval">function range(begin, end) {
+  for (let i = begin; i &lt; end; ++i) {
+    yield i;
+  }
+}
+</pre>
+
+<p><code>range()</code> jest generatorem, który zwraca wszystkie wartości między <var>begin</var> i <var>end</var>. Mając taką funkcję gotową, możemy jej użyć na przykład tak:</p>
+
+<pre class="eval">var ten_squares = [i * i for (i in range(0, 10))];
+</pre>
+
+<p>Nowa tablica, <var>ten_squares</var>, zawiera kwadraty liczb w zakresie od <code>0..9</code>.</p>
+
+<p>Możesz użyć dowolnych wyrażeń do inicjalizacji tablic. Jeśli chcesz stworzyć tablicę zawierającą parzyste liczby od 0 do 20, możesz użyć takiego wyrażenia:</p>
+
+<pre class="eval">var evens = [i for (i in range(0, 21)) if (i % 2 == 0)];
+</pre>
+
+<p>Przed JavaScriptem 1.7, aby to osiągnąć musiałbyś napisać coś w tym stylu:</p>
+
+<pre>var evens = [];
+for (var i=0; i &lt;= 20; i++) {
+  if (i % 2 == 0)
+    evens.push(i);
+}
+</pre>
+
+<p>Nowa metoda jest nie tylko znacznie krótsza, ale także czytelniejsza, kiedy już przyzwyczaisz się do nowej koncepcji.</p>
+
+<h4 id="Regu.C5.82y_zasi.C4.99gu" name="Regu.C5.82y_zasi.C4.99gu">Reguły zasięgu</h4>
+
+<p>Array comprehensions są zawarte w oznaczonym bloku, wewnątrz kwadratowych nawiasów, tak samo jak deklaracje <code>let</code>.</p>
+
+<p><em>Więcej szczegółów.</em></p>
+
+<h3 id="Zasi.C4.99g_blokowy_z_let" name="Zasi.C4.99g_blokowy_z_let">Zasięg blokowy z <code>let</code></h3>
+
+<p>Istnieje kilka metod, w których możesz wykorzystać <code>let</code> do zarządzania zasięgiem blokowym danych i funkcji:</p>
+
+<ul>
+ <li><strong>Wyrażenie <code>let</code></strong> pozwala na wiązanie wartości ze zmiennymi, stałymi i funkcjami wewnątrz zasięgu bloku bez wpływu na wartości zmiennych o tej samej nazwie znajdujących się poza blokiem.</li>
+ <li><strong>Wyrażenie <code>let</code></strong> pozwala stworzyć zmienne o zasięgu ograniczonym tylko do jednego wyrażenia.</li>
+ <li><strong>Definicja <code>let</code></strong> definiuje zmienne, stałe i funkcje których zasięg jest ograniczony do bloku w którym zostały zdefiniowane. Taka składnia bardzo przypomina składnię używaną dla <code>var</code>.</li>
+ <li>Możesz także użyć <code>let</code> do stworzenia zmiennych, które istnieją tylko wewnątrz kontekstu pętli <code>for</code>.</li>
+</ul>
+
+<h4 id="Wyra.C5.BCenie_let" name="Wyra.C5.BCenie_let">Wyrażenie <code>let</code></h4>
+
+<p>Wyrażenie <code>let</code> wprowadza lokalny zasięg dla zmiennych, stałych i funkcji. Wiąże on zero lub więcej zmiennych do leksykalnego zasięgu jednego bloku kodu; w przeciwnym wypadku działa tak samo jak <a href="pl/Dokumentacja_j%c4%99zyka_JavaScript_1.5/Polecenia/block">wyrażenie block</a>. Zauważ, że zasięg zmiennej wewnątrz wyrażenia <code>let</code> używając <code>var</code> jest ciągle taki sam gdy byłby on zadeklarowany na zewnątrz wyrażenia <code>let</code>; takie zmienne wciąż posiadają zasięg funkcji.</p>
+
+<p>Na przykład:</p>
+
+<pre>var x = 5;
+var y = 0;
+
+let (x = x+10, y = 12) {
+  document.write(x+y + "\n");
+}
+
+document.write(x+y + "\n");</pre>
+
+<p>Wynik programu:</p>
+
+<pre class="eval">27
+5
+</pre>
+
+<p><br>
+ Reguły dla tego bloku kodu są takie same jak dla każdego innego bloku kodu w JavaScripcie. Może on posiadać swoje własne, lokalne zmienne określone przy użyciu deklaracji <code>let</code>.</p>
+
+<div class="note"><strong>Uwaga:</strong> Podczas używania składni <code>let</code>, nawiasy występujące po <code>let</code> są konieczne. Pominięcie ich będzie skutkowało błędem składni.</div>
+
+<h5 id="Regu.C5.82y_zasi.C4.99gu_2" name="Regu.C5.82y_zasi.C4.99gu_2">Reguły zasięgu</h5>
+
+<p>Zmienne określone przy użyciu <code>let</code> mają zasięg bloku <code>let</code>, oraz każdego bloku zawartego wewnątrz niego, chyba, że te bloki zadeklarują własne zmienne o tych samych nazwach.</p>
+
+<h4 id="Wyra.C5.BCenia_let" name="Wyra.C5.BCenia_let">Wyrażenia <code>let</code></h4>
+
+<p>Możesz używać <code>let</code> do tworzenia zmiennych, które mają być w zasięgu tylko jednego wyrażenia:</p>
+
+<pre>var x = 5;
+var y = 0;
+document.write( let(x = x + 10, y = 12) x+y + "&lt;br&gt;\n");
+document.write(x+y + "&lt;br&gt;\n");
+</pre>
+
+<p>Wynikiem będzie:</p>
+
+<pre>27
+5
+</pre>
+
+<p>W tym przypadku, powiązanie wartości <var>x</var> oraz <var>y</var> do <code>x+10</code> oraz <code>12</code> ma tylko zasięg pojedyńczego wyrażenia <code>x+y</code>.</p>
+
+<h5 id="Regu.C5.82y_zasi.C4.99gu_3" name="Regu.C5.82y_zasi.C4.99gu_3">Reguły zasięgu</h5>
+
+<p>Mając wyrażenie <code>let</code> takie jak:</p>
+
+<pre class="eval">let (<var>decls</var>) <var>expr</var>&lt;/font&gt;
+</pre>
+
+<p>Wokół <var>expr</var>&lt;/font&gt; zostaje stworzony tzw. blok bezpośredni (eng. implicit block).</p>
+
+<h4 id="Definicje_let" name="Definicje_let">Definicje <code>let</code></h4>
+
+<p>Słowo kluczowe <code>let</code> może także zostać użyte do definiowania zmiennych, stałych i funkcji wewnątrz bloku.</p>
+
+<div class="note"><strong>Uwaga:</strong> Jeśli posiadasz ciekawsze przykłady użycia definicji <code>let</code> dodaj te proszę poniżej.</div>
+
+<pre>if (x &gt; y)
+{
+   let gamma = 12.7 + y;
+   i = gamma * x;
+}
+</pre>
+
+<p><code>let</code> statements, expressions and definitions sometimes make the code cleaner when inner functions are used.</p>
+
+<pre>var list = document.getElementById("list");
+for (var i = 1; i &lt;= 5; i++)
+{
+  var item = document.createElement("LI");
+  item.appendChild(document.createTextNode("Item " + i));
+  let j = i;
+  item.onclick = function (ev) {
+    alert("Item " + j + " is clicked.");
+  };
+  list.appendChild(item);
+}
+</pre>
+
+<p>The example above works as intended because the five instances of the (anonymous) inner function refer to five different instances of variable <code>j</code>. Note that it does not work as intended if you replace <code>let</code> by <code>var</code> or if you remove the variable <code>j</code> and simply use the variable <code>i</code> in the inner function.</p>
+
+<h5 id="Regu.C5.82y_zasi.C4.99gu_4" name="Regu.C5.82y_zasi.C4.99gu_4">Reguły zasięgu</h5>
+
+<p>Variables declared by <code>let</code> have as their scope the block in which they are defined, as well as in any sub-blocks in which they aren't redefined. In this way, <code>let</code> works very much like <code>var</code>. The main difference is that the scope of a <code>var</code> variable is the entire enclosing function:</p>
+
+<pre>  function varTest() {
+    var x = 31;
+    if (true) {
+      var x = 71;  // same variable!
+      alert(x);  // 71
+    }
+    alert(x);  // 71
+  }
+
+  function letTest() {
+    let x = 31;
+    if (true) {
+      let x = 71;  // different variable
+      alert(x);  // 71
+    }
+    alert(x);  // 31
+  }
+</pre>
+
+<p>The expression to the right of the <code>=</code> is inside the block. This is different from how <code>let</code>-expressions and <code>let</code>-statements are scoped:</p>
+
+<pre>  function letTests() {
+    let x = 10;
+
+    // let-statement
+    let (x = x + 20) {
+      alert(x);  // 30
+    }
+
+    // let-expression
+    alert(let (x = x + 20) x);  // 30
+
+    // let-definition
+    {
+      let x = x + 20;  // x here evaluates to undefined
+      alert(x);  // undefined + 20 ==&gt; NaN
+    }
+  }
+</pre>
+
+<p>W programach i klasach <code>let</code> nie tworzy własności w obiektach globalnych ani w obiektach klas, tak jak to czyni <code>var</code>; w zamian, tworzy własność w bezpośrednim bloku, stworzonym do obliczenia wartości wyrażenia w tych kontekstach. W sumie oznacza to, że <code>let</code> nie nadpisze zmiennych zdefiniowanych wcześniej przez <code>var</code>. Na przykład:</p>
+
+<pre>** Nie działa w FF 2.0 b1. Zwraca "42", a nie "global".
+var x = 'global';
+let x = 42;
+document.write(this.x + "&lt;BR&gt;\n")
+</pre>
+
+<p>Wyjście, wyświetlone przez ten kod pokaże napis "global", a nie " 42".</p>
+
+<p><em>Bezpośredni blok</em>oznacza blok, który nie jest określony nawiasami; jest on stworzony bezpośrednio przez silnik JavaScript.</p>
+
+<p>W funkcjach, <code>let</code> użyte wewnątrz <code>eval()</code> nie tworzy własności w obiekcie zmiennej (obiekt aktywujący, lub najbliższe wiązanie) jak robi to <code>var</code>; w zamian, tworzy własności w bezpośrdnim bloku tworzonym do obliczenia wyrażenia w programie. Jest to konsekwencja tego, że <code>eval()</code> operuje na programach oraz poprzedniej reguły.</p>
+
+<p>Innymi słowy, kiedy używasz <code>eval()</code> do wywołania kodu, ten kod jest traktowany jako osobny program, który posiada własny bezpośredni blok wokół swojego kodu.</p>
+
+<h4 id="Zmienne_zasi.C4.99gu_let_w_p.C4.99tlach_for" name="Zmienne_zasi.C4.99gu_let_w_p.C4.99tlach_for">Zmienne zasięgu <code>let</code> w pętlach <code>for</code></h4>
+
+<p>Możesz używać słowa kluczowego <code>let</code>, aby wiązać zmienne lokalnie w zasięgu pętli <code>for</code>, tak samo jak możesz robić to z <code>var</code>.</p>
+
+<pre>** Add obj **
+   var i=0;
+   for ( let i=i ; i &lt; 10 ; i++ )
+     document.write(i + "&lt;br&gt;\n");
+
+   for ( let [name,value] in obj )
+     document.write("Nazwa: " + name + ", Wartość: " + value + "&lt;br&gt;\n");
+</pre>
+
+<h5 id="Regu.C5.82y_zasi.C4.99gu_5" name="Regu.C5.82y_zasi.C4.99gu_5">Reguły zasięgu</h5>
+
+<pre class="eval">for (let <var>expr1</var>; <var>&lt;var&gt;expr2</var>; <var>&lt;var&gt;expr3</var>) <var>statement</var>&lt;/font&gt;
+</pre>
+
+<p>W tym przykładzie, <var>expr2</var>, <var>expr3</var>, oraz <var>&lt;var&gt;statement</var> są zamknięte w bezpośrednim bloku zawierającym lokalne zmienne zadeklarowane przez <code>let <var>expr1</var></code>. Jest to zaprezentowane w pierwszej pętli powyżej.</p>
+
+<pre class="eval">for (<var>expr1</var> in <var>expr2</var>) <var>statement</var>
+</pre>
+
+<p>W tym przypadku, istnieje bezpośredni blok zawierający <var>statement</var>. Jest to zaprezentowane w drugiej pętli powyżej.</p>
+
+<h3 id="Rozpakowywanie_struktur" name="Rozpakowywanie_struktur">Rozpakowywanie struktur</h3>
+
+<p>Rozpakowywanie struktur daje możliwość wydobycia danych z tablic lub obiektów, używając składni, która mapuje je na zmienne tablic i obiektów jako wyniku.</p>
+
+<p>The object and array literal expressions provide an easy way to create ad-hoc packages of data. Once you've created these packages of data, you can use them any way you want to. You can even return them from functions.</p>
+
+<p>One particularly useful thing you can do with destructuring assignment is to read an entire structure in a single statement, although there are a number of interesting things you can do with them, as shown in the section full of examples that follows.</p>
+
+<p>Ta funkcjonalność jest podobna do własności takich języków jak Perl czy Python.</p>
+
+<h4 id="Przyk.C5.82ady" name="Przyk.C5.82ady">Przykłady</h4>
+
+<p>Destructuring assignment is best explained through the use of examples, so here are a few for you to read over and learn from.</p>
+
+<h5 id="Unikanie_zmiennych_tymczasowych" name="Unikanie_zmiennych_tymczasowych">Unikanie zmiennych tymczasowych</h5>
+
+<p>You can use destructuring assignment, for example, to swap values:</p>
+
+<pre>var a = 1;
+var b = 3;
+
+[a, b] = [b, a];
+</pre>
+
+<p>After executing this code, <var>b</var> is 1 and <var>a</var> is 3. Without destructuring assignment, swapping two values requires a temporary variable (or, in some low-level languages, the <a class="external" href="http://en.wikipedia.org/wiki/XOR_swap">XOR-swap trick</a>).</p>
+
+<p>Similarly, it can be used to rotate three or more variables:</p>
+
+<pre>var a = 'o';
+var b = "&lt;span style='color:green;'&gt;o&lt;/span&gt;";
+var c = 'o';
+var d = 'o';
+var e = 'o';
+var f = "&lt;span style='color:blue;'&gt;o&lt;/span&gt;";
+var g = 'o';
+var h = 'o';
+
+for (lp=0;lp&lt;40;lp++)
+	{[a, b, c, d, e, f, g, h] = [b, c, d, e, f, g, h, a];
+	 document.write(a+''+b+''+c+''+d+''+e+''+f+''+g+''+h+''+"&lt;br /&gt;");}
+</pre>
+
+<p>After executing this code, a visual colorful display of the variable rotation will be displayed.</p>
+
+<p>Returning to our Fibonacci generator example from above, we can eliminate the temporary "t" variable by computing the new values of "i" and "j" in a single group-assignment statement:</p>
+
+<pre>function fib() {
+  var i = 0, j = 1;
+  while (true) {
+    yield i;
+    [i, j] = [j, i + j];
+  }
+}
+
+var g = fib();
+for (let i = 0; i &lt; 10; i++)
+  print(g.next());
+</pre>
+
+<h5 id="Zwracanie_wielu_warto.C5.9Bci" name="Zwracanie_wielu_warto.C5.9Bci">Zwracanie wielu wartości</h5>
+
+<p>Dzięki rozpakowywaniu struktur, funkcje mogą zwracać wiele wartości. While it's always been possible to return an array from a function, this provides an added degree of flexibility.</p>
+
+<pre>function f() {
+  return [1, 2];
+}
+</pre>
+
+<p>As you can see, returning results is done using an array-like notation, with all the values to return enclosed in brackets. You can return any number of results in this way. In this example, <code>f()</code> returns the values <code>{{ mediawiki.external('1, 2') }}</code> as its output.</p>
+
+<pre>var a, b;
+[a, b] = f();
+document.write ("A is " + a + " B is " + b + "&lt;br&gt;\n");
+</pre>
+
+<p>Po wykonaniu tego kodu, <var>a</var> ma wartość 1, a <var>b</var> ma wartość 2. You can also retrieve the return values as an array:</p>
+
+<pre>var a = f();
+document.write ("A is " + a);
+</pre>
+
+<p>In this case, <var>a</var> is an array containing the values 1 and 2.</p>
+
+<h5 id="Iterowanie_przez_obiekty" name="Iterowanie_przez_obiekty">Iterowanie przez obiekty</h5>
+
+<p>Możesz też użyć rozpakowywania struktur do pobierania danych z obiektu:</p>
+
+<pre>let obj = { width: 3, length: 1.5, color: "orange" };
+for (let [name, value] in Iterator(obj)) {
+  document.write ("Name: " + name + ", Value: " + value + "&lt;br&gt;\n");
+}
+</pre>
+
+<p>This loops over all the key/value pairs in the object <var>obj</var> and displays their names and values. In this case, the output looks like the following:</p>
+
+<pre class="eval">Name: width, Value: 3
+Name: length, Value: 1.5
+Name: color, Value: orange
+</pre>
+
+<p>The <code>Iterator()</code> around <code>obj</code> is not necessary in JavaScript 1.7; however, it will be needed for <a href="pl/Nowo%c5%9bci_w_JavaScript_1.8">JavaScript 1.8</a>. This is to allow destructuring assignment with arrays (see {{ Bug(366941) }}).</p>
+
+<p> </p>
+
+<h5 id="Iterowanie_przez_warto.C5.9Bci_w_macierzy_obiekt.C3.B3w" name="Iterowanie_przez_warto.C5.9Bci_w_macierzy_obiekt.C3.B3w">Iterowanie przez wartości w macierzy obiektów</h5>
+
+<p>Możesz też iterować przez wartości w macierzy obiektów wyciągając wartości z każdego obiektu:</p>
+
+<pre>var people = [
+  {
+    name: "Mike Smith",
+    family: {
+      mother: "Jane Smith",
+      father: "Harry Smith",
+      sister: "Samantha Smith"
+    },
+    age: 35
+  },
+  {
+    name: "Tom Jones",
+    family: {
+      mother: "Norah Jones",
+      father: "Richard Jones",
+      brother: "Howard Jones"
+    },
+    age: 25
+  }
+];
+
+for each (let {name: n, family: { father: f } } in people) {
+  document.write ("Name: " + n + ", Father: " + f + "&lt;br&gt;\n");
+}
+</pre>
+
+<p>This pulls the <var>name</var> field into <var>n</var> and the <var>family.father</var> field into <var>f</var>, then prints them. This is done for each object in the <var>people</var> array. The output looks like this:</p>
+
+<pre>Name: Mike Smith, Father: Harry Smith
+Name: Tom Jones, Father: Richard Jones
+</pre>
+
+<h5 id="Pomijanie_niekt.C3.B3rych_warto.C5.9Bci_zwracanych" name="Pomijanie_niekt.C3.B3rych_warto.C5.9Bci_zwracanych">Pomijanie niektórych wartości zwracanych</h5>
+
+<p>You can also ignore return values that you're not interested in:</p>
+
+<pre>function f() {
+  return [1, 2, 3];
+}
+
+var [a, , b] = f();
+document.write ("A is " + a + " B is " + b + "&lt;br&gt;\n");
+</pre>
+
+<p>After running this code, a is 1 and b is 3. The value 2 is ignored. You can ignore any (or all) returned values this way. For example:</p>
+
+<pre>[,,,] = f();
+</pre>
+
+<h5 id="Wyci.C4.85ganie_warto.C5.9Bci_z_wyra.C5.BCe.C5.84_regularnych" name="Wyci.C4.85ganie_warto.C5.9Bci_z_wyra.C5.BCe.C5.84_regularnych">Wyciąganie wartości z wyrażeń regularnych</h5>
+
+<p>When the regular expression <code><a href="pl/Dokumentacja_j%c4%99zyka_JavaScript_1.5/Obiekty/RegExp/exec"> exec()</a></code> method finds a match, it returns an array containing first the entire matched portion of the string and then the portions of the string that matched each parenthesized group in the regular expression. Destructuring assignment allows you to pull the parts out of this array easily, ignoring the full match if it is not needed.</p>
+
+<pre class="eval">// Simple regular expression to match http / https / ftp-style URLs.
+var parsedURL = /^(\w+)\:\/\/([^\/]+)\/(.*)$/.exec(url);
+if (!parsedURL)
+  return null;
+var [, protocol, fullhost, fullpath] = parsedURL;
+</pre>

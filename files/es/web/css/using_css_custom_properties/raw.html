@@ -1,0 +1,224 @@
+<p><strong>Las variables CSS</strong> son entidades definidas por autores CSS que contienen valores específicos que se pueden volver a utilizar en un documento. Se establecen mediante la notación de propiedades personalizadas (por ejemplo,<strong> </strong><strong><code>--main-color: black;</code></strong>) y se accede mediante la función <code><strong>var()</strong></code> (por ejemplo, color: <strong><code>var (--main-color);</code></strong>).</p>
+
+<p>Sitios web complejos tienen cantidades muy grandes de CSS, a menudo con una gran cantidad de valores repetidos. Por ejemplo, el mismo color se puede utilizar en cientos de lugares diferentes, que requieren búsqueda global y reemplazar si ese color necesita cambiar. Las variables CSS permiten que un valor se almacene en un lugar y luego se haga referencia en varios otros lugares. Un beneficio adicional son los identificadores semánticos. Por ejemplo <strong><code>--main-text-color</code></strong> es más fácil de entender que <strong><code>#00ff00</code></strong>, especialmente si este mismo color también se utiliza en otro contexto.</p>
+
+<p>Las variables CSS están sujetas a la cascada, y heredan su valor de sus padres</p>
+
+<h2 id="Uso_Básico">Uso Básico</h2>
+
+<p>Declaración de una variable</p>
+
+<pre class="brush:css; highlight:[2]  language-css">elemento {
+  --main-bg-color: brown;
+}
+</pre>
+
+<p>Utilizando la variable</p>
+
+<pre class="brush:css; highlight:[2]  language-css">elemento {
+  background-color: var(--main-bg-color);
+}
+</pre>
+
+<div class="note">
+<p><strong>Nota:</strong> El prefijo de propiedad personalizada era <code>var-</code> en la especificación anterior, pero posteriormente cambió a <code>--</code>. Firefox 31 y superiores siguen la nueva especificación. ({{Bug (985838)}}</p>
+</div>
+
+<h2 id="Primeros_Pasos_con_Variables_CSS">Primeros Pasos con Variables CSS</h2>
+
+<p>Comencemos con este simple CSS que colorea elementos de diferentes clases con el mismo color:</p>
+
+<div id="sample1">
+<pre class="brush:css; highlight:[3,20,26,32]">.uno {
+  color: white;
+  background-color: brown;
+  margin: 10px;
+  width: 50px;
+  height: 50px;
+  display: inline-block;
+}
+
+.dos {
+  color: white;
+  background-color: black;
+  margin: 10px;
+  width: 150px;
+  height: 70px;
+  display: inline-block;
+}
+.tres {
+  color: white;
+  background-color: brown;
+  margin: 10px;
+  width: 75px;
+}
+.cuatro {
+  color: white;
+  background-color: brown;
+  margin: 10px;
+  width: 100px;
+}
+
+.cinco {
+  background-color: brown;
+}
+
+</pre>
+
+<p>Lo aplicaremos a este HTML:</p>
+
+<pre class="brush:html">&lt;div&gt;
+    &lt;div class="uno"&gt;1:&lt;/div&gt;
+    &lt;div class="dos"&gt;2: Texto &lt;span class="cinco"&gt;5 - más texto&lt;/span&gt;&lt;/div&gt;
+    &lt;input class="tres"&gt;
+    &lt;textarea class="cuatro"&gt;4: Lorem Ipsum&lt;/textarea&gt;
+&lt;/div&gt;
+</pre>
+
+<p>Que nos lleva a esto:</p>
+
+<p>{{EmbedLiveSample("sample1",600,180)}}</p>
+
+<p><br>
+ Observe la repetición en el CSS. El color de fondo se pone a marrón (<code>brown</code>) en varios lugares. Para algunas declaraciones CSS, es posible declarar esto más alto en la cascada y dejar que la herencia CSS resuelva este problema de forma natural. Para proyectos no triviales, esto no siempre es posible. Al declarar una variable en la pseudo-clase raíz, un autor CSS puede detener algunas instancias de repetición usando la variable.</p>
+</div>
+
+<div id="sample2">
+<pre class="brush:css; highlight:[2, 7, 24,30,36]">:root {
+  --main-bg-color: brown;
+}
+
+.uno {
+  color: white;
+  background-color: var(--main-bg-color);
+  margin: 10px;
+  width: 50px;
+  height: 50px;
+  display: inline-block;
+}
+
+.dos {
+  color: white;
+  background-color: black;
+  margin: 10px;
+  width: 150px;
+  height: 70px;
+  display: inline-block;
+}
+.tres {
+  color: white;
+  background-color: var(--main-bg-color);
+  margin: 10px;
+  width: 75px;
+}
+.cuatro {
+  color: white;
+  background-color: var(--main-bg-color);
+  margin: 10px;
+  width: 100px;
+}
+
+.cinco {
+  background-color: var(--main-bg-color);
+}
+
+</pre>
+
+<pre class="brush:html">&lt;div&gt;
+    &lt;div class="uno"&gt;&lt;/div&gt;
+    &lt;div class="dos"&gt;Text &lt;span class="cinco"&gt;- more text&lt;/span&gt;&lt;/div&gt;
+    &lt;input class="tres"&gt;
+    &lt;textarea class="cuatro"&gt;Lorem Ipsum&lt;/textarea&gt;
+&lt;/div&gt;
+</pre>
+</div>
+
+<p>Esto conduce al mismo resultado que el ejemplo anterior pero permite una declaración canónica de la propiedad deseada.</p>
+
+<h2 id="Herencia_de_variables_CSS">Herencia de variables CSS</h2>
+
+<p>Las propiedades personalizadas heredan. Lo que significa que si no se establece ningún valor para una propiedad personalizada en un elemento dado, se utiliza el valor de su elemento principal</p>
+
+<pre class="brush: html">&lt;div class="uno"&gt;
+  &lt;div class="dos"&gt;
+    &lt;div class="tres"&gt;&lt;/div&gt;
+    &lt;div class="cuatro"&gt;&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</pre>
+
+<p>Con el siguiente CSS:</p>
+
+<pre class="brush: css">.dos {
+  --test: 10px;
+}
+
+.tres {
+  --test: 2em;
+}
+</pre>
+
+<p>En este caso, los resultados de <code>var(--test)</code> son:</p>
+
+<ul>
+ <li>Para el elemento <code>class="dos"</code>: <code>10px</code></li>
+ <li>Para el elemento <code>class="tress"</code>: <code>2em</code></li>
+ <li>Para el elemento <code>class="cuatro"</code>: <code>10px</code> (Heredado de su padre)</li>
+ <li>Para el elemento <code>class="uno"</code>: <em>valor no válido</em>, que es el valor predeterminado de cualquier propiedad personalizada.</li>
+</ul>
+
+<p>Tenga en cuenta que estas son propiedades personalizadas, no variables CSS reales. El valor se calcula donde sea necesario, no se almacena para su uso en otras reglas. Por ejemplo, no se puede establecer una propiedad para un elemento y esperar recuperarla en la regla del descendiente de un hermano. La propiedad sólo está configurada para el selector de emparejamiento y sus descendientes, como cualquier CSS normal.</p>
+
+<h2 id="Valores_de_sustitución_(fallback)_de_propiedades_personalizadas">Valores de sustitución (fallback) de propiedades personalizadas</h2>
+
+<p>Utilizando <a href="/es/docs/Web/CSS/var">var()</a> puede definir múltiples <strong> valores de sustitución (fallback)</strong> cuando la variable dada no está definida aún, esto puede ser útil cuando se trabaja con Custom Elements y Shadow DOM.</p>
+
+<p>El primer argumento a la función es el nombre de la <a href="https://www.w3.org/TR/css-variables/#custom-property"> propiedad personalizada </a> que se va a sustituir. El segundo argumento a la función, si se proporciona, es un valor de reserva, que se utiliza como valor de sustitución cuando la <a href="https://www.w3.org/TR/css-variables/#custom-property"> propiedad personalizada </a> referenciada no es válida. P.ej:</p>
+
+<pre class="brush: css">.dos {
+  color: var(--my-var, red); /* Rojo (red) si --my-var no esta definida */
+}
+
+.tres {
+  background-color: var(--my-var, var(--my-background, pink)); /* Rosa (pink) si my-var y --my-background no están definidas */
+}
+
+.tres {
+  background-color: var(--my-var, --my-background, pink); /* Invalido: "--background, pink" */
+}</pre>
+
+<div class="note">
+<p>La sintaxis del fallback (), como la de las <a href="https://www.w3.org/TR/css-variables/#custom-property">propiedades personalizadas</a>, permite comas. Por ejemplo, var(--foo, red, blue) define un fallback de rojo, azul; Es decir, cualquier cosa entre la primer coma y el final de la función se considera un valor de fallback.</p>
+</div>
+
+<div class="note">
+<p>También se ha visto que este método causa problemas de rendimiento. Hace que los navegadores rendericen las páginas más lentamente de lo normal, ya que toma más tiempo para analizar las variables.</p>
+</div>
+
+<h2 id="Validez_y_Valores">Validez y Valores</h2>
+
+<p>El clásico concepto CSS de validez, vinculado a cada propiedad, no es muy útil con respecto a las propiedades personalizadas. Cuando se analizan los valores de las propiedades personalizadas, el explorador no sabe dónde se utilizarán, por lo que debe considerar casi todos los valores como <em>válidos</em>.</p>
+
+<p>Desafortunadamente, estos valores válidos se pueden usar, a través de la notación funcional <code>var()</code>, en un contexto en el que tal vez no tengan sentido. Propiedades y variables personalizadas pueden llevar a declaraciones CSS no válidas, dando lugar al nuevo concepto de <em>válido en tiempo calculado.</em></p>
+
+<h2 id="Valores_en_JavaScript">Valores en JavaScript</h2>
+
+<p>Para utilizar los valores de las propiedades personalizadas en JavaScript, es como las propiedades estándar.</p>
+
+<pre class="brush: js">// Obtener la variable desde el estilo inline
+element.style.getPropertyValue("--my-var");
+// Obtener variable desde cualquier lugar
+getComputedStyle(element).getPropertyValue("--my-var");
+
+// Establecer variable en estilo inline
+element.style.setProperty("--my-var", jsVar + 4);
+</pre>
+
+<h2 id="Compatibilidad_del_Navegador">Compatibilidad del Navegador</h2>
+
+<p>{{Compat("css.properties.custom-property")}}</p>
+
+<h2 id="Ver_también">Ver también</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Web/CSS/--*" title="The documentation about this has not yet been written; please consider contributing!"><code>custom properties</code></a></li>
+</ul>

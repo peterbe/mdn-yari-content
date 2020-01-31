@@ -1,0 +1,508 @@
+<div>{{jsSidebar("JavaScript Guide")}} {{PreviousNext("Web/JavaScript/Guide/Regular_Expressions", "Web/JavaScript/Guide/Details_of_the_Object_Model")}}</div>
+
+<p class="summary">JavaScript està dissenyat en un simple paradigma basat en objectes. Un objecte és una col·lecció de propietats, i una propietat és una associació entre un nom i un valor. Un valor d'una propietat pot ser una funció, en aquest cas la propietat es coneix com a <em>mètode</em>. A més a més dels objectes que estan predefinits en el navegador, també es pot definir objectes propis.</p>
+
+<h2 id="Resum_d'objectes">Resum d'objectes</h2>
+
+<p>Els objects en JavaScript, com també passa en altres llenguatges de programació, poden comparar-se a objectes en la vida real. El concepte d'objectes en JavaScript pot ser entès amb la vida real, amb objectes tangibles.</p>
+
+<p>JavaScriptJavaScriptA JavaScript, un objecte és una entitat independent, amb propietats i tipus. Ho podeu comparar amb una tassa, per exemple. Una tassa és un objecte, amb propietats. Una tassa té un color, un disseny, un pes, un material del qual està fet, etc. De la mateixa manera, els objectes en JavaScript poden tenir propietats, que defineixen les seves característiques.</p>
+
+<h2 id="Objectes_i_propietats">Objectes i propietats</h2>
+
+<p>Un objecte de JavaScript té unes porpietats associades. Una propietat d'un objecte pot explicar-se com una variable que està lligada a l'objecte. Les propietats d'un objecte són bàsicament el mateix que variables comunes de JavaScript, excepte per la lligadura als objectes. Les propietats d'un objecte defineixen les característiques de l'objecte. Es pot accedir a les propietats d'un objecte amb un simple punt:</p>
+
+<div style="margin-right: 270px;">
+<pre class="brush: js">objectName.propertyName
+</pre>
+</div>
+
+<p>Com totes les variables a JavaScript, tant en el nom de l'objecte (que pot ser una variable normal) com en el nom de la propietat és distingeix entre majúscules i minúscules. Es pot definir una propietat assignant-li un valor. Per exemple, creem un objecte anomenat <code>myCar</code> i li donem propietats anomenades <code>make</code>, <code>model</code>, i <code>year</code> com s'indica a continuació:</p>
+
+<pre class="brush: js">var myCar = new Object();
+myCar.make = "Ford";
+myCar.model = "Mustang";
+myCar.year = 1969;
+</pre>
+
+<p>També es pot accedir o assignar propietats dels objectes de JavaScriptor fent ús de claudàtors. Algunes vegades els objectes són anomenats <em>arrays d'associació</em>, ja que cada propietat és associada amb un valor de tipus cadena que es pot fer servir per accedir-hi. Així, per exemple, es podria accedir a les propietats de l'obejcte <code>myCar</code> com s'indica a continuació:</p>
+
+<pre class="brush: js">myCar["make"] = "Ford";
+myCar["model"] = "Mustang";
+myCar["year"] = 1969;
+</pre>
+
+<p>Un nom d'una propietat d'un objecte pot ser quasevol cadena vàlida de JavaScript, o qualsevol cosa que es pugui convertir a una cadena, incloent la cadena buida. tanmateix, qualsevol nom d'una propietat que no és un identificador vàlid de JavaScript (per exemple, un nom d'una propietat que té un espai o un guió, o que comenci amb un nombre) només es pot accedir-hi usant la notació claudàtors. Aquesta notació és també molt útil per quan els noms de les propietats s'han de determinar dinàmicament (quan el nom d'una propietat no és determina fins que entra en execució). Alguns exemples a continuació:</p>
+
+<pre class="brush: js">var myObj = new Object(),
+    str = "myString",
+    rand = Math.random(),
+    obj = new Object();      // quatre variables són creades i assignades d'un sol cop, separades per comes
+
+myObj.type              = "Dot syntax";
+myObj["date created"]   = "String with space";
+myObj[str]              = "String value";
+myObj[rand]             = "Random Number";
+myObj[obj]              = "Object";
+myObj[""]               = "Even an empty string";
+
+console.log(myObj);
+</pre>
+
+<p>També es pot accedir a les propietats mitjançant l'ús d'un valor de cadena que s'emmagatzema en una variable:</p>
+
+<div style="width: auto;">
+<pre class="brush: js">var propertyName = "make";
+myCar[propertyName] = "Ford";
+
+propertyName = "model";
+myCar[propertyName] = "Mustang";
+</pre>
+</div>
+
+<p>Es pot fer servir la notació claudàtors amb <a class="internal" href="/en-US/docs/JavaScript/Guide/Statements#for...in_Statement" title="en-US/docs/JavaScript/Guide/Statements#for...in Statement">for...in</a> per iterar sobre totes les propietats enumerables d'un objecte. Per il·lustrar com funciona això, la següent funció mostra les propietats de l'objecte quan es pasa l'objecte i el nom de l'objecte com a arguments de la funció:</p>
+
+<pre class="brush: js">function showProps(obj, objName) {
+  var result = "";
+  for (var i in obj) {
+    if (obj.hasOwnProperty(i)) {
+        result += objName + "." + i + " = " + obj[i] + "\n";
+    }
+  }
+  return result;
+}
+</pre>
+
+<p>Així, la crida de la funció <code>showProps(myCar, "myCar")</code> retornaria el següent:</p>
+
+<pre>myCar.make = Ford
+myCar.model = Mustang
+myCar.year = 1969</pre>
+
+<h2 id="Objecte_tot">Objecte tot</h2>
+
+<p>A JavaScript, quasi tot és un objecte. Tots els tipus primitius excepte <code>null</code> i <code>undefined</code> són tractats com a objectes. Se'ls hi poden assignar propietats (les propietats assignades d'alguns tipus no són persistents), i tenen totes les característiques dels objectes.</p>
+
+<h2 id="Enumerar_totes_les_propietats_d'un_objecte">Enumerar totes les propietats d'un objecte</h2>
+
+<p>A partir de <a href="/en-US/docs/JavaScript/ECMAScript_5_support_in_Mozilla" title="en-US/docs/JavaScript/ECMAScript 5 support in Mozilla">ECMAScript 5</a>, hi ha tres formes bàsiques per llistar/recòrrer propietats d'un objecte:</p>
+
+<ul>
+ <li>Bucle <a href="/en-US/docs/JavaScript/Reference/Statements/for...in" title="en-US/docs/JavaScript/Reference/Statements/for...in">for...in</a><br>
+  Aquest mètode recorre totes les propietats numerables d'un objecte i la seva cadena prototip.</li>
+ <li><a href="/en-US/docs/JavaScript/Reference/Global_Objects/Object/keys" title="en-US/docs/JavaScript/Reference/Global Objects/Object/keys">Object.keys(o)</a><br>
+  Aquest mètode retorna una array amb tots els noms de els propietats enumerables ("keys") pròpies (no en la cadena prototip)  d'un objecte <code>o</code>.</li>
+ <li><a href="/en-US/docs/JavaScript/Reference/Global_Objects/Object/getOwnPropertyNames" title="en-US/docs/JavaScript/Reference/Global Objects/Object/getOwnPropertyNames">Object.getOwnPropertyNames(o)</a><br>
+  Aquest mètode retorna una array que conté tots els noms de les propietats pròpies (enumerables o no) d'un objecte <code>o</code>.</li>
+</ul>
+
+<p>Abans de ECMAScript 5, no hi havia cap forma original de llistar totes les propietats d'un objecte. Tanmateix, això es pot aconseguir amb la funció següent:</p>
+
+<pre class="brush: js">function listAllProperties(o){     
+	var objectToInspect;     
+	var result = [];
+	
+	for(objectToInspect = o; objectToInspect !== null; objectToInspect = Object.getPrototypeOf(objectToInspect)){  
+		result = result.concat(Object.getOwnPropertyNames(objectToInspect));  
+	}
+	
+	return result; 
+}
+</pre>
+
+<p>Això pot ser útil per revelar propietats "amagades" (propietats en la cadena prototip que no són accessibles a través de l'objecte, ja que una altra propietat té el mateix nom abans en la cadena prototip). Llistar les propietats accessibles només es pot fer de forma simple per mitjà d'eliminar les dupliques de l'array.</p>
+
+<h2 id="Crear_nous_objectes">Crear nous objectes</h2>
+
+<p>JavaScript té un nombre d'objectes predefinits. A més a més, també es pot crear els objectes propis. A partir de JavaScript 1.2r, es pot crear un objecte usant un objecte inicialitzador. Alternativament, primer es pot crear una funció constructora i després una instància de l'objecte fent servir aquesta funció i l'operador <code>new</code>.</p>
+
+<h3 id="Utilitzar_inicialitzadors_d'objectes">Utilitzar inicialitzadors d'objectes</h3>
+
+<p>A més a més de poder crear objectes per mitjà de la funció constructora, es pot crear objectes fent servir un inicialitzador d'objectes. Utilitzar inicialitzadors d'objectes en alguns casos fa referència a crear objectes amb notació literal. "Inicialitzador d'un objecte" és coherent amb la terminologia utilitzada per C++.</p>
+
+<p>La sintaxi per un objecte mitjançant un inicialitzador d'objectes és:</p>
+
+<pre class="brush: js">var obj = { property_1:   value_1,   // la propietat_# pot ser un identificador...
+            2:            value_2,   // o un nombre...
+            // ...,
+            "property n": value_n }; // o una cadena
+</pre>
+
+<p>On <code>obj</code> és el nom del nou objecte, cada <code>property_<em>i</em></code> és un identificador (ja sigui un nom, un nombre, o una cadena literal), i cada <code>value_<em>i</em></code> és una expressió la qual el seu valor és assignat a la <code>property_<em>i</em></code>. L'<code>obj</code> i l'assignació és opcional; si no cal referir-se a ella en cap altre lloc no fa falta assignar-la a una variable. (Tingueu en compte que podeu necessitar embolcallar l'objecte literal entre parèntesis si l'objecte apareix en el lloc on s'espera una sentència, per tal de no confondre el literal amb una sentència de bloc.)</p>
+
+<p>Els inicialitzadors d'objectes són expressionss, i cada inicialitzador d'objectes resulta en un nou objecte que es crea cada vegada que s'executa la sentència on apareix. Els inicialitzadors d'objectes idèntics creen objectes diferents que no es comparen entre ells com a iguals. Els objectes es creen com si es fes una crida a <code>new Object()</code>; és a dir, els objectes creats d'expressions literals d'objectes són instàncies d'<code>Object</code>.</p>
+
+<p>La següent sentència crea un objecte i l'assigna a la variable <code>x</code> si i només si l'expressió <code>cond</code> és certa:</p>
+
+<pre class="brush: js">if (cond) var x = {hi: "there"};
+</pre>
+
+<p>L'exemple següent crea <code>myHonda</code> amb tres propietats. Vegeu que la propietat <code>engine</code> és també un objecte amb les seves pròpies propietats.</p>
+
+<pre class="brush: js">var myHonda = {color: "red", wheels: 4, engine: {cylinders: 4, size: 2.2}};
+</pre>
+
+<p>També es pot fer servir inicialitzadors d'objectes per crear arrays. Vegeu <a href="/ca/docs/Web/JavaScript/Guide/Grammar_and_types#Array_literals">array literals</a>.</p>
+
+<p>En JavaScript 1.1 i en versions interiors, no es pot fer servir inicialitzadors d'objectes. Es pot crear objectes usant només les seves funcions constructores o utilitzant una funció subministrada per algun altre objecte per aquest objectiu. Vegeu</p>
+
+<h3 id="Utilitzar_una_funció_constructora">Utilitzar una funció constructora</h3>
+
+<p>Alternativament, es pot crear un objecte amb aquests dos pasos:</p>
+
+<ol>
+ <li>Definir el tipus d'objecte escrivint una funció constructora. Hi ha una forta convenció, amb bones raons, d'utilitzar una majúscula com a primera lletra.</li>
+ <li>Crear una instància de l'objecte amb <code>new</code>.</li>
+</ol>
+
+<p>Per definir un tipus d'objecte, es crea una funció pel tipus d'objecte que especifiqui el nom, les propietats, i els mètodes. Per exemple, suposeu que voleu crear un tipus d'objecte per cotxes. Voleu que aquest tipus d'objecte s'anomeni <code>car</code>, i voleu que tingui les propietats per marca, model, i any. Per fer això, escriurieu la funció següent:</p>
+
+<pre class="brush: js">function Car(make, model, year) {
+  this.make = make;
+  this.model = model;
+  this.year = year;
+}
+</pre>
+
+<p>Observeu l'ús de <code>this</code> per assignar valors a les propietats de l'objecte en funció dels valors passats a la funció.</p>
+
+<p>Ara podeu crear un objecte anomenat <code>mycar</code> de la forma següent:</p>
+
+<pre class="brush: js">var mycar = new Car("Eagle", "Talon TSi", 1993);
+</pre>
+
+<p>Aquesta sentència crea <code>mycar</code> i li assigna els valors especificats per les seves propietats. Llavors el valor de <code>mycar.make</code> és la cadena "Eagle", <code>mycar.year</code> és el nombre enter 1993, i així successivament.</p>
+
+<p>Es pot crear qualsevol nombre d'objectes de <code>car</code> mitjançant crides a <code>new</code>. Per exemple,</p>
+
+<pre class="brush: js">var kenscar = new Car("Nissan", "300ZX", 1992);
+var vpgscar = new Car("Mazda", "Miata", 1990);
+</pre>
+
+<p>Un objecte pot tenir una propietat que per ella mateixa sigui un altre objecte. Per exemple, suposeu que definiu un objecte anomenat <code>person</code> de la forma següent:</p>
+
+<pre class="brush: js">function Person(name, age, sex) {
+  this.name = name;
+  this.age = age;
+  this.sex = sex;
+}
+</pre>
+
+<p>I despres creeu dues noves instàncies de l'objecte <code>person</code> de la forma següent:</p>
+
+<pre class="brush: js">var rand = new Person("Rand McKinnon", 33, "M");
+var ken = new Person("Ken Jones", 39, "M");
+</pre>
+
+<p>Llavors, podeu reescriure la definició de <code>car</code> per incloure una propietat d'<code>owner</code> que pren un objecte <code>person</code>, com es fa de la forma següent:</p>
+
+<pre class="brush: js">function Car(make, model, year, owner) {
+  this.make = make;
+  this.model = model;
+  this.year = year;
+  this.owner = owner;
+}
+</pre>
+
+<p>Per crear instàncies de nous objectes, s'utilitza el següent:</p>
+
+<pre class="brush: js">var car1 = new Car("Eagle", "Talon TSi", 1993, rand);
+var car2 = new Car("Nissan", "300ZX", 1992, ken);
+</pre>
+
+<p>Notice that instead of passing a literal string or integer value when creating the new objects, the above statements pass the objects <code>rand</code> and <code>ken</code> as the arguments for the owners. Then if you want to find out the name of the owner of car2, you can access the following property:</p>
+
+<pre class="brush: js">car2.owner.name
+</pre>
+
+<p>Note that you can always add a property to a previously defined object. For example, the statement</p>
+
+<pre class="brush: js">car1.color = "black";
+</pre>
+
+<p>adds a property <code>color</code> to car1, and assigns it a value of "black." However, this does not affect any other objects. To add the new property to all objects of the same type, you have to add the property to the definition of the <code>car</code> object type.</p>
+
+<h3 id="Using_the_Object.create_method">Using the Object.create method</h3>
+
+<p>Objects can also be created using the <code>Object.create</code> method. This method can be very useful, because it allows you to choose the prototype object for the object you want to create, without having to define a constructor function. For more detailed information on the method and how to use it, see {{jsxref("Object.create()")}}.</p>
+
+<pre class="brush: js">// Animal properties and method encapsulation
+var Animal = {
+  type: "Invertebrates", // Default value of properties
+  displayType : function(){  // Method which will display type of Animal
+    console.log(this.type);
+  }
+}
+
+// Create new animal type called animal1 
+var animal1 = Object.create(Animal);
+animal1.displayType(); // Output:Invertebrates
+
+// Create new animal type called Fishes
+var fish = Object.create(Animal);
+fish.type = "Fishes";
+fish.displayType(); // Output:Fishes</pre>
+
+<h3 id="Inheritance">Inheritance</h3>
+
+<p>All objects in JavaScript inherit from at least one other object. The object being inherited from is known as the prototype, and the inherited properties can be found in the <code>prototype</code> object of the constructor.</p>
+
+<h3 id="Indexing_object_properties">Indexing object properties</h3>
+
+<p>In JavaScript 1.0, you can refer to a property of an object either by its property name or by its ordinal index. In JavaScript 1.1 and later, however, if you initially define a property by its name, you must always refer to it by its name, and if you initially define a property by an index, you must always refer to it by its index.</p>
+
+<p>This restriction applies when you create an object and its properties with a constructor function (as we did previously with the <code>Car</code> object type) and when you define individual properties explicitly (for example, <code>myCar.color = "red"</code>). If you initially define an object property with an index, such as <code>myCar[5] = "25 mpg"</code>, you can subsequently refer to the property only as <code>myCar[5]</code>.</p>
+
+<p>The exception to this rule is objects reflected from HTML, such as the <code>forms</code> array. You can always refer to objects in these arrays by either their ordinal number (based on where they appear in the document) or their name (if defined). For example, if the second <code>&lt;FORM&gt;</code> tag in a document has a <code>NAME</code> attribute of "myForm", you can refer to the form as <code>document.forms[1]</code> or <code>document.forms["myForm"]</code> or <code>document.myForm</code>.</p>
+
+<h3 id="Defining_properties_for_an_object_type">Defining properties for an object type</h3>
+
+<p>You can add a property to a previously defined object type by using the <code>prototype</code> property. This defines a property that is shared by all objects of the specified type, rather than by just one instance of the object. The following code adds a <code>color</code> property to all objects of type <code>car</code>, and then assigns a value to the <code>color</code> property of the object <code>car1</code>.</p>
+
+<pre class="brush: js">Car.prototype.color = null;
+car1.color = "black";
+</pre>
+
+<p>See the <a href="/en-US/docs/JavaScript/Reference/Global_Objects/Function/prototype" title="en-US/docs/JavaScript/Reference/Global Objects/Function/prototype"><code>prototype</code> property</a> of the <code>Function</code> object in the <a href="/en-US/docs/JavaScript/Reference" title="en-US/docs/JavaScript/Reference">JavaScript Reference</a> for more information.</p>
+
+<h3 id="Defining_methods">Defining methods</h3>
+
+<p>A <em>method</em> is a function associated with an object, or, simply put, a method is a property of an object that is a function. Methods are defined the way normal functions are defined, except that they have to be assigned as the property of an object. Examples are:</p>
+
+<pre class="brush: js">objectName.methodname = function_name;
+
+var myObj = {
+  myMethod: function(params) {
+    // ...do something
+  }
+};
+</pre>
+
+<p>where <code>objectName</code> is an existing object, <code>methodname</code> is the name you are assigning to the method, and <code>function_name</code> is the name of the function.</p>
+
+<p>You can then call the method in the context of the object as follows:</p>
+
+<pre class="brush: js">object.methodname(params);
+</pre>
+
+<p>You can define methods for an object type by including a method definition in the object constructor function. For example, you could define a function that would format and display the properties of the previously-defined <code>car</code> objects; for example,</p>
+
+<pre class="brush: js">function displayCar() {
+  var result = "A Beautiful " + this.year + " " + this.make
+    + " " + this.model;
+  pretty_print(result);
+}
+</pre>
+
+<p>where <code>pretty_print</code> is a function to display a horizontal rule and a string. Notice the use of <code>this</code> to refer to the object to which the method belongs.</p>
+
+<p>You can make this function a method of <code>car</code> by adding the statement</p>
+
+<pre class="brush: js">this.displayCar = displayCar;
+</pre>
+
+<p>to the object definition. So, the full definition of <code>car</code> would now look like</p>
+
+<pre class="brush: js">function Car(make, model, year, owner) {
+  this.make = make;
+  this.model = model;
+  this.year = year;
+  this.owner = owner;
+  this.displayCar = displayCar;
+}
+</pre>
+
+<p>Then you can call the <code>displayCar</code> method for each of the objects as follows:</p>
+
+<pre class="brush: js">car1.displayCar();
+car2.displayCar();
+</pre>
+
+<p>This produces the output shown in the following figure.</p>
+
+<p><img alt="Image:obja.gif" class="internal" src="/@api/deki/files/786/=Obja.gif"></p>
+
+<p><small><strong>Figure 7.1: Displaying method output.</strong></small></p>
+
+<h3 id="Using_this_for_object_references">Using <code>this</code> for object references</h3>
+
+<p>JavaScript has a special keyword, <code>this</code>, that you can use within a method to refer to the current object. For example, suppose you have a function called <code>validate</code> that validates an object's <code>value</code> property, given the object and the high and low values:</p>
+
+<pre class="brush: js">function validate(obj, lowval, hival) {
+  if ((obj.value &lt; lowval) || (obj.value &gt; hival))
+    alert("Invalid Value!");
+}
+</pre>
+
+<p>Then, you could call <code>validate</code> in each form element's <code>onchange </code> event handler, using <code>this</code> to pass it the element, as in the following example:</p>
+
+<pre class="brush: html">&lt;input type="text" name="age" size="3"
+  onChange="validate(this, 18, 99)"&gt;
+</pre>
+
+<p>In general, <code>this</code> refers to the calling object in a method.</p>
+
+<p>When combined with the <code>form</code> property, <code>this</code> can refer to the current object's parent form. In the following example, the form <code>myForm</code> contains a <code>Text</code> object and a button. When the user clicks the button, the value of the <code>Text</code> object is set to the form's name. The button's <code>onclick</code> event handler uses <code>this.form</code> to refer to the parent form, <code>myForm</code>.</p>
+
+<pre class="brush: html">&lt;form name="myForm"&gt;
+&lt;p&gt;&lt;label&gt;Form name:&lt;input type="text" name="text1" value="Beluga"&gt;&lt;/label&gt;
+&lt;p&gt;&lt;input name="button1" type="button" value="Show Form Name"
+     onclick="this.form.text1.value = this.form.name"&gt;
+&lt;/p&gt;
+&lt;/form&gt;</pre>
+
+<h3 id="Defining_getters_and_setters">Defining getters and setters</h3>
+
+<p>A <em>getter</em> is a method that gets the value of a specific property. A <em>setter</em> is a method that sets the value of a specific property. You can define getters and setters on any predefined core object or user-defined object that supports the addition of new properties. The syntax for defining getters and setters uses the object literal syntax.</p>
+
+<p>Starting in JavaScript 1.8.1, setters are no longer called when setting properties in object and array initializers.</p>
+
+<p>The following <a href="/en-US/docs/SpiderMonkey/Introduction_to_the_JavaScript_shell" title="en-US/docs/SpiderMonkey/Introduction to the JavaScript shell">JS shell</a> session illustrates how getters and setters could work for a user-defined object <code>o</code>. The JS shell is an application that allows developers to test JavaScript code in batch mode or interactively. In Firefox you can get a JS shell by pressing Ctrl+Shift+K.</p>
+
+<pre class="brush: js">js&gt; var o = {a: 7, get b() {return this.a + 1;}, set c(x) {this.a = x / 2}};
+[object Object]
+js&gt; o.a;
+7
+js&gt; o.b;
+8
+js&gt; o.c = 50;
+js&gt; o.a;
+25
+</pre>
+
+<p>The <code>o</code> object's properties are:</p>
+
+<ul>
+ <li><code>o.a</code> — a number</li>
+ <li><code>o.b</code> — a getter that returns <code>o.a</code> plus 1</li>
+ <li><code>o.c</code> — a setter that sets the value of <code>o.a</code> to half of the value <code>o.c</code> is being set to</li>
+</ul>
+
+<p>Please note that function names of getters and setters defined in an object literal using "[gs]et <em>property</em>()" (as opposed to <code>__define[GS]etter__</code> ) are not the names of the getters themselves, even though the <code>[gs]et <em>propertyName</em>(){ }</code> syntax may mislead you to think otherwise. To name a function in a getter or setter using the "[gs]et <em>property</em>()" syntax, define an explicitly named function programmatically using <code><a href="/en-US/docs/JavaScript/Reference/Global_Objects/Object/defineProperty" title="en-US/docs/Core JavaScript 1.5 Reference/Global
+Objects/Object/defineProperty">Object.defineProperty</a></code> (or the <code><a href="/en-US/docs/JavaScript/Reference/Global_Objects/Object/defineGetter" title="en-US/docs/Core JavaScript 1.5 Reference/Global
+Objects/Object/defineGetter">Object.prototype.__defineGetter__</a></code> legacy fallback).</p>
+
+<p>This JavaScript shell session illustrates how getters and setters can extend the <code>Date</code> prototype to add a <code>year</code> property to all instances of the predefined <code>Date</code> class. It uses the <code>Date</code> class's existing <code>getFullYear</code> and <code>setFullYear</code> methods to support the <code>year</code> property's getter and setter.</p>
+
+<p>These statements define a getter and setter for the year property:</p>
+
+<pre class="brush: js">js&gt; var d = Date.prototype;
+js&gt; Object.defineProperty(d, "year", {
+    get: function() {return this.getFullYear() },
+    set: function(y) { this.setFullYear(y) }
+});
+</pre>
+
+<p>These statements use the getter and setter in a <code>Date</code> object:</p>
+
+<pre class="brush: js">js&gt; var now = new Date;
+js&gt; print(now.year);
+2000
+js&gt; now.year = 2001;
+987617605170
+js&gt; print(now);
+Wed Apr 18 11:13:25 GMT-0700 (Pacific Daylight Time) 2001
+</pre>
+
+<h4 id="Obsolete_syntaxes">Obsolete syntaxes</h4>
+
+<p>In the past, JavaScript supported several other syntaxes for defining getters and setters. None of these syntaxes were supported by other engines, and support has been removed in recent versions of JavaScript. See <a class="external" href="http://whereswalden.com/2010/04/16/more-spidermonkey-changes-ancient-esoteric-very-rarely-used-syntax-for-creating-getters-and-setters-is-being-removed/" title="http://whereswalden.com/2010/04/16/more-spidermonkey-changes-ancient-esoteric-very-rarely-used-syntax-for-creating-getters-and-setters-is-being-removed/">this dissection of the removed syntaxes</a> for further details on what was removed and how to adapt to those removals.</p>
+
+<h4 id="Summary">Summary</h4>
+
+<p>In principle, getters and setters can be either</p>
+
+<ul>
+ <li>defined using <a href="/ca/docs/Web/JavaScript/Guide/Treballar_amb_Objectes$edit#Object_initializers">object initializers</a>, or</li>
+ <li>added later to any object at any time using a getter or setter adding method.</li>
+</ul>
+
+<p>When defining getters and setters using <a href="/ca/docs/Web/JavaScript/Guide/Treballar_amb_Objectes$edit#Object_initializers">object initializers</a>, all you need to do is to prefix a getter method with <code>get</code> and a setter method with <code>set</code>. Of course, the getter method must not expect a parameter, while the setter method expects exactly one parameter (the new value to set). For instance:</p>
+
+<pre class="brush: js">var o = {
+  a: 7,
+  get b() { return this.a + 1; },
+  set c(x) { this.a = x / 2; }
+};
+</pre>
+
+<p>Getters and setters can also be added to an object at any time after creation using the <code>Object.defineProperties</code> method. This method's first parameter is the object on which you want to define the getter or setter. The second parameter is an object whose property names are the getter or setter names, and whose property values are objects for defining the getter or setter functions. Here's an example that defines the same getter and setter used in the previous example:<br>
+  </p>
+
+<pre class="brush: js">var o = { a:0 }
+
+Object.defineProperties(o, {
+    "b": { get: function () { return this.a + 1; } },
+    "c": { set: function (x) { this.a = x / 2; } }
+});
+
+o.c = 10 // Runs the setter, which assigns 10 / 2 (5) to the 'a' property
+console.log(o.b) // Runs the getter, which yields a + 1 or 6
+</pre>
+
+<p>Which of the two forms to choose depends on your programming style and task at hand. If you already go for the object initializer when defining a prototype you will probably most of the time choose the first form. This form is more compact and natural. However, if you need to add getters and setters later — because you did not write the prototype or particular object — then the second form is the only possible form. The second form probably best represents the dynamic nature of JavaScript — but it can make the code hard to read and understand.</p>
+
+<div class="note">
+<p>Prior to Firefox 3.0, getter and setter are not supported for DOM Elements. Older versions of Firefox silently fail. If exceptions are needed for those, changing the prototype of HTMLElement <code>(HTMLElement.prototype.__define[SG]etter__)</code> and throwing an exception is a workaround.</p>
+With Firefox 3.0, defining getter or setter on an already-defined property will throw an exception. The property must be deleted beforehand, which is not the case for older versions of Firefox.</div>
+
+<h4 id="Defining_getters_and_setters_See_also" name="Defining_getters_and_setters_See_also">Vegeu també</h4>
+
+<ul>
+ <li><code><a href="https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Object/defineProperty" title="en-US/docs/JavaScript/Reference/Global_Objects/Object/defineSetter">Object.defineProperty</a></code></li>
+ <li><code><a href="/en-US/docs/JavaScript/Reference/Operators/get" title="en-US/docs/JavaScript/Reference/Operators/Special Operators/get Operator">get</a></code></li>
+ <li><code><a href="/en-US/docs/JavaScript/Reference/Operators/set" title="en-US/docs/JavaScript/Reference/Operators/Special Operators/set Operator">set</a></code></li>
+</ul>
+
+<h3 id="Eliminar_propietats">Eliminar propietats</h3>
+
+<p>You can remove a non-inherited property by using the <code>delete</code> operator. The following code shows how to remove a property.</p>
+
+<pre class="brush: js">//Creates a new object, myobj, with two properties, a and b.
+var myobj = new Object;
+myobj.a = 5;
+myobj.b = 12;
+
+//Removes the a property, leaving myobj with only the b property.
+delete myobj.a;
+console.log ("a" in myobj) // yields "false"
+</pre>
+
+<p>You can also use <code>delete</code> to delete a global variable if the <code>var</code> keyword was not used to declare the variable:</p>
+
+<pre class="brush: js">g = 17;
+delete g;
+</pre>
+
+<p>See <code><a href="/ca/docs/Web/JavaScript/Reference/Operators/delete">delete</a></code> for more information.</p>
+
+<h3 id="Comparar_Objectes">Comparar Objectes</h3>
+
+<p>In JavaScript objects are a reference type. Two distinct objects are never equal, even if they have the same properties. Only comparing the same object reference with itself yields true.</p>
+
+<pre class="brush: js">// Two variables, two distict objects with the same properties
+var fruit = {name: "apple"};
+var fruitbear = {name: "apple"};
+
+fruit == fruitbear // return false
+fruit === fruitbear // return false</pre>
+
+<pre class="brush: js">// Two variables, a single object
+var fruit = {name: "apple"};
+var fruitbear = fruit;  // assign fruit object reference to fruitbear
+
+// here fruit and fruitbear are pointing to same object
+fruit == fruitbear // return true
+fruit === fruitbear // return true
+</pre>
+
+<p>Per més informació sobre els operadors de comparació, vegeu <a href="/en-US/docs/Web/JavaScript/Reference/Operators/Comparison_Operators">operadors de comparació</a>.</p>
+
+<h2 id="Vegeu_també">Vegeu també</h2>
+
+<ul>
+ <li><a class="external" href="http://es5.github.com/#x4.2" title="http://es5.github.com/#x4.2">ECMAScript 5.1 spec: Language Overview</a></li>
+ <li><a class="external" href="http://dmitrysoshnikov.com/ecmascript/javascript-the-core" title="http://dmitrysoshnikov.com/ecmascript/javascript-the-core">JavaScript. The core. (Dmitry A. Soshnikov ECMA-262 article series)</a></li>
+</ul>
+
+<div>{{PreviousNext("Web/JavaScript/Guide/Regular_Expressions", "Web/JavaScript/Guide/Details_of_the_Object_Model")}}</div>

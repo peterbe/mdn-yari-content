@@ -1,0 +1,119 @@
+<p>{{WebGLSidebar("Tutorial")}} {{PreviousNext("Web/API/WebGL_API/Tutorial/Using_shaders_to_apply_color_in_WebGL", "Web/API/WebGL_API/Tutorial/Creating_3D_objects_using_WebGL") }}</p>
+
+<p>在之前静态的示例中，我们现有的代码已被配置成每15毫秒就重新绘制一次WebGL的场景。但至今为止，每一次所绘制的场景都是相同的。让我们来改变这一点，使我们的正方形动起来。</p>
+
+<p>在这个例子中，我们实际上对2D的正方形进行了三维旋转和移动；这证明即使我们建立的是一个2D的物体，但实际上它也是存在于3D空间中的。</p>
+
+<h2 id="旋转正方形">旋转正方形</h2>
+
+<p>让我们从旋转正方形开始。首先我们需要一个变量来追踪正方形当前的旋转情况：</p>
+
+<pre class="brush: js">var squareRotation = 0.0;
+</pre>
+
+<p>现在我们需要更新 <code>drawScene() </code>函数将当前的旋转状态应用于绘制正方形。在将正方形移动到初始绘制位置后，使用如下方法进行旋转：</p>
+
+<pre class="brush: js">mvPushMatrix();
+mvRotate(squareRotation, [1, 0, 1]);
+</pre>
+
+<p>这段代码存储了当前模型视图矩阵，然后按照<code>squareRotation</code>的值绕X轴和Z轴旋转矩阵。</p>
+
+<p><br>
+ 绘制完成后，需要加载回之前的矩阵：</p>
+
+<pre class="brush: js">  mvPopMatrix();
+</pre>
+
+<p>存储后再重加载原始矩阵的目的是：避免绘制其它图形时也受到这次旋转的影响。但在此例子中并没有绘制更多物体，所以在此这一步并没有实际意义。</p>
+
+<p>为了让物体动起来，我们需要随时改变<code>squareRotation</code>的值。我们可以建立一个新的变量来追踪上一次动作的时间（可以称这个变量为 <code>lastSquareUpdateTime</code> ），并将如下代码添加到 <code>drawScene() </code>函数的末尾：</p>
+
+<pre class="brush: js">  var currentTime = Date.now();
+  if (lastSquareUpdateTime) {
+  	var delta = currentTime - lastSquareUpdateTime;
+  	
+  	squareRotation += (30 * delta) / 1000.0;
+  }
+  
+  lastSquareUpdateTime = currentTime;
+</pre>
+
+<p>这段代码用当前时间与上次动作的时间差更新 <code>squareRotation</code> 决定旋转的角度。</p>
+
+<h2 id="移动正方形">移动正方形</h2>
+
+<p>在绘制正方形之前，可以先将图形移动到其它位置。下面的例子展示的是非常基础的动作——当然，在实际操作中一般不会用如此奇怪的变换。</p>
+
+<p>让我们用一些新的变量来追踪每个轴的偏移量：</p>
+
+<pre class="brush: js">var squareXOffset = 0.0;
+var squareYOffset = 0.0;
+var squareZOffset = 0.0;
+</pre>
+
+<p>用如下的变量来表示每个轴上的变化量：</p>
+
+<pre class="brush: js">var xIncValue = 0.2;
+var yIncValue = -0.4;
+var zIncValue = 0.3;
+</pre>
+
+<p>在之前的旋转代码中加入如下的部分：</p>
+
+<pre class="brush: js">    squareXOffset += xIncValue * ((30 * delta) / 1000.0);
+    squareYOffset += yIncValue * ((30 * delta) / 1000.0);
+    squareZOffset += zIncValue * ((30 * delta) / 1000.0);
+    
+    if (Math.abs(squareYOffset) &gt; 2.5) {
+      xIncValue = -xIncValue;
+      yIncValue = -yIncValue;
+      zIncValue = -zIncValue;
+    }
+</pre>
+
+<p>最后，将下面的代码加入<code> drawScene()</code>  函数中：</p>
+
+<pre class="brush: js">mvTranslate([squareXOffset, squareYOffset, squareZOffset]);</pre>
+
+<p>如下所示，正方形在旋转的过程中会缩放，在画布上随机移动且相对于观测者的位置循环地拉近缩远。它看起来更像一个屏幕保护程序。</p>
+
+<p>{{EmbedGHLiveSample('webgl-examples/tutorial/sample4/index.html', 670, 510) }}</p>
+
+<p><a href="https://github.com/mdn/webgl-examples/tree/gh-pages/tutorial/sample4">查看完整代码</a> | <a href="http://mdn.github.io/webgl-examples/tutorial/sample4/">在新页面中打开示例</a></p>
+
+<h2 id="更多矩阵操作">更多矩阵操作</h2>
+
+<p>这个例子中使用了其他一些矩阵操作，包括两个用于保存矩阵的入栈出栈函数，以及一个将矩阵旋转特定的角度的函数。代码如下：</p>
+
+<pre class="brush: js">var mvMatrixStack = [];
+
+function mvPushMatrix(m) {
+  if (m) {
+    mvMatrixStack.push(m.dup());
+    mvMatrix = m.dup();
+  } else {
+    mvMatrixStack.push(mvMatrix.dup());
+  }
+}
+
+function mvPopMatrix() {
+  if (!mvMatrixStack.length) {
+    throw("Can't pop from an empty matrix stack.");
+  }
+  
+  mvMatrix = mvMatrixStack.pop();
+  return mvMatrix;
+}
+
+function mvRotate(angle, v) {
+  var inRadians = angle * Math.PI / 180.0;
+  
+  var m = Matrix.Rotation(inRadians, $V([v[0], v[1], v[2]])).ensure4x4();
+  multMatrix(m);
+}
+</pre>
+
+<p>这些函数来源于Vlad Vukićević之前写的示例。</p>
+
+<p>{{PreviousNext("Web/API/WebGL_API/Tutorial/Using_shaders_to_apply_color_in_WebGL", "Web/API/WebGL_API/Tutorial/Creating_3D_objects_using_WebGL") }}</p>

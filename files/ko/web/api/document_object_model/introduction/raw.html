@@ -1,0 +1,151 @@
+<p>이 장에서는 <a href="ko/DOM">DOM</a>에 대한 개념과 <a href="ko/HTML">HTML</a>과 <a href="ko/XML">XML</a> 문서의 구조를 어떻게 표현하고 어떻게 접근하는 지에 대한 API 참고 자료와 예제를 간략하게 소개하고자 합니다.
+</p>
+<h3 id="DOM.EC.9D.B4.EB.9E.80_.EB.AC.B4.EC.97.87.EC.9D.B8.EA.B0.80.3F" name="DOM.EC.9D.B4.EB.9E.80_.EB.AC.B4.EC.97.87.EC.9D.B8.EA.B0.80.3F">DOM이란 무엇인가?</h3>
+<p>문서 객체 모델(Document Object Model, DOM)은 HTML과 XML 문서에 대한 프로그래밍 인터페이스입니다. 문서에 대한 구조적 정보를 제공하고 문서 구조나 외양 및 내용을 바꿀 수 있도록 프로그램에서 접근할 수 있는 방법을 제공합니다. DOM은 프로퍼티와 메소드를 가지는 객체와 노드의 트리형 구조로 표현됩니다. 웹 페이지를 스크립트나 다른 개발 언어로 접근할 때 필수 적입니다.
+</p><p>웹 페이지는 문서 입니다. 문서는 웹 브라우저창에 표시되거나 HTML 소스 창에 표시됩니다. 둘다 같은 문서 입니다만 문서 객체 모델(DOM)은 이 문서를 다루고 저장하기 위해 다른 방법을 사용합니다. DOM은 웹 문서를 객체 지향적으로 다룹니다. 그래서 <a href="ko/JavaScript">JavaScript</a> 같은 스크립트 언어가 다루기 쉽습니다.
+</p><p><a class="external" href="http://www.w3.org/DOM/">W3C DOM</a>은 현대 웹 브라우저에서 DOM을 해석하는 표준 형식입니다. 많은 웹 브라우저들은 W3C 표준에 확장 기능을 제공하고 있지만, 이 표준 방식을 따르면 웹 브라우저에서 문서를 접근할 때 다 같은 결과를 얻어 낼 수 있습니다.
+</p><p>예를 들어 W3C DOM은 <code>getElementsByTagName</code>은 아래와 같이 문서 내에 모든 <code>&lt;P&gt;</code>요소의 내용을 가지고 오게 됩니다.
+</p>
+<pre>paragraphs = document.getElementsByTagName("P");
+// paragraphs[0] is the first &lt;p&gt; element
+// paragraphs[1] is the second &lt;p&gt; element, etc.
+alert(paragraphs[0].nodeName);
+</pre>
+<p>웹 문서의 모든 프로퍼티, 메소드, 이벤트은 객체로 정의할 수 있습니다. (예를 들어, <code>document</code>객체는 문서 자체를 <code>table</code> 객체는 특정 <code>HTMLTableElement</code> DOM 인터페이스를 표시합니다.) 이 문서는 Gecko 기반 브라우저에 구현된 DOM을 객체 방법으로 이용할 수 있는 방법을 제공합니다.
+</p>
+<h3 id="DOM.EA.B3.BC_JavaScript" name="DOM.EA.B3.BC_JavaScript">DOM과 JavaScript</h3>
+<p>The short example above, like nearly all of the examples in this reference, is <a href="ko/JavaScript">JavaScript</a>. That is to say, it's <i>written</i> in JavaScript, but it <i>uses</i> the DOM to access the document and its elements. The DOM is not a programming language, but without it, the JavaScript language wouldn't have any model or notion of the web pages, XML pages and elements with which it is usually concerned. Every element in a document—the document as a whole, the head, tables within the document, table headers, text within the table cells—is part of the document object model for that document, so they can all be accessed and manipulated using the DOM and a scripting language like JavaScript.
+</p><p>In the beginning, JavaScript and the DOM were tightly intertwined, but eventually they evolved into separate entities. The page content is stored in DOM and may be accessed and manipulated via JavaScript, so that we may write this approximative equation: </p><p>API(web or XML page) = DOM + JS(scripting language)
+</p><p>The DOM was designed to be independent of any particular programming language, making the structural representation of the document available from a single, consistent API. Though we focus exclusively on JavaScript in this reference documentation, implementations of the DOM can be built for any language, as this Python example demonstrates:
+</p>
+<pre class="eval"># Python DOM example
+import xml.dom.minidom as m
+doc = m.parse("C:\\Projects\\Py\\chap1.xml");
+doc.nodeName # DOM property of document object;
+p_list = doc.getElementsByTagName("para");
+</pre>
+<h3 id="How_Do_I_Access_the_DOM.3F" name="How_Do_I_Access_the_DOM.3F">How Do I Access the DOM?</h3>
+<p>You don't have to do anything special to begin using the DOM. Different browsers have different implementations of the DOM, and these implementations exhibit varying degrees of conformance to the actual DOM standard (a subject we try to avoid in this documentation), but every web browser uses some document object model to make web pages accessible to script.
+</p><p>When you create a script–whether it's in-line in a <code>&lt;SCRIPT&gt;</code> element or included in the web page by means of a script loading instruction–you can immediately begin using the API for the <code><a href="ko/DOM/document">document</a></code> or <code><a href="ko/DOM/window">window</a></code> elements to manipulate the document itself or to get at the children of that document, which are the various elements in the web page. Your DOM programming may be something as simple as the following, which displays an alert message by using the <code><a href="ko/DOM/window.alert">alert()</a></code> function from the <code><a href="ko/DOM/window">window</a></code> object, or it may use more sophisticated DOM methods to actually create new content, as in the longer example below.
+</p>
+<pre class="eval">&lt;body onload="window.alert('welcome to my home page!');"&gt;
+</pre>
+<p>Aside from the <code>&lt;script&gt;</code> element in which the JavaScript is defined, this JavaScript sets a function to run when the document is loaded (and when the whole DOM is available for use). This function creates a new H1 element, adds text to that element, and then adds the <code>H1</code> to the tree for this document:
+</p>
+<pre class="eval">&lt;html&gt;
+&lt;head&gt;
+&lt;script&gt;
+// run this function when the document is loaded
+window.onload = function() {
+   // create a couple of elements 
+   // in an otherwise empty HTML page
+   heading = document.createElement("h1");
+   heading_text = document.createTextNode("Big Head!");
+   heading.appendChild(heading_text);
+   document.body.appendChild(heading);
+}
+&lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<h3 id="Important_Data_Types" name="Important_Data_Types">Important Data Types</h3>
+<p>This reference tries to describe the various objects and types in as simple a way as possible. But there are a number of different data types being passed around the API that you should be aware of. For the sake of simplicity, syntax examples in this API reference typically refer to <code>nodes</code> as elements, to arrays of nodes as <code>nodeLists</code> (or simply <code>elements</code>), and to <code>attribute</code> nodes simply as attributes.
+</p><p>The following table briefly describes these data types.
+</p>
+<table> <tbody><tr> <td><code>document</code></td> <td>When a member returns an object of type <code>document</code> (e.g., the <b>ownerDocument</b> property of an element returns the <code>document</code> to which it belongs), this object is the root <code>document</code> object itself. The <a href="ko/Gecko_DOM_Reference/document">DOM <code>document</code> Reference</a> chapter describes the <code>document</code> object.</td> </tr> <tr> <td><code>element</code></td> <td><code>element</code> refers to an element or a node of type <code>element</code> returned by a member of the DOM API. Rather than saying, for example, that the <code>document.createElement()</code> method returns an object reference to a <code>node</code>, we just say that this method returns the <code>element</code> that has just been created in the DOM. <code>element</code> objects implement the DOM <code>Element</code> interface and also the more basic <code>Node</code> interface, both of which are included together in this reference.</td> </tr> <tr> <td><code>nodeList</code></td> <td>A <code>nodeList</code> is an array of elements, like the kind that is returned by the method <code>document.getElementsByTagName()</code>. Items in a <code>nodeList</code> are accessed by index in either of two ways: <ul><li> list.item(1)
+</li><li> list{{ mediawiki.external(1) }}
+</li></ul>
+<p>These two are equivalent. In the first, <b>item()</b> is the single method on the <code>nodeList</code> object. The latter uses the typical array syntax to fetch the second item in the list.
+</p>
+</td> </tr> <tr> <td><code>attribute</code></td> <td>When an <code>attribute</code> is returned by a member (e.g., by the <b>createAttribute()</b> method), it is an object reference that exposes a special (albeit small) interface for attributes. Attributes are nodes in the DOM just like elements are, though you may rarely use them as such.</td> </tr> <tr> <td><code>NamedNodeMap</code></td> <td>A <code>namedNodeMap</code> is like an array, but the items are accessed by name or index, though this latter case is merely a convenience for enumeration, as they are in no particular order in the list. A <code>NamedNodeMap</code> has an item() method for this purpose, and you can also add and remove items from a <code>NamedNodeMap </code></td> </tr>
+</tbody></table>
+<h3 id="DOM_Interfaces" name="DOM_Interfaces">DOM Interfaces</h3>
+<p>A stated purpose of this guide is to minimize talk about abstract interfaces, inheritance, and other implementation details, and to talk instead about the objects in the DOM, about the actual <i>things</i> you can use to manipulate the DOM hierarchy. From the point of view of the web programmer, it's often a matter of indifference that the object representing the <code>HTML FORM</code> element gets its <b>name</b> property from the <code>HTMLFormElement</code> interface but its <b>className</b> property from the <code>HTMLElement</code> interface proper. In both cases, the property you want is simply in the form object.
+</p><p>But the relationship between objects and the interfaces that they implement in the DOM can be confusing, and so this section attempts to say a little something about the actual interfaces in the DOM specification and how they are made available.
+</p>
+<h4 id="Interfaces_and_Objects" name="Interfaces_and_Objects">Interfaces and Objects</h4>
+<p>In some cases, an object implements a single interface. But more often than not, an object like an HTML <code>table</code> borrows from several different interfaces. The table object, for example, implements a specialized <a href="ko/DOM/table">HTML Table Element Interface</a>, which includes such methods as <code>createCaption</code> and <code>insertRow</code>. But since it's also an HTML element, <code>table</code> implements the <code>Element</code> interface described in the <a href="ko/Gecko_DOM_Reference/element">DOM <code>element</code> Reference</a> chapter. And finally, since an HTML element is also, as far as the DOM is concerned, a node in the tree of nodes that make up the object model for a web page or an XML page, the table element also implements the more basic <code>Node</code> interface, from which <code>Element</code> derives.
+</p><p>When you get a reference to a <code>table</code> object, as in the following example, you routinely use all three of these interfaces interchangeably on the object, perhaps without knowing it.
+</p>
+<pre>var table = document.getElementById("table");
+var tableAttrs = table.attributes; // Node/Element interface
+for(var i = 0; i &lt; tableAttrs.length; i++){
+  // HTMLTableElement interface: border attribute
+  if(tableAttrs[i].nodeName.toLowerCase() == "border")
+    table.border = "1"; 
+}
+// HTMLTableElement interface: summary attribute
+table.summary = "note: increased border";
+</pre>
+<h4 id="Core_Interfaces_in_the_DOM" name="Core_Interfaces_in_the_DOM">Core Interfaces in the DOM</h4>
+<p>This section lists some of the most commonly-used interfaces in the DOM. The idea is not to describe what these APIs do here but to give you an idea of the sorts of methods and properties you will see very often as you use the DOM. These common APIs are used in the longer examples in the <a href="ko/Gecko_DOM_Reference/Examples">DOM Examples</a> chapter at the end of this book.
+</p><p><code>Document</code> and <code>window</code> objects are the objects whose interfaces you generally use most often in DOM programming. In simple terms, the <code>window</code> object represents something like the browser, and the <code>document</code> object is the root of the document itself. <code>Element</code> inherits from the generic <code>Node</code> interface, and together these two interfaces provide many of the methods and properties you use on individual elements. These elements may also have specific interfaces for dealing with the kind of data those elements hold, as in the <code>table</code> object example in the previous section.
+</p><p>The following is a brief list of common APIs in web and XML page scripting using the DOM.
+</p>
+<ul><li> <code><a href="ko/DOM/document.getElementById">document.getElementById</a>(id)</code>
+</li><li> <code>element.<a href="ko/DOM/element.getElementsByTagName">getElementsByTagName</a>(name)</code>
+</li><li> <code><a href="ko/DOM/document.createElement">document.createElement</a>(name)</code>
+</li><li> <code>parentNode.<a href="ko/DOM/element.appendChild">appendChild</a>(node)</code>
+</li><li> <code>element.<a href="ko/DOM/element.innerHTML">innerHTML</a></code>
+</li><li> <code>element.<a href="ko/DOM/element.style">style</a>.left</code>
+</li><li> <code>element.<a href="ko/DOM/element.setAttribute">setAttribute</a></code>
+</li><li> <code>element.<a href="ko/DOM/element.getAttribute">element.getAttribute</a></code>
+</li><li> <code>element.<a href="ko/DOM/element.addEventListener">addEventListener</a></code>
+</li><li> <code><a href="ko/DOM/window.content">window.content</a></code>
+</li><li> <code><a href="ko/DOM/window.onload">window.onload</a></code>
+</li><li> <code><a href="ko/DOM/window.dump">window.dump</a></code>
+</li><li> <code><a href="ko/DOM/window.scrollTo">window.scrollTo</a></code>
+</li></ul>
+<h3 id="Testing_the_DOM_API" name="Testing_the_DOM_API">Testing the DOM API</h3>
+<p>This document provides samples for every interface that you can use in your own web development. In some cases, the samples are complete HTML pages, with the DOM access in a &lt;script&gt; element, the interface (e.g, buttons) necessary to fire up the script in a form, and the HTML elements upon which the DOM operates listed as well. When this is the case, you can cut and paste the example into a new HTML document, save it, and run the example from the browser.
+</p><p>There are some cases, however, when the examples are more concise. To run examples that only demonstrate the basic relationship of the interface to the HTML elements, you may want to set up a test page in which interfaces can be easily accessed from scripts. The following very simple web page provides a &lt;script&gt; element in the header in which you can place functions that test the interface, a few HTML elements with attributes that you can retrieve, set, or otherwise manipulate, and the web user interface necessary to call those functions from the browser.
+</p><p>You can use this test page or create a similar one to test the DOM interfaces you are interested in and see how they work on the browser platform. You can update the contents of the <code>test()</code> function as needed, create more buttons, or add elements as necessary.
+</p>
+<pre>&lt;html&gt;
+&lt;head&gt;
+&lt;title&gt;DOM Tests&lt;/title&gt;
+&lt;script type="application/x-javascript"&gt;
+function setBodyAttr(attr,value){
+  if(document.body) eval('document.body.'+attr+'="'+value+'"');
+  else notSupported();
+}
+&lt;/script&gt;
+&lt;/head&gt; 
+&lt;body&gt;
+&lt;div style="margin: .5in; height="400""&gt; 
+&lt;p&gt;&lt;b&gt;&lt;tt&gt;text&lt;/tt&gt; color&lt;/p&gt; 
+&lt;form&gt; 
+&lt;select onChange="setBodyAttr('text',
+    this.options[this.selectedIndex].value);"&gt; 
+&lt;option value="black"&gt;black 
+&lt;option value="darkblue"&gt;darkblue 
+&lt;/select&gt;
+ &lt;p&gt;&lt;b&gt;&lt;tt&gt;bgColor&lt;/tt&gt;&lt;/p&gt;
+ &lt;select onChange="setBodyAttr('bgColor',
+    this.options[this.selectedIndex].value);"&gt; 
+&lt;option value="white"&gt;white 
+&lt;option value="lightgrey"&gt;gray
+ &lt;/select&gt;
+&lt;p&gt;&lt;b&gt;&lt;tt&gt;link&lt;/tt&gt;&lt;/p&gt; 
+&lt;select onChange="setBodyAttr('link',
+     this.options[this.selectedIndex].value);"&gt;
+&lt;option value="blue"&gt;blue
+&lt;option value="green"&gt;green
+&lt;/select&gt;  &lt;small&gt;
+     &lt;a href="http://www.brownhen.com/dom_api_top.html" id="sample"&gt;
+(sample link)&lt;/a&gt;&lt;/small&gt;&lt;br&gt;
+&lt;/form&gt;
+&lt;form&gt;
+  &lt;input type="button" value="version" onclick="ver()" /&gt;
+&lt;/form&gt;
+&lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<p>To test a lot of interfaces in a single page-for example, a "suite" of properties that affect the colors of a web page-you can create a similar test page with a whole console of buttons, textfields, and other HTML elements. The following screenshot gives you some idea of how interfaces can be grouped together for testing.
+</p><p><img alt="Image:DOM_Ref_Introduction_to_the_DOM.gif"><br>
+Figure 0.1 Sample DOM Test Page
+</p><p>In this example, the dropdown menus dynamically update such DOM-accessible aspects of the web page as its background color (<code>bgColor</code>), the color of the hyperlinks (<code>aLink</code>), and color of the text (<code>text</code>). However you design your test pages, testing the interfaces as you read about them is an important part of learning how to use the DOM effectively.
+</p>{{ languages( { "en": "en/Gecko_DOM_Reference/Introduction", "fr": "fr/R\u00e9f\u00e9rence_du_DOM_Gecko/Introduction", "pl": "pl/Dokumentacja_Gecko_DOM/Wprowadzenie", "zh-cn": "cn/Gecko_DOM_\u53c2\u8003/\u5165\u95e8" } ) }}

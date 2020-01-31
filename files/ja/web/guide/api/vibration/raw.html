@@ -1,0 +1,141 @@
+<p>{{DefaultAPISidebar("Vibration API")}}</p>
+
+<p class="summary">現代のモバイルデバイスはたいていバイブレーションハードウェアを内蔵しており、デバイスを振動させることによりソフトウェアのコードがユーザに物理的なフィードバックを与えることを可能にします。バイブレーションハードウェアを搭載している場合は <strong>Vibration API</strong> で、Web アプリがこのハードウェアにアクセスできるようにします。なお、デバイスがバイブレーションをサポートしない場合は何も行いません。</p>
+
+<h2 id="Describing_vibrations" name="Describing_vibrations">バイブレーションの表現</h2>
+
+<p>バイブレーションはオン・オフのパルスのパターンで表され、それはさまざまな長さになるでしょう。パターンは振動するミリ秒数を示す整数 1 つ、あるいはバイブレーションと休止時間のパターンを示す整数の配列で構成します。バイブレーションは 1 つのメソッドで制御します: {{domxref("Navigator.vibrate()")}} です。</p>
+
+<h3 id="A_single_vibration" name="A_single_vibration">1 回のバイブレーション</h3>
+
+<p>1 個の値、または 1 個だけの値で構成される配列を指定することにより、バイブレーションハードウェアを 1 回振動させることができます:</p>
+
+<pre class="brush:js">window.navigator.vibrate(200);
+window.navigator.vibrate([200]);
+</pre>
+
+<p>どちらの例も、デバイスを 200 ミリ秒間振動させます。</p>
+
+<h3 id="Vibration_patterns" name="Vibration_patterns">バイブレーションパターン</h3>
+
+<p>値の配列は、デバイスが振動する時間と振動しない時間を交互に示します。配列内の各値は整数値に変換されて、デバイスを振動させるミリ秒数および振動させないミリ秒数として交互に解釈されます。例えば:</p>
+
+<pre class="brush: js">window.navigator.vibrate([200, 100, 200]);
+</pre>
+
+<p>これはデバイスを 200 ミリ秒間振動させて、その後再び 200 ミリ秒間振動させる前に 100 ミリ秒間振動を止めます。</p>
+
+<p>バイブレーション/休止のペアは好きなだけ多く指定でき、またエントリ数は偶数・奇数のどちらでも可能です。各バイブレーション時間の終端で自動的にバイブレーションを止めますので、休止時間を最後のエントリとして与えなくてもよいことは注目に値します。</p>
+
+<h3 id="Canceling_existing_vibrations" name="Canceling_existing_vibrations">実行中のバイブレーションを取り消す</h3>
+
+<p>値 <code>0</code>、空の配列、あるいはすべての値が <code>0</code> の配列 を指定して {{domxref("Navigator.vibrate()")}} を呼び出すと、現在進行中のバイブレーションパターンを取り消します。</p>
+
+<h3 id="Continued_vibrations" name="Continued_vibrations">継続的なバイブレーション</h3>
+
+<p>基本的な <code>setInterval</code> および <code>clearInterval</code> のアクションにより、継続的なバイブレーションを生成できます:</p>
+
+<pre class="brush: js">var vibrateInterval;
+
+// 渡されたレベルでバイブレーションを開始
+function startVibrate(duration) {
+	navigator.vibrate(duration);
+}
+
+// バイブレーションを停止
+function stopVibrate() {
+	// インターバルをクリアして継続的なバイブレーションを停止 
+	if(vibrateInterval) clearInterval(vibrateInterval);
+	navigator.vibrate(0);
+}
+
+// 与えられた時間とインターバルによる継続的なバイブレーションを開始
+// 数値が与えられるものとする
+function startPeristentVibrate(duration, interval) {
+	vibrateInterval = setInterval(function() {
+		startVibrate(duration);
+	}, interval);
+}
+</pre>
+
+<p>当然ながら、上記のコードスニペットは配列によるバイブレーションを考慮していません。配列に基づく継続的なバイブレーションでは、配列のアイテムの総数を計算して、その値を基にしてインターバル (おそらく、遅延時間を付加して) を作成することが必要でしょう。</p>
+
+<h3 id="Why_use_Vibration_API" name="Why_use_Vibration_API">なぜ Vibration API を使用するか?</h3>
+
+<p>この API は、明らかにモバイルデバイスをターゲットにしています。Vibration API はモバイル Web アプリケーションでの通知に有用であり、また特にゲームやメディア重視のアプリケーションで使用するときにすばらしいものでしょう。モバイルデバイスで動画を見ていて、爆発シーンでデバイスが少し振動すると想像してみましょう。あるいはボンバーマンをプレイしていて、ブロックが爆発するときに穏やかな衝撃を感じると想像してみましょう!</p>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">策定状況</th>
+   <th scope="col">コメント</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName('Vibration API')}}</td>
+   <td>{{Spec2('Vibration API')}}</td>
+   <td>リンク先は最新の Editor's Draft です。W3C 版は勧告になりました。</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザ実装状況</h2>
+
+<div>{{CompatibilityTable}}</div>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>機能</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>基本サポート</td>
+   <td>{{CompatVersionUnknown}} {{property_prefix("webkit")}}</td>
+   <td>11.0 {{property_prefix("moz")}}<br>
+    16</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>機能</th>
+   <th>Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>基本サポート</td>
+   <td>{{CompatVersionUnknown}} {{property_prefix("webkit")}}</td>
+   <td>11.0 {{property_prefix("moz")}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li>{{domxref("Navigator.vibrate()")}}</li>
+</ul>

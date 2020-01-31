@@ -1,0 +1,333 @@
+<div>{{APIRef("File System API")}} {{non-standard_header}}</div>
+
+<p>La interfaz de acceso de la FileSystem API representa una entrada al sistema de archivos. La entrada puede ser un archivo o directorio. La interfaz incluye métodos para trabajar con archivos- incluyendo copiado, movimiento, eliminacion y lectura de archivos- así como información del archivo al cual apunta- incluyendo su nombre y la ruta desde la raíz hasta la entrada.</p>
+
+<h2 id="Sobre_este_documento">Sobre este documento</h2>
+
+<p>Este documento fue actualizado por última vez en Marzo 2 de 2011 y trata las especificaciones W3C(Borrador en desarrollo) bocetado en Abril 19 de 2011.</p>
+
+<p>La especificacion está mas o menos abandonada al no haber conseguido tracción significativa.</p>
+
+<h2 id="basic" name="basic">Conceptos Básicos</h2>
+
+<p>The <code>Entry</code> interface includes methods that you would expect for manipulating files and directories, but it also include a really handy method for getting a URL of the entry: <code><a href="#toURL">toURL()</a></code>. It also introduces a new URL scheme: <code>filesystem:</code>.</p>
+
+<p>You can use the <code>filesystem:</code> scheme on Google Chrome to see all the files and folders that are stored in the origin of your app. Just use <code>filesystem:</code> scheme for the root directory of the origin of the app. For example, if your app is in <code><a href="http://ww.html5rocks.com" rel="freelink">http://ww.html5rocks.com</a></code>, open<code> filesystem:<a href="http://www.html5rocks.com/temporary/" rel="freelink">http://www.html5rocks.com/temporary/</a></code> in a tab. Chrome shows a read-only list of all the files and folders stored the origin of your app.</p>
+
+<h3 id="example" name="example">Example</h3>
+
+<p>To see an example of how toURL() works, see the <a href="#toURL">method description</a>. The snippet below shows you how you can remove a file by name.</p>
+
+<pre class="brush: js">// Taking care of the browser-specific prefixes.
+window.requestFileSystem  = window.requestFileSystem || window.webkitRequestFileSystem; 
+
+...
+
+// Opening a file system with temporary storage
+window.requestFileSystem(TEMPORARY, 1024*1024 /*1MB*/, function(fs) {
+  fs.root.getFile('log.txt', {}, function(fileEntry) {
+    
+    fileEntry.remove(function() {
+      console.log('File removed.');
+    }, onError);
+  
+  }, onError);
+}, onError); </pre>
+
+<h2 id="Method_overview">Method overview</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <td><code>void <a href="#getMetadata">getMetadata</a> (in MetadataCallback <em>successCallback</em>, in optional ErrorCallback <em>errorCallback</em>);</code></td>
+  </tr>
+  <tr>
+   <td><code>void <a href="#moveTo">moveTo</a> (in DirectoryEntry <em>parent</em>, optional DOMString <em>newName</em>, in optional EntryCallback <em>successCallback</em>, in optional ErrorCallback <em>errorCallback</em>);</code></td>
+  </tr>
+  <tr>
+   <td><code>void <a href="#copyTo">copyTo</a> (in DirectoryEntry <em>parent</em>, in optional DOMString <em>newName</em>, in optional EntryCallback <em>successCallback</em>, in optional ErrorCallback <em>errorCallback</em>);</code></td>
+  </tr>
+  <tr>
+   <td><code>void <a href="#toURL">toURL</a> (in optional DOMString <em>mimeType</em>);</code></td>
+  </tr>
+  <tr>
+   <td><code>void <a href="#remove">remove</a> (in VoidCallback <em>successCallback</em>, in optional ErrorCallback <em>errorCallback</em>);</code></td>
+  </tr>
+  <tr>
+   <td><code>void <a href="#getParent">getParent</a> (in EntryCallback <em>successCallback</em>, in optional ErrorCallback <em>errorCallback</em>);</code></td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Attributes">Attributes</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">Attribute</th>
+   <th scope="col">Type</th>
+   <th scope="col">Description</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td><a name="attr_filesystem"><code>filesystem</code></a></td>
+   <td><code>readonly FileSystem</code></td>
+   <td>The file system where the entry resides.</td>
+  </tr>
+  <tr>
+   <td><a id="attr_fullpath" name="fullpath"><code>fullPath</code></a></td>
+   <td><code>readonly DOMString</code></td>
+   <td>The full absolute path from the root to the entry.
+    <p>An absolute path is a relative path from the root directory, prepended with a '<code>/</code>'. </p>
+   </td>
+  </tr>
+  <tr>
+   <td><a id="attr_root" name="attr_isDirectory"><code>isDirectory</code></a></td>
+   <td><code>readonly boolean</code></td>
+   <td>True if the entry is a directory.</td>
+  </tr>
+  <tr>
+   <td><a id="attr_isfile" name="attr_isfile"><code>isFile</code></a></td>
+   <td><code>readonly boolean</code></td>
+   <td>True if the entry is a file.</td>
+  </tr>
+  <tr>
+   <td><a id="attr_name" name="attr_name"><code>name</code></a></td>
+   <td><code>readonly DOMString</code></td>
+   <td>The name of the entry, excluding the path leading to it.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Methods">Methods</h2>
+
+<h3 id="getMetadata" name="getMetadata">getMetadata()</h3>
+
+<p>Look up last modification date of the entry.</p>
+
+<pre>void getMetadata (
+  in MetadataCallback ErrorCallback
+);</pre>
+
+<h5 id="Parameter">Parameter</h5>
+
+<dl>
+ <dt>successCallback</dt>
+ <dd>A callback that is called with the time of the last modification.</dd>
+ <dt>errorCallback</dt>
+ <dd>A callback that is called when errors happen.</dd>
+</dl>
+
+<h5 id="Returns">Returns</h5>
+
+<dl>
+ <dt><code>void</code></dt>
+</dl>
+
+<h3 id="moveTo" name="moveTo">moveTo()</h3>
+
+<p>Move an entry to a different location on the file system. Moving a file over an existing file replaces that existing file. A move of a directory on top of an existing empty directory replaces that directory.</p>
+
+<p>You can also use this method for renaming files. You can keep it in the same location and then define the <code>newName</code> parameter.</p>
+
+<p>You cannot do the following:</p>
+
+<ul>
+ <li>Move a directory inside itself or to any child at any depth</li>
+ <li>Move an entry into its parent if a name different from its current one isn't provided</li>
+ <li>Move a file to a path occupied by a directory or move a directory to a path occupied by a file</li>
+ <li>Move any element to a path occupied by a directory that is not empty.</li>
+</ul>
+
+<pre>void moveTo (
+  in DirectoryEntry <em>parent</em>, optional DOMString <em>newName</em>, optional EntryCallback <em>successCallback</em>, optional ErrorCallback <em>errorCallback</em>
+);</pre>
+
+<h5 id="Parameter_2">Parameter</h5>
+
+<dl>
+ <dt>parent</dt>
+ <dd>The directory to which to move the entry.</dd>
+ <dt>newName</dt>
+ <dd>The new name of the entry. If you do not specify a name, the browser preserves the entry's current name.</dd>
+ <dt>successCallback</dt>
+ <dd>A callback that is called when the file or directory has been successfully moved.</dd>
+ <dt>errorCallback</dt>
+ <dd>An optional callback that is called only when errors happen.</dd>
+</dl>
+
+<h5 id="Returns_2">Returns</h5>
+
+<dl>
+ <dt><code>void</code></dt>
+</dl>
+
+<h3 id="copyTo" name="copyTo">copyTo()</h3>
+
+<p>Copy an entry to a different location on the file system. You cannot copy an entry inside itself if it is a directory, nor can you copy it into its parent if you don't provide a new name. Directory copies are always recursive—that is, they copy all contents of the directory. You cannot change this behavior. Files are simply duplicated.</p>
+
+<pre>void copyTo (
+  in DirectoryEntry <em>parent</em>, optional DOMString <em>newName</em>, optional EntryCallback <em>successCallback</em>, optional ErrorCallback <em>errorCallback</em>
+);</pre>
+
+<h5 id="Parameter_3">Parameter</h5>
+
+<dl>
+ <dt>parent</dt>
+ <dd>The directory where you want the entry to move to.</dd>
+ <dt>newName</dt>
+ <dd>The new name of the entry. If you do not specify a name, the browser preserves the entry's current name.</dd>
+ <dt>successCallback</dt>
+ <dd>A callback that is called when the file or directory has been successfully copied.</dd>
+ <dt>errorCallback</dt>
+ <dd>An optional callback that is called only when errors happen.</dd>
+</dl>
+
+<h5 id="Returns_3">Returns</h5>
+
+<dl>
+ <dt><code>void</code></dt>
+</dl>
+
+<h3 id="toURL" name="toURL">toURL()</h3>
+
+<p>Returns a URL that can be used to identify this entry. It exposes a new URL scheme—<code>filesystem:</code>—that you can use to fill <code>src</code> or <code>href</code> attributes. For example, if you wanted to display an image and have its <a href="/en-US/docs/DOM/File_API/File_System_API/FileEntry">fileEntry</a>, calling <code>toURL()</code> gives you the image file's file system URL. You get something like: <code>filesystem:<a href="http://example.com/temporary/lolcat.png" rel="freelink">http://example.com/temporary/lolcat.png</a>.</code></p>
+
+<p>The following is an example:</p>
+
+<pre class="brush: js">var img = document.createElement('img'); 
+// Get the URL of the entry, which returns: filesystem:<a href="http://example.com/temporary/lolcat.png" rel="freelink">http://example.com/temporary/lolcat.png</a> 
+img.src = fileEntry.toURL(); 
+document.body.appendChild(img);</pre>
+
+<p>The file system URL does not expire. Because the method describes a location on disk, the URL is valid for as long as that location exists. You can delete the file and recreate it, and it's all good.</p>
+
+<p>You can supply <code>the <code>mimeType</code></code> to simulate the optional MIME-type header associated with HTTP downloads.</p>
+
+<pre>DOMString toURL (
+  <em>in </em>optional DOMString mimeType
+);</pre>
+
+<h5 id="Parameter_4">Parameter</h5>
+
+<dl>
+ <dt>mimeType</dt>
+ <dd>The MIME type that you want to be used to interpret the file when it is loaded through this URL.</dd>
+</dl>
+
+<h5 id="Returns_4">Returns</h5>
+
+<dl>
+ <dt><code>DOMString</code></dt>
+</dl>
+
+<h3 id="remove" name="remove">remove()</h3>
+
+<p>Deletes a file or directory. You cannot delete an empty directory or the root directory of a file system. If you want to remove an empty directory, use <a href="/en-US/docs/DOM/File_API/File_System_API/DirectoryEntrySync#removeRecursively()"><code>removeRecursively()</code></a> instead.</p>
+
+<pre>void remove (
+  in VoidCallback <em>successCallback</em>, optional ErrorCallback <em>errorCallback</em>
+);</pre>
+
+<h5 id="Parameter_5">Parameter</h5>
+
+<dl>
+ <dt>successCallback</dt>
+ <dd>A callback that is called when the file is successfully deleted.</dd>
+ <dt>errorCallback</dt>
+ <dd>An optional callback that is called only when errors happen.</dd>
+</dl>
+
+<h5 id="Returns_5">Returns</h5>
+
+<dl>
+ <dt><code>void</code></dt>
+</dl>
+
+<h3 id="getParent" name="getParent">getParent()</h3>
+
+<p>Look up the parent <code>DirectoryEntry</code> containing the entry. If this entry is the root of its file system, then the parent is itself.</p>
+
+<pre>void getParent (
+ in EntryCallback <em>successCallback</em>, optional ErrorCallback <em>errorCallback</em>
+);</pre>
+
+<h5 id="Parameter_6">Parameter</h5>
+
+<dl>
+ <dt>parent</dt>
+ <dd>The directory where you want to move the entry.</dd>
+ <dt>newName</dt>
+ <dd>The new name of the entry. If you do not specify a name, the browser preserves the entry's current name.</dd>
+ <dt>successCallback</dt>
+ <dd>A callback that is called when the look-up entry is successful.</dd>
+ <dt>errorCallback</dt>
+ <dd>An optional callback that is called when errors happen.</dd>
+</dl>
+
+<h5 id="Returns_6">Returns</h5>
+
+<dl>
+ <dt><code>void</code></dt>
+</dl>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">Browser compatibility</h2>
+
+<div>{{CompatibilityTable}}</div>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari (WebKit)</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>13{{property_prefix("webkit")}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Chrome for Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Phone</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatNo}}</td>
+   <td>0.16{{property_prefix("webkit")}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li>Specification: {{spec("http://dev.w3.org/2009/dap/file-system/pub/FileSystem/", "File API: Directories and System Specification", "WD")}}</li>
+ <li>Reference: <a href="/en-US/docs/DOM/File_API/File_System_API">File System API</a></li>
+ <li>Introduction: <a href="/en-US/docs/DOM/File_APIs/Filesystem/Basic_Concepts_About_the_Filesystem_API">Basic Concepts About the File System API</a></li>
+</ul>

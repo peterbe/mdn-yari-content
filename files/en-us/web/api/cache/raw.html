@@ -1,0 +1,150 @@
+<p>{{APIRef("Service Workers API")}}</p>
+
+<p><span class="seoSummary">The <strong><code>Cache</code></strong> interface provides a storage mechanism for <code><a href="http://fetch.spec.whatwg.org/#request">Request</a></code> / <code><a href="http://fetch.spec.whatwg.org/#response">Response</a></code> object pairs that are cached, for example as part of the {{domxref("ServiceWorker")}} life cycle. Note that the <code>Cache</code> interface is exposed to windowed scopes as well as workers. You don't have to use it in conjunction with service workers, even though it is defined in the service worker spec.</span></p>
+
+<p>An origin can have multiple, named <code>Cache</code> objects. You are responsible for implementing how your script (e.g. in a {{domxref("ServiceWorker")}})  handles <code>Cache</code> updates. Items in a <code>Cache</code> do not get updated unless explicitly requested; they don’t expire unless deleted. Use {{domxref("CacheStorage.open", "CacheStorage.open()")}} to open a specific named <code>Cache</code> object and then call any of the <code>Cache</code> methods to maintain the <code>Cache</code>.</p>
+
+<p>You are also responsible for periodically purging cache entries. Each browser has a hard limit on the amount of cache storage that a given origin can use. Cache quota usage estimates are available via the {{domxref("StorageEstimate")}} API. The browser does its best to manage disk space, but it may delete the Cache storage for an origin.  The browser will generally delete all of the data for an origin or none of the data for an origin. Make sure to version caches by name and use the caches only from the version of the script that they can safely operate on. See <a href="/en-US/docs/Web/API/ServiceWorker_API/Using_Service_Workers#Deleting_old_caches">Deleting old caches</a> for more information.</p>
+
+<div class="note">
+<p><strong>Note</strong>: Initial Cache implementations (in both Blink and Gecko) resolve {{domxref("Cache.add()")}}, {{domxref("Cache.addAll()")}}, and {{domxref("Cache.put()")}} promises when the response body is fully written to storage.  More recent versions of the specification state that the browser can resolve the promise as soon as the entry is recorded in the database even if the response body is still streaming in.</p>
+</div>
+
+<div class="note">
+<p><strong>Note</strong>: The key matching algorithm depends on the <a href="https://www.fastly.com/blog/best-practices-for-using-the-vary-header">VARY header</a> in the value. So matching a new key requires looking at both key and value for entries in the Cache.</p>
+</div>
+
+<div class="note">
+<p><strong>Note:</strong> The caching API doesn't honor HTTP caching headers.</p>
+</div>
+
+<h2 id="Methods">Methods</h2>
+
+<dl>
+ <dt>{{domxref("Cache.match", "Cache.match(request, options)")}}</dt>
+ <dd>Returns a {{jsxref("Promise")}} that resolves to the response associated with the first matching request in the <code>Cache</code> object.</dd>
+ <dt>{{domxref("Cache.matchAll", "Cache.matchAll(request, options)")}}</dt>
+ <dd>Returns a {{jsxref("Promise")}} that resolves to an array of all matching requests in the <code>Cache</code> object.</dd>
+ <dt>{{domxref("Cache.add", "Cache.add(request)")}}</dt>
+ <dd>Takes a URL, retrieves it and adds the resulting response object to the given cache. This is functionally equivalent to calling <code>fetch()</code>, then using <code>put()</code> to add the results to the cache.</dd>
+ <dt>{{domxref("Cache.addAll", "Cache.addAll(requests)")}}</dt>
+ <dd>Takes an array of URLs, retrieves them, and adds the resulting response objects to the given cache.</dd>
+ <dt>{{domxref("Cache.put", "Cache.put(request, response)")}}</dt>
+ <dd>Takes both a request and its response and adds it to the given cache.</dd>
+ <dt>{{domxref("Cache.delete", "Cache.delete(request, options)")}}</dt>
+ <dd>Finds the {{domxref("Cache")}} entry whose key is the request, returning a {{jsxref("Promise")}} that resolves to <code>true</code> if a matching <code>Cache</code> entry is found and deleted. If no <code>Cache</code> entry is found, the promise resolves to <code>false</code>.</dd>
+ <dt>{{domxref("Cache.keys", "Cache.keys(request, options)")}}</dt>
+ <dd>Returns a {{jsxref("Promise")}} that resolves to an array of <code>Cache</code> keys.</dd>
+</dl>
+
+<h2 id="Examples">Examples</h2>
+
+<p>This code snippet is from the <a href="https://github.com/GoogleChrome/samples/blob/gh-pages/service-worker/selective-caching/service-worker.js">service worker selective caching sample</a>. (see <a href="https://googlechrome.github.io/samples/service-worker/selective-caching/">selective caching live</a>) The code uses {{domxref("CacheStorage.open()")}} to open any <code>Cache</code> objects with a <code>Content-Type</code> header that starts with <code>"font/"</code>.</p>
+
+<p>The code then uses {{domxref("Cache.match()")}} to see if there's already a matching font in the cache, and if so, returns it. If there isn't a matching font, the code fetches the font from the network and uses {{domxref("Cache.put()")}} to cache the fetched resource.</p>
+
+<p>The code handles exceptions thrown from the {{domxref("Globalfetch.fetch","fetch()")}} operation. Note that an HTTP error response (e.g., 404) will not trigger an exception. It will return a normal response object that has the appropriate error code.</p>
+
+<p>The code snippet also shows a best practice for versioning caches used by the service worker. Though there's only one cache in this example, the same approach can be used for multiple caches. It maps a shorthand identifier for a cache to a specific, versioned cache name. The code also deletes all caches that aren't named in <code>CURRENT_CACHES</code>.</p>
+
+<p>In the code example, "caches" is an attribute of the service worker's <code>WorkerGlobalScope</code>. It holds the <code>CacheStorage</code> object, by which it can access the {{domxref("CacheStorage")}} interface.</p>
+
+<div class="note"><strong>Note:</strong> In Chrome, visit chrome://inspect/#service-workers and click on the "inspect" link below the registered service worker to view logging statements for the various actions the <a href="https://github.com/GoogleChrome/samples/blob/gh-pages/service-worker/selective-caching/service-worker.js">service-worker.js</a> script is performing.</div>
+
+<pre class="brush: js" dir="rtl">var CACHE_VERSION = 1;
+
+// Shorthand identifier mapped to specific versioned cache.
+var CURRENT_CACHES = {
+  font: 'font-cache-v' + CACHE_VERSION
+};
+
+self.addEventListener('activate', function(event) {
+  var expectedCacheNames = Object.values(CURRENT_CACHES);
+
+  // Active worker won't be treated as activated until promise
+  // resolves successfully.
+  event.waitUntil(
+    caches.keys().then(function(cacheNames) {
+      return Promise.all(
+        cacheNames.map(function(cacheName) {
+          if (!expectedCacheNames.includes(cacheName)) {
+            console.log('Deleting out of date cache:', cacheName);
+            
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
+});
+
+self.addEventListener('fetch', function(event) {
+  console.log('Handling fetch event for', event.request.url);
+
+  event.respondWith(
+    
+    // Opens Cache objects that start with 'font'.
+    caches.open(CURRENT_CACHES['font']).then(function(cache) {
+      return cache.match(event.request).then(function(response) {
+        if (response) {
+          console.log('Found response in cache:', response);
+
+          return response;
+        }
+
+        console.log('Fetching request from the network');
+
+        return fetch(event.request).then(function(networkResponse) {
+          cache.put(event.request, networkResponse.clone());
+
+          return networkResponse;
+        });
+      }).catch(function(error) {
+        
+        // Handles exceptions that arise from match() or fetch().
+        console.error('Error in fetch handler:', error);
+
+        throw error;
+      });
+    })
+  );
+});</pre>
+
+<h3 id="Storing_cookies_in_Caches">Storing cookies in Caches</h3>
+
+<p>The <a href="/en-US/docs/Web/API/Fetch_API">Fetch API</a> requires {{httpheader("Set-Cookie")}} headers to be stripped before returning a {{domxref("Response")}} object from {{domxref("WindowOrWorkerGlobalScope", "fetch()")}}.  So a <code>Response</code> stored in a Cache won't contain headers.</p>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('Service Workers', '#cache', 'Cache')}}</td>
+   <td>{{Spec2('Service Workers')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<div>
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("api.Cache")}}</p>
+</div>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorker_API/Using_Service_Workers">Using Service Workers</a></li>
+ <li><a class="external external-icon" href="https://github.com/mdn/sw-test">Service workers basic code example</a></li>
+ <li><a class="external external-icon" href="https://jakearchibald.github.io/isserviceworkerready/">Is ServiceWorker ready?</a></li>
+ <li>{{jsxref("Promise")}}</li>
+ <li><a href="https://developer.mozilla.org/en-US/docs/Web/Guide/Performance/Using_web_workers">Using web workers</a></li>
+</ul>

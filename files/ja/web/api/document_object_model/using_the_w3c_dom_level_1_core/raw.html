@@ -1,0 +1,85 @@
+<div>{{DefaultAPISidebar("DOM")}}</div>
+
+<p>W3C の DOM Level 1 Core は文書のコンテンツツリーに手を加えるための強力なオブジェクトモデルであり、 Mozilla Firefox や Microsoft Internet Explorer を含むすべての主要なブラウザーが対応しています。ウェブにおけるスクリプティングの未来を担う強力な基盤なのです。</p>
+
+<h2 id="What_is_a_content_tree.3F" name="What_is_a_content_tree.3F">コンテンツツリーとは？</h2>
+
+<p>多くの HTML 作者は HTML のことを平坦なものだと考えています。間にタグのあるテキストの固まりという感じで。しかしながら、HTML はもっと高度なものです。 HTML 文書はすべて (あるいはこの点については SGML 文書や XML 文書もすべて)、木のような構造となってます。例えば、以下の文書とツリー構造は同じようなものです (同一ではありません。<a href="/ja/docs/Web/API/Document_Object_Model/Whitespace_in_the_DOM">DOM における空白文字</a> を参照)</p>
+
+<pre class="brush: html">&lt;html&gt;
+&lt;head&gt;
+  &lt;title&gt;My Document&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;Header&lt;/h1&gt;
+  &lt;p&gt;Paragraph&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+
+<p><img alt="image:Using_the_W3C_DOM_Level_1_Core-doctree.jpg" class="internal" src="/@api/deki/files/415/=Using_the_W3C_DOM_Level_1_Core-doctree.jpg"></p>
+
+<p>Mozilla は文書のパース時にコンテンツツリーを構築し、それを使って文書を表示します。</p>
+
+<p>木の構造を表現するのに使用されている用語が DOM Level 1 Core でも頻繁に出てきます。上の木に描いた個々の箱は木の中のノードです。ノードの上の線は親子関係を表しています。上のノードが親で、下のノードが子供です。従って同じ親の子供達は兄弟です。同様にして、祖先や子孫などといいます。 (流石に従兄弟などとまではいいません。)</p>
+
+<h2 id="What_does_the_DOM_Level_1_Core_let_me_do.3F" name="What_does_the_DOM_Level_1_Core_let_me_do.3F">DOM Level 1 Core で何ができるの？</h2>
+
+<p>W3C DOM Level 1 によって<em>何でも好きな方法で</em>コンテンツツリーを変更できます。任意の HTML 文書を何もないところから構築できるくらい十分に強力なものです。これにより文書の好きなところを好きな時にスクリプトから変更できます。 Webページの作者が DOM を動的に変更する上で最も簡単なのは、JavaScript を使用することです。 JavaScript であれば、古いブラウザでグローバルオブジェクトの <code>document</code> プロパティから操作していたのと同様にして文書を操作できます。この <code>document</code> オブジェクトは W3C DOM Level 1 仕様書の <a class="external" href="http://www.w3.org/TR/REC-DOM-Level-1/level-one-core.html#i-Document">Document インターフェイス</a> を実装しています。</p>
+
+<h2 id="A_simple_example" name="A_simple_example">簡単な例</h2>
+
+<p>上の文書を元に作者は、ヘッダの内容を変え、1つある段落を 2 つに書き換えたいものとしましょう。これは以下のスクリプトによってできます。</p>
+
+<h3 id="HTML_Content" name="HTML_Content">HTML コンテンツ</h3>
+
+<pre class="brush: html">&lt;body&gt;
+&lt;input type="button" value="Change this document." onclick="change()"&gt;
+&lt;h2&gt;Header&lt;/h2&gt;
+&lt;p&gt;Paragraph&lt;/p&gt;
+&lt;/body&gt;<span>
+</span></pre>
+
+<h3 id="JavaScript_Content" name="JavaScript_Content">JavaScript コンテンツ</h3>
+
+<pre class="brush: js"><span>  function change() {
+    // document.getElementsByTagName("H2") は、文書内の &lt;h2&gt; 要素の NodeList
+    // であり、最初のものは0番です。
+    
+    var header = document.getElementsByTagName("H2").item(0);
+    // header の firstChild はテキストノードです。
+    header.firstChild.data = "A dynamic document";
+    // ヘッダーが "A dynamic document" になりました。
+    
+    var para = document.getElementsByTagName("P").item(0);
+    para.firstChild.data = "This is the first paragraph.";
+    
+    // 第二の段落のために新しいテキストノードを生成します
+    var newText = document.createTextNode("This is the second paragraph.");
+    // 第二の段落になる新しい Element を生成します
+    var newElement = document.createElement("P");
+    // 段落にテキストを置きます
+    newElement.appendChild(newText);
+    // また、 (段落の親に当たる) BODY に追加することで、文書の最後に
+    // 段落を置きます
+    para.parentNode.appendChild(newElement);
+  }</span></pre>
+
+<p>{{ EmbedLiveSample('A_simple_example', 800, 300) }}</p>
+
+<p>このスクリプトを<a class="internal" href="/@api/deki/files/2866/=example.html">完全なデモ</a>として見ることができます。</p>
+
+<h2 id="How_can_I_learn_more.3F" name="How_can_I_learn_more.3F">どうすればもっと学べるの？</h2>
+
+<p>DOM の基本概念に親しんでもらいましたが、 <a href="/ja/docs/Traversing_an_HTML_table_with_JavaScript_and_DOM_Interfaces">DOM Level 1 の基本的なメソッド</a>の説明をしている文書も用意しています。いわばこの文書の続編です。</p>
+
+<p>W3C の <a class="external" href="http://www.w3.org/TR/REC-DOM-Level-1/level-one-core.html">DOM Level 1 Core 仕様書</a> も参照して下さい。公式仕様ではありますが結構読みやすいです。特に各 DOM オブジェクトとその全プロパティ及びメソッドの説明が役立ちます。<a href="ja/DOM">その他の DOM 関連文書</a> も参照して下さい。</p>
+
+<div class="originaldocinfo">
+<p><strong>原書情報</strong></p>
+
+<ul>
+ <li>著者: L. David Baron &lt;dbaron at dbaron dot org&gt;</li>
+ <li>著作権情報: © 1998-2005 by individual mozilla.org contributors; content available under a <a class="external" href="http://www.mozilla.org/foundation/licensing/website-content.html">Creative Commons license</a></li>
+</ul>
+</div>

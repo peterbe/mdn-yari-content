@@ -1,0 +1,273 @@
+<p>{{APIRef("WebXR Device API")}}{{Draft}}</p>
+
+<p><span class="seoSummary"><strong>WebXR</strong> is a group of standards which are used together to support rendering 3D scenes to hardware designed for presenting virtual worlds (<strong>virtual reality</strong>, or <strong>VR</strong>), or for adding graphical imagery to the real world, (<strong>augmented reality</strong>, or <strong>AR</strong>).</span> The <strong>WebXR Device API</strong> implements the core of the WebXR feature set, managing the selection of output devices, render the 3D scene to the chosen device at the appropriate frame rate, and manage motion vectors created using input controllers.</p>
+
+<p>WebXR-compatible devices include fully-immersive 3D headsets with motion and orientation tracking, eyeglasses which overlay graphics atop the real world scene passing through the frames, and handheld mobile phones which augment reality by capturing the world with a camera and augment that scene with computer-generated imagery.</p>
+
+<p>To accomplish these things, the WebXR Device API provides the following key capabilities:</p>
+
+<ul>
+ <li>Find compatible VR or AR output devices</li>
+ <li>Render a 3D scene to the device at an appropriate frame rate</li>
+ <li>(Optionally) mirror the output to a 2D display</li>
+ <li>Create vectors representing the movements of input controls</li>
+</ul>
+
+<p>At the most basic level, a scene is presented in 3D by computing the perspective to apply to the scene in order to render it from the viewpoint of each of the user's eyes, taking into account the typical distance between the eyes, then rendering the scene twice, once for each eye. The resulting images (or image, if the scene is rendered twice onto a single frame, half per eye) are then displayed to the user.</p>
+
+<p>Since <a href="/en-US/docs/Web/API/WebGL_API">WebGL</a> is used for rendering the 3D world into the WebXR session, you should first be familiar with WebGL's general usage, and with the basics of 3D graphics in general. You most likely will not directly use the WebGL API, instead making use of one of the frameworks or libraries that are built atop WebGL to make it more convenient to use. Among the most popular of these is <a href="https://threejs.org/">three.js</a>.</p>
+
+<p>A particular benefit to using a library rather than directly using the WebGL API is that libraries tend to implement virtual camera functionality. OpenGL (and thus WebGL by extension) does not directly offer a camera view, using a library that simulates one on your behalf can make your job much, much easier, especially when building code that allows free movement through your virtual world.</p>
+
+<h2 id="Important_health_and_safety_reminders">Important health and safety reminders</h2>
+
+<p>Because the entire act of creating a virtual 3D world is, in essence, a trick which takes advantage of our understanding of how eyes collect light and how the brain interprets the collected data, it is important to keep in mind that as such, software designers and developers have a responsibility to be even more careful than usual to ensure that the results are correct.</p>
+
+<p>Defects, misalignments, or distortion can confuse the eyes and the brain, resulting in anything from aching eyes or headache to in some cases vertigo, dizziness, or potentially severe nausea. It's also important to be alert for anything you may display that may have the potential to trigger seizures, given the all-encompassing nature of VR goggles; the user may not be able to quickly look away from the imagery you're presenting if it's causing distress.</p>
+
+<p>If you have any content that may be of risk to any users, you should provide a warning message. Better to be safe than sorry!</p>
+
+<h2 id="WebXR_Device_API_concepts_and_usage">WebXR Device API concepts and usage</h2>
+
+<h3 id="WebXR_AR_and_VR">WebXR: AR and VR</h3>
+
+<figure style="background: #eee; padding: 0.5em; border: 1px solid #aaa; border-radius: 1em; max-width: 20em; margin-bottom: 1em; margin-right: 2em; float: left;">
+<figcaption>Example WebXR hardware setup</figcaption>
+<img alt='Sketch of a person in a chair with wearing goggles labelled "Head mounted display (HMD)" facing a monitor with a webcam labeled "Position sensor"' src="https://mdn.mozillademos.org/files/11035/hw-setup.png"></figure>
+
+<p>While the older <a href="/en-US/docs/Web/API/WebVR_API">WebVR API</a> was designed solely to support Virtual Reality (VR), WebXR provides support for both VR and Augmented Reality (AR) on the web. Support for AR functionality is added by the WebXR Augmented Reality Module.</p>
+
+<p>A typical XR device can have either 3 or 6 degrees of freedom and might or might not have an external positional sensor.</p>
+
+<p>The equipment may also include an accelerometer, barometer, or other sensors which are used to sense when the user moves through space, rotates their head, or the like.</p>
+
+<h3 id="WebXR_application_lifecycle">WebXR application lifecycle</h3>
+
+<p>Most applications using WebXR will follow a similar overall design pattern:</p>
+
+<ol>
+ <li>Check to see if the user's device and browser are both capable of presenting the XR experience you want to provide.
+  <ol>
+   <li>Make sure the WebXR API is available; if {{domxref("navigator.xr")}} is undefined, you can assume the user's browser and/or device doesn't support WebXR. If it's not supported, disable any user interface used to activate XR features and abort any attempts to enter XR mode.</li>
+   <li>Call {{DOMxRef("XR.isSessionSupported","navigator.xr.isSessionSupported()")}}, specifying the WebXR experience mode you want to provide: <code>inline</code>, <code>immersive-vr</code>, or <code>immersive-ar</code>, in order to determine whether or not the type of session you wish to provide is available.</li>
+   <li>If the session type you want to use is available, provide the appropriate interface to the user to allow them to activate it.</li>
+  </ol>
+ </li>
+ <li>When the user requests the activation of WebXR functionality by engaging with the user interface enabled above, request an {{DOMxRef("XRSession")}} using the desired mode. This is done by calling {{DOMxRef("XR.requestSession","navigator.xr.requestSession()")}}, again specifying the string indicating the mode you want to enable: <code>inline</code>, <code>immersive-vr</code>, or <code>immersive-ar</code>.</li>
+ <li>If the promise returned by <code>requestSession()</code> resolves, use the new {{domxref("XRSession")}} to run the frame loop for the entire duration of the WebXR experience.
+  <ol>
+   <li>Call the {{domxref("XRSession")}} method {{DOMxRef("XRSession.requestAnimationFrame", "requestAnimationFrame()")}} to schedule the first frame render for the XR device.</li>
+   <li>Each <code>requestAnimationFrame()</code> callback should use the information provided about the objects located in the 3D world to render the frame using WebGL.</li>
+   <li>Keep calling {{DOMxRef("XRSession.requestAnimationFrame", "requestAnimationFrame()")}} from within the callback to schedule each successive frame to be rendered.</li>
+  </ol>
+ </li>
+ <li>When the time comes, end the XR session; otherwise, continue the loop until the user chooses to exit XR mode.
+  <ol>
+   <li>To end the XR session yourself, call {{DOMxRef("XRSession.end", "XRSession.end()")}}.</li>
+   <li>Include a handler for the {{domxref("XRSession")}} event {{domxref("XRSession.end_event", "end")}} event to be informed when the session is ending, regardless of whether your code, the user, or the browser initiated the termination of the session.</li>
+  </ol>
+ </li>
+</ol>
+
+<h3 id="Permissions_and_security">Permissions and security</h3>
+
+<p>The WebXR Device API is subject to a number of permission and security controls. While not onerous, they are worth being aware of. These mostly revolve around the fully-immersive <code>immersive-vr</code> session mode, but there are things to be aware of when setting up an AR session, as well.</p>
+
+<h4 id="Immersive_presentation_of_VR">Immersive presentation of VR</h4>
+
+<p>First, any requests to activate the <code>immersive-vr</code> mode are rejected if the domain issuing the request does not have permission to enable an immersive session. This permission comes from the <code>xr-spatial-tracking</code> <a href="/en-US/docs/Web/HTTP/Feature_Policy">feature policy</a>.</p>
+
+<p>Once that check is passed, the request to enter <code>immersive-vr</code> mode is allowed if all of the following are true:</p>
+
+<ul>
+ <li>The <code>requestSession()</code> call was issued by code executing within the handler for a user event, or the from the startup code for a user-launched <a href="/en-US/docs/Web/Progressive_web_apps">web application</a>.</li>
+ <li>The document is considered trustworthy, in that it is responsible and is both currently active and has focus.</li>
+ <li>The user's intent to enter immersive VR mode is well understood; see [{anch("User intent")}} below for details.</li>
+</ul>
+
+<p>If all of that is true, the promise returned by <code>requestSession()</code> is resolved, and the new {{domxref("XRSession")}} object is passed into the fulfilment handler. Otherwise, an appropriate exception is thrown, such as <code>SecurityError</code> if the document doesn't have permission to enter immersive mode.</p>
+
+<h4 id="Inline_presentation">Inline presentation</h4>
+
+<p>When you request an {{domxref("XRSession")}} with the mode set to <code>inline</code>, and any features are required or requested, the browser will only allow the session to be created if the call to {{domxref("XR.requestSession", "requestSession()")}} was made by code which is executing expressly due to <strong>user intent</strong>.</p>
+
+<p>Specifically:</p>
+
+<ul>
+ <li>If the <code>requestSession()</code> call isn't coming from within the handler executed in response to a user event, and is not being issued while launching a web application, the request is denied and <code>false</code> is delivered to the promise's fulfillment handler.</li>
+ <li>If the document making the request isn't the one which is responsible for the script, the request is denied.</li>
+ <li>If the document making the request isn't trustworthy, the request is denied and <code>false</code> is returned through the promise's fulfillment routine. A trustworthy document is one which is both responsible and active, and which currently has focus.</li>
+ <li>If the user's intent to open an inline XR presentation is not well understood, the request is denied. Understanding of the {{anch("User intent", "user's intent")}} may be either implicit or explicit.</li>
+</ul>
+
+<div class="blockIndicator note">
+<p><strong>Note:</strong> Additional requirements may be put into effect due to the specific features requested by the options object when calling <code>requestSession()</code>.</p>
+</div>
+
+<h4 id="User_intent">User intent</h4>
+
+<p><strong>User intent</strong> is the concept of whether or not an action being performed by code is being performed because of something the user intends to do or not. There are two kinds of user intent: <strong>implicit</strong> and <strong>explicit</strong>.</p>
+
+<p><strong>Explicit user intent</strong> (explicit user consent) is granted when the user has specifically and expressly been asked for permission to perform an action.</p>
+
+<p><strong>Implicit user intent</strong> (implicit user consent) is assumed if either of the following scenarios is the case:</p>
+
+<ul>
+ <li>The user has interacted with the document in some way which has in turn caused your request to occur. For example, if you have an "Enter XR mode" button, and the user clicks it, calling <code>requestSession()</code> from the button's {{domxref("Element.click_event", "click")}} event handler will permitted.</li>
+ <li>If your code is executing during the launch of a web application, the runtime may consider the act of launching your web application to qualify as user intent.</li>
+</ul>
+
+<h3 id="WebXR_availability">WebXR availability</h3>
+
+<p>As a new and still in development API, WebXR support is limited to specific devices and browsers; and even on those, it may not be enabled by default. There may be options available to allow you to experiment with WebXR even if you don't have a compatible system, however.</p>
+
+<h4 id="WebXR_polyfill">WebXR polyfill</h4>
+
+<p>The team designing the WebXR specification has published a <a href="https://github.com/immersive-web/webxr-polyfill">WebXR polyfill</a> which you can use to simulate WebXR on browsers which don't have support for the WebXR APIs. If the browser supports the older <a href="/en-US/docs/Web/API/WebVR_API">WebVR API</a>, that is used. Otherwise, the polyfill falls back to an implementation which uses Google's Cardboard VR API.</p>
+
+<p>The polyfill is maintained alongside the specification, and is kept up to date with the specification. Additionally, it is updated to maintain compatiblity with browsers as their support for WebXR and other technologies related to it and to the implementation of the polyfill change over time.</p>
+
+<p>Be sure to read the readme carefully; the polyfill comes in several versions depending on what degree of compatibility with newer JavaScript features your target browsers include.</p>
+
+<h4 id="WebXR_API_Emulator_extension">WebXR API Emulator extension</h4>
+
+<p>The <a href="https://mixedreality.mozilla.org/">Mozilla WebXR team</a> has created a <a href="https://blog.mozvr.com/webxr-emulator-extension/">WebXR API Emulator</a> browser extension, compatible with both Firefox and Chrome, which emulates the WebXR API, simulating a variety of compatible devices such as the HTC Vive, the Oculus Go and Oculus Quest, Samsung Gear, and Google Cardboard. With the extension in place, you can open up a developer tools panel that lets you control the position and orientation of the headset and any hand controllers, as well as button presses on the controllers.</p>
+
+<p>While somewhat awkward compared to using an actual headset, this makes it possible to experiment with and developer WebXR code on a desktop computer, where WebXR isn't normally available. It also lets you perform some basic testing before taking your code to a real device. Be aware, however, that the emulator does not yet completely emulate all of the WebXR API, so you may run into problems you're not expecting. Again, carefully read the readme file and make sure you're aware of the limitations before you begin.</p>
+
+<div class="blockIndicator note">
+<p><strong>Important:</strong> You should <em>always</em> test your code on actual AR and/or VR hardware before releasing or shipping a product! Emulated, simulated, or polyfilled environments are <em>not</em> an adequate substitute for actual testing on physical devices.</p>
+</div>
+
+<p>Download the WebXR API Emulator for your supported browser below:</p>
+
+<ul>
+ <li><a href="https://chrome.google.com/webstore/detail/webxr-api-emulator/mjddjgeghkdijejnciaefnkjmkafnnje">Google Chrome</a></li>
+ <li><a href="https://addons.mozilla.org/en-US/firefox/addon/webxr-api-emulator/">Mozilla Firefox</a></li>
+</ul>
+
+<p>The <a href="https://github.com/MozillaReality/WebXR-emulator-extension">source code for the extension</a> is also available on GitHub.</p>
+
+<h2 id="Accessing_the_WebXR_API">Accessing the WebXR API</h2>
+
+<p>To gain access to the WebXR API within the context of a given window, use the {{domxref("navigator.xr")}} property.</p>
+
+<dl>
+ <dt>{{domxref("navigator.xr")}} {{ReadOnlyInline}}</dt>
+ <dd>This property, added to the {{domxref("Navigator")}} interface, returns the {{domxref("XR")}} object through which the WebXR API is exposed. If this property is missing or <code>null</code>, WebXR is not available.</dd>
+</dl>
+
+<h2 id="WebXR_interfaces">WebXR interfaces</h2>
+
+<dl>
+ <dt>{{DOMxRef("XR")}}</dt>
+ <dd>The {{domxref("Navigator.xr", "navigator.xr")}} property returns the window's instance of {{domxref("XR")}}, which is the mechanism by which your code accesses the WebXR API. Using the <code>XR</code> interface, you can create {{domxref("XRSession")}}s to represent actual AR and/or VR sessions.</dd>
+ <dt>{{DOMxRef("XRFrame")}}</dt>
+ <dd>While presenting an XR session, the state of all tracked objects which make up the session are represented by an <code>XRFrame</code>. To get an <code>XRFrame</code>, call the session's {{domxref("XRSession.requestAnimationFrame", "requestAnimationFrame()")}} method, providing a callback which will be called with the <code>XRFrame</code> once available. Events which communicate tracking states will also use <code>XRFrame</code> to contain that information.</dd>
+ <dt>{{DOMxRef("XRRenderState")}}</dt>
+ <dd>Provides a set of configurable properties which change how the imagery output by an <code>XRSession</code> is composited. These properties include the range of distances from the viewer within which content should be rendered, the vertical field of view (for inline presentations), and a reference to the {{domxref("XRWebGLLayer")}} being used as the target for rendering the scene prior to it being presented on the XR device's display or displays.</dd>
+ <dt>{{DOMxRef("XRSession")}}</dt>
+ <dd>Provides the interface for interacting with XR hardware. Once an <code>XRSession</code> is obtained from {{domxref("XR.requestSession()")}}, the session can be used to check the position and orientation of the viewer, query the device for environment information, and present the virtual or augmented world to the user.</dd>
+ <dt>{{DOMxRef("XRSpace")}}</dt>
+ <dd><code>XRSpace</code> is an opaque base class on which all virtual coordinate system interfaces are based. Positions in WebXR are always expressed in relation to a particular <code>XRSpace</code> at the time at which a particular {{domxref("XFrame")}} takes place. The space's coordinate system has its origin at the a given physical position.</dd>
+ <dt>{{DOMxRef("XRReferenceSpace")}}</dt>
+ <dd>A subclass of {{domxref("XRSpace")}} which is used to identify a spatial relationship in relation to the user's physical emvironment. The <code>XRReferenceSpace</code> coordinate system is expected to remain unchanged through the lifespan of the {{domxref("XRSession")}}.The world has no boundaries and extends infinitely in every direction.</dd>
+ <dt>{{DOMxRef("XRBoundedReferenceSpace")}}</dt>
+ <dd><code>XRBoundedReferenceSpace</code> extends the {{domxref("XRReferenceSpace")}} coordinate system to further include support for a finite world with set boundaries. Unlike <code>XRReferenceSpace</code>, the origin must be located on the floor (that is, <em>y</em> = 0 at the floor). The x and z components of the origin are typically presumed to be located at or near the center of the room or surface.</dd>
+ <dt>{{DOMxRef("XRView")}}</dt>
+ <dd>Represents a single view into the XR scene for a particular frame. Each <code>XRView</code> corresponds to the video display surface used to present the scene to the user. For example, a given XR device might have two views: one for the left eye and one for the right. Each view has an offset used to shift the position of the view relative to the camera, in order to allow for creating stereographic effects.</dd>
+ <dt>{{DOMxRef("XRViewport")}}</dt>
+ <dd>Describes a viewport. A viewport is a rectangular portion of a graphic surface.</dd>
+ <dt>{{DOMxRef("XRRigidTransform")}}</dt>
+ <dd>A transform defined using a position and orientation in the virtual space's coordinate system as described by the {{domxref("XRSpace")}}.</dd>
+ <dt>{{DOMxRef("XRPose")}}</dt>
+ <dd>Describes a position and orientation in space relative to an {{domxref("XRSpace")}}.</dd>
+ <dt>{{DOMxRef("XRViewerPose")}}</dt>
+ <dd>Based on {{domxref("XRPose")}}, <code>XRViewerPose</code> specifies the state of a viewer of the WebXR scene as indicated by the XR device. Included is an array of {{domxref("XRView")}} objects, each representing one perspective on the scene. For example, it takes two views to create the stereoscopic view as perceived by human vision—one for the left eye and a second for the right eye. One view is offset to the left slightly from the viewer's position, and the other view is offset to the right by the same distance. The view list can also be used to represent the perspectives of each of the spectators of a scene, in a multi-user environment.</dd>
+ <dt>{{DOMxRef("XRInputSource")}}</dt>
+ <dd>Represents any input device the user can use to perform targeted actions within the same virtual space as the viewer. Input sources may include devices such as hand controllers, optical tracking systems, and other devices which are explicitly associated with the XR device. Other input devices such as keyboards, mice, and gamepads are not presented as <code>XRInputSource</code> instances.</dd>
+ <dt>{{DOMxRef("XRWebGLLayer")}}</dt>
+ <dd>A layer which serves as a <a href="/en-US/docs/Web/API/WebGL_API">WebGL</a> frame buffer into which a scene's view is rendered. Using WebGL to render the scene gains substantial performance benefits due to graphics acceleration.</dd>
+</dl>
+
+<h3 id="Event_interfaces">Event interfaces</h3>
+
+<p>The following interfaces are used to represent the events used by the WebXR API.</p>
+
+<dl>
+ <dt>{{domxref("XRInputSourceEvent")}}</dt>
+ <dd>Sent when the state of an {{domxref("XRInputSource")}} changes. This can happen, for example, when the position and/or orientation of the device changes, or when buttons are pressed or released.</dd>
+ <dt>{{domxref("XRInputSourcesChangeEvent")}}</dt>
+ <dd>Sent to indicate that the set of available input sources has changed for the {{domxref("XRSession")}}.</dd>
+ <dt>{{domxref("XRReferenceSpaceEvent")}}</dt>
+ <dd>Sent when the state of an {{domxref("XRReferenceSpace")}} changes.</dd>
+ <dt>{{domxref("XRSessionEvent")}}</dt>
+ <dd>Sent to indicate that the state of an {{domxref("XRSession")}} has changed. For example, if the position and/or orient</dd>
+</dl>
+
+<h2 id="Extensions_to_the_WebGL_API">Extensions to the WebGL API</h2>
+
+<p>The WebGL API is extended by the WebXR specification to augment the WebGL context to allow it to be used to render views for display by a WebXR device.</p>
+
+<dl>
+ <dt>{{domxref("WebGLRenderingContextBase.makeXRCompatibile()")}}</dt>
+ <dd>Configures the WebGL context to be compatible with WebXR. If the context was not initially created with the {{domxref("WebGLContextAttributes.xrCompatible", "xrCompatible")}} property set to <code>true</code>, you must call <code>makeXRCompatible()</code> prior to attempting to use the WebGL context for WebXR rendering. Returns a {{jsxref("promise")}} which resolves once the context has been prepared, or is rejected if the context cannot be configured for use by WebXR.</dd>
+</dl>
+
+<h2 id="Guides_and_tutorials">Guides and tutorials</h2>
+
+<p>The following guides and tutorials are a great resource to learn how to comprehend WebXR and the underlying 3D and VR/AR graphics concepts.</p>
+
+<dl>
+ <dt><a href="/en-US/docs/Web/API/WebXR_Device_API/Fundamentals">Fundamentals of WebXR</a></dt>
+ <dd>Before diving into the details of how to create content using WebXR, it may be helpful to read this overview of the technology, which includes introductions to terminology that may be unfamiliar to you, or which may be used in a new way.</dd>
+ <dt><a href="/en-US/docs/Web/API/WebGL_API/Matrix_math_for_the_web">Matrix math for the web</a></dt>
+ <dd>A guide covering how matrices can be used on the web, including both for CSS transforms and for WebGL purposes, as well as to handle the positioning and orientation of objects in WebXR contexts.</dd>
+ <dt><a href="/en-US/docs/Web/API/WebXR_Device_API/Geometry">Geometry and reference spaces in WebXR</a></dt>
+ <dd>In this guide, the required concepts of 3D geometry are briefly reviewed, and the fundamentals of how that geometry is represented in WebXR are detailed. Learn how reference spaces are used to position objects—and the viewer—and the differences among the available types of reference space, as well as their use cases.</dd>
+ <dt><a href="/en-US/docs/Web/API/WebXR_Device_API/Spatial_tracking">Spatial tracking in WebXR</a></dt>
+ <dd>This guide describes how objects—including the user's body and its parts—are located in space, and how their movement and orientation relative to one another is monitored and managed over time. This article explains the relationship between spaces, poses, viewers, and views.</dd>
+ <dt><a href="/en-US/docs/Web/API/WebXR_Device_API/Cameras">Viewpoints and viewers: Simulating cameras in WebXR </a></dt>
+ <dd>WebGL (and therefore WebXR) doesn't really have a concept of a camera, which is the traditional concept used to represent a viewpoint in 3D graphics. In this article, we see how to simulate a camera and how to create the illusion of moving a viewer through a world in which the viewer doesn't really move.</dd>
+ <dt><a href="/en-US/docs/Web/WebXR_Device_API/Rendering">Rendering and the WebXR frame loop</a></dt>
+ <dd>Starting with how you schedule frames to be rendered, this guide then continues to cover how to determine the placement of objects in the view and how to then render them into the WebGL buffer used for each of the two eyes' views of the scene.</dd>
+ <dt><a href="/en-US/docs/API/WebXR_Device_API/Movement_and_motion">Movement, orientation, and motion: A WebXR example</a></dt>
+ <dd>In this example and tutorial, we use information learned throughout the WebXR documentation to create a scene containing a rotating cube which the user can move around using both VR headset and keyboard and mouse.</dd>
+ <dt><a href="/en-US/docs/Web/API/WebXR_Device_API/Performance">WebXR performance guide</a></dt>
+ <dd>Recommendations and tips to help you optimize the performance of your WebXR application.</dd>
+ <dt><a href="/en-US/docs/Web/API/WebXR_Device_API/Inputs">Inputs and input sources</a></dt>
+ <dd>A guide to input sources and how to efficiently manage the input devices being used to control the WebXR session, and how to receive and process user inputs from those devices.</dd>
+ <dt><a href="/en-US/docs/Web/WebXR Device API/Gamepads">Supporting gamepads in WebXR applications</a></dt>
+ <dd>WebXR implements the Gamepad API to allow gamepads connected to the XR device to be used as input controls. This guide describes how this works.</dd>
+</dl>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName("WebXR")}}</td>
+   <td>{{Spec2("WebXR")}}</td>
+   <td>Initial definition.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<p>{{Compat("api.Navigator.xr")}}</p>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Web/Guide/Graphics">Graphics on the web</a></li>
+ <li><a href="/en-US/docs/Learn/JavaScript/Client-side_web_APIs/Drawing_graphics">Drawing graphics</a></li>
+ <li><a href="/en-US/docs/Web/API/WebGL_API">WebGL API</a>: Accelerated 2D and 3D graphics on the web</li>
+ <li><a href="/en-US/docs/Web/API/Canvas_API">Canvas API</a>: 2D drawing for the web</li>
+ <li><a href="/en-US/docs/Web/API/Canvas_API/Tutorial">Canvas tutorial</a></li>
+</ul>

@@ -1,0 +1,196 @@
+<div>{{JSRef}}</div>
+
+<p><strong><code>JSON</code></strong> オブジェクトは、 <a class="external" href="http://json.org/">JavaScript Object Notation</a> ({{glossary("JSON")}}) をパースするメソッドや、値を JSON に変換するメソッドを持ちます。これは呼び出しや構築ができず、また2つのメソッドを除きそれ自身に興味深い機能性はありません。</p>
+
+<h2 id="Description" name="Description">説明</h2>
+
+<h3 id="JavaScript_Object_Notation" name="JavaScript_Object_Notation">JavaScript Object Notation</h3>
+
+<p>JSON は、オブジェクト、配列、数値、文字列、真偽値、そして {{jsxref("null")}} をシリアライズする構文です。これは JavaScript の構文に基づいていますが、JavaScript とは異なります。ある JavaScript が JSON であるのではなく、またある JSON が JavaScript でもありません。<a href="http://timelessrepo.com/json-isnt-a-javascript-subset">JSON: The JavaScript subset that isn't</a> もご覧ください。</p>
+
+<table>
+ <caption>JavaScript と JSON の違い</caption>
+ <thead>
+  <tr>
+   <th scope="col">JavaScript の型</th>
+   <th scope="col">JSON で異なる点</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>Object および Array</td>
+   <td>プロパティ名は二重引用符で括った文字列にしなければなりません。また、末尾にカンマを置いてはいけません。</td>
+  </tr>
+  <tr>
+   <td>Number</td>
+   <td>先頭のゼロは禁止されています(JSON.stringify では、ゼロは無視されますが、JSON.parse は SyntaxError をスローします)。また、小数点は少なくとも 1 個の数字の後ろに置かなければなりません。</td>
+  </tr>
+  <tr>
+   <td>String</td>
+   <td>
+    <p>エスケープできる文字は限定されています。禁止されている制御文字があります。Unicode の Line Separator 文字 (<a href="http://unicode-table.com/en/2028/">U+2028</a>) および Paragraph Separator 文字 (<a href="http://unicode-table.com/en/2029/">U+2029</a>) は許可されています。文字列は二重引用符で括らなければなりません。{{jsxref("JSON.parse()")}} では動作しますが、JavaScript のコードして評価すると {{jsxref("SyntaxError")}} が発生する例をご覧ください:</p>
+
+    <pre class="brush: js">
+var code = '"\u2028\u2029"';
+JSON.parse(code); // 成功
+eval(code); // 失敗
+</pre>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+<p>JSON の完全な構文は以下のとおりです:</p>
+
+<pre><var>JSON</var> = <strong>null</strong>
+    <em>or</em> <strong>true</strong> <em>or</em> <strong>false</strong>
+    <em>or</em> <var>JSONNumber</var>
+    <em>or</em> <var>JSONString</var>
+    <em>or</em> <var>JSONObject</var>
+    <em>or</em> <var>JSONArray</var>
+
+<var>JSONNumber</var> = <strong>-</strong> <var>PositiveNumber</var>
+          <em>or</em> <var>PositiveNumber</var>
+<var>PositiveNumber</var> = DecimalNumber
+              <em>or</em> <var>DecimalNumber</var> <strong>.</strong> <var>Digits</var>
+              <em>or</em> <var>DecimalNumber</var> <strong>.</strong> <var>Digits</var> <var>ExponentPart</var>
+              <em>or</em> <var>DecimalNumber</var> <var>ExponentPart</var>
+<var>DecimalNumber</var> = <strong>0</strong>
+             <em>or</em> <var>OneToNine</var> <var>Digits</var>
+<var>ExponentPart</var> = <strong>e</strong> <var>Exponent</var>
+            <em>or</em> <strong>E</strong> <var>Exponent</var>
+<var>Exponent</var> = <var>Digits</var>
+        <em>or</em> <strong>+</strong> <var>Digits</var>
+        <em>or</em> <strong>-</strong> <var>Digits</var>
+<var>Digits</var> = <var>Digit</var>
+      <em>or</em> <var>Digits</var> <var>Digit</var>
+<var>Digit</var> = <strong>0</strong> through <strong>9</strong>
+<var>OneToNine</var> = <strong>1</strong> through <strong>9</strong>
+
+<var>JSONString</var> = <strong>""</strong>
+          <em>or</em> <strong>"</strong> <var>StringCharacters</var> <strong>"</strong>
+<var>StringCharacters</var> = <var>StringCharacter</var>
+                <em>or</em> <var>StringCharacters</var> <var>StringCharacter</var>
+<var>StringCharacter</var> = any character
+                  <em>except</em> <strong>"</strong> <em>or</em> <strong>\</strong> <em>or</em> U+0000 through U+001F
+               <em>or</em> <var>EscapeSequence</var>
+<var>EscapeSequence</var> = <strong>\"</strong> <em>or</em> <strong>\/</strong> <em>or</em> <strong>\\</strong> <em>or</em> <strong>\b</strong> <em>or</em> <strong>\f</strong> <em>or</em> <strong>\n</strong> <em>or</em> <strong>\r</strong> <em>or</em> <strong>\t</strong>
+              <em>or</em> <strong>\u</strong> <var>HexDigit</var> <var>HexDigit</var> <var>HexDigit</var> <var>HexDigit</var>
+<var>HexDigit</var> = <strong>0</strong> through <strong>9</strong>
+        <em>or</em> <strong>A</strong> through <strong>F</strong>
+        <em>or</em> <strong>a</strong> through <strong>f</strong>
+
+<var>JSONObject</var> = <strong>{</strong> <strong>}</strong>
+          <em>or</em> <strong>{</strong> <var>Members</var> <strong>}</strong>
+<var>Members</var> = <var>JSONString</var> <strong>:</strong> <var>JSON</var>
+       <em>or</em> <var>Members</var> <strong>,</strong> <var>JSONString</var> <strong>:</strong> <var>JSON</var>
+
+<var>JSONArray</var> = <strong>[</strong> <strong>]</strong>
+         <em>or</em> <strong>[</strong> <var>ArrayElements</var> <strong>]</strong>
+<var>ArrayElements</var> = <var>JSON</var>
+             <em>or</em> <var>ArrayElements</var> <strong>,</strong> <var>JSON</var>
+</pre>
+
+<p><code><var>JSONNumber</var></code> (数値に空白を含んではいけません) や <code><var>JSONString</var></code> (一致する文字であると解釈されるか、エラーが発生します) の内部を除く、任意の場所に余分な空白文字を置くことができます。ホワイトスペースとして有効な文字はタブ (<a href="http://unicode-table.com/en/0009/">U+0009</a>)、キャリッジリターン (<a href="http://unicode-table.com/en/000D/">U+000D</a>)、ラインフィード (<a href="http://unicode-table.com/en/000A/">U+000A</a>)、空白 (<a href="http://unicode-table.com/en/0020/">U+0020</a>) のみです。</p>
+
+<h2 id="Methods" name="Methods">メソッド</h2>
+
+<dl>
+ <dt>{{jsxref("JSON.parse()")}}</dt>
+ <dd>文字列を JSON として解析、また必要に応じて作成した値やそのプロパティを変換して、値を返します。</dd>
+ <dt>{{jsxref("JSON.stringify()")}}</dt>
+ <dd>指定した値に対応する JSON 文字列を返します。また任意で特定のプロパティのみを含むようにしたり、ユーザ定義の規則によりプロパティの値を置き換えたりします。</dd>
+</dl>
+
+<h2 id="Polyfill" name="Polyfill">ポリフィル</h2>
+
+<p><code>JSON</code> オブジェクトは古いブラウザでサポートされていません。この問題はスクリプトの先頭に以下のコードを挿入して、(Internet Explorer 6 のような) JSON をネイティブにサポートしないブラウザでの <code>JSON</code> オブジェクトの利用を可能にすることで回避できます。</p>
+
+<p>以下のアルゴリズムは、ネイティブな <code>JSON</code> オブジェクトを模倣するものです:</p>
+
+<pre class="brush: js">if (!window.JSON) {
+  window.JSON = {
+    parse: function(sJSON) { return eval('(' + sJSON + ')'); },
+    stringify: (function () {
+      var toString = Object.prototype.toString;
+      var hasOwnProperty = Object.prototype.hasOwnProperty;
+      var isArray = Array.isArray || function (a) { return toString.call(a) === '[object Array]'; };
+      var escMap = {'"': '\\"', '\\': '\\\\', '\b': '\\b', '\f': '\\f', '\n': '\\n', '\r': '\\r', '\t': '\\t'};
+      var escFunc = function (m) { return escMap[m] || '\\u' + (m.charCodeAt(0) + 0x10000).toString(16).substr(1); };
+      var escRE = /[\\"\u0000-\u001F\u2028\u2029]/g;
+      return function stringify(value) {
+        if (value == null) {
+          return 'null';
+        } else if (typeof value === 'number') {
+          return isFinite(value) ? value.toString() : 'null';
+        } else if (typeof value === 'boolean') {
+          return value.toString();
+        } else if (typeof value === 'object') {
+          if (typeof value.toJSON === 'function') {
+            return stringify(value.toJSON());
+          } else if (isArray(value)) {
+            var res = '[';
+            for (var i = 0; i &lt; value.length; i++)
+              res += (i ? ', ' : '') + stringify(value[i]);
+            return res + ']';
+          } else if (toString.call(value) === '[object Object]') {
+            var tmp = [];
+            for (var k in value) {
+              // in case "hasOwnProperty" has been shadowed
+              if (hasOwnProperty.call(value, k))
+                tmp.push(stringify(k) + ': ' + stringify(value[k]));
+            }
+            return '{' + tmp.join(', ') + '}';
+          }
+        }
+        return '"' + value.toString().replace(escRE, escFunc) + '"';
+      };
+    })()
+  };
+}
+</pre>
+
+<p>より複雑な、<code>JSON</code> の有名な<a href="http://remysharp.com/2010/10/08/what-is-a-polyfill/">ポリフィル</a>として、<a class="link-https" href="https://github.com/douglascrockford/JSON-js">JSON2</a> および <a class="external" href="http://bestiejs.github.com/json3">JSON3</a> があります。</p>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">策定状況</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-15.12', 'JSON')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td>最初期の定義</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-json-object', 'JSON')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-json-object', 'JSON')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザ実装状況</h2>
+
+<div>
+<div>
+<div class="hidden">このページの互換性一覧表は構造化データから生成されます。データに協力したいのであれば、 <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> をチェックアウトしてプルリクエストを送信してください。</div>
+
+<p>{{Compat("javascript.builtins.JSON")}}</p>
+</div>
+</div>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li>{{jsxref("Date.prototype.toJSON()")}}</li>
+</ul>

@@ -1,0 +1,48 @@
+<p>
+</p><p>Firefox permet à du code JavaScript d'installer un plugin de moteur de recherche écrit au format <a href="fr/Cr%c3%a9ation_de_plugins_OpenSearch_pour_Firefox">OpenSearch</a> ou <a class="external" href="http://developer.apple.com/macosx/sherlock/">Sherlock</a>.
+</p>
+<div class="note"><b>Note :</b> Pour Firefox 2 et suivants, il est recommandé d'utiliser le format OpenSearch.</div>
+<p>Lorsque du code JavaScript tente d'installer un plugin de recherche, Firefox alerte l'utilisateur en lui demandant sa permission.
+</p>
+<h3 id="Installation_de_plugins_OpenSearch"> Installation de plugins OpenSearch </h3>
+<p>Pour installer un plugin OpenSearch, vous devez employer la méthode DOM <code>window.external.AddSearchProvider()</code>. La syntaxe de cette méthode est :
+</p>
+<pre class="eval">window.external.AddSearchProvider(<i>URLmoteur</i>);
+</pre>
+<p>où <i>URLmoteur</i> est l'URL complète du fichier XML pour le plugin de recherche.
+</p>
+<div class="note"><b>Note :</b> Le support d'OpenSearch n'est disponible qu'à partir de Firefox 2.</div>
+<h3 id="Installation_de_plugins_Sherlock"> Installation de plugins Sherlock </h3>
+<p>Pour installer un plugin Sherlock, vous devez appeler <code>window.sidebar.addSearchEngine()</code>, dont la syntaxe est :
+</p>
+<pre class="eval">window.sidebar.addSearchEngine(<i>URLmoteur</i>, <i>URLicone</i>, <i>nomProposé</i>, <i>catégorieProposée</i>);
+</pre>
+<ul><li> Le paramètre <code>URLmoteur</code> est l'URL du plugin Sherlock (un fichier « <code>.src</code> ») à installer.
+</li><li> <code>URLicone</code> est l'URL d'une icône à associer au plugin.
+</li><li> Le paramètre <code>nomProposé</code> n'est utilisé que lorsque Firefox demande à l'utilisateur la permission d'installer le plugin, pour pouvoir afficher un message tel que « Voulez-vous installer <i>nomProposé</i> depuis <i>URLmoteur</i> ? ».
+</li><li> Le paramètre <code>catégorieProposée</code> n'est pas utilisé. Utilisez soit une chaîne vide (<code>""</code>), soit <code>null</code>.
+</li></ul>
+<p>Pour plus de détails sur Sherlock, consultez <a class=" external" href="http://developer.apple.com/macosx/sherlock/">http://developer.apple.com/macosx/sherlock/</a>.
+</p>
+<h3 id="D.C3.A9tection_des_capacit.C3.A9s_de_gestion_de_moteurs_de_recherche_du_navigateur"> Détection des capacités de gestion de moteurs de recherche du navigateur </h3>
+<p>Comme le système d'ajout des moteurs de recherche a changé lors du passage de Firefox 1.5 à Firefox 2, et que Firefox 1.5 ne supporte pas les fichiers de description OpenSearch, les webmestres qui veulent aussi permettre l'ajout des moteurs sur les version antérieures (c'est-à-dire, qui fonctionneront dans Firefox 1.5, Firefox 2.0 ou IE 7) devront gérer à la fois les formats Sherlock et OpenSearch et détecter les capacités du navigateur à traiter soit l'un soit l'autre. Les lignes ci-dessous en sont un exemple :
+</p><p><br>
+</p>
+<pre class="eval">function installSearchEngine() {
+ if (window.external &amp;&amp; ("AddSearchProvider" in window.external)) {
+   // Firefox 2 and IE 7, OpenSearch
+   window.external.AddSearchProvider("<span>http://example.com/search-plugin.xml</span>");
+ } else if (window.sidebar &amp;&amp; ("addSearchEngine" in window.sidebar)) {
+   // Firefox &lt;= 1.5, Sherlock
+   window.sidebar.addSearchEngine("<span>http://example.com/search-plugin.src</span>",
+                                  "<span>http://example.com/search-icon.png</span>",
+                                  "Search Plugin", "");
+ } else {
+   // No search engine support (IE 6, Opera, etc).
+   alert("No search engine support");
+ }
+}
+</pre>
+<div class="noinclude">
+</div>
+{{ languages( { "ca": "ca/Addici\u00f3_de_motors_de_cerca_a_les_p\u00e0gines_web", "en": "en/Adding_search_engines_from_web_pages", "es": "es/A\u00f1adir_motores_de_b\u00fasqueda_desde_p\u00e1ginas_web", "it": "it/Installare_plugin_di_ricerca_dalle_pagine_web", "ja": "ja/Adding_search_engines_from_web_pages", "pl": "pl/Dodawanie_wyszukiwarek_z_poziomu_stron_WWW", "zh-tw": "zh_tw/\u81ea\u7db2\u9801\u6dfb\u52a0\u641c\u5c0b\u5f15\u64ce" } ) }}

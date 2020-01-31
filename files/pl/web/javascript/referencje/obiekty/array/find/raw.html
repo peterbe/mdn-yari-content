@@ -1,0 +1,178 @@
+<div>{{JSRef("Global_Objects", "Array")}}</div>
+
+<h2 id="Summary" name="Summary">Podsumowanie</h2>
+
+<p>Metoda <strong>find()</strong> zwraca pierwszy element tablicy, który spełnia warunek podanej funkcji testującej. W przeciwnym razie, gdy żaden element tablicy nie spełni warunku, zwracana jest wartość {{jsxref("Global_Objects/undefined", "undefined")}}.</p>
+
+<pre class="brush: js">function isBigEnough(element) {
+  return element &gt;= 15;
+}
+
+[12, 5, 8, 130, 44].find(isBigEnough); // 130</pre>
+
+<p>Zobacz także metodę {{jsxref("Array.findIndex", "findIndex()")}}, która zwraca indeks znalezionego elementu zamiast jego wartości.</p>
+
+<p>Jeżeli chcesz znaleźć pozycję w tablicy, na której znajduje się dany element, lub sprawdzić, czy element istnieje w tablicy, możesz odnieść się do metod {{jsxref("Array.prototype.indexOf()")}} oraz {{jsxref("Array.prototype.includes()")}}.</p>
+
+<h2 id="Syntax" name="Syntax">Składnia</h2>
+
+<pre class="syntaxbox"><code><var>arr</var>.find(<var>callback</var>[, <var>thisArg</var>])</code></pre>
+
+<h3 id="Parameters" name="Parameters">Parametry</h3>
+
+<dl>
+ <dt><code>callback</code></dt>
+ <dd>Funkcja do wykonania przy każdym elemencie tablicy, przyjmująca trzy wartości:
+ <dl>
+  <dt><code>element</code></dt>
+  <dd>Element obecnie przetwarzany przez funkcję.</dd>
+  <dt><code>index</code></dt>
+  <dd>Indeks obecnie przetwarzanego elementu.</dd>
+  <dt><code>array</code></dt>
+  <dd>Tablica, na której wywołano funkcję <code>find</code>.</dd>
+ </dl>
+ </dd>
+ <dt><code>thisArg</code></dt>
+ <dd>Opcjonalny. Obiekt, który będzie się znajdował pod <code>this</code> w czasie wykonywania funkcji <code>callback</code>.</dd>
+ <dt>
+ <h3 id="Zwracana_wartość">Zwracana wartość</h3>
+
+ <p>Wartość znajdująca się w tablicy, jeżeli dla danego elementu predykat był dla niego prawdziwy. W przeciwnym wypadku: {{jsxref("undefined")}}.</p>
+ </dt>
+</dl>
+
+<h2 id="Description" name="Description">Opis</h2>
+
+<p>Metoda <code>find</code> wywołuje raz funkcję <code>callback</code> dla każdego elementu w tablicy, aż do momentu w którym znajdzie taki element, dla którego <code>callback</code> zwraca wartość <code>true</code>. W momencie, w którym taki element zostaje znaleziony, <code>find</code> natychmiast zwraca wartość tego elementu. W przeciwnym razie zostaje zwrócona wartość {{jsxref("Global_Objects/undefined", "undefined")}}. Funkcja <code>callback</code> jest wywoływana tylko dla tych indeksów w tablicy, które mają przypisaną jakąś wartość; nie jest natomiast wywoływana dla indeksów, które zostały usunięte, lub którym nigdy nie przypisano wartości.</p>
+
+<p>Funkcja <code>callback</code> jest wywoływana z trzema argumentami, kolejno: wartością elementu tablicy, indeksem tego elementu i obiektem typu Array, który jest przeszukiwany.</p>
+
+<p>Jeżeli parametr <code>thisArg</code> zostanie dostarczony do metody <code>find</code>, będzie on użyty jako wartość <code>this</code> dla każdego wywołania funkcji zwrotnej <code>callback</code>. Jeżeli parametr ten nie zostanie przekazany, to wartość {{jsxref("Global_Objects/undefined", "undefined")}} zostanie użyta.</p>
+
+<p>Metoda <code>find</code> nie modyfikuje tablicy, na której jest wywoływana. </p>
+
+<p>Zakres elementów przetwarzanych przez metodę <code>find</code> jest ustalony przed pierwszym wywołaniem funkcji zwrotnej <code>callback</code>. Elementy, które zostaną dodane do tablicy już po wywołaniu metody <code>find</code> nie zostaną uwzględnione i odwiedzone przez funkcję <code>callback</code>. Jeżeli uprzednio istniejący, nieodwiedzony element zostaje zmodyfikowany przez <code>callback</code>, jego wartość przy wywołaniu <code>callback</code> będzie wartością z chwili, w której <code>find</code> odwiedza indeks tego elementu; elementy usunięte nie są odwiedzane.</p>
+
+<h2 id="Examples" name="Examples">Examples</h2>
+
+<h3 id="Example:_Testing_size_of_all_array_elements" name="Example:_Testing_size_of_all_array_elements">Example: Find a prime number in an array</h3>
+
+<p>The following example finds an element in the array that is a prime number (or returns {{jsxref("Global_Objects/undefined", "undefined")}} if there is no prime number).</p>
+
+<pre class="brush: js">function isPrime(element, index, array) {
+  var start = 2;
+  while (start &lt;= Math.sqrt(element)) {
+    if (element % start++ &lt; 1) {
+      return false;
+    }
+  }
+  return element &gt; 1;
+}
+
+console.log([4, 6, 8, 12].find(isPrime)); // undefined, not found
+console.log([4, 5, 8, 12].find(isPrime)); // 5
+</pre>
+
+<h2 id="Polyfill" name="Polyfill">Polyfill</h2>
+
+<p>This method has been added to the ECMAScript 6 specification and may not be available in all JavaScript implementations yet. However, you can polyfill <code>Array.prototype.find</code> with the following snippet:</p>
+
+<pre class="brush: js">if (!Array.prototype.find) {
+  Array.prototype.find = function(predicate) {
+    if (this == null) {
+      throw new TypeError('Array.prototype.find called on null or undefined');
+    }
+    if (typeof predicate !== 'function') {
+      throw new TypeError('predicate must be a function');
+    }
+    var list = Object(this);
+    var length = list.length &gt;&gt;&gt; 0;
+    var thisArg = arguments[1];
+    var value;
+
+    for (var i = 0; i &lt; length; i++) {
+      value = list[i];
+      if (predicate.call(thisArg, value, i, list)) {
+        return value;
+      }
+    }
+    return undefined;
+  };
+}
+</pre>
+
+<h2 id="Specifications" name="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-array.prototype.find', 'Array.prototype.find')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">Browser compatibility</h2>
+
+<div>{{CompatibilityTable}}</div>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatChrome("45.0")}}</td>
+   <td>{{CompatGeckoDesktop("25.0")}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatSafari("7.1")}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Chrome for Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatGeckoMobile("25.0")}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>iOS 8</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="See_also" name="See_also">See also</h2>
+
+<ul>
+ <li>{{jsxref("Array.prototype.findIndex()")}} {{experimental_inline}}</li>
+ <li>{{jsxref("Array.prototype.every()")}}</li>
+</ul>

@@ -1,0 +1,99 @@
+<p>{{WebGLSidebar("Tutorial")}} {{Next("Web/API/WebGL_API/Tutorial/Adding_2D_content_to_a_WebGL_context")}}</p>
+
+<p class="syntaxbox"><a class="external" href="http://www.khronos.org/webgl/" title="http://www.khronos.org/webgl/">WebGL</a> pozwala stronom internetowym na wykorzystanie API opartego na <a class="external" href="http://www.khronos.org/opengles/" title="http://www.khronos.org/opengles/">OpenGL ES</a> 2.0 do renderowania elementów 2D i 3D w elemencie <a class="internal" href="/en/HTML/Canvas" title="en/HTML/Canvas"><code>canvas</code></a> w przeglądarkach wspierających je bez używania dodatkowych wtyczek. Program WebGL składa się z kodu kontrolującego napisanego w JavaScript i shaderów GLSL (wykonywanych na GPU komputera). Elementy WebGL mogą być łączone z innymi elementami HTML i wkomponowane w inne części strony lub tła.</p>
+
+<p class="syntaxbox">W tym artykule poznasz podstawy użycia WebGL na stronie internetowej. Zakładamy, że znasz koncepcje matematyczne związane z grafiką 3D i nie ma potrzeby ich tłumaczenia. Dla początkujących stworzyliśmy przewodnik podstaw WebGL: <a href="https://developer.mozilla.org/en-US/docs/Learn/WebGL">Learn WebGL for 2D and 3D graphics</a>.</p>
+
+<h2 id="Przygotowanie_do_renderowania_w_3D">Przygotowanie do renderowania w 3D</h2>
+
+<p>Pierwszą rzeczą potrzebną do użycia webGL jest płótno(canvas). Poniższy fragment HTML tworzy płótno i ustawia funkcję <code>onload</code> w której utworzony zostanie kontekst webGL.</p>
+
+<pre class="brush: html">&lt;body onload="start()"&gt;
+  &lt;canvas id="glcanvas" width="640" height="480"&gt;
+    Your browser doesn't appear to support the HTML5 &lt;code&gt;&amp;lt;canvas&amp;gt;&lt;/code&gt; element.
+  &lt;/canvas&gt;
+&lt;/body&gt;
+</pre>
+
+<h3 id="Preparing_the_WebGL_context">Preparing the WebGL context</h3>
+
+<p>The <code>start()</code> function, in our JavaScript code, is called after the document is loaded. Its mission is to set up the WebGL context and start rendering content.</p>
+
+<pre class="brush: js">var gl; // A global variable for the WebGL context
+
+function start() {
+  var canvas = document.getElementById("glcanvas");
+
+  gl = initWebGL(canvas);      // Initialize the GL context
+  
+  // Only continue if WebGL is available and working
+  
+  if (gl) {
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);                      // Set clear color to black, fully opaque
+    gl.enable(gl.DEPTH_TEST);                               // Enable depth testing
+    gl.depthFunc(gl.LEQUAL);                                // Near things obscure far things
+    gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);      // Clear the color as well as the depth buffer.
+  }
+}
+</pre>
+
+<p>The first thing we do here is obtain a reference to the canvas, stashing it in a variable called <code>canvas</code>. Obviously if you don't need to repeatedly reference the canvas, you should avoid saving this value globally, and just save it in a local variable or member field of an object.</p>
+
+<p>Once we have the canvas, we call a function called <code>initWebGL()</code>; this is a function we'll define momentarily; its job is to initialize the WebGL context.</p>
+
+<p>If the context is successfully initialized, <code>gl</code> is a reference to it. In this case, we set the clear color to black, then clear the context to that color. After that, the context is configured by setting parameters. In this case, we're enabling depth testing and specifying that closer objects will obscure objects that are farther away.</p>
+
+<p>For the purposes of this initial pass at the code, that's all we're going to do. We'll look at how to actually start doing something a little later.</p>
+
+<h3 id="Creating_a_WebGL_context">Creating a WebGL context</h3>
+
+<p>The <code>initWebGL()</code> function looks like this:</p>
+
+<pre class="brush: js">function initWebGL(canvas) {
+  gl = null;
+  
+  try {
+    // Try to grab the standard context. If it fails, fallback to experimental.
+    gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+  }
+  catch(e) {}
+  
+  // If we don't have a GL context, give up now
+  if (!gl) {
+    alert("Unable to initialize WebGL. Your browser may not support it.");
+    gl = null;
+  }
+  
+  return gl;
+}
+
+</pre>
+
+<p>To obtain a WebGL context for a canvas, we request the context named "webgl" from the canvas. If this fails, we try the name "experimental-webgl". If that, too, fails, we display an alert letting the user know they appear not to have WebGL support. That's all there is to it. At this point, <code>gl</code> is either null (meaning there is no WebGL context available) or is a reference to the WebGL context into which we'll be rendering.</p>
+
+<div class="note"><strong>Note:</strong> The context name "experimental-webgl" is a temporary name for the context for use during development of the specification; the name "webgl" will be used once the spec is finalized.</div>
+
+<p>At this point, you have enough code that the WebGL context should successfully initialize, and you should wind up with a big black, empty box, ready and waiting to receive content.</p>
+
+<p><a href="/samples/webgl/sample1/index.html" title="https://developer.mozilla.org/samples/webgl/sample1/index.html">Try this example live by clicking here</a> if you're running a WebGL compatible browser.</p>
+
+<h3 id="Resizing_the_WebGL_context">Resizing the WebGL context</h3>
+
+<p>A new WebGL context will set its viewport resolution to the height and width of its canvas element, without CSS, at the instant the context was obtained. Editing the style of a canvas element will change its displayed size but will not change its rendering resolution. Editing the width and height attributes of a canvas element after the context has been created will also not change the number of pixels to be drawn. To change the resolution which WebGL renders at, such as when the user resizes the window of a full-document canvas or you wish to provide in-app adjustable graphics settings, you will need to call the WebGL context's <code>viewport()</code> function to acknowledge the change.</p>
+
+<p>To modify the rendered resolution of a WebGL context with variables <code>gl</code> and <code>canvas</code> as used in the above example:</p>
+
+<pre class="brush: js">gl.viewport(0, 0, canvas.width, canvas.height);</pre>
+
+<p>A canvas will experience scaling when it is rendered at a different resolution than its CSS style makes it occupy on the display. Resizing with CSS is mostly useful to save resources by rendering at a low resolution and allowing the browser to upscale; downscaling is possible which would produce a super sample antialiasing (SSAA) effect (albeit with naive results and a severe performance cost). It is often best to rely upon the <abbr style="line-height: 24px;" title='"Multisample'>MSAA</abbr> and texture filtering implementations of the user's browser, if available and appropriate, rather than doing it via brute force and hoping that the browser's image reduction algorithm produces a cleaner result.</p>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li><a href="http://dev.opera.com/articles/view/an-introduction-to-webgl/">An introduction to WebGL</a> - Written by Luz Caballero at the DEV.OPERA. This article addresses that what WebGL is, how WebGL works and the rendering pipeline concept and introduces some WebGL libraries.</li>
+ <li><a href="http://duriansoftware.com/joe/An-intro-to-modern-OpenGL.-Table-of-Contents.html" style="line-height: 1.5;">An intro to modern OpenGL</a><span style="line-height: 1.5;"> - A series of nice articles about OpenGL written by Joe Groff. Joe gives a clear intro about OpenGL from its history to the important graphics pipeline concept and provides some examples to demo how OpenGL works. If you have no idea about OpenGL, this is a good place to start.</span></li>
+</ul>
+
+<p>{{Next("Web/API/WebGL_API/Tutorial/Adding_2D_content_to_a_WebGL_context")}}</p>
+
+<h3 id="sect1"> </h3>

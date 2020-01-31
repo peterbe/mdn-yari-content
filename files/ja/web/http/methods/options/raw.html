@@ -1,0 +1,117 @@
+<div>{{HTTPSidebar}}</div>
+
+<p><strong>HTTP <code>OPTIONS</code>メソッド</strong>は、ターゲット・リソースの通信オプションを記述するために使用されます。クライアントは、OPTIONSメソッドのURLを指定するか、サーバー全体を参照するアスタリスク（*）を指定することができます。</p>
+
+<table class="properties">
+ <tbody>
+  <tr>
+   <th scope="row">リクエストボディがある</th>
+   <td>No</td>
+  </tr>
+  <tr>
+   <th scope="row"><span class="short_text" id="result_box" lang="ja"><span>成功したレスポンスにはボディがある</span></span></th>
+   <td>Yes</td>
+  </tr>
+  <tr>
+   <th scope="row">{{Glossary("Safe")}}</th>
+   <td>Yes</td>
+  </tr>
+  <tr>
+   <th scope="row">{{Glossary("Idempotent")}}</th>
+   <td>Yes</td>
+  </tr>
+  <tr>
+   <th scope="row">{{Glossary("Cacheable")}}</th>
+   <td>No</td>
+  </tr>
+  <tr>
+   <th scope="row">HTML フォームを許可</th>
+   <td>No</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="構文">構文</h2>
+
+<pre class="syntaxbox">OPTIONS /index.html HTTP/1.1
+OPTIONS * HTTP/1.1
+</pre>
+
+<h2 id="例">例</h2>
+
+<h3 id="許可されたリクエストメソッドの特定">許可されたリクエストメソッドの特定</h3>
+
+<p>サーバーがサポートするリクエストメソッドを調べるには、curlを使用してOPTIONS要求を発行します。</p>
+
+<pre>curl -X OPTIONS http://example.org -i</pre>
+
+<p>レスポンスには、許可されたメソッドを持つ {{HTTPHeader("Allow")}} ヘッダが含まれています：</p>
+
+<pre>HTTP/1.1 200 OK
+Allow: OPTIONS, GET, HEAD, POST
+Cache-Control: max-age=604800
+Date: Thu, 13 Oct 2016 11:45:00 GMT
+Expires: Thu, 20 Oct 2016 11:45:00 GMT
+Server: EOS (lax004/2813)
+x-ec-custom-error: 1
+Content-Length: 0
+</pre>
+
+<h3 id="CORSでのプリフライトリクエスト">CORSでのプリフライトリクエスト</h3>
+
+<p><a href="/en-US/docs/Web/HTTP/Access_control_CORS">CORS</a>では、<code>OPTIONS</code>メソッドを使用したプリフライトリクエストが送信されるため、サーバーはこれらのパラメータを使用してリクエストを送信できるかどうかレスポンスを返すことができます。{{HTTPHeader("Access-Control-Request-Method")}} ヘッダーは、実際のリクエストが送信されたときに<code>POST</code>リクエストメソッドとともに送信されるプリフライトリクエストの一部としてサーバーに通知します。{{HTTPHeader("Access-Control-Request-Headers")}} ヘッダーは、実際のリクエストが送信されたときに<code>X-PINGOTHER</code>および<code>Content-Type</code>カスタムヘッダーと共に送信されることをサーバーに通知します。 サーバーは、このような状況下でリクエストを受け入れるかどうかを決定する機会を得ました。</p>
+
+<pre>OPTIONS /resources/post-here/ HTTP/1.1 
+Host: bar.other 
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8 
+Accept-Language: en-us,en;q=0.5 
+Accept-Encoding: gzip,deflate 
+Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7 
+Connection: keep-alive 
+Origin: http://foo.example 
+Access-Control-Request-Method: POST 
+Access-Control-Request-Headers: X-PINGOTHER, Content-Type</pre>
+
+<p>サーバーは {{HTTPHeader("Access-Control-Allow-Methods")}} でレスポンスを返し、<code>POST</code>、<code>GET</code>、および<code>OPTIONS</code>は問題のリソースを照会する実行可能なメソッドであると言います。 このヘッダーはレスポンスヘッダーに似ていますが、CORSのコンテキスト内で厳密に使用されます。</p>
+
+<pre>HTTP/1.1 200 OK
+Date: Mon, 01 Dec 2008 01:15:39 GMT 
+Server: Apache/2.0.61 (Unix) 
+Access-Control-Allow-Origin: http://foo.example 
+Access-Control-Allow-Methods: POST, GET, OPTIONS 
+Access-Control-Allow-Headers: X-PINGOTHER, Content-Type 
+Access-Control-Max-Age: 86400 
+Vary: Accept-Encoding, Origin 
+Content-Encoding: gzip 
+Content-Length: 0 
+Keep-Alive: timeout=2, max=100 
+Connection: Keep-Alive 
+Content-Type: text/plain</pre>
+
+<h2 id="仕様">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">タイトル</th>
+  </tr>
+  <tr>
+   <td>{{RFC("7231", "OPTIONS", "4.3.7")}}</td>
+   <td>Hypertext Transfer Protocol (HTTP/1.1): Semantics and Content</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="ブラウザの互換性">ブラウザの互換性</h2>
+
+<p class="hidden">このページの互換表は、構造化データから生成されます。 データに貢献したい場合は、<a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data </a>をチェックし、プルリクエストを送信してください。</p>
+
+<p>{{Compat("http.methods.OPTIONS")}}</p>
+
+<h2 id="合わせて読む">合わせて読む</h2>
+
+<ul>
+ <li>{{HTTPHeader("Allow")}} header</li>
+ <li><a href="/en-US/docs/Web/HTTP/Access_control_CORS">CORS</a></li>
+</ul>

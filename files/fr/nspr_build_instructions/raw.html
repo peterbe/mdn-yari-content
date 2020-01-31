@@ -1,0 +1,65 @@
+<h3 id="Prerequisites" name="Prerequisites">Prerequisites</h3>
+<p>On Windows, the NSPR build system needs GNU make and a Unix command-line utility suite such as MKS Toolkit, Cygwin, and MSYS. The easiest way to get these tools is to install the <a href="/En/Developer_Guide/Build_Instructions/Windows_Prerequisites#MozillaBuild" title="en/Windows_Build_Prerequisites#MozillaBuild">MozillaBuild</a> package.</p>
+<h3 id="Introduction" name="Introduction">Introduction</h3>
+<p>The top level of the NSPR source tree is the <code>mozilla/nsprpub</code> directory. Although <code>nsprpub</code> is a subdirectory under <code>mozilla</code>, NSPR is independent of the Mozilla client source tree.</p>
+<p>Building NSPR consists of three steps:</p>
+<ol>
+ <li>run the configure script. You may override the compilers (the CC environment variable) or specify options.</li>
+ <li>build the libraries</li>
+ <li>build the test programs</li>
+</ol>
+<p>For example,</p>
+<pre># check out the source tree from Mercurial
+hg clone https://hg.mozilla.org/projects/nspr
+# create a build directory
+mkdir target.debug
+cd target.debug
+# run the configure script
+../mozilla/nsprpub/configure <em>[optional configure options]</em>
+# build the libraries
+gmake
+# build the test programs
+cd pr/tests
+gmake
+</pre>
+<p>On Mac OS X, use <code>make</code>, which is GNU <code>make</code>.</p>
+<h3 id="Configure_options" name="Configure_options">Configure options</h3>
+<p>Although NSPR uses autoconf, its configure script has two default values that are different from most open source projects.</p>
+<ol>
+ <li>If the OS vendor provides a compiler (for example, Sun and HP), NSPR uses that compiler instead of GCC by default.</li>
+ <li>NSPR build generates a debug build by default.</li>
+</ol>
+<h4 id="--disable-debug_--enable-optimize" name="--disable-debug_--enable-optimize">--disable-debug --enable-optimize</h4>
+<p>Specify these two options to generate an optimized (release) build.</p>
+<p>These two options can actually be used independently, but it's not recommended.</p>
+<h4 id="--enable-64bit" name="--enable-64bit">--enable-64bit</h4>
+<p>On a dual 32-bit/64-bit platform, NSPR build generates a 32-bit build by default. To generate a 64-bit build, specify the <code>--enable-64bit</code> configure option.</p>
+<h4 id="--target=x86_64-pc-mingw32" name="--target=x86_64-pc-mingw32">--target=x86_64-pc-mingw32</h4>
+<p>For 64-bit builds on Windows, when using the <a href="/En/Developer_Guide/Build_Instructions/Windows_Prerequisites#MozillaBuild" style="text-decoration: none; color: rgb(4, 137, 183) !important; cursor: default;" title="en/Windows_Build_Prerequisites#MozillaBuild">MozillaBuild</a> environment.</p>
+<h4 id="--enable-win32-target.3DWIN95" name="--enable-win32-target.3DWIN95">--enable-win32-target=WIN95</h4>
+<p>This option is only used on Windows. NSPR build generates a "WINNT" configuration by default on Windows for historical reasons. We recommend most applications use the "WIN95" configuration. The "WIN95" configuration supports all versions of Windows. The "WIN95" name is historical; it should have been named "WIN32".</p>
+<p>To generate a "WIN95" configuration, specify the <code>--enable-win32-target=WIN95</code> configure option.</p>
+<h4 id="--enable-debug-rtl" name="--enable-debug-rtl">--enable-debug-rtl</h4>
+<p>This option is only used on Windows. NSPR debug build uses the release C run-time library by default. To generate a debug build that uses the debug C run-time library, specify the <code>--enable-debug-rtl</code> configure option.</p>
+<h3 id="Makefile_targets" name="Makefile_targets">Makefile targets</h3>
+<ul>
+ <li>all (default)</li>
+ <li>clean</li>
+ <li>realclean</li>
+ <li>distclean</li>
+ <li>install</li>
+ <li>release</li>
+</ul>
+<h3 id="Running_the_test_programs" name="Running_the_test_programs">Running the test programs</h3>
+<p>The tests were built above, in the <code>pr/tests</code> directory.</p>
+<p>On Mac OS X, they can be executed with the following:</p>
+<pre class="eval"> /bin/sh:
+
+ $ cd pr/tests
+ $ DYLD_LIBRARY_PATH=../../dist/lib ./accept
+ PASS
+ $
+ $ # to run all the NSPR tests...
+ $
+ $ DYLD_LIBRARY_PATH=../../dist/lib ../../../mozilla/nsprpub/pr/tests/runtests.sh
+</pre>

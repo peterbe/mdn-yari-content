@@ -1,0 +1,162 @@
+<div>{{APIRef("HTML DOM")}}</div>
+
+<p>The <code><strong>WindowOrWorkerGlobalScope.btoa()</strong></code> method creates a base-64 encoded ASCII string from a <a href="/en-US/docs/Web/API/DOMString/Binary">binary string</a> (i.e., a {{jsxref("String")}} object in which each character in the string is treated as a byte of binary data).</p>
+
+<div class="note">
+<p><strong>Note</strong>: Since this function treats each character as a byte of binary data, regardless of the number of bytes which actually make up the character, an <code>InvalidCharacterError</code> exception is thrown if any character's {{Glossary("code point")}} is outside the range 0x00 to 0xFF. See {{anch("Unicode strings")}} for an example demonstrating how to encode strings with characters outside the 0x00 to 0xFF range</p>
+</div>
+
+<h2 id="Syntax">Syntax</h2>
+
+<pre class="syntaxbox">var encodedData = scope.btoa(<em>stringToEncode</em>);</pre>
+
+<h3 id="Parameters">Parameters</h3>
+
+<dl>
+	<dt><code>stringToEncode</code></dt>
+	<dd>The <a href="/en-US/docs/Web/API/DOMString/Binary">binary string</a> to encode.</dd>
+</dl>
+
+<h3 id="Return_value">Return value</h3>
+
+<p>An ASCII string containing the Base64 representation of <code>stringToEncode</code>.</p>
+
+<h3 id="Exceptions">Exceptions</h3>
+
+<h2 id="Example">Example</h2>
+
+<pre class="brush:js">var encodedData = window.btoa('Hello, world'); // encode a string
+var decodedData = window.atob(encodedData); // decode the string
+</pre>
+
+<h2 id="Notes">Notes</h2>
+
+<p>You can use this method to encode data which may otherwise cause communication problems, transmit it, then use the <code>{{domxref("WindowOrWorkerGlobalScope.atob","atob()")}}</code> method to decode the data again. For example, you can encode control characters such as ASCII values 0 through 31.</p>
+
+<p><code>btoa()</code> is also available to XPCOM components implemented in JavaScript, even though {{domxref("Window")}} is not the global object in components.</p>
+
+<h2 id="Unicode_strings">Unicode strings</h2>
+
+<p>In most browsers, calling <code>btoa()</code> on a Unicode string will cause an <code>InvalidCharacterError</code> exception.</p>
+
+<p>One option is to escape any extended characters so that the string you actually encode is an ASCII representation of the original. Consider this example, noted by <a class="external" href="http://ecmanaut.blogspot.com/2006/07/encoding-decoding-utf8-in-javascript.html" title="http://ecmanaut.blogspot.com/2006/07/encoding-decoding-utf8-in-javascript.html">Johan Sundström</a>:</p>
+
+<pre class="brush:js" id="txt">// ucs-2 string to base64 encoded ascii
+function utoa(str) {
+    return window.btoa(unescape(encodeURIComponent(str)));
+}
+// base64 encoded ascii to ucs-2 string
+function atou(str) {
+    return decodeURIComponent(escape(window.atob(str)));
+}
+// Usage:
+utoa('✓ à la mode'); // 4pyTIMOgIGxhIG1vZGU=
+atou('4pyTIMOgIGxhIG1vZGU='); // "✓ à la mode"
+
+utoa('I \u2661 Unicode!'); // SSDimaEgVW5pY29kZSE=
+atou('SSDimaEgVW5pY29kZSE='); // "I ♡ Unicode!"
+</pre>
+
+<p>A better, more faithful and less expensive solution is to <a href="/en-US/docs/Web/API/WindowBase64/Base64_encoding_and_decoding#The_Unicode_Problem">use typed arrays to do the conversion</a>.</p>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+	<thead>
+		<tr>
+			<th scope="col">Specification</th>
+			<th scope="col">Status</th>
+			<th scope="col">Comment</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>{{SpecName('HTML WHATWG', '#dom-btoa', 'WindowOrWorkerGlobalScope.btoa()')}}</td>
+			<td>{{Spec2('HTML WHATWG')}}</td>
+			<td>Method moved to the <code>WindowOrWorkerGlobalScope</code> mixin in the latest spec.</td>
+		</tr>
+		<tr>
+			<td>{{SpecName('HTML5.1', '#dom-windowbase64-btoa', 'WindowBase64.btoa()')}}</td>
+			<td>{{Spec2('HTML5.1')}}</td>
+			<td>Snapshot of {{SpecName("HTML WHATWG")}}. No change.</td>
+		</tr>
+		<tr>
+			<td>{{SpecName("HTML5 W3C", "#dom-windowbase64-btoa", "WindowBase64.btoa()")}}</td>
+			<td>{{Spec2('HTML5 W3C')}}</td>
+			<td>Snapshot of {{SpecName("HTML WHATWG")}}. Creation of <code>WindowBase64</code> (properties where on the target before it).</td>
+		</tr>
+	</tbody>
+</table>
+
+<h2 id="Polyfill">Polyfill</h2>
+
+<pre>// Polyfill from  <a href="https://github.com/MaxArt2501/base64-js/blob/master/base64.js">https://github.com/MaxArt2501/base64-js/blob/master/base64.js
+</a>(function() {
+    // base64 character set, plus padding character (=)
+    var b64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
+
+        // Regular expression to check formal correctness of base64 encoded strings
+        b64re = /^(?:[A-Za-z\d+\/]{4})*?(?:[A-Za-z\d+\/]{2}(?:==)?|[A-Za-z\d+\/]{3}=?)?$/;
+
+    window.btoa = window.btoa || function(string) {
+        string = String(string);
+        var bitmap, a, b, c,
+            result = "",
+            i = 0,
+            rest = string.length % 3; // To determine the final padding
+
+        for (; i &lt; string.length;) {
+            if ((a = string.charCodeAt(i++)) &gt; 255 ||
+                (b = string.charCodeAt(i++)) &gt; 255 ||
+                (c = string.charCodeAt(i++)) &gt; 255)
+                throw new TypeError("Failed to execute 'btoa' on 'Window': The string to be encoded contains characters outside of the Latin1 range.");
+
+            bitmap = (a &lt;&lt; 16) | (b &lt;&lt; 8) | c;
+            result += b64.charAt(bitmap &gt;&gt; 18 &amp; 63) + b64.charAt(bitmap &gt;&gt; 12 &amp; 63) +
+                b64.charAt(bitmap &gt;&gt; 6 &amp; 63) + b64.charAt(bitmap &amp; 63);
+        }
+
+        // If there's need of padding, replace the last 'A's with equal signs
+        return rest ? result.slice(0, rest - 3) + "===".substring(rest) : result;
+    };
+
+    window.atob = window.atob || function(string) {
+        // atob can work with strings with whitespaces, even inside the encoded part,
+        // but only \t, \n, \f, \r and ' ', which can be stripped.
+        string = String(string).replace(/[\t\n\f\r ]+/g, "");
+        if (!b64re.test(string))
+            throw new TypeError("Failed to execute 'atob' on 'Window': The string to be decoded is not correctly encoded.");
+
+        // Adding the padding if missing, for semplicity
+        string += "==".slice(2 - (string.length &amp; 3));
+        var bitmap, result = "",
+            r1, r2, i = 0;
+        for (; i &lt; string.length;) {
+            bitmap = b64.indexOf(string.charAt(i++)) &lt;&lt; 18 | b64.indexOf(string.charAt(i++)) &lt;&lt; 12 |
+                (r1 = b64.indexOf(string.charAt(i++))) &lt;&lt; 6 | (r2 = b64.indexOf(string.charAt(i++)));
+
+            result += r1 === 64 ? String.fromCharCode(bitmap &gt;&gt; 16 &amp; 255) :
+                r2 === 64 ? String.fromCharCode(bitmap &gt;&gt; 16 &amp; 255, bitmap &gt;&gt; 8 &amp; 255) :
+                String.fromCharCode(bitmap &gt;&gt; 16 &amp; 255, bitmap &gt;&gt; 8 &amp; 255, bitmap &amp; 255);
+        }
+        return result;
+    };
+})()
+</pre>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<div>
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("api.WindowOrWorkerGlobalScope.btoa")}}</p>
+</div>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+	<li>{{domxref("WindowBase64/Base64_encoding_and_decoding", "Base64 encoding and decoding")}}</li>
+	<li><a href="/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs"><code>data</code> URIs</a></li>
+	<li>{{domxref("WindowOrWorkerGlobalScope.atob","atob()")}}</li>
+	<li><a href="/en-US/docs/Components.utils.importGlobalProperties">Components.utils.importGlobalProperties</a></li>
+</ul>

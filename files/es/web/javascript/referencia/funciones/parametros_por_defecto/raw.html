@@ -1,0 +1,271 @@
+<div>{{jsSidebar("Functions")}}</div>
+
+<p>Los <strong>parámetros por defecto de una función</strong> permiten que los parámetros formales de la función sean inicializados con valores por defecto si no se pasan valores o los valores pasados son <code>undefined</code>.</p>
+
+<h2 id="Sintaxis">Sintaxis</h2>
+
+<pre class="syntaxbox">function [<em>nombre</em>]([<em>param1</em>[ = valorPorDefecto1 ][, ..., <em>paramN</em>[ = valorPorDefectoN ]]]) {
+   <em>declaraciones</em>
+}
+</pre>
+
+<h2 id="Descripción">Descripción</h2>
+
+<p>En JavaScript, los parámetros de funciones son por defecto <code>undefined</code>. De todos modos, en algunas situaciones puede ser útil colocar un valor por defecto diferente. Aquí es donde los parámetros por defecto pueden ayudar.</p>
+
+<p>En el pasado, la estrategia general para colocar valores por defecto era probar los valores de los parámetros en el cuerpo de la función y asignarles un valor si eran <code>undefined</code>. Si en el siguiente ejemplo no se proveyera un valor para <code>b</code> en la llamada, su valor sería <code>undefined</code> cuando se evalúe <code>a*b</code> y la llamada a <code>multiplicar</code> hubiera retornado <code>NaN</code>. De todos modos, esto es capturado en la segunda línea de este ejemplo:</p>
+
+<pre class="brush: js">function multiplicar(a, b) {
+  b = typeof b !== 'undefined' ?  b : 1;
+
+  return a*b;
+}
+
+multiplicar(5); // 5
+</pre>
+
+<p>Con parámetros por defecto, la verificación en el cuerpo de la función ya no es necesaria. Ahora, puedes colocar simplemente 1 como el valor por defecto de <code>b</code> en la cabecera de la función:</p>
+
+<pre class="brush: js">function multiplicar(a, b = 1) {
+  return a*b;
+}
+
+multiplicar(5); // 5</pre>
+
+<h2 id="Ejemplos">Ejemplos</h2>
+
+<h3 id="Pasando_undefined">Pasando <code>undefined</code></h3>
+
+<p>En la segunda llamada aquí, aunque el segundo argumento sea explícitamente declarado como <code>undefined</code> cuando se haga la llamada, el valor del argumento <code>color</code> será el que se tiene por defecto.</p>
+
+<pre class="brush: js">function setBackgroundColor(elemento, color = 'rosybrown') {
+  elemento.style.backgroundColor = color;
+}
+
+setBackgroundColor(algunDiv);            // color configurado a 'rosybrown'
+setBackgroundColor(algunDiv, undefined); // color configurado a 'rosybrown' también
+setBackgroundColor(algunDiv, 'blue');    // color configurado a 'blue' 
+</pre>
+
+<h3 id="Evaluado_al_momento_de_la_llamada">Evaluado al momento de la llamada</h3>
+
+<p>El argumento por defecto se evalúa en la llamada, a diferencia de p.ej. Python, se crea un nuevo objeto en cada llamada a la función.</p>
+
+<pre class="brush: js">function agregar(valor, arreglo = []) {
+  arreglo.push(valor);
+  return arreglo;
+}
+
+agregar(1); //[1]
+agregar(2); //[2], not [1, 2]
+
+</pre>
+
+<p>Esto también se aplica a funciones y variables:</p>
+
+<pre class="brush: js">function llamarAlgo(cosa = algo()) { return cosa; }
+
+function algo(){
+  return "esto";
+}
+
+llamarAlgo();  //esto</pre>
+
+<h3 id="Los_parámetros_por_defecto_están_disponibles_para_posteriores_parámetros_por_defecto">Los parámetros por defecto están disponibles para posteriores parámetros por defecto</h3>
+
+<p>Loa parámetros ya encontrados están disponibles para los parámetros siguientes:</p>
+
+<pre class="brush: js">function singularAutoPlural(singular, plural = singular+"s", 
+                            gritoDeGuerra = plural + " ¡¡¡ATAQUEN!!!") {
+  return [singular, plural, gritoDeGuerra ]; 
+}
+
+//["Gecko","Geckos", "Geckos ¡¡¡ATAQUEN!!!"]
+singularAutoPlural("Gecko");
+
+//["Aprendiz","Aprendices", "Aprendices ¡¡¡ATAQUEN!!!"]
+singularAutoPlural("Aprendiz","Aprendices");
+
+//["Ciervo", "Ciervo", "Ciervo ... positivo."]
+singularAutoPlural("Ciervo", "Ciervo", "Ciervo hace una petición pacífica y respetuosa
+   al gobierno para un cambio positivo.")
+</pre>
+
+<p>Esta manera de hacerlo es más sencilla de entender y en ella se puede ver como se manejan los casos más límites.</p>
+
+<pre class="brush: js">function ir() {
+  return ":P"
+}
+
+function conPorDefecto(a, b = 5, c = b, d = ir(), e = this, 
+                      f = arguments, g = this.value) {
+  return [a,b,c,d,e,f,g];
+}
+function sinPorDefecto(a, b, c, d, e, f, g){
+  switch(arguments.length){
+    case 0:
+      a
+    case 1:
+      b = 5
+    case 2:
+      c = b
+    case 3:
+      d = ir();
+    case 4:
+      e = this
+    case 5:
+      f = arguments
+    case 6:
+      g = this.value;
+    default:
+  }
+  return [a,b,c,d,e,f,g];
+}
+
+conPorDefecto.call({value:"=^_^="});
+// [undefined, 5, 5, ":P", {value:"=^_^="}, arguments, "=^_^="]
+
+
+sinPorDefecto.call({value:"=^_^="});
+// [undefined, 5, 5, ":P", {value:"=^_^="}, arguments, "=^_^="]
+</pre>
+
+<h3 id="Funciones_definidas_dentro_del_cuerpo_de_una_función">Funciones definidas dentro del cuerpo de una función</h3>
+
+<p>Se introdujo en Gecko 33 {{geckoRelease(33)}}. Las funciones decladaras en el cuerpo de la función no pueden ser referidas dentro de los parámetros por defecto y arroja un {{jsxref("ReferenceError")}} (actualmente un {{jsxref("TypeError")}} en SpiderMonkey, ver {{bug(1022967)}}). Los parámetros por defecto son siempre ejecutados primero, las declaraciones de funciones dentro del cuerpo de la función son evaluadas después.</p>
+
+<pre class="brush: js">// ¡No funciona! Arroja ReferenceError.
+function f(a = ir()) {
+  function ir(){return ":P"}
+}
+</pre>
+
+<h3 id="Parámetros_no_por_defecto_luego_de_parámetros_por_defecto">Parámetros no por defecto luego de parámetros por defecto</h3>
+
+<p>Antes de Gecko 26 {{geckoRelease(26)}}, el siguiente código resultaba en un {{jsxref("SyntaxError")}}. Esto ha sido arreglado en {{bug(777060)}} y funciona como se espera en versiones posteriores:</p>
+
+<pre class="brush: js">function f(x=1, y) { 
+  return [x, y]; 
+}
+
+f(); // [1, undefined]
+</pre>
+
+<h3 id="Parámetro_destructurado_con_asignación_de_valor_por_defecto">Parámetro destructurado con asignación de valor por defecto</h3>
+
+<p>Puedes usar asignación de valor por defecto con la notación de <a href="/es/docs/Web/JavaScript/Referencia/Operadores/Destructuring_assignment">asignación por destructuración</a>:</p>
+
+<pre class="brush: js">function f([x, y] = [1, 2], {z: z} = {z: 3}) { 
+  return x + y + z; 
+}
+
+f(); // 6</pre>
+
+<h2 id="Especificaciones">Especificaciones</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Especificación</th>
+   <th scope="col">Estado</th>
+   <th scope="col">Comentario</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-function-definitions', 'Function Definitions')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td>Definición inicial.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Compatibilidad_con_navegadores">Compatibilidad con navegadores</h2>
+
+<div>{{CompatibilityTable}}</div>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Característica</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>Soporte básico</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatGeckoDesktop("15.0")}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+  <tr>
+   <td>Parámetros no por defecto después de parámetros por defecto</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatGeckoDesktop("26.0")}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td>Parámetro destructurado con asignación de valor por defecto</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatGeckoDesktop("41.0")}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Característica</th>
+   <th>Android</th>
+   <th>Chrome for Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>Soporte básico</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatGeckoMobile("15.0")}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+  <tr>
+   <td>Parámetros no por defecto después de parámetros por defecto</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatGeckoMobile("26.0")}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td>Parámetro destructurado con asignación de valor por defecto</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatGeckoMobile("41.0")}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="Vea_también">Vea también</h2>
+
+<ul>
+ <li><a class="external" href="http://wiki.ecmascript.org/doku.php?id=harmony:parameter_default_values" rel="external" title="http://wiki.ecmascript.org/doku.php?id=harmony:parameter_default_values">Original proposal at ecmascript.org</a></li>
+</ul>

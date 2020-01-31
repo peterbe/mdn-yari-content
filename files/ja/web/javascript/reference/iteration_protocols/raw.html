@@ -1,0 +1,335 @@
+<div>{{jsSidebar("More")}}</div>
+
+<p>ECMAScript 2015 に追加された 2 つのプロトコルです（新しい構文やビルトインではありません）。規約を満たす任意のオブジェクトに実装することができます。</p>
+
+<p><a href="#iterable">iterable プロトコル</a>と <a href="#iterator">iterator プロトコル</a>の 2 つのプロトコルがあります。</p>
+
+<h2 id="The_iterable_protocol" name="The_iterable_protocol"><a name="iterable">iterable プロトコル</a></h2>
+
+<p>{{原語併記("<strong>iterable</strong>", "反復可能")}}プロトコルによって、JavaScript オブジェクトは、{{jsxref("Statements/for...of", "for..of")}}構造で値がループしているもの等の反復動作を定義、または、カスタマイズできます。{{jsxref("Array")}}や{{jsxref("Map")}}のように、いくつかのビルトインの型はデフォルトの反復動作を持っている<a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Iteration_protocols#Built-in_iterables">ビルトイン iterables</a> です。一方、({{jsxref("Object")}}のような)他の型は反復動作を持ちません。 </p>
+
+<p><strong>iterable</strong> であるために、オブジェクトは<strong>@@iterator</strong> メソッドを実装する必要があります。これはつまり、オブジェクト(または、<a href="/docs/Web/JavaScript/Guide/Inheritance_and_the_prototype_chain">prototype chain</a> オブジェクトの一つ)が <code>{{jsxref("Symbol.iterator")}}</code> 定数にて利用できる <strong>@@iterator </strong> キーのプロパティを持つ必要があります。:</p>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">プロパティ</th>
+   <th scope="col">値</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td><code>[Symbol.iterator]</code></td>
+   <td><a href="#iterator">iterator プロトコル</a>に準拠するオブジェクトを返す、引数なしの関数。</td>
+  </tr>
+ </tbody>
+</table>
+
+<p>(<code>for..of</code> ループの始まりのように)オブジェクトが反復される必要があるときはいつでも、その<code>@@iterator</code> メソッドが引数なしで呼ばれます。そして、返される <strong>iterator</strong> は、反復される値を取得するために使用されます。</p>
+
+<h2 id="The_iterator_protocol" name="The_iterator_protocol"><a name="iterator">iterator プロトコル</a></h2>
+
+<p><strong>iterator</strong> プロトコルは、値のシーケンスを生成するための標準的な方法を定義します(有限または無限のいずれか)。</p>
+
+<p>次のセマンティクスで <code><strong>next()</strong></code>メソッドを実装するとき、オブジェクトはイテレーターです。:</p>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">プロパティ</th>
+   <th scope="col">値</th>
+  </tr>
+  <tr>
+   <td><code>next</code></td>
+   <td>
+    <p>引き数なしの関数。二つのプロパティを持つオブジェクトを返します。:</p>
+
+    <ul>
+     <li><code>done</code> (boolean)
+
+      <ul>
+       <li>イテレーターは、反復シーケンスの終わりを超えている場合、<code>true</code>値になります。この場合に、<code>value</code> は、任意の方法でイテレーターの <em>return value</em> を指定します。戻り値については<a href="http://www.2ality.com/2013/06/iterators-generators.html#generators-as-threads">こちら</a>で説明されています。</li>
+       <li>イテレーターがシーケンス内の次の値を生成できるとき <code>false</code>値になります。これは、完全に <code>done</code> プロパティを指定しないのと同じです。</li>
+      </ul>
+     </li>
+     <li><code>value</code> - イテレーターによって返される任意の JavaScript値。<code>done</code> が <code>true</code> のとき省略されます。</li>
+    </ul>
+
+    <p><code>next</code> メソッドは常に <code>done</code> と <code>value</code> の適切なプロパティと共にオブジェクトを返します。非オブジェクト値が返される場合(例えば <code>false</code> や <code>undefined</code>)、{{jsxref("TypeError")}} ("iterator.next() returned a non-object value") が投げられます。</p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+<p>いくつかのイテレーターは次々にイテレート可能です:</p>
+
+<pre class="brush: js">var someArray = [1, 5, 7];
+var someArrayEntries = someArray.entries();
+
+someArrayEntries.toString();           // "[object Array Iterator]"
+someArrayEntries === someArrayEntries[Symbol.iterator]();    // true
+</pre>
+
+<h2 id="Examples_using_the_iteration_protocols" name="Examples_using_the_iteration_protocols">例: iteration protocols を使う</h2>
+
+<p>{{jsxref("String")}}はビルトイン反復可能オブジェクトの例です。:</p>
+
+<pre class="brush: js">var someString = "hi";
+typeof someString[Symbol.iterator];          // "function"
+</pre>
+
+<p><code>String</code> の<a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/String/@@iterator">デフォルトイテレーター</a>は一つづつ String の文字を返します。:</p>
+
+<pre class="brush: js">var iterator = someString[Symbol.iterator]();
+iterator + "";                               // "[object String Iterator]"
+ 
+iterator.next();                             // { value: "h", done: false }
+iterator.next();                             // { value: "i", done: false }
+iterator.next();                             // { value: undefined, done: true }</pre>
+
+<p><a href="/docs/Web/JavaScript/Reference/Operators/Spread_operator">spread演算子</a>のように、内部で同じ反復プロトコルを使っているビルトインコンストラクタもあります:</p>
+
+<pre class="brush: js">[...someString]                              // ["h", "i"]</pre>
+
+<p>自身の<code>@@iterator</code> を供給することによって反復動作を再定義できます。:</p>
+
+<pre class="brush: js">var someString = new String("hi");          // need to construct a String object explicitly to avoid auto-boxing
+
+someString[Symbol.iterator] = function() {
+  return { // this is the iterator object, returning a single element, the string "bye"
+    next: function() {
+      if (this._first) {
+        this._first = false;
+        return { value: "bye", done: false };
+      } else {
+        return { done: true };
+      }
+    },
+    _first: true
+  };
+};
+</pre>
+
+<p><code>@@iterator</code> を再定義することによって、iteration プロトコルを使用するビルトインコンストラクタの動作にどれほど影響を与えるか注意してください:</p>
+
+<pre class="brush: js">[...someString];                              // ["bye"]
+someString + "";                              // "hi"
+</pre>
+
+<h2 id="Iterable_examples" name="Iterable_examples">反復の例</h2>
+
+<h3 id="Built-in_iterables" name="Built-in_iterables">ビルトインの反復可能オブジェクト</h3>
+
+<p>{{jsxref("String")}}、{{jsxref("Array")}}、{{jsxref("TypedArray")}}、{{jsxref("Map")}}、{{jsxref("Set")}}は、すべてのビルトイン反復可能オブジェクトです。というのも、それらすべてのプロトタイプオブジェクトは<code>@@</code><code>iterator</code> メソッドをもつからです。</p>
+
+<h3 id="User-defined_iterables" name="User-defined_iterables">ユーザー定義反復可能オブジェクト</h3>
+
+<p>下記のように反復可能オブジェクトを生成できます。:</p>
+
+<pre class="brush: js">var myIterable = {};
+myIterable[Symbol.iterator] = function* () {
+    yield 1;
+    yield 2;
+    yield 3;
+};
+[...myIterable]; // [1, 2, 3]
+</pre>
+
+<h3 id="Built-in_APIs_accepting_iterables" name="Built-in_APIs_accepting_iterables">反復可能オブジェクトを受け入れる組み込み API</h3>
+
+<p>反復可能オブジェクトを受け入れる多くの API があります。例えば: {{jsxref("Map", "Map([iterable])")}}、{{jsxref("WeakMap", "WeakMap([iterable])")}}、{{jsxref("Set", "Set([iterable])")}}、{{jsxref("WeakSet", "WeakSet([iterable])")}}:</p>
+
+<pre class="brush: js">var myObj = {};
+new Map([[1,"a"],[2,"b"],[3,"c"]]).get(2);               // "b"
+new WeakMap([[{},"a"],[myObj,"b"],[{},"c"]]).get(myObj); // "b"
+new Set([1, 2, 3]).has(3);                               // true
+new Set("123").has("2");                                 // true
+new WeakSet(function*() {
+    yield {};
+    yield myObj;
+    yield {};
+}()).has(myObj);                                         // true
+</pre>
+
+<p>他には、{{jsxref("Promise.all", "Promise.all(iterable)")}}、{{jsxref("Promise.race", "Promise.race(iterable)")}}、{{jsxref("Array.from", "Array.from()")}}があります。</p>
+
+<h3 id="Syntaxes_expecting_iterables" name="Syntaxes_expecting_iterables">反復可能オブジェクトを期待する構文</h3>
+
+<p>いくつかのステートメントや式は反復可能オブジェクトを期待しています。例えば、<code><a href="/docs/Web/JavaScript/Reference/Statements/for...of">for-of</a></code> ループ、<a href="/docs/Web/JavaScript/Reference/Operators/Spread_operator">spread syntax</a>、<code><a href="/docs/Web/JavaScript/Reference/Operators/yield*">yield*</a></code>、<a href="/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment">destructuring assignment</a></p>
+
+<pre class="brush: js">for(let value of ["a", "b", "c"]){
+    console.log(value);
+}
+// "a"
+// "b"
+// "c"
+
+[..."abc"]; // ["a", "b", "c"]
+
+function* gen(){
+  yield* ["a", "b", "c"];
+}
+
+gen().next(); // { value:"a", done:false }
+
+[a, b, c] = new Set(["a", "b", "c"]);
+a // "a"
+
+</pre>
+
+<h3 id="Non-well-formed_iterables" name="Non-well-formed_iterables">非整形反復可能オブジェクト</h3>
+
+<p>反復可能オブジェクトの<code>@@iterator</code> メソッドが反復オブジェクトを返さない場合、その反復可能オブジェクトは非整形反復可能オブジェクトです。それは、ランタイム例外やバグの挙動をもたらす可能性があります。:</p>
+
+<pre class="brush: js">var nonWellFormedIterable = {}
+nonWellFormedIterable[Symbol.iterator] = () =&gt; 1
+[...nonWellFormedIterable] // TypeError: [] is not a function
+</pre>
+
+<h2 id="Iterator_examples" name="Iterator_examples">イテレーターの例</h2>
+
+<h3 id="Simple_iterator" name="Simple_iterator">簡単なイテレーター</h3>
+
+<pre class="brush: js">function makeIterator(array){
+    var nextIndex = 0;
+    
+    return {
+       next: function(){
+           return nextIndex &lt; array.length ?
+               {value: array[nextIndex++], done: false} :
+               {done: true};
+       }
+    };
+}
+
+var it = makeIterator(['yo', 'ya']);
+
+console.log(it.next().value); // 'yo'
+console.log(it.next().value); // 'ya'
+console.log(it.next().done);  // true
+</pre>
+
+<h3 id="Infinite_iterator" name="Infinite_iterator">無限のイテレーター</h3>
+
+<pre class="brush: js">function idMaker(){
+    var index = 0;
+    
+    return {
+       next: function(){
+           return {value: index++, done: false};
+       }
+    };
+}
+
+var it = idMaker();
+
+console.log(it.next().value); // '0'
+console.log(it.next().value); // '1'
+console.log(it.next().value); // '2'
+// ...
+</pre>
+
+<h3 id="With_a_generator" name="With_a_generator">ジェネレーターとともに</h3>
+
+<pre class="brush: js">function* makeSimpleGenerator(array){
+    var nextIndex = 0;
+    
+    while(nextIndex &lt; array.length){
+        yield array[nextIndex++];
+    }
+}
+
+var gen = makeSimpleGenerator(['yo', 'ya']);
+
+console.log(gen.next().value); // 'yo'
+console.log(gen.next().value); // 'ya'
+console.log(gen.next().done);  // true
+
+
+
+function* idMaker(){
+    var index = 0;
+    while(true)
+        yield index++;
+}
+
+var gen = idMaker();
+
+console.log(gen.next().value); // '0'
+console.log(gen.next().value); // '1'
+console.log(gen.next().value); // '2'
+// ...
+</pre>
+
+<h3 id="With_ECMAScript_6_class" name="With_ECMAScript_6_class">ES2015 class とともに</h3>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js"><span class="keyword token">class</span> <span class="class-name token">SimpleClass</span> <span class="punctuation token">{</span>
+  <span class="function token">constructor</span><span class="punctuation token">(</span>data<span class="punctuation token">)</span> <span class="punctuation token">{</span>
+    <span class="keyword token">this</span><span class="punctuation token">.</span>index <span class="operator token">=</span> <span class="number token">0</span><span class="punctuation token">;</span>
+    <span class="keyword token">this</span><span class="punctuation token">.</span>data <span class="operator token">=</span> data<span class="punctuation token">;</span>
+  <span class="punctuation token">}</span>
+
+  <span class="punctuation token">[</span>Symbol<span class="punctuation token">.</span>iterator<span class="punctuation token">]</span><span class="punctuation token">(</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+    <span class="keyword token">return</span> <span class="punctuation token">{</span>
+      next<span class="punctuation token">:</span> <span class="punctuation token">(</span><span class="punctuation token">)</span> <span class="operator token">=</span><span class="operator token">&gt;</span> <span class="punctuation token">{</span>
+        <span class="keyword token">if</span> <span class="punctuation token">(</span><span class="keyword token">this</span><span class="punctuation token">.</span>index <span class="operator token">&lt;</span> <span class="keyword token">this</span><span class="punctuation token">.</span>data<span class="punctuation token">.</span>length<span class="punctuation token">)</span> <span class="punctuation token">{</span>
+          <span class="keyword token">return</span> <span class="punctuation token">{</span>value<span class="punctuation token">:</span> <span class="keyword token">this</span><span class="punctuation token">.</span>data<span class="punctuation token">[</span><span class="keyword token">this</span><span class="punctuation token">.</span>index<span class="operator token">++</span><span class="punctuation token">]</span><span class="punctuation token">,</span> done<span class="punctuation token">:</span> <span class="keyword token">false</span><span class="punctuation token">}</span><span class="punctuation token">;</span>
+        <span class="punctuation token">}</span> <span class="keyword token">else</span> <span class="punctuation token">{</span>
+          <span class="keyword token">this</span><span class="punctuation token">.</span>index <span class="operator token">=</span> <span class="number token">0</span><span class="punctuation token">;</span> <span class="comment token">//If we would like to iterate over this again without forcing manual update of the index</span>
+          <span class="keyword token">return</span> <span class="punctuation token">{</span>done<span class="punctuation token">:</span> <span class="keyword token">true</span><span class="punctuation token">}</span><span class="punctuation token">;</span>
+        <span class="punctuation token">}</span>
+      <span class="punctuation token">}</span>
+    <span class="punctuation token">}</span>
+  <span class="punctuation token">}</span><span class="punctuation token">;</span>
+<span class="punctuation token">}</span>
+
+<span class="keyword token">const</span> simple <span class="operator token">=</span> <span class="keyword token">new</span> <span class="class-name token">SimpleClass</span><span class="punctuation token">(</span><span class="punctuation token">[</span><span class="number token">1</span><span class="punctuation token">,</span><span class="number token">2</span><span class="punctuation token">,</span><span class="number token">3</span><span class="punctuation token">,</span><span class="number token">4</span><span class="punctuation token">,</span><span class="number token">5</span><span class="punctuation token">]</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+
+<span class="keyword token">for</span> <span class="punctuation token">(</span><span class="keyword token">const</span> val <span class="keyword token">of</span> simple<span class="punctuation token">)</span> <span class="punctuation token">{</span>
+  console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(</span>val<span class="punctuation token">)</span><span class="punctuation token">;</span>  <span class="comment token">//'0' '1' '2' '3' '4' '5' </span>
+<span class="punctuation token">}</span></code></pre>
+
+<h2 id="Is_a_generator_object_an_iterator_or_an_iterable" name="Is_a_generator_object_an_iterator_or_an_iterable">ジェネレーターは、イテレーターまたは反復可能なオブジェクトですか？</h2>
+
+<p><a href="/docs/Web/JavaScript/Reference/Global_Objects/Generator">generator オブジェクト</a>は、イテレーターであり、反復可能オブジェクトです。:</p>
+
+<pre class="brush: js">var aGeneratorObject = function*(){
+    yield 1;
+    yield 2;
+    yield 3;
+}();
+typeof aGeneratorObject.next;
+// "function", because it has a next method, so it's an iterator
+typeof aGeneratorObject[Symbol.iterator];
+// "function", because it has an @@iterator method, so it's an iterable
+aGeneratorObject[Symbol.iterator]() === aGeneratorObject;
+// true, because its @@iterator method return its self (an iterator), so it's an well-formed iterable
+[...aGeneratorObject];
+// [1, 2, 3]
+</pre>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">ステータス</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-iteration', 'Iteration')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td>初期定義。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-iteration', 'Iteration')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<p>ES2015 ジェネレーターの詳細について、<a href="/docs/Web/JavaScript/Reference/Statements/function*">function*() 文書</a>をご覧ください。</p>

@@ -1,0 +1,388 @@
+<div>{{LearnSidebar}}</div>
+
+<div>{{PreviousMenuNext("Learn/JavaScript/Building_blocks/Looping_code","Learn/JavaScript/Building_blocks/Build_your_own_function", "Learn/JavaScript/Building_blocks")}}</div>
+
+<p class="summary">코딩에 있어서 또 하나의 중요한 개념은 바로 '함수'입니다. 함수란, 한 가지의 일을 수행하는 코드가 블럭으로 묶여있는 것을 말하며, 간단한 명령만으로 동일한 코드를 필요한 곳마다 반복해서 사용하지 않을 수 있게 만들어 줍니다. 이번 장에서는 함수에 대한 기본 문법과 파라미터(parameter) 및 범위(scope), 그리고 호출 방법에 대해 설명합니다.</p>
+
+<table class="learn-box standard-table">
+ <tbody>
+  <tr>
+   <th scope="row">필요 사항:</th>
+   <td>기본적인 컴퓨터 활용 능력, HTML과 CSS의 기본적인 이해, <a href="/en-US/docs/Learn/JavaScript/First_steps">자바스크립트 첫 단계</a>.</td>
+  </tr>
+  <tr>
+   <th scope="row">목표:</th>
+   <td>JavaScript 함수의 기본 개념을 이해합니다.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="함수는_어디에서_찾을_수_있나요">함수는 어디에서 찾을 수 있나요?</h2>
+
+<p>자바스크립트에서, 어디서든 함수를 찾을 수 있습니다. 사실, 우리는 지금까지 수업을 통해 함수를 항상 사용해왔습니다; 함수에 대해서 그렇게 말해오지 않았을 뿐입니다. 그러나 이제 함수에 대해서 명시적으로 논하고, 실제로 문법을 탐험할 때가 되었습니다. </p>
+
+<p>괄호 쌍이 있는 JavaScript 구조를 사용할 때마다 — <code>()</code> — 그리고 <a href="/en-US/Learn/JavaScript/Building_blocks/Looping_code#The_standard_for_loop">for loop</a>, <a href="/en-US/Learn/JavaScript/Building_blocks/Looping_code#while_and_do_..._while">while 또는 do...while loop</a>, 또는 <a href="/en-US/Learn/JavaScript/Building_blocks/conditionals#if_..._else_statements">if...else문</a>과 같은 일반적인 내장 언어 구조를 사용하지 <strong>않고 </strong>함수를 사용하고 있습니다.</p>
+
+<h2 id="브라우저_내장_함수">브라우저 내장 함수</h2>
+
+<p>우리는 이 코스에서 많은 브라우저 빌트인 함수를 사용해왔습니다.<br>
+ 예를 들어, 우리가 매번 텍스트 string을 조작할 때마다:</p>
+
+<pre class="brush: js">var myText = 'I am a string';
+var newString = myText.replace('string', 'sausage');
+console.log(newString);
+// the replace() string function takes a string,
+// replaces one substring with another, and returns
+// a new string with the replacement made</pre>
+
+<p>또는 우리가 배열을 조작할 때마다:</p>
+
+<pre class="brush: js">var myArray = ['I', 'love', 'chocolate', 'frogs'];
+var madeAString = myArray.join(' ');
+console.log(madeAString);
+// the join() function takes an array, joins
+// all the array items together into a single
+// string, and returns this new string</pre>
+
+<p>또는 우리가 무작위의 숫자를 생성할 때마다:</p>
+
+<pre class="brush: js">var myNumber = Math.random();
+// the random() function generates a random
+// number between 0 and 1, and returns that
+// number</pre>
+
+<p>...우리는 함수를 사용하고 있었어요!</p>
+
+<div class="note">
+<p><strong>Note</strong>: Feel free to enter these lines into your browser's JavaScript console to re-familiarize yourself with their functionality, if needed.</p>
+</div>
+
+<p>JavaScript 언어는 당신 스스로 코드 전체를 적을 필요 없이, 유용한 것들을 할 수 있게 해주는 많은 내장 함수를 가지고 있습니다.  사실, 브라우저 내장 함수를 <strong>호출</strong>(run 또는 execute를 위한 멋진 단어)할 때 호출하는 일부 코드는 JavaScript로 작성할 수 없었습니다 —  이러한 함수 중 상당수는 백그라운드 브라우저 코드의 일부를 호출하고 있으며, 이는 JavaScript와 같은 웹 언어가 아니라 C++와 같은 저수준 시스템 언어로 작성됩니다.</p>
+
+<p>Bear in mind that some built-in browser functions are not part of the core JavaScript language — some are defined as part of browser APIs, which build on top of the default language to provide even more functionality (refer to <a href="/en-US/Learn/JavaScript/First_steps/What_is_JavaScript#So_what_can_it_really_do">this early section of our course</a> for more descriptions). We'll look at using browser APIs in more detail in a later module.</p>
+
+<h2 id="함수_대_메소드">함수 대 메소드</h2>
+
+<p>우리가 다음으로 넘어가기 전에, 확실하게 짚고 가야할 게 있습니다. — 기술적으로, Built-in browser functions은 functions이 아닙니다. 그들은 <strong>methods</strong>죠. 이 문장이 약간 이상하고 혼란스럽게 들릴 수 있겠지만, 걱정마세요. — function과 method 이 두 단어는 광범위하게 교체가능하답니다. 최소한 그들의 용도적 측면과 지금 당신의 배움 단계에서는요.<br>
+ <br>
+ 구별되는 점은 methods는 objects안에 정의된 functions이라는 겁니다. Built-in browser functions(methods)와 변수(<strong>properties</strong>라 불리는 것들)는 코드를 더욱 효율적이고 다루기 쉽게하기 위해 구조화된 objects안에 저장되어 있습니다.</p>
+
+<p>당신은 아직 구조화된 JavaScript objects의 내부 동작에 대해서까지는 배우지 않아도 괜찮습니다. — 당신은 우리가 가르쳐 줄 objects의 내부 동작에 관한 모든 것인 모듈과, 어떻게 당신만의 모듈을 창조할 수 있는지에 대해 기다릴 수 있습니다. 현재로서는, 우리는 단지 어떤 혼동도 가능한 method 대 function(당신이 웹에서 이용가능한 관련 자원들을 볼때, 두 가지 용어를 만날 가능 성이 충분히 있는)에 대해 정리하고 싶을 뿐입니다. </p>
+
+<h2 id="사용자_정의_함수">사용자 정의 함수</h2>
+
+<p>또한 지금까지 많은 <strong>사용자 정의 함수</strong>(브라우저가 아닌 코드에 정의된 함수)를 봤습니다. 바로 뒤에 괄호가 있는 사용자가 정의한 이름을 볼 때마다, 바로 사용자 정의 함수를 사용하고 있었던 겁니다. <a href="/en-US/docs/Learn/JavaScript/Building_blocks/Looping_code">loops article</a>의 <a href="http://mdn.github.io/learning-area/javascript/building-blocks/loops/random-canvas-circles.html">random-canvas-circles.html</a> 예제(전체  <a href="https://github.com/mdn/learning-area/blob/master/javascript/building-blocks/loops/random-canvas-circles.html">소스 코드</a> 참조)에는 다음과 같은 <code>draw()</code> 사용자 정의 함수가 포함되어 있습니다:</p>
+
+<pre class="brush: js">function draw() {
+  ctx.clearRect(0,0,WIDTH,HEIGHT);
+  for (var i = 0; i &lt; 100; i++) {
+    ctx.beginPath();
+    ctx.fillStyle = 'rgba(255,0,0,0.5)';
+    ctx.arc(random(WIDTH), random(HEIGHT), random(50), 0, 2 * Math.PI);
+    ctx.fill();
+  }
+}</pre>
+
+<p>이 함수는 {{htmlelement("canvas")}} 요소 안에 100개의 임의의 원을 그립니다. 원할 때마다 아래 코드로 함수를 호출할 수 있습니다:</p>
+
+<pre class="brush: js">draw();</pre>
+
+<p>rather than having to write all that code out again every time we want to repeat it. And functions can contain whatever code you like — you can even call other functions from inside functions. The above function for example calls the <code>random()</code> function three times, which is defined by the following code:</p>
+
+<pre class="brush: js">function random(number) {
+  return Math.floor(Math.random()*number);
+}</pre>
+
+<p>We needed this function because the browser's built-in <a href="/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random">Math.random()</a> function only generates a random decimal number between 0 and 1. We wanted a random whole number between 0 and a specified number.</p>
+
+<h2 id="Invoking_functions">Invoking functions</h2>
+
+<p>You are probably clear on this by now, but just in case ... to actually use a function after it has been defined, you've got to run — or invoke — it. This is done by including the name of the function in the code somewhere, followed by parentheses.</p>
+
+<pre class="brush: js">function myFunction() {
+  alert('hello');
+}
+
+myFunction()
+// calls the function once</pre>
+
+<h2 id="Anonymous_functions">Anonymous functions</h2>
+
+<p>You may see functions defined and invoked in slightly different ways. So far we have just created a function like so:</p>
+
+<pre class="brush: js">function myFunction() {
+  alert('hello');
+}</pre>
+
+<p>But you can also create a function that doesn't have a name:</p>
+
+<pre class="brush: js">function() {
+  alert('hello');
+}</pre>
+
+<p>This is called an <strong>anonymous function</strong> — it has no name! It also won't do anything on its own. You generally use an anonymous function along with an event handler, for example the following would run the code inside the function whenever the associated button is clicked:</p>
+
+<pre class="brush: js">var myButton = document.querySelector('button');
+
+myButton.onclick = function() {
+  alert('hello');
+}</pre>
+
+<p>The above example would require there to be a {{htmlelement("button")}} element available on the page to select and click. You've already seen this structure a few times throughout the course, and you'll learn more about and see it in use in the next article.</p>
+
+<p>You can also assign an anonymous function to be the value of a variable, for example:</p>
+
+<pre class="brush: js">var myGreeting = function() {
+  alert('hello');
+}</pre>
+
+<p>This function could now be invoked using:</p>
+
+<pre class="brush: js">myGreeting();</pre>
+
+<p>This effectively gives the function a name; you can also assign the function to be the value of multiple variables, for example:</p>
+
+<pre class="brush: js">var anotherGreeting = function() {
+  alert('hello');
+}</pre>
+
+<p>This function could now be invoked using either of</p>
+
+<pre class="brush: js">myGreeting();
+anotherGreeting();</pre>
+
+<p>But this would just be confusing, so don't do it! When creating functions, it is better to just stick to this form:</p>
+
+<pre class="brush: js">function myGreeting() {
+  alert('hello');
+}</pre>
+
+<p>You will mainly use anonymous functions to just run a load of code in response to an event firing — like a button being clicked — using an event handler. Again, this looks something like this:</p>
+
+<pre class="brush: js">myButton.onclick = function() {
+  alert('hello');
+  // I can put as much code
+  // inside here as I want
+}</pre>
+
+<h2 id="Function_parameters">Function parameters</h2>
+
+<p>Some functions require <strong>parameters</strong> to be specified when you are invoking them — these are values that need to be included inside the function parentheses, which it needs to do its job properly.</p>
+
+<div class="note">
+<p><strong>Note</strong>: Parameters are sometimes called arguments, properties, or even attributes.</p>
+</div>
+
+<p>As an example, the browser's built-in <a href="/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random">Math.random()</a> function doesn't require any parameters. When called, it always returns a random number between 0 and 1:</p>
+
+<pre class="brush: js">var myNumber = Math.random();</pre>
+
+<p>The browser's built-in string <a href="/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace">replace()</a> function however needs two parameters — the substring to find in the main string, and the substring to replace that string with:</p>
+
+<pre class="brush: js">var myText = 'I am a string';
+var newString = myText.replace('string', 'sausage');</pre>
+
+<div class="note">
+<p><strong>Note</strong>: When you need to specify multiple parameters, they are separated by commas.</p>
+</div>
+
+<p>It should also be noted that sometimes parameters are optional — you don't have to specify them. If you don't, the function will generally adopt some kind of default behavior. As an example, the array <a href="/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/join">join()</a> function's parameter is optional:</p>
+
+<pre class="brush: js">var myArray = ['I', 'love', 'chocolate', 'frogs'];
+var madeAString = myArray.join(' ');
+// returns 'I love chocolate frogs'
+var madeAString = myArray.join();
+// returns 'I,love,chocolate,frogs'</pre>
+
+<p>If no parameter is included to specify a joining/delimiting character, a comma is used by default.</p>
+
+<h2 id="Function_scope_and_conflicts">Function scope and conflicts</h2>
+
+<p>Let's talk a bit about {{glossary("scope")}} — a very important concept when dealing with functions. When you create a function, the variables and other things defined inside the function are inside their own separate <strong>scope</strong>, meaning that they are locked away in their own separate compartments, unreachable from inside other functions or from code outside the functions.</p>
+
+<p>The top level outside all your functions is called the <strong>global scope</strong>. Values defined in the global scope are accessible from everywhere in the code.</p>
+
+<p>JavaScript is set up like this for various reasons — but mainly because of security and organization. Sometimes you don't want variables to be accessible from everywhere in the code — external scripts that you call in from elsewhere could start to mess with your code and cause problems because they happen to be using the same variable names as other parts of the code, causing conflicts. This might be done maliciously, or just by accident.</p>
+
+<p>For example, say you have an HTML file that is calling in two external JavaScript files, and both of them have a variable and a function defined that use the same name:</p>
+
+<pre class="brush: html">&lt;!-- Excerpt from my HTML --&gt;
+&lt;script src="first.js"&gt;&lt;/script&gt;
+&lt;script src="second.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+  greeting();
+&lt;/script&gt;</pre>
+
+<pre class="brush: js">// first.js
+var name = 'Chris';
+function greeting() {
+  alert('Hello ' + name + ': welcome to our company.');
+}</pre>
+
+<pre class="brush: js">// second.js
+var name = 'Zaptec';
+function greeting() {
+  alert('Our company is called ' + name + '.');
+}</pre>
+
+<p>Both functions you want to call are called <code>greeting()</code>, but you can only ever access the <code>second.js</code> file's <code>greeting()</code> function — it is applied to the HTML later on in the source code, so its variable and function overwrite the ones in <code>first.js</code>.</p>
+
+<div class="note">
+<p><strong>Note</strong>: You can see this example <a href="http://mdn.github.io/learning-area/javascript/building-blocks/functions/conflict.html">running live on GitHub</a> (see also the <a href="https://github.com/mdn/learning-area/tree/master/javascript/building-blocks/functions">source code</a>).</p>
+</div>
+
+<p>Keeping parts of your code locked away in functions avoids such problems, and is considered best practice.</p>
+
+<p>It is a bit like a zoo. The lions, zebras, tigers, and penguins are kept in their own enclosures, and only have access to the things inside their enclosures — in the same manner as the function scopes. If they were able to get into other enclosures, problems would occur. At best, different animals would feel really uncomfortable inside unfamiliar habitats — a lion or tiger would feel terrible inside the penguins' watery, icy domain. At worst, the lions and tigers might try to eat the penguins!</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/14079/MDN-mozilla-zoo.png" style="display: block; margin: 0 auto;"></p>
+
+<p>The zoo keeper is like the global scope — he or she has the keys to access every enclosure, to restock food, tend to sick animals, etc.</p>
+
+<h3 id="Active_learning_Playing_with_scope">Active learning: Playing with scope</h3>
+
+<p>Let's look at a real example to demonstrate scoping.</p>
+
+<ol>
+ <li>First, make a local copy of our <a href="https://github.com/mdn/learning-area/blob/master/javascript/building-blocks/functions/function-scope.html">function-scope.html</a> example. This contains two functions called <code>a()</code> and <code>b()</code>, and three variables — <code>x</code>, <code>y</code>, and <code>z</code> — two of which are defined inside the functions, and one in the global scope. It also contains a third function called <code>output()</code>, which takes a single parameter and outputs it in a paragraph on the page.</li>
+ <li>Open the example up in a browser and in your text editor.</li>
+ <li>Open the JavaScript console in your browser developer tools. In the JavaScript console, enter the following command:
+  <pre class="brush: js">output(x);</pre>
+  You should see the value of variable <code>x</code> output to the screen.</li>
+ <li>Now try entering the following in your console
+  <pre class="brush: js">output(y);
+output(z);</pre>
+  Both of these should return an error along the lines of "<a href="/en-US/docs/Web/JavaScript/Reference/Errors/Not_defined">ReferenceError: y is not defined</a>". Why is that? Because of function scope — <code>y</code> and <code>z</code> are locked inside the <code>a()</code> and <code>b()</code> functions, so <code>output()</code> can't access them when called from the global scope.</li>
+ <li>However, what about when it's called from inside another function? Try editing <code>a()</code> and <code>b()</code> so they look like this:
+  <pre class="brush: js">function a() {
+  var y = 2;
+  output(y);
+}
+
+function b() {
+  var z = 3;
+  output(z);
+}</pre>
+  Save the code and reload it in your browser, then try calling the <code>a()</code> and <code>b()</code> functions from the JavaScript console:
+
+  <pre class="brush: js">a();
+b();</pre>
+  You should see the <code>y</code> and <code>z</code> values output in the page. This works fine, as the <code>output()</code> function is being called inside the other functions — in the same scope as the variables it is printing are defined in, in each case. <code>output()</code> itself is available from anywhere, as it is defined in the global scope.</li>
+ <li>Now try updating your code like this:
+  <pre class="brush: js">function a() {
+  var y = 2;
+  output(x);
+}
+
+function b() {
+  var z = 3;
+  output(x);
+}</pre>
+  Save and reload again, and try this again in your JavaScript console:
+
+  <pre class="brush: js">a();
+b();</pre>
+  Both the <code>a()</code> and <code>b()</code> call should output the value of x — 1. These work fine because even though the <code>output()</code> calls are not in the same scope as <code>x</code> is defined in, <code>x</code> is a global variable so is available inside all code, everywhere.</li>
+ <li>Finally, try updating your code like this:
+  <pre class="brush: js">function a() {
+  var y = 2;
+  output(z);
+}
+
+function b() {
+  var z = 3;
+  output(y);
+}</pre>
+  Save and reload again, and try this again in your JavaScript console:
+
+  <pre class="brush: js">a();
+b();</pre>
+  This time the <code>a()</code> and <code>b()</code> calls will both return that annoying "<a href="/en-US/docs/Web/JavaScript/Reference/Errors/Not_defined">ReferenceError: z is not defined</a>" error — this is because the <code>output()</code> calls and the variables they are trying to print are not defined inside the same function scopes — the variables are effectively invisible to those function calls.</li>
+</ol>
+
+<div class="note">
+<p><strong>Note</strong>: The same scoping rules do not apply to loop (e.g. <code>for() { ... }</code>) and conditional blocks (e.g. <code>if() { ... }</code>) — they look very similar, but they are not the same thing! Take care not to get these confused.</p>
+</div>
+
+<div class="note">
+<p><strong>Note</strong>: The <a href="/en-US/docs/Web/JavaScript/Reference/Errors/Not_defined">ReferenceError: "x" is not defined</a> error is one of the most common you'll encounter. If you get this error and you are sure that you have defined the variable in question, check what scope it is in.</p>
+</div>
+
+<ul>
+</ul>
+
+<h3 id="Functions_inside_functions">Functions inside functions</h3>
+
+<p>Keep in mind that you can call a function from anywhere, even inside another function.  This is often used as a way to keep code tidy — if you have a big complex function, it is easier to understand if you break it down into several sub-functions:</p>
+
+<pre class="brush: js">function myBigFunction() {
+  var myValue;
+
+  subFunction1();
+  subFunction2();
+  subFunction3();
+}
+
+function subFunction1() {
+  console.log(myValue);
+}
+
+function subFunction2() {
+  console.log(myValue);
+}
+
+function subFunction3() {
+  console.log(myValue);
+}
+</pre>
+
+<p>Just make sure that the values being used inside the function are properly in scope. The example above would throw an error <code>ReferenceError: myValue is not defined</code>, because although the <code>myValue</code> variable is defined in the same scope as the function calls, it is not defined inside the function definitions — the actual code that is run when the functions are called. To make this work, you'd have to pass the value into the function as a parameter, like this:</p>
+
+<pre class="brush: js">function myBigFunction() {
+  var myValue = 1;
+      
+  subFunction1(myValue);
+  subFunction2(myValue);
+  subFunction3(myValue);
+}
+
+function subFunction1(value) {
+  console.log(value);
+}
+
+function subFunction2(value) {
+  console.log(value);
+}
+
+function subFunction3(value) {
+  console.log(value);
+}</pre>
+
+<h2 id="Conclusion">Conclusion</h2>
+
+<p>This article has explored the fundamental concepts behind functions, paving the way for the next one in which we get practical and take you through the steps to building up your own custom function.</p>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Web/JavaScript/Guide/Functions">Functions detailed guide</a> — covers some advanced features not included here.</li>
+ <li><a href="/en-US/docs/Web/JavaScript/Reference/Functions">Functions reference</a></li>
+ <li><a href="/en-US/docs/Web/JavaScript/Reference/Functions/Default_parameters">Default parameters</a>, <a href="/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions">Arrow functions</a> — advanced concept references</li>
+</ul>
+
+<ul>
+</ul>
+
+<p>{{PreviousMenuNext("Learn/JavaScript/Building_blocks/Looping_code","Learn/JavaScript/Building_blocks/Build_your_own_function", "Learn/JavaScript/Building_blocks")}}</p>
+
+<h2 id="In_this_module">In this module</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Learn/JavaScript/Building_blocks/conditionals">Making decisions in your code — conditionals</a></li>
+ <li><a href="/en-US/docs/Learn/JavaScript/Building_blocks/Looping_code">Looping code</a></li>
+ <li><a href="/en-US/docs/Learn/JavaScript/Building_blocks/Functions">Functions — reusable blocks of code</a></li>
+ <li><a href="/en-US/docs/Learn/JavaScript/Building_blocks/Build_your_own_function">Build your own function</a></li>
+ <li><a href="/en-US/docs/Learn/JavaScript/Building_blocks/Return_values">Function return values</a></li>
+ <li><a href="/en-US/docs/Learn/JavaScript/Building_blocks/Events">Introduction to events</a></li>
+ <li><a href="/en-US/docs/Learn/JavaScript/Building_blocks/Image_gallery">Image gallery</a></li>
+</ul>

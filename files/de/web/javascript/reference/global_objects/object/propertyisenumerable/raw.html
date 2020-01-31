@@ -1,0 +1,154 @@
+<div>
+ {{JSRef("Global_Objects", "Object")}}</div>
+<h2 id="Summary" name="Summary">Summary</h2>
+<p>The <code><strong>propertyIsEnumerable()</strong></code> method returns a Boolean indicating whether the specified property is enumerable.</p>
+<h2 id="Syntax" name="Syntax">Syntax</h2>
+<pre class="syntaxbox"><code><var>obj</var>.propertyIsEnumerable(<var>prop</var>)</code></pre>
+<h3 id="Parameters" name="Parameters">Parameters</h3>
+<dl>
+ <dt>
+  <code>prop</code></dt>
+ <dd>
+  The name of the property to test.</dd>
+</dl>
+<h2 id="Description" name="Description">Description</h2>
+<p>Every object has a <code>propertyIsEnumerable</code> method. This method can determine whether the specified property in an object can be enumerated by a {{jsxref("Statements/for...in", "for...in")}} loop, with the exception of properties inherited through the prototype chain. If the object does not have the specified property, this method returns <code>false</code>.</p>
+<h2 id="Examples" name="Examples">Examples</h2>
+<h3 id="Example:_A_basic_use_of_propertyIsEnumerable" name="Example:_A_basic_use_of_propertyIsEnumerable">Example: A basic use of <code>propertyIsEnumerable</code></h3>
+<p>The following example shows the use of <code>propertyIsEnumerable</code> on objects and arrays:</p>
+<pre class="brush: js">var o = {};
+var a = [];
+o.prop = 'is enumerable';
+a[0] = 'is enumerable';
+
+o.propertyIsEnumerable('prop');   // returns true
+a.propertyIsEnumerable(0);        // returns true
+</pre>
+<h3 id="Example:_User-defined_versus_built-in_objects" name="Example:_User-defined_versus_built-in_objects">Example: User-defined versus built-in objects</h3>
+<p>The following example demonstrates the enumerability of user-defined versus built-in properties:</p>
+<pre class="brush: js">var a = ['is enumerable'];
+
+a.propertyIsEnumerable(0);          // returns true
+a.propertyIsEnumerable('length');   // returns false
+
+Math.propertyIsEnumerable('random');   // returns false
+this.propertyIsEnumerable('Math');     // returns false
+</pre>
+<h3 id="Example:_Direct_versus_inherited_properties" name="Example:_Direct_versus_inherited_properties">Example: Direct versus inherited properties</h3>
+<pre class="brush: js">var a = [];
+a.propertyIsEnumerable('constructor');         // returns false
+
+function firstConstructor() {
+  this.property = 'is not enumerable';
+}
+
+firstConstructor.prototype.firstMethod = function() {};
+
+function secondConstructor() {
+  this.method = function method() { return 'is enumerable'; };
+}
+
+secondConstructor.prototype = new firstConstructor;
+secondConstructor.prototype.constructor = secondConstructor;
+
+var o = new secondConstructor();
+o.arbitraryProperty = 'is enumerable';
+
+o.propertyIsEnumerable('arbitraryProperty');   // returns true
+o.propertyIsEnumerable('method');              // returns true
+o.propertyIsEnumerable('property');            // returns false
+
+o.property = 'is enumerable';
+
+o.propertyIsEnumerable('property');            // returns true
+
+// These return false as they are on the prototype which 
+// propertyIsEnumerable does not consider (even though the last two
+// are iteratable with for-in)
+o.propertyIsEnumerable('prototype');   // returns false (as of JS 1.8.1/FF3.6)
+o.propertyIsEnumerable('constructor'); // returns false
+o.propertyIsEnumerable('firstMethod'); // returns false
+</pre>
+<h2 id="Specifications">Specifications</h2>
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>ECMAScript 3rd Edition.</td>
+   <td>Standard</td>
+   <td>Initial definition.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-15.2.4.7', 'Object.prototype.propertyIsEnumerable')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-object.prototype.propertyisenumerable', 'Object.prototype.propertyIsEnumerable')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+<div>
+ {{CompatibilityTable}}</div>
+<div id="compat-desktop">
+ <table class="compat-table">
+  <tbody>
+   <tr>
+    <th>Feature</th>
+    <th>Chrome</th>
+    <th>Firefox (Gecko)</th>
+    <th>Internet Explorer</th>
+    <th>Opera</th>
+    <th>Safari</th>
+   </tr>
+   <tr>
+    <td>Basic support</td>
+    <td>{{CompatVersionUnknown}}</td>
+    <td>{{CompatVersionUnknown}}</td>
+    <td>{{CompatVersionUnknown}}</td>
+    <td>{{CompatVersionUnknown}}</td>
+    <td>{{CompatVersionUnknown}}</td>
+   </tr>
+  </tbody>
+ </table>
+</div>
+<div id="compat-mobile">
+ <table class="compat-table">
+  <tbody>
+   <tr>
+    <th>Feature</th>
+    <th>Android</th>
+    <th>Chrome for Android</th>
+    <th>Firefox Mobile (Gecko)</th>
+    <th>IE Mobile</th>
+    <th>Opera Mobile</th>
+    <th>Safari Mobile</th>
+   </tr>
+   <tr>
+    <td>Basic support</td>
+    <td>{{CompatVersionUnknown}}</td>
+    <td>{{CompatVersionUnknown}}</td>
+    <td>{{CompatVersionUnknown}}</td>
+    <td>{{CompatVersionUnknown}}</td>
+    <td>{{CompatVersionUnknown}}</td>
+    <td>{{CompatVersionUnknown}}</td>
+   </tr>
+  </tbody>
+ </table>
+</div>
+<h3 id="Gecko-specific_notes" name="Gecko-specific_notes">Gecko-specific notes</h3>
+<p>Starting in JavaScript 1.8.1 (in Firefox 3.6), <code>propertyIsEnumerable('prototype')</code> returns <code>false</code> instead of <code>true</code>; this makes the result compliant with ECMAScript 5.</p>
+<h2 id="See_also" name="See_also">See also</h2>
+<ul>
+ <li><a href="/en-US/docs/Enumerability_and_ownership_of_properties">Enumerability and ownership of properties</a></li>
+ <li>{{jsxref("Statements/for...in", "for...in")}}</li>
+ <li>{{jsxref("Object.keys()")}}</li>
+ <li>{{jsxref("Object.defineProperty()")}}</li>
+</ul>

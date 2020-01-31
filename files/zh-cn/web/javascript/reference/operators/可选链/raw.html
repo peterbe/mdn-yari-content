@@ -1,0 +1,184 @@
+<div>{{JSSidebar("Operators")}}</div>
+
+<div>{{SeeCompatTable}}</div>
+
+<div></div>
+
+<div><strong>可选链</strong>操作符<strong><code>?.</code></strong>能够去读取一个被连接对象的深层次的属性的值而无需明确校验链条上每一个引用的有效性。<strong><code>?.</code></strong>运算符功能类似于<strong><code>.</code></strong>运算符，不同之处在于如果链条上的一个引用是{{glossary("nullish")}} ({{JSxRef("null")}} 或 {{JSxRef("undefined")}})，<strong><code>.</code></strong>操作符会引起一个错误，<strong><code>?.</code></strong>操作符取而代之的是会按照短路计算的方式返回一个undefined。当<strong><code>?.</code></strong>操作符用于函数调用时，如果该函数不存在也将会返回undefined。</div>
+
+<div></div>
+
+<div>当访问链条上可能存在的属性却不存在时，<strong><code>?.</code></strong>操作符将会使表达式更短和更简单。当不能保证哪些属性是必需的时，<strong><code>?.</code></strong>操作符对于探索一个对象的内容是很有帮助的。</div>
+
+<div></div>
+
+<p>{{EmbedInteractiveExample("pages/js/expressions-optionalchainingoperator.html")}}</p>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<h2 id="语法">语法</h2>
+
+<pre class="syntaxbox"><var>obj</var>?.<var>prop</var>
+<var>obj</var>?.[<var>expr</var>]
+<var>arr</var>?.[<var>index</var>]
+<var>func</var>?.(<var>args</var>)
+</pre>
+
+<h2 id="描述">描述</h2>
+
+<p>通过连接的对象的引用或函数可能是<code>undefined</code>或<code>null</code>时，可选链操作符提供了一种方法来简化被连接对象的值访问。</p>
+
+<p>比如，思考一个存在嵌套结构的对象<code>obj</code>。不使用可选链的话，查找一个深度嵌套的子属性需要验证之间的引用，例如：</p>
+
+<pre class="brush: js">let nestedProp = obj.first &amp;&amp; obj.first.second;</pre>
+
+<p>在访问<code>obj.first.second</code>之前，<code>obj.first</code> 的值要被确认非<code>null</code>(且不是<code>undefined</code>)。目的是为了防止错误发生，如果简单直接的访问<code>obj.first.second</code>而不对<code>obj.first</code> 进行校验有可能产生错误。</p>
+
+<p>有了可选链操作符 (<code>?.</code>)，在访问<code>obj.first.second</code>:之前，你将不需要明确的校验和短路计算<code>obj.first</code>的状态：</p>
+
+<pre class="brush: js">let nestedProp = obj.first?.second;</pre>
+
+<p>通过使用<code>?.</code>操作符取代<code>.</code>操作符。JavaScript知道在尝试访问<code>obj.first.second</code>之前先明确的校验并确定<code>obj.first</code>t是非<code>null</code>且非<code>undefined</code>。如果<code>obj.first</code>是<code>null</code>或<code>undefined</code>，表达式将会短路计算直接返回<code>undefined</code>。</p>
+
+<p>这等价于以下表达式：</p>
+
+<pre class="brush: js">let nestedProp = ((obj.first == null || obj.first == undefined) ? undefined : obj.first.second);</pre>
+
+<h3 id="可选链与函数调用">可选链与函数调用</h3>
+
+<p>当尝试调用一个可能不存在的方法时也可以使用可选链。这将是很有帮助的，比如，当使用一个API的方法可能不可用时，要么因为实现的版本问题要么因为当前用户的设备不支持该功能。</p>
+
+<p>函数调用时如果被调用的方法不存在，使用可选链可以使表达式自动返回<code>undefined</code>而不是抛出一个异常。</p>
+
+<pre class="brush: js">let result = someInterface.customMethod?.();</pre>
+
+<div class="blockIndicator note">
+<p><strong>注意:</strong> 如果存在一个属性名且不是函数, 使用 <code>?.</code> 仍然会产生一个 {{JSxRef("TypeError")}} 异常 (<code>x.y</code><code> is not a function</code>).</p>
+</div>
+
+<h4 id="处理可选的callbacks或事件handlers">处理可选的callbacks或事件handlers</h4>
+
+<p>如果你使用<a href="/zh-CN/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment">解构赋值</a>来解构的一个对象的callbacks或fetch方法，你可能得到不能当做函数直接调用的不存在的值，除非你已经校验了他们的存在性。使用<code>?.</code>的你可以忽略这些额外的校验：</p>
+
+<pre class="brush: js">//  ES2019的写法
+function doSomething(onContent, onError) {
+  try {
+    // ... do something with the data 
+  }
+  catch (err) {
+    if (onError) { // 校验onError是否真的存在
+      onError(err.message);
+    }
+  }
+}
+</pre>
+
+<pre class="brush: js">// 使用可选链进行函数调用
+function doSomething(onContent, onError) {
+  try {
+   // ... do something with the data
+  }
+  catch (err) {
+    onError?.(err.message); // 如果onError是undefined也不会有异常
+  }
+}
+</pre>
+
+<h3 id="可选链和表达式">可选链和表达式</h3>
+
+<p>当使用<a href="/zh-CN/docs/Web/JavaScript/Reference/Operators/Property_Accessors#方括号表示法">方括号</a>访问属性时，你也可以使用可选链操作符：</p>
+
+<pre class="brush: js">let nestedProp = obj?.['prop' + 'Name'];
+</pre>
+
+<h2 id="例子">例子</h2>
+
+<h3 id="基本例子">基本例子</h3>
+
+<p>如下的例子在一个不存在<code>bar</code>成员的map中查找<code>bar</code>中<code>name</code>的值，因此结果是<code>undefined</code>。</p>
+
+<pre class="brush: js">let myMap = new Map();
+myMap.set("foo", {name: "baz", desc: "inga"});
+
+let nameBar = myMap.get("bar")?.name;</pre>
+
+<h3 id="短路计算">短路计算</h3>
+
+<p>当在表达式中使用可选链时，如果左操作数是<code>null</code>或<code>undefined</code>，表达式将不会被计算，例如：</p>
+
+<pre class="brush: js">let potentiallyNullObj = null;
+let x = 0;
+let prop = potentiallyNullObj?.[x++];
+
+console.log(x); // 作为0的x将不会被递增，依旧输出0
+</pre>
+
+<h3 id="叠加可选链操作符">叠加可选链操作符</h3>
+
+<p>嵌套结构,可以多次使用可选链:</p>
+
+<pre class="brush: js">let customer = {
+  name: "Carl",
+  details: {
+    age: 82,
+    location: "Paradise Falls" // detailed的address属性是未知的
+  }
+};
+let customerCity = customer.details?.address?.city;
+
+// … 可选链也可以和函数调用一起使用
+let duration = vacations.trip?.getTime?.();
+</pre>
+
+<h3 id="使用_nullish_合并运算符">使用 nullish 合并运算符</h3>
+
+<p>该 nullish 合并运算符(the nullish coalescing operator)可以在使用可选链时设置一个默认值：</p>
+
+<pre><code>let customer = {
+  name: "Carl",
+  details: { age: 82 }
+};
+let customerCity = customer?.city ?? "Unknown city";
+console.log(customerCity); // Unknown city</code></pre>
+
+<h2 id="说明">说明</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">说明</th>
+   <th scope="col">状态</th>
+   <th scope="col">建议</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td><a href="https://tc39.es/proposal-optional-chaining/">Proposal for the "optional chaining" operator</a></td>
+   <td>Stage 4</td>
+   <td></td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<div>
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.operators.optional_chaining")}}</p>
+
+<h3 id="Implementation_Progress">Implementation Progress</h3>
+
+<p>The following table provides a daily implementation status for this feature, because this feature has not yet reached cross-browser stability. The data is generated by running the relevant feature tests in <a href="https://github.com/tc39/test262">Test262</a>, the standard test suite of JavaScript, in the nightly build, or latest release of each browser's JavaScript engine.</p>
+
+<p>{{EmbedTest262ReportResultsTable("optional-chaining")}}</p>
+
+<h2 id="See_also">See also</h2>
+</div>
+
+<h2 id="See_also_2">See also</h2>
+
+<ul>
+ <li>The {{JSxRef("Operators/Nullish_Coalescing_Operator", "Nullish Coalescing Operator", '', 1)}}</li>
+ <li><a href="https://github.com/tc39/proposals">TC39 proposals</a></li>
+</ul>

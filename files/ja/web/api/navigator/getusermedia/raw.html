@@ -1,0 +1,187 @@
+<div> </div>
+
+<div class="note">
+<p><strong>注記:</strong> この API は、{{domxref("MediaDevices.getUserMedia()")}} に名前が変更されました。代わりに {{domxref("MediaDevices.getUserMedia()")}} を使用してください！ 非推奨となったこの API の従来のバージョンは、後方互換性のためにのみ存在しています。</p>
+</div>
+
+<p>{{APIRef}}{{deprecated_header}}</p>
+
+<p><code><strong>Navigator.getUserMedia()</strong></code> メソッドは、カメラや共有画面、マイクなど、0 または 1 系統の動画入力デバイスおよび 0 または 1 系統の音声入力デバイスの使用許可をユーザーに求めます。ユーザーが許可を与えると、許可された {{domxref("MediaStream")}} オブジェクトを引数に与える <code>successCallback</code> が呼び出されます。ユーザーが拒否するかメディアが使用できない場合、<code>PermissionDeniedError</code> または <code>NotFoundError</code> エラーを伴う <code>errorCallback</code> が呼び出されます。ただし、ユーザーが選択する必要がない場合など、コールバックの呼び出しが完了しない可能性があることに注意してください。</p>
+
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox">navigator.getUserMedia(constraints, successCallback, errorCallback);</pre>
+
+<h3 id="引数">引数</h3>
+
+<dl>
+ <dt>constraints</dt>
+ <dd>要求するメディアの形式を指定する {{domxref("MediaStreamConstaints")}} オブジェクト。詳細は、現在の {{domxref("MediaDevices.getUserMedia()")}} メソッド下の <a href="/docs/Web/API/MediaDevices/getUserMedia#Parameters">constraints</a> セクションを参照してください。</dd>
+ <dt>successCallback</dt>
+ <dd>呼び出しが完了した場合に、<code>successCallback</code> で指定され、メディアストリームを含む {{domxref("MediaStream")}} オブジェクトが引数に与えられた関数が呼び出されます。次の例で示すように、このオブジェクトには、適切な要素を割り当てて動作させてください:
+ <pre class="brush: js">function(stream) {
+   var video = document.querySelector('video');
+   video.src = window.URL.createObjectURL(stream);
+   video.onloadedmetadata = function(e) {
+      // Do something with the video here.
+   };
+}</pre>
+ </dd>
+ <dt>errorCallback</dt>
+ <dd>呼び出しが失敗した場合、<code>errorCallback</code> で指定され、{{domxref("MediaStreamError")}} が唯一の引数に与えられた関数が呼び出されますこのオブジェクトは、{{domxref("DOMException")}} をひな形としています。エラーコードは以下のとおり:
+ <table>
+  <thead>
+   <tr>
+    <th scope="col">エラー</th>
+    <th scope="col">説明</th>
+   </tr>
+  </thead>
+  <tbody>
+   <tr>
+    <td><code>PermissionDeniedError</code></td>
+    <td>メディアデバイスの使用がユーザーまたはシステムにより拒否された。</td>
+   </tr>
+   <tr>
+    <td><code>NotFoundError</code></td>
+    <td>指定された制約を満たす、特定の形式のメディアトラックが見つからない。</td>
+   </tr>
+  </tbody>
+ </table>
+ </dd>
+</dl>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<h3 id="幅と高さ">幅と高さ</h3>
+
+<p>これは、様々のブラウザの接頭辞に対処したコードを含む、<code>getUserMedia()</code> の使用例です。ただし、これは非推奨の使用方法なので注意してください。現在の API の使用例は、{{domxref("MediaDevices.getUserMedia()")}} 下の <a href="/docs/Web/API/MediaDevices/getUserMedia#Frame_rate">例</a> セクションを参照してください。</p>
+
+<pre class="brush: js">navigator.getUserMedia = navigator.getUserMedia ||
+                         navigator.webkitGetUserMedia ||
+                         navigator.mozGetUserMedia;
+
+if (navigator.getUserMedia) {
+   navigator.getUserMedia({ audio: true, video: { width: 1280, height: 720 } },
+      function(stream) {
+         var video = document.querySelector('video');
+         video.src = window.URL.createObjectURL(stream);
+         video.onloadedmetadata = function(e) {
+           video.play();
+         };
+      },
+      function(err) {
+         console.log("The following error occurred: " + err.name);
+      }
+   );
+} else {
+   console.log("getUserMedia not supported");
+}
+</pre>
+
+<h2 id="Permissions" name="Permissions">許可設定</h2>
+
+<p>インストール可能アプリ (例えば <a href="/Apps/Build/Building_apps_for_Firefox_OS/Firefox_OS_app_beginners_tutorial">Firefox OS アプリ</a>) で <code>getUserMedia()</code> を使用するには、次のどちらか、または両方の項目をマニフェストファイルに記述する必要があります:</p>
+
+<pre class="brush: js">"permissions": {
+  "audio-capture": {
+    "description": "Required to capture audio using getUserMedia()"
+  },
+  "video-capture": {
+    "description": "Required to capture video using getUserMedia()"
+  }
+}</pre>
+
+<p>詳しい情報は、<a href="/Apps/Developing/App_permissions#audio-capture">permission: audio-capture</a> および <a href="/Apps/Developing/App_permissions#video-capture">permission: video-capture</a> を参照してください。</p>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">策定状況</th>
+   <th scope="col">備考</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('Media Capture', '#navigatorusermedia-interface-extensions', 'navigator.getUserMedia')}}</td>
+   <td>{{Spec2('Media Capture')}}</td>
+   <td>初期定義。</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザーの実装状況</h2>
+
+<div>{{CompatibilityTable}}</div>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>機能</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari (WebKit)</th>
+  </tr>
+  <tr>
+   <td>基本サポート</td>
+   <td>21{{property_prefix("webkit")}} [1]</td>
+   <td>17{{property_prefix("moz")}} [3]</td>
+   <td>{{CompatNo}}</td>
+   <td>12 [2]<br>
+    18{{property_prefix("webkit")}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>機能</th>
+   <th>Android</th>
+   <th>Android Webview</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>Firefox OS (Gecko)</th>
+   <th>IE Phone</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+   <th>Chrome for Android</th>
+  </tr>
+  <tr>
+   <td>基本サポート</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatChrome(40.0)}}{{property_prefix("webkit")}} [2]</td>
+   <td>24{{property_prefix("moz")}} [3]</td>
+   <td>1.2{{property_prefix("moz")}} [4]<br>
+    1.4{{property_prefix("moz")}}</td>
+   <td>{{CompatNo}}</td>
+   <td>12 [2]</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<p>[1] 新しいバージョンの Chrome は、この非推奨のメソッドに代わる、接頭辞なしの {{domxref("MediaDevices.getUserMedia()")}} をサポートします。</p>
+
+<p>[2] Chrome と Opera は、依然として古い制約構文を使用しますが、ここに書かれた構文は、<a href="https://github.com/webrtc/adapter">adapter.js</a> 互換コードを通して利用可能です。</p>
+
+<p>[3] ここに書かれた制約構文は、Firefox 38 で利用可能です。以前のバージョン (32～37) は古い制約構文を使用しますが、ここに書かれた構文は、<a href="https://github.com/webrtc/adapter">adapter.js</a> 互換コードを通して利用可能です。</p>
+
+<p>[4] Firefox OS 1.2 では、<code>audio</code> のみがサポートされていました。1.4 で <code>video</code> のサポートが追加されました。</p>
+
+<h2 id="See_also" name="See_also">関連項目</h2>
+
+<ul>
+ <li>この非推奨のメソッドに代わる {{domxref("MediaDevices.getUserMedia()")}}。</li>
+ <li><a href="/docs/WebRTC">WebRTC</a> - この API の前置きページ。</li>
+ <li><a href="/docs/WebRTC/MediaStream_API">MediaStream API</a> - メディアストリームオブジェクト向けの API。</li>
+ <li><a href="/docs/WebRTC/taking_webcam_photos">Taking webcam photos</a> - <code>getUserMedia()</code> を使って、動画ではなく写真を撮るためのチュートリアル。</li>
+</ul>

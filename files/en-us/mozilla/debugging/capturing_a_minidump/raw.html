@@ -1,0 +1,41 @@
+<p><em>Minidumps</em> are files created by various Windows tools which record the complete state of a program as it's running, or as it was at the moment of a crash. Small minidumps are created by the Breakpad <a href="/Crash_reporting" title="Crash reporting">crash reporting</a> tool, but sometimes that's not sufficient to diagnose a problem. For example, if the application is hanging (not responding to input, but hasn't crashed) then Breakpad is not triggered, and it can be difficult to determine where the problem lies. Sometimes a more complete form of minidump is needed to see additional details about a crash, in which case manual capture of a minidump is desired.</p>
+
+<p>This page describes how to capture these minidumps on Windows, to permit better debugging.</p>
+
+<h2 id="Privacy_and_minidumps">Privacy and minidumps</h2>
+
+<div class="warning"><strong>Warning!</strong> Unlike the minidumps submitted by Breakpad, these minidumps contain the <strong>complete</strong> contents of program memory. They are therefore much more likely to contain private information, if there is any in the browser. For this reason, you may prefer to generate minidumps against a <a href="http://support.mozilla.com/en-US/kb/Managing%20profiles" title="http://support.mozilla.com/en-US/kb/Managing profiles">clean profile</a> where possible.</div>
+
+<h2 id="Capturing_a_minidump_application_crash">Capturing a minidump: application crash</h2>
+
+<p>To capture a full minidump for an application crash, you can use a tool called windbg.</p>
+
+<h3 id="Debugging_Tools_for_Windows" name="Debugging_Tools_for_Windows">Install debugging tools for Windows</h3>
+
+<p>Microsoft distributes the Debugging Tools for Windows for free, those include WinDbg which you will need here. Download it from <a href="http://msdn.microsoft.com/en-us/windows/hardware/gg463009.aspx">Install Debugging Tools for Windows</a>. (<em>You'll want the 32-bit version of WinDbg only if you are using a 32</em>-bit version of Firefox) Then install it, the standard settings in the installation process are fine.</p>
+
+<h3 id="Capture_a_minidump">Capture a minidump</h3>
+
+<ol>
+ <li>
+  <p>Connect Firefox to the debugger. </p>
+
+  <ol start="1" style="list-style-type: lower-alpha;">
+   <li>
+    <p>If Firefox is not already running, then open WinDbg from the Start menu (Start-&gt;All Programs-&gt;Debugging Tools for Windows-&gt;WinDbg).  Next, open the<strong style="font-size: 1rem; letter-spacing: -0.00278rem;"> "File"</strong> menu and choose <strong style="font-size: 1rem; letter-spacing: -0.00278rem;">"Open Executable..."</strong>. In the file chooser window that appears, open the firefox.exe executable in your Firefox program folder (C:\Program Files\Mozilla Firefox).</p>
+   </li>
+   <li>
+    <p>If Firefox is already running, open WinDbg from the Start menu (Start-&gt;All Programs-&gt;Debugging Tools for Windows-&gt;WinDbg).  Next, open the<strong style="font-size: 1rem; letter-spacing: -0.00278rem;"> "File"</strong> menu and choose <strong style="font-size: 1rem; letter-spacing: -0.00278rem;">"Attach to a Process..."</strong>. In the file chooser window that appears, find the firefox.exe executable process with the lowest PID.</p>
+   </li>
+  </ol>
+ </li>
+ <li>
+  <p>You should now see a "Command" text window with debug output at the top and an input box at the bottom. From the menu, select <code>Debug → Go</code>, and Firefox should start. If the debugger spits out some text right away and Firefox doesn't come up, select <code>Debug → Go</code> again.</p>
+ </li>
+ <li>When the program is about to crash, WinDbg will spit out more data, and the prompt at the bottom will change from saying "<code>*BUSY*</code>" to having a number in it. At this point, you should type "<code>.dump /ma c:\temp\firefoxcrash.dmp</code>" -- without the quotes, but don't forget the dot at the beginning. Once it completes, which can take a fair while, you will have a very large file at <code>c:\firefoxcrash.dmp</code> that can be used to help debug your problem.  File size will depend on this size of Firefox running in your enviroment, which could several GB.</li>
+ <li>Ask in the relevant bug or thread how best to share this very large file!</li>
+</ol>
+
+<h2 id="Capturing_a_minidump_application_hang">Capturing a minidump: application hang</h2>
+
+<p>On Windows Vista and Windows 7, you can follow <a class="external" href="http://support.microsoft.com/kb/931673" title="http://support.microsoft.com/kb/931673">these instructions</a> to capture a dump file and locate it after it's been saved.</p>

@@ -1,0 +1,561 @@
+<div>{{JSRef}}</div>
+
+<p><code><strong>reduce()</strong></code> は配列の各要素に対して（引数で与えられた）<strong>reducer</strong> 関数を実行して、単一の値にします。</p>
+
+<div>{{EmbedInteractiveExample("pages/js/array-reduce.html")}}</div>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<p><strong>reducer </strong>関数は 4 つの引数を取り込みます。</p>
+
+<ol>
+ <li>アキュムレータ (acc)</li>
+ <li>現在値 (cur)</li>
+ <li>現在のインデックス (idx)</li>
+ <li>ソースの配列 (src)</li>
+</ol>
+
+<p><strong>reducer </strong>関数の戻り値はアキュムレータに代入され、配列内の各反復に対してこの値を記憶します。最終的に単一の値になります。</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox"><var>arr</var>.reduce(<var>callback[, </var><var>initialValue]</var>)</pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<dl>
+ <dt><code>callback</code></dt>
+ <dd>次の 4 つの引数を取って、配列内の各要素に対し実行されるコールバック関数です。
+ <dl>
+  <dt><code>accumulator</code></dt>
+  <dd>コールバックの戻り値を累積します。累積値は、ひとつ前の戻り値、もしくは <code>initialValue</code> です。<code>initialValue</code> については、後で述べます。</dd>
+  <dt><code>currentValue</code></dt>
+  <dd>現在処理されている配列の要素です。</dd>
+  <dt><code>currentIndex</code> {{optional_inline}}</dt>
+  <dd>現在処理されている配列要素のインデックスです。<code>initialValue</code> が指定された場合はインデックス 0 から、そうでない場合はインデックス 1 から開始します。</dd>
+  <dt><code>array</code> {{optional_inline}}</dt>
+  <dd><code>reduce()</code> が呼ばれた配列です。</dd>
+ </dl>
+ </dd>
+ <dt><code>initialValue</code> {{optional_inline}}</dt>
+ <dd><code>callback</code> の最初の呼び出しのときに、最初の引数として使用されます。設定しなかった場合、配列の最初の要素が使用されます。空の配列を <code>initialValue</code> なしで <code>reduce()</code> を実行すると <code>TypeError</code> を throw します。</dd>
+</dl>
+
+<h3 id="Return_value" name="Return_value">戻り値</h3>
+
+<p>畳み込みによって得られた 1 つの値です。</p>
+
+<h2 id="Description" name="Description">詳細</h2>
+
+<p><code>reduce()</code> メソッドは、配列に存在する各要素ごとに対して、<code>callback</code> 関数を次の 4 つの引数を渡しながら一度だけ実行します。</p>
+
+<ul>
+ <li><code>accumulator</code></li>
+ <li><code>currentValue</code></li>
+ <li><code>currentIndex</code></li>
+ <li><code>array</code></li>
+</ul>
+
+<p>コールバックが初めて呼び出されるときは、<code>accumulator</code> と <code>currentValue</code> は次の 2 つの値のうちの 1 つになります。<code>reduce()</code> の呼び出しで <code>initialValue</code> が指定された場合、<code>accumulator</code> は <code>initialValue</code> と等しくなり、<code>currentValue</code> は配列の最初の値と等しくなります。<code>initialValue</code> が指定されていない場合は、<code>accumulator</code> は配列の最初の値と等しくなり、<code>currentValue</code> は 2 番目の値と等しくなります。</p>
+
+<div class="note">
+<p><strong>注:</strong> <code>initialValue</code> が指定されなかった場合は、<code>reduce()</code> は最初のインデックスを飛ばしてインデックス 1 から実行されます。<code>initialValue</code> が指定されていたらインデックス 0 から開始します。</p>
+</div>
+
+<p>空配列で <code>initialValue</code> が指定されなかった場合、{{jsxref("TypeError")}} が発生します。配列が（位置に関わらず）1 つの要素しか持たず <code>initialValue</code> が指定されなかった場合、または <code>initialValue</code> が指定されていても空配列の場合、<em><code>callback</code> が実行されず</em>要素が返却されます。</p>
+
+<p><code>initialValue</code> を指定しない場合、下記の例のような 3 種類の結果が発生しうるため、<code>initialValue</code> を指定する方が通常は安全です。</p>
+
+<pre class="brush: js">var maxCallback = ( acc, cur ) =&gt; Math.max( acc.x, cur.x );
+var maxCallback2 = ( max, cur ) =&gt; Math.max( max, cur );
+
+// reduce() without initialValue
+[ { x: 22 }, { x: 42 } ].reduce( maxCallback ); // 42
+[ { x: 22 }            ].reduce( maxCallback ); // { x: 22 }
+[                      ].reduce( maxCallback ); // TypeError
+
+// map/reduce; better solution, also works for empty or larger arrays
+[ { x: 22 }, { x: 42 } ].map( el =&gt; el.x )
+                        .reduce( maxCallback2, -Infinity );
+</pre>
+
+<h3 id="How_reduce()_works" name="How_reduce()_works">reduce() はどう動くか</h3>
+
+<p>次のコードのように <code>reduce()</code> を使用した場合について見てみましょう。</p>
+
+<pre class="brush: js">[0, 1, 2, 3, 4].reduce(function(accumulator, currentValue, currentIndex, array) {
+  return accumulator + currentValue;
+});
+</pre>
+
+<p>コールバック関数は 4 回呼び出され、各回の引数の内容は以下のようになっています。</p>
+
+<table>
+ <thead>
+  <tr>
+   <th scope="col"><code>callback</code></th>
+   <th scope="col"><code>accumulator</code></th>
+   <th scope="col"><code>currentValue</code></th>
+   <th scope="col"><code>currentIndex</code></th>
+   <th scope="col"><code>array</code></th>
+   <th scope="col">戻り値</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <th scope="row">初回の呼出し</th>
+   <td><code>0</code></td>
+   <td><code>1</code></td>
+   <td>1</td>
+   <td><code>[0, 1, 2, 3, 4]</code></td>
+   <td><code>1</code></td>
+  </tr>
+  <tr>
+   <th scope="row">2 回目の呼出し</th>
+   <td><code>1</code></td>
+   <td><code>2</code></td>
+   <td>2</td>
+   <td><code>[0, 1, 2, 3, 4]</code></td>
+   <td><code>3</code></td>
+  </tr>
+  <tr>
+   <th scope="row">3 回目の呼出し</th>
+   <td><code>3</code></td>
+   <td><code>3</code></td>
+   <td>3</td>
+   <td><code>[0, 1, 2, 3, 4]</code></td>
+   <td><code>6</code></td>
+  </tr>
+  <tr>
+   <th scope="row">4 回目の呼出し</th>
+   <td><code>6</code></td>
+   <td><code>4</code></td>
+   <td>4</td>
+   <td><code>[0, 1, 2, 3, 4]</code></td>
+   <td><code>10</code></td>
+  </tr>
+ </tbody>
+</table>
+
+<p><code>reduce()</code> の戻り値は、コールバック関数の最後の戻り値である （<code>10</code>）となるでしょう。</p>
+
+<p>通常の関数の代わりに{{jsxref("Functions/Arrow_functions", "アロー関数","",1)}}を指定できます。下記のコードは上述のコードと同じ結果を返します。</p>
+
+<pre class="brush: js">[0, 1, 2, 3, 4].reduce( (accumulator, currentValue) =&gt; accumulator + currentValue );
+</pre>
+
+<p><code>reduce()</code> の 2 つ目の引数に初期値を設定した場合は、コールバック各回の内部的な動作はこのようになります。</p>
+
+<pre class="brush: js">[0, 1, 2, 3, 4].reduce((accumulator, currentValue, currentIndex, array) =&gt; {
+    return accumulator + currentValue;
+}, 10);
+</pre>
+
+<table>
+ <thead>
+  <tr>
+   <th scope="col"><code>callback</code></th>
+   <th scope="col"><code>accumulator</code></th>
+   <th scope="col"><code>currentValue</code></th>
+   <th scope="col"><code>currentIndex</code></th>
+   <th scope="col"><code>array</code></th>
+   <th scope="col">戻り値</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <th scope="row">初回の呼出し</th>
+   <td><code>10</code></td>
+   <td><code>0</code></td>
+   <td><code>0</code></td>
+   <td><code>[0, 1, 2, 3, 4]</code></td>
+   <td><code>10</code></td>
+  </tr>
+  <tr>
+   <th scope="row">2 回目の呼出し</th>
+   <td><code>10</code></td>
+   <td><code>1</code></td>
+   <td><code>1</code></td>
+   <td><code>[0, 1, 2, 3, 4]</code></td>
+   <td><code>11</code></td>
+  </tr>
+  <tr>
+   <th scope="row">3 回目の呼出し</th>
+   <td><code>11</code></td>
+   <td><code>2</code></td>
+   <td><code>2</code></td>
+   <td><code>[0, 1, 2, 3, 4]</code></td>
+   <td><code>13</code></td>
+  </tr>
+  <tr>
+   <th scope="row">4 回目の呼出し</th>
+   <td><code>13</code></td>
+   <td><code>3</code></td>
+   <td><code>3</code></td>
+   <td><code>[0, 1, 2, 3, 4]</code></td>
+   <td><code>16</code></td>
+  </tr>
+  <tr>
+   <th scope="row">5 回目の呼出し</th>
+   <td><code>16</code></td>
+   <td><code>4</code></td>
+   <td><code>4</code></td>
+   <td><code>[0, 1, 2, 3, 4]</code></td>
+   <td><code>20</code></td>
+  </tr>
+ </tbody>
+</table>
+
+<p><code>reduce()</code> の戻り値はもちろん <code>20</code> となります。</p>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<h3 id="Sum_all_the_values_of_an_array" name="Sum_all_the_values_of_an_array">配列内の値の合計値を出す</h3>
+
+<pre class="brush: js">var sum = [0, 1, 2, 3].reduce(function (accumulator, currentValue) {
+  return accumulator + currentValue;
+}, 0);
+// sum is 6
+</pre>
+
+<p>また、アロー関数を用いて書くことも出来ます。</p>
+
+<pre class="brush: js">var total = [ 0, 1, 2, 3 ].reduce(
+  ( accumulator, currentValue ) =&gt; accumulator + currentValue,
+  0
+);</pre>
+
+<h3 id="Sum_of_values_in_an_object_array" name="Sum_of_values_in_an_object_array">オブジェクトの配列の値の合計値を出す</h3>
+
+<p>オブジェクトの配列に含まれた値の合計値を出すには、すべての項目を関数内で取得できるようにするために <code>initialValue</code> を指定する<strong>必要があります</strong>。</p>
+
+<pre class="brush: js">var initialValue = 0;
+var sum = [{x: 1}, {x: 2}, {x: 3}].reduce(function (accumulator, currentValue) {
+    return accumulator + currentValue.x;
+},initialValue)
+
+console.log(sum) // logs 6
+</pre>
+
+<p>また、アロー関数を用いて書くことも出来ます。</p>
+
+<pre class="brush: js">var initialValue = 0;
+var sum = [{x: 1}, {x: 2}, {x: 3}].reduce(
+    (accumulator, currentValue) =&gt; accumulator + currentValue.x
+    ,initialValue
+);
+
+console.log(sum) // logs 6</pre>
+
+<h3 id="Flatten_an_array_of_arrays" name="Flatten_an_array_of_arrays">二次元配列を一次元配列にする</h3>
+
+<pre class="brush: js">var flattened = [[0, 1], [2, 3], [4, 5]].reduce(
+  function(accumulator, currentValue) {
+    return accumulator.concat(currentValue);
+  },
+  []
+);
+// flattened is [0, 1, 2, 3, 4, 5]
+</pre>
+
+<p>また、アロー関数を用いて書くことも出来ます。</p>
+
+<pre class="brush: js">var flattened = [[0, 1], [2, 3], [4, 5]].reduce(
+  ( accumulator, currentValue ) =&gt; accumulator.concat(currentValue),
+  []
+);
+</pre>
+
+<h3 id="Counting_instances_of_values_in_an_object" name="Counting_instances_of_values_in_an_object">オブジェクトの値のインスタンスを数える</h3>
+
+<pre class="brush: js">var names = ['Alice', 'Bob', 'Tiff', 'Bruce', 'Alice'];
+
+var countedNames = names.reduce(function (allNames, name) { 
+  if (name in allNames) {
+    allNames[name]++;
+  }
+  else {
+    allNames[name] = 1;
+  }
+  return allNames;
+}, {});
+// countedNames is:
+// { 'Alice': 2, 'Bob': 1, 'Tiff': 1, 'Bruce': 1 }
+</pre>
+
+<h3 id="Grouping_objects_by_a_property" name="Grouping_objects_by_a_property">プロパティによってオブジェクトをグループ化する</h3>
+
+<pre class="brush: js">var people = [
+  { name: 'Alice', age: 21 },
+  { name: 'Max', age: 20 },
+  { name: 'Jane', age: 20 }
+];
+
+function groupBy(objectArray, property) {
+  return objectArray.reduce(function (acc, obj) {
+    var key = obj[property];
+    if (!acc[key]) {
+      acc[key] = [];
+    }
+    acc[key].push(obj);
+    return acc;
+  }, {});
+}
+
+var groupedPeople = groupBy(people, 'age');
+// groupedPeople is:
+// { 
+//   20: [
+//     { name: 'Max', age: 20 }, 
+//     { name: 'Jane', age: 20 }
+//   ], 
+//   21: [{ name: 'Alice', age: 21 }] 
+// }
+</pre>
+
+<h3 id="Bonding_arrays_contained_in_an_array_of_objects_using_the_spread_operator_and_initialValue" name="Bonding_arrays_contained_in_an_array_of_objects_using_the_spread_operator_and_initialValue">スプレッド演算子と initialValue を使ってオブジェクトの配列に含まれる配列を結合させる</h3>
+
+<pre class="brush: js">// friends - an array of objects 
+// where object field "books" - list of favorite books 
+var friends = [{
+  name: 'Anna',
+  books: ['Bible', 'Harry Potter'],
+  age: 21
+}, {
+  name: 'Bob',
+  books: ['War and peace', 'Romeo and Juliet'],
+  age: 26
+}, {
+  name: 'Alice',
+  books: ['The Lord of the Rings', 'The Shining'],
+  age: 18
+}];
+
+// allbooks - list which will contain all friends' books +  
+// additional list contained in initialValue
+var allbooks = friends.reduce(function(accumulator, currentValue) {
+  return [...accumulator, ...currentValue.books];
+}, ['Alphabet']);
+
+// allbooks = [
+//   'Alphabet', 'Bible', 'Harry Potter', 'War and peace', 
+//   'Romeo and Juliet', 'The Lord of the Rings',
+//   'The Shining'
+// ]</pre>
+
+<h3 id="Remove_duplicate_items_in_array" name="Remove_duplicate_items_in_array">配列内の重複要素を除去する</h3>
+
+<div class="blockIndicator note">
+<p><strong>注:</strong> {{jsxref("Set")}} と {{jsxref("Array.from()")}} に対応している環境を使っている場合、重複要素を除去された配列を <code>let orderedArray = Array.from(new Set(myArray));</code>  を使うことで取得できます。</p>
+</div>
+
+<pre class="brush: js">var myArray = ['a', 'b', 'a', 'b', 'c', 'e', 'e', 'c', 'd', 'd', 'd', 'd'];
+var myOrderedArray = myArray.reduce(function (accumulator, currentValue) {
+  if (accumulator.indexOf(currentValue) === -1) {
+    accumulator.push(currentValue);
+  }
+  return accumulator
+}, [])
+
+console.log(myOrderedArray);</pre>
+
+<h3 id="Running_Promises_in_Sequence" name="Running_Promises_in_Sequence">シーケンス上の Promise を動かす</h3>
+
+<pre class="brush: js">/**
+ * Runs promises from array of functions that can return promises
+ * in chained manner
+ *
+ * @param {array} arr - promise arr
+ * @return {Object} promise object
+ */
+function runPromiseInSequence(arr, input) {
+  return arr.reduce(
+    (promiseChain, currentFunction) =&gt; promiseChain.then(currentFunction),
+    Promise.resolve(input)
+  );
+}
+
+// promise function 1
+function p1(a) {
+  return new Promise((resolve, reject) =&gt; {
+    resolve(a * 5);
+  });
+}
+
+// promise function 2
+function p2(a) {
+  return new Promise((resolve, reject) =&gt; {
+    resolve(a * 2);
+  });
+}
+
+// function 3  - will be wrapped in a resolved promise by .then()
+function f3(a) {
+ return a * 3;
+}
+
+// promise function 4
+function p4(a) {
+  return new Promise((resolve, reject) =&gt; {
+    resolve(a * 4);
+  });
+}
+
+const promiseArr = [p1, p2, f3, p4];
+runPromiseInSequence(promiseArr, 10)
+  .then(console.log);   // 1200
+</pre>
+
+<h3 id="Function_composition_enabling_piping" name="Function_composition_enabling_piping">パイプによって関数を合成する</h3>
+
+<pre class="brush: js">// Building-blocks to use for composition
+const double = x =&gt; x + x;
+const triple = x =&gt; 3 * x;
+const quadruple = x =&gt; 4 * x;
+
+// Function composition enabling pipe functionality
+const pipe = (...functions) =&gt; input =&gt; functions.reduce(
+    (acc, fn) =&gt; fn(acc),
+    input
+);
+
+// Composed functions for multiplication of specific values
+const multiply6 = pipe(double, triple);
+const multiply9 = pipe(triple, triple);
+const multiply16 = pipe(quadruple, quadruple);
+const multiply24 = pipe(double, triple, quadruple);
+
+// Usage
+multiply6(6); // 36
+multiply9(9); // 81
+multiply16(16); // 256
+multiply24(10); // 240
+
+</pre>
+
+<h3 id="write_map_using_reduce" name="write_map_using_reduce">reduce を使って map メソッドを書く</h3>
+
+<pre class="brush: js">if (!Array.prototype.mapUsingReduce) {
+  Array.prototype.mapUsingReduce = function(callback, thisArg) {
+    return this.reduce(function(mappedArray, currentValue, index, array) {
+      mappedArray[index] = callback.call(thisArg, currentValue, index, array);
+      return mappedArray;
+    }, []);
+  };
+}
+
+[1, 2, , 3].mapUsingReduce(
+  (currentValue, index, array) =&gt; currentValue + index + array.length
+); // [5, 7, , 10]
+
+</pre>
+
+<h2 id="Polyfill" name="Polyfill">ポリフィル</h2>
+
+<pre class="brush: js">// Production steps of ECMA-262, Edition 5, 15.4.4.21
+// Reference: http://es5.github.io/#x15.4.4.21
+// https://tc39.github.io/ecma262/#sec-array.prototype.reduce
+if (!Array.prototype.reduce) {
+  Object.defineProperty(Array.prototype, 'reduce', {
+    value: function(callback /*, initialValue*/) {
+      if (this === null) {
+        throw new TypeError( 'Array.prototype.reduce ' + 
+          'called on null or undefined' );
+      }
+      if (typeof callback !== 'function') {
+        throw new TypeError( callback +
+          ' is not a function');
+      }
+
+      // 1. Let O be ? ToObject(this value).
+      var o = Object(this);
+
+      // 2. Let len be ? ToLength(? Get(O, "length")).
+      var len = o.length &gt;&gt;&gt; 0; 
+
+      // Steps 3, 4, 5, 6, 7      
+      var k = 0; 
+      var value;
+
+      if (arguments.length &gt;= 2) {
+        value = arguments[1];
+      } else {
+        while (k &lt; len &amp;&amp; !(k in o)) {
+          k++; 
+        }
+
+        // 3. If len is 0 and initialValue is not present,
+        //    throw a TypeError exception.
+        if (k &gt;= len) {
+          throw new TypeError( 'Reduce of empty array ' +
+            'with no initial value' );
+        }
+        value = o[k++];
+      }
+
+      // 8. Repeat, while k &lt; len
+      while (k &lt; len) {
+        // a. Let Pk be ! ToString(k).
+        // b. Let kPresent be ? HasProperty(O, Pk).
+        // c. If kPresent is true, then
+        //    i.  Let kValue be ? Get(O, Pk).
+        //    ii. Let accumulator be ? Call(
+        //          callbackfn, undefined,
+        //          « accumulator, kValue, k, O »).
+        if (k in o) {
+          value = callback(value, o[k], k, o);
+        }
+
+        // d. Increase k by 1.      
+        k++;
+      }
+
+      // 9. Return accumulator.
+      return value;
+    }
+  });
+}
+</pre>
+
+<p>{{jsxref("Object.defineProperty()")}} をサポートしていない、本当に古い JavaScript エンジンをサポートする必要がある場合、<strong>列挙不可</strong>に設定することができないため、すべての <code>Array.prototype</code> メソッドは polyfill されないべきです。</p>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">策定状況</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-15.4.4.21', 'Array.prototype.reduce()')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td>初期定義です。JavaScript 1.8 で実装されました。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-array.prototype.reduce', 'Array.prototype.reduce()')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-array.prototype.reduce', 'Array.prototype.reduce()')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザー実装状況</h2>
+
+<div>
+<div class="hidden">The compatibility table in this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.builtins.Array.reduce")}}</p>
+</div>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li>{{jsxref("Array.prototype.reduceRight()")}}</li>
+</ul>

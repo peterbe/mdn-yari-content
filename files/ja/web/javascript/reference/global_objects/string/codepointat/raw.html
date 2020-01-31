@@ -1,0 +1,129 @@
+<div>{{JSRef}}</div>
+
+<p><strong><code>codePointAt()</code></strong> メソッドは、Unicode ポイント値である負でない整数を返します。</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox"><code><var>str</var>.codePointAt(<var>pos</var>)</code></pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<dl>
+ <dt><code>pos</code></dt>
+ <dd>コードポイント値を返す文字列内の要素の位置</dd>
+</dl>
+
+<h3 id="戻り値">戻り値</h3>
+
+<p>与えられたインデックスにある文字のコードユニット値を示す数値。<code>pos</code> に要素がない場合、{{jsxref("undefined")}}</p>
+
+<h2 id="Description" name="Description">説明</h2>
+
+<p>指定した位置に要素がない場合、{{jsxref("Global_Objects/undefined", "undefined")}}が返されます。UTF-16サロゲートペアが<code>pos</code>から始まらないなら、<code>pos</code>のコードユニットが返されます。</p>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<h3 id="codePointAt()を使う"><code>codePointAt()</code>を使う</h3>
+
+<pre class="brush: js">'ABC'.codePointAt(1);          // 66
+'\uD800\uDC00'.codePointAt(0); // 65536
+
+'XYZ'.codePointAt(42); // undefined
+</pre>
+
+<h2 id="互換性">互換性</h2>
+
+<p>次のコードでは、ネイティブにサポートしていないブラウザのために、ECMAScript 2015で指定された <code>codePointAt()</code> 関数を含むように String を拡張します。</p>
+
+<pre class="brush: js">/*! https://mths.be/codepointat v0.2.0 by @mathias */
+if (!String.prototype.codePointAt) {
+  (function() {
+    'use strict'; // needed to support `apply`/`call` with `undefined`/`null`
+    var defineProperty = (function() {
+      // IE 8 only supports `Object.defineProperty` on DOM elements
+      try {
+        var object = {};
+        var $defineProperty = Object.defineProperty;
+        var result = $defineProperty(object, object, object) &amp;&amp; $defineProperty;
+      } catch(error) {}
+      return result;
+    }());
+    var codePointAt = function(position) {
+      if (this == null) {
+        throw TypeError();
+      }
+      var string = String(this);
+      var size = string.length;
+      // `ToInteger`
+      var index = position ? Number(position) : 0;
+      if (index != index) { // better `isNaN`
+        index = 0;
+      }
+      // Account for out-of-bounds indices:
+      if (index &lt; 0 || index &gt;= size) {
+        return undefined;
+      }
+      // Get the first code unit
+      var first = string.charCodeAt(index);
+      var second;
+      if ( // check if it’s the start of a surrogate pair
+        first &gt;= 0xD800 &amp;&amp; first &lt;= 0xDBFF &amp;&amp; // high surrogate
+        size &gt; index + 1 // there is a next code unit
+      ) {
+        second = string.charCodeAt(index + 1);
+        if (second &gt;= 0xDC00 &amp;&amp; second &lt;= 0xDFFF) { // low surrogate
+          // https://mathiasbynens.be/notes/javascript-encoding#surrogate-formulae
+          return (first - 0xD800) * 0x400 + second - 0xDC00 + 0x10000;
+        }
+      }
+      return first;
+    };
+    if (defineProperty) {
+      defineProperty(String.prototype, 'codePointAt', {
+        'value': codePointAt,
+        'configurable': true,
+        'writable': true
+      });
+    } else {
+      String.prototype.codePointAt = codePointAt;
+    }
+  }());
+}
+</pre>
+
+<h2 id="仕様">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">ステータス</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-string.prototype.codepointat', 'String.prototype.codePointAt')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td>初期定義。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-string.prototype.codepointat', 'String.prototype.codePointAt')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="ブラウザ実装状況">ブラウザ実装状況</h2>
+
+<p class="hidden">The compatibility table in this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</p>
+
+<p>{{Compat("javascript.builtins.String.codePointAt")}}</p>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li>{{jsxref("String.fromCodePoint()")}}</li>
+ <li>{{jsxref("String.fromCharCode()")}}</li>
+ <li>{{jsxref("String.prototype.charCodeAt()")}}</li>
+ <li>{{jsxref("String.prototype.charAt()")}}</li>
+</ul>

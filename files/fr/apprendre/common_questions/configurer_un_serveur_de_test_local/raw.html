@@ -1,0 +1,90 @@
+<div class="summary">
+<p>Cet article explique comment configurer un serveur de test local simple sur votre machine, et les bases pour l'utiliser.</p>
+</div>
+
+<table class="learn-box standard-table">
+ <tbody>
+  <tr>
+   <th scope="row">Prérequis :</th>
+   <td>Vous devez au préalable savoir <a href="/en-US/docs/Learn/How_the_Internet_works">comment Internet fonctionne</a>, et <a href="/en-US/docs/Learn/What_is_a_Web_server">ce qu'est un serveur Web</a>.</td>
+  </tr>
+  <tr>
+   <th scope="row">Objectif:</th>
+   <td>Vous apprendrez à configurer un serveur de test local.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Fichiers_locaux_contre_fichiers_distants">Fichiers locaux contre fichiers distants</h2>
+
+<p>Dans la plupart de la section apprentissage du site, nous vous disons simplement d'ouvrir vos exemples directement dans votre navigateur — vous pouvez le faire en double cliquant le fichier HTML, en déposant celui-ci dans la fenêtre de votre navigateur, ou en faisant <em>Fichier</em> &gt; <em>Ouvrir...</em> et naviguer jusqu'au fichier HTML, etc... Il y a beaucoup de manières d'y arriver.</p>
+
+<p>Vous savez que vous avez lancé l'exemple depuis un fichier local, lorsque l'URL commence par <code>fichier://</code>, suivie de son chemin d'accès sur votre disque dur interne. Par contre, si vous consultez un de nos exemples hébergés sur GitHub (ou un n'importe quel autre serveur distant), l'adresse web commencera par <code>http://</code> ou <code>https://</code>, démontrant ainsi que le fichier a été servi via HTTP.</p>
+
+<h2 id="Le_problème_du_test_local">Le problème du test local</h2>
+
+<p>Certains exemples ne fontionneront pas si vous les ouvrez en tant que fichiers locaux. Cela peut être dû à plusieurs raisons, dont les plus courantes sont :</p>
+
+<ul>
+ <li><strong>Ils comprennent les requêtes désynchronisées</strong>. Certains navigateurs (comme Chrome) ne pourront pas lire de requêtes asynchrones (voyez <a href="/en-US/docs/Learn/JavaScript/Client-side_web_APIs/Fetching_data">Récolter des données depuis le serveur </a>) si vous lancez simplement l'exemple comme un fichier local. Cela est dû à des restictions de sécurité (Pour en savoir plus, lisez <a href="/en-US/docs/Learn/Server-side/First_steps/Website_security">Sécurité des sites Web</a>).</li>
+ <li><strong>Ils comprennent des languages spécifiques aux serveurs</strong>. Des languages serveur (comme PHP ou Python) nécessitent un serveur spécifique pour interpréter le code et donner des résutats.</li>
+</ul>
+
+<h2 id="Créer_un_serveur_HTTP_local_simple">Créer un serveur HTTP local simple</h2>
+
+<p>Pour contourner le problème le problème des requêtes asynchrones, nous devons tester de tels examples en les exécutant depuis un serveur local. Une des plus faciles manière de s'y prendre pour notre objectif  est d'utiliser le module <code>SimpleHTTPServer</code> de Python.</p>
+
+<p>Pour le faire:</p>
+
+<ol>
+ <li>
+  <p>Installer Python. Si vous utilisez GNU/Linux ou macOS, il devrait être déjà disponible sur votre système d'exploitation. Si vous êtes un utilisateur de Windows, vous pouvez obtenir un installeur depuis la page d'accueil de Python et suivre les instructions pour l'installer:</p>
+
+  <ul>
+   <li>Allez à <a href="https://www.python.org/">python.org</a></li>
+   <li>Sous Télécharger, cliquez le lien pour Python "3.xxx".</li>
+   <li>Tout en bas de la page,  <em>l'exécutable et</em> download it.</li>
+   <li>Quand c'est installé, l'exécuter.</li>
+   <li>Sur la première page de l'installeur, assurez-vous d'avoir coché la case à cocher "Ajouter Python 3.xxx to PATH".</li>
+   <li>Cliquer <em>Install</em>, puis <em>Fermer</em> quand l'installation est complète.</li>
+  </ul>
+ </li>
+ <li>
+  <p>Ouvrez votre invite de commandes (Windows)/terminal (OS X et GNULinux). Pour vérifier que fichier est installé, entré la commande suivante</p>
+
+  <pre class="brush: bash">python -V</pre>
+ </li>
+ <li>
+  <p>Elle devrait retourner un numéro de verion. Si c'est le cas, naviguer dans le dossier contenant en utilisant la commande <code>cd</code>.</p>
+
+  <pre class="brush: bash"># inclure le nom du doosier pour y s'y rendre, par exemple
+cd Bureau
+# utiliser deux points pour revenir au dossier précédent si besoin
+cd ..</pre>
+ </li>
+ <li>
+  <p>Entrer la commande pour démarrer le server dans ce dossier</p>
+
+  <pre class="brush: bash"># Si la version de Python retournée est ultérieur à 3.X
+python3 -m http.server
+# Si la version de Python retournée est ultérieur à 2.X
+python -m <code>SimpleHTTPServer</code></pre>
+ </li>
+ <li>
+  <p>Par défaut, il affiche la liste des fichiers  du dossier sur un serveur de développement, port 8000. Vous pouvez aller à ce serveur en saisissant  l'URL <code>localhost:8000</code> dans votre navigateur web. Vous verrez les contenus du dossier listés — cliquer le fichier HTML que vous voulez exécuter.</p>
+ </li>
+</ol>
+
+<div class="note">
+<p><strong>Note</strong>: Si le port 8000 est occupé, vous pouvez choisir un autre port en spécifiant un nombre alternatif après la commande par exemple <code>python -m http.server 7800</code> (Python 3.x) ou <code>python -m SimpleHTTPServer 7800</code> (Python 2.x). Vous pouvez maintenant accéder à votre contenu à <code>localhost:7800</code>.</p>
+</div>
+
+<h2 id="Faire_fonctionner_localement_des_languages_serveur">Faire fonctionner localement des languages serveur</h2>
+
+<p>Le module <code>SimpleHTTPServer</code> de Python est utile, mais il ne sait pas comment exécuter du code écrit dans des languages tels que PHP or Python. Pour  gérer ça, vous aurez besoin de quelque chose en plus — ce dont vous aurez besoin exactement dépend du language serveur que vous essayez d'exécuter. Voici quelques exemples:</p>
+
+<ul>
+ <li>Pour exécuter du code Python coté-serveur, vous aurez besoin d'utiliser un framework web Python. Vous pouvez découvrir comment utiliser le framework Django en lisant <a href="/en-US/docs/Learn/Server-side/Django">Django Web Framework (Python)</a>. <a href="http://flask.pocoo.org/">Flask</a> est aussi une bonne (légèrement plus léger) alternative à Django. Pour l'exécuter, vous aurez besoin d'<a href="https://developer.mozilla.org/en-US/docs/Learn/Server-side/Django/development_environment#Installing_Python_3">installer Python/PIP</a>, puis Flask en utilisant <code>pip3 install flask</code>.  À ce point, vous devriez être capable d'exécuter les exemples Python Flask en utilisant par exemple <code>python3 python-example.py</code>, puis consulter <code>localhost:5000</code> dans votre navigateur.</li>
+ <li>Pour exécuter du code Node.js (JavaScript) côté-serveur, vous aurez besoin d'utiliser un  noeud brut ou un framework construit par dessus ce dernier. Express est un bon choix — voir <a href="/en-US/docs/Learn/Server-side/Express_Nodejs">Express Web Framework (Node.js/JavaScript)</a>.</li>
+ <li>Pour exécuter du code PHP côté serveur, vous aurez besoin d'une configuration serveur qui peut  interpréter PHP. De bonnes options pour tester PHP localement sont <a class="external external-icon" href="https://www.mamp.info/en/downloads/">MAMP</a> (Mac and Windows) , <a class="external external-icon" href="http://ampps.com/download">AMPPS</a> (Mac, Windows, Linux) and <a href="https://www.linux.com/learn/easy-lamp-server-installation">LAMP</a> (Linux, Apache, MySQL, et PHP/Python/Perl). Ce sont des paquets complets qui créent des configurations locales pour vous permettre d'exécuter le serveur Apache, PHP, et des bases de données MySQL.</li>
+</ul>

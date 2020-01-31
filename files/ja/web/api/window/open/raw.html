@@ -1,0 +1,660 @@
+<div>{{APIRef}}</div>
+
+<p>指定された名前のブラウザコンテキスト(ウィンドウや {{HTMLElement("iframe")}}、タブ)に、指定されたリソースをロードします。該当の名前のコンテキストがない場合、新しいウィンドウを開いてそこにリソースをロードします。</p>
+
+<h2 id="構文">構文</h2>
+
+<pre class="syntaxbox"><code>var <em>window</em> = window.open(<em>url</em>, <em>windowName</em>, [<var>windowFeatures</var>]);</code></pre>
+
+<h3 id="引数">引数</h3>
+
+<dl>
+ <dt><code>url</code></dt>
+ <dd>新しく開かれるウィンドウでロードされる URL。</dd>
+ <dt><code>windowName</code></dt>
+ <dd><code style="font-size: 1em;">&lt;a&gt;</code> 要素や <code style="font-size: 1em;">&lt;form&gt;</code> 要素のターゲットの属性を文字列 "name" で指定したときにリンクやフォームのターゲットとして参照することができる新しいウィンドウの名前。文字列の引数には一切空白を含むべきではありません。<var>name</var> は新しいウィンドウのタイトルを指定する<strong>ものではありません</strong>。</dd>
+ <dt><code>windowFeatures</code> {{optional_inline}}</dt>
+ <dd>オプションの引数。このパラメータは、新しいブラウザをウィンドウのリクエストされたウィンドウの特性（ウィンドウの機能やツールバー）をリスト化した文字列です。この文字列の引数は、空白スペースを一切含んではいけません。リクエストされたウィンドウの特性の各々は、文字列内においてコンマで区切られけばなりません。</dd>
+</dl>
+
+<h3 id="戻り値">戻り値</h3>
+
+<p>新しく開かれた文書の <code>window</code>。何らかの理由でこのメソッドの呼びだしでウィンドウを開くことに失敗した場合、この値は <code>null</code> になります（例えば、ポップアップブロッカーがその <code>window</code> を開くことを妨げた場合）。</p>
+
+<h2 id="説明">説明</h2>
+
+<p><code>open()</code> メソッドは、新しい副ブラウザウィンドウを生成します。それは、ファイルメニューから新しいウィンドウを選ぶのに似ています。引数 <var>url</var> は、新しいウィンドウにおいてフェッチしロードする URL を指定します。<var>url</var> が空文字列の場合は、メインウィンドウのデフォルトツールバーを持った新しい空白の空のウィンドウ（URL は <code>about:blank</code> がロードされます）が生成されます。</p>
+
+<p>リモート URL は、すぐにはロードされないことに注意してください。<code>window.open()</code> が戻り値を返すとき、ウィンドウは、常に <code>about:blank</code> を含んでいます。URL が実際にフェッチされるまでには猶予期間があり、現在のスクリプトブロックが実行を終えた後に開始されます。ウィンドウの生成と参照されるリソースの読み込みは、非同期に行われます。</p>
+
+<h2 id="例">例</h2>
+
+<pre>var win;
+var features = "menubar=yes,location=yes,resizable=yes,scrollbars=yes,status=yes";
+function openRequestedPopup()
+{
+win = window.open("http://www.cnn.com/", "CNN_WindowName", features);
+}
+</pre>
+
+<pre>var win;
+
+function openRequestedPopup()
+{
+win = window.open("http://www.domainname.ext/path/ImageFile.png",
+    "DescriptiveWindowName",
+    "resizable=no,scrollbars=yes,status=no");
+}
+</pre>
+
+<p><var>name</var> の名前を持っているウィンドウがすでに存在する場合は、新しいウィンドウが開かれる代わりに、<var>url</var> がその存在するウィンドウにロードされます。この場合において、そのメソッドの戻り値は、その存在するウィンドウであり、<var>features</var> は無視されます。<var>url</var> に空文字列を与えることは、ウィンドウのロケーションを変えずに、その名前によって開いたウィンドウの参照を得るための手段です。 <code>window.open()</code> の全ての呼びだしで新しいウィンドウを開きたい場合、<var>name</var> に <var>_blank</var> という特別な値を用いるべきです。</p>
+
+<div class="note">
+<p><code>strWindowName</code>という名前の<a href="https://developer.mozilla.org/ja/docs/Web/API/window.open#Note_on_use_of_window_open">既存のウィンドウをwindow.openを使用して再オープンする際の注意</a>：この機能は、すべてのブラウザおよび可変条件で有効ではありません。Firefox (50.0.1)関数の場合を説明すると、同じドメイン+ポートで同じ名前を再度開くと、以前に作成されたウィンドウにアクセスします。一方、Google Chrome (55.0.2883.87 m ) は、同じ親からのみ行う（ウィンドウが依存して作成された場合と同様、「オープナー」です）ことになります。これは幅広い制限であり、信じられないほど複雑な開発をもたらします。Firefox (51.) はハンドルを取得しますが、Element.focus() は実行できません。一方で Chrome はオープナーから子へ focus() を実行できますが、兄弟間でも子からオープナーにもフォーカスを移動できません。この関数は、開発者がその名前にしかアクセスできない場合（クッキーまたはローカルストレージは保存できますが、ウィンドウオブジェクトハンドルは保存できません）、ウィンドウ上のハンドルを取り戻す孤独なキーです。現時点では、最近発見された動作の差異は、他のブラウザでもまだテストされていません。</p>
+</div>
+
+<h2 id="Window_features">Window features</h2>
+
+<p>windowFeatures は、新しいウィンドウに指定する特性をコンマで分割したリストを含む、オプションの文字列です。ウィンドウが開かれた後、ウィンドウの機能やウィンドウのツールバーを変えるために JavaScript を用いることはできません。<var>name</var> が存在するウィンドウを指定しなかった場合、かつ、引数 windowFeatures を与えなかった場合（もしくは、引数 windowFeatures が空文字列だった場合）は、新しい副ウィンドウにメインウィンドウのデフォルトのツールバーが表示されるでしょう。</p>
+
+<p>引数 windowFeatures が使用され、サイズの特性が定義されなかった場合は、新しいウィンドウの寸法は、最も最近に表示されたウィンドウの寸法と同じになります。</p>
+
+<p>引数 windowFeatures が使用され、位置の特性が定義されなかった場合は、新しいウィンドウの面の左と上の座標は、最も最近に表示されたウィンドウがあった位置から 22 ピクセル離れた位置になります。離す距離の設定は、ブラウザの製造者（デフォルトテーマでの MSIE 6 SP2 では 29 ピクセルです）によって普遍的に実装されます。そして、その目的は、ユーザに新しいウィンドウが開いたということに気づくのを助けることにあります。最も最近に使用されたウィンドウが最大化された状態である場合は、22 ピクセル離れた状態にはなりません。つまり、新しい副ウィンドウも同様に最大化されます。</p>
+
+<p><strong>引数 windowFeatures を定義する場合、文字列として指定されずに、列挙されなかった特性は、無効になるか非表示になるでしょう。</strong>(デフォルトで <var>yes</var> である <var>titlebar</var> と <var>close</var> は除きます。)</p>
+
+<div class="note">
+<p><strong>Tip</strong>: 引数 <var>features</var> を使用する場合は、新しいウィンドウに含めたい特性のリストだけを指定するようにしてください。望むものだけが、有効に、もしくは、表示され、他のものは(デフォルトで <var>yes</var> である <var>titlebar</var> と <var>close</var> は除きます。)、無効、もしくは、非表示になるでしょう。</p>
+</div>
+
+<p><img alt="Firefox Toolbars Illustration" src="/@api/deki/files/210/=FirefoxChromeToolbarsDescription7a.gif" style="display: block; margin: 0px auto;"></p>
+
+<h3 id="位置とサイズの特性">位置とサイズの特性</h3>
+
+<div>{{gecko_minversion_note("1.9.2", "Starting in Gecko 1.9.2 (Firefox 3.6), overriding the position of a window using window features will not change the persisted values saved by the session store feature. That means the next time the window is opened, it will still open in the saved location.")}}</div>
+
+<p><a href="#Note_on_position_and_dimension_error_correction">位置と寸法のエラー修正についての注記</a></p>
+
+<div class="bug">{{bug(176320)}}</div>
+
+<p><a href="#Note_on_precedence">優先度についての注記</a></p>
+
+<dl>
+ <dt id="left">left</dt>
+ <dd>ユーザのオペレーティングシステムのアプリケーションのための作業領域の左端からブラウザウィンドウの左端ボーダー（リサイズハンドル）までの新しいウィンドウが配置される間隔を指定します。新しいウィンドウは、最初からスクリーン外に配置されることはありません。</dd>
+ <dd>サポートされるブラウザ: <img alt="Internet Explorer 5+" src="/@api/deki/files/260/=MSIE_ico.png">, <img alt="Netscape 6.x" src="/@api/deki/files/785/=Ns6.gif">, <img alt="Netscape 7.x" src="/@api/deki/files/281/=NS7_ico4.gif">, <img alt="Mozilla 1.x" src="/@api/deki/files/277/=Mozilla1_ico.png">, <img alt="Firefox 1.x" src="/@api/deki/files/200/=FF1x.png">, <img alt="Opera 6+" src="/@api/deki/files/288/=Opera6.gif"></dd>
+ <dt id="top">top</dt>
+ <dd>ユーザのオペレーティングシステムのアプリケーションのための作業領域の上端からブラウザウィンドウの上端ボーダー（リサイズハンドル）までの新しいウィンドウが配置される間隔を指定します。新しいウィンドウは、最初からスクリーン外に配置されることはありません。</dd>
+ <dd>サポートされるブラウザ: <img alt="Internet Explorer 5+" src="/@api/deki/files/260/=MSIE_ico.png">, <img alt="Netscape 6.x" src="/@api/deki/files/785/=Ns6.gif">, <img alt="Netscape 7.x" src="/@api/deki/files/281/=NS7_ico4.gif">, <img alt="Mozilla 1.x" src="/@api/deki/files/277/=Mozilla1_ico.png">, <img alt="Firefox 1.x" src="/@api/deki/files/200/=FF1x.png">, <img alt="Opera 6+" src="/@api/deki/files/288/=Opera6.gif"></dd>
+ <dt id="height">height</dt>
+ <dd>コンテンツエリア、新しい副ウィンドウのビューエリアの高さをピクセル単位で指定します。高さの値は、水平スクロールバーが存在するならば、その高さを含めます。最小の要求値は 100 です。</dd>
+ <dd><a href="#Note_on_outerHeight_versus_height">outerHeight 対 height (or innerHeight) についての注記</a></dd>
+ <dd>サポートされるブラウザ: <img alt="Internet Explorer 5+" src="/@api/deki/files/260/=MSIE_ico.png">, <img alt="Netscape 6.x" src="/@api/deki/files/785/=Ns6.gif">, <img alt="Netscape 7.x" src="/@api/deki/files/281/=NS7_ico4.gif">, <img alt="Mozilla 1.x" src="/@api/deki/files/277/=Mozilla1_ico.png">, <img alt="Firefox 1.x" src="/@api/deki/files/200/=FF1x.png">, <img alt="Opera 6+" src="/@api/deki/files/288/=Opera6.gif"></dd>
+ <dt id="width">width</dt>
+ <dd>コンテンツエリア、、新しい副ウィンドウのビューエリアの幅をピクセル単位で指定します。幅の値は、垂直スクロールバーが存在すれば、その高さを含みます。幅の値は、サイドバーが展開されていても、その幅を含みません。最小の要求値は 100 です。</dd>
+ <dd>サポートされるブラウザ: <img alt="Internet Explorer 5+" src="/@api/deki/files/260/=MSIE_ico.png">, <img alt="Netscape 6.x" src="/@api/deki/files/785/=Ns6.gif">, <img alt="Netscape 7.x" src="/@api/deki/files/281/=NS7_ico4.gif">, <img alt="Mozilla 1.x" src="/@api/deki/files/277/=Mozilla1_ico.png">, <img alt="Firefox 1.x" src="/@api/deki/files/200/=FF1x.png">, <img alt="Opera 6+" src="/@api/deki/files/288/=Opera6.gif"></dd>
+ <dt>screenX</dt>
+ <dd>非推奨。<a href="#left">left</a> と同様ですが、Netscape と Mozilla ベースのブラウザでしかサポートされていません。</dd>
+ <dd>サポートされるブラウザ: <img alt="Netscape 6.x" src="/@api/deki/files/785/=Ns6.gif">, <img alt="Netscape 7.x" src="/@api/deki/files/281/=NS7_ico4.gif">, <img alt="Mozilla 1.x" src="/@api/deki/files/277/=Mozilla1_ico.png">, <img alt="Firefox 1.x" src="/@api/deki/files/200/=FF1x.png"></dd>
+ <dt>screenY</dt>
+ <dd>非推奨。<a href="#topS">top</a> と同様ですが、Netscape と Mozilla ベースのブラウザでしかサポートされていません。</dd>
+ <dd>サポートされるブラウザ: <img alt="Netscape 6.x" src="/@api/deki/files/785/=Ns6.gif">, <img alt="Netscape 7.x" src="/@api/deki/files/281/=NS7_ico4.gif">, <img alt="Mozilla 1.x" src="/@api/deki/files/277/=Mozilla1_ico.png">, <img alt="Firefox 1.x" src="/@api/deki/files/200/=FF1x.png"></dd>
+ <dt>centerscreen</dt>
+ <dd>その親のサイズのと位置に関連付けられたウィンドウの中央。chrome=yes が必要。</dd>
+ <dt>outerHeight</dt>
+ <dd>ブラウザウィンドウ全体の高さをピクセル単位で指定します。この outerHeight の値は、任意/全て のツールバーを含みます。この outerHeight の値は、ウィンドウの水平スクロールバー（存在する場合）と上と下のウィンドウリサイズボーダーを含みます。最小の要求値は、100 です。</dd>
+ <dd><strong>注記</strong>: タイトルバーは常に表示されるので、outerHeight=100 を指定したとき、ブラウザウィンドウの innerHeight は、最小 100 ピクセル未満になります。</dd>
+ <dd><a href="#Note_on_outerHeight_versus_height">outerHeight 対 height (or innerHeight) についての注記</a></dd>
+ <dd>サポートされるブラウザ: <img alt="Netscape 6.x" src="/@api/deki/files/785/=Ns6.gif">, <img alt="Netscape 7.x" src="/@api/deki/files/281/=NS7_ico4.gif">, <img alt="Mozilla 1.x" src="/@api/deki/files/277/=Mozilla1_ico.png">, <img alt="Firefox 1.x" src="/@api/deki/files/200/=FF1x.png"></dd>
+ <dt>outerWidth</dt>
+ <dd>ブラウザウィンドウ全体の幅をピクセル単位で指定します。この outerWidth の値は、任意/全て のツールバーを含みます。この outerWidth の値は、ウィンドウの垂直スクロールバー（存在する場合）と 左と右のウィンドウリサイズボーダーを含みます。</dd>
+ <dd>サポートされるブラウザ: <img alt="Netscape 6.x" src="/@api/deki/files/785/=Ns6.gif">, <img alt="Netscape 7.x" src="/@api/deki/files/281/=NS7_ico4.gif">, <img alt="Mozilla 1.x" src="/@api/deki/files/277/=Mozilla1_ico.png">, <img alt="Firefox 1.x" src="/@api/deki/files/200/=FF1x.png"></dd>
+ <dt>innerHeight</dt>
+ <dd><a href="#height">height</a> と同じですが、Netscape と Mozilla ベースのブラウザでしかサポートされていません。コンテンツエリア、新しい副ウィンドウのビューエリアの高さをピクセル単位で指定します。<var>innerHeight</var> の値は、水平スクロールバーが存在するならば、その高さを含めます。最小の要求値は 100 です。</dd>
+ <dd><a href="#Note_on_outerHeight_versus_height">outerHeight 対 height (or innerHeight) についての注記</a></dd>
+ <dd>サポートされるブラウザ: <img alt="Netscape 6.x" src="/@api/deki/files/785/=Ns6.gif">, <img alt="Netscape 7.x" src="/@api/deki/files/281/=NS7_ico4.gif">, <img alt="Mozilla 1.x" src="/@api/deki/files/277/=Mozilla1_ico.png">, <img alt="Firefox 1.x" src="/@api/deki/files/200/=FF1x.png"></dd>
+ <dt>innerWidth</dt>
+ <dd><a href="#width">width</a> と同じですが、Netscape と Mozilla ベースのブラウザでしかサポートされていません。コンテンツエリア、新しい副ウィンドウのビューエリアの幅をピクセル単位で指定します。幅の値は、垂直スクロールバーが存在すれば、その高さを含みます。幅の値は、サイドバーが展開されていても、その幅を含みません。最小の要求値は 100 です。</dd>
+ <dd>サポートされるブラウザ: <img alt="Netscape 6.x" src="/@api/deki/files/785/=Ns6.gif">, <img alt="Netscape 7.x" src="/@api/deki/files/281/=NS7_ico4.gif">, <img alt="Mozilla 1.x" src="/@api/deki/files/277/=Mozilla1_ico.png">, <img alt="Firefox 1.x" src="/@api/deki/files/200/=FF1x.png"></dd>
+</dl>
+
+<h3 id="ツールバーと_chrome_の特性">ツールバーと chrome の特性</h3>
+
+<dl>
+ <dt>NOTE: All features can be set to <var>yes</var> or <var>1</var>, or just be present to be "on". Set them to <var>no</var> or <var>0</var>, or in most cases just omit them, to be "off".</dt>
+ <dd>Example: "status=yes", "status=1", and "status" have identical results.</dd>
+ <dt>menubar</dt>
+ <dd>この特性が yes に設定されている場合、新しい副ウィンドウにメニューバーが表示されます。</dd>
+ <dd>Mozilla と Firefox ユーザは、<a class="external" href="http://support.mozilla.com/en-US/kb/Editing+configuration+files#about_config">about:config</a> か <a class="external" href="http://support.mozilla.com/en-US/kb/Editing+configuration+files#user_js">user.js ファイル</a>（<a class="external" href="http://www.mozilla-japan.org/support/firefox/edit#user">旧ページの日本語版</a>）で、<code>dom.disable_window_open_feature.menubar</code> を <var>true</var> に設定することにより、常に新しいウィンドウにメニューバーを表示させるようにすることができます。</dd>
+ <dd>サポートされるブラウザ: <img alt="Internet Explorer 5+" src="/@api/deki/files/260/=MSIE_ico.png">, <img alt="Netscape 6.x" src="/@api/deki/files/785/=Ns6.gif">, <img alt="Netscape 7.x" src="/@api/deki/files/281/=NS7_ico4.gif">, <img alt="Mozilla 1.x" src="/@api/deki/files/277/=Mozilla1_ico.png">, <img alt="Firefox 1.x" src="/@api/deki/files/200/=FF1x.png"></dd>
+ <dt>toolbar</dt>
+ <dd>この特性が yes に設定されている場合、新しい副ウィンドウにナビゲーションツールバー（戻る、進む、更新、中止ボタンなどを配置できるバー）が表示されます。ナビゲーションツールバーに加えて、Mozilla ベースのブラウザには、タブバーが表示されるでしょう（親ウィンドウに存在し、表示されている状態である場合）。</dd>
+ <dd>Mozilla Firefox ユーザは、<a class="external" href="http://support.mozilla.com/en-US/kb/Editing+configuration+files#about_config">about:config</a> か <a class="external" href="http://support.mozilla.com/en-US/kb/Editing+configuration+files#user_js">user.js ファイル</a>（<a class="external" href="http://www.mozilla-japan.org/support/firefox/edit#user">旧ページの日本語版</a>）で、<br>
+ <code>dom.disable_window_open_feature.toolbar</code><br>
+ を <var>true</var> に設定することにより、常に新しいウィンドウにナビゲーションツールバーを表示させるようにすることができます。</dd>
+ <dd>サポートされるブラウザ: <img alt="Internet Explorer 5+" src="/@api/deki/files/260/=MSIE_ico.png">, <img alt="Netscape 6.x" src="/@api/deki/files/785/=Ns6.gif">, <img alt="Netscape 7.x" src="/@api/deki/files/281/=NS7_ico4.gif">, <img alt="Mozilla 1.x" src="/@api/deki/files/277/=Mozilla1_ico.png">, <img alt="Firefox 1.x" src="/@api/deki/files/200/=FF1x.png"></dd>
+ <dt>location</dt>
+ <dd>この特性が yes に設定されている場合、新しい副ウィンドウに Mozilla ベースのブラウザではアドレスバーが、MSIE 5+ 及び Opera 7.x ではアドレスバーが表示されます。</dd>
+ <dd>Mozilla と Firefox ユーザは、<a class="external" href="http://support.mozilla.com/en-US/kb/Editing+configuration+files#about_config">about:config</a> か <a class="external" href="http://support.mozilla.com/en-US/kb/Editing+configuration+files#user_js">user.js ファイル</a>（<a class="external" href="http://www.mozilla-japan.org/support/firefox/edit#user">旧ページの日本語版</a>）で、<code>dom.disable_window_open_feature.location </code> を <var>true</var> に設定することにより、常に新しいウィンドウにアドレスバーを表示させるようにすることができます。</dd>
+ <dd>サポートされるブラウザ: <img alt="Internet Explorer 5+" src="/@api/deki/files/260/=MSIE_ico.png">, <img alt="Netscape 6.x" src="/@api/deki/files/785/=Ns6.gif">, <img alt="Netscape 7.x" src="/@api/deki/files/281/=NS7_ico4.gif">, <img alt="Mozilla 1.x" src="/@api/deki/files/277/=Mozilla1_ico.png">, <img alt="Firefox 1.x" src="/@api/deki/files/200/=FF1x.png">, <img alt="Opera 6+" src="/@api/deki/files/288/=Opera6.gif"></dd>
+ <dt>personalbar</dt>
+ <dd><var>directories</var> と同じですが、Netscape と Mozilla ベースブラウザでのみサポートされています。</dd>
+ <dd>Mozilla と Firefox ユーザは、<a class="external" href="http://support.mozilla.com/en-US/kb/Editing+configuration+files#about_config">about:config</a> か <a class="external" href="http://support.mozilla.com/en-US/kb/Editing+configuration+files#user_js">user.js ファイル</a>（<a class="external" href="http://www.mozilla-japan.org/support/firefox/edit#user">旧ページの日本語版</a>）で、</dd>
+ <dd>この特性が yes に設定されている場合、新しい副ウィンドウに Netscape 6.x、Netscape 7.x、 Mozilla ブラウザでは、パーソナルツールバーが表示されます。Firefox 1.x では、ブックマークツールバーが表示され、MSIE 5+ では、リンクバーが表示されます。パーソナルツールバーに加えて、Mozilla ブラウザでは、サイトナビゲーションバーも表示されるでしょう（親ウィンドウに存在し、表示されている場合）。</dd>
+ <dd>サポートされるブラウザ: <img alt="Netscape 6.x" src="/@api/deki/files/785/=Ns6.gif">, <img alt="Netscape 7.x" src="/@api/deki/files/281/=NS7_ico4.gif">, <img alt="Mozilla 1.x" src="/@api/deki/files/277/=Mozilla1_ico.png">, <img alt="Firefox 1.x" src="/@api/deki/files/200/=FF1x.png"></dd>
+ <dt>directories {{obsolete_inline("2")}}</dt>
+ <dd>Obsolete synonym of personalbar. In IE, it rendered the Links bar. Supported in Gecko up to 1.9.2 and in IE up to 6.</dd>
+ <dt>status</dt>
+ <dd>この特性が yes に設定されている場合、新しい副ウィンドウにステータスバーが表示されます。ユーザは、 全ての Mozilla ベースブラウザ、MSIE 6 SP2 (<a href="#Note_on_security_issues_of_the_status_bar_presence">XP SP2 におけるステータスバーについての注記</a>)、Opera 6+ において、ステータスバーの表示を強制させることができます。 最近の Mozilla ベースブラウザのリリース版及び Firefox 1.0 におけるデフォルト設定では、ステータスバーの表示を強制します。</dd>
+ <dd><a href="#Note_on_status_bar">ステータスバーについての注記</a></dd>
+ <dd>サポートされるブラウザ: <img alt="Internet Explorer 5+" src="/@api/deki/files/260/=MSIE_ico.png">, <img alt="Netscape 6.x" src="/@api/deki/files/785/=Ns6.gif">, <img alt="Netscape 7.x" src="/@api/deki/files/281/=NS7_ico4.gif">, <img alt="Mozilla 1.x" src="/@api/deki/files/277/=Mozilla1_ico.png">, <img alt="Firefox 1.x" src="/@api/deki/files/200/=FF1x.png"></dd>
+</dl>
+
+<h3 id="ウィンドウの機能の特性">ウィンドウの機能の特性</h3>
+
+<dl>
+ <dt>attention {{NonStandardBadge}}</dt>
+</dl>
+
+<dl>
+ <dd>If this feature is specified, the window is able to open even if another application is already in the foreground. This feature is for Firefox OS applications only, and is currently restricted to certified applications. See {{SectionOnPage("/ja/docs/Web/Apps/App_permissions", "Certified app permissions")}} for more information.</dd>
+ <dd>Supported in: <img alt="" src="https://mdn.mozillademos.org/files/8003/firefox_os_logo_wordmark-75px.png" style="height: 25px; width: 83px;"></dd>
+ <dt>dependent</dt>
+ <dd>この特性が <var>yes</var> に設定されている場合、新しいウィンドウが親ウィンドウに依存している状態になります。依存状態のウィンドウは親ウィンドウが閉じると閉じます。依存状態のウィンドウは、親ウィンドウが最小化されたときにのみ Windows のタスクバーに最小化されます。Windows プラットフォームでは、依存状態のウィンドウはタスクバーに表示されません。依存状態のウィンドウは、常に親ウィンドウの前面に表示されます。</dd>
+ <dd>依存状態のウィンドウは、MacOS X では、実装されていません。このオプションは無視されるでしょう。</dd>
+ <dd>依存状態の特性は現在の開発版では削除されています({{ Bug(214867) }})。</dd>
+ <dd>MSIE 6 において、この特性に近いものは、<code>showModelessDialog()</code> メソッドです。</dd>
+ <dd>サポートされるブラウザ: <img alt="Netscape 6.x" src="/@api/deki/files/785/=Ns6.gif">, <img alt="Netscape 7.x" src="/@api/deki/files/281/=NS7_ico4.gif">, <img alt="Mozilla 1.x" src="/@api/deki/files/277/=Mozilla1_ico.png">, <img alt="Firefox 1.x" src="/@api/deki/files/200/=FF1x.png"></dd>
+ <dt>minimizable</dt>
+ <dd>この設定は、ダイアログウィンドウにだけ適用されます。つまり、"minimizable" を設定するには、<code>dialog=yes</code> が必須です。<code>minimizable</code> が <var>yes</var> に設定されている場合、新しいダイアログウィンドウには、「最小化」システムコマンドアイコンがタイトルバーに表示され、最小化可能となります。ダイアログウィンドウではないウィンドウは、常に最小化可能であり、 <code>minimizable=no</code> を無視します。</dd>
+ <dd>サポートされるブラウザ: <img alt="Netscape 6.x" src="/@api/deki/files/785/=Ns6.gif">, <img alt="Netscape 7.x" src="/@api/deki/files/281/=NS7_ico4.gif">, <img alt="Mozilla 1.x" src="/@api/deki/files/277/=Mozilla1_ico.png">, <img alt="Firefox 1.x" src="/@api/deki/files/200/=FF1x.png"></dd>
+ <dt>fullscreen</dt>
+ <dd>使用しないでください。Mozilla では実装されていません。Mozilla でこの特性を実装する予定はありません。</dd>
+ <dd>この特性は、 MSIE 6 SP2 においては、MSIE 5.x で動作した方法 では、もはや動作しません。MSIE 5.x で有効になっているときは、Windows のタスクバーは、ウィンドウのタイトルバーとステータスバー同様に、表示されませんし、アクセスも出来ません。</dd>
+ <dd><code>fullscreen</code> は、広いモニタースクリーンやデュアルモニタースクリーンのユーザをいつも混乱させます。他のユーザに <code>fullscreen</code> を強制することは、いつも非常に不評であり、web 制作者の見方の設定をユーザに押し付けるのは、あからさまに不作法です。</dd>
+ <dd><a href="#Note_on_fullscreen">fullscreen についての注記</a></dd>
+ <dd>サポートされるブラウザ: <img alt="Internet Explorer 5+" src="/@api/deki/files/260/=MSIE_ico.png"></dd>
+ <dd><code>fullscreen</code> は、MSIE 6 SP2 では、正しく動きません。</dd>
+ <dt><a id="noopener" name="noopener">noopener</a></dt>
+ <dd>If this feature is set, the newly-opened window will open as normal, except that it will not have access back to the originating window (via {{domxref("Window.opener")}} ? it returns <code>null</code>). In addition, the <code>window.open()</code> call will also return <code>null</code>, so the originating window will not have access to the new one either.? This is useful for preventing untrusted sites opened via <code>window.open()</code> from tampering with the originating window, and vice versa.</dd>
+ <dd>Note that when <code>noopener</code> is used, nonempty target names other than <code>_top</code>, <code>_self</code>, and <code>_parent</code> are all treated like <code>_blank</code> in terms of deciding whether to open a new window/tab.<br>
+ <br>
+ This is supported in modern browsers including Chrome, and Firefox 52+. See also <code><a href="/en-US/docs/Web/HTML/Link_types#noopener">rel="noopener"</a></code>.</dd>
+ <dt>resizable</dt>
+ <dd>この特性が <var>yes</var> に設定されている場合、新しい副ウィンドウがリサイズ可能になります。</dd>
+ <dd><strong>Note</strong>: バージョン 1.4 から、Mozilla ベースのブラウザには、ステータスバーの右端にウィンドウをリサイズできる{{ 原語併記("つまみ", "grippy") }}があるので、web 制作者が副ウィンドウをリサイズ不可能に設定しても、ユーザがブラウザウィンドウをリサイズできることが保証されています。このとき、ウィンドウのタイトルバーの 最大化 / 元に戻す アイコンが非表示になり、ウィンドウの端でリサイズできなくなりますが、ウィンドウは依然としてステータスバーのつまみでリサイズ可能です。
+ <p>Firefox 3 では、副ウィンドウは常にリサイズ可能になることが期待されています({{ Bug(177838) }})。</p>
+
+ <div class="note">
+ <p><strong>Tip</strong>: アクセシビリティの観点から、この特性は常に <var>yes</var> に設定することが強く推奨されています。</p>
+ </div>
+ </dd>
+ <dd>Mozilla と Firefox ユーザは、<a class="external" href="http://support.mozilla.com/en-US/kb/Editing+configuration+files#about_config">about:config</a> か <a class="external" href="http://support.mozilla.com/en-US/kb/Editing+configuration+files#user_js">user.js ファイル</a>（<a class="external" href="http://www.mozilla-japan.org/support/firefox/edit#user">旧ページの日本語版</a>）で、<code>dom.disable_window_open_feature.resizable</code> を <var>true</var> に設定することにより、新しいウィンドウを常に容易にリサイズ可能にすることができます。</dd>
+ <dd>サポートされるブラウザ: <img alt="Internet Explorer 5+" src="/@api/deki/files/260/=MSIE_ico.png">, <img alt="Netscape 6.x" src="/@api/deki/files/785/=Ns6.gif">, <img alt="Netscape 7.x" src="/@api/deki/files/281/=NS7_ico4.gif">, <img alt="Mozilla 1.x" src="/@api/deki/files/277/=Mozilla1_ico.png">, <img alt="Firefox 1.x" src="/@api/deki/files/200/=FF1x.png"></dd>
+ <dt>scrollbars</dt>
+ <dd>この特性が <var>yes</var> に設定されている場合、新しい副ウィンドウに、水平 / 垂直スクロールバーの両方かいずれかが表示されます（文書がウィンドウの{{ 原語併記("ビューポート", "viewport") }}に収まらない場合）。
+ <div class="note">
+ <p><strong>Tip</strong>: アクセシビリティの観点から、この特性は常に <var>yes</var> に設定することが強く奨励されています。</p>
+ </div>
+ </dd>
+ <dd>Mozilla と Firefox ユーザは、<a class="external" href="http://support.mozilla.com/en-US/kb/Editing+configuration+files#about_config">about:config</a> か <a class="external" href="http://support.mozilla.com/en-US/kb/Editing+configuration+files#user_js">user.js ファイル</a>（<a class="external" href="http://www.mozilla-japan.org/support/firefox/edit#user">旧ページの日本語版</a>）で、<code>dom.disable_window_open_feature.scrollbars</code> を <var>true</var> に設定することにより、新しいウィンドウでこのオプションを常に有効にすることができます。</dd>
+ <dd><a href="#Note_on_scrollbars">スクロールバーについての注記</a></dd>
+ <dd>サポートされるブラウザ: <img alt="Internet Explorer 5+" src="/@api/deki/files/260/=MSIE_ico.png">, <img alt="Netscape 6.x" src="/@api/deki/files/785/=Ns6.gif">, <img alt="Netscape 7.x" src="/@api/deki/files/281/=NS7_ico4.gif">, <img alt="Mozilla 1.x" src="/@api/deki/files/277/=Mozilla1_ico.png">, <img alt="Firefox 1.x" src="/@api/deki/files/200/=FF1x.png"></dd>
+</dl>
+
+<h3 id="特権を必要とする特性">特権を必要とする特性</h3>
+
+<p>以下の特性は、 <code>UniversalBrowserWrite</code> 特権が必要です。特権がない場合、それらの指定は無視されます。Chrome で実行されるスクリプトには、自動的にこの特権が付加されます。それ以外の場合は、<a href="ja/PrivilegeManager">PrivilegeManager</a> から特権のリクエストをする必要があります。</p>
+
+<dl>
+ <dt>chrome</dt>
+ <dd><strong>注記</strong>: Mozilla 1.7/Firefox 0.9 から、この特性は、<code>UniversalBrowserWrite</code> 特権を必要とします（{{ Bug(244965) }}）。</dd>
+ <dd><var>yes</var> に設定されている場合、そのページには、ウィンドウのコンテンツだけがロードされ、ブラウザのインターフェース要素は一切表示されません。 デフォルトで定義されたコンテキストメニューも表示されず、標準のキーボードショートカットも機能しません。 そのページには、それ自身のユーザインターフェースが提供されなければならず、たいてい、この特性は、XUL 文書を開くために使われます（JavaScript コンソール のような標準のダイアログは、この方法で開かれます）。</dd>
+ <dd>サポートされるブラウザ: <img alt="Netscape 6.x" src="/@api/deki/files/785/=Ns6.gif">, <img alt="Netscape 7.x" src="/@api/deki/files/281/=NS7_ico4.gif">, <img alt="Mozilla 1.x" src="/@api/deki/files/277/=Mozilla1_ico.png">, <img alt="Firefox 1.x" src="/@api/deki/files/200/=FF1x.png"></dd>
+ <dt>dialog</dt>
+ <dd><strong>Note</strong>: Starting with Firefox 44, this feature can only be used with chrome privileges. If content attempts to toggle this feature, it will be ignored.</dd>
+ <dd><a href="/@api/deki/files/268/=MenuSystemCommands.png" title="MenuSystemCommands.png"><img alt="MenuSystemCommands.png" class="internal lwrap" src="/@api/deki/files/268/=MenuSystemCommands.png?size=webview" style="float: left; height: 170px; width: 170px;"> </a><code>dialog</code> 特性は、ウィンドウのタイトルバーから閉じるボタンを除いた全てのアイコン（元に戻す、最小化、最大化）を非表示にします。 <span class="float-right"><img alt="Windows における Firefox と そのコマンドシステムメニュー"></span>Mozilla 1.2+ と Netscape 7.1 は、他のメニューシステムコマンドを表示するでしょう（FF 1.0 と NS 7.0x では、コマンドシステムメニューをタイトルバーの左端の Firefox/NS 7.0x のアイコンで呼びだすことができません。:これは恐らくバグです。タイトルバーを右クリックすることでコマンドシステムメニューにアクセスすることができます）。ダイアログウィンドウは、最小化システムコマンドアイコンと最大化 / 元に戻すシステムコマンドアイコンが、タイトルバーにもコマンドシステムメニュー内の代理メニューアイテム内にも表示されないウィンドウです。通常のダイアログと言われるものは、情報を通知するだけのもの、及び、退去時、閉じる時に表示されるものです。Mac システムにおける、ダイアログウィンドウでのウィンドウ端は異なっており、ダイアログはシートで代用されるかもしれません。</dd>
+ <dd>サポートされるブラウザ: <img alt="Netscape 6.x" src="/@api/deki/files/785/=Ns6.gif">, <img alt="Netscape 7.x" src="/@api/deki/files/281/=NS7_ico4.gif">, <img alt="Mozilla 1.x" src="/@api/deki/files/277/=Mozilla1_ico.png">, <img alt="Firefox 1.x" src="/@api/deki/files/200/=FF1x.png"></dd>
+ <dt>modal</dt>
+ <dd><strong>注記</strong>: Mozilla 1.2.1 から、この特性は、<code>UniversalBrowserWrite</code> 特権を必要とします（{{ Bug(180048) }}）。 この特権が無ければ、この特性は無視されます。</dd>
+ <dd><var>yes</var> に設定されている場合、その新しいウィンドウは、モーダルと呼ばれます。ユーザは、モーダルウィンドウが閉じられるまで、メインウィンドウに戻ることができません。典型的なモーダルウィンドウは、<a href="ja/DOM/window.alert">alert() メソッド</a>によって、生成されます。</dd>
+ <dd>モーダルウィンドウの厳密な挙動は、プラットフォーム及び Mozilla のリリースバージョンに依存します。
+ <div class="note">
+ <p><strong>Note:</strong> As of {{Gecko("1.9")}}, Internet Explorer において、この特性と同等のものは、the {{domxref("window.showModalDialog()")}} メソッドです。互換性の理由で、Firefox でもこのメソッドがサポートされます。 Note also that starting in {{Gecko("2.0")}}, you can use {{domxref("window.showModalDialog()")}} without UniversalBrowserWrite privileges.</p>
+ </div>
+ </dd>
+ <dd>サポートされるブラウザ: <img alt="Netscape 6.x" src="/@api/deki/files/785/=Ns6.gif">, <img alt="Netscape 7.x" src="/@api/deki/files/281/=NS7_ico4.gif">, <img alt="Mozilla 1.x" src="/@api/deki/files/277/=Mozilla1_ico.png">, <img alt="Firefox 1.x" src="/@api/deki/files/200/=FF1x.png"></dd>
+ <dt>titlebar</dt>
+ <dd>デフォルトでは、新しい副ウィンドウの全てにタイトルバーが表示されるようになっています。<var>no</var> に設定されている場合、この特性は、タイトルバーを新しい副ウィンドウで表示しないようにします。</dd>
+ <dd>Mozilla と Firefox ユーザは、<a class="external" href="http://support.mozilla.com/en-US/kb/Editing+configuration+files#about_config">about:config</a> か <a class="external" href="http://support.mozilla.com/en-US/kb/Editing+configuration+files#user_js">user.js ファイル</a>（<a class="external" href="http://www.mozilla-japan.org/support/firefox/edit#user">旧ページの日本語版</a>）で、<br>
+ <code>dom.disable_window_open_feature.titlebar</code><br>
+ を <var>true</var> に設定することにより、新しいウィンドウに常にタイトルバーを表示させるようにすることができます。</dd>
+ <dd>サポートされるブラウザ: <img alt="Netscape 6.x" src="/@api/deki/files/785/=Ns6.gif">, <img alt="Netscape 7.x" src="/@api/deki/files/281/=NS7_ico4.gif">, <img alt="Mozilla 1.x" src="/@api/deki/files/277/=Mozilla1_ico.png">, <img alt="Firefox 1.x" src="/@api/deki/files/200/=FF1x.png"></dd>
+ <dt>alwaysRaised</dt>
+ <dd><var>yes</var> に設定されている場合、 その新しいウィンドウは、アクティブかどうかに関わらず、常に他のブラウザウィンドウの最前面に表示されます。</dd>
+ <dd>サポートされるブラウザ: <img alt="Netscape 6.x" src="/@api/deki/files/785/=Ns6.gif">, <img alt="Netscape 7.x" src="/@api/deki/files/281/=NS7_ico4.gif">, <img alt="Mozilla 1.x" src="/@api/deki/files/277/=Mozilla1_ico.png">, <img alt="Firefox 1.x" src="/@api/deki/files/200/=FF1x.png"></dd>
+ <dt>alwaysLowered</dt>
+ <dd><var>yes</var> に設定されている場合、その新しく生成されるウィンドウは、それ自身の親ウィンドウの下に表示されます。そのときの親ウィンドウは最小化されていない状態です。alwaysLowered 状態のウィンドウは、しばしば、ポップアップウィンドウとして参照されます。alwaysLowered 状態のウィンドウは最前面に表示させることはできませんが、親ウィンドウは最小化することができます。NS 6.x では、alwaysLowered 状態のウィンドウに「最小化」システムコマンドアイコンと「元に戻す/最大化」システムコマンドが表示されません。</dd>
+ <dd>サポートされるブラウザ: <img alt="Netscape 6.x" src="/@api/deki/files/785/=Ns6.gif">, <img alt="Netscape 7.x" src="/@api/deki/files/281/=NS7_ico4.gif">, <img alt="Mozilla 1.x" src="/@api/deki/files/277/=Mozilla1_ico.png">, <img alt="Firefox 1.x" src="/@api/deki/files/200/=FF1x.png"></dd>
+ <dt>z-lock</dt>
+ <dd><code>alwaysLowered</code> と同様です。</dd>
+ <dt>close</dt>
+ <dd><var>no</var> に設定されている場合、システムの「閉じる」コマンドアイコンとシステムの「閉じる」メニューアイテムが非表示になります。この特性は、ダイアログウィンドウ（<code>dialog</code> 特性が設定されている状態）でのみ動作します。</dd>
+ <dd>Mozilla と Firefox ユーザは、<a class="external" href="http://support.mozilla.com/en-US/kb/Editing+configuration+files#about_config">about:config</a> か <a class="external" href="http://support.mozilla.com/en-US/kb/Editing+configuration+files#user_js">user.js ファイル</a>（<a class="external" href="http://www.mozilla-japan.org/support/firefox/edit#user">旧ページの日本語版</a>）で、<br>
+ <code>dom.disable_window_open_feature.close</code><br>
+ を <var>true</var> に設定することにより、新しいウィンドウで「閉じる」ボタンを常に表示させることができます。</dd>
+ <dd>サポートされるブラウザ: <img alt="Netscape 6.x" src="/@api/deki/files/785/=Ns6.gif">, <img alt="Netscape 7.x" src="/@api/deki/files/281/=NS7_ico4.gif">, <img alt="Mozilla 1.x" src="/@api/deki/files/277/=Mozilla1_ico.png">, <img alt="Firefox 1.x" src="/@api/deki/files/200/=FF1x.png"></dd>
+</dl>
+
+<p>位置とサイズの特性の要素は、数値を設定する必要があります。ツールバー、chrome、ウィンドウの機能の特性は、<var>yes</var> 、もしくは、<var>no</var> を設定することができます。ちなみに、<var>yes</var> の代わりに <var>1</var> を、<var>no</var> の代わりに <var>0</var> を使うこともできます。ツールバーと機能の特性の要素は、簡略形でも受け入れます。つまり、<var>features</var> の文字列に特性の名前を列挙するだけで特性を変更することができます。<var>features</var> の引数を与えた場合、<code>titlebar</code> と <code>close</code> は、依然として、デフォルト状態で <var>yes</var> です。しかし、<var>yes</var>/<var>no</var> の選択を持っている他の特性は、 デフォルト状態で <var>no</var> になり、無効状態に変更されるでしょう。</p>
+
+<p>例:</p>
+
+<pre class="brush:js">var windowObjectReference; // グローバル変数
+
+function openRequestedPopup() {
+  windowObjectReference = window.open(
+    "http://www.domainname.ext/path/ImgFile.png",
+   "DescriptiveWindowName",
+    "width=420,height=230,resizable,scrollbars=yes,status=1"
+  );
+}</pre>
+
+<p>この例では、開かれるウィンドウは、リサイズ可能で、必要ならば（コンテンツが指定したウィンドウの範囲からあふれた場合）、スクロールバーが表示され、そして、ステータスバーが表示されます。メニューバーとアドレスバーは表示されません。作者は、画像のサイズが、幅 400 ピクセル、高さ 200 ピクセル であることを知っていたので、上マージンが 15 ピクセル、下マージンが 15 ピクセル、左マージンが 10 ピクセル、右マージンが 10 ピクセルである MSIE 6 のルート要素に適用されるマージンを加えました。</p>
+
+<h2 id="ベストプラクティス">ベストプラクティス</h2>
+
+<pre class="brush:js">&lt;script type="text/javascript"&gt;
+var windowObjectReference = null; // グローバル変数
+
+function openFFPromotionPopup() {
+  if(windowObjectReference == null || windowObjectReference.closed)
+  /* メモリ内のウィンドウオブジェクトへのポインタが存在しないか、
+     そのようなポインタが存在するが、そのウィンドウが閉じられている場合 */
+
+  {
+    windowObjectReference = window.open("http://www.spreadfirefox.com/",
+   "PromoteFirefoxWindowName", "resizable,scrollbars,status");
+    /* 真であれば、ウィンドウを生成。新しいウィンドウが生成され、
+       他のウィンドウの最前面に移動します。*/
+  }
+  else
+  {
+    windowObjectReference.focus();
+    /* 偽であれば、ウィンドウへの参照は存在しなればならず、ウィンドウは
+       閉じられていません。それゆえ、 focus() メソッドで他のウィンドウの
+       最前面にそのウィンドウを移動させることができます。ウィンドウを再生成し、
+       参照されているリソースを更新させる必要はありません。 */
+  };
+}
+&lt;/script&gt;
+
+(...)
+
+&lt;p&gt;&lt;a
+ href="http://www.spreadfirefox.com/"
+ target="PromoteFirefoxWindowName"
+ onclick="openFFPromotionPopup(); return false;" 
+ title="このリンクは、新しいウィンドウを生成するか、すでに開かれているウィンドウを再利用します。"&gt;Firefox 採用の宣伝&lt;/a&gt;&lt;/p&gt;
+&gt;Promote Firefox adoption&lt;/a&gt;&lt;/p&gt;
+</pre>
+
+<p>上記のコードは、副ウィンドウを開くリンクに関する、わずかなユーザビリティの問題を解決します。コード内の <code>return false</code> の目的は、リンクのデフォルトアクションをキャンセルすることです。: onclick イベントハンドラが実行される場合、リンクのデフォルトアクションを実行する必要はありません。しかし、ユーザのブラウザで javascript サポートが無効、もしくは、存在しない場合、onclick イベントハンドラは無視され、ブラウザは、target の "PromoteFirefoxWindowName" という名前のフレーム、もしくは、ウィンドウ内の参照されたリソースを読みこみます。"PromoteFirefoxWindowName" という名前のフレームもウィンドウも存在しない場合は、ブラウザは新しいウィンドウを生成し、そのウィンドウに "PromoteFirefoxWindowName" という名前を付けます。</p>
+
+<p>target 属性の使い方の参考ページ:</p>
+
+<p><a href="http://www.w3.org/TR/html401/present/frames.html#h-16.3.2">HTML 4.01 Target attribute specifications</a>（<a href="http://www.asahi-net.or.jp/~sd5a-ucd/rec-html401j/present/frames.html#h-16.3.2">日本語訳</a>）</p>
+
+<p><a href="http://www.htmlhelp.com/faq/html/links.html#new-window">How do I create a link that opens a new window?</a></p>
+
+<p>関数をパラメタライズして、より多くの状況で機能する、多用途なものにすることもできます。そうすることで、スクリプト及びウェブページ内で、再利用可能なものになります。:</p>
+
+<pre class="brush:js">&lt;script type="text/javascript"&gt;
+var windowObjectReference = null; // global variable
+
+function openRequestedPopup(strUrl, strWindowName) {
+  if(windowObjectReference == null || windowObjectReference.closed) {
+    windowObjectReference = window.open(strUrl, strWindowName,
+           "resizable,scrollbars,status");
+  } else {
+    windowObjectReference.focus();
+  };
+}
+&lt;/script&gt;
+ 
+(...)
+
+&lt;p&gt;&lt;a
+ href="http://www.spreadfirefox.com/"
+ target="PromoteFirefoxWindow"
+ onclick="openRequestedPopup(this.href, this.target); return false;"
+ title="このリンクは、新しいウィンドウを生成するか、すでに開かれているウィンドウを再利用します。"
+&gt;Firefox 採用の宣伝&lt;/a&gt;&lt;/p&gt;
+</pre>
+
+<p>この関数を、 副ウィンドウを 1 つだけ開くようにし、その単一の副ウィンドウをこの関数で開く他のリンクで再利用するようにすることもできます。:</p>
+
+<pre class="brush:js">&lt;script type="text/javascript"&gt;
+var windowObjectReference = null; // グローバル変数
+var PreviousUrl; /* 副ウィンドウ内の現在の URL を
+                    保存しているであろうグローバル変数 */
+
+function openRequestedSinglePopup(strUrl) {
+  if(windowObjectReference == null || windowObjectReference.closed) {
+    windowObjectReference = window.open(strUrl, "SingleSecondaryWindowName",
+         "resizable,scrollbars,status");
+  } else if(PreviousUrl != strUrl) {
+    windowObjectReference = window.open(strUrl, "SingleSecondaryWindowName",
+         "resizable=yes,scrollbars=yes,status=yes");
+    /* 読み込まれるリソースが異なる場合、
+       それをすでに開かれている副ウィンドウに読み込み、
+       そのウィンドウをその親ウィンドウの最前面に再移動します。 */
+    windowObjectReference.focus();
+  } else {
+    windowObjectReference.focus();
+  };
+
+  PreviousUrl = strUrl;
+  /* 説明: 現在の URL を保存し、この関数が再度呼び出されたときの
+     URL と比較できるようにします。 */
+}
+&lt;/script&gt;
+
+(...)
+
+&lt;p&gt;&lt;a
+ href="http://www.spreadfirefox.com/"
+ target="SingleSecondaryWindowName"
+ onclick="openRequestedSinglePopup(this.href); return false;"
+ title="このリンクは、新しいウィンドウを生成するか、すでに開かれているウィンドウを再利用します。"
+&gt;Firefox 採用の宣伝&lt;/a&gt;&lt;/p&gt;
+
+&lt;/p&gt;&lt;p&gt;&lt;a
+ href="http://www.mozilla.org/support/firefox/faq"
+ target="SingleSecondaryWindowName"
+ onclick="openRequestedSinglePopup(this.href); return false;"
+title="このリンクは、新しいウィンドウを生成するか、すでに開かれているウィンドウを再利用します。"
+&gt;Firefox FAQ&lt;/a&gt;&lt;/p&gt;
+</pre>
+
+<h2 id="FAQ">FAQ</h2>
+
+<dl>
+ <dt>どのようにすれば、ユーザにウィンドウを閉じるかどうか確認するメッセージを出さないようにすることができますか？</dt>
+ <dd>できません。 <strong>JavaScript によって開かれていない新しいウィンドウは、JavaScript によって閉じることは原則としてできません。</strong> Mozilla ベースブラウザの JavaScript コンソールは、次の警告メッセージを出すでしょう。: <code>"スクリプトはスクリプトによって開かれたウィンドウ以外を閉じることができません。"</code> そうしなければ、ブラウザセッション中の訪問した URL の履歴が失われるでしょう。</dd>
+ <dd>詳細は、<a href="ja/DOM/window.close">window.close()</a> メソッドを参照してください。</dd>
+ <dt>どのようにすれば、ウィンドウを、最小化状態、あるいは、他のウィンドウの背後にある状態から復帰することができますか？</dt>
+ <dd>まず、対象ウィンドウのウィンドウオブジェクトへの参照が存在するかどうかを調べてください。それが存在し、かつ、閉じてしまっていない場合は、<a href="ja/DOM/window.focus">focus()</a> メソッドを使用してください。他に確実な方法はありません。<a href="#Best_practices">focus() メソッドの使用方法を説明している例</a> でテストすることができます。</dd>
+ <dt>どのようにして、最大化したウィンドウを強制させるのですか？</dt>
+ <dd>できません。全てのブラウザ制作者は、新しい副ウィンドウが開くことを、ユーザを混乱させずに、ユーザに気づかせることができるように努力しています。</dd>
+ <dt>どのようにすれば、ウィンドウのリサイズを無効にしたり、ツールバーを非表示にできますか？</dt>
+ <dd>これを強制することはできません。Mozilla ベースのブラウザのユーザは、<code>about:config</code> における ユーザ設定で、リサイズ、スクロール、ツールバーの表示を自らコントロールできます。 あなたのユーザはそのウィンドウを使うであろう一人に過ぎない（ウェブ制作者であるあなたではありません）ので、最も良いのは、彼らの習慣や設定に干渉することを避けることです。推奨する方法は、コンテンツへのアクセシビリティとウィンドウのユーザビリティを保証するために、リサイズとスクロールバーの表示を（必要ならば） 常に yes に設定することです。これは、ウェブ制作者とそのユーザの両者のとって最も有益な方法です。</dd>
+ <dt>どのようにすれば、ウィンドウをコンテンツに合うようにリサイズできますか。</dt>
+ <dd>確実にはできません。なぜなら、ユーザは、Mozilla では、<code style="white-space: normal;">編集/設定/詳細/スクリプトとプラグイン/以下のスクリプトを許可/ウィンドウの移動または大きさの変更</code>のチェックボックスをチェックしないことによって、Firefox では、<code style="white-space: normal;">ツール/オプション.../コンテンツ タブ/Javascript を有効にする/詳細設定 ボタン/ウィンドウの移動または大きさの変更</code> のチェックボックスをチェックしない、あるいは、<kbd>about:config</kbd> か<a class="external" href="http://www.mozilla.org/support/firefox/edit#user">user.js ファイル</a>（<a class="external" href="http://www.mozilla-japan.org/support/firefox/edit#user">日本語版</a>）で、<code>dom.disable_window_move_resize</code> を <var>true</var> に設定することで、ウィンドウがリサイズされないようにすることができるからです。</dd>
+ <dd>一般に、ユーザは、たいてい、ウィンドウの移動またはリサイズを無効にしています。その理由は、過去に、制作者のそのようなスクリプトを許可することで、大変な弊害を受けており、この特性を濫用しない、めったにないスクリプトでも、ウィンドウをリサイズするときに、間違ったリサイズをしばしば行うからです。これらのスクリプトの 99% は、ウィンドウのリサイズを不可能にしたり、スクロールバーを非表示にします。そのような場合、本来は、それらのスクリプトの計算が間違っている場合のための、用心深く、分別のある代替の仕組みとして、それらの特性の両方が有効であるべきです。</dd>
+ <dd>window オブジェクトのメソッドである、<a href="ja/DOM/window.sizeToContent">sizeToContent()</a> メソッドもまた、ユーザが、設定の <code>ウィンドウの移動または大きさの変更</code> のチェックボックスをチェックしないことにより、無効化されます。スクリプトによるユーザ画面上における遠隔操作的なウィンドウの移動または大きさの変更は、大変非常にユーザをいらいらさせるでしょうし、ユーザの頭を混乱させるでしょうし、最も間違っていることでしょう。そのようなウェブ制作者は、架空のユーザのブラウザウィンドウのあらゆる位置とサイズのアスペクトの完全なコントロールを期待しています（し、決めつけています）。</dd>
+ <dt>どのようにして、リンク先の参照リソースを新しいタブ、あるいは、指定したタブに開くのですか？</dt>
+ <dd>To open a resource in a new tab see <a href="https://developer.mozilla.org/en-US/docs/XUL/tabbrowser">Tabbed browser</a>. Some <a href="https://developer.mozilla.org/en-US/Add-ons/Code_snippets/Tabbed_browser?redirectlocale=en-US&amp;redirectslug=Code_snippets%2FTabbed_browser">Code snippets</a> are available. If you are using the SDK, tabs are <a href="https://developer.mozilla.org/en-US/Add-ons/SDK/High-Level_APIs/tabs">handled a bit differently</a></dd>
+ <dd>現在のところ、できません。ユーザだけが自身の詳細設定でそうするように設定することができます。Mozilla ベースのブラウザである、<a class="external" href="http://kmeleon.sourceforge.net/">K-meleon 1.1</a> は、どのようにリンクを開くかに関する完全な管理と選択肢をユーザに与えています。いくつかの高度な拡張も、Mozilla と Firefox にどのように参照リソースをロードするかに関する多くの選択肢を与えます。</dd>
+ <dd>ここ数年の間に、<a class="external" href="http://www.w3.org/TR/2004/WD-css3-hyperlinks-20040224/#target0">CSS3 ハイパーリンクモジュールの target プロパティ</a>（<a class="external" href="http://www.d-toybox.com/spec/CSS3/hyperlinks/index.html#target0">日本語訳</a>） が実装されるかもしれません（CSS3 ハイパーリンクモジュールが承認された場合）。そうなった場合、タブブラウザ制作者がユーザにどのようにリンクからウェブページを開くことができるかに関する完全に拒否する権利と完全な管理を与えることを期待できます。どのようにリンクを開くかは、常に、完全にユーザの管理下にあるべきです。</dd>
+ <dt>どんなようにして、開いたウィンドウがまだ開かれているかどうかを知るのですか？</dt>
+ <dd>ウィンドウオブジェクトへの参照が存在するかどうかをテストできます。それは、window.open() メソッドの呼び出しが成功した場合の戻り値です。また、<var>WindowObjectReference</var>.closed プロパティの値の戻り値が <var>false</var> であるかどうかを調べることでもできます。</dd>
+ <dt>どのようにすれば、ウィンドウがポップアップブロッカーによってブロックされていることを伝えることができますか？</dt>
+ <dd>Mozilla/Firefox と Internet Explorer 6 SP2 の組み込みポップアップブロッカーでは、<code>window.open()</code> の戻り値を調べる必要があります。ウィンドウが開くことが許可されなかった場合の戻り値は、<var>null</var> です。しかし、多くの他のポップアップブロッカーに対しては、そのような方法はありません。</dd>
+ <dt>主ウィンドウと副ウィンドウの JavaScript の関係は？</dt>
+ <dd>window.open() メソッドと <a href="ja/DOM/window.opener">opener</a> プロパティの戻り値です。<var>WindowObjectReference</var> は、opener キーワードが副ウィンドウをそれの主ウィンドウ（{{ 原語併記("開く側", "opener", "") }}）へつなげている間、主ウィンドウ（開く側）を副ウィンドウ（サブウィンドウ）へつなげています。</dd>
+ <dt>新しい副ウィンドウのプロパティにアクセスできません。JavaScript コンソールに、"Error<span class="nowiki">:</span> uncaught exception<span class="nowiki">:</span> Permission denied to get property &lt;プロパティ名 or メソッド名&gt;." というエラーが常に出ます。なぜそのようになるのですか？</dt>
+ <dd>それは、クロスドメインスクリプトセキュリティの制限（"同一生成元ポリシー"とも）のためです。異なった生成元（ドメイン名）からウィンドウ（あるいは、フレーム）にロードされるスクリプトは、別ウィンドウ（あるいは、フレーム）のプロパティ、または、別の異なった生成元（ドメイン名）由来の HTML オブジェクトの<strong>取得も設定もできません。</strong>それゆえ、主ウィンドウのブラウザは、副ウィンドウをターゲットとしたスクリプトを実行する前に、副ウィンドウが同じドメイン名を持っているかどうかを調べるでしょう。</dd>
+ <dd>クロスドメインスクリプトセキュリティ制限については、以下で詳細を参照してください。: <a class="external" href="http://www.mozilla.org/projects/security/components/same-origin.html" rel="freelink">http://www.mozilla.org/projects/secu...me-origin.html</a>（<a class="external" href="http://www.mozilla-japan.org/projects/security/components/same-origin.html">日本語版</a>）</dd>
+</dl>
+
+<h2 id="ユーザビリティの問題">ユーザビリティの問題</h2>
+
+<h3 id="window.open()_への依存を回避する"><code>window.open()</code> への依存を回避する</h3>
+
+<p>一般的に言えば、いくつかの理由で、<code>window.open()</code> への依存を回避することを選択するべきです。:</p>
+
+<ul>
+ <li>全ての Mozilla ベースのブラウザは、タブブラウジングを提供しています。タブブラウジングは、参照するリソースを開くときに（ウィンドウを開くよりも）よりましな形態です。…これは、Mozilla ベースのブラウザだけでなく、他のタブブラウジングを提供しているブラウザの全てにおいていえることですが。言い換えれば、タブ機能を持つブラウザのユーザは、全般的に、ウェブページを見るときのほとんどの場面で、新しいウィンドウで開くよりも、新しいタブで開く方を好むということです。過去3年の間に、インターネット上でのタブ機能を持つブラウザへの支援と熱狂的な支持は、劇的な速度で拡大しました。そして、この流行は、逆戻りすることはないでしょう。2006 年 10 月にリリースされた MSIE 7 は、タブブラウジングを完全にサポートしています。</li>
+ <li>Multizilla のような <a class="link-https" href="https://addons.mozilla.org/seamonkey/browse/type:1/cat:48/sort:updated">いくつかの Mozilla の拡張</a> と <a class="link-https" href="https://addons.mozilla.org/firefox/addon/158">Tabbrowser preferences</a> のような <a class="link-https" href="https://addons.update.mozilla.org/firefox/browse/type:1/cat:14/sort:updated">Firefox の拡張</a> が現在存在しますが、それらの機能、設定、詳細な設定は、タブブラウジングを基本とし、また、window.open() の呼び出しを、タブとして開くことに置き換える、または、（特に、リクエストされていない新しいウィンドウを開く場合）無効化すること（リクエストされていないポップアップをブロックすること、もしくは、スクリプトで自動的に開かれるウィンドウをブロックすることがそれにあてはまります）を基本としています。 それらの拡張の機能には、リンクを新しいウィンドウで開くかどうか、同じウィンドウに読み込むかどうか、新しいタブで開くかどうか、"バックグラウンド" で開くかどうかというような設定が含まれています。むやみに新しいウィンドウを開くようにコーディングしても、もはや上手く動作する保証はありませんし、強制的に上手く動作させることもできません。そのようなことをした場合、大多数のユーザの反感を買うことになるでしょう。</li>
+ <li>新しいウィンドウでは、メニューバーが非表示になったり、スクロールバーが非表示になったり、ステータスバーが非表示になったり、ウィンドウのリサイズができなくなるようになる可能性などがあります。しかし、新しいタブは、それらのバーや機能、ツールバー（少なくとも、デフォルトで存在しているツールバー）が無くなることはありません。それゆえ、タブブラウジングは、多くのユーザに好まれます。タブを利用することで、ユーザが好むブラウザウィンドウの通常のユーザインタフェースが完全な状態を維持し、安定した状態が保たれるからです。</li>
+ <li>新しいウィンドウを開くことは、ウィンドウの機能を削ったとしても、考慮しなければならないほど多くのユーザのシステムリソース（CPU、RAM）を使用し、考慮しなければならないほどの多くのコーディングをソースコードにおいて伴います（セキュリティ管理、メモリ管理、ときどきかなり複雑になる様々なコードブランチ、ウィンドウのフレーム/chrome/ツールバーの構築、ウィンドウの位置調整及び大きさの調整など）。新しいタブを開くことは新しいウィンドウを開くよりもユーザのシステムリソースの要求が少なくてすみます（そして、実装がより迅速です）。</li>
+</ul>
+
+<h3 id="リンクを新しいウィンドウに開くことを提供する場合、以下のガイドラインを使用してください">リンクを新しいウィンドウに開くことを提供する場合、以下のガイドラインを使用してください</h3>
+
+<p>リンクを新しいウィンドウで開くことを提供したい場合、テストされ、推奨できる、ユーザビリティとアクセシビリティのガイドラインに従うべきです。:</p>
+
+<h4 id="決して_リンクに次の形式のコードを使わない&lt;a_hrefjavascriptwindow.open(...)_...>"><em>決して</em> リンクに次の形式のコードを使わない:<code>&lt;a href="javascript:window.open(...)" ...&gt;</code></h4>
+
+<p>"javascript:" 形式のリンクは、全てのブラウザにおいて、ウェブページのアクセシビリティとユーザビリティを損ねます。</p>
+
+<ul>
+ <li>"javascript:" 疑似リンクは、JavaScript サポートが無効化、もしくは、存在しない場合、障害的な機能となります。企業によっては、従業員にウェブの閲覧を許可していても、それが厳格なセキュリティポリシーで管理されている場合があります。例えば、JavaScript 有効の禁止、Java の禁止、Active X の禁止、Flash の禁止などです。様々な理由で（セキュリティ、共用アクセス、テキストブラウザ、など…）、ユーザの 5%～10% が、JavaScript を無効化にしてウェブを閲覧しています。</li>
+ <li>"javascript:" 形式のリンクは、タブ機能があるブラウザの高度な機能を妨害する可能性があります。例えば、リンクのミドルクリック、リンクの Ctrl + クリック、拡張におけるタブブラウジングの機能などです。</li>
+ <li>"javascript:" 形式のリンクは、検索エンジンによるウェブページのインデックス処理を妨害する可能性があります。</li>
+ <li>"javascript:" 形式のリンクは、ボイスブラウザなどの{{ 原語併記("支援技術", "assistive technologies") }} と <abbr title="Personal Digital Assistant">PDA</abbr> や モバイルブラウザなどのいくつかの Web-Aware アプリケーションを妨害します。</li>
+ <li>"javascript:" 形式のリンクは、ブラウザに実装された "マウスジェスチャ" 機能も妨害します。</li>
+ <li>プロトコルスキーマとしての "javascript:" は、link Validator 及び リンクチェッカーでは、エラーとして報告されます。</li>
+</ul>
+
+<p><strong>参考 URL:</strong></p>
+
+<ul>
+ <li><a href="http://www.useit.com/alertbox/20021223.html">Top Ten Web-Design Mistakes of 2002</a>, 6. JavaScript in Links, Jakob Nielsen, December 2002（<a class="external" href="http://www.usability.gr.jp/alertbox/20021223.html">日本語版</a>）</li>
+ <li><a href="http://www.evolt.org/article/Links_and_JavaScript_Living_Together_in_Harmony/17/20938/">Links &amp; JavaScript Living Together in Harmony</a>, Jeff Howden, February 2002</li>
+ <li><a href="http://jibbering.com/faq/#FAQ4_24">comp.lang.javascript newsgroup discussion FAQ on "javascript:" links</a></li>
+</ul>
+
+<h4 id="決して_&lt;a_href_onclickwindow.open(...)>_を使わない">決して <code>&lt;a href="#" onclick="window.open(...);"&gt;</code> を使わない</h4>
+
+<p>そのような疑似リンクもリンクのアクセシビリティを損ねます。<strong>常に href 属性値を持つ本来の URL を使ってください。</strong> そうすれば、JavaScript サポートが無効にされていたり、存在しない場合や、 MS-Web TV や、テキストブラウザなどのようなユーザエージェントが副ウィンドウを開くことをサポートしていない場合でも、そのようなユーザエージェントが、それらがサポートするデフォルトの方法に従って参照されるリソースを読みこむことができます。また、この形式のコードは、タブ機能を持つブラウザの高度な機能を妨害します。例えば、リンクのミドルクリック、リンクの Ctrl + クリック、リンクの Ctrl + Enter、"マウスジェスチャ" 機能です。</p>
+
+<h4 id="新しい副ウィンドウを生成（もしくは再利用）するリンクを常に識別できるようにする">新しい副ウィンドウを生成（もしくは再利用）するリンクを常に識別できるようにする</h4>
+
+<p>リンクの title 属性を記述したり、リンクの最後にアイコンを追加したり、反応するカーソルを記述することによってユーザに情報を与え、新しいウィンドウを開くことになるリンクを識別できるようにしてください。</p>
+
+<p>ユーザに警告をする目的は、コンテキストが変化するときに、ユーザの混乱を最小限にするためです。現在のウィンドウが変化したり、新しいウィンドウがポップアップすることは、ユーザを混乱させます（ツールバーボタンの戻るは使えません）。</p>
+
+<blockquote>
+<p>"ユーザが新しいウィンドウが開いたことに気づかないことはけっこうあります。特に、小さなモニターを使用していて、ウィンドウが最大化されている場合です。元のページに戻ろうとするユーザは、<em>Back</em> ボタンがグレーアウトしているので、混乱してしまいます。"<br>
+ 引用元：<a href="http://www.useit.com/alertbox/990530.html">The Top Ten<em>New</em> Mistakes of Web Design</a>: 2. Opening New Browser Windows, Jakob Nielsen, May 1999（<a class="external" href="http://www.usability.gr.jp/alertbox/990530.html">日本語版</a>）</p>
+</blockquote>
+
+<p>コンテキストにおける急激な変化が発生する前にそれらが明確に示唆されるとき、ユーザは、そのまま進みたいかどうかを決めることができ、変化に対して準備することができます。ユーザを混乱させないだけでなく、より経験豊富なユーザは、そのようなリンクをどのように開くかに対するより良い決定を下すこともできます（新しいウィンドウとして開くかどうか、同じウインドウに読み込むか、新しいタブに開くどうか、"バックグラウンド" で開くかどうか）。</p>
+
+<p><strong>リファレンス</strong></p>
+
+<ul>
+ <li>"リンクが新しいウィンドウを開いたり、別のウィンドウをディスプレイにポップアップさせたり、システムのフォーカスを新しいフレームやウィンドウに移動させる場合、行うべき良策は、ユーザにそのようなことが起きるということを伝えることです。" <a href="http://www.w3.org/WAI/wcag-curric/sam77-0.htm">World Wide Web Consortium Accessibility Initiative regarding popups</a></li>
+ <li>"リンクをクリックする前に、そのリンクでどこへ行くかの情報をユーザに提供するためにリンクタイトルを使用してください。" <a href="http://www.useit.com/alertbox/991003.html">Ten Good Deeds in Web Design</a>, Jakob Nielsen, October 1999（<a class="external" href="http://www.usability.gr.jp/alertbox/991003.html">日本語版</a>）</li>
+ <li><a href="http://www.useit.com/alertbox/980111.html">Using Link Titles to Help Users Predict Where They Are Going</a>, Jakob Nielsen, January 1998（<a class="external" href="http://www.usability.gr.jp/alertbox/980111.html">日本語版</a>）</li>
+</ul>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <td class="header" colspan="4">"新しいウィンドウ" を示すアイコンとカーソルの例</td>
+  </tr>
+  <tr>
+   <td><img alt="yahoo.com の新しいウィンドウアイコン" src="/@api/deki/files/782/=NewwindowYahoo.png"></td>
+   <td><img alt="microsoft.com の新しいウィンドウアイコン" src="/@api/deki/files/780/=NewwinMSIE.gif"></td>
+   <td><img alt="webaim.org の新しいウィンドウアイコン" src="/@api/deki/files/296/=Popup_requested_new_window.gif"></td>
+   <td><img alt="sun.com の新しいウィンドウアイコン" src="/@api/deki/files/811/=PopupImageSun.gif"></td>
+  </tr>
+  <tr>
+   <td><img alt="bbc.co.uk の新しいウィンドウアイコン" src="/@api/deki/files/795/=Opennews_rb.gif"></td>
+   <td><img alt="Accessible Internet Solutions の新しいウィンドウアイコン" src="/@api/deki/files/15/=AIS_NewWindowIcon.png"></td>
+   <td><img alt="accessify.com の新しいウィンドウアイコン" src="/@api/deki/files/809/=Pop-up-launcher.gif"></td>
+   <td><img alt="webstyleguide.com の新しいウィンドウアイコン" src="/@api/deki/files/417/=Webstyleguide_com_newwind.gif"></td>
+  </tr>
+  <tr>
+   <td><img alt="ソース不明の新しいウィンドウアイコン" src="/@api/deki/files/810/=Popicon_1.gif"></td>
+   <td><img alt="ソース不明の新しいウィンドウアイコン" src="/@api/deki/files/779/=New.gif"></td>
+   <td><img alt="ソース不明の新しいウィンドウアイコン" src="/@api/deki/files/419/=WillCreateOrRecycleNewWindow.gif"></td>
+   <td><img alt="gtalbot.org の新しいウィンドウアイコン" src="/@api/deki/files/287/=OpenRequestedPopup.png"></td>
+  </tr>
+  <tr>
+   <td colspan="2"><img alt="draig.de の新しいウィンドウカーソル" src="/@api/deki/files/169/=Cursor_LinkNewWindowTargetBlank.png"></td>
+   <td colspan="2"><img alt="mithgol.ru の新しいウィンドウカーソル" src="/@api/deki/files/170/=Cursor_newwindowSergeySokoloff.png"></td>
+  </tr>
+ </tbody>
+</table>
+
+<h4 id="常に_target_属性を使う">常に target 属性を使う</h4>
+
+<p>JavaScript サポートが無効化されている、もしくは、存在しない場合、ユーザエージェントは、自身の target 属性の扱い方に従って、副ウィンドウを生成するか、参照されるリソースを表示するでしょう。例えば、MS Web TV のような、新しいウィンドウを生成できないいくつかのユーザエージェントは、参照されたリソースを取りだしてから、それを現在のウィンドウの最後に追加します。その最終目的と考え方は、ユーザに参照されるリソースを開く方法、つまり、リンクを開く形式を提供しようとすることであり、 - <strong>強制することではありません。</strong> - あなたのコードはユーザが自由に選択できるブラウザの機能を妨害すべきではありませんし、ユーザに与えられる最終決定権を妨害すべきではありません。</p>
+
+<h4 id="target_blank_を使わない"><code>target="_blank"</code> を使わない</h4>
+
+<p>target 属性には常に意味のある名前を指定し、あなたのページでそのような target 属性を再利用するようにしてください。そうすれば、別のリンクをクリックしても、参照されるリソースがすでに生成され、表示されているウィンドウに読みこまれることになるでしょう（そうすることで、ユーザ側の処理がスピードアップします）。また、そうすることで、副ウィンドウを最初の場所に生成する理由（とユーザのシステムリソース、時間消費）が正当化されるでしょう。単一の target 属性値を使用し、それをリンクで再利用することは、再利用される単一の副ウィンドウを生成するよりも、非常にユーザリソースに優しいことです。一方、target 属性の値として、"_blank" を使用すると、いくつかの新しい、名前のないウィンドウをユーザにデスクトップに生成することになり、それらは、再利用も、再使用もできません。どんな場合でも、あなたのコードが上手く動作する場合でも、ユーザの最終選択を妨害するべきではありません。そうではなく、より多くの選択肢、リンクを開くためのより多くの方法、ユーザが使用しているツール（ブラウザ）へのより多くの機能をユーザに提供するようにしてください。</p>
+
+<h2 id="用語">用語</h2>
+
+<dl>
+ <dt>{{ 原語併記("開く側のウィンドウ", "Opener window") }}、{{ 原語併記("親ウィンドウ", "parent window") }}、{{ 原語併記("主ウィンドウ", "main window") }}、{{ 原語併記("第 1 ウィンドウ", "first window") }}</dt>
+ <dd>これらの語は、同じウィンドウのことを記述、または、指し示すために使われています。これは、新しいウィンドウが生成される元ウィンドウのことです。つまり、これは、ユーザが別の新しいウィンドウを生成するためのリンクをクリックした際の元ウィンドウのことです。</dd>
+ <dt>{{ 原語併記("サブウィンドウ", "Sub-window") }}、{{ 原語併記("子ウィンドウ", "child window") }}、{{ 原語併記("副ウィンドウ", "secondary window") }}、{{ 原語併記("第 2 ウィンドウ", "second window") }}</dt>
+ <dd>これらの語は、同じウィンドウのことを記述、または、指し示すために使われています。これは、生成された新しいウィンドウのことです。</dd>
+ <dt>{{ 原語併記("リクエストされていないポップアップウィンドウ", "Unrequested popup windows") }}</dt>
+ <dd>スクリプトで初期化されたウィンドウで、ユーザの了承無しに、自動的に開くウィンドウのことです。</dd>
+</dl>
+
+<h2 id="仕様">仕様</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">状態</th>
+   <th scope="col">コメント</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName('HTML WHATWG', 'window-object.html#dom-open', 'Window.open()')}}</td>
+   <td>{{Spec2('HTML WHATWG')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{ SpecName('CSSOM View', '#the-features-argument-to-the-open()-method', 'The features argument to the open() method') }}</td>
+   <td>{{ Spec2('CSSOM View') }}</td>
+   <td><code>features</code> 引数の効果を定義します</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="注記">注記</h2>
+
+<h3 id="優先度についての注記">優先度についての注記</h3>
+
+<p><code>left</code> と <code>screenX</code>（かつ/または <code>top</code> と <code>screenY</code>）で値が衝突した場合は、それぞれ、<code>left</code> と <code>top</code> が <code>screenX</code> と <code>screenY</code> よりも優先されます。<code>left</code> と <code>screenX</code>（かつ/または <code>top</code> と <code>screenY</code>） <var>features</var> のリストで定義された場合は、<code>left</code>（かつ/または <code>top</code>）が優先され、その値を用いて表示されます。次の例の新しいウィンドウは、ユーザのオペレーティングシステムにおけるアプリケーションのための作業領域の左端から 100 ピクセルの位置に表示されます。200 ピクセルの位置には表示されません。</p>
+
+<pre class="brush:js">windowObjectReference = window.open(
+  "http://news.bbc.co.uk/", 
+       "BBCWorldNewsWindowName", 
+  "left=100,screenX=200,resizable,scrollbars,status"
+);</pre>
+
+<p>left の値が設定され、top の値が設定されていない、かつ、screenY の値が設定されている場合は、left と screenY の値が副ウィンドウの座標位置を決定します。</p>
+
+<p>outerWidth は width より優先され、 width は innerWidth より優先されます。outerHeight は height より優先され、height は innerHeight より優先されます。次の例では、Mozilla ブラウザは、新しいウィンドウを outerWidth 600 ピクセルの幅で生成し、width 500 ピクセル と innerWidth 400 ピクセルの各指定は両方とも無視されます。</p>
+
+<pre class="brush:js">windowObjectReference = window.open(
+  "http://www.wwf.org/",
+     "WWildlifeOrgWindowName",
+  "outerWidth=600,width=500,innerWidth=400,resizable,scrollbars,status"
+);</pre>
+
+<h3 id="位置と寸法のエラー修正についての注記">位置と寸法のエラー修正についての注記</h3>
+
+<p><var>features</var> のリストで指定された位置と寸法の値でブラウザウィンドウ全体がユーザのオペレーティングシステムにおけるアプリケーションのための作業領域内に表示し切れない場合、それらの値は、優先されず、<strong>修正されません。</strong><strong>新しいウィンドウのどの部分も最初からスクリーン外に配置されることはありません。これは、Mozilla ベースのブラウザのリリース版の全てでデフォルトです。</strong></p>
+
+<p><a href="http://msdn2.microsoft.com/en-us/library/ms997645.aspx#xpsp_topic5">MSIE 6 SP2 にも同じようなエラー修正の仕組みがあります。</a>（<a class="external" href="http://msdn.microsoft.com/library/ja/jpdnwxp/htm/xpsp2web.asp?frame=true#xpsp_topic5">日本語版</a>）しかし、それは、全てのセキュリティレベルにおいてデフォルトでは有効にされていません。つまり、セキュリティの設定でそのようなエラー修正の仕組みを無効にすることができるということです。{{ 訳注("日本語版 IE では、「サイズや位置の制限無しにスクリプトでウィンドウを開くことを許可する」がその設定に該当します。") }}</p>
+
+<h3 id="スクロールバーについての注記">スクロールバーについての注記</h3>
+
+<p>コンテンツがビューポートの範囲からはみ出すときは、ユーザがコンテンツにアクセスできることを保証するために、スクロールバー（あるいは、スクロールする仕組み）が必要です。ウェブ制作者のコントロール外となるいくつかの理由でコンテンツがウィンドウの範囲をはみ出すことがあります。:</p>
+
+<ul>
+ <li>ユーザはウィンドウをリサイズします。</li>
+ <li>ユーザはテキストのフォントサイズを、Mozilla では、メニューアイテムの 表示/文字の大きさ (%) で、Firefox では、表示/文字サイズ/大きく or 小さく を使って大きくします。</li>
+ <li>ユーザはページの最小フォントサイズをウェブ制作者が指定したフォントサイズよりも大きく設定します。40 歳以上、もしくは、特殊な閲覧習慣、閲覧設定を持つ人々は、よく、Mozilla ベースのブラウザで最小フォントサイズを設定しています。</li>
+ <li>ウェブ制作者は、様々なブラウザ及び様々なブラウザのバージョンの、ルート要素、または、body ノードに適用されるデフォルトの margin（かつ/または border かつ/または padding）の値に注意していません。</li>
+ <li>ユーザは、文書のボックスサイズ（margin、padding、デフォルトフォントサイズ）を大きくする閲覧習慣のためにユーザスタイルシート(<a class="external" href="http://www.mozilla.org/support/firefox/edit#content">userContent.css in Mozilla-based browsers</a>, <a class="external" href="http://www.mozilla-japan.org/support/firefox/edit#content">日本語版</a>)を用いています。</li>
+ <li>ユーザは、オペレーティングシステムの設定で多くのツールバーのサイズ（高さ、幅）を独自にカスタマイズしています。例えば、Windows XP オペレーティングシステムでは、ユーザがウィンドウリサイズの限界、ブラウザのタイトルバー、メニューバー、スクロールバーの高さ、フォントサイズを完全にカスタマイズできます。これらのツールバーの寸法は、ブラウザテーマとスキン、あるいは、オペレーティングシステムのテーマによっても設定されることがあります。</li>
+ <li>ウェブ制作者は、ユーザのデフォルトのブラウザウィンドウに、指定された目的のためのカスタムツールバーがあることに気付きません。例えば、設定バー、ウェブ開発者パー、アクセシビリティツールバー、ポップアップブロックと検索ツールバー、多機能ツールバーなどです。</li>
+ <li>ユーザは、アプリケーションのためのオペレーティングシステムの作業領域を変更する支援技術、あるいは、アドオン機能を用います。例えば、{{ 原語併記("拡大鏡", "MS-Magnifier") }}です。</li>
+ <li>ユーザは、直接、または、間接的に、アプリケーションのためのオペレーティングシステムの作業領域を再配置 かつ/または リサイズします。例えば、ユーザは、Windows のタスクバーをリサイズしたり、Windows のタスクバーを左側（アラビア語ベース）や右側（ヘブライ語）に配置したり、固定の MS-Office クイック起動ツールバーを置いたりします。</li>
+ <li>いくつかのオペレーティングシステム（Mac OS X）はウェブ制作者のブラウザウィンドウの有効範囲の予測、計算がはずれたツールバーを強制的に表示させます。</li>
+</ul>
+
+<h3 id="ステータスバーについての注記">ステータスバーについての注記</h3>
+
+<p>大多数のユーザのブラウザにはステータスバーが表示されており、大多数のユーザがステータスバーの表示を強制させたいと思っていることを仮定すべきです。つまり、最もベストなのは、この機能を yes に常に設定することです。また、ステータスバーを非表示にするように明確に指定した場合、Firefox のユーザは、Site Navigation toolbar（インストールされていれば）も見ることができません。Mozilla と Firefox においては、ステータスバーの右端に、ウィンドウをリサイズするためのつまみがあります（ステータスバーがあるウィンドウの全てにそれは存在します）。 ステータスバーは、http 接続の情報、ハイパーテキストリソースの場所、ダウンロード進捗バー、 <abbr title="Secure Socket Layer">SSL</abbr> 接続で 暗号化された/保護された 接続の情報（黄色の南京錠のアイコンが表示されている状態）、インターネット/セキュリティ ゾーンのアイコン、プライバシーポリシー/クッキー のアイコン、なども提供します。<strong>ステータスバーを非表示にすることは、たいてい、ユーザにとって役立つ（ときには、不可欠な）と思われる、多くの機能、特性、情報を非表示にするのです。</strong></p>
+
+<h3 id="ステータスバーの表示に関するセキュリティ上の問題についての注記">ステータスバーの表示に関するセキュリティ上の問題についての注記</h3>
+
+<p>XP SP2 向け MSIE 6 における:window.open() を使用して開かれるウィンドウ:</p>
+
+<blockquote>
+<p>"window.open() を使用して開かれるウィンドウ:<br>
+ ステータスバーが表示されていることが期待されます。また、その前提でコードを記述してください。<strong>ステータスバーはデフォルトで表示され、</strong>その高さは、20～25 ピクセルになります。(...)"<br>
+ 引用元 <a href="http://msdn2.microsoft.com/en-us/library/ms997645.aspx#xpsp_topic5">Fine-Tune Your Web Site for Windows XP Service Pack 2, Browser Window Restrictions in XP SP2</a>（<a class="external" href="http://msdn.microsoft.com/library/ja/jpdnwxp/htm/xpsp2web.asp?frame=true#xpsp_topic5">日本語版</a>）</p>
+</blockquote>
+
+<blockquote>
+<p>"(...) window.open() メソッドを用いて生成されたウィンドウがスクリプトによって呼び出され、、ユーザインタフェースやデスクトップを{{ 原語併記("偽装", "spoof") }}するために使われたり、ウィンドウの大きさを変えることでステータスバーを非表示にする動作や悪意のある情報を隠したりする可能性があります。<br>
+ Internet Explorer のウィンドウは、ユーザに可視性のあるセキュリティ情報を提供します。そのおかげで、ユーザは、ウェブページのソースとそのページとのやりとりの安全性を確認できます。これらの要素が表示されないとき、ユーザは、信頼されたページと誤認したり、実際には、悪意のあるホストと通信するシステムプロセスを実行したりする可能性があります。 (...)<br>
+ <strong>スクリプトで起動されたウィンドウが画面いっぱいに表示されても、Internet Explorer のタイトルバーとステータスバーも表示されます。</strong> (...)<br>
+ Internet Explorer のステータスバーのスクリプトによる管理<br>
+ 詳細説明<br>
+ <strong>Internet Explorer では、全てのウィンドウにおいて、ステータスバーを非表示にすることはできません。Internet Explorer のウィンドウの全てにおいて、ステータスバーは常に表示されます。</strong> (...) この変更がなければ、window.open() メソッドを用いて生成されたウィンドウがスクリプトによって呼び出され、ユーザインタフェースやデスクトップを偽装したり、悪意ある情報やユーザにとって重要な要素をユーザから隠したりする可能性があります。<br>
+ ステータスバーは、Internet Explorer のウィンドウのセキュリティ機能であり、ユーザに Internet Explorer のセキュリティゾーンの情報を提供します。このゾーンは偽装できません。(...)"<br>
+ 引用元<a href="http://technet.microsoft.com/en-us/library/bb457150.aspx#ECAA">Changes to Functionality in Microsoft Windows XP Service Pack 2, Internet Explorer Window Restrictions</a>（<a class="external" href="http://www.microsoft.com/japan/technet/prodtechnol/winxppro/maintain/sp2brows.mspx#E5RBG">日本語版</a>）</p>
+</blockquote>
+
+<h3 id="フルスクリーンについての注記">フルスクリーンについての注記</h3>
+
+<p>XP SP2 向けの MSIE 6 では :</p>
+
+<ul>
+ <li>"fullscreen=yes を指定した window.open() は、キオスク モードのウィンドウではなく、最大化されたウィンドウになります。"</li>
+ <li>"fullscreen=yes の仕様の定義が、タイトルバー、アドレスバーおよびステータスバーの表示を保持する 'ウィンドウを最大化して表示' を意味するように変更されました。"</li>
+</ul>
+
+<h4 id="リファレンス">リファレンス:</h4>
+
+<ul>
+ <li><a href="http://msdn2.microsoft.com/en-us/library/ms997645.aspx#xpsp_topic5">Fine-Tune Your Web Site for Windows XP Service Pack 2</a>（<a class="external" href="http://msdn.microsoft.com/library/ja/jpdnwxp/htm/xpsp2web.asp?frame=true#xpsp_topic5">日本語版</a>）</li>
+ <li><a href="http://technet.microsoft.com/en-us/library/bb457150.aspx#ECAA">Changes to Functionality in Microsoft Windows XP Service Pack 2, Script sizing of Internet Explorer windows</a>（<a class="external" href="http://www.microsoft.com/japan/technet/prodtechnol/winxppro/maintain/sp2brows.mspx#E5RBG">日本語版</a>）</li>
+</ul>
+
+<h3 id="outerHeight_対_height_についての注記">outerHeight 対 height についての注記</h3>
+
+<p><img alt="innerHeight vs outerHeight の図示" src="/@api/deki/files/212/=FirefoxInnerVsOuterHeight.png"></p>
+
+<h3 id="Note_on_refreshing_vs._opening_a_new_windowtab">Note on refreshing vs. opening a new window/tab</h3>
+
+<p>If the <code>strWindowName</code> parameter is omitted, a new window or tab is opened. If a window with the same name already exists, the existing window is refreshed.</p>
+
+<pre class="brush:js">//Always opens a new window/tab
+window.open("map.php");
+
+//Refreshes an existing window/tab that was opened with the same name, if one exists
+window.open("map.php", "BiggerMap");</pre>
+
+<h2 id="チュートリアル">チュートリアル</h2>
+
+<ul>
+ <li><a href="http://www.infimum.dk/HTML/JSwindows.html">JavaScript windows (tutorial)</a> by Lasse Reichstein Nielsen</li>
+ <li><a href="http://accessify.com/features/tutorials/the-perfect-popup/" title="http://accessify.com/features/tutorials/the-perfect-popup/">The perfect pop-up (tutorial)</a> by Ian Lloyd</li>
+ <li><a href="http://www.gtalbot.org/FirefoxSection/Popup/PopupAndFirefox.html">Popup windows and Firefox (interactive demos)</a> by Gérard Talbot</li>
+</ul>
+
+<h2 id="リファレンス_2">リファレンス</h2>
+
+<ul>
+ <li><a href="http://www.cs.tut.fi/~jkorpela/www/links.html">Links Want To Be Links</a> by Jukka K. Korpela</li>
+ <li><a href="http://www.evolt.org/article/Links_and_JavaScript_Living_Together_in_Harmony/17/20938/">Links &amp; JavaScript Living Together in Harmony</a> by Jeff Howden</li>
+</ul>

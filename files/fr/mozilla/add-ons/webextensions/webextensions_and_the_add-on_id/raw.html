@@ -1,0 +1,62 @@
+<div>{{AddonSidebar}}</div>
+
+<div class="summary">
+<p>Les extensions Firefox contiennent une ID unique qui sert à distinguer cet extension à partir de n'importe quel autre add-on Firefox.</p>
+Cet article explique comment les identifiants extensions sont gérés pour les extensions construites avec les API WebExtensions.</div>
+
+<p>Les extensions de Firefox contiennent un identifiant unique à la fois dans Firefox lui-même et sur le site <a href="https://addons.mozilla.org/">addons.mozilla.org</a> (AMO). Par exemple, il est utilisé par Firefox pour vérifier les mises à jour des extensions installées et identifier les objets (tels que les magasins de données) controlés par cette extension.</p>
+
+<p>Avec les anciens types d'add-on Firefox, le développeur d'extensions doit définir explicitement l'ID de celle-ci. Les extensions XUL / XPCOM définissent l'ID dans l'<a href="/fr/docs/Mozilla/Add-ons/Install_Manifests">installation du manifest</a>, tandis que les extensions SDK le configure dans le <a href="/fr/Add-ons/SDK/Tools/package_json">package.json</a>.</p>
+
+<p>Cependant, à partir de Firefox 48 vous pouvez développer, déboguer, publier et mettre à jour les extensions sans avoir à définir une ID explicite.</p>
+
+<div class="note">
+<p>Notez que la capacité de développer et de déboguer des WebExtensions qui n'incluent pas d'ID est nouvelle dans Firefox 48. Si vous devez utiliser une version antérieure de Firefox, vous devez utiliser la clé des <code><a href="/fr/docs/Mozilla/Add-ons/WebExtensions/manifest.json/applications">applications</a></code> pour définir une ID de manière explicite.</p>
+</div>
+
+<h2 id="Flux_de_base_sans_extension_ID">Flux de base sans extension ID</h2>
+
+<p>Les extensions peuvent définir explicitement pour définir l'ID à l'aide de la clé des <code><a href="/fr/Add-ons/WebExtensions/manifest.json/browser_specific_settings">browser_specific_settings</a></code>  dans le manifest.json. Cependant, cette clé est généralement facultative. Si vous ne le configurez pas, vous pouvez généralement développer, déboguer, publier et mettre à jour votre extension sans jamais avoir à traiter une ID. Un avantage de cela est que Google Chrome ne reconnaît pas la clé des applications et affichera un avertissement si vous l'incluez.</p>
+
+<p>Notez cependant que certaines API WebExtension utilisent l'ID complémentaire et s'attendent à ce qu'elles soient identiques d'une session de navigateur à l'autre. Si vous utilisez ces API dans Firefox, vous devez définir l'ID explicitement à l'aide de la clé <code><a href="/fr/Add-ons/WebExtensions/manifest.json/browser_specific_settings">browser_specific_settings</a></code>. Voir <a href="/fr/Add-ons/WebExtensions/WebExtensions_and_the_Add-on_ID#Quand_avez-vous_besoin_d%27un_ID_d%27extension">Quand avez-vous besoin d'un ID d'extension ?</a>.</p>
+
+<h3 id="Développement_et_débogage">Développement et débogage</h3>
+
+<p>A partir de Firefox 48, si votre manifest.json ne contient pas d'identifiant, l'extension recevra une ID temporaire générée de manière aléatoire quand vous <a href="/fr/Add-ons/WebExtensions/Temporary_Installation_in_Firefox">installez dans Firefox</a> about:debugging. Si vous rechargez l'extension à l'aide du bouton "Recharger", la même ID sera utilisée. Si vous redemmarez Firefox et chargez l'extension, il obtiendra un nouvel ID.</p>
+
+<p>Si vous activez l'extension dans un .xpi ou .zip and installez-le sur about:addons, cela ne fonctionnera pas. Pour que cela fonctionne dans ce scénario, vous devrez ajouter la clé <code><a href="/fr/Add-ons/WebExtensions/manifest.json/browser_specific_settings">browser_specific_settings</a></code> dans manifest.json</p>
+
+<h3 id="Publication">Publication</h3>
+
+<p>Une fois que vous avez terminé le développement de l'extension, vous pouvez l'<a href="/fr/Add-ons/WebExtensions/Publishing_your_WebExtension">emballer et l'envoyer à AMO pour examen et signature</a>. Si l'extension emballée que vous téléchargez ne contient pas d'ID, AMO en générera une pour vous. C'est seulement à ce stade que l'add-on recevra une ID permanente, qui sera intégrée dans l'extension emballée signée.</p>
+
+<p>Notez qu'une fois qu'une extension a reçu une ID permanente, vous ne pouvez pas la mettre à jour pour utiliser le SDK de l'extension ou les techniques XUL/XPCOM héritées. Si vous passez à l'une de ces plates-formes, vous devez la soumettre comme une nouvelle extension distincte, avec une nouvelle ID.</p>
+
+<h3 id="Mise_à_jour">Mise à jour</h3>
+
+<p>Même après cet étape, vous n'avez généralement pas à traiter l'ID du tout. Vous pouvez continuer à développer l'add-on sans ID, et lorsque vous souhaitez mettre à jour, téléchargez la nouvelle version en visitant la page AMO de l'extension. Parce que vous téléchargez l'extension par cette page, AMO sait qu'il s'agit d'une mise à jour de ce complément particulier, bien qu'il ne contienne pas d'ID.</p>
+
+<div class="note">
+<p>Il est essentiel, avec ce flux de travail, de mettre à jour <em>manuellement à l'aide de sa page sur AMO</em>, sinon AMO ne comprendra pas que la soumission est une mise à jour d'un add-on existant et traitera la mise à jour comme un nouveau add-on</p>
+</div>
+
+<p>Vous pouvez faire la même chose si vous mettez à jour un ancien type d'extension, tel qu'un complément XUL/XPCOM, pour utiliser les API WebExtensions. Visitez simplement la page de l'ancien add-on sur AMO, téléchargez la nouvelle extension là-bas, et elle sera traitée comme une mise à jour de l'ancienne version.</p>
+
+<h2 id="Quand_avez-vous_besoin_d'un_ID_d'extension">Quand avez-vous besoin d'un ID d'extension ?</h2>
+
+<ul>
+ <li>Si vous chargez l'extension du fichier XPI, ne la chargez pas temporairement utilisez about:debugging et non signé.</li>
+ <li>Si vous utilisez l'<a href="https://addons-server.readthedocs.io/en/latest/topics/api/signing.html">API d'AMO</a> pour télécharger votre extension, plutôt que de le charger manuellement sur sa page, vous devez inclure l'ID de l'extension dans la requête.</li>
+ <li>Certaines APIs WebExtension utilisent l'ID d'extension et s'attendent à ce qu'elles soient identiques d'une session de navigateur à l'autre. Si vous utilisez ces APIs, vous devez définir l'ID explicitement à l'aide de la clé des <code><a href="/fr/Add-ons/WebExtensions/manifest.json/browser_specific_settings">browser_specific_settings</a></code>. Cela s'applique aux APIs suivantes :
+  <ul>
+   <li>{{WebExtAPIRef("storage.managed")}}</li>
+   <li>{{WebExtAPIRef("storage.sync")}}</li>
+   <li>{{WebExtAPIRef("identity.getRedirectURL")}}</li>
+   <li><a href="/fr/Add-ons/WebExtensions/Native_messaging">Native messaging</a></li>
+   <li>{{WebExtAPIRef("pkcs11")}}</li>
+   <li>{{WebExtAPIRef("runtime.onMessageExternal")}}</li>
+   <li>{{WebExtAPIRef("runtime.onConnectExternal")}}</li>
+  </ul>
+ </li>
+ <li>Using Firefox for Android. See <a href="/fr/Add-ons/WebExtensions/manifest.json/browser_specific_settings">browser_specific_settings in manifest.json</a>.</li>
+</ul>

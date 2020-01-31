@@ -1,0 +1,139 @@
+<p>{{ Outdated("このドキュメントの最終更新は 2005　年です。") }}
+</p><p>ビルドの過程において、さまざまな <i>chrome</i> ファイルが dist/bin/chrome に集められます。これらのファイルはアプリケーションのユーザインターフェイスを定義するファイルであり、<a href="ja/XUL">XUL</a>、<a href="ja/JavaScript">JavaScript</a>、DTD (<a href="ja/Localization">ローカライズ</a> のため)、CSS、XBL、画像といったファイルなどからなります。ビルドシステムは <code>jar.mn</code> というマニフェストファイルを通して、chrome ファイルをビルドする過程を自動化します。
+</p>
+<h3 id="Chrome_.E3.83.91.E3.83.83.E3.82.B1.E3.83.BC.E3.82.B8.E3.81.AE.E3.83.95.E3.82.A9.E3.83.BC.E3.83.9E.E3.83.83.E3.83.88" name="Chrome_.E3.83.91.E3.83.83.E3.82.B1.E3.83.BC.E3.82.B8.E3.81.AE.E3.83.95.E3.82.A9.E3.83.BC.E3.83.9E.E3.83.83.E3.83.88"> Chrome パッケージのフォーマット </h3>
+<p>Chrome ファイルはさまざまなフォーマットをとることができます。それぞれ長所と短所があります：
+</p>
+<table class="fullwidth-table"> <tbody><tr>
+<th>フォーマット
+</th><th>長所
+</th><th>短所
+</th></tr>
+<tr>
+<td>JAR パッケージ (デフォルト)
+</td><td>最も能率的です。Chrome ファイルは少数の JAR アーカイブ (ZIP ファイルとしても知られている) にまとめられます。これはより簡単にキャッシュでき、システム上でファイルハンドルを開く数を減らせます。
+</td><td>結果としてできたファイルからパッチを作るのは非常に困難です。
+</td></tr>
+<tr>
+<td>フラットファイル chrome
+</td><td>フラット chrome は編集、差分の抽出、パッチの適用がより簡単にできるため、テスト目的や実験的用途には有用です。
+</td><td>JAR パッケージほど能率的ではありません。
+</td></tr>
+<tr>
+<td>シンボリックリンクされたフラット chrome
+</td><td>フラット chrome に似ており、シンボリックリンクされた chrome は編集や mozilla ソースツリーのパッチの適用が容易です。またディスクスペースを抑えることもできます。
+</td><td>本当のシンボリックリンクがサポートされたプラットフォーム (windows は該当しない) でのみ可能。 JAR パッケージほど能率的ではありません。
+</td></tr></tbody></table>
+<p>Mozilla をビルドする際、<a class="external" href="http://webtools.mozilla.org/build/config.cgi">Build Configurator</a> を使うか、--enable-chrome-format=(jar|flat|symlink) というフラグを手動で設定することで chrome パッケージのフォーマットを明示できます。
+</p>
+<h3 id="jar.mn_.E3.81.AE.E3.83.95.E3.82.A9.E3.83.BC.E3.83.9E.E3.83.83.E3.83.88" name="jar.mn_.E3.81.AE.E3.83.95.E3.82.A9.E3.83.BC.E3.83.9E.E3.83.83.E3.83.88"> <i>jar.mn</i> のフォーマット </h3>
+<p>ビルドシステムは Makefile と同じディレクトリから <i>jar.mn</i> というファイルを自動的に探し、chrome を作るためにこれらのファイルをパースします。
+</p>
+<pre class="eval"> <strong>例: mozilla/browser/base/jar.mn (短縮版)</strong>
+ 
+ browser.jar:
+         content/browser/contents.rdf                  (content/contents.rdf)
+ <span class="highlightgreen"># ソースファイル content/contents.rdf は、jar ファイル browser.jar に
+ # ontent/browser/contents.rdf というパスでコピーされる</span>
+         content/browser/about.png                     (content/about.png)
+ *       content/browser/aboutDialog.xul               (content/aboutDialog.xul)
+ <span class="highlightgreen"># ソースファイル content/aboutDialog.xul は jar ファイルに格納される前に
+ # XUL プリプロセッサに通される</span>
+ 
+ classic.jar:
+         skin/classic/browser/aboutDialog.css          (skin/aboutDialog.css)
+         skin/classic/browser/Bookmarks-folder.png     (skin/Bookmarks-folder.png)
+ 
+ en-US.jar:
+         locale/en-US/browser/contents.rdf             (locale/contents.rdf)
+ *       locale/en-US/browser/browser.dtd              (locale/browser.dtd)
+</pre>
+<h3 id="JAR_.E3.83.95.E3.82.A1.E3.82.A4.E3.83.AB.E3.81.AE.E6.A7.8B.E9.80.A0" name="JAR_.E3.83.95.E3.82.A1.E3.82.A4.E3.83.AB.E3.81.AE.E6.A7.8B.E9.80.A0"> JAR ファイルの構造 </h3>
+<p>Jar ファイルの内部構造は、簡単にデバッグができるように、整合性がある構造になっています。したがって、jar ファイルの中身を調べれば、(結果的に) jar ファイルにどんなものが含まれているかを調べることができ、別の製品のためにパッケージを組み替えることが容易にできます。例えば、ある製品は (chatzilla のように) content、skin、locale を一つのパッケージに chrome としてまとめたいかもしれませんし、別の製品では、拡張性のために content と skin は別の jar ファイルにしておきたいかもしれません。
+</p><p>内部的に、それぞれの jar ファイルは次の 3 つのうちの 1 つの形式をとります：
+</p>
+<ul><li> <code>content/package-name/&lt;path&gt;</code>
+</li><li> <code>skin/skin-name/package-name/&lt;path&gt;</code>
+</li><li> <code>locale/locale-name/package-name/&lt;path&gt;</code>
+</li></ul>
+<p>これらはそれぞれ 3 つの形式の chrome URL に対応します：
+</p>
+<ul><li> <code><a class=" external" rel="freelink">chrome://package-name/content/</a>&lt;path&gt;</code>
+</li><li> <code><a class=" external" rel="freelink">chrome://package-name/skin/</a>&lt;path&gt;</code>
+</li><li> <code><a class=" external" rel="freelink">chrome://package-name/locale/</a>&lt;path&gt;</code>
+</li></ul>
+<h3 id="contents.rdf_.E3.81.A8_Chrome_Registry" name="contents.rdf_.E3.81.A8_Chrome_Registry"> contents.rdf と Chrome Registry </h3>
+<p>XUL ファイルを JAR の中に入れれただけでは、そのファイルに <a class=" external" rel="freelink">chrome://</a> URI からアクセスできることにはなりません。そのファイルについて chrome registry に知らせる必要があります。これには RDF と contents.rdf という特別なファイルを使います。不幸にも <code>contents.rdf</code> のための RDF スキーマは実はドキュメント化されていません。それを学ぶ一番の方法は実際の例をコピーすることです：
+</p>
+<pre class="eval"> <strong>例: mozilla/extensions/venkman/resources/content/contents.rdf</strong>
+ 
+ &lt;RDF:RDF xmlns:RDF="<span class="nowiki">http://www.w3.org/1999/02/22-rdf-syntax-ns#</span>"
+          xmlns:chrome="<span class="nowiki">http://www.mozilla.org/rdf/chrome#</span>"&gt;
+ 
+   <span class="highlightgreen">&lt;!-- この jar によって与えられる全パッケージのリスト --&gt;</span>
+   &lt;RDF:Seq about="urn:mozilla:package:root"&gt;
+     &lt;RDF:li resource="urn:mozilla:package:venkman"/&gt;
+   &lt;/RDF:Seq&gt;
+ 
+   <span class="highlightgreen">&lt;!-- パッケージ情報 --&gt;</span>
+   &lt;RDF:Description about="urn:mozilla:package:venkman"
+         chrome:displayName="JavaScript Debugger"
+         chrome:author="mozilla.org"
+         chrome:localeVersion="@MOZILLA_VERSION@"
+         chrome:name="venkman"&gt;
+   &lt;/RDF:Description&gt;
+ 
+   <span class="highlightgreen">&lt;!-- オーバレイ情報 --&gt;</span>
+   &lt;RDF:Seq about="urn:mozilla:overlays"&gt;
+     &lt;RDF:li resource="<a class=" external" rel="freelink">chrome://communicator/content/tasksOverlay.xul</a>"/&gt;
+   &lt;/RDF:Seq&gt;
+ 
+   &lt;RDF:Seq about="<a class=" external" rel="freelink">chrome://communicator/content/tasksOverlay.xul</a>"&gt;
+     &lt;RDF:li&gt;<a class=" external" rel="freelink">chrome://venkman/content/venkman-overlay.xul</a>&lt;/RDF:li&gt;
+   &lt;/RDF:Seq&gt;
+ &lt;/RDF:RDF&gt;
+</pre>
+<p>Chrome ビルドシステムが <code>contents.rdf</code> ファイルを見つけるたびに、グローバルファイルである <code>installed-chrome.txt</code> にそのパッケージを登録します。
+</p>
+<pre class="eval"> <strong>例: Flat chrome パッケージを選んだときの installed-chrome.txt</strong>
+ 
+ locale,install,url,resource:/chrome/en-US/locale/en-US/necko/
+ content,install,url,resource:/chrome/comm/content/editor/
+ locale,install,url,resource:/chrome/en-US/locale/en-US/editor/
+ content,install,url,resource:/chrome/comm/content/navigator/
+ locale,install,url,resource:/chrome/en-US/locale/en-US/navigator/
+ content,install,url,resource:/chrome/toolkit/content/global/
+ locale,install,url,resource:/chrome/en-US/locale/en-US/global/
+ content,install,url,resource:/chrome/comm/content/communicator/
+ locale,install,url,resource:/chrome/en-US/locale/en-US/communicator/
+ skin,install,url,resource:/chrome/classic/skin/classic/communicator/
+ skin,install,url,resource:/chrome/classic/skin/classic/editor/
+ skin,install,url,resource:/chrome/classic/skin/classic/global/
+ skin,install,url,resource:/chrome/classic/skin/classic/messenger/
+ skin,install,url,resource:/chrome/classic/skin/classic/navigator/
+ skin,install,url,resource:/chrome/blue/skin/blue/communicator/
+ skin,install,url,resource:/chrome/blue/skin/blue/editor/
+ skin,install,url,resource:/chrome/blue/skin/blue/global/
+ skin,install,url,resource:/chrome/blue/skin/blue/messenger/
+ skin,install,url,resource:/chrome/blue/skin/blue/navigator/
+ skin,install,url,resource:/chrome/modern/skin/modern/communicator/
+ skin,install,url,resource:/chrome/modern/skin/modern/editor/
+ skin,install,url,resource:/chrome/modern/skin/modern/global/
+ skin,install,url,resource:/chrome/modern/skin/modern/messenger/
+ skin,install,url,resource:/chrome/modern/skin/modern/navigator/
+ skin,install,select,classic/1.0 
+ locale,install,select,en-US 
+ content,install,url,resource:/chrome/messenger/content/messenger/
+ locale,install,url,resource:/chrome/en-US/locale/en-US/messenger/
+</pre>
+<div class="originaldocinfo">
+<h2 id=".E5.8E.9F.E6.96.87.E6.9B.B8.E3.81.AE.E6.83.85.E5.A0.B1" name=".E5.8E.9F.E6.96.87.E6.9B.B8.E3.81.AE.E6.83.85.E5.A0.B1"> 原文書の情報 </h2>
+<ul><li> 著者: Warren Harris
+</li><li> 貢献者: <a class="link-mailto" href="mailto:benjamin@smedbergs.us">Benjamin Smedberg</a>
+</li><li> 最終更新日: Feb 7, 2005
+</li><li> 著作権: Portions of this content are © 1998–2007 by individual mozilla.org contributors; content available under a Creative Commons license | <a class="external" href="http://www.mozilla.org/foundation/licensing/website-content.html">詳細</a>
+</li></ul>
+</div>
+<div class="noinclude">
+</div>
+{{ languages( { "en": "en/JAR_Packaging" } ) }}

@@ -1,0 +1,244 @@
+<div>{{JSRef}}</div>
+
+<p>UTF-16 単位で指定された位置にあるコードの値を取りだし、その値のみで構成された新しい文字列を返します。</p>
+
+<h2 id="構文">構文</h2>
+
+<pre class="syntaxbox"><em>character</em> = <em>str</em>.charAt(<em>index</em>)</pre>
+
+<h3 id="引数">引数</h3>
+
+<dl>
+ <dt><code>index</code></dt>
+ <dd>0 から文字列の長さより 1 小さい値までの間の整数。index が提供されない場合、<code>charAt()</code> は <code>0</code> を使用するため、文字列内の最初の文字が返されます。</dd>
+</dl>
+
+<h3 id="戻り値">戻り値</h3>
+
+<p>指定した index にある文字を表す文字列(UTF-16コード一つから成ります)。<code>index</code> が範囲外だった場合は、空文字。</p>
+
+<h2 id="説明">説明</h2>
+
+<p>文字列において、文字は左から右の方向にインデックス化されます。一番最初の文字のインデックスは 0 で、一番最後の文字のインデックスは、<code>stringName</code> が文字列オブジェクトの場合、<code>stringName.length - 1</code> です。指定する <code>index</code> が範囲外の場合、JavaScript は 空文字列を返します。エラーは発生しません。</p>
+
+<p>.charAt() に index が提供されなかった場合、0 が既定値として使用されます。</p>
+
+<h2 id="例">例</h2>
+
+<h3 id="文字列内の、異なる位置の文字を表示する">文字列内の、異なる位置の文字を表示する</h3>
+
+<p>"<code>Brave new world</code>" という文字列内の、異なる位置の文字を表示する例を以下に示します。</p>
+
+<pre class="brush: js">var anyString = 'Brave new world';
+console.log("The character at index 0   is '" + anyString.charAt()   + "'"); 
+// No index was provided, used 0 as default
+
+console.log("The character at index 0   is '" + anyString.charAt(0)   + "'");
+console.log("The character at index 1   is '" + anyString.charAt(1)   + "'");
+console.log("The character at index 2   is '" + anyString.charAt(2)   + "'");
+console.log("The character at index 3   is '" + anyString.charAt(3)   + "'");
+console.log("The character at index 4   is '" + anyString.charAt(4)   + "'");
+console.log("The character at index 999 is '" + anyString.charAt(999) + "'");
+</pre>
+
+<p>上記コードの出力を以下に示します。</p>
+
+<pre class="brush: js">The character at index 0   is 'B'
+
+The character at index 0   is 'B'
+The character at index 1   is 'r'
+The character at index 2   is 'a'
+The character at index 3   is 'v'
+The character at index 4   is 'e'
+The character at index 999 is ''
+</pre>
+
+<h3 id="すべての文字を取得する">すべての文字を取得する</h3>
+
+<p>次の例は、文字列が BMP にない文字を含んでいても、文字列内のすべての文字に正しくアクセスするループを示しています。</p>
+
+<p>訳注: UTF-16は一つの文字を必ずしも一つの単位で表しているわけではありません。後から追加された(非BMP)文字では、一つの文字を「サロゲートペア」と呼ばれる二つの単位で表現します。従って、内容不明な文字列を単純なループで一単位ずつアクセスしていると、文字になりきれない "変なもの" をつかんでしまう可能性があります。</p>
+
+<pre class="brush: js">var str = 'A \uD87E\uDC04 Z'; // We could also use a non-BMP character directly
+for (var i = 0, chr; i &lt; str.length; i++) {
+  if ((chr = getWholeChar(str, i)) === false) {
+    continue;
+  }
+  // Adapt this line at the top of each loop, passing in the whole string and
+  // the current iteration and returning a variable to represent the 
+  // individual character
+
+  console.log(chr);
+}
+
+function getWholeChar(str, i) {
+  var code = str.charCodeAt(i);
+
+  if (Number.isNaN(code)) {
+    return ''; // Position not found
+  }
+  if (code &lt; 0xD800 || code &gt; 0xDFFF) {
+    return str.charAt(i);
+  }
+
+  // High surrogate (could change last hex to 0xDB7F to treat high private
+  // surrogates as single characters)
+  if (0xD800 &lt;= code &amp;&amp; code &lt;= 0xDBFF) {
+    if (str.length &lt;= (i + 1)) {
+      throw 'High surrogate without following low surrogate';
+    }
+    var next = str.charCodeAt(i + 1);
+      if (0xDC00 &gt; next || next &gt; 0xDFFF) {
+        throw 'High surrogate without following low surrogate';
+      }
+      return str.charAt(i) + str.charAt(i + 1);
+  }
+  // Low surrogate (0xDC00 &lt;= code &amp;&amp; code &lt;= 0xDFFF)
+  if (i === 0) {
+    throw 'Low surrogate without preceding high surrogate';
+  }
+  var prev = str.charCodeAt(i - 1);
+
+  // (could change last hex to 0xDB7F to treat high private
+  // surrogates as single characters)
+  if (0xD800 &gt; prev || prev &gt; 0xDBFF) {
+    throw 'Low surrogate without preceding high surrogate';
+  }
+  // We can pass over low surrogates now as the second component
+  // in a pair which we have already processed
+  return false;
+}
+</pre>
+
+<p>分割代入ができる ECMAScript 2016 環境では、以下は、変数を自動的にインクリメントすることで、（文字がサロゲートペアであることを保証している場合）より簡潔で柔軟な代替方法になります。</p>
+
+<pre class="brush: js">var str = 'A\uD87E\uDC04Z'; // We could also use a non-BMP character directly
+for (var i = 0, chr; i &lt; str.length; i++) {
+  [chr, i] = getWholeCharAndI(str, i);
+  // Adapt this line at the top of each loop, passing in the whole string and
+  // the current iteration and returning an array with the individual character
+  // and 'i' value (only changed if a surrogate pair)
+
+  console.log(chr);
+}
+
+function getWholeCharAndI(str, i) {
+  var code = str.charCodeAt(i);
+
+  if (Number.isNaN(code)) {
+    return ''; // Position not found
+  }
+  if (code &lt; 0xD800 || code &gt; 0xDFFF) {
+    return [str.charAt(i), i]; // Normal character, keeping 'i' the same
+  }
+
+  // High surrogate (could change last hex to 0xDB7F to treat high private 
+  // surrogates as single characters)
+  if (0xD800 &lt;= code &amp;&amp; code &lt;= 0xDBFF) {
+    if (str.length &lt;= (i + 1)) {
+      throw 'High surrogate without following low surrogate';
+    }
+    var next = str.charCodeAt(i + 1);
+      if (0xDC00 &gt; next || next &gt; 0xDFFF) {
+        throw 'High surrogate without following low surrogate';
+      }
+      return [str.charAt(i) + str.charAt(i + 1), i + 1];
+  }
+  // Low surrogate (0xDC00 &lt;= code &amp;&amp; code &lt;= 0xDFFF)
+  if (i === 0) {
+    throw 'Low surrogate without preceding high surrogate';
+  }
+  var prev = str.charCodeAt(i - 1);
+
+  // (could change last hex to 0xDB7F to treat high private surrogates
+  // as single characters)
+  if (0xD800 &gt; prev || prev &gt; 0xDBFF) {
+    throw 'Low surrogate without preceding high surrogate';
+  }
+  // Return the next character instead (and increment)
+  return [str.charAt(i + 1), i + 1];
+}
+</pre>
+
+<h3 id="非_Basic-Multilingual-Plane_(BMP)_文字をサポートするように_charAt()_を修正する">非 Basic-Multilingual-Plane (BMP) 文字をサポートするように charAt() を修正する</h3>
+
+<p>上記の例は、BMP 以外の文字をサポートしたい場合（BMP 以外の文字が表示される場所を呼び出し側に知らせる必要がないため）便利ですが、文字列内のサロゲートペアを単一の文字として扱うために、インデックスで文字を<em>選択したいなら</em>、次のものを使用できます。</p>
+
+<pre class="brush: js">function fixedCharAt(str, idx) {
+  var ret = '';
+  str += '';
+  var end = str.length;
+
+  var surrogatePairs = /[\uD800-\uDBFF][\uDC00-\uDFFF]/g;
+  while ((surrogatePairs.exec(str)) != null) {
+    var li = surrogatePairs.lastIndex;
+    if (li - 2 &lt; idx) {
+      idx++;
+    } else {
+      break;
+    }
+  }
+
+  if (idx &gt;= end || idx &lt; 0) {
+    return '';
+  }
+
+  ret += str.charAt(idx);
+
+  if (/[\uD800-\uDBFF]/.test(ret) &amp;&amp; /[\uDC00-\uDFFF]/.test(str.charAt(idx + 1))) {
+    // Go one further, since one of the "characters" is part of a surrogate pair
+    ret += str.charAt(idx + 1);
+  }
+  return ret;
+}
+</pre>
+
+<h2 id="仕様">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">ステータス</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES1')}}</td>
+   <td>{{Spec2('ES1')}}</td>
+   <td>初期定義。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-15.5.4.4', 'String.prototype.charAt')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-string.prototype.charat', 'String.prototype.charAt')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-string.prototype.charat', 'String.prototype.charAt')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="ブラウザー実装状況">ブラウザー実装状況</h2>
+
+<p class="hidden">The compatibility table in this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</p>
+
+<p>{{Compat("javascript.builtins.String.charAt")}}</p>
+
+<h2 id="関連項目">関連項目</h2>
+
+<ul>
+ <li>{{jsxref("String.prototype.indexOf()")}}</li>
+ <li>{{jsxref("String.prototype.lastIndexOf()")}}</li>
+ <li>{{jsxref("String.prototype.charCodeAt()")}}</li>
+ <li>{{jsxref("String.prototype.codePointAt()")}}</li>
+ <li>{{jsxref("String.prototype.split()")}}</li>
+ <li>{{jsxref("String.fromCodePoint()")}}</li>
+ <li><a href="https://mathiasbynens.be/notes/javascript-unicode">JavaScript has a Unicode problem – Mathias Bynens</a></li>
+</ul>

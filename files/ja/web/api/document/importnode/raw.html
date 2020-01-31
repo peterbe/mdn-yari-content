@@ -1,0 +1,85 @@
+<div>{{APIRef("DOM")}}</div>
+
+<p><span class="seoSummary">{{domxref("Document")}} オブジェクトの <code><strong>importNode()</strong></code> メソッドは、後で現在の文書に挿入するために、他の文書から {{domxref("Node")}} または {{domxref("DocumentFragment")}} の複製を作成します。</span></p>
+
+<p>インポートされたノードは、まだ文書ツリーには含まれません。これを含めるには、 {{domxref("Node.appendChild", "appendChild()")}} や {{domxref("Node.insertBefore", "insertBefore()")}} のような挿入メソッドを、現在の文書ツリーに<em>存在する</em>ノードに対して呼び出す必要があります。</p>
+
+<p>{{domxref("document.adoptNode()")}} とは異なり、元の文書から元のノードは削除されません。インポートされたノードは元のノードの複製です。</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox">var <var>node</var> = <var>document</var>.importNode(<var>externalNode</var>, <var>deep</var>);
+</pre>
+
+<dl>
+ <dt><var>node</var></dt>
+ <dd>インポートするノードのスコープにあるコピーされたノードです。この新しいノードはまだドキュメントツリーに挿入されていないので、 {{domxref("Node.parentNode")}} は <code>null</code> です。</dd>
+ <dt><var>externalNode</var></dt>
+ <dd>現在の文書にインポートする、外部の <code>Node</code> または <code>DocumentFragment</code> です。</dd>
+ <dt><var>deep</var></dt>
+ <dd>真偽値で、 <var>externalNode</var> の DOM サブツリー全体をインポートするかどうかを制御します。
+ <ul>
+  <li><var>deep</var> が <code>true</code> に設定された場合、 <var>externalNode</var> およびその子孫全てが複製されます。</li>
+  <li><var>deep</var> が <code>false</code> に設定された場合、 <var>externalNode</var> のみがインポートされます — 新しいノードには子ノードはない状態になります。</li>
+ </ul>
+ </dd>
+</dl>
+
+<div class="note">
+<p><strong>メモ:</strong> DOM4 仕様書では、 <var>deep</var> は省略可能で、既定値は <code>true</code> です。</p>
+
+<p>この既定値は最新の仕様書で変更されました。 — 新しい既定値は <strong><code>false</code></strong> です。この引数は依然として省略可能ですが、後方<em>および</em>前方互換性のため、 <var>deep</var> 引数には値を設定してください。 Gecko 28.0 {{geckoRelease(28)}} では、引数を省略すべきでないという警告がコンソールに表示されます。 Gecko 29.0 {{geckoRelease(29)}} 以降では、ディープクローンの代わりにシャロークローンが既定の動作になりました。</p>
+</div>
+
+<h2 id="Example" name="Example">例</h2>
+
+<pre class="brush: js">var iframe = document.querySelector("iframe");
+var oldNode = iframe.contentWindow.document.getElementById("myNode");
+var newNode = document.importNode(oldNode, true);
+document.getElementById("container").appendChild(newNode);
+</pre>
+
+<h2 id="Notes" name="Notes">メモ</h2>
+
+<p></p><p>外部ドキュメントからのノードは、現在のドキュメントに挿入する前に <a href="/ja/docs/Web/API/Document/importNode" title="外部ドキュメントからノードのコピーを作成し、現在のドキュメントに挿入できるようにします。"><code>document.importNode()</code></a> を使ってクローンを作る (あるいは 
+    <a href="/ja/docs/Web/API/Document/adoptNode" title="外部ドキュメントからノードを取り込みます。ノードとそのサブツリーは、(もしあれば) 元あったドキュメントから削除され、ownerDocument が現在のドキュメントに変更されます。そして、そのノードが現在のドキュメントに挿入できるようになります。"><code>document.adoptNode()</code></a> を使って取り込む) べきです。<a href="/ja/docs/Web/API/Node/ownerDocument" title="ownerDocument プロパティは、指定ノードを内包するノードツリーのトップレベルのドキュメントオブジェクトを返します。"><code>Node.ownerDocument</code></a> 問題の詳細については 
+    <a class="external" href="http://www.w3.org/DOM/faq.html#ownerdoc" rel="noopener">W3C DOM FAQ</a> を参照してください。</p>
+    
+    <p>Firefox では現在このルールを強制していません。Firefox 3 の開発中には強制していた時期もありましたが、このルールを強制すると多くのサイトが機能しなくなってしまうため取りやめになりました。
+    将来的な互換性を高めるため、Web 開発者にはこのルールに従ってコードを修正することを推奨します。</p><p></p>
+
+<h2 id="Specifications" name="Specifications">仕様書</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">状態</th>
+   <th scope="col">備考</th>
+  </tr>
+  <tr>
+   <td>{{SpecName("DOM WHATWG", "#dom-document-importnode", "document.importNode()")}}</td>
+   <td>{{Spec2("DOM WHATWG")}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName("DOM2 Core", "core.html#Core-Document-importNode", "document.importNode()")}}</td>
+   <td>{{Spec2("DOM2 Core")}}</td>
+   <td>初回定義</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザーの対応</h2>
+
+<p class="hidden">このページの互換性一覧表は構造化データから生成されています。データに協力していただけるのであれば、 <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> をチェックアウトしてプルリクエストを送信してください。</p>
+
+<p>{{Compat("api.Document.importNode")}}</p>
+
+<h2 id="See_also" name="See_also">参照</h2>
+
+<ul>
+ <li>{{domxref("document.adoptNode()")}}</li>
+ <li>{{domxref("Node.appendChild()")}}</li>
+ <li>{{domxref("Node.insertBefore()")}}</li>
+</ul>

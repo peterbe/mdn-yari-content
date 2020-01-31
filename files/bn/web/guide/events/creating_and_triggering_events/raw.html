@@ -1,0 +1,62 @@
+<p>এই আর্টিকেলে ইভেন্ট তৈরি এবং ডিসপ্যাচ করার প্রক্রিয়া দেখানো হয়েছে।</p>
+<h2 id="কাস্টম_ইভেন্ট">কাস্টম ইভেন্ট</h2>
+<h3 id="ইভেন্ট_তৈরি_করা">ইভেন্ট তৈরি করা</h3>
+<p>নিচের মত করে <a href="/en-US/docs/Web/API/Event"><code>Event</code> কন্সট্রাক্টর</a> এর সাহায্যে ইভেন্ট তৈরি করা যেতে পারে।</p>
+<pre class="brush: js">var event = new Event('build');
+
+// Listen for the event.
+elem.addEventListener('build', function (e) { ... }, false);
+
+// Dispatch the event.
+elem.dispatchEvent(event);</pre>
+<p>কনস্ট্রাক্টরটি অধিকাংশ আধুনিক ব্রাউজারে (ইন্টারনেট এক্সপ্লোরার ব্যতীত) সমর্থিত। আরেকটি পদ্ধতি হল <a href="#The_old-fashioned_way" title="#The_old-fashioned_way">পুরনো পদ্ধতি</a>।</p>
+<h3 id="কাস্টম_ডাটা_যোগ_করা_–_CustomEvent">কাস্টম ডাটা যোগ করা – CustomEvent</h3>
+<p>To add more data to the event object, the CustomEvent interface exists. For example, the event could be created as follows:</p>
+<pre class="brush: js">var event = new CustomEvent('build', { 'detail': elem.dataset.time });</pre>
+<p>This will then allow accessing the additional data in the event listener:</p>
+<pre class="brush: js">function eventHandler(e) {
+  log('The time is: ' + e.detail);
+}
+</pre>
+<h3 id="পুরনো_পদ্ধতি">পুরনো পদ্ধতি</h3>
+<p>The older approach to creating events uses APIs inspired by Java. The following shows an example:</p>
+<pre class="brush: js">// Create the event.
+var event = document.createEvent('Event');
+
+// Define that the event name is 'build'.
+event.initEvent('build', true, true);
+
+// Listen for the event.
+document.addEventListener('build', function (e) {
+  // e.target matches document from above
+}, false);
+
+// target can be any Element or other EventTarget.
+document.dispatchEvent(event);
+
+</pre>
+<h2 id="বিল্ট-ইন_ইভেন্ট_ট্রিগার_করা">বিল্ট-ইন ইভেন্ট ট্রিগার করা</h2>
+<p>This example demonstrates simulating a click (that is programmatically generating a click event) on a checkbox using DOM methods. You can view the example in action <a class="external" href="http://developer.mozilla.org/samples/domref/dispatchEvent.html">here</a>.</p>
+<pre class="brush: js">function simulateClick() {
+  var event = new MouseEvent('click', {
+    'view': window,
+    'bubbles': true,
+    'cancelable': true
+  });
+  var cb = document.getElementById('checkbox'); 
+  var canceled = !cb.dispatchEvent(event);
+  if (canceled) {
+    // A handler called preventDefault.
+    alert("canceled");
+  } else {
+    // None of the handlers called preventDefault.
+    alert("not canceled");
+  }
+}</pre>
+<h2 id="আরও_দেখুন">আরও দেখুন</h2>
+<ul>
+ <li>{{domxref("document.createEvent()")}}</li>
+ <li>{{domxref("Event.initEvent()")}}</li>
+ <li>{{domxref("EventTarget.dispatchEvent()")}}</li>
+ <li>{{domxref("EventTarget.addEventListener()")}}</li>
+</ul>

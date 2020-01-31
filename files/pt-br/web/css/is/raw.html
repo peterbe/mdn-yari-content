@@ -1,0 +1,273 @@
+<p>{{CSSRef}}{{SeeCompatTable}}</p>
+
+<div class="blockIndicator note">
+<p><strong>Nota:</strong> <code>:matches()</code> foi renomeado para <code>:is()</code> em <a href="https://github.com/w3c/csswg-drafts/issues/3258" style="white-space: nowrap;">CSSWG issue #3258</a>.</p>
+</div>
+
+<p>A função <a href="/en-US/docs/Web/CSS/Pseudo-classes">pseudo-classe</a> <a href="/en-US/docs/Web/CSS">CSS</a> <strong><code>:is()</code></strong> usa uma lista de seletores como argumento e seleciona qualquer elemento que possa ser selecionado por um dos seletores dessa lista. Isso é útil para escrever seletores grandes em uma forma mais compacta.</p>
+
+<p>Note que atualmente os navegadores suportam essa funcionalidade como <code>:matches()</code>, ou através de uma pseudo-classe pré-fixada mais antiga — <code>:any()</code>, incluindo versões mais antigas do Chrome, Firefox, e Safari. <code>:any()</code> funciona exatamente da mesma maneira que <code>:matches()</code>/<code>:is()</code>, exceto que requer prefixos de fornecedor (vendor) e não suporta <a href="/en-US/docs/Learn/CSS/Introduction_to_CSS/Selectors">seletores complexos</a>.</p>
+
+<pre class="brush: css no-line-numbers">/* Selects any paragraph inside a header, main
+   or footer element that is being hovered */
+:is(header, main, footer) p:hover {
+  color: red;
+  cursor: pointer;
+}
+
+/* The above is equivalent to the following */
+header p:hover,
+main p:hover,
+footer p:hover {
+  color: red;
+  cursor: pointer;
+}
+
+/* Backwards-compatible version with :-*-any() and :matches()
+   (It is not possible to group selectors into single rule,
+   because presence of invalid selector would invalidate whole rule.) */
+:-webkit-any(header, main, footer) p:hover {
+  color: red;
+  cursor: pointer;
+}
+:-moz-any(header, main, footer) p:hover {
+  color: red;
+  cursor: pointer;
+}
+:matches(header, main, footer) p:hover {
+  color: red;
+  cursor: pointer;
+}
+</pre>
+
+<h2 id="Syntax">Syntax</h2>
+
+<pre class="syntaxbox">{{CSSSyntax}}</pre>
+
+<h2 id="Exemplos">Exemplos</h2>
+
+<h3 id="Cross-browser_example">Cross-browser example</h3>
+
+<pre class="brush: html">&lt;header&gt;
+  &lt;p&gt;This is my header paragraph&lt;/p&gt;
+&lt;/header&gt;
+
+&lt;main&gt;
+  &lt;ul&gt;
+    &lt;li&gt;&lt;p&gt;This is my first&lt;/p&gt;&lt;p&gt;list item&lt;/p&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;p&gt;This is my second&lt;/p&gt;&lt;p&gt;list item&lt;/p&gt;&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/main&gt;
+
+&lt;footer&gt;
+  &lt;p&gt;This is my footer paragraph&lt;/p&gt;
+&lt;/footer&gt;</pre>
+
+<pre class="brush: css">:-webkit-any(header, main, footer) p:hover {
+  color: red;
+  cursor: pointer;
+}
+
+:-moz-any(header, main, footer) p:hover {
+  color: red;
+  cursor: pointer;
+}
+
+:matches(header, main, footer) p:hover {
+  color: red;
+  cursor: pointer;
+}
+
+:is(header, main, footer) p:hover {
+  color: red;
+  cursor: pointer;
+}
+</pre>
+
+<pre class="brush: js">let matchedItems;
+
+try {
+  matchedItems = document.querySelectorAll(':is(header, main, footer) p');
+} catch(e) {
+  try {
+    matchedItems = document.querySelectorAll(':matches(header, main, footer) p');
+  } catch(e) {
+    try {
+      matchedItems = document.querySelectorAll(':-webkit-any(header, main, footer) p');
+    } catch(e) {
+      try {
+        matchedItems = document.querySelectorAll(':-moz-any(header, main, footer) p');
+      } catch(e) {
+        console.log('Your browser doesn\'t support :is(), :matches(), or :any()');
+      }
+    }
+  }
+}
+
+matchedItems.forEach(applyHandler);
+
+function applyHandler(elem) {
+  elem.addEventListener('click', function(e) {
+    alert('This paragraph is inside a ' + e.target.parentNode.nodeName);
+  });
+}</pre>
+
+<p>{{EmbedLiveSample("Cross-browser_example", "100%", 300)}}</p>
+
+<h3 id="Simplificando_a_lista_de_seletores">Simplificando a lista de seletores</h3>
+
+<p>A pseudo-classe <code>:is()</code> pode simplificar bastante seus seletores de CSS. Por exemplo, o seguinte CSS:</p>
+
+<pre class="brush: css">/* 3-deep (or more) unordered lists use a square */
+ol ol ul,     ol ul ul,     ol menu ul,     ol dir ul,
+ol ol menu,   ol ul menu,   ol menu menu,   ol dir menu,
+ol ol dir,    ol ul dir,    ol menu dir,    ol dir dir,
+ul ol ul,     ul ul ul,     ul menu ul,     ul dir ul,
+ul ol menu,   ul ul menu,   ul menu menu,   ul dir menu,
+ul ol dir,    ul ul dir,    ul menu dir,    ul dir dir,
+menu ol ul,   menu ul ul,   menu menu ul,   menu dir ul,
+menu ol menu, menu ul menu, menu menu menu, menu dir menu,
+menu ol dir,  menu ul dir,  menu menu dir,  menu dir dir,
+dir ol ul,    dir ul ul,    dir menu ul,    dir dir ul,
+dir ol menu,  dir ul menu,  dir menu menu,  dir dir menu,
+dir ol dir,   dir ul dir,   dir menu dir,   dir dir dir {
+  list-style-type: square;
+}
+</pre>
+
+<p>... pode ser substituído por:</p>
+
+<pre class="brush: css">/* 3-deep (or more) unordered lists use a square */
+:is(ol, ul, menu, dir) :is(ol, ul, menu, dir) ul,
+:is(ol, ul, menu, dir) :is(ol, ul, menu, dir) menu,
+:is(ol, ul, menu, dir) :is(ol, ul, menu, dir) dir {
+  list-style-type: square;
+}</pre>
+
+<p>No entanto, não use o seguinte: (Consulte a <a href="#Issues_with_performance_and_specificity">seção sobre desempenho</a> abaixo.)</p>
+
+<pre class="brush: css">:is(ol, ul, menu, dir) :is(ol, ul, menu, dir) :is(ul, menu, dir) {
+  list-style-type: square;
+}</pre>
+
+<h3 id="Simplifying_section_selectors">Simplifying section selectors</h3>
+
+<p>A pseudo-classe <code>:is()</code> é particularmente útil ao lidar com seções e cabeçalhos em HTML5. Como {{HTMLElement("section")}}, {{HTMLElement("article")}}, {{HTMLElement("aside")}}, e {{HTMLElement("nav")}} são geralmente aninhados, sem <code>:is()</code>, estilizá-los para combinar um com outro pode ser complicado.</p>
+
+<p>Por exemplo, sem <code>:is()</code>, estilizar todos os elementos {{HTMLElement("h1")}} em diferentes profundidades pode ser muito complicado:</p>
+
+<pre class="brush: css">/* Level 0 */
+h1 {
+  font-size: 30px;
+}
+/* Level 1 */
+section h1, article h1, aside h1, nav h1 {
+  font-size: 25px;
+}
+/* Level 2 */
+section section h1, section article h1, section aside h1, section nav h1,
+article section h1, article article h1, article aside h1, article nav h1,
+aside section h1, aside article h1, aside aside h1, aside nav h1,
+nav section h1, nav article h1, nav aside h1, nav nav h1 {
+  font-size: 20px;
+}
+/* Level 3 */
+/* ... don't even think about it! */
+</pre>
+
+<p>Usando <code>:is()</code>, porém, é muito mais fácil.</p>
+
+<pre class="brush: css">/* Level 0 */
+h1 {
+  font-size: 30px;
+}
+/* Level 1 */
+:is(section, article, aside, nav) h1 {
+  font-size: 25px;
+}
+/* Level 2 */
+:is(section, article, aside, nav)
+:is(section, article, aside, nav) h1 {
+  font-size: 20px;
+}
+/* Level 3 */
+:is(section, article, aside, nav)
+:is(section, article, aside, nav)
+:is(section, article, aside, nav) h1 {
+  font-size: 15px;
+}</pre>
+
+<h3 id="Evitando_invalidação_da_lista_de_seletores">Evitando invalidação da lista de seletores</h3>
+
+<p>Diferentemente das <a href="/en-US/docs/Web/CSS/Selector_list">listas de seletores</a>, a pseudo-classe <code>:is()</code> não é invalidada quando um dos seletores passados para ela não é suportado pelo navegador.</p>
+
+<pre class="brush: css">:is(:valid, :unsupported) {
+  ...
+}</pre>
+
+<p>Ainda analisará corretamente e corresponderá <code>:valid</code> mesmo em navegadores que não suportam <code>:unsupported</code>, enquanto:</p>
+
+<pre class="brush: css">:valid, :unsupported {
+  ...
+}</pre>
+
+<p>Será ignorado em navegadores que não suportam,<code>:unsupported</code> mesmo que eles suportem<code>:valid</code></p>
+
+<h2 id="Notes">Notes</h2>
+
+<h3 id="Issues_with_performance_and_specificity" name="Issues_with_performance_and_specificity">any(): — Issues with performance and specificity</h3>
+
+<p>{{Bug(561154)}} tracks an issue with Gecko where the specificity of <code>:-moz-any()</code> is incorrect. The current (as of Firefox 12) implementation puts <code>:-moz-any()</code> in the category of universal rules, meaning using it as the rightmost selector will be slower than using an ID, class, or tag as the rightmost selector.</p>
+
+<p>For example:</p>
+
+<pre class="brush: css">.a &gt; :-moz-any(.b, .c)
+</pre>
+
+<p>... is slower than:</p>
+
+<pre class="brush: css">.a &gt; .b, .a &gt; .c
+</pre>
+
+<p>... and the following is fast:</p>
+
+<pre class="brush: css">:-moz-any(.a, .d) &gt; .b, :-moz-any(.a, .d) &gt; .c</pre>
+
+<p><code>:is()</code> aims to fix such problems.</p>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName("CSS4 Selectors", "#matches-pseudo", ":is()")}}</td>
+   <td>{{Spec2("CSS4 Selectors")}}</td>
+   <td>Initial definition</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">Browser compatibility</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("css.selectors.is")}}</p>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li>{{CSSxRef(":where", ":where()")}} {{Experimental_Inline}} - Like <code>:is()</code>, but with 0 <a href="/en-US/docs/Web/CSS/Specificity">specificity</a>.</li>
+ <li><a href="/en-US/docs/Web/CSS/Selector_list">Selector list</a></li>
+ <li><a href="/en-US/docs/Web/Web_Components">Web components</a></li>
+</ul>
+
+<div id="gtx-trans" style="position: absolute; left: 276px; top: 3124px;">
+<div class="gtx-trans-icon"></div>
+</div>

@@ -1,0 +1,84 @@
+<p>{{DefaultAPISidebar("Web Workers API")}}</p>
+
+<p>Web Worker는 script 실행을 메인 쓰레드가 아니라 백그라운드 쓰레드에서 실행할 수 있도록 해주는 기술 입니다. 이 기술을 통해 무거운 작업을 분리된 쓰레드에서 처리할 수 있으며, 이를 통해 메인 쓰레드(일반적으로 UI 쓰레드)는 멈춤, 속도저하 없이 동작할 수 있게 됩니다.</p>
+
+<h2 id="Web_Worker의_개념과_활용">Web Worker의 개념과 활용</h2>
+
+<p>Worker는 Worker() 생성자를 통해 생성되며 지정된 Javascript 파일에 포함된 코드를 Worker 쓰레드에서 실행합니다. (Worker는 현재 Window와 분리된 DuplicatedWorkerGlobalScope라는 별도의 Global context에서 동작합니다.) Worker 쓰레드에서 어떠한 코드도 실행할 수 있지만, 몇가지 예외가 있습니다. 예를들어 Worker 내에서는 DOM을 직접 다룰 수 없습니다. 또한 {{domxref("Window")}}의 기본 메서드와 속성을 사용할 수 없습니다. 보다 자세한 정보는 <a href="/en-US/docs/Web/API/Worker/Functions_and_classes_available_to_workers">Functions and classes available to workers</a>를 참조해주세요.</p>
+
+<p>Message System을 통해 Worker와 메인 쓰레드 간에 데이터를 교환할 수 있습니다. {{domxref("Worker.postMessage()")}} 메서드를 통해 데이터를 전송할 수 있으며, {{domxref("Worker.onmessage")}} 이벤트 핸들러 Attribute를 통해 응답할 수 있습니다. (전송되는 메세지는 {{domxref("MessageEvent.data")}}에 포함됩니다). 전송되는 데이터는 공유되지 않으며 복제를 통해 전달되게 됩니다.</p>
+
+<p>부모페이지와 동일한 Origin 내에서 Worker는 새로운 Worker를 생성할 수 있습니다.  Worker들은 <a class="internal" href="/en/DOM/XMLHttpRequest" title="En/XMLHttpRequest"><code>XMLHttpRequest</code></a>를 통해 네트워크 통신을 할 수 있지만 XMLHttpRequest의 responseXML과 channel attribute는 항상 null을 반환합니다.</p>
+
+<p>지금까지 알아본 Dedicated Worker와 다른 유형의 Worker들도 존재합니다.</p>
+
+<ul>
+ <li>Shared worker는 Worker가 동일한 도메인 내에 존재하는 여러 script에 의해 사용될 수 있습니다. Shared Worker는 Dedicated worker보다 좀더 복잡성을 가지고 있습니다. 예를들어 Script들은 반드시 활성화된 Port를 통해 통신해야 합니다. 좀더 자세한 정보는 {{domxref("SharedWorker")}}를 확인해주세요.</li>
+ <li><a href="/en-US/docs/Web/API/ServiceWorker_API">ServiceWorker</a>는 웹 어플리케이션 사이의 Proxy Server와 브라우저로서 역할을 하며 (만약 가능하다면)통신을 구축합니다. 이를 통해 효율적인 오프라인 경험을 구축하고, 네트워크 요청을 가로채어 통신이 가능한지 여부에 따라 적절한 동작을 수행하며,  서버에 존재하는 자원들을 갱신할 수 있습니다. 또한 푸시 알림이나 백그라운드 동기화 API에 접근을 허용합니다.</li>
+ <li>Chrome Worker는 Firefox에서만 사용 가능한 worker 유형입니다. Add-on을 제작할 때나 확장기능에서 Worker를 사용하고 싶을 때 사용할 수 있으며, Worker에서 <a href="https://developer.mozilla.org/en/js-ctypes" title="en/js-ctypes">js-ctypes</a>에 접근할 수 있습니다. 상세한 정보를 위해 {{domxref("ChromeWorker")}}를 확인해보세요.</li>
+ <li><a href="/en-US/docs/Web/API/Web_Audio_API#Audio_Workers">Audio Workers</a>는 스크립트를 통한 직접적인 오디오 처리를 Web Worker에서 처리할 수 있도록 해줍니다.</li>
+</ul>
+
+<h2 id="Web_Worker_interfaces">Web Worker interfaces</h2>
+
+<dl>
+ <dt>{{domxref("AbstractWorker")}}</dt>
+ <dd>Abstracts properties and methods common to all kind of workers (i.e. {{domxref("Worker")}} or {{domxref("SharedWorker")}}).</dd>
+ <dt>{{domxref("Worker")}}</dt>
+ <dd>Represents a running worker thread, allowing you to pass messages to the running worker code.</dd>
+ <dt>{{domxref("SharedWorker")}}</dt>
+ <dd>Represents a specific kind of worker that can be <em>accessed</em> from several browsing context, being several windows, iframes or even workers.</dd>
+ <dt>{{domxref("WorkerGlobalScope")}}</dt>
+ <dd>Represents the generic scope of any worker (doing the same job as {{domxref("Window")}} does for normal web content). Different types of worker have scope objects that inherit from this interface and add more specific features.</dd>
+ <dt>{{domxref("DedicatedWorkerGlobalScope")}}</dt>
+ <dd>Represents the scope of a dedicated worker, inheriting from {{domxref("WorkerGlobalScope")}} and adding some dedicated features.</dd>
+ <dt>{{domxref("SharedWorkerGlobalScope")}}</dt>
+ <dd>Represents the scope of a shared worker, inheriting from {{domxref("WorkerGlobalScope")}} and adding some dedicated features.</dd>
+ <dt>{{domxref("WorkerNavigator")}}</dt>
+ <dd>Represents the identity and state of the user agent (the client):</dd>
+</dl>
+
+<h2 id="Examples">Examples</h2>
+
+<p>We have created a couple of simple demos to show basic usage:</p>
+
+<ul>
+ <li><a href="https://github.com/mdn/simple-web-worker">Basic dedicated worker example</a> (<a href="http://mdn.github.io/simple-web-worker/">run dedicated worker</a>).</li>
+ <li><a href="https://github.com/mdn/simple-shared-worker">Basic shared worker example</a> (<a href="http://mdn.github.io/simple-shared-worker/">run shared worker</a>).</li>
+</ul>
+
+<p>You can find out more information on how these demos work in our <a href="/en-US/docs/Web/Guide/Performance/Using_web_workers">Using web workers guide</a>; in addition you can visit our <a href="/en-US/docs/Web/API/Web_Workers_API/Advanced_concepts_and_examples">Web workers Advanced concepts and examples</a> page for more examples.</p>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('HTML WHATWG', '#toc-workers')}}</td>
+   <td>{{Spec2('HTML WHATWG')}}</td>
+   <td>No change from {{SpecName("Web Workers")}}.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('Web Workers')}}</td>
+   <td>{{Spec2('Web Workers')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="See_also">See also</h2>
+
+<div id="compat-mobile"> </div>
+
+<ul>
+ <li><a href="/en-US/docs/Web/API/Web_Workers_API/basic_usage">Using Web Workers</a></li>
+ <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Worker">Worker Interface</a></li>
+ <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/SharedWorker">SharedWorker interface</a></li>
+ <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorker_API">ServiceWorker API</a></li>
+ <li><a href="/en-US/docs/Web/API/Web_Workers_API/Advanced_concepts_and_examples">Advanced concepts and examples</a></li>
+</ul>

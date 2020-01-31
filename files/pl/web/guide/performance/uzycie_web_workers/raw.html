@@ -1,0 +1,637 @@
+<p><span class="seoSummary">Dedykowane <strong>wątki robocze</strong> (Web Workers) zapewniają prosty sposób na uruchamiania skryptów w postaci wątków w tle treści internetowych. Po utworzeniu, wątek roboczy może przekazywać informacje do menedżera zadań, poprzez wysyłanie wiadomości do procesu obsługi zdarzeń, określonego przez twórcę. Jednak działają one w <a href="/en-US/docs/JavaScript/DedicatedWorkerGlobalScope" title="/en-US/docs/JavaScript/DedicatedWorkerGlobalScope">kontekście globalnym</a>, który różni się od kontekstu bieżącego okna (wywoływanego za pomocą skrótu {{domxref ("window")}}, zamiast {{domxref ("window.self", "self")}}, dlatego próba otrzymania obecnego zakresu globalnego komendą {{domxref ("Worker")}} zwróci błąd).</span></p>
+
+<p><span style="font-size: 14px; line-height: 1.5;">Wątki robocze  mogą wykonywać zadania bez interakcji z interfejsem użytkownika. Ponadto, mogą one obsługiwać wejście/wyjście używając </span><a class="internal" href="/en/nsIXMLHttpRequest" style="font-family: 'Courier New', 'Andale Mono', monospace;" title="En/XMLHttpRequest">XMLHttpRequest</a><span style="font-size: 14px; line-height: 1.5;"> (chociaż </span><span style="font-family: courier new,andale mono,monospace;">responseXML</span><span style="font-size: 14px; line-height: 1.5;"> i właściwości </span><span style="font-family: courier new,andale mono,monospace;">channel</span><span style="font-size: 14px; line-height: 1.5;"> będą zawsze równe null).</span></p>
+
+<p><span style="font-size: 14px; line-height: 1.5;">Zobacz {{ domxref("wątek") }} w dokumentacji referencyjnej o wątkach roboczych; ten artykuł jest jej uzupełnieniem, które oferuje przykłady i dodaje szczegóły. Aby uzyskać listę funkcji dostępnych dla wątków, patrz </span><a href="https://developer.mozilla.org/en-US/docs/Web/Reference/Functions_and_classes_available_to_workers" style="line-height: 1.5;" title="En/DOM/Worker/Functions available to workers">Funkcje i interfejsy dostępne dla wątków</a>.</p>
+
+<h2 id="O_bezpieczeństwie_wątków">O bezpieczeństwie wątków</h2>
+
+<p>{{ domxref("Worker") }} <span style="line-height: 1.5;"> jest interfejsem łączącym współbieżne wątki na na poziomie systemu operacyjnego i może spowodować </span><span style="line-height: 1.5;">ciekawe zmiany w kodzie, jeśli nie jesteś ostrożny. </span><span style="line-height: 1.5;">Jednak w przypadku wątków internetowych, punkty komunikacyjne z innych wątków są starannie kontrolowane, co oznacza, że ​w rzeczywistości bardzo trudno jest spowodować problemy współbieżności. </span><span style="line-height: 1.5;">Nie ma dostępu do bezwątkowych bezpiecznych komponentów lub obiektów DOM i trzeba by dopasować szczegółowe dane wejściowe i wyjściowe z wątku przez serializację obiektów. Więc trzeba się naprawdę mocno postarać, aby spowodować problemy w kodzie.</span></p>
+
+<h2 id="Mnożenie_wątków">Mnożenie wątków</h2>
+
+<p>Tworzenie nowego wątku jest proste. Wszystko, co musisz zrobić, to wywołać konstruktor {{ domxref("Worker.Worker", "Worker()") }}, podając URI skryptu do wykonania w wątku roboczym, a jeśli chcesz być w stanie otrzymywać powiadomienia od wątku, ustawić właściwości wątku {{domxref("Worker.onmessage")}} na obsługę odpowiedniej funkcji zdarzenia.</p>
+
+<div style="overflow: hidden;">
+<pre class="brush: js">var myWorker = new Worker("my_task.js");
+
+myWorker.onmessage = function (oEvent) {
+  console.log("Wywołane zwrotne, przez wątek!\n");
+};</pre>
+</div>
+
+<p>Alternatywnie, możesz użyć <code>addEventListener()</code> :</p>
+
+<div style="overflow: hidden;">
+<pre class="brush: js">var myWorker = new Worker("my_task.js");
+
+myWorker.addEventListener("message", function (oEvent) {
+  console.log("<span style="font-size: 1rem;">Wywołane zwrotne, przez wątek</span><span style="font-size: 1rem;">!\n");</span>
+}, false);
+
+myWorker.postMessage(""); // start wątku.</pre>
+</div>
+
+<p>W powyższym przykładzie w linii 1 tworzymy nowy wątek roboczy. W linii 3 dodajemy do niego funkcję obsługi zdarzenia "message" pochodzącego z wątku. Funkcja ta będzie wywołana wtedy, kiedy wątek roboczy wywoła metodę {{domxref("Worker.postMessage()")}}. W końcu w lini 7 uruchamiamy wątek.</p>
+
+<div class="note"><strong>Note</strong> : The URI passed as parameter of the <code>Worker</code> constructor must obey the <a href="/en/Same_origin_policy_for_JavaScript" title="Same origin policy for JavaScript">same-origin policy</a> . There is currently disagreement among browsers vendors on what URIs are of the same-origin; Gecko 10.0 {{ geckoRelease("10.0") }} and later do allow data URIs and Internet Explorer 10 does not allow Blob URIs as a valid script for workers.</div>
+
+<h2 id="Przekazywanie_danych">Przekazywanie danych</h2>
+
+<p>Data passed between the main page and workers are <strong>copied</strong>, not shared. Objects are serialized as they're handed to the worker, and subsequently, de-serialized on the other end. The page and worker <strong>do not share the same instance</strong>, so the end result is that <strong>a duplicate</strong> is created on each end. Most browsers implement this feature as <a href="/en/DOM/The_structured_clone_algorithm" title="The structured clone algorithm">structured cloning</a>.</p>
+
+<p>Before continuing, let's create for didactical purpose a function named <code>emulateMessage()</code> which will simulate the behavior of a value which is <em>cloned and not shared</em> during the passage from a <code>worker</code> to the main page or vice versa:</p>
+
+<pre class="brush: js">function emulateMessage (vVal) {
+    return eval("(" + JSON.stringify(vVal) + ")");
+}
+
+// Tests
+
+// test #1
+var example1 = new Number(3);
+alert(typeof example1); // object
+alert(typeof emulateMessage(example1)); // number
+
+// test #2
+var example2 = true;
+alert(typeof example2); // boolean
+alert(typeof emulateMessage(example2)); // boolean
+
+// test #3
+var example3 = new String("Hello World");
+alert(typeof example3); // object
+alert(typeof emulateMessage(example3)); // string
+
+// test #4
+var example4 = {
+    "name": "John Smith",
+    "age": 43
+};
+alert(typeof example4); // object
+alert(typeof emulateMessage(example4)); // object
+
+// test #5
+function Animal (sType, nAge) {
+    this.type = sType;
+    this.age = nAge;
+}
+var example5 = new Animal("Cat", 3);
+alert(example5.constructor); // Animal
+alert(emulateMessage(example5).constructor); // Object</pre>
+
+<p>A value which is cloned and not shared is called <em>message</em>. Back to talk about workers, <em>messages</em> can be sent to and from the main thread by using <code>postMessage()</code>. The <code>message</code> event's {{domxref("MessageEvent.data", "data")}} attribute contains data passed back from the worker.</p>
+
+<p><strong>example.html</strong>: (the main page):</p>
+
+<pre class="brush: js">var myWorker = new Worker("my_task.js");
+
+myWorker.onmessage = function (oEvent) {
+  console.log("Worker said : " + oEvent.data);
+};
+
+myWorker.postMessage("ali");</pre>
+
+<p><strong>my_task.js</strong> (the worker):</p>
+
+<pre class="brush: js">postMessage("I\'m working before postMessage(\'ali\').");
+
+onmessage = function (oEvent) {
+  postMessage("Hi " + oEvent.data);
+};</pre>
+
+<div class="note"><strong>Note:</strong> As usual, background threads – including workers – <strong>cannot manipulate the DOM</strong>.  If actions taken by the background thread need to result in changes to the DOM, they should post messages back to their creators to do that work.</div>
+
+<p>The <a href="/en-US/docs/Web/Guide/DOM/The_structured_clone_algorithm" style="line-height: 1.572;" title="The structured clone algorithm">structured cloning</a> algorithm can accept JSON and a few things that JSON can't like circular references.</p>
+
+<h3 id="Przykłady_przekazywania_danych">Przykłady przekazywania danych</h3>
+
+<h4 id="Example_1_Create_a_generic_asynchronous_eval()">Example #1: Create a generic "asynchronous <code>eval()</code>"</h4>
+
+<p>The following example shows how to use a worker in order to execute <strong>asynchronously</strong> any JavaScript code allowed in a Worker, through <a href="/en-US/docs/JavaScript/Reference/Global_Objects/eval" title="/en-US/docs/JavaScript/Reference/Global_Objects/eval"><code>eval()</code></a> within the worker:</p>
+
+<pre class="brush: js">// Syntax: asyncEval(code[, listener])
+
+var asyncEval = (function () {
+
+  var aListeners = [], oParser = new Worker("data:text/javascript;charset=US-ASCII,onmessage%20%3D%20function%20%28oEvent%29%20%7B%0A%09postMessage%28%7B%0A%09%09%22id%22%3A%20oEvent.data.id%2C%0A%09%09%22evaluated%22%3A%20eval%28oEvent.data.code%29%0A%09%7D%29%3B%0A%7D");
+
+  oParser.onmessage = function (oEvent) {
+    if (aListeners[oEvent.data.id]) { aListeners[oEvent.data.id](oEvent.data.evaluated); }
+    delete aListeners[oEvent.data.id];
+  };
+
+
+  return function (sCode, fListener) {
+    aListeners.push(fListener || null);
+    oParser.postMessage({
+      "id": aListeners.length - 1,
+      "code": sCode
+    });
+  };
+
+})();</pre>
+
+<p>(Note the data url is equivalent to a network request with the following response:)</p>
+
+<pre>onmessage = function (oEvent) {
+	postMessage({
+		"id": oEvent.data.id,
+		"evaluated": eval(oEvent.data.code)
+	});
+}</pre>
+
+<p>Sample usage:</p>
+
+<pre class="brush: js">// asynchronous alert message...
+asyncEval("3 + 2", function (sMessage) {
+    alert("3 + 2 = " + sMessage);
+});
+
+// asynchronous print message...
+asyncEval("\"Hello World!!!\"", function (sHTML) {
+    document.body.appendChild(document.createTextNode(sHTML));
+});
+
+// asynchronous void...
+asyncEval("(function () {\n\tvar oReq = new XMLHttpRequest();\n\toReq.open(\"get\", \"http://www.mozilla.org/\", false);\n\toReq.send(null);\n\treturn oReq.responseText;\n})()");</pre>
+
+<h4 id="Example_2_Advanced_passing_JSON_Data_and_creating_a_switching_system">Example #2: Advanced passing JSON Data and creating a switching system</h4>
+
+<p>If you have to pass some complex data and have to call many different functions both in the main page and in the Worker, you can create a system like the following.</p>
+
+<p><strong>example.html</strong> (the main page):</p>
+
+<pre class="brush: html">&lt;!doctype html&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;meta charset="UTF-8"  /&gt;
+&lt;title&gt;MDN Example - Queryable worker&lt;/title&gt;
+&lt;script type="text/javascript"&gt;
+  /*
+    QueryableWorker instances methods:
+     * sendQuery(queryable function name, argument to pass 1, argument to pass 2, etc. etc): calls a Worker's queryable function
+     * postMessage(string or JSON Data): see Worker.prototype.postMessage()
+     * terminate(): terminates the Worker
+     * addListener(name, function): adds a listener
+     * removeListener(name): removes a listener
+    QueryableWorker instances properties:
+     * defaultListener: the default listener executed only when the Worker calls the postMessage() function directly
+  */
+  function QueryableWorker (sURL, fDefListener, fOnError) {
+    var oInstance = this, oWorker = new Worker(sURL), oListeners = {};
+    this.defaultListener = fDefListener || function () {};
+    oWorker.onmessage = function (oEvent) {
+      if (oEvent.data instanceof Object &amp;&amp; oEvent.data.hasOwnProperty("vo42t30") &amp;&amp; oEvent.data.hasOwnProperty("rnb93qh")) {
+        oListeners[oEvent.data.vo42t30].apply(oInstance, oEvent.data.rnb93qh);
+      } else {
+        this.defaultListener.call(oInstance, oEvent.data);
+      }
+    };
+    if (fOnError) { oWorker.onerror = fOnError; }
+    this.sendQuery = function (/* queryable function name, argument to pass 1, argument to pass 2, etc. etc */) {
+      if (arguments.length &lt; 1) { throw new TypeError("QueryableWorker.sendQuery - not enough arguments"); return; }
+      oWorker.postMessage({ "bk4e1h0": arguments[0], "ktp3fm1": Array.prototype.slice.call(arguments, 1) });
+    };
+    this.postMessage = function (vMsg) {
+      //I just think there is no need to use call() method
+      //how about just oWorker.postMessage(vMsg);
+      //the same situation with terminate
+      //well,just a little faster,no search up the prototye chain
+      Worker.prototype.postMessage.call(oWorker, vMsg);
+    };
+    this.terminate = function () {
+      Worker.prototype.terminate.call(oWorker);
+    };
+    this.addListener = function (sName, fListener) {
+      oListeners[sName] = fListener;
+    };
+    this.removeListener = function (sName) {
+      delete oListeners[sName];
+    };
+  };
+
+  // your custom "queryable" worker
+  var oMyTask = new QueryableWorker("my_task.js" /* , yourDefaultMessageListenerHere [optional], yourErrorListenerHere [optional] */);
+
+  // your custom "listeners"
+
+  oMyTask.addListener("printSomething", function (nResult) {
+    document.getElementById("firstLink").parentNode.appendChild(document.createTextNode(" The difference is " + nResult + "!"));
+  });
+
+  oMyTask.addListener("alertSomething", function (nDeltaT, sUnit) {
+    alert("Worker waited for " + nDeltaT + " " + sUnit + " :-)");
+  });
+&lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;ul&gt;
+    &lt;li&gt;&lt;a id="firstLink" href="javascript:oMyTask.sendQuery('getDifference', 5, 3);"&gt;What is the difference between 5 and 3?&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="javascript:oMyTask.sendQuery('waitSomething');"&gt;Wait 3 seconds&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="javascript:oMyTask.terminate();"&gt;terminate() the Worker&lt;/a&gt;&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+
+<p><strong>my_task.js</strong> (the worker):</p>
+
+<pre class="brush: js">// your custom PRIVATE functions
+
+function myPrivateFunc1 () {
+  // do something
+}
+
+function myPrivateFunc2 () {
+  // do something
+}
+
+// etc. etc.
+
+// your custom PUBLIC functions (i.e. queryable from the main page)
+
+var queryableFunctions = {
+  // example #1: get the difference between two numbers:
+  getDifference: function (nMinuend, nSubtrahend) {
+      reply("printSomething", nMinuend - nSubtrahend);
+  },
+  // example #2: wait three seconds
+  waitSomething: function () {
+      setTimeout(function() { reply("alertSomething", 3, "seconds"); }, 3000);
+  }
+};
+
+// system functions
+
+function defaultQuery (vMsg) {
+  // your default PUBLIC function executed only when main page calls the queryableWorker.postMessage() method directly
+  // do something
+}
+
+function reply (/* listener name, argument to pass 1, argument to pass 2, etc. etc */) {
+  if (arguments.length &lt; 1) { throw new TypeError("reply - not enough arguments"); return; }
+  postMessage({ "vo42t30": arguments[0], "rnb93qh": Array.prototype.slice.call(arguments, 1) });
+}
+
+onmessage = function (oEvent) {
+  if (oEvent.data instanceof Object &amp;&amp; oEvent.data.hasOwnProperty("bk4e1h0") &amp;&amp; oEvent.data.hasOwnProperty("ktp3fm1")) {
+    queryableFunctions[oEvent.data.bk4e1h0].apply(self, oEvent.data.ktp3fm1);
+  } else {
+    defaultQuery(oEvent.data);
+  }
+};</pre>
+
+<p>It is a possible method to switch the content of each mainpage-worker – and vice versa – message.</p>
+
+<h3 id="Przekazywanie_danych_przez_przeniesienie_własności_(transferable_objects)">Przekazywanie danych przez przeniesienie własności (transferable objects)</h3>
+
+<p>Google Chrome 17 and Firefox 18 contain an additional way to pass certain kind of objects (<span class="external">Transferable objects, that is objects implementing the {{domxref("Transferable")}} interface</span>) to or from a worker with high performance. Transferable objects are transferred from one context to another with a zero-copy operation. This means a vast performance improvement when sending large data. Think of it as pass-by-reference if you're from the C/C++ world. However, unlike pass-by-reference, the 'version' from the calling context is no longer available once transferred. Its ownership is transferred to the new context. For example, when transferring an {{domxref("ArrayBuffer")}} from your main app to Worker, the original {{domxref("ArrayBuffer")}} is cleared and no longer usable. Its content is (quite literally) transferred to the Worker context.</p>
+
+<pre class="brush: js">// Create a 32MB "file" and fill it.
+var uInt8Array = new Uint8Array(1024*1024*32); // 32MB
+for (var i = 0; i &lt; uInt8Array.length; ++i) {
+  uInt8Array[i] = i;
+}
+
+worker.postMessage(uInt8Array.buffer, [uInt8Array.buffer]);
+</pre>
+
+<p>For more information on transferable objects, performance and feature-detection for this method, <a class="external" href="http://updates.html5rocks.com/2011/12/Transferable-Objects-Lightning-Fast" title="http://updates.html5rocks.com/2011/12/Transferable-Objects-Lightning-Fast">see the HTML5Rocks</a> article.</p>
+
+<h2 id="Spawning_subworkers">Spawning subworkers</h2>
+
+<p>Workers may spawn more workers if they wish.  So-called subworkers must be hosted within the same origin as the parent page.  Also, the URIs for subworkers are resolved relative to the parent worker's location rather than that of the owning page.  This makes it easier for workers to keep track of where their dependencies are.</p>
+
+<p>Subworkers are currently not supported in Chrome. See <a class="external" href="http://code.google.com/p/chromium/issues/detail?id=31666" title="http://code.google.com/p/chromium/issues/detail?id=31666">crbug.com/31666</a> .</p>
+
+<h2 id="Embedded_workers">Embedded workers</h2>
+
+<p>There is not an "official" way to embed the code of a worker within a web page as for the {{ HTMLElement("script") }} elements. But a {{ HTMLElement("script") }} element which does not have a <code>src</code> attribute and has a <code>type</code> attribute that does not identify an executable mime-type will be considered a data block element, that JavaScript could use.  "Data blocks" is a more general feature of HTML5 that can carry almost any textual data. So, a worker could be embedded in this way:</p>
+
+<pre class="brush: html">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;meta charset="UTF-8" /&gt;
+&lt;title&gt;MDN Example - Embedded worker&lt;/title&gt;
+&lt;script type="text/js-worker"&gt;
+  // This script WON'T be parsed by JS engines because its mime-type is text/js-worker.
+  var myVar = "Hello World!";
+  // Rest of your worker code goes here.
+&lt;/script&gt;
+&lt;script type="text/javascript"&gt;
+  // This script WILL be parsed by JS engines because its mime-type is text/javascript.
+  function pageLog (sMsg) {
+    // Use a fragment: browser will only render/reflow once.
+    var oFragm = document.createDocumentFragment();
+    oFragm.appendChild(document.createTextNode(sMsg));
+    oFragm.appendChild(document.createElement("br"));
+    document.querySelector("#logDisplay").appendChild(oFragm);
+  }
+&lt;/script&gt;
+&lt;script type="text/js-worker"&gt;
+  // This script WON'T be parsed by JS engines because its mime-type is text/js-worker.
+  onmessage = function (oEvent) {
+    postMessage(myVar);
+  };
+  // Rest of your worker code goes here.
+&lt;/script&gt;
+&lt;script type="text/javascript"&gt;
+  // This script WILL be parsed by JS engines because its mime-type is text/javascript.
+
+  // In the past...:
+  // blob builder existed
+  // ...but now we use Blob...:
+  var blob = new Blob(Array.prototype.map.call(document.querySelectorAll("script[type=\"text\/js-worker\"]"), function (oScript) { return oScript.textContent; }),{type: "text/javascript"});
+
+  // Creating a new document.worker property containing all our "text/js-worker" scripts.
+  document.worker = new Worker(window.URL.createObjectURL(blob));
+
+  document.worker.onmessage = function (oEvent) {
+    pageLog("Received: " + oEvent.data);
+  };
+
+  // Start the worker.
+  window.onload = function() { document.worker.postMessage(""); };
+&lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;&lt;div id="logDisplay"&gt;&lt;/div&gt;&lt;/body&gt;
+&lt;/html&gt;</pre>
+
+<p>The embedded worker is now nested into a new custom <code>document.worker</code> property.</p>
+
+<h2 id="Timeouts_and_intervals">Timeouts and intervals</h2>
+
+<p>Workers can use timeouts and intervals just like the main thread can.  This can be useful, for example, if you want to have your worker thread run code periodically instead of nonstop.</p>
+
+<p>See <a class="internal" href="/en/DOM/window.setTimeout" title="En/DOM/Window.setTimeout"> <code>setTimeout()</code> </a> , <a class="internal" href="/en/DOM/window.clearTimeout" title="En/DOM/Window.clearTimeout"> <code>clearTimeout()</code> </a> , <a class="internal" href="/en/DOM/window.setInterval" title="En/DOM/Window.setInterval"> <code>setInterval()</code> </a> , and <a class="internal" href="/en/DOM/window.clearInterval" title="En/DOM/Window.clearInterval"> <code>clearInterval()</code> </a> for details. See also: <a href="/en-US/docs/JavaScript/Timers" title="/en-US/docs/JavaScript/Timers">JavaScript Timers</a>.</p>
+
+<h2 id="Terminating_a_worker">Terminating a worker</h2>
+
+<p>If you need to immediately terminate a running worker, you can do so by calling the worker's <code>terminate()</code> method:</p>
+
+<pre class="syntaxbox">myWorker.terminate();</pre>
+
+<p>The worker thread is killed immediately without an opportunity to complete its operations or clean up after itself.</p>
+
+<p>Workers may close themselves by calling their own {{ ifmethod("nsIWorkerScope", "close") }} method:</p>
+
+<pre class="syntaxbox">self.close();</pre>
+
+<h2 id="Handling_errors">Handling errors</h2>
+
+<p>When a runtime error occurs in worker, its <code>onerror</code> event handler is called.  It receives an event named <code>error</code> which implements the <code>ErrorEvent</code> interface.  The event doesn't bubble and is cancelable; to prevent the default action from taking place, the worker can call the error event's <a class="internal" href="/en/DOM/event.preventDefault" title="En/DOM/Event.preventDefault"> <code>preventDefault()</code> </a> method.</p>
+
+<p>The error event has the following three fields that are of interest:</p>
+
+<dl>
+ <dt><code>message</code></dt>
+ <dd>A human-readable error message.</dd>
+ <dt><code>filename</code></dt>
+ <dd>The name of the script file in which the error occurred.</dd>
+ <dt><code>lineno</code></dt>
+ <dd>The line number of the script file on which the error occurred.</dd>
+</dl>
+
+<h2 id="Accessing_the_navigator_object">Accessing the navigator object</h2>
+
+<p>Workers may access the <code>navigator</code> object, which is available within their scope.  It contains the following strings which can be used to identify the browser, just as can be done from normal scripts:</p>
+
+<ul>
+ <li><code>appName</code></li>
+ <li><code>appVersion</code></li>
+ <li><code>platform</code></li>
+ <li><code>userAgent</code></li>
+</ul>
+
+<h2 id="Importing_scripts_and_libraries">Importing scripts and libraries</h2>
+
+<p>Worker threads have access to a global function, <code>importScripts()</code> , which lets them import scripts or libraries into their scope.  It accepts as parameters zero or more URIs to resources to import; all of the following examples are valid:</p>
+
+<pre class="brush: js">importScripts();                        /* imports nothing */
+importScripts('foo.js');                /* imports just "foo.js" */
+importScripts('foo.js', 'bar.js');      /* imports two scripts */
+</pre>
+
+<p>The browser loads each listed script and executes it. Any global objects from each script may then be used by the worker. If the script can't be loaded, <code>NETWORK_ERROR</code> is thrown, and subsequent code will not be executed. Previously executed code (including code deferred using {{ domxref("window.setTimeout()") }}) will still be functional though. Function declarations <strong>after</strong> the <code>importScripts()</code> method are also kept, since these are always evaluated before the rest of the code.</p>
+
+<div class="note"><strong>Note:</strong> Scripts may be downloaded in any order, but will be executed in the order in which you pass the filenames into <code>importScripts()</code> .  This is done synchronously; <code>importScripts()</code> does not return until all the scripts have been loaded and executed.</div>
+
+<h2 id="Examples">Examples</h2>
+
+<p>This section provides several examples of how to use DOM workers.</p>
+
+<h3 id="Performing_computations_in_the_background">Performing computations in the background</h3>
+
+<p>One way workers are useful is to allow your code to perform processor-intensive calculations without blocking the user interface thread.  In this example, a worker is used to calculate Fibonacci numbers.</p>
+
+<h4 id="The_JavaScript_code">The JavaScript code</h4>
+
+<p>The following JavaScript code is stored in the "fibonacci.js" file referenced by the HTML in the next section.</p>
+
+<pre class="brush: js">var results = [];
+
+function resultReceiver(event) {
+  results.push(parseInt(event.data));
+  if (results.length == 2) {
+    postMessage(results[0] + results[1]);
+  }
+}
+
+function errorReceiver(event) {
+  throw event.data;
+}
+
+onmessage = function(event) {
+  var n = parseInt(event.data);
+
+  if (n == 0 || n == 1) {
+    postMessage(n);
+    return;
+  }
+
+  for (var i = 1; i &lt;= 2; i++) {
+    var worker = new Worker("fibonacci.js");
+    worker.onmessage = resultReceiver;
+    worker.onerror = errorReceiver;
+    worker.postMessage(n - i);
+  }
+ };</pre>
+
+<p>The worker sets the property <code>onmessage</code>  to a function which will receive messages sent when the worker object's  <code>postMessage()</code> is called.  (Note that this differs from defining a global <em>variable</em> of that name, or defining a <em>function</em> with that name.   <code>var onmessage</code> and <code>function onmessage</code> will define global properties with those names, but they will not register the function to receive messages sent by the  web page that created the worker.)  This starts the recursion, spawning new copies of itself to handle each iteration of the calculation.</p>
+
+<h4 id="The_HTML_code">The HTML code</h4>
+
+<pre class="brush: html">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+  &lt;head&gt;
+    &lt;meta charset="UTF-8"  /&gt;
+    &lt;title&gt;Test threads fibonacci&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+
+  &lt;div id="result"&gt;&lt;/div&gt;
+
+  &lt;script language="javascript"&gt;
+
+    var worker = new Worker("fibonacci.js");
+
+    worker.onmessage = function(event) {
+      document.getElementById("result").textContent = event.data;
+      dump("Got: " + event.data + "\n");
+    };
+
+    worker.onerror = function(error) {
+      dump("Worker error: " + error.message + "\n");
+      throw error;
+    };
+
+    worker.postMessage("5");
+
+  &lt;/script&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+
+<p>The web page creates a <code>div</code> element with the ID  <code>result</code> , which gets used to display the result, then spawns the worker.  After spawning the worker, the <code>onmessage</code> handler is configured to display the results by setting the contents of the <code>div</code> element, and the <code>onerror</code> handler is set to <a class="external" href="/en/Debugging_JavaScript#dump()" title="https://developer.mozilla.org/editor/fckeditor/core/editor/en/Debugging_JavaScript#dump()">dump</a> the error message.</p>
+
+<p>Finally, a message is sent to the worker to start it.</p>
+
+<p><a class="external" href="/samples/workers/fibonacci" title="https://developer.mozilla.org/samples/workers/fibonacci/">Try this example</a> .</p>
+
+<h3 id="Performing_web_IO_in_the_background">Performing web I/O in the background</h3>
+
+<p>You can find an example of this in the article <a class="internal" href="/En/Using_workers_in_extensions" title="En/Using workers in extensions">Using workers in extensions</a> .</p>
+
+<h3 id="Dividing_tasks_among_multiple_workers">Dividing tasks among multiple workers</h3>
+
+<p>As multi-core computers become increasingly common, it's often useful to divide computationally complex tasks among multiple workers, which may then perform those tasks on multiple-processor cores.</p>
+
+<p>example coming soon</p>
+
+<h3 id="Creating_workers_from_within_workers">Creating workers from within workers</h3>
+
+<p>The Fibonacci example shown previously demonstrates that workers can in fact <a href="#Spawning_subworkers">spawn additional workers</a>.  This makes it easy to create recursive routines.</p>
+
+<h2 id="Browser_Compatibility" name="Browser_Compatibility">Browser compatibility</h2>
+
+<p>{{ CompatibilityTable() }}</p>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari (WebKit)</th>
+  </tr>
+  <tr>
+   <td>Dedicated workers</td>
+   <td>{{CompatChrome(3)}}</td>
+   <td>{{CompatGeckoDesktop(1.9.1)}}</td>
+   <td>{{CompatIE(10)}}</td>
+   <td>{{CompatOpera(10.60)}}</td>
+   <td>{{CompatSafari(4)}}</td>
+  </tr>
+  <tr>
+   <td>Shared workers</td>
+   <td>{{CompatChrome(3)}}</td>
+   <td>{{CompatGeckoDesktop(29)}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatOpera(10.60)}}</td>
+   <td>{{CompatSafari(5)}}</td>
+  </tr>
+  <tr>
+   <td>Passing data using <a href="/en/DOM/The_structured_clone_algorithm" title="The structured clone algorithm">structured cloning</a> . </td>
+   <td>{{CompatChrome(13)}}</td>
+   <td>{{CompatGeckoDesktop(8)}}</td>
+   <td>{{CompatIE(10)}}</td>
+   <td>{{CompatOpera(11.50)}}</td>
+   <td>{{CompatSafari(5.1)}}</td>
+  </tr>
+  <tr>
+   <td>Passing data using  <a class="external" href="http://www.w3.org/html/wg/drafts/html/master/infrastructure.html#transferable-objects" title="http://dev.w3.org/html5/spec/common-dom-interfaces.html#transferable-objects">transferable objects</a></td>
+   <td>17 {{ property_prefix("webkit") }}<br>
+    {{CompatChrome(21)}}</td>
+   <td>{{CompatGeckoDesktop(18)}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatOpera(15)}}</td>
+   <td>{{CompatSafari(6)}}</td>
+  </tr>
+  <tr>
+   <td>Global {{ domxref("window.URL", "URL") }}</td>
+   <td>10 as <code>webkitURL</code><br>
+    {{CompatChrome(23)}}</td>
+   <td>{{CompatGeckoDesktop(21)}}</td>
+   <td>{{CompatIE(11)}}</td>
+   <td>{{CompatOpera(15)}}</td>
+   <td>6 as <code>webkitURL</code></td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Chrome for Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Phone</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>Dedicated workers</td>
+   <td>---</td>
+   <td>0.16</td>
+   <td>3.5 (1.9.1)</td>
+   <td>---</td>
+   <td>11</td>
+   <td>5</td>
+  </tr>
+  <tr>
+   <td>Shared workers</td>
+   <td>---</td>
+   <td>{{ CompatNo() }}</td>
+   <td>---</td>
+   <td>---</td>
+   <td>---</td>
+   <td>---</td>
+  </tr>
+  <tr>
+   <td>Passing data using <a href="/en/DOM/The_structured_clone_algorithm" title="The structured clone algorithm">structured cloning</a> . </td>
+   <td>---</td>
+   <td>0.16</td>
+   <td>8</td>
+   <td>---</td>
+   <td>---</td>
+   <td>---</td>
+  </tr>
+  <tr>
+   <td>Passing data using  <a class="external" href="http://www.w3.org/html/wg/drafts/html/master/infrastructure.html#transferable-objectshtml#transferable-objects" title="http://dev.w3.org/html5/spec/common-dom-interfaces.html#transferable-objects">transferable objects</a></td>
+   <td>---</td>
+   <td> </td>
+   <td>18</td>
+   <td>---</td>
+   <td>---</td>
+   <td>---</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li>{{ spec("http://dev.w3.org/html5/workers/", "File API Specification: Web Workers", "ED") }}</li>
+ <li><code><a class="internal" href="/en/DOM/Worker" title="En/DOM/Worker">Worker</a></code> interface</li>
+ <li><code><a class="internal" href="/en/DOM/SharedWorker" title="En/DOM/SharedWorker">SharedWorker</a></code> interface</li>
+ <li><a href="/en/DOM/Worker/Functions_available_to_workers" title="En/DOM/Worker/Functions available to workers">Functions available to workers</a></li>
+ <li><a class="external" href="http://www.html5rocks.com/en/tutorials/workers/basics/#toc-enviornment-subworkers" title="http://www.html5rocks.com/en/tutorials/workers/basics/#toc-enviornment-subworkers">HTML5Rocks - The Basics of Web Workers</a></li>
+ <li><a class="external" href="http://code.google.com/p/chromium/issues/detail?id=127990" title="Chrome has Problems with many workers">Chrome has problems when using too many worker</a></li>
+</ul>

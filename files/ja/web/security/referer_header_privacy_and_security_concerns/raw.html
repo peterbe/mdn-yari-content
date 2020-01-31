@@ -1,0 +1,45 @@
+<p class="summary"><a href="/ja/docs/Web/HTTP/Headers/Referer">HTTP の Referer ヘッダー</a>にまつわるプライバシーとセキュリティのリスクがあります。この記事ではこれらを説明し、これらのリスクを回避するためのアドバイスを提案します。</p>
+
+<h2 id="The_referrer_problem" name="The_referrer_problem">リファラー問題</h2>
+
+<p>{{httpheader("Referer")}} (綴りに注意) ヘッダーには現在リクエストされているページへのリンクをたどる元のウェブページのアドレスが含まれています。これには、分析、ログ、キャッシュの最適化など、問題のない用途がかなりあります。しかし、情報の追跡や盗用など、もっと問題になる用途や、誤って機密情報を漏らすなどの副作用もあります。</p>
+
+<p>例えば、あるソーシャルメディアの「パスワードリセット」ページへのリンクがフッターにあるケースを想像してみてください。リンクをクリックすると、情報を共有する方法によっては、ソーシャルメディアサイトがパスワードをリセットする URL を受け取り、共有された情報が使用されると、ユーザーのセキュリティを侵害する恐れがあります。</p>
+
+<p>同じロジックで、第三者のページにホスティングされている画像があなたの所有するページにも埋め込まれている場合にも重大な情報漏洩につながる可能性があります。たとえセキュリティが侵害されていなくても、その情報はユーザーが必要としているものとは違う場合もあります。</p>
+
+<h2 id="How_can_we_fix_this" name="How_can_we_fix_this">どのように対処できるか</h2>
+
+<p>多くのこのようなリスクは適切なアプリケーション設計によって回避することができます。例えばパスワードリセットのURLは一度だけ使えるものにしたり、また一意のユーザートークンと組み合わせてデータ送信を行うように設計することでリスク回避が見込めます。</p>
+
+<p>重要なデータをURLを通じて外へ送らないために、可能な限り<code><a href="/ja/docs/Web/HTTP/Methods/GET">GET</a></code>ではなく<code><a href="/ja/docs/Web/HTTP/Methods/POST">POST</a></code>を使うようにすべきです。</p>
+
+<p>You should always use {{glossary("HTTPS")}} for your sites. This has many security advantages, inclusing the fact that HTTPS sites will never transmit referer information to non-HTTPS sites. This is becoming less useful in this context now that most of the web is using HTTPS, but it is still a worthy consideration.</p>
+
+<p>In addition, you should consider removing any third party content (e.g. social networking widgets embedded in {{htmlelement("iframe")}}) from secure areas of your website, like password reset pages, payment forms, login areas, etc.</p>
+
+<p>You can also mitigate such risks using:</p>
+
+<ul>
+ <li>The {{httpheader("Referrer-Policy")}} header on your server to control what information is sent through the <code>Referer</code> header. Again, a directive of <code>no-referrer</code> would omit the Referer header entirely.</li>
+ <li>The <code>referrerpolicy</code> attribute on HTML elements that are in danger of leaking such information (such as <code><a href="/ja/docs/Web/HTML/Element/img">&lt;img&gt;</a></code> and <code><a href="/ja/docs/Web/HTML/Element/a">&lt;a&gt;</a></code>). This can 例えば、be set to <code>no-referrer</code> to stop the <code>Referer</code> header being sent altogether.</li>
+ <li>The <code>rel</code> attribute set to <code>noreferrer</code> on HTML elements that are in danger of leaking such information (such as <code><a href="/ja/docs/Web/HTML/Element/img">&lt;img&gt;</a></code> and <code><a href="/ja/docs/Web/HTML/Element/a">&lt;a&gt;</a></code>). See <a href="/ja/docs/Web/HTML/Link_types">Link types</a> and search for <code>noreferrer</code> for more information.</li>
+ <li>The <a href="https://geekthis.net/post/hide-http-referer-headers/#exit-page-redirect">Exit page</a> technique.</li>
+</ul>
+
+<p>Security-conscious server-side frameworks tend to have built in mitigations for such problems, 例えば、:</p>
+
+<ul>
+ <li><a href="https://docs.djangoproject.com/en/stable/topics/security/">Security in Django</a> (especially see <a href="https://docs.djangoproject.com/en/stable/topics/security/#cross-site-request-forgery-csrf-protection">Cross site request forgery (CSRF) protection</a>).</li>
+ <li><a href="https://github.com/helmetjs/referrer-policy">helmetjs referrer-policy</a> — middleware for setting Referrer-Policy in Node.js/Express apps (see also <a href="https://github.com/helmetjs">helmetjs</a> for more security provisions).</li>
+</ul>
+
+<h2 id="Policy_and_requirements" name="Policy_and_requirements">Policy and requirements</h2>
+
+<p>It would make sense to write a set of security and privacy requirements for your project team(s) that specify usage of such features to mitigate the associated risks. You should enlist the help of a web security expert to write these requirements, and consider both user needs and welfare, as well as other issues like policy and regulation enforced by legislation such as the <a href="https://ec.europa.eu/commission/priorities/justice-and-fundamental-rights/data-protection/2018-reform-eu-data-protection-rules_en">EU General Data Protection Regulation (GDPR)</a>.</p>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li><a href="https://infosec.mozilla.org/guidelines/web_security.html#referrer-policy">Mozilla security team guidelines on Referrer-Policy</a></li>
+</ul>

@@ -1,0 +1,80 @@
+<p>{{APIRef("Media Capture and Streams")}}</p>
+
+<p><span class="seoSummary">{{domxref("MediaStreamTrack")}}接口的</span><strong>applyConstraints</strong>方法应用一组约束;这些约束让Web站点或应用程序为轨道的可约束属性(如帧速率、尺寸、回波抵消等)建立理想值和可接受的值范围。</p>
+
+<p>可以使用约束来确保媒体符合您喜欢的某些指导方针。例如，您可能更喜欢高密度的视频，但是要求帧速率稍微低一点，以帮助保持足够低的数据速率，而不会给网络带来过多的负担。约束还可以指定理想的和/或可接受的大小或大小范围。有关如何应用首选约束的更多信息，请参见在功能、约束和设置中应用约束。</p>
+
+<h2 id="Syntax">Syntax</h2>
+
+<pre class="syntaxbox">var <em>appliedPromise</em> = <em>MediaStreamTrack</em>.applyConstraints(<em>constraints</em>);</pre>
+
+<h3 id="Parameters">Parameters</h3>
+
+<dl>
+ <dt><code>constraints</code> {{optional_inline}}</dt>
+ <dd>A {{domxref("MediaTrackConstraints")}} object listing the constraints to apply to the track's constrainable properties; any existing constraints are replaced with the new values specified, and any constrainable properties not included are restored to their default constraints. If this parameter is omitted, all currently set custom constraints are cleared. This object represents the basic set of constraints that must apply for the Promise to resolve. The object may contain an advanced property containing an array of additional MediaTrackConstrants objects, which are treated as exact requires. </dd>
+</dl>
+
+<h3 id="Return_value">Return value</h3>
+
+<p>A {{jsxref("Promise")}} which resolves when the constraints have been successfully applied. If the constraints cannot be applied, the promise is rejected with a {{domxref("MediaStreamError")}} whose name is <code>OverconstrainedError</code>, to indicate that the constraints could not be met. This can happen if the specified constraints are too strict to find a match when attempting to configure the track.</p>
+
+<h2 id="Examples">Examples</h2>
+
+<p>The following shows how to specify a basic and advanced set of constraints. It specifies that the page or web app needs a width between 640 and 1280 and a height between 480 and 720, with the later number in each pair being preferred. The advanced property further specifies that an image size of 1920 by 1280 is the preferred or an aspect ratio of 1.333 if that is not available. Note that these constraints also illustrate what the spec refers to as a <em>backoff strategy</em>.</p>
+
+<pre class="brush: js">const constraints = {
+  width: {min: 640, ideal: 1280},
+  height: {min: 480, ideal: 720},
+  advanced: [
+    {width: 1920, height: 1280},
+    {aspectRatio: 1.333}
+  ]
+};
+
+navigator.mediaDevices.getUserMedia({ video: true })
+.then(mediaStream =&gt; {
+  const track = mediaStream.getVideoTracks()[0];
+  track.applyConstraints(constraints)
+  .then(() =&gt; {
+    // Do something with the track such as using the Image Capture API.
+  })
+  .catch(e =&gt; {
+    // The constraints could not be satisfied by the available devices.
+  })
+})
+</pre>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('Media Capture', '#dom-mediatrackconstraints', 'applyConstraints()')}}</td>
+   <td>{{Spec2('Media Capture')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('MediaStream Image', '#mediatrackconstraintset-section','applyConstraints()')}}</td>
+   <td>{{Spec2('MediaStream Image')}}</td>
+   <td>Adds image constraints.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("api.MediaStreamTrack.applyConstraints")}}</p>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/MediaStream_Image_Capture_API">MediaStream Image Capture API</a></li>
+</ul>

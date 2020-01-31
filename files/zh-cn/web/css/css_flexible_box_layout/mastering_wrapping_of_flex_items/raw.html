@@ -1,0 +1,87 @@
+<p>{{CSSRef}}</p>
+
+<p>Flexbox被设计为一维布局，这意味着这种布局可以将Flex项目在一行或一列上布置——但不能同时布置。但是将Flex项目包装在新行上是可能的，如果{{cssxref("flex-direction")}}属性为 <code>row</code> ，则创建新行、如果为 <code>column</code>则创建新列。本教程中，我们会解释这样做的工作原理、设计目的以及真正需要 <a href="/en-US/docs/Web/CSS/CSS_Grid_Layout">CSS Grid Layout</a> 而不是Flexbox的地方。</p>
+
+<h2 id="包装起来">包装起来</h2>
+
+<p>{{cssxref("flex-wrap")}}属性的初始值为 <code>nowrap</code>。这意味着，如果你有一组对于Flex容器来说过宽的Flex项目，它们就会溢出。如果要使它们在宽度过大时自动换行，则必须为 <code>flex-wrap</code> 属性添加 <code>wrap</code>，或者为速记属性{{cssxref("flex-flow")}}设置值为 <code>row wrap</code> 或 <code>column wrap</code>。</p>
+
+<p>Flex项目将被包装起来。在下一个例子中，我们会有十个Flex项目，所有Flex项目的 <code>flex-basis</code> 将为 <code>160px</code> ，并且它们能够增长和收缩。一旦第一行没有足够的空间来放置另一个160px的Flex项目，就会为这些Flex项目创建一行新的伸缩行，以此类推，直到所有的Flex项目均被放置完毕。随着Flex项目宽度的增长，它们将扩大至大于160px以完全填满Flex容器的每一行。如果最后一行只有一项，它将拉伸以填满整行。</p>
+
+<p>{{EmbedGHLiveSample("css-examples/flexbox/wrapping/row-wrap.html", '100%', 650)}}</p>
+
+<p>我们可以看到列布局也发生了同样的事。Flex容器需要具有一定的宽度，以便Flex项目被包装并创建新的列，并且Flex项目被拉伸的更高以填充每个列。</p>
+
+<p>{{EmbedGHLiveSample("css-examples/flexbox/wrapping/column-wrap.html", '100%', 810)}}</p>
+
+<h2 id="Wrapping_and_flex-direction">Wrapping and flex-direction</h2>
+
+<p>Wrapping works as you might expect when combined with <code>flex-direction</code>. If <code>flex-direction</code> is set to <code>row-reverse</code> then the items will start from the end edge of the container and lay themselves out in reverse ordered lines.</p>
+
+<p>{{EmbedGHLiveSample("css-examples/flexbox/wrapping/row-reverse-wrap.html", '100%', 750)}}</p>
+
+<p>Note that the reversing is only happening in the inline, row direction. We start on the right then go onto the second line and again start from the right. We aren’t reversing in both directions, starting from the bottom coming up the container!</p>
+
+<h2 id="Single-dimensional_layout_explained">Single-dimensional layout explained</h2>
+
+<p>As we have seen from the above examples if our items are allowed to grow and shrink, when there are fewer items in the last row or column then those items grow to fill the available space.</p>
+
+<p>There is no method in flexbox to tell items in one row to line up with items in the row above — each flex line acts like a new flex container. It deals with space distribution across the main axis. If there is only one item, and that item is allowed to grow, it will fill the axis just as if you had a single item flex container.</p>
+
+<p>If you want layout in two dimensions then you probably want Grid Layout. We can compare our wrapped row example above with the CSS Grid version of that layout to see the difference. The following live sample uses CSS Grid Layout to create a layout that has as many columns of at least 160 pixels as will fit, distributing the extra space between all columns. However, in this case the items stay in their grid and don’t stretch out when there are fewer of them on the final row.</p>
+
+<p>{{EmbedGHLiveSample("css-examples/flexbox/wrapping/grid-example.html", '100%', 700)}}</p>
+
+<p>This is the difference between one and two-dimensional layout. In a one dimensional method like flexbox, we only control the row or column. In two dimensional layout like grid we control both at the same time. If you want the space distribution row by row, use flexbox. If you don’t, use Grid.</p>
+
+<h2 id="How_do_flexbox-based_grid_systems_work">How do flexbox-based grid systems work?</h2>
+
+<p>Typically flexbox-based grid systems work by taking flexbox back to the familiar world of float-based layouts. If you assign percentage widths to flex items — either as <code>flex-basis</code> or by adding a width to the item itself leaving the value of <code>flex-basis</code> as <code>auto</code> — you can get the impression of a two dimensional layout. You can see this working in the example below.</p>
+
+<p>Here I have set <code>flex-grow</code> and <code>flex-shrink</code> to <code>0</code> to make inflexible flex items and am then controlling flexibility using percentages, just like we used to do in float layouts.</p>
+
+<p>{{EmbedGHLiveSample("css-examples/flexbox/wrapping/flex-grid.html", '100%', 650)}}</p>
+
+<p>If you need flex items to line up in the cross axis, controlling the width in this way will achieve that. In most cases however, adding widths to flex items in this way demonstrates that you would probably be better served by switching to grid layout for that component.</p>
+
+<h2 id="Creating_gutters_between_items">Creating gutters between items</h2>
+
+<p>When wrapping flex items, the need to space them out is likely to arise. At the current time we do not have any implementations of the gap properties from the <a href="https://www.w3.org/TR/css-align-3/">Box Alignment module</a> for Flexbox. In the future we will be able to simply use <code>row-gap</code> and <code>column-gap</code> for flexbox as we do for CSS Grid. At the current time you will need to use margins to achieve this.</p>
+
+<p>You can see from the live example below that in order to create gaps that do not also create a gap at the edges of the container, we need to use negative margins on the flex container itself. Any border on the flex container is then moved to a second wrapper in order that the negative margin can pull the items up to that wrapper element.</p>
+
+<p>It is this requirement that the gap properties, once implemented, will solve for us. Proper gaps only happen on the inside edges of items.</p>
+
+<p>{{EmbedGHLiveSample("css-examples/flexbox/wrapping/gaps.html", '100%', 830)}}</p>
+
+<h2 id="Collapsed_items">Collapsed items</h2>
+
+<p>The flexbox specification details what should happen if a flex item is collapsed by setting <code>visibility: collapse</code> on an item. See the MDN documentation for the {{cssxref("visibility")}} property. The specification describes the behaviour as follows:</p>
+
+<blockquote>
+<p>“Specifying visibility:collapse on a flex item causes it to become a collapsed flex item, producing an effect similar to visibility:collapse on a table-row or table-column: the collapsed flex item is removed from rendering entirely, but leaves behind a "strut" that keeps the flex line’s cross-size stable. Thus, if a flex container has only one flex line, dynamically collapsing or uncollapsing items may change the flex container’s main size, but is guaranteed to have no effect on its cross size and won’t cause the rest of the page’s layout to "wobble". Flex line wrapping is re-done after collapsing, however, so the cross-size of a flex container with multiple lines might or might not change.” - <a href="https://www.w3.org/TR/css-flexbox-1/#visibility-collapse">Collapsed items</a></p>
+</blockquote>
+
+<p>This behaviour is useful if you want to target flex items using JavaScript to show and hide content for example. The example in the specification demonstrates one such pattern.</p>
+
+<p>In the following live example I have a non-wrapped flex container. The third item has more content than the others yet is set to <code>visibility: collapse</code> and therefore the flex container is retaining a <em>strut</em> of the height required to display this item. If you remove <code>visibility: collapse</code> from the CSS or change the value to <code>visible</code>, you will see the item disappear and the space redistribute between non-collapsed items; the height of the flex container should not change.</p>
+
+<div class="note">
+<p><strong>Note</strong>: Use Firefox for the below two examples as Chrome and Safari treat collapse as hidden.</p>
+</div>
+
+<p>{{EmbedGHLiveSample("css-examples/flexbox/wrapping/visibility-collapse.html", '100%', 650)}}</p>
+
+<p>When dealing with multiple-line flex containers however you need to understand that the wrapping is re-done <em>after</em> collapsing. So the browser needs to re-do the wrapping behaviour to account for the new space that the collapsed item has left in the inline direction.</p>
+
+<p>This means that items might end up on a different line to the one they started on. In the case of an item being shown and hidden it could well cause the items to end up in a different row.</p>
+
+<p>I have created this behaviour in the next live example. You can see how the stretching changes row based on the location of the collapsed item. If you add more content to the second item, it changes row once it gets long enough. That top row then only becomes as tall as a single line of text.</p>
+
+<p>{{EmbedGHLiveSample("css-examples/flexbox/wrapping/wrapped-visibility-collapse.html", '100%', 750)}}</p>
+
+<p>If this causes a problem for your layout it may require a rethinking of the structure, for example putting each row into a separate flex container in order that they can’t shift rows.</p>
+
+<h3 id="The_difference_between_visibility_hidden_and_display_none">The difference between <code>visibility: hidden</code> and <code>display: none</code></h3>
+
+<p>When you set an item to <code>display: none</code> in order to hide it, the item is removed from the formatting structure of the page. What this means in practice is that counters ignore it, and things like transitions do not run. Using <code>visibility: hidden</code> keeps the box in the formatting structure which is useful in that it still behaves as if it were part of the layout even though the user can’t see it.</p>

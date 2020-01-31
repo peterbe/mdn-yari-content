@@ -1,0 +1,126 @@
+<p>{{APIRef("Service Workers API")}}{{ SeeCompatTable() }}</p>
+
+<p><code>InstallEvent</code> インターフェースは、{{domxref("ServiceWorker")}} の {{domxref("ServiceWorkerGlobalScope")}} で送出されるインストールアクションを表します。{{domxref("ExtendableEvent")}} の子として、インストール中に（{{domxref("FetchEvent")}} のような）機能的なイベントが送出されないようになっています。</p>
+
+<h2 id="プロパティ">プロパティ</h2>
+
+<p><em>祖先である {{domxref("Event")}} からプロパティを継承します</em>。</p>
+
+<h2 id="メソッド">メソッド</h2>
+
+<p><em>親である </em><em>{{domxref("ExtendableEvent")}} からメソッドを継承します</em>。</p>
+
+<h2 id="例" style="line-height: 30px; font-size: 2.14285714285714rem;">例</h2>
+
+<p style="line-height: 19.0909080505371px;">このコードスニペットは、<a href="https://github.com/GoogleChrome/samples/blob/gh-pages/service-worker/prefetch/service-worker.js">service worker fetch sample</a> のものです。コードが、{{domxref("ServiceWorkerGlobalScope.oninstall")}} で {{domxref("ExtendableEvent.waitUntil", "ExtendableEvent.waitUntil(any value)")}} を呼び出すと、渡された promise がうまく解決するまで {{domxref("ServiceWorkerRegistration.installing")}} worker がインストール済みとして扱うことを遅延できます。promise はすべてのリソースを取得してキャッシュした場合か、何らかの例外が起こった場合に解決されます。</p>
+
+<p style="line-height: 19.0909080505371px;">コードスニペットは、service worker を使用したキャッシュのバージョン管理のベストプラクティスも示しています。この例では、1 つしかキャッシュがありませんが、複数のキャッシュに対しても同じアプローチができます。これは、特定のバージョン管理されたキャッシュに、ショートハンド識別子をマップします。</p>
+
+<div class="note" style="line-height: 19.0909080505371px;">
+<p><strong>ノート</strong>: ログステートメントは、"Inspect" インターフェースの SW が関連する chrome://serviceworker-internals から見ることができます。</p>
+</div>
+
+<pre class="brush: js" style="font-size: 14px;">var CACHE_VERSION = 1;
+var CURRENT_CACHES = {
+  prefetch: 'prefetch-cache-v' + CACHE_VERSION
+};
+
+self.addEventListener('install', function(event) {
+  var urlsToPrefetch = [
+    './static/pre_fetched.txt',
+    './static/pre_fetched.html',
+    'https://www.chromium.org/_/rsrc/1302286216006/config/customLogo.gif'
+  ];
+
+console.log('Handling install event. Resources to pre-fetch:', urlsToPrefetch);
+
+  event.waitUntil(
+    caches.open(CURRENT_CACHES['prefetch']).then(function(cache) {
+      cache.addAll(urlsToPrefetch.map(function(urlToPrefetch) {
+        return new Request(urlToPrefetch, {mode: 'no-cors'});
+      })).then(function() {
+        console.log('All resources have been fetched and cached.');
+      });
+    }).catch(function(error) {
+      console.error('Pre-fetching failed:', error);
+    })
+  );
+});</pre>
+
+<h2 id="仕様">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">ステータス</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('Service Workers', '#install-event-section', 'FetchEvent')}}</td>
+   <td>{{Spec2('Service Workers')}}</td>
+   <td>初期定義。</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="ブラウザー実装状況">ブラウザー実装状況</h2>
+
+<div>{{CompatibilityTable}}</div>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>機能</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari (WebKit)</th>
+  </tr>
+  <tr>
+   <td>基本サポート</td>
+   <td>{{CompatChrome(40.0)}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>24</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>機能</th>
+   <th>Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>Firefox OS</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+   <th>Chrome for Android</th>
+  </tr>
+  <tr>
+   <td>基本サポート</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatNo}}</td>
+   <td><span style="font-size: 12px; line-height: 16.3636360168457px;">{{CompatChrome(40.0)}}</span></td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="関連項目">関連項目</h2>
+
+<ul>
+ <li>{{jsxref("Promise")}}</li>
+ <li><a href="/ja/docs/Web/API/Fetch_API">Fetch API</a></li>
+</ul>

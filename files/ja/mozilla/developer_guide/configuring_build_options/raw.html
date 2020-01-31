@@ -1,0 +1,559 @@
+<p>デフォルトオプションの状態で configure および make を実行しても、動作するビルドを作り上げることはできません。.mozconfig ファイルを使って、相応のリリースビルドを入手してください。ビルドの前に次のガイドをよく読み、順番に従ってください。工程を 1 つでも飛ばせば、ソフトウェアをビルドできないか、使い物にならないビルドができるでしょう。</p>
+
+<p>{{ 英語版章題("Using a .mozconfig Configuration File") }}</p>
+
+<h3 id=".mozconfig_.E8.A8.AD.E5.AE.9A.E3.83.95.E3.82.A1.E3.82.A4.E3.83.AB.E3.82.92.E4.BD.BF.E3.81.86" name=".mozconfig_.E8.A8.AD.E5.AE.9A.E3.83.95.E3.82.A1.E3.82.A4.E3.83.AB.E3.82.92.E4.BD.BF.E3.81.86">.mozconfig 設定ファイルを使う</h3>
+
+<p>手動でコマンドラインオプションを使って <code>configure</code> を実行することも可能ですが、推奨しません。代わりに、ソースディレクトリに .mozconfig ファイルを置いてください (mozilla/.mozconfig)。または HOME ディレクトリに .mozconfig ファイルを置いてください (~/.mozconfig)。</p>
+
+<pre class="eval">echo "# My first mozilla config" &gt; .mozconfig
+</pre>
+
+<p>.mozconfig は 2 種類のオプションから成り立っています。</p>
+
+<ul>
+ <li><code>mk_add_options</code> 接頭辞の付いたオプションは <code>client.mk</code> に渡され、通常は cvs チェックアウトやアップデートを制御するものです。</li>
+ <li><code>ac_add_options</code> 接頭辞の付いたオプションは <code>configure</code> に渡され、ビルドプロセスに影響を及ぼします。</li>
+</ul>
+
+<p>これらのオプションは <code>./configure</code> や <code>make -f client.mk</code> が実行されるときに自動的に使用されます。</p>
+
+<p>このページの下の方に .mozconfig ファイルの例がいくつかあります。</p>
+
+<p><br>
+ MOZCONFIG 環境変数を設定ファイルのフルパスに設定する方法もあります:</p>
+
+<pre class="eval">export MOZCONFIG=~/mozilla/mozconfig-firefox
+</pre>
+
+<p>この方法は、アプリケーションや設定ごとに異なる複数の .mozconfig ファイルを使い分けることができるので便利です。 この 'export' の例ではファイル名が .mozconfig ではないことに注意してください。実際に使用するファイルの名前がなんであれ、以下の例ではこのファイルのことを .mozconfig ファイルと呼びます。</p>
+
+<p>{{ 英語版章題("Building with an Objdir") }}</p>
+
+<h3 id=".E3.82.AA.E3.83.96.E3.82.B8.E3.82.A7.E3.82.AF.E3.83.88.E3.83.87.E3.82.A3.E3.83.AC.E3.82.AF.E3.83.88.E3.83.AA.E3.82.92.E7.94.A8.E3.81.84.E3.81.A6.E3.83.93.E3.83.AB.E3.83.89.E3.81.99.E3.82.8B" name=".E3.82.AA.E3.83.96.E3.82.B8.E3.82.A7.E3.82.AF.E3.83.88.E3.83.87.E3.82.A3.E3.83.AC.E3.82.AF.E3.83.88.E3.83.AA.E3.82.92.E7.94.A8.E3.81.84.E3.81.A6.E3.83.93.E3.83.AB.E3.83.89.E3.81.99.E3.82.8B">オブジェクトディレクトリを用いてビルドする</h3>
+
+<p>mozilla をビルドする際にオブジェクトディレクトリを使用することを強く勧めます。これによってソースコードとオブジェクトファイルがディレクトリシステム内で混ざらなくなります。オブジェクトディレクトリを使うと、同じソースツリーから複数のアプリケーション（例えば Firefox と Thunderbird）をビルドすることができます。</p>
+
+<p>オブジェクトディレクトリを使うことでソースツリー中の各 Makefile.in ファイルがオブジェクトディレクトリ内の Makefile に変わります。Makefile.in の親ディレクトリはオブジェクトディレクトリ内の対応する Makefile と同じ親ディレクトリになります。例えばファイル <code>mozilla/modules/plugin/base/src/Makefile.in</code> の場合、オブジェクトディレクトリを <code>@TOPSRCDIR@/obj-debug</code> とすると、ファイルおよびディレクトリパス <code>mozilla/obj-debug/modules/plugin/base/src/Makefile</code> が作られます。この Makefile は <code>mozilla/modules/plugin/base/src</code> ディレクトリ内のソースファイルを参照してくれます。</p>
+
+<p>configure を手動で再実行する必要がある場合は、オブジェクトディレクトリ内から configure スクリプトの絶対パスを用いて作業を行ってください。例えば Win32 で実行する場合、かつソースツリーが <code>/cygdrive/c/Projects/FIREFOX/mozilla</code> にある場合、手動で configure を実行する必要があるときには常にオブジェクトディレクトリ内から <code>/cygdrive/c/Projects/FIREFOX/mozilla/configure</code> を実行することになります。</p>
+
+<p>.mozconfig に次の行を追加することでオブジェクトディレクトリが有効になります。</p>
+
+<pre class="eval">mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/../obj-@CONFIG_GUESS@
+</pre>
+
+<p>オブジェクトディレクトリを 'mozilla' ディレクトリの中に置かないようにしてください。そうしないと大量のビルドエラーが表示されるでしょう。</p>
+
+<p>{{ 英語版章題("Choose an Application") }}</p>
+
+<h3 id=".E3.82.A2.E3.83.97.E3.83.AA.E3.82.B1.E3.83.BC.E3.82.B7.E3.83.A7.E3.83.B3.E3.82.92.E9.81.B8.E3.81.B6" name=".E3.82.A2.E3.83.97.E3.83.AA.E3.82.B1.E3.83.BC.E3.82.B7.E3.83.A7.E3.83.B3.E3.82.92.E9.81.B8.E3.81.B6">アプリケーションを選ぶ</h3>
+
+<p> </p>
+
+<dl>
+ <dt>Mozilla Suite (SeaMonkey)</dt>
+ <dd>以下のオプションを指定してください。
+ <pre class="eval">ac_add_options --enable-application=suite
+# CVS から SeaMonkey をチェックアウトするために以下のオプションを使う。
+mk_add_options MOZ_CO_PROJECT=suite
+</pre>
+
+ <p> </p>
+ </dd>
+ <dt>ブラウザ (Firefox)</dt>
+ <dd>.mozconfig ファイルで Firefox の {{ Source("browser/config/mozconfig", "デフォルトの mozconfig ファイル") }} を読み込んでください。
+ <pre class="eval">. $topsrcdir/browser/config/mozconfig
+</pre>
+
+ <p>今後ファイルの内容が変わるかもしれないので、ファイルの内容を mozconfig にコピーアンドペーストしないでください！</p>
+
+ <p> </p>
+ </dd>
+ <dt>メール (Thunderbird)</dt>
+ <dd>.mozconfig ファイルで Thunderbird の {{ Source("mail/config/mozconfig", "デフォルトの mozconfig ファイル") }} を読み込んでください。
+ <pre class="eval">. $topsrcdir/mail/config/mozconfig
+</pre>
+
+ <p>今後ファイルの内容が変わるかもしれないので、ファイルの内容を mozconfig にコピーアンドペーストしないでください！</p>
+
+ <p> </p>
+ </dd>
+ <dt>スタンドアローンな Calendar (Sunbird)</dt>
+ <dd>.mozconfig ファイルで Sunbird の {{ Source("calendar/sunbird/config/mozconfig", "デフォルトの mozconfig ファイル") }} を読み込んでください。
+ <pre class="eval">. $topsrcdir/calendar/sunbird/config/mozconfig
+</pre>
+
+ <p>今後ファイルの内容が変わるかもしれないので、ファイルの内容を mozconfig にコピーアンドペーストしないでください！</p>
+
+ <p> </p>
+ </dd>
+ <dt>XULRunner</dt>
+ <dd>.mozconfig ファイルで XULRunner の {{ Source("xulrunner/config/mozconfig", "デフォルトの mozconfig ファイル") }} を読み込んでください。
+ <pre class="eval">. $topsrcdir/xulrunner/config/mozconfig
+</pre>
+
+ <p>今後ファイルの内容が変わるかもしれないので、ファイルの内容を mozconfig にコピーアンドペーストしないでください！</p>
+
+ <p> </p>
+ </dd>
+</dl>
+
+<p>{{ 英語版章題("Selecting Build Options") }}</p>
+
+<h3 id=".E3.83.93.E3.83.AB.E3.83.89.E3.82.AA.E3.83.97.E3.82.B7.E3.83.A7.E3.83.B3.E3.82.92.E9.81.B8.E3.81.B6" name=".E3.83.93.E3.83.AB.E3.83.89.E3.82.AA.E3.83.97.E3.82.B7.E3.83.A7.E3.83.B3.E3.82.92.E9.81.B8.E3.81.B6">ビルドオプションを選ぶ</h3>
+
+<p>選ぶべきビルドオプションは、どのアプリケーションをビルドするつもりなのか、そのビルドを何のために使うのかに依存します。ビルドを定期的に使用したいのであれば、余計なデバッグ情報を含まないリリースビルドが必要でしょう。ソースコードをハックしたい開発者ならば、余計なデバッグマクロを含んだ最適化されていないビルドが必要でしょう。</p>
+
+<p>configure スクリプトに認識されるオプションの中には、組み込みなどの特別な目的のためのものであって、完全なスイートや XUL アプリケーションをビルドするためには使うべきではないものがたくさんあります。オプションの完全なリストを手に入れるには、./configure --help を実行してください。</p>
+
+<p><strong>目的のわからない configure オプションは使わないでください！</strong> 以下が非常に一般的なビルドオプションです。</p>
+
+<p>{{ 英語版章題("Optimization") }}</p>
+
+<h4 id=".E6.9C.80.E9.81.A9.E5.8C.96" name=".E6.9C.80.E9.81.A9.E5.8C.96">最適化</h4>
+
+<dl>
+ <dt>ac_add_options --enable-optimize </dt>
+ <dd>デフォルトの最適化オプションを有効にします。</dd>
+ <dt>ac_add_options --enable-optimize=-O2 </dt>
+ <dd>特定の最適化オプションを指定します。ほとんどの場合、mozilla コードベースをよく知っているのでないならば希望の結果を得られません。</dd>
+ <dt>ac_add_options --disable-debug </dt>
+ <dd>余計なデバッグマクロを無効にします。</dd>
+ <dt>ac_add_options --disable-optimize </dt>
+ <dd>最適化を無効にします。デバッガでの解析を簡易化します。</dd>
+ <dt>ac_add_options --enable-debug </dt>
+ <dd>デバッグマクロや他のデバッグ専用コードを有効にします。ビルドは著しく遅くなりますが、パッチを書く際に大変有用です。</dd>
+</dl>
+
+<p>{{ 英語版章題("Graphics Toolkit") }}</p>
+
+<h4 id=".E3.82.B0.E3.83.A9.E3.83.95.E3.82.A3.E3.83.83.E3.82.AF.E3.82.B9.E3.83.84.E3.83.BC.E3.83.AB.E3.82.AD.E3.83.83.E3.83.88" name=".E3.82.B0.E3.83.A9.E3.83.95.E3.82.A3.E3.83.83.E3.82.AF.E3.82.B9.E3.83.84.E3.83.BC.E3.83.AB.E3.82.AD.E3.83.83.E3.83.88">グラフィックスツールキット</h4>
+
+<p> </p>
+
+<dl>
+ <dt>ac_add_options --enable-default-toolkit=gtk2|gtk|xlib|qt|cairo-gtk2|cairo-windows|windows|mac|cocoa|cairo-cocoa|os2|beos|photon</dt>
+ <dd>グラフィックスツールキットを選択します。
+ <p>トランク / 1.9 (Firefox 3) をビルドする場合、どのプラットフォームでもこのオプションは必要ありません。グラフィックスツールキットを手動で選択すると、まったく動かないか、バグだらけのビルドができあがる可能性があります。 The available toolkits differ from those listed above.</p>
+
+ <p>1.8 ブランチをビルドする場合、Windows、OS2、BeOS、Photon では自動的に正しいツールキットが選択されるので、これらのプラットフォームでは必要ありません。Mac でも古いブランチの Camino をビルドするのでなければ必要ありません（Camino は --enable-default-toolkit=cocoa を使用します）。</p>
+
+ <p>*nix プラットフォームではグラフィックスツールキットを選択します。GTK2 と GTK はともに十分にテストされています。xlib は <a class="external" href="http://www.mozilla.org/build/faq.html#supported">tier-3 プラットフォーム</a> であるとみなされています。Qt と cairo は実験的なのでバグがあるでしょう。</p>
+
+ <p> </p>
+ </dd>
+ <dt>ac_add_options --enable-xft</dt>
+ <dd>XFT による高品位のフォントレンダリングを有効にします。--enable-default-toolkit=gtk2 としたときにのみ使用可能で、gtk2 を使う際には推奨します。このオプションはトランクには無くなりました (XFT は cairo-gtk2 に必須) 。
+ <p> </p>
+ </dd>
+ <dt>ac_add_options --enable-freetype2</dt>
+ <dd>freetype によるフォントレンダリングを有効にします。これは GTK ツールキットではデフォルトです。--enable-xft とは共存できません。トランクには適用されません。</dd>
+</dl>
+
+<p>{{ 英語版章題("Statically Linking Components") }}</p>
+
+<h4 id=".E3.82.B3.E3.83.B3.E3.83.9D.E3.83.BC.E3.83.8D.E3.83.B3.E3.83.88.E3.81.AE.E9.9D.99.E7.9A.84.E3.83.AA.E3.83.B3.E3.82.AF" name=".E3.82.B3.E3.83.B3.E3.83.9D.E3.83.BC.E3.83.8D.E3.83.B3.E3.83.88.E3.81.AE.E9.9D.99.E7.9A.84.E3.83.AA.E3.83.B3.E3.82.AF">コンポーネントの静的リンク</h4>
+
+<p> </p>
+
+<dl>
+ <dt><code>ac_add_options --enable-libxul</code> <em>(デフォルト)</em></dt>
+ <dd>コア gecko コンポーネントを libxul という単一のライブラリとしてビルドします。再配置の実行回数を減らすことで起動時と実行時のパフォーマンスが改善します。
+ <p> </p>
+ </dd>
+ <dt><code>ac_add_options --enable-static --disable-libxul</code></dt>
+ <dd>これらのオプションはより大きな単一の実行ファイルを作ります。このファイルは静的にリンクされたコンポーネントを保持します。<code>--enable-static</code> には <code>--disable-libxul</code> が必須です。 <code>--enable-static</code> を使用するのであれば <code>--disable-tests</code> も推奨します。このオプションは Firefox では非推奨です。libxul 設定ではまだビルドできない Thunderbird や SeaMonkey のためだけに存在しています。
+ <p> </p>
+ </dd>
+ <dt><code>ac_add_options --disable-static --disable-libxul</code></dt>
+ <dd>これらのオプションはコンポーネントを別々の共有ライブラリにします。これによりデバッグやインクリメンタルコンパイルが大変簡単になりますが、結果として得られるビルドは遅くなります。
+ <p> </p>
+ </dd>
+</dl>
+
+<p>{{ 英語版章題("Extensions") }}</p>
+
+<h4 id=".E6.8B.A1.E5.BC.B5.E6.A9.9F.E8.83.BD" name=".E6.8B.A1.E5.BC.B5.E6.A9.9F.E8.83.BD">拡張機能</h4>
+
+<p> </p>
+
+<dl>
+ <dt>ac_add_options --enable-extensions=default|all|ext1,ext2,-skipext3</dt>
+ <dd>{{ Source("extensions/") }} には多くのオプション的なコードがあります。これらの拡張機能の多くはブラウジング体験に不可欠なものであるとみなされています。スイート向け拡張機能のデフォルトのリストがありますが、それぞれのアプリケーション固有の mozconfig は異なったデフォルトセットを指定しています。全てのアプリケーションとは共存できない拡張機能もあります。例えば、
+ <ul>
+  <li>cookie は thunderbird と共存できません</li>
+  <li>typeaheadfind はどのツールキットアプリケーション (Firefox、Thunderbird、Sunbird) とも共存できません</li>
+ </ul>
+
+ <p>どの拡張機能がどのアプリケーションと共存可能かを知らないのであれば、--enable-extensions オプションを使ってはいけません。ビルドシステムが自動的に適当な拡張機能のデフォルトセットを選択してくれます。</p>
+ </dd>
+</dl>
+
+<p>{{ 英語版章題("Tests") }}</p>
+
+<h4 id=".E3.83.86.E3.82.B9.E3.83.88" name=".E3.83.86.E3.82.B9.E3.83.88">テスト</h4>
+
+<p> </p>
+
+<dl>
+ <dt>ac_add_options --disable-tests</dt>
+ <dd>デフォルトでは多くの補助的なテストアプリケーションがビルドされます。これらはデバッグや mozilla のソースにパッチを当てるのに役立ちます。これらのテストアプリケーションを無効にすることでかなりビルド時間を短縮し、ディスクスペースを減らすことができます。</dd>
+ <dt>ac_add_options --disable-mochitest</dt>
+ <dd>上と同じですが、UI を必要とする別のテストのためのものです。</dd>
+</dl>
+
+<p>{{ 英語版章題("Other Options") }}</p>
+
+<h4 id=".E3.81.9D.E3.81.AE.E4.BB.96.E3.81.AE.E3.82.AA.E3.83.97.E3.82.B7.E3.83.A7.E3.83.B3" name=".E3.81.9D.E3.81.AE.E4.BB.96.E3.81.AE.E3.82.AA.E3.83.97.E3.82.B7.E3.83.A7.E3.83.B3">その他のオプション</h4>
+
+<p> </p>
+
+<dl>
+ <dt>ac_add_options --disable-crypto</dt>
+ <dd>暗号化機能はデフォルトで有効になっています。国によっては暗号化機能を持ったソフトウェアの使用や輸出が違法であることがあります。自分の国の暗号に関する法律について熟知しておいてください。
+ <p>1.7 および aviary ブランチでは暗号化機能はデフォルトで無効になっていました。SSL、SMIME あるいは暗号化機能を必要とする他の機能が必要であれば <code>--enable-crypto</code> を指定する必要があります。</p>
+
+ <p> </p>
+ </dd>
+ <dt>ac_add_options --disable-javaxpcom（Java なし）</dt>
+ <dd>XULRunner ではデフォルトで <a href="/ja/JavaXPCOM" title="ja/JavaXPCOM">Java-XPCOM ブリッジ</a> がビルドされます。これは JDK がインストールされていなければなりません。configure 中に <code>The header jni.h was not found. Set $JAVA_HOME or use --with-java-include-path</code> というエラーが発生した場合は <code>ac_add_options --disable-javaxpcom</code> を使用することで java 依存性を無効にすることができます。</dd>
+</dl>
+
+<p>{{ 英語版章題("Example .mozconfig Files") }}</p>
+
+<h3 id=".mozconfig_.E3.83.95.E3.82.A1.E3.82.A4.E3.83.AB.E3.81.AE.E4.BE.8B" name=".mozconfig_.E3.83.95.E3.82.A1.E3.82.A4.E3.83.AB.E3.81.AE.E4.BE.8B">.mozconfig ファイルの例</h3>
+
+<p>{{ 英語版章題("Firefox, Default Release Configuration") }}</p>
+
+<h4 id="Firefox_.E3.81.AE.E3.83.AA.E3.83.AA.E3.83.BC.E3.82.B9.E7.94.A8.E3.83.87.E3.83.95.E3.82.A9.E3.83.AB.E3.83.88.E8.A8.AD.E5.AE.9A" name="Firefox_.E3.81.AE.E3.83.AA.E3.83.AA.E3.83.BC.E3.82.B9.E7.94.A8.E3.83.87.E3.83.95.E3.82.A9.E3.83.AB.E3.83.88.E8.A8.AD.E5.AE.9A">Firefox のリリース用デフォルト設定</h4>
+
+<pre class="eval">. $topsrcdir/browser/config/mozconfig
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/ff-opt
+ac_add_options --disable-tests
+</pre>
+
+<p>{{ 英語版章題("Thunderbird, Debugging Build") }}</p>
+
+<h4 id="Thunderbird_.E3.81.AE.E3.83.87.E3.83.90.E3.83.83.E3.82.B0.E3.83.93.E3.83.AB.E3.83.89" name="Thunderbird_.E3.81.AE.E3.83.87.E3.83.90.E3.83.83.E3.82.B0.E3.83.93.E3.83.AB.E3.83.89">Thunderbird のデバッグビルド</h4>
+
+<pre class="eval">. $topsrcdir/mail/config/mozconfig
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/tbird-debug
+mk_add_options MOZ_CO_PROJECT=mail,calendar
+ac_add_options --disable-optimize
+ac_add_options --enable-debug
+</pre>
+
+<p>{{ 英語版章題("SeaMonkey, Optimized (but not static)") }}</p>
+
+<h4 id="SeaMonkey_.E3.81.AE.E6.9C.80.E9.81.A9.E5.8C.96.EF.BC.88.E9.9D.9E.E9.9D.99.E7.9A.84.EF.BC.89.E3.83.93.E3.83.AB.E3.83.89" name="SeaMonkey_.E3.81.AE.E6.9C.80.E9.81.A9.E5.8C.96.EF.BC.88.E9.9D.9E.E9.9D.99.E7.9A.84.EF.BC.89.E3.83.93.E3.83.AB.E3.83.89">SeaMonkey の最適化（非静的）ビルド</h4>
+
+<pre class="eval">mk_add_options MOZ_CO_PROJECT=suite
+ac_add_options --enable-application=suite
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/suite-opt
+ac_add_options --enable-optimize
+ac_add_options --disable-debug
+</pre>
+
+<p>{{ 英語版章題("XULRunner, Minimal Release Build") }}</p>
+
+<h4 id="XULRunner_.E3.81.AE.E6.9C.80.E5.B0.8F.E3.83.AA.E3.83.AA.E3.83.BC.E3.82.B9.E3.83.93.E3.83.AB.E3.83.89" name="XULRunner_.E3.81.AE.E6.9C.80.E5.B0.8F.E3.83.AA.E3.83.AA.E3.83.BC.E3.82.B9.E3.83.93.E3.83.AB.E3.83.89">XULRunner の最小リリースビルド</h4>
+
+<pre class="eval">mk_add_options MOZ_CO_PROJECT=xulrunner
+mk_add_options MOZ_OBJDIR=@topsrcdir@/obj-xulrunner
+ac_add_options --enable-application=xulrunner
+#ac_add_options --disable-javaxpcom
+</pre>
+
+<p>{{ 英語版章題("Building multiple applications from the same source tree") }}</p>
+
+<h3 id=".E5.90.8C.E4.B8.80.E3.81.AE.E3.82.BD.E3.83.BC.E3.82.B9.E3.83.84.E3.83.AA.E3.83.BC.E3.81.8B.E3.82.89.E8.A4.87.E6.95.B0.E3.81.AE.E3.82.A2.E3.83.97.E3.83.AA.E3.82.B1.E3.83.BC.E3.82.B7.E3.83.A7.E3.83.B3.E3.82.92.E3.83.93.E3.83.AB.E3.83.89.E3.81.99.E3.82.8B" name=".E5.90.8C.E4.B8.80.E3.81.AE.E3.82.BD.E3.83.BC.E3.82.B9.E3.83.84.E3.83.AA.E3.83.BC.E3.81.8B.E3.82.89.E8.A4.87.E6.95.B0.E3.81.AE.E3.82.A2.E3.83.97.E3.83.AA.E3.82.B1.E3.83.BC.E3.82.B7.E3.83.A7.E3.83.B3.E3.82.92.E3.83.93.E3.83.AB.E3.83.89.E3.81.99.E3.82.8B">同一のソースツリーから複数のアプリケーションをビルドする</h3>
+
+<p>必要なソースをすべてチェックアウトしており、アプリケーションごとに <a href="#Building_with_an_Objdir">異なったオブジェクトディレクトリを使用</a> しているのであれば、同一のソースツリーから複数のアプリケーションをビルドすることができます。</p>
+
+<p>複数の mozconfig ファイルを作成したり、または MOZ_BUILD_PROJECTS という make オプションを使用したりすることができます。</p>
+
+<p>{{ 英語版章題("Using MOZ_BUILD_PROJECTS in a single mozconfig") }}</p>
+
+<h4 id=".E5.8D.98.E4.B8.80.E3.81.AE_mozconfig_.E3.81.AB.E3.81.8A.E3.81.84.E3.81.A6_MOZ_BUILD_PROJECTS_.E3.82.92.E4.BD.BF.E3.81.86" name=".E5.8D.98.E4.B8.80.E3.81.AE_mozconfig_.E3.81.AB.E3.81.8A.E3.81.84.E3.81.A6_MOZ_BUILD_PROJECTS_.E3.82.92.E4.BD.BF.E3.81.86">単一の mozconfig において MOZ_BUILD_PROJECTS を使う</h4>
+
+<p>MOZ_BUILD_PROJECTS を使用するには MOZ_OBJDIR および MOZ_BUILD_PROJECTS という make オプションを指定する必要があります。これはスペースで名前を区切ります。それぞれの名前は任意のディレクトリ名をとることができます。それぞれの名前についてトップレベルのオブジェクトディレクトリの下にサブディレクトリが作られます。そうしたら、指定した名前とともに ac_add_app_options を使用して各オブジェクトディレクトリに別々のアプリケーションが入るようにする必要があります。</p>
+
+<p>例：</p>
+
+<pre class="eval"> ac_add_options --disable-optimize --enable-debug 
+ ac_add_options --enable-default-toolkit=gtk2 --disable-freetype2 --enable-xft
+ mk_add_options MOZ_OBJDIR=/home/amil082/mozilla_trunk/obj-@CONFIG_GUESS@
+ mk_add_options MOZ_BUILD_PROJECTS="xulrunner browser mail"
+ mk_add_options MOZ_CO_PROJECT="xulrunner browser mail"
+ ac_add_app_options browser --enable-application=browser
+ ac_add_app_options xulrunner --enable-application=xulrunner
+ ac_add_app_options mail --enable-application=mail
+</pre>
+
+<p>この mozconfig ファイルを使って 1 つのプロジェクトだけをビルドしたい場合は次のコマンドラインを使用します。</p>
+
+<pre class="eval"> make -f client.mk build MOZ_CURRENT_PROJECT=browser
+</pre>
+
+<p>これでブラウザだけがビルドされます。</p>
+
+<p>{{ 英語版章題("Using multiple mozconfig files") }}</p>
+
+<h4 id=".E8.A4.87.E6.95.B0.E3.81.AE_mozconfig_.E3.83.95.E3.82.A1.E3.82.A4.E3.83.AB.E3.82.92.E4.BD.BF.E3.81.86" name=".E8.A4.87.E6.95.B0.E3.81.AE_mozconfig_.E3.83.95.E3.82.A1.E3.82.A4.E3.83.AB.E3.82.92.E4.BD.BF.E3.81.86">複数の mozconfig ファイルを使う</h4>
+
+<p>別の方法として、mozconfig ファイルを分けて作成することもできます。</p>
+
+<p>例として、以下に Firefox と Thunderbird をビルドするためのステップを示します。はじめに 3 つの mozconfig ファイルを作る必要があります。</p>
+
+<p>mozconfig-common:</p>
+
+<pre class="eval">mk_add_options MOZ_CO_PROJECT=browser,mail
+
+# ここに他の共通オプションを追加してください
+# 静的リリースビルドを作り、テストを無効にするなど
+ac_add_options --enable-optimize --disable-debug
+ac_add_options --disable-tests
+</pre>
+
+<p>mozconfig-firefox:</p>
+
+<pre class="eval"># 共通の mozconfig のインクルード
+. ./mozconfig-common
+
+# Firefox のビルド
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/firefox-static
+ac_add_options --enable-application=browser
+</pre>
+
+<p>mozconfig-thunderbird:</p>
+
+<pre class="eval"># 共通の mozconfig のインクルード
+. ./mozconfig-common
+
+# Thunderbird のビルド
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/thunderbird-static
+ac_add_options --enable-application=mail
+</pre>
+
+<p>以下のコマンドを実行してチェックアウトします。</p>
+
+<pre class="eval">export MOZCONFIG=/path/to/mozilla/mozconfig-common
+make -f client.mk checkout
+</pre>
+
+<p>以下のコマンドを実行して Firefox をビルドします。</p>
+
+<pre class="eval">export MOZCONFIG=/path/to/mozilla/mozconfig-firefox
+make -f client.mk build
+</pre>
+
+<p>以下のコマンドを実行して Thunderbird をビルドします。</p>
+
+<pre class="eval">export MOZCONFIG=/path/to/mozilla/mozconfig-thunderbird
+make -f client.mk build
+</pre>
+
+<p>{{ 英語版章題("Complete list of configure options") }}</p>
+
+<h3 id="configure_.E3.82.AA.E3.83.97.E3.82.B7.E3.83.A7.E3.83.B3.E3.81.AE.E5.AE.8C.E5.85.A8.E3.81.AA.E3.83.AA.E3.82.B9.E3.83.88" name="configure_.E3.82.AA.E3.83.97.E3.82.B7.E3.83.A7.E3.83.B3.E3.81.AE.E5.AE.8C.E5.85.A8.E3.81.AA.E3.83.AA.E3.82.B9.E3.83.88">configure オプションの完全なリスト</h3>
+
+<p>{{ Warning("目的のわからない configure オプションは使わないでください。 デフォルトのオプションが存在するのには理由があります！ mozconfig ファイルの設定が少ないほどビルドが成功する可能性は高くなります。") }}</p>
+
+<ul>
+ <li>--{{ mediawiki.external('enable/disable') }}-accessibility - tested and works well in shipping software. このオプションは初期のバージョンでは有効に出来ないため、不安定になるでしょう。詳しい情報は news.mozilla.org の mozilla.dev.accessibility ニュースグループを見てください。</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-activex</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-activex-scripting</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-application=APP</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-auto-deps</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-boehm - Boehm Garbage Collector は非常に古くなっています。</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-canvas</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-chrome-format=jar|flat|both|symlink</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-codesighs</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-compile-environment</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-composer</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-cookies</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-cpp-exceptions</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-cpp-rtti</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-crashreporter - デフォルトで有効ですが、Linux のビルドで問題が起こることがあります。詳しくは <a href="/ja/Developer_Guide/Build_Instructions/Linux_Build_Prerequisites" title="ja/Developer_Guide/Build_Instructions/Linux_Build_Prerequisites">Linux Build Prerequisites</a> を見てください。</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-crypto</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-ctl</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-dbus</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-debug-modules</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-debug{{ mediawiki.external('=DBG') }} - デバッグ出力やその他のコンパイルおよびリンク指示のためのマスタースイッチ。</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-debugger-info-modules</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-default-toolkit=TK</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-dtrace</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-eazel-profiler-support</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-efence</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-elf-dynstr-gc</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-extensions</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-feeds</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-freetypetest</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-glibtest</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-glitz</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-gnomeui</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-gnomevfs</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-help-viewer</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-image-encoders{{ mediawiki.external('={mod1,mod2,default,all,none}') }}</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-inspector-apis</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-install-strip</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-installer</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-insure</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-ipcd</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-javaxpcom</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-jemalloc</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-jprof</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-js-static-build</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-js-ultrasparc</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-jsd</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-jsloader</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-ldap</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-ldap-experimental</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-leaky</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-libIDLtest</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-libxul</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-logging</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-logrefcnt</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-long-long-warning</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-macos-target=VER</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-mailnews</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-mathml</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-md</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-mochitest</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-native-uconv</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-necko-disk-cache</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-necko-protocols{{ mediawiki.external('={http,ftp,default,all,none}') }}</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-necko-small-buffers</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-negotiateauth</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-official-branding</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-oji</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-old-abi-compat-wrappers</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-optimize</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-optimize={{ mediawiki.external('OPT') }}</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-os2-high-mem</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-parental-controls</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-pedantic</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-perf-metrics</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-permissions</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-places</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-plaintext-editor-only</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-plugins</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-postscript</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-prebinding</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-pref-extensions</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-printing</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-profile-guided-optimization</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-profile-modules</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-profilelocking</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-profilesharing</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-quantify</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-rdf</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-reflow-perf</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-safe-browsing</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-shark</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-startup-notification</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-static</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-static-mail</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-storage</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-strip</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-svg</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-svg-foreignobject</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-system-cairo</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-system-hunspell</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-system-lcms</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-system-sqlite</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-tests</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-timeline {{ obsolete_inline("8.0") }}</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-trace-malloc</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-ui-locale=ab-CD</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-universalchardet</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-update-channel=CHANNEL</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-update-packaging</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-updater</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-url-classifier</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-v1-string-abi</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-view-source</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-webservices</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-wrap-malloc</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-xmlextras</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-xpcom-fastload</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-xpcom-lea</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-xpcom-obsolete</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-xpconnect-idispatch</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-xpctools</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-xpfe-components</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-xpinstall</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-xterm-updates</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-xtf</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-xul</li>
+ <li>--{{ mediawiki.external('enable/disable') }}-zipwriter</li>
+ <li>--bindir=DIR</li>
+ <li>--build=BUILD</li>
+ <li>--cache-file=FILE</li>
+ <li>--datadir=DIR</li>
+ <li>--exec-prefix=EPREFIX</li>
+ <li>--help - configure 実行ファイルで利用できるオプションの一覧を出力します。</li>
+ <li>--host=HOST - --host、--target、および --prefix オプションはクロスコンパイルに使用します。</li>
+ <li>--includedir=DIR</li>
+ <li>--infodir=DIR</li>
+ <li>--libdir=DIR</li>
+ <li>--libexecdir=DIR</li>
+ <li>--localstatedir=DIR</li>
+ <li>--mandir=DIR</li>
+ <li>--no-create</li>
+ <li>--oldincludedir=DIR</li>
+ <li>--prefix=PREFIX - --host、--target、および --prefix オプションはクロスコンパイルに使用します。</li>
+ <li>--program-prefix=PREFIX</li>
+ <li>--program-suffix=SUFFIX</li>
+ <li>--program-transform-name=PROGRAM</li>
+ <li>--quiet</li>
+ <li>--sbindir=DIR</li>
+ <li>--sharedstatedir=DIR</li>
+ <li>--srcdir=DIR</li>
+ <li>--sysconfdir=DIR</li>
+ <li>--target=TARGET - --host、--target、および --prefix オプションはクロスコンパイルに使用します。</li>
+ <li>--version</li>
+ <li>--with-PACKAGE{{ mediawiki.external('=ARG') }}</li>
+ <li>--with-branding=dir</li>
+ <li>--with-default-mozilla-five-home</li>
+ <li>--with-distribution-id=ID</li>
+ <li>--with-doc-include-dirs=DIRS</li>
+ <li>--with-doc-input-dirs=DIRS</li>
+ <li>--with-doc-output-dir=DIR</li>
+ <li>--with-embedding-profile=default|basic|minimal</li>
+ <li>--with-ft-exec-prefix=PFX</li>
+ <li>--with-ft-prefix=PFX</li>
+ <li>--with-glib-exec-prefix=PFX</li>
+ <li>--with-glib-exec-prefix=PFX</li>
+ <li>--with-glib-prefix=PFX</li>
+ <li>--with-glib-prefix=PFX</li>
+ <li>--with-insure-dirs=DIRS</li>
+ <li>--with-insure-exclude-dirs=DIRS</li>
+ <li>--with-java-bin-path=dir</li>
+ <li>--with-java-include-path=dir</li>
+ <li>--with-libIDL-exec-prefix=PFX</li>
+ <li>--with-libIDL-prefix=PFX</li>
+ <li>--with-libxul-sdk=PFX</li>
+ <li>--with-macos-sdk=dir</li>
+ <li>--with-nspr-exec-prefix=PFX</li>
+ <li>--with-nspr-prefix=PFX</li>
+ <li>--with-nss-exec-prefix=PFX</li>
+ <li>--with-nss-prefix=PFX</li>
+ <li>--with-pthreads</li>
+ <li>--with-system-bz2{{ mediawiki.external('=PFX') }}</li>
+ <li>--with-system-jpeg{{ mediawiki.external('=PFX') }}</li>
+ <li>--with-system-nspr</li>
+ <li>--with-system-nss</li>
+ <li>--with-system-png{{ mediawiki.external('=PFX') }}</li>
+ <li>--with-system-zlib{{ mediawiki.external('=PFX') }}</li>
+ <li>--with-user-appdir=DIR</li>
+ <li>--with-windows-version=WINVER</li>
+ <li>--with-wrap-malloc=DIR</li>
+ <li>--with-x</li>
+ <li>--with-xulrunner-stub-name=appname</li>
+ <li>--without-PACKAGE</li>
+ <li>--without-libIDL</li>
+ <li>--x-includes=DIR</li>
+ <li>--x-libraries=DIR</li>
+</ul>

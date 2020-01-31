@@ -1,0 +1,241 @@
+<p>De{{ SeeCompatTable() }}</p>
+
+<p>A API de tela cheia fornece uma maneira fácil para o conteúdo da web para ser apresentado usando a tela inteira do usuário. Este artigo fornece informações sobre como usar este API.</p>
+
+<div class="note"><strong>Nota:</strong> Essa API é no início do processo de normalização. Embora ambos Gecko e Google Chrome têm implementações, eles não estão mutuamente compatíveis, e nem implementa o atual projeto de especificação. Por essa razão, pelo menos no Firefox, ele não é habilitado por padrão no Firefox 9, mas é no Firefox 10. Como a especificação é atualmente um projeto extremamente início, esta documentação está sujeita a ser totalmente errado, e é muito preliminar. Uma vez que a especificação se acalmou um pouco, a documentação será limpo para ser mais navegadora agnóstica.</div>
+
+<p>The API lets you easily direct the browser to make an element and its children, if any, occupy the fullscreen, eliminating all browser user interface and other applications from the screen for the duration.</p>
+
+<h2 id="Specification" name="Specification">Activating fullscreen mode</h2>
+
+<p>Given an element that you'd like to present in fullscreen mode (such as a {{ HTMLElement("video") }}, for example), you can present it in fullscreen mode by simply calling its <code>requestFullscreen()</code> method; this method is implemented in Gecko as {{ domxref("element.mozRequestFullScreen()") }}, in Trident as <code>element.msRequestFullscreen()</code> and in WebKit as <code>element.webkitRequestFullscreen()</code>.</p>
+
+<div class="note">
+<p><strong>Note:</strong> The <a href="http://fullscreen.spec.whatwg.org/#dom-element-requestfullscreen">specification</a> uses the label, "Fullscreen" as in "requestFullscreen" or "fullscreenEnabled" - without a capital 's'. The implementation described here and other prefixed implementations may use a capital 'S'.</p>
+</div>
+
+<p>Let's consider this {{ HTMLElement("video") }} element:</p>
+
+<pre class="brush: html">&lt;video controls id="myvideo"&gt;
+  &lt;source src="somevideo.webm"&gt;&lt;/source&gt;
+  &lt;source src="somevideo.mp4"&gt;&lt;/source&gt;
+&lt;/video&gt;
+</pre>
+
+<p>We can put that video into fullscreen mode with script like this:</p>
+
+<pre class="brush: js">var elem = document.getElementById("myvideo");
+if (elem.requestFullscreen) {
+  elem.requestFullscreen();
+} else if (elem.msRequestFullscreen) {
+  elem.msRequestFullscreen();
+} else if (elem.mozRequestFullScreen) {
+  elem.mozRequestFullScreen();
+} else if (elem.webkitRequestFullscreen) {
+  elem.webkitRequestFullscreen();
+}
+</pre>
+
+<h3 id="Presentation_differences">Presentation differences</h3>
+
+<p>It's worth noting a key difference here between the Gecko and WebKit implementations at this time: Gecko automatically adds CSS rules to the element to stretch it to fill the screen: "<code>width: 100%; height: 100%</code>". WebKit doesn't do this; instead, it centers the fullscreen element at the same size in a screen that's otherwise black. To get the same fullscreen behavior in WebKit, you need to add your own "<code>width: 100%; height: 100%;</code>" CSS rules to the element yourself:</p>
+
+<pre class="brush: css">#myvideo:-webkit-full-screen {
+  width: 100%;
+  height: 100%;
+}
+</pre>
+
+<p>On the other hand, if you're trying to emulate WebKit's behavior on Gecko, you need to place the element you want to present inside another element, which you'll make fullscreen instead, and use CSS rules to adjust the inner element to match the appearance you want.</p>
+
+<h3 id="Notification">Notification</h3>
+
+<p>When fullscreen mode is successfully engaged, the document which contains the element receives a <code>mozfullscreenchange</code> event. When fullscreen mode is exited, the document again receives a  <code>mozfullscreenchange</code> event. Note that the <code>mozfullscreenchange</code> event doesn't provide any information itself as to whether the document is entering or exiting fullscreen mode, but if the document has a non null {{ domxref("document.mozFullScreenElement", "mozFullScreenElement") }}, you know you're in fullscreen mode.</p>
+
+<h3 id="When_a_fullscreen_request_fails">When a fullscreen request fails</h3>
+
+<p>It's not guaranteed that you'll be able to switch into fullscreen mode. For example, {{ HTMLElement("iframe") }} elements have the {{ HTMLAttrXRef("mozallowfullscreen", "iframe") }} attribute ({{ HTMLAttrXRef("webkitallowfullscreen", "iframe") }}, etc) in order to opt-in to allowing their content to be displayed in fullscreen mode. In addition, certain kinds of content, such as windowed plug-ins, cannot be presented in fullscreen mode. Attempting to put an element which can't be displayed in fullscreen mode (or the parent or descendant of such an element) won't work. Instead, the element which requested fullscreen will receive a <code>mozfullscreenerror</code> event. When a fullscreen request fails, Firefox will log an error message to the Web Console explaining why the request failed. In Chrome and newer versions of Opera however, no such warning is generated.</p>
+
+<div class="note">
+<p>NOTE: Fullscreen requests need to be called from within an event handler or otherwise they will be denied. </p>
+</div>
+
+<h2 id="Getting_out_of_full_screen_mode">Getting out of full screen mode</h2>
+
+<p>The user always has the ability to exit fullscreen mode of their own accord; see {{ anch("Things your users want to know") }}. You can also do so programmatically by calling the <code>exitFullscreen()</code> method; this is implemented in Gecko as <a href="/en/DOM/document.mozCancelFullScreen" title="document.mozCancelFullScreen"><code>mozCancelFullScreen()</code></a>, WebKit as <code>webkitExitFullscreen(), </code>and Trident as <code>msExitFullscreen()</code>.</p>
+
+<h2 id="Other_information">Other information</h2>
+
+<p>The {{ domxref("document") }} provides some additional information that can be useful when developing fullscreen web applications:</p>
+
+<dl>
+ <dt>{{ domxref("document.mozFullScreenElement", "fullscreenElement") }}</dt>
+ <dd>The <code>fullscreenElement</code> attribute tells you the {{ domxref("element") }} that's currently being displayed fullscreen. If this is non-null, the document is in fullscreen mode. If this is null, the document is not in fullscreen mode.</dd>
+ <dt>{{ domxref("document.mozFullScreenEnabled", "fullscreenEnabled") }}</dt>
+ <dd>The <code>fullscreenEnabled</code> attribute tells you whether or not the document is currently in a state that would allow fullscreen mode to be requested.</dd>
+</dl>
+
+<h2 id="Things_your_users_want_to_know" name="Things_your_users_want_to_know">Things your users want to know</h2>
+
+<p>You'll want to be sure to let your users know that they can press the ESC key (or F11) to exit fullscreen mode.</p>
+
+<p>In addition, navigating to another page, changing tabs, or switching to another application (using, for example, Alt-Tab) while in fullscreen mode exits fullscreen mode as well.</p>
+
+<h2 id="Specification" name="Specification">Example</h2>
+
+<p>In this example, a video is presented in a web page. Pressing the Return or Enter key lets the user toggle between windowed and fullscreen presentation of the video.</p>
+
+<p><a href="/samples/domref/fullscreen.html">View Live Examples</a></p>
+
+<h3 id="Watching_for_the_Enter_key">Watching for the Enter key</h3>
+
+<p>When the page is loaded, this code is run to set up an event listener to watch for the 'enter' key.</p>
+
+<pre class="brush: js">document.addEventListener("keydown", function(e) {
+  if (e.keyCode == 13) {
+    toggleFullScreen();
+  }
+}, false);
+</pre>
+
+<h3 id="Toggling_fullscreen_mode">Toggling fullscreen mode</h3>
+
+<p>This code is called when the user hits the Enter key, as seen above.</p>
+
+<pre class="brush: js">function toggleFullScreen() {
+  if (!document.fullscreenElement &amp;&amp;    // alternative standard method
+      !document.mozFullScreenElement &amp;&amp; !document.webkitFullscreenElement &amp;&amp; !document.msFullscreenElement ) {  // current working methods
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen();
+    } else if (document.documentElement.msRequestFullscreen) {
+      document.documentElement.msRequestFullscreen();
+    } else if (document.documentElement.mozRequestFullScreen) {
+      document.documentElement.mozRequestFullScreen();
+    } else if (document.documentElement.webkitRequestFullscreen) {
+      document.documentElement.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+    }
+  } else {
+    if (document.exitFullscreen) {
+      document.exitFullscreen();
+    } else if (document.msExitFullscreen) {
+      document.msExitFullscreen();
+    } else if (document.mozCancelFullScreen) {
+      document.mozCancelFullScreen();
+    } else if (document.webkitExitFullscreen) {
+      document.webkitExitFullscreen();
+    }
+  }
+}
+</pre>
+
+<p>This starts by looking at the value of the <code>fullscreenElement</code> attribute on the {{ domxref("document") }} (checking it prefixed with both <code>moz</code>,<code> ms</code>,<code> </code>and <code>webkit</code>). If it's <code>null</code>, the document is currently in windowed mode, so we need to switch to fullscreen mode. Switching to fullscreen mode is done by calling either {{ domxref("element.mozRequestFullScreen()") }} <code>msRequestFullscreen()</code>or <code>webkitRequestFullscreen()</code>, depending on which is available.</p>
+
+<p>If fullscreen mode is already active (<code>fullscreenElement</code> is non-<code>null</code>), we call {{ domxref("document.mozCancelFullScreen()") }}, <code>msExitFullscreen</code> or <code>webkitExitFullscreen()</code>, again depending on which browser is in use.</p>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">Browser compatibility</h2>
+
+<p>Although  Gecko , Trident, and WebKit implement a draft of this API, there are some subtle differences. This document doesn't necessarily try to call them all into focus. The article will be revised as the spec and implementations fall closer into alignment with one another.</p>
+
+<p>{{ CompatibilityTable() }}</p>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>15 {{ property_prefix("-webkit") }}</td>
+   <td>{{ CompatGeckoDesktop("9.0") }} {{ property_prefix("-moz") }}</td>
+   <td>11 {{ property_prefix("-ms") }}</td>
+   <td>12.10</td>
+   <td>5.0 {{ property_prefix("-webkit") }}</td>
+  </tr>
+  <tr>
+   <td><code>fullscreenEnabled</code></td>
+   <td>20 {{ property_prefix("-webkit") }}</td>
+   <td>{{ CompatGeckoDesktop("10.0") }} {{ property_prefix("-moz") }}</td>
+   <td>11 {{ property_prefix("-ms") }}</td>
+   <td>12.10</td>
+   <td>5.1 {{ property_prefix("-webkit") }}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Chrome</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{ CompatUnknown() }}</td>
+   <td>28 {{ property_prefix("-webkit") }}</td>
+   <td>{{ CompatGeckoMobile("9.0") }}{{ property_prefix("-moz") }}</td>
+   <td>{{ CompatUnknown() }}</td>
+   <td>{{ CompatUnknown() }}</td>
+   <td>{{ CompatUnknown() }}</td>
+  </tr>
+  <tr>
+   <td><code>fullscreenEnabled</code></td>
+   <td>{{ CompatUnknown() }}</td>
+   <td>28 {{ property_prefix("-webkit") }}</td>
+   <td>{{ CompatGeckoMobile("10.0") }} {{ property_prefix("moz") }}</td>
+   <td>{{ CompatUnknown() }}</td>
+   <td>{{ CompatUnknown() }}</td>
+   <td>{{ CompatUnknown() }}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h3 id="Gecko_notes">Gecko notes</h3>
+
+<p>Although this API was introduced in Gecko 9.0 {{ geckoRelease("9.0") }}, it's not enabled by default in that release. To enable it, set the <code>full-screen-api.enabled</code> preference to <code>true</code>. The API is enabled by default in Gecko 10.0 {{ geckoRelease("10.0") }}. In Gecko all the API is spelt "fullScreen".</p>
+
+<h2 id="Specification" name="Specification">Specification</h2>
+
+<p><a class="external" href="http://fullscreen.spec.whatwg.org/">Fullscreen API</a></p>
+
+<h2 id="Non-standard_methods">Non-standard methods</h2>
+
+<p>These are some of the methods that browsers implemented before the standard was drafted. Having the standard methods described above it's better to avoid using the following ones:</p>
+
+<ul>
+ <li><a href="/en-US/docs/DOM/window.fullScreen" title="/en-US/docs/DOM/window.fullScreen"><code>window.fullScreen</code></a> (Firefox)</li>
+ <li><code>HTMLMediaElement.webkitDisplayingFullscreen</code></li>
+ <li><code>HTMLMediaElement.webkitEnterFullscreen</code></li>
+ <li><code>HTMLMediaElement.webkitExitFullscreen</code></li>
+ <li><code>HTMLMediaElement.webkitSupportsFullscreen</code></li>
+</ul>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li>{{ domxref("element.mozRequestFullScreen()") }}</li>
+ <li>{{ domxref("element.mozCancelFullScreen()") }}</li>
+ <li>{{ domxref("document.mozFullScreen") }}</li>
+ <li>{{ domxref("document.mozFullScreenElement") }}</li>
+ <li>{{ domxref("document.mozFullScreenEnabled") }}</li>
+ <li>{{ cssxref(":-moz-full-screen") }}</li>
+ <li>{{ cssxref(":-moz-full-screen-ancestor") }}</li>
+ <li>{{ HTMLAttrXRef("allowfullscreen", "iframe") }}</li>
+</ul>
+
+<ul>
+ <li><a class="external" href="http://blog.pearce.org.nz/2011/11/firefoxs-html-full-screen-api-enabled.html" title="http://blog.pearce.org.nz/2011/11/firefoxs-html-full-screen-api-enabled.html">Blog post: Firefox's HTML full-screen API enabled in Nightly builds</a></li>
+</ul>

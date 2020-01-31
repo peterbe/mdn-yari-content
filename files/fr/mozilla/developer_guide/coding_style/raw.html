@@ -1,0 +1,770 @@
+<p>Ce document présente les règles de styles et les pattern utilisés dans la base de code de Mozilla. Tout nouveau code doit essayer de se conformer à ces standards, afin de pouvoir être maintenu facilement. Bien sûr, toute règle va avec ses exceptions, mais il est tout de même important de connaître les règles !</p>
+
+<p>Ce guide s'adresse avant tout aux personnes qui commencent à contribuer et s'apprêtent à demander une revue de leur code. Avant de soumettre votre code, lisez-le et assurez-vous que votre code est conforme aux recommendations.</p>
+
+<div class="blockIndicator warning">
+<p>Le code de Firefox utilise le  <a href="https://google.github.io/styleguide/cppguide.html">Google Coding style pour le code C++</a></p>
+</div>
+
+<h3 id="Naming_and_Formatting_code" name="Naming_and_Formatting_code">Nommage et formatage du code</h3>
+
+<p><em>Les règles suivantes s'appliquent à du code nouveau, ou à du code qui doit être nettoyé. Pour étendre un code existant, utilisez le style qui prévaut dans un fichier ou un module, et demandez au responsable de la page si le style à utiliser ne vous semble pas clair.</em></p>
+
+<h4 id="Whitespace" name="Whitespace">Espaces blancs</h4>
+
+<p>Pas de tabulation. Pas d'espace en fin de ligne.</p>
+
+<p>Pour les retour à la ligne, utilisez le style Unix ('\n'), et non pas le style Windows ('\r\n').</p>
+
+<h4 id="Line_Length" name="Line_Length">Longueur de ligne</h4>
+
+<p>80 charactères ou moins (for laptop side-by-side diffing and two-window tiling; also for Bonsai / hgweb and hardcopy printing).</p>
+
+<h4 id="Indentation" name="Indentation">Indentation</h4>
+
+<p>Deux espaces par niveau logique, quatre pour le code Python.</p>
+
+<p>Notez que la visibilité d'une classe et les instructions <code>goto</code> ne correspondent pas à un niveau logique, à la différence des instructions <code>switch</code> <code>case</code> (cf les exemples ci-après).</p>
+
+<h4 id="Control_Structures" name="Control_Structures">Structures de contrôle</h4>
+
+<p>Utilisez le style d'indentation K&amp;R : accolade ouvrante à la fin de la première ligne, accolades des deux côtés du else sur la même ligne, accolade fermante sur une nouvelle ligne.</p>
+
+<div class="note"><strong>Note:</strong> Les définitions des classes et des fonctions ne sont pas des structures de contrôle; l'accolade ouvrante va dans cas sur une nouvelle ligne sans indentation supplémentaire.</div>
+
+<p>Utilisez toujours des accolades pour les structures contrôlées, même quand il s'agit d'une instruction d'une seule ligne pour un bloc <code>if else else</code> . C'est redondant mais c'est plus sécurisé pour passer à l'échelle, car cela permet d'éviter les bugs de "dangling else" (cas dans lequel il peut y avoir plusieurs arbres d'analyse corrects pour une même instruction).</p>
+
+<p>Coupez les conditions longues après les opérateurs logiques <code>&amp;&amp;</code> et <code>||</code>. Voir ci-dessous pour les règles concernant les autres opérateurs.</p>
+
+<p>Exemples:</p>
+
+<pre class="brush: cpp">if (...) {
+} else if (...) {
+} else {
+}
+
+while (...) {
+}
+
+do {
+} while (...);
+
+for (...; ...; ...) {
+}
+
+switch (...) {
+  case 1: {
+    // Lorsque vous avez besoin de déclarer une variable 
+    // à l'intérieur d'un switch, 
+    // mettez le bloc entre accolades
+    int var;
+    break;
+  }
+  case 2:
+    ...
+    break;
+  default:
+    break;
+}</pre>
+
+<p>Pour configurer ce type d'indentation pour <code>switch</code> dans emacs, on peut définir le "case-label" offset:</p>
+
+<pre>(c-set-offset 'case-label '+)
+</pre>
+
+<p>Les mots-clé de contrôle <code>if</code>, <code>for</code>, <code>while</code>, et <code>switch</code> sont toujours suivi d'un espace.<br>
+ Les appels de fonction en revanche n'ont pas d'espace blanc avant la parenthèse.</p>
+
+<h4 id="Namespaces" name="Namespaces">Espaces de noms C++</h4>
+
+<p>Les déclarations C++ qui s'inscrivent dans le projet Mozilla doivent se trouver dans l'espace de noms "mozilla".  Les modules doivent éviter d'utiliser des espaces de noms imbriqués sauf s'ils contiennent des noms qui ont une forte probabilité d'entrer en conflit avec d'autres noms de la base de code (comme <code>Point</code>, <code>Path</code>, etc.).  Ceux-ci peuvent se situer dans des espaces de noms spécifiques, avec des noms en bas de casse uniquement. Il n'est pas possible d'utiliser d'autre espace de noms global que "mozilla".</p>
+
+<p>Les instructions "using" ne sont pas autorisées dans les fichiers d'en-tête, sauf à l'intérieur d'une définition de classe ou d'une fonction (afin de ne pas polluer la portée globale des unités de compilation qui utilisent le fichier d'en-tête).</p>
+
+<p><code>using namespace ...;</code> est autorisé uniquement dans les fichiers <code>.cpp</code> , après toutes les instructions  <code>#include</code>. Autant que possible, il est préférable d'encapsuler du code dans un bloc (<code>namespace ... { ... };)</code>. Une instruction  <code>using namespace ...; </code>devrait toujours spécifier l'intégralité du namespace. C'est-à-dire que pour utiliser <code>Foo::Bar </code>il ne faut écrire <code>using namespace Foo::Bar;</code> (et non pas <code>using namespace Foo; using namespace Bar;</code>. </p>
+
+<p>Le code à l'intérieur du bloc <code>namespace ... { ... }</code> ne doit pas être indenté. On peut le désactiver dans emacs en configurant l'offset "innamespace" :</p>
+
+<pre>(c-set-offset 'innamespace 0)
+</pre>
+
+<h4 id="Espaces_de_noms_anonymes">Espaces de noms anonymes</h4>
+
+<p>L'usage de "static" est préférable à l'utilisation d'un espace de noms anonyme. Cela peut être amené à changer lorsque les débuggeurs (en particulier celui de Windows) supporteront le placement de points d'arrêt dans le code des espaces de noms anonymes. Ces derniers peuvent cependant être utilisés pour les éléments qui ne peuvent pas être statiques (comme les types, ou certains objets qui demandent d'être passés à des fonctions de templating).</p>
+
+<h4 id="Classes" name="Classes">Classes C++  </h4>
+
+<pre class="brush: cpp">namespace mozilla {
+
+class MyClass : public A
+{
+  ...
+};
+
+class MyClass
+  : public X  // Lorsqu'on hérite de plus d'une classe,
+  , public Y  // on écrit chaque classe sur une ligne.
+{
+public:
+  MyClass(int aVar, int aVar2)
+    : mVar(aVar)
+    , mVar2(aVar2)
+  {
+     ...
+  }
+
+  // Les constructeurs et destructeurs courts peuvent être écrits sur une seule ligne.
+  MyClass() { }
+
+  // A moins qu'il s'agisse d'un constructeur de copie ou de déplacement (copy or move constructor)
+  // ou que vous ayiez une bonne raison d'autoriser la conversion implicite
+  // définissez tous les constructeurs prenant un argument unique comme explicites.
+  explicit MyClass(OtherClass aArg)
+  {
+    ...
+  }
+
+  // Ce constructeur accepte également un argument unique,
+  // donc il est également défini comme explicite.
+  explicit MyClass(OtherClass aArg, AnotherClass aArg2 = AnotherClass())
+  {
+    ...
+  }
+  
+  int TinyFunction() { return mVar; }  // Les fonctions courtes peuvent être écrites sur une seule ligne.
+
+  int LargerFunction()
+  {
+    ...
+    ...
+  }
+
+private:
+  int mVar;
+};
+
+} // namespace mozilla
+</pre>
+
+<p>Définissez les classes selon le style utilisé ci-dessus.</p>
+
+<p>Les classes situées dans l'espace de noms global sont nommées avec un préfixe court en guise de pseudo espace de noms (par exemple "ns").</p>
+
+<h4 id="Methods" name="Methods">Methods and functions</h4>
+
+<p>Pour les fonctions, constructeurs, ou autres constructions entre accolades, il est possible de les écrire sur une ligne comme pour la fonction <code>TinyFunction</code>. Lorsqu'ils sont plus longs, on utilise on utilise les règles suivantes.</p>
+
+<h5 id="CC">C/C++</h5>
+
+<p>En C/C++, les noms de méthodes commencent par une lettre majuscule et utilisent la convention CamelCase.</p>
+
+<pre class="brush: cpp">template&lt;typename T&gt;  // Template sur une ligne.
+static int            // Valeur de retour sur une ligne pour la fonction de premier niveau.
+MyFunction(...)
+{
+  ...
+}
+
+int
+MyClass::Method(...)
+{
+  ...
+}
+</pre>
+
+<p>Les accesseurs qui n'échouent jamais et ne retournent jamais null sont nommés <code>Foo()</code>, while tandis que les autres accesseurs s'intitulent <code>GetFoo()</code>. Les accesseurs peuvent renvoyer la valeur d'un objet via un paramètre de sortie <code>Foo** aResult</code> (typiquement pour un accesseur XPCOM) ou <code>already_AddRefed&lt;Foo&gt;</code> (typiquement pour un accesseur WebIDL, potentiellement avec un paramètre <code>ErrorResult&amp; rv</code>) ou occasionnellement <code>Foo*</code> (typiquement pour un accesseur interne pour un objet dont la durée de vie est connue). Voir {{ bug(223255) }} pour davantage d'information.</p>
+
+<p>Les accesseurs XPCOM renvoient toujours des valeurs primitives via un paramètre de sortie tandis que les autres accesseurs utilisent une valeur de retour.</p>
+
+<p>Les déclarations de méthodes doivent utiliser au moins l'un des mots-clé suivants: <code>virtual</code>, <code>override</code>, ou <code>final</code>. Utilisez <code>virtual</code> pour déclarer des méthodes virtuelles, qui ne surchargent pas une méthode de la classe de base avec la même signature. Utilisez <code>override</code> pour déclarer des méthodes virtuelles qui ne surchargent pas une méthode de la classe de base avec la même signature, et peuvent être surchargées dans des classes dérivées.  Utilisez <code>final</code> pour déclarer des méthodes virtuelles qui ne surchargent pas une méthode de la classe de base avec la même signature, mais ne peuvent pas être surchargées dans des classes dérivées.  Cela devrait aider une personne qui lit votre code à comprendre ce que la déclaration fait exactement sans avoir besoin d'inspecter les classes de base.</p>
+
+<h5 id="JavaScript">JavaScript</h5>
+
+<p>En JavaScript, les fonctions suivant la convention camelCase avec la première lettre en minuscule. Les méthodes ne doivent pas utiliser la syntaxe des expressions nommées, car nos outils comprennent les noms de méthodes:</p>
+
+<pre class="brush: js">doSomething: function (aFoo, aBar) {
+  ...
+}
+</pre>
+
+<p>Les fonctions sur une ligne doivent avoir des espaces avant et après les accolades, excepté après une virgule ou un point virgule :</p>
+
+<pre class="brush: js">function valueObject(aValue) { return { value: aValue }; }
+</pre>
+
+<h4 id="JavaScript_objects" name="JavaScript_objects">JavaScript objects</h4>
+
+<pre class="brush: js">var foo = { prop1: "value1" };
+
+var bar = {
+  prop1: "value1",
+  prop2: "value2"
+}; 
+</pre>
+
+<p>Les constructeurs d'objets doivent commencer par une une majuscule et suivre la convention CamelCase:</p>
+
+<pre class="brush: js">function ObjectConstructor() {
+  this.foo = "bar";
+}
+</pre>
+
+<h4 id="Mode_Line" name="Mode_Line">Mode line</h4>
+
+<p>Les commentaires de type mode line pour Emacs ou vim doivent être indiqués sur les deux premières lignes du fichier, et définir indent-tabs-mode à nil. Pour les nouveaux fichiers, utilisez le code suivant:</p>
+
+<pre class="brush: cpp">/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+</pre>
+
+<p>Assurez-vous d'indiquer le bon "Mode" sur la première ligne — n'utilisez pas "C++" dans les fichiers JavaScript. Pour le code Python, définissez quatre espaces pour l'indentation.</p>
+
+<h4 id="Declarations" name="Declarations">Déclarations</h4>
+
+<p>En général, l'étoile indiquant le pointeur est collée au type, pas au nom de la variable:</p>
+
+<pre class="brush: cpp"><code>T* p</code>; // BIEN
+T *p; // PAS BIEN
+T* p, q; // OOPS mettre chaque variable sur une ligne
+</pre>
+
+<p>Certains modules déjà existants utilisent le style <code>T *p</code> .</p>
+
+<h4 id="Operators" name="Operators">Opérateurs</h4>
+
+<p>Les expressions particulièrement longues ne comprenant pas de <code>&amp;&amp;</code> ou <code>||</code> doivent être coupées de façon à ce que l'opérateur commence sur la seconde ligne, aligné avec le début de l'expression sur la ligne précédente. Cela s'applique à <code>? et</code> <code>:</code>, aux opérateurs binaires comme <code>+</code>, et aux opérateurs d'appartenance (en particulier le <code>.</code> en JavaScript, voir la Rationale).</p>
+
+<p>Rationale: mettre l'opérateur au début de la ligne de continuation permet une lecture plus rapide, car il indique qu'il n'est pas nécessaire de lire la ligne précédente juqu'à la fin. De plus il existe un risque de sensibilité au contexte en Javascript, qui peut être évité ainsi ; voir {{bug(442099, "bug", 19)}}.</p>
+
+<p>En JavaScript, <code>==</code> est préférable à <code>===</code>.</p>
+
+<p>L'opérande des opérateurs unaires tels que <code>typeof</code> et <code>sizeof</code>, doit être entre parenthèses; e.g. <code>typeof("foo") == "string"</code>.</p>
+
+<h4 id="Littéraux">Littéraux</h4>
+
+<p>En JavaScript, utilisez plutôt des guillemets doubles (e.g. <code>"foo"</code>) que des guillemets simples (e.g. <code>'foo'</code>), sauf quand c'est nécessaire pour éviter d'échapper des guillemets à l'intérieur d'une chaîne, ou pour assigner des gestionnaires d'évènement.</p>
+
+<p>Utilisez <a href="/en/JavaScript/Guide/Obsolete_Pages/Unicode" title="en/Core_JavaScript_1.5_Guide/Unicode">l'échappement unicode de type <code>\uXXXX</code></a> pour les caractères non-ASCII. L'encodage pour XUL, les DTD, les scripts, et les fichiers de propriétés est l'UTF-8.</p>
+
+<h4 id="Prefixes" name="Prefixes">Préfixes</h4>
+
+<h5 id="Variable_prefixes" name="Variable_prefixes">Préfixes variables</h5>
+
+<ul>
+ <li>k=constant (e.g. <code>kNC_child</code>). Not all code uses this style; some uses <code>ALL_CAPS</code> for constants.</li>
+ <li>g=global (e.g. <code>gPrefService</code>)</li>
+ <li>a=argument (e.g. <code>aCount</code>)</li>
+ <li>C++ Specific Prefixes
+  <ul>
+   <li>s=static member (e.g. <code>sPrefChecked</code>)</li>
+   <li>m=member (e.g. <code>mLength</code>)</li>
+   <li>e=enum values (e.g. <code>enum class Foo { eBar, eBaz }</code>)</li>
+  </ul>
+ </li>
+ <li>JavaScript Specific Prefixes
+  <ul>
+   <li>_=member (variable or function) (e.g. <code>_length</code> or <code>_setType(aType)</code>)</li>
+   <li>k=enumeration value (e.g. <code>const kDisplayModeNormal = 0</code>)</li>
+   <li>on=event handler (e.g. <code>function onLoad()</code>)</li>
+   <li>Convenience constants for interface names should be prefixed with <code>nsI</code>:
+    <pre class="brush: js"><code>const nsISupports = Components.interfaces.nsISupports;
+const nsIWBN = Components.interfaces.nsIWebBrowserNavigation;</code></pre>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+<h5 id="Global_functions.2Fmacros.2Fetc" name="Global_functions.2Fmacros.2Fetc">Global functions/macros/etc</h5>
+
+<ul>
+ <li>Macros begin with <code>MOZ_</code>, and are all caps (e.g. <code>MOZ_WOW_GOODNESS</code>). Note that older code uses the <code>NS_</code> prefix; while these aren't being changed, you should only use <code>MOZ_</code> for new macros. The only exception is if you're creating a new macro which is part of a set of related macros that still use the old <code>NS_</code> prefix. Then you should be consistent with the existing macros.</li>
+</ul>
+
+<h5 id="Error_Variables">Error Variables</h5>
+
+<ul>
+ <li>local nsresult result codes should be `rv`. `rv` should not be used for bool or other result types.</li>
+ <li>local bool result codes should be `ok`</li>
+</ul>
+
+<h3 id="General_C.2FC.2B.2B_Practices" name="General_C.2FC.2B.2B_Practices">General practices</h3>
+
+<ul>
+ <li>Don't put an <code>else</code> right after a <code>return</code>, <code>break</code> or <code>continue</code>. Delete the <code>else</code>, it's unnecessary and increases indentation level.</li>
+ <li>Don't leave debug <code>printf</code>s or <code>dump</code>s lying around.</li>
+ <li>Use Unix-style carriage returns ("<code>\n</code>") rather than Windows/DOS ones (<code>"\r\n</code>").  You can convert patches with DOS newlines to Unix via the 'dos2unix' utility, or your favorite text editor.</li>
+ <li>Use two spaces for indentation.</li>
+ <li>Use <a class="external" href="http://www.oracle.com/technetwork/java/javase/documentation/index-137868.html">JavaDoc-style comments</a>.</li>
+ <li>When fixing a problem, check to see if the problem occurs elsewhere in the same file, and fix it everywhere if possible.</li>
+ <li>End the file with a newline (make sure your patches don't contain files with the text "no newline at end of file" in them).</li>
+ <li>Declare local variables as near to their use as possible.</li>
+ <li>For new files, be sure to use the right <a class="external" href="http://www.mozilla.org/MPL/headers/" title="http://www.mozilla.org/MPL/headers/">license boilerplate</a> per our <a class="external" href="http://www.mozilla.org/MPL/license-policy.html" title="http://www.mozilla.org/MPL/license-policy.html">license policy</a>.</li>
+</ul>
+
+<h3 id="CC_practices">C/C++ practices</h3>
+
+<ul>
+ <li><strong>Have you checked for compiler warnings?</strong> Warnings often point to real bugs.</li>
+ <li>In C++ code, use <code>nullptr</code> for pointers. In C code, using <code>NULL</code> or <code>0</code> is allowed.</li>
+ <li>Don't use <code>PRBool</code> and <code>PRPackedBool</code> in C++, use <code>bool</code> instead.</li>
+ <li>When testing a pointer, use <code>(</code><code>!myPtr</code><code>)</code> or <code>(myPtr)</code>; don't use <code>myPtr != </code><code>nullptr</code> or <code>myPtr == </code><code>nullptr</code>.</li>
+ <li>Do not compare <code>x == true</code> or <code>x == false</code>. Use <code>(x)</code> or <code>(!x)</code> instead. <code>x == true</code>, in fact, is different from if <code>(x)</code>!</li>
+ <li>In general, initialize variables with <code>nsFoo aFoo = bFoo</code> and not nsFoo aFoo(bFoo).
+  <ul>
+   <li>For constructors initialize member variables with : nsFoo aFoo(bFoo) syntax</li>
+  </ul>
+ </li>
+ <li>To avoid warnings created by variables used only in debug builds, use the <a href="/En/Namespace/Mozilla/DebugOnly%3CT%3E" title="En/Namespace/Mozilla/DebugOnly&lt;T>"><code>DebugOnly&lt;T&gt;</code></a> helper when declaring them.</li>
+ <li>You should <a href="/en/Mozilla/Preferences/Using_preferences_from_application_code" title="en/Preferences/Using preferences from application code">use the static preference API</a> for working with preferences.</li>
+ <li>One-argument constructors that are not copy or move constructors should generally be marked explicit.  Exceptions should be annotated with MOZ_IMPLICIT.</li>
+ <li>Forward-declare classes in your header files instead of including them whenever possible. For example, if you have an interface with a <code>void DoSomething(nsIContent* aContent)</code> function, forward-declare with <code>class nsIContent;</code> instead of <code>#include "nsIContent.h"</code></li>
+ <li>Includes are split into three blocks and are sorted alphabetically in each block:
+  <ol>
+   <li>The main header: <code>#include "Foo.h"</code> in Foo.cpp</li>
+   <li>Standard library includes: <code>#include &lt;map&gt;</code></li>
+   <li>Mozilla includes: <code>#include "mozilla/dom/Element.h"</code></li>
+  </ol>
+ </li>
+ <li>
+  <p>Include guards are named by determining the fully-qualified include path, then substituting <code>_</code> for <code>/</code> and <code>.</code> and <code>-</code> in it. For example, nsINode.h's guard is nsINode_h, and Element.h's guard is mozilla_dom_Element_h (because its include path is mozilla/dom/Element.h).</p>
+
+  <p>Use the following exact form for include guards. GCC and clang recognize this idiom and avoid re-reading headers that use it. To avoid confusing GCC's and clang's header optimization, do not include any code before or after the include guards (but comments and whitespace are OK). Do not combine any other preprocessor checks in the #ifndef &lt;guard&gt; expression.</p>
+
+  <pre class="brush: cpp">#ifndef &lt;guard&gt;
+#define &lt;guard&gt;
+... All code ...
+#endif // &lt;guard&gt;
+</pre>
+ </li>
+</ul>
+
+<h3 id="JavaScript_practices">JavaScript practices</h3>
+
+<ul>
+ <li>Make sure you are aware of the <a href="/en/JavaScript_Tips" title="en/JavaScript Tips">JavaScript Tips</a>.</li>
+ <li>Do not compare <code>x == true</code> or <code>x == false</code>. Use <code>(x)</code> or <code>(!x)</code> instead. <code>x == true</code>, in fact, is different from if <code>(x)</code>! Compare objects to <code>null</code>, numbers to <code>0</code> or strings to <code>""</code> if there is chance for confusion.</li>
+ <li>Make sure that your code doesn't generate any strict JavaScript warnings, such as:
+  <ul>
+   <li>Duplicate variable declaration</li>
+   <li>Mixing <code>return;</code> with <code>return value;</code></li>
+   <li>Undeclared variables or members. If you are unsure if an array value exists, compare the index to the array's length. If you are unsure if an object member exists, use <code>"name" in aObject</code>, or if you are expecting a particular type you may use <code>typeof(aObject.name) == "function"</code> (or whichever type you are expecting).</li>
+  </ul>
+ </li>
+ <li>Use <code>{{ mediawiki.external('value1, value2') }}</code> to create a JavaScript array in preference to using <code>new Array(value1, value2)</code> which can be confusing, as <code>new Array(length)</code> will actually create a physically empty array with the given logical length, while <code>{{ mediawiki.external('value') }}</code> will always create a 1-element array. You cannot actually guarantee to be able to preallocate memory for an array.</li>
+ <li>Use <code>{ member: value, ... }</code> to create a JavaScript object; a useful advantage over <code>new Object()</code> is the ability to create initial properties and use extended JavaScript syntax to define getters and setters.</li>
+ <li>If having defined a constructor you need to assign default properties it is preferred to assign an object literal to the prototype property.</li>
+ <li>Use regular expressions, but use them wisely. For instance, to check that <code>aString</code> is not completely whitespace use <code>/\S/.test(aString);</code> only use <code>aString.search</code> if you need to know the position of the result, or <code>aString.match</code> if you need to collect matching substrings (delimited by parentheses in the regular expression). Regular expressions are less useful if the match is unknown in advance, or to extract substrings in known positions in the string. For instance, <code>aString.slice(-1)</code> returns the last letter in <code>aString</code>, or the empty string if <code>aString</code> is empty.</li>
+</ul>
+
+<h3 id="Java_practices">Java practices</h3>
+
+<ul>
+ <li>We use the <a class="external text" href="http://www.oracle.com/technetwork/java/codeconvtoc-136057.html" rel="nofollow">Java Coding Style</a>. Quick summary:
+
+  <ul>
+   <li>FirstLetterUpperCase for class names</li>
+   <li>camelCase for method and variable names</li>
+   <li>One declaration per line:
+    <pre class="brush: java">int x, y; // this is BAD!
+int a;    // split it over
+int b;    // two lines
+</pre>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+<ul>
+ <li>Braces should be placed like so (generally opening braces on same line, closing braces on a new line):
+  <pre class="brush: java">public void func(int arg) {
+    if (arg != 0) {
+        while (arg &gt; 0) {
+            arg--;
+        }
+    } else {
+        arg++;
+    }
+}
+</pre>
+ </li>
+</ul>
+
+<ul>
+ <li>Places we differ from the Java coding style:
+  <ul>
+   <li>Start class variable names with 'm' prefix (e.g. mSomeClassVariable) and static variables with 's' prefix (e.g. sSomeStaticVariable)</li>
+   <li>import statements:
+    <ul>
+     <li>Do not use wildcard imports like `import java.util.*;`</li>
+     <li>Organize imports by blocks separated by empty line: org.mozilla.*, com.*, net.*, org.*, android.*, then java.*</li>
+     <li>Within each import block, alphabetize import names with uppercase before lowercase (so `com.example.Foo` is before `com.example.bar`).</li>
+    </ul>
+   </li>
+   <li>4-space indents</li>
+   <li>spaces, not tabs</li>
+   <li>Don't restrict yourself to 80-character lines. Google's Android style guide suggests 100-character lines. Java code tends to be long horizontally, so use appropriate judgement when wrapping. Avoid deep indents on wrapping. Note that aligning the wrapped part of a line with some previous part of the line (rather than just using a fixed indent) may require shifting the code every time the line changes, resulting in spurious whitespace changes.</li>
+  </ul>
+ </li>
+ <li>For additional specifics on Firefox for Android, see the <a href="https://wiki.mozilla.org/Mobile/Fennec/Android#Coding_Style">Coding Style guide for Firefox on Android</a>.</li>
+ <li>The <a class="external text" href="http://source.android.com/source/code-style.html" rel="nofollow">Android Coding Style</a> has some useful guidelines too.</li>
+</ul>
+
+<h3 id="Makefile_moz.build_practices" name="Makefile_moz.build_practices">Makefile/moz.build practices</h3>
+
+<ul>
+ <li>Changes to makefile and moz.build variables do not require build-config peer review. Any other build system changes such as adding new scripts or rules require review from the build-config team.</li>
+ <li>Suffix long <code>if</code>/<code>endif</code> conditionals with #{ &amp; #} so editors can display matching tokens that enclose a block of statements.
+  <pre>ifdef CHECK_TYPE #{
+  ifneq ($(flavor var_type),recursive) #{
+    $(warning var should be expandable but detected var_type=$(flavor var_type))
+  endif #}
+endif #}</pre>
+ </li>
+ <li>moz.build are python and follow normal Python style</li>
+ <li>List assignments should be written with one element per line.  Align closing square brace with start of variable assignment. If ordering is not important, variables should be in alphabetical order.
+  <pre class="brush: python">var += [
+    'foo',
+    'bar'
+]</pre>
+ </li>
+</ul>
+
+<ul>
+ <li>Use CONFIG['CPU_ARCH'] {=arm} to test for generic classes of architecure rather than CONFIG['OS_TEST'] {=armv7} (re: bug 886689)</li>
+</ul>
+
+<h3 id="Python_Practices" name="Python_Practices">Python practices</h3>
+
+<ul>
+ <li>Install the <a href="https://hg.mozilla.org/hgcustom/version-control-tools/file/default/hgext/mozext">mozext</a> Mercurial extension and address every issue reported on commit, qrefresh, or the output of <code>hg critic</code>.</li>
+ <li>Follow <a class="external" href="http://www.python.org/dev/peps/pep-0008/">PEP 8</a>.</li>
+ <li>Do not place statements on the same line as <code>if/elif/else</code> conditionals to form a one-liner.</li>
+ <li>Global vars, avoid them at all cost.</li>
+ <li>Exclude outer parenthesis from conditionals.  Use <code>if x &gt; 5: </code>rather than <code>if (x &gt; 5):</code></li>
+ <li>Use string formatters rather than var + str(val).  <code>var = 'Type %s value is %d' % ('int', 5)</code></li>
+ <li>Utilize tools like <a class="external" href="http://pypi.python.org/pypi/pylint" title="http://pypi.python.org/pypi/pylint"><code>pylint</code></a> or <a class="external" href="http://pychecker.sourceforge.net" title="http://pychecker.sourceforge.net"><code>pychecker</code></a> to screen sources for common problems.</li>
+ <li>Testing/Unit tests, write them.</li>
+ <li>See also <a class="external" href="http://python.net/%7Egoodger/projects/pycon/2007/idiomatic/handout.html">Code Like a Pythonista</a>.</li>
+</ul>
+
+<h3 id="SVG_practices">SVG practices</h3>
+
+<p>Check <a href="/en-US/docs/Mozilla/Developer_guide/SVG_Guidelines">SVG Guidelines</a> for more details.</p>
+
+<h3 id="COM_and_pointers" name="COM_and_pointers">COM, pointers and strings</h3>
+
+<ul>
+ <li>Use <code>nsCOMPtr&lt;&gt;</code><br>
+  If you don't know how to use it, start looking in the code for examples. The general rule is that the very act of typing <code>NS_RELEASE</code> should be a signal to you to question your code: "Should I be using <code>nsCOMPtr</code> here?". Generally the only valid use of <code>NS_RELEASE</code> are when you are storing refcounted pointers in a long-lived datastructure.</li>
+ <li>Declare new XPCOM interfaces using <a href="/en/XPIDL" title="en/XPIDL">XPIDL</a> so they will be scriptable.</li>
+ <li>Use <a href="/en/nsCOMPtr" title="en/nsCOMPtr">nsCOMPtr</a> for strong references, and <a href="/en/Weak_reference" title="en/Weak_reference">nsWeakPtr</a> for weak references.</li>
+ <li>String arguments to functions should be declared as <code>nsAString</code>.</li>
+ <li>Use <code>EmptyString()</code> and <code>EmptyCString()</code> instead of <code>NS_LITERAL_STRING("")</code> or <code>nsAutoString empty</code>;.</li>
+ <li>Use <code>str.IsEmpty()</code> instead of <code>str.Length() == 0</code>.</li>
+ <li>Use <code>str.Truncate()</code> instead of <code>str.SetLength(0)</code> or <code>str.Assign(EmptyString())</code>.</li>
+ <li>Don't use <code>QueryInterface</code> directly. Use <code>CallQueryInterface</code> or <code>do_QueryInterface</code> instead.</li>
+ <li><code>nsresult</code> should be declared as <code>rv</code>. Not res, not result, not foo.</li>
+ <li>For constant strings, use <code>NS_LITERAL_STRING("...")</code> instead of <code>NS_ConvertASCIItoUCS2("...")</code>, <code>AssignWithConversion("...")</code>, <code>EqualsWithConversion("...")</code>, or <code>nsAutoString()</code></li>
+ <li>To compare a string with a literal, use .EqualsLiteral("...").</li>
+ <li>Use <a class="link-news" href="news://news.mozilla.org/3994AE3E.D96EF810@netscape.com">Contract IDs</a> instead of CIDs with do_CreateInstance/do_GetService.</li>
+ <li>Use pointers instead of references for function out parameters, even for primitive types.</li>
+</ul>
+
+<h3 id="IDL" name="IDL">IDL</h3>
+
+<h4 id="Use_leading-lowercase.2C_or_.22interCaps.22" name="Use_leading-lowercase.2C_or_.22interCaps.22">Use leading-lowercase, or "interCaps"</h4>
+
+<p>When defining a method or attribute in IDL, the first letter should be lowercase, and each following word should be capitalized. For example:</p>
+
+<pre class="brush: cpp">long updateStatusBar();
+</pre>
+
+<h4 id="Use_attributes_wherever_possible" name="Use_attributes_wherever_possible">Use attributes wherever possible</h4>
+
+<p>Whenever you are retrieving or setting a single value without any context, you should use attributes. Don't use two methods when you could use one attribute. Using attributes logically connects the getting and setting of a value, and makes scripted code look cleaner.</p>
+
+<p>This example has too many methods:</p>
+
+<pre class="brush: cpp">interface nsIFoo : nsISupports
+{
+    long getLength();
+    void setLength(in long length);
+    long getColor();
+};
+</pre>
+
+<p>The code below will generate the exact same C++ signature, but is more script-friendly.</p>
+
+<pre class="brush: cpp">interface nsIFoo : nsISupports
+{
+    attribute long length;
+    readonly attribute long color;
+};
+</pre>
+
+<h4 id="Use_java-style_constants" name="Use_java-style_constants">Use Java-style constants</h4>
+
+<p>When defining scriptable constants in IDL, the name should be all uppercase, with underscores between words:</p>
+
+<pre class="brush: cpp">const long ERROR_UNDEFINED_VARIABLE = 1;
+</pre>
+
+<h4 id="See_also">See also</h4>
+
+<p>For details on interface development, as well as more detailed style guides, see the <a href="/En/Developer_Guide/Interface_development_guide" title="En/Developer Guide/Interface development guide">Interface development guide</a>.</p>
+
+<h3 id="Error_handling" name="Error_handling">Error handling</h3>
+
+<h4 id="Check_for_errors_early_and_often" name="Check_for_errors_early_and_often">Check for errors early and often</h4>
+
+<p>Every time you make a call into an XPCOM function, you should check for an error condition. You need to do this even if you know that call will never fail. Why?</p>
+
+<ul>
+ <li>Someone may change the callee in the future to return a failure condition.</li>
+ <li>The object in question may live on another thread, another process, or possibly even another machine. The proxy could have failed to actually make your call in the first place.</li>
+</ul>
+
+<p>Also, when you make a new function which is failable (i.e. it will return a nsresult or a bool that may indicate an error), you should explicitly mark the return value should always be checked, e.g.:</p>
+
+<pre>// for IDL
+[must_use] nsISupports
+create();
+
+// for C++, add this in *declaration*, do not add it again in implementation
+MOZ_MUST_USE nsresult
+DoSomething();</pre>
+
+<p>There are some exceptions:</p>
+
+<ul>
+ <li>Predicates or getters which return bool or nsresult</li>
+ <li>IPC method implementation (e.g. bool RecvSomeMessage())</li>
+ <li>Most callers will check the output parameter, see below</li>
+</ul>
+
+<pre class="brush: cpp">nsresult
+SomeMap::GetValue(const nsString&amp; key, nsString&amp; value);</pre>
+
+<p>If most callers need to check the output value first, then adding MOZ_MUST_USE might be too verbose. In this case, change the return value to void might be a reasonable choice.</p>
+
+<p>There is also a static analysis attribute MOZ_MUST_USE_TYPE, which can be added to class declarations to ensure that those declarations are always used when they are returned.</p>
+
+<h4 id="Use_the_nice_macros" name="Use_the_nice_macros">Use the NS_WARN_IF macro when errors are unexpected.</h4>
+
+<p>The NS_WARN_IF macro can be used to issue a console warning in debug builds if the condition fails. This should only be used when the failure is unexpected and cannot be caused by normal web content.</p>
+
+<p>If you are writing code that wants to issue warnings when methods fail, please either use NS_WARNING directly or use the new NS_WARN_IF macro.</p>
+
+<pre class="brush: cpp">if (NS_WARN_IF(somethingthatshouldbefalse)) {
+  return NS_ERROR_INVALID_ARG;
+}
+
+if (NS_WARN_IF(NS_FAILED(rv))) {
+  return rv;
+}
+</pre>
+
+<p>Previously the <code>NS_ENSURE_*</code> macros were used for this purpose, but those macros hide return statements and should not be used in new code. (This coding style rule isn't generally agreed, so use of NS_ENSURE_* can be valid.)</p>
+
+<h4 id="Return_from_errors_immediately" name="Return_from_errors_immediately">Return from errors immediately</h4>
+
+<p>In most cases, your knee-jerk reaction should be to return from the current function when an error condition occurs. Don't do this:</p>
+
+<pre class="brush: cpp">rv = foo-&gt;Call1();
+if (NS_SUCCEEDED(rv)) {
+  rv = foo-&gt;Call2();
+  if (NS_SUCCEEDED(rv)) {
+    rv = foo-&gt;Call3();
+  }
+}
+return rv;
+</pre>
+
+<p>Instead, do this:</p>
+
+<pre class="brush: cpp">rv = foo-&gt;Call1();
+if (NS_FAILED(rv)) {
+  return rv;
+}
+
+rv = foo-&gt;Call2();
+if (NS_FAILED(rv)) {
+  return rv;
+}
+
+rv = foo-&gt;Call3();
+if (NS_FAILED(rv)) {
+  return rv;
+}
+</pre>
+
+<p>Why? Because error handling should not obfuscate the logic of the code. The author's intent in the first example was to make 3 calls in succession, but wrapping the calls in nested if() statements obscured the most likely behavior of the code.</p>
+
+<p>Consider a more complicated example that actually hides a bug:</p>
+
+<pre class="brush: cpp">bool val;
+rv = foo-&gt;GetBooleanValue(&amp;val);
+if (NS_SUCCEEDED(rv) &amp;&amp; val) {
+  foo-&gt;Call1();
+} else {
+  foo-&gt;Call2();
+}
+</pre>
+
+<p>The intent of the author may have been that foo-&gt;Call2() would only happen when val had a false value. In fact, foo-&gt;Call2() will also be called when foo-&gt;GetBooleanValue(&amp;val) fails. This may or may not have been the author's intent, and it is not clear from this code. Here is an updated version:</p>
+
+<pre class="brush: cpp">bool val;
+rv = foo-&gt;GetBooleanValue(&amp;val);
+if (NS_FAILED(rv)) {
+  return rv;
+}
+if (val) {
+  foo-&gt;Call1();
+} else {
+  foo-&gt;Call2();
+}
+</pre>
+
+<p>In this example, the author's intent is clear, and an error condition avoids both calls to foo-&gt;Call1() and foo-&gt;Call2();</p>
+
+<p><em>Possible exceptions:</em> Sometimes it is not fatal if a call fails. For instance, if you are notifying a series of observers that an event has fired, it might be inconsequential that one of these notifications failed:</p>
+
+<pre class="brush: cpp">for (size_t i = 0; i &lt; length; ++i) {
+  // we don't care if any individual observer fails
+  observers[i]-&gt;Observe(foo, bar, baz);
+}
+</pre>
+
+<p>Another possibility is that you are not sure if a component exists or is installed, and you wish to continue normally if the component is not found.</p>
+
+<pre class="brush: cpp">nsCOMPtr&lt;nsIMyService&gt; service = do_CreateInstance(NS_MYSERVICE_CID, &amp;rv);
+// if the service is installed, then we'll use it
+if (NS_SUCCEEDED(rv)) {
+  // non-fatal if this fails too, ignore this error
+  service-&gt;DoSomething();
+
+  // this is important, handle this error!
+  rv = service-&gt;DoSomethingImportant();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+}
+    
+// continue normally whether or not the service exists
+</pre>
+
+<h3 id="Strings" name="Strings">C++ strings</h3>
+
+<h4 id="Use_the_Auto_form_of_strings_for_local_values" name="Use_the_Auto_form_of_strings_for_local_values">Use the <code>Auto</code> form of strings for local values</h4>
+
+<p>When declaring a local, short-lived <code>nsString</code> class, always use <code>nsAutoString</code> or <code>nsAutoCString</code> - these versions pre-allocate a 64-byte buffer on the stack, and avoid fragmenting the heap. Don't do this:</p>
+
+<pre class="brush: cpp">nsresult
+foo()
+{
+  nsCString bar;
+  ..
+}
+</pre>
+
+<p>instead:</p>
+
+<pre class="brush: cpp">nsresult
+foo()
+{
+  nsAutoCString bar;
+  ..
+}
+</pre>
+
+<h4 id="Be_wary_of_leaking_values_from_non-XPCOM_functions_that_return_char.2A_or_PRUnichar.2A" name="Be_wary_of_leaking_values_from_non-XPCOM_functions_that_return_char.2A_or_PRUnichar.2A">Be wary of leaking values from non-XPCOM functions that return char* or PRUnichar*</h4>
+
+<p>It is an easy trap to return an allocated string from an internal helper function, and then use that function inline in your code without freeing the value. Consider this code:</p>
+
+<pre class="brush: cpp">static char*
+GetStringValue()
+{
+  ..
+  return resultString.ToNewCString();
+}
+
+  ..
+  WarnUser(GetStringValue());
+</pre>
+
+<p>In the above example, WarnUser will get the string allocated from <code>resultString.ToNewCString()</code> and throw away the pointer. The resulting value is never freed. Instead, either use the string classes to make sure your string is automatically freed when it goes out of scope, or make sure that your string is freed.</p>
+
+<p>Automatic cleanup:</p>
+
+<pre class="brush: cpp">static void
+GetStringValue(nsAWritableCString&amp; aResult)
+{
+  ..
+  aResult.Assign("resulting string");
+}
+
+  ..
+  nsAutoCString warning;
+  GetStringValue(warning);
+  WarnUser(warning.get());
+</pre>
+
+<p>Free the string manually:</p>
+
+<pre class="brush: cpp">static char*
+GetStringValue()
+{
+  ..
+  return resultString.ToNewCString();
+}
+
+  ..
+  char* warning = GetStringValue();
+  WarnUser(warning);
+  nsMemory::Free(warning);
+</pre>
+
+<h4 id="Use_NS_LITERAL_STRING.28.29_to_avoid_runtime_string_conversion" name="Use_NS_LITERAL_STRING.28.29_to_avoid_runtime_string_conversion">Use MOZ_UTF16() or NS_LITERAL_STRING() to avoid runtime string conversion</h4>
+
+<p>It is very common to need to assign the value of a literal string such as "Some String" into a unicode buffer. Instead of using <code>nsString</code>'s <code>AssignLiteral</code> and <code>AppendLiteral</code>, use <code>NS_LITERAL_STRING()</code> instead. On most platforms, this will force the compiler to compile in a raw unicode string, and assign it directly.</p>
+
+<p>Incorrect:</p>
+
+<pre class="brush: cpp">nsAutoString warning;
+warning.AssignLiteral("danger will robinson!");
+...
+foo-&gt;SetStringValue(warning);
+...
+bar-&gt;SetUnicodeValue(warning.get());
+</pre>
+
+<p>Correct:</p>
+
+<pre class="brush: cpp">NS_NAMED_LITERAL_STRING(warning, "danger will robinson!");
+...
+// if you'll be using the 'warning' string, you can still use it as before:
+foo-&gt;SetStringValue(warning);
+...
+bar-&gt;SetUnicodeValue(warning.get());
+
+// alternatively, use the wide string directly:
+foo-&gt;SetStringValue(NS_LITERAL_STRING("danger will robinson!"));
+...
+bar-&gt;SetUnicodeValue(MOZ_UTF16("danger will robinson!"));
+</pre>
+
+<div class="note">
+<p>Note: named literal strings cannot yet be static.</p>
+</div>
+
+<h3 id="Usage_of_PR_(MAXMINABSROUNDUP)_macro_calls">Usage of PR_(MAX|MIN|ABS|ROUNDUP) macro calls</h3>
+
+<p>Use the standard-library functions (std::max) instead of PR_(MAX|MIN|ABS|ROUNDUP).</p>
+
+<p>Use mozilla::Abs instead of PR_ABS. All PR_ABS calls in C++ code have been replaced with mozilla::Abs calls in <a class="link-https" href="https://bugzilla.mozilla.org/show_bug.cgi?id=847480">bug 847480</a>. All new code in Firefox/core/toolkit needs to <code>#include "nsAlgorithm.h"</code> and use the NS_foo variants instead of PR_foo, or <code>#include "mozilla/MathAlgorithms.h"</code> for <code>mozilla::Abs</code>.</p>
+
+<p>{{ languages( { "ja": "ja/Mozilla_Coding_Style_Guide" } ) }}</p>

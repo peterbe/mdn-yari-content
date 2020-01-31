@@ -1,0 +1,229 @@
+<div>{{jsSidebar("Statements")}}</div>
+
+<p><strong><code>throw</code> 文</strong>は、ユーザー定義の例外を投げます。現在の関数の実行を止めて (<code>throw</code> の後の文は実行しません)、コールスタック内の最初の <a href="/ja/docs/Web/JavaScript/Reference/Statements/try...catch"><code>catch</code></a> ブロックに制御を移します。呼び出し元の関数に <code>catch</code> ブロックが存在しない場合は、プログラムが終了します。</p>
+
+<h2 id=".E6.A7.8B.E6.96.87" name=".E6.A7.8B.E6.96.87">構文</h2>
+
+<pre class="syntaxbox">throw <em>expression</em>; </pre>
+
+<dl>
+ <dt><code>expression</code></dt>
+ <dd>投げる式。</dd>
+</dl>
+
+<h2 id=".E8.AA.AC.E6.98.8E" name=".E8.AA.AC.E6.98.8E">説明</h2>
+
+<p>例外を投げるためには <code>throw</code> 文を使ってください。例外を投げるときは、<code>expression</code> で例外の値を指定します。次のそれぞれが例外を投げます:</p>
+
+<pre class="brush: js">throw "Error2"; // 文字列値である例外を生成します
+throw 42;       // 値 42 である例外を生成します
+throw true;     // 値 true である例外を生成します</pre>
+
+<p>また、<code>throw</code> 文は <code>throw</code> キーワードと式の間に行末を置くことができるため、<a href="/ja/docs/Web/JavaScript/Reference/Lexical_grammar#.E8.87.AA.E5.8B.95.E3.82.BB.E3.83.9F.E3.82.B3.E3.83.AD.E3.83.B3.E6.8C.BF.E5.85.A5">自動セミコロン挿入 (ASI)</a> の影響を受けます。</p>
+
+<h2 id=".E4.BE.8B" name=".E4.BE.8B">例</h2>
+
+<h3 id=".E4.BE.8B_.E3.82.AA.E3.83.96.E3.82.B8.E3.82.A7.E3.82.AF.E3.83.88.E3.82.92.E6.8A.95.E3.81.92.E3.82.8B" name=".E4.BE.8B:_.E3.82.AA.E3.83.96.E3.82.B8.E3.82.A7.E3.82.AF.E3.83.88.E3.82.92.E6.8A.95.E3.81.92.E3.82.8B">例: オブジェクトを投げる</h3>
+
+<p>例外を投げるときにオブジェクトを指定することができます。そうすれば、<code>catch</code> ブロックの中でそのオブジェクトのプロパティを参照できます。次の例は、<code>UserException</code> 型のオブジェクトを生成し、それを <code>throw</code> 文の中で使っています。</p>
+
+<pre class="brush: js">function UserException(message) {
+   this.message = message;
+   this.name = "UserException";
+}
+function getMonthName(mo) {
+   mo = mo-1; // 配列の添え字のために月の数を調整する (1=Jan, 12=Dec)
+   var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
+      "Aug", "Sep", "Oct", "Nov", "Dec"];
+   if (months[mo] !== undefined) {
+      return months[mo];
+   } else {
+      throw new UserException("InvalidMonthNo");
+   }
+}
+
+try {
+   // 試みる文
+   var myMonth = 15; // 15 は範囲外であり、例外が発生する
+   var monthName = getMonthName(myMonth);
+} catch (e) {
+   monthName = "unknown";
+   console.error(e.message, e.name); // エラーハンドラに例外オブジェクトを渡す
+}
+</pre>
+
+<h3 id=".E4.BE.8B_.E3.82.AA.E3.83.96.E3.82.B8.E3.82.A7.E3.82.AF.E3.83.88.E3.82.92.E6.8A.95.E3.81.92.E3.82.8B.E3.82.82.E3.81.86.E3.81.B2.E3.81.A8.E3.81.A4.E3.81.AE.E4.BE.8B" name=".E4.BE.8B:_.E3.82.AA.E3.83.96.E3.82.B8.E3.82.A7.E3.82.AF.E3.83.88.E3.82.92.E6.8A.95.E3.81.92.E3.82.8B.E3.82.82.E3.81.86.E3.81.B2.E3.81.A8.E3.81.A4.E3.81.AE.E4.BE.8B">例: オブジェクトを投げるもうひとつの例</h3>
+
+<p>次の例では入力文字列で U.S. zip コードのテストをします。もし zip コードが無効な書式を使っていたなら、throw 文は <code>ZipCodeFormatException</code> 型のオブジェクトを生成して例外を投げます。</p>
+
+<pre class="brush: js">/*
+ * ZipCode オブジェクトを生成します。
+ *
+ * zip コードとして受け入れられる書式は次のとおりです:
+ *    12345
+ *    12345-6789
+ *    123456789
+ *    12345 6789
+ *
+ * もし ZipCode コンストラクタに渡された引数が、これらのパターンの
+ * うちひとつにも確かめられないのなら、例外が投げられます。
+ */
+
+function ZipCode(zip) {
+   zip = new String(zip);
+   pattern = /[0-9]{5}([- ]?[0-9]{4})?/;
+   if (pattern.test(zip)) {
+      // zip コードの値は文字列中の最初の一致部分です
+      this.value = zip.match(pattern)[0];
+      this.valueOf = function() {
+         return this.value
+      };
+      this.toString = function() {
+         return String(this.value)
+      };
+   } else {
+      throw new ZipCodeFormatException(zip);
+   }
+}
+
+function ZipCodeFormatException(value) {
+   this.value = value;
+   this.message = "does not conform to the expected format for a zip code";
+   this.toString = function() {
+      return this.value + this.message;
+   };
+}
+
+/*
+ * これは、US の住所のためのアドレスデータを検証するスクリプトで
+ * 使われるかもしれません。
+ */
+
+const ZIPCODE_INVALID = -1;
+const ZIPCODE_UNKNOWN_ERROR = -2;
+
+function verifyZipCode(z) {
+   try {
+      z = new ZipCode(z);
+   } catch (e) {
+      if (e instanceof ZipCodeFormatException) {
+         return ZIPCODE_INVALID;
+      } else {
+         return ZIPCODE_UNKNOWN_ERROR;
+      }
+   }
+   return z;
+}
+
+a = verifyZipCode(95060);         // 95060 を返します
+b = verifyZipCode(9560);          // -1 を返します
+c = verifyZipCode("a");           // -1 を返します
+d = verifyZipCode("95060");       // 95060 を返します
+e = verifyZipCode("95060 1234");  // 95060 1234 を返します
+</pre>
+
+<h3 id=".E4.BE.8B_.E4.BE.8B.E5.A4.96.E3.82.92.E5.86.8D.E5.BA.A6.E6.8A.95.E3.81.92.E3.82.8B" name=".E4.BE.8B:_.E4.BE.8B.E5.A4.96.E3.82.92.E5.86.8D.E5.BA.A6.E6.8A.95.E3.81.92.E3.82.8B">例: 例外を再度投げる</h3>
+
+<p>例外を捕捉した後、その例外を再度投げるために <code>throw</code> を使うことができます。次の例では、数値である例外を捕捉し、もしその値が 50 を超えるのなら、それを再度投げます。再度投げられた例外は、利用者がわかるように、囲んでいる関数またはトップレベルにいたるまで伝播します。</p>
+
+<pre class="brush: js">try {
+   throw n; // 数値である例外を投げる
+} catch (e) {
+   if (e &lt;= 50) {
+      // 1 から 50 の例外を操作するための文
+   } else {
+      // この例外を操作できないので、再度投げる
+      throw e;
+   }
+}
+</pre>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">策定状況</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES3')}}</td>
+   <td>{{Spec2('ES3')}}</td>
+   <td>最初期の定義。JavaScript 1.4 で実装。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-12.13', 'throw statement')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td></td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-throw-statement', 'throw statement')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td></td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-throw-statement', 'throw statement')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td></td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザ実装状況</h2>
+
+<div>{{CompatibilityTable}}</div>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>機能</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>基本サポート</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>機能</th>
+   <th>Android</th>
+   <th>Chrome for Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>基本サポート</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id=".E5.8F.82.E7.85.A7" name=".E5.8F.82.E7.85.A7">参照</h2>
+
+<ul>
+ <li><a href="/ja/docs/Web/JavaScript/Reference/Statements/try...catch"><code>try...catch</code></a></li>
+</ul>

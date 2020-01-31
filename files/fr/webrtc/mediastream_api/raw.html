@@ -1,0 +1,407 @@
+<p>{{SeeCompatTable}}</p>
+
+<p>L'<strong>API Processing MediaStream</strong>, souvent appelée <em>Media Stream API</em> ou <em>Stream API</em>, est la partie de <a href="/fr/docs/WebRTC">WebRTC</a> décrivant un flux de données audio ou vidéo, les méthodes pour les manipuler, les contraintes associées au type de données, les erreurs et succès des callbacks avec les données asynchrones, et les évènements déclenchés durant le processus.</p>
+
+<p><span style="font-family: Georgia,Times,'Times New Roman',serif; font-size: 1.628em; line-height: inherit;">Concepts de base</span></p>
+
+<p>L'API est basée sur la manipulation de l'objet <span style="line-height: inherit;">{{domxref("MediaStream")}} représentant un flux de données audio ou vidéo. Typiquement, un </span>{{domxref("MediaStream")}} est une simple chaine URL qui peut être utilisée pour référencer une donnée stockée dans un <span style="line-height: inherit;">{{domxref("File")}} DOM, ou un objet </span><span style="line-height: inherit;">{{domxref("Blob")}} crée avec </span><span style="line-height: inherit;">{{domxref("window.URL.createObjectURL()")}}, tel que décrit dans <a href="/en-US/docs/WebRTC/taking_webcam_photos#Get_the_video">cette vidéo</a>.</span></p>
+
+<p><span style="line-height: inherit;">Un </span>{{domxref("MediaStream")}} consiste en zéro ou plus objets <span style="line-height: inherit;">{{domxref("MediaStreamTrack")}}, représentant différentes <strong>pistes</strong> audio ou vidéos. Chaque </span><span style="line-height: inherit;">{{domxref("MediaStreamTrack")}} peut avoir un ou plusieurs <strong>canal</strong>. Le canal représente la plus petite unité d'un flux média, tel un signal audio d'un haut-parleur, séparé en <em>gauche</em> et <em>droite</em> sur une piste audio en stéréo.</span></p>
+
+<p><span style="line-height: inherit;"><code><font face="Lucida Grande, Lucida Sans Unicode, DejaVu Sans, Lucida, Arial, Helvetica, sans-serif">Les objets </font></code></span>{{domxref("MediaStream")}} ont une seule <strong>entrée </strong>et une seule <strong>sortie</strong>. Un objet {{domxref("MediaStream")}} généré par <a href="/en-US/docs/WebRTC/navigator.getUserMedia" style="line-height: inherit; color: rgb(34, 85, 170); text-decoration: underline; font-family: 'Courier New', 'Andale Mono', monospace;" title="/en-US/docs/WebRTC/navigator.getUserMedia">getUserMedia()</a> est dit <em>local</em>, et sa source d'entrée provient de l'une des caméra ou microphone de l'utilisateur. Un objet {{domxref("MediaStream")}} non local peut représenter un média tel que <span style="line-height: inherit;"> {{HTMLElement("video")}} ou </span><span style="line-height: inherit;">{{HTMLElement("audio")}}, un flux provenant du réseau et obtenu via l'API WebRTC </span><a href="/en-US/docs/WebRTC/PeerConnection_API" style="line-height: inherit;" title="/en-US/docs/WebRTC/PeerConnection_API">PeerConnection</a>, ou un flux créé en utilisant l'API <a href="/en-US/docs/Web_Audio_API" title="/en-US/docs/Web_Audio_API">Web Audio</a> {{domxref("MediaStreamAudioSourceNode")}}. La sortie d'un objet {{domxref("MediaStream")}} est liée à un <strong>consommateur</strong>. Elle peut-être un élément média tel que {{HTMLElement("audio")}} ou {{HTMLElement("video")}}, l'API WebRTC <a href="/en-US/docs/WebRTC/PeerConnection_API" style="line-height: inherit;" title="/en-US/docs/WebRTC/PeerConnection_API">PeerConnection</a> ou l'<a href="/en-US/docs/Web_Audio_API">API Web Audio</a> <span style="line-height: inherit;">{{domxref("MediaStreamAudioDestinationNode")}}.</span></p>
+
+<h2 id="Reference">Reference</h2>
+
+<div class="index">
+<ul>
+ <li>{{event("addtrack")}} (event)</li>
+ <li>{{domxref("AudioStreamTrack")}}</li>
+ <li>{{domxref("BlobEvent")}}</li>
+ <li>{{event("ended (MediaStream)")}} (event)</li>
+ <li>{{event("ended (MediaStreamTrack)")}} (event)</li>
+ <li>{{domxref("MediaStream")}}</li>
+ <li>{{domxref("MediaStreamConstraints")}}</li>
+ <li>{{domxref("MediaStreamTrack")}}</li>
+ <li>{{domxref("MediaStreamTrackEvent")}}</li>
+ <li>{{domxref("MediaStreamTrackList")}}</li>
+ <li>{{domxref("MediaTrackConstraints")}}</li>
+ <li>{{event("muted")}} (event)</li>
+ <li>{{domxref("NavigatorUserMedia")}}</li>
+ <li>{{domxref("NavigatorUserMediaError")}}</li>
+ <li>{{event("overconstrained")}} (event)</li>
+ <li>{{event("removetrack")}} (event)</li>
+ <li>{{event("started")}} (event)</li>
+ <li>{{event("unmuted")}} (event)</li>
+ <li>{{domxref("URL")}}</li>
+ <li>{{domxref("VideoStreamTrack")}}</li>
+</ul>
+</div>
+
+<h2 id="sect1"> </h2>
+
+<h2 id="MediaStreamTrack"><code>MediaStreamTrack</code></h2>
+
+<p>Un objet <code>MediaStreamTrack</code> peut-être de deux types différents, audio ou vidéo, et représente une source (ex: une caméra).</p>
+
+<p><span style="font-family: 'Open Sans Light',sans-serif; font-size: 28px; letter-spacing: -0.5px; line-height: 28px;">Attributs</span></p>
+
+<table>
+ <thead>
+  <tr>
+   <th scope="col">Attribute </th>
+   <th scope="col">Type</th>
+   <th scope="col">Description</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>enabled</td>
+   <td>Boolean </td>
+   <td>True if the track is still associated with its source.</td>
+  </tr>
+  <tr>
+   <td>id</td>
+   <td>DOMString, read-only</td>
+   <td>A globally unique identifier (GUID) which describes the media track.</td>
+  </tr>
+  <tr>
+   <td>kind</td>
+   <td>DOMString, read-only</td>
+   <td>The <strong>audio</strong> or <strong>video</strong> for the source of the track.</td>
+  </tr>
+  <tr>
+   <td>label</td>
+   <td>DOMString, read-only</td>
+   <td>A user agent-assigned string that identifies the track source, as in "internal microphone." </td>
+  </tr>
+  <tr>
+   <td>onended</td>
+   <td>EventHandler</td>
+   <td>Handles the ended event when fired on the MediaStreamTrack object.</td>
+  </tr>
+  <tr>
+   <td>onmute </td>
+   <td>EventHandler</td>
+   <td>Handles the muted event when fired on the MediaStreamTrack object. </td>
+  </tr>
+  <tr>
+   <td>onoverconstrained</td>
+   <td>EventHandler</td>
+   <td>Handles the overconstrained event when fired on the MediaStreamTrack object.</td>
+  </tr>
+  <tr>
+   <td>onstarted</td>
+   <td>EventHandler</td>
+   <td>Handles the started event when fired on the MediaStreamTrack object.</td>
+  </tr>
+  <tr>
+   <td>onunmute </td>
+   <td>EventHandler</td>
+   <td>Handles the unmuted event when fired on the MediaStreamTrack object.</td>
+  </tr>
+  <tr>
+   <td>readyState</td>
+   <td>unsigned short, read-only</td>
+   <td>
+    <p>The track's ready state; values:</p>
+
+    <ul>
+     <li>live - the track is active; the output may be switched on and off with the enabled attribute.</li>
+     <li>muted - the track's underlying media source is temporarily unable to provide realtime data.</li>
+    </ul>
+   </td>
+  </tr>
+  <tr>
+   <td>sourceId</td>
+   <td>DOMString, read-only</td>
+   <td>The identity of this source that is unique to this application and persistent between sessions. A GUID is recommended but not required.</td>
+  </tr>
+  <tr>
+   <td>sourceType</td>
+   <td>SourceTypeEnum, read-only</td>
+   <td>Contains the type information of the source, if one exists.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h3 id="Events">Events</h3>
+
+<table>
+ <thead>
+  <tr>
+   <th scope="col">Event </th>
+   <th scope="col">Interface </th>
+   <th scope="col">Description </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>started</td>
+   <td>Event</td>
+   <td>The MediaStreamTrack object is no longer in the "new" readyState.</td>
+  </tr>
+  <tr>
+   <td>muted</td>
+   <td>Event</td>
+   <td>The MediaStreamTrack object's source is temporarily unable to provide data. </td>
+  </tr>
+  <tr>
+   <td>unmuted </td>
+   <td>Event</td>
+   <td>The MediaStreamTrack object's source has resumed providing data.</td>
+  </tr>
+  <tr>
+   <td>overconstrained</td>
+   <td>Event</td>
+   <td>The MediaStreamTrack object's source cannot be configured to fit the constraints imposed by the track. This could be height in the case of video, among several others.</td>
+  </tr>
+  <tr>
+   <td>ended</td>
+   <td>Event</td>
+   <td>
+    <p>The MediaStreamTrack object's source will not provide data; this may be caused by the following:</p>
+
+    <ul>
+     <li>the user has revoked permissions on the application</li>
+     <li>the source device has been disconnected</li>
+     <li>the remote peer has stopped sending data</li>
+     <li>the stop() method was invoked</li>
+    </ul>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+<h3 id="appendConstraint()">appendConstraint()</h3>
+
+<p>Adds the constraint to the end of the list. This is only a method of adding optional constraints.</p>
+
+<dl>
+ <dt>Parameters</dt>
+ <dd>constraintName <strong>DOMString</strong>, required.</dd>
+ <dd>constraintValue <strong>Primitive (DOMString, float, etc.) </strong>or<strong> MinMaxConstraint</strong>, required.</dd>
+ <dt>Returns</dt>
+ <dd>void</dd>
+ <dt>Exceptions</dt>
+ <dd>None.</dd>
+</dl>
+
+<h3 id="applyConstraints()">applyConstraints()</h3>
+
+<p>Applies the list of optional constraints to the track. This overwrites any existing optional constraints on the track.</p>
+
+<dl>
+ <dt><strong>Parameters</strong></dt>
+ <dd>constraints <strong>MediaTrackConstraints</strong>, required.</dd>
+ <dt>Returns</dt>
+ <dd>void</dd>
+ <dt>Exceptions</dt>
+ <dd>None.</dd>
+</dl>
+
+<h3 id="constraints()">constraints()</h3>
+
+<p>Returns all constraints on the track, mandatory and optional. If either <code>mandatory</code> or <code>optional</code> have no constraints, that field will be <code>undefined</code>. If neither have constraints, then <code>constraints()</code> will return <code>null</code>.</p>
+
+<dl>
+ <dt>Parameters</dt>
+ <dd>None.</dd>
+ <dt>Returns</dt>
+ <dd><strong>MediaTrackConstraints</strong> or <strong>null</strong></dd>
+ <dt><span id="cke_bm_186C" style="display: none;"> </span>Exceptions</dt>
+ <dd>None.</dd>
+</dl>
+
+<h3 id="getConstraint()">getConstraint()</h3>
+
+<p>Fetches a specific constraint, by name, from the track. This method can return one of many possibilities:</p>
+
+<ul>
+ <li>If your constraint does not exist, <code>null</code> is returned.</li>
+ <li>If you do not provide <code>true</code> to this method's optional <code>mandatory </code>parameter, and your query matches one or more constraints, this method will return a list. Each item in the list will be the query name and either its value or a <code>MinMaxConstraint</code> object. The list is sorted: the 0th entry is most important, and each entry thereafter is progressively less important.</li>
+ <li>If your provide <code>true</code> to the <code>mandatory</code> parameter, and your query is a member of the <code>MediaTrackConstraintSet</code> for the track, this method returns either its primitive value or its <code>MinMaxConstraint</code>, whichever applies.</li>
+</ul>
+
+<dl>
+ <dt>Parameters</dt>
+ <dd>constraintName <strong>DOMString</strong>, required.</dd>
+ <dd>mandatory <strong>boolean</strong>, optional, default false.</dd>
+ <dt>Returns</dt>
+ <dd>Any of the possibilities mentioned above.</dd>
+ <dt>Exceptions</dt>
+ <dd>None.</dd>
+</dl>
+
+<p>--</p>
+
+<h3 id="stop()">stop()</h3>
+
+<p>Permanently halts the generation of data for the tracks' sources and removes the references to the sources.</p>
+
+<dl>
+ <dt>Parameters</dt>
+ <dd>None.</dd>
+ <dt>Returns</dt>
+ <dd>Void.</dd>
+ <dt>Exceptions</dt>
+ <dd>None.</dd>
+</dl>
+
+<h2 id="MediaStreamTrackList">MediaStreamTrackList</h2>
+
+<p>A MediaStream has two MediaStreamTrackList objects, one for the video and one for the audio tracks.</p>
+
+<table>
+ <thead>
+  <tr>
+   <th scope="col">Attribute </th>
+   <th scope="col">Type</th>
+   <th scope="col">Description</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>length</td>
+   <td>unsigned long, read-only </td>
+   <td>The number of tracks in the list. </td>
+  </tr>
+  <tr>
+   <td>onaddtrack </td>
+   <td>EventHandler</td>
+   <td>Handles the addtrack event.</td>
+  </tr>
+  <tr>
+   <td>onremovetrack </td>
+   <td>EventHandler</td>
+   <td>Handles the removetrack event.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h3 id="Events_2">Events</h3>
+
+<table>
+ <thead>
+  <tr>
+   <th scope="col">Event </th>
+   <th scope="col">Interface </th>
+   <th scope="col">Description </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>addtrack </td>
+   <td>MediaStreamTrackEvent </td>
+   <td>A MediaStreamTrack has been added to the list. </td>
+  </tr>
+  <tr>
+   <td>removetrack </td>
+   <td>MediaStreamTrackEvent</td>
+   <td>A MediaStreamTrack has been removed from the list. </td>
+  </tr>
+ </tbody>
+</table>
+
+<h3 id="add()">add()</h3>
+
+<p>Adds a MediaStreamTrack to this track list.</p>
+
+<dl>
+ <dt>Parameters</dt>
+ <dd>MediaStreamTrack <strong>track</strong>, required.</dd>
+ <dt>Returns</dt>
+ <dd>Void.</dd>
+ <dt>Exceptions</dt>
+ <dd>INVALID_STATE_ERR if the stream is finished (all tracks have ended).</dd>
+</dl>
+
+<h3 id="item()">item()<span id="cke_bm_369C" style="display: none;"> </span></h3>
+
+<p>Returns the MediaStreamTrack at the specified index value.</p>
+
+<dl>
+ <dt>Parameters</dt>
+ <dd>unsigned long <strong>index</strong>, required.</dd>
+ <dt>Returns</dt>
+ <dd>MediaStreamTrack</dd>
+ <dt>Exceptions</dt>
+ <dd>None.</dd>
+</dl>
+
+<h3 id="Remove()">Remove()</h3>
+
+<p>Removes a MediaStreamTrack from this track list.</p>
+
+<dl>
+ <dt>Parameters</dt>
+ <dd>MediaStreamTrack <strong>track</strong>, required.</dd>
+ <dt>Returns</dt>
+ <dd>Void.</dd>
+ <dt>Exceptions</dt>
+ <dd>INVALID_STATE_ERR if the stream is finished (all tracks have ended).</dd>
+</dl>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<p>{{ CompatibilityTable() }}</p>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera </th>
+   <th>Safari (WebKit)</th>
+  </tr>
+  <tr>
+   <td>Stream API </td>
+   <td>21{{ property_prefix("webkit") }} </td>
+   <td>nightly 18{{ property_prefix("moz") }} </td>
+   <td>{{ CompatUnknown() }} </td>
+   <td>12</td>
+   <td>{{ CompatUnknown() }} </td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Phone</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>Stream API </td>
+   <td>{{ CompatNo() }} </td>
+   <td>{{ CompatUnknown() }}</td>
+   <td>{{ CompatUnknown() }} </td>
+   <td>{{ CompatNo() }} </td>
+   <td>{{ CompatNo() }} </td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<p><span style="line-height: 1.5em;">Currently using WebRTC for accessing the camera is supported in Chrome, Opera and Firefox Nightly 18. Enabling WebRTC in Firefox Nightly requires you to set a flag in the configuration:</span></p>
+
+<ul style="margin: 0px 0px 1.286em; padding-top: 0px; padding-right: 0px; padding-bottom: 0px;">
+ <li>Type "about:config" in the address bar and say yes that you want to make changes</li>
+ <li>Find the "media.navigator.enabled" entry and set it to true</li>
+</ul>
+
+<h2 id="See_Also">See Also</h2>
+
+<ul>
+ <li><a href="/en-US/docs/WebRTC" title="/en-US/docs/WebRTC">WebRTC</a> - the introductory page to the API</li>
+ <li><a href="/en-US/docs/WebRTC/navigator.getUserMedia" title="/en-US/docs/WebRTC/navigator.getUserMedia">getUserMedia()</a></li>
+ <li><a href="/en-US/docs/WebRTC/taking_webcam_photos" title="/en-US/docs/WebRTC/taking_webcam_photos">Taking webcam photos</a> - a tutorial on using getUserMedia()</li>
+</ul>

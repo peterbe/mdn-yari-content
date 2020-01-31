@@ -1,0 +1,106 @@
+<div>{{JSRef}}</div>
+
+<p><strong><code>WebAssembly.Global</code></strong> 对象表示一个全局变量实例, 可以被JavaScript 和importable/exportable 访问 ,跨越一个或多个{{jsxref("WebAssembly.Module")}} 实例. 他允许被多个modules动态连接.</p>
+
+<h2 id="构造函数语法">构造函数语法</h2>
+
+<pre class="syntaxbox">var myGlobal = new WebAssembly.Global(<em>descriptor</em>, <em>value</em>);</pre>
+
+<h3 id="参数">参数</h3>
+
+<dl>
+ <dt>descriptor</dt>
+ <dd><code>GlobalDescriptor</code> 包含2个属性的表:
+ <ul>
+  <li><code>value</code>: A {{domxref("USVString")}} 表示全局变量的数据类型. 可以是<code>i32</code>, <code>i64</code>, <code>f32</code>, 或 <code>f64</code>.</li>
+  <li><code>mutable</code>: 布尔值决定是否可以修改. 默认是 <code>false</code>.</li>
+ </ul>
+ </dd>
+ <dt><em>value</em></dt>
+ <dd>可以是任意变量值. This can be any value,需要其类型与变量类型匹配. 如果变量没有定义, 使用0代替,参考 <a href="https://webassembly.github.io/spec/js-api/#defaultvalue"><code>DefaultValue</code> algorithm</a>.</dd>
+</dl>
+
+<h2 id="Global_构造函数属性">Global 构造函数属性</h2>
+
+<p>None.</p>
+
+<h2 id="Global_实例">Global 实例</h2>
+
+<p>所有的 <code>Global</code> 实例 继承自 <code>Global()</code> 构造函数 <a href="/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Global/prototype">prototype object</a> — 修改会影响 所有 <code>Global</code> 实例.</p>
+
+<h3 id="实例属性">实例属性</h3>
+
+<p>{{page('/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Global/prototype', 'Properties')}}</p>
+
+<h3 id="实例方法">实例方法</h3>
+
+<p>{{page('/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Global/prototype', 'Methods')}}</p>
+
+<h2 id="例子">例子</h2>
+
+<p>以下例子展示了使用 <code>WebAssembly.Global()</code> 构造函数创建一个新的实例. 它定义为可修饰的 类型为<code>i32</code> , 值为 0.</p>
+
+<p>global的值发生改变, 首先设置<code>Global.value</code> 为42, 然后使用导出函数 <code>incGlobal()</code> 增加为43. 导出函数在 <code>global.wasm</code> 模块中(它将参数的值加一并返回).</p>
+
+<pre class="brush: js">const output = document.getElementById('output');
+
+function assertEq(msg, got, expected) {
+    output.innerHTML += `Testing ${msg}: `;
+    if (got !== expected)
+        output.innerHTML += `FAIL!&lt;br&gt;Got: ${got}&lt;br&gt;Expected: ${expected}&lt;br&gt;`;
+    else
+        output.innerHTML += `SUCCESS! Got: ${got}&lt;br&gt;`;
+}
+
+assertEq("WebAssembly.Global exists", typeof WebAssembly.Global, "function");
+
+const global = new WebAssembly.Global({value:'i32', mutable:true}, 0);
+
+WebAssembly.instantiateStreaming(fetch('global.wasm'), { js: { global } })
+.then(({instance}) =&gt; {
+    assertEq("getting initial value from wasm", instance.exports.getGlobal(), 0);
+    global.value = 42;
+    assertEq("getting JS-updated value from wasm", instance.exports.getGlobal(), 42);
+    instance.exports.incGlobal();
+    assertEq("getting wasm-updated value from JS", global.value, 43);
+});</pre>
+
+<div class="note">
+<p><strong>注意</strong>: 你可以在<a href="https://mdn.github.io/webassembly-examples/js-api-examples/global.html">running live on GitHub</a> 查看例子; 也可以访问<a href="https://github.com/mdn/webassembly-examples/blob/master/js-api-examples/global.html">source code</a>.</p>
+</div>
+
+<h2 id="规格">规格</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">规格</th>
+   <th scope="col">状态</th>
+   <th scope="col">解释</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName('WebAssembly JS', '#globals', 'WebAssembly.Global()')}}</td>
+   <td>{{Spec2('WebAssembly JS')}}</td>
+   <td>Initial draft definition.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">浏览器兼容性</h2>
+
+<div>
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.builtins.WebAssembly.Global")}}</p>
+</div>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li><a href="/en-US/docs/WebAssembly">WebAssembly</a> overview page</li>
+ <li><a href="/en-US/docs/WebAssembly/Concepts">WebAssembly concepts</a></li>
+ <li><a href="/en-US/docs/WebAssembly/Using_the_JavaScript_API">Using the WebAssembly JavaScript API</a></li>
+ <li><a href="https://github.com/WebAssembly/mutable-global/blob/master/proposals/mutable-global/Overview.md">Import/Export mutable globals proposal</a></li>
+</ul>

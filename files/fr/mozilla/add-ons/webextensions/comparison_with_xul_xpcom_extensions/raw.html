@@ -1,0 +1,356 @@
+<div>{{AddonSidebar}}</div>
+
+<p>Cet article dresse une comparaison technique entre la technologie WebExtensions et les extensions « classiques » développées à l'aide de XUL et XPCOM. Il est destiné à aider les personnes qui maintiennent un <em>add-on</em> réalisé avec ces technologies afin de le porter vers les API WebExtensions.</p>
+
+<div class="blockIndicator warning">
+<p>La prise en charge des extensions utilisant XUL/XPCOM ou le SDK Add-on a été supprimée dans Firefox 57, publié en novembre 2017. Comme il n'y a pas de version supportée de Firefox permettant ces technologies, cette page sera supprimée d'ici décembre 2020.</p>
+</div>
+
+<p>Cet article couvre à la fois les <a href="/en-US/docs/Archive/Add-ons/Overlay_Extensions">extensions de surcouche</a> et <a href="/fr/Add-ons/Bootstrapped_extensions">les extensions <em>bootstrappées</em></a> mais pas les extensions développées avec le SDK. Pour ces extensions réalisées avec le SDK, se référer à <a href="/fr/Add-ons/WebExtensions/Comparison_with_the_Add-on_SDK">Comparaison avec les <em>add-ons</em> SDK</a>.</p>
+
+<p>À un niveau basique, les extensions XUL/XPCOM sont similaires aux extensions développées avec WebExtensions. Toutes deux incluent :</p>
+
+<ul>
+ <li>Les fichiers de <strong>manifeste</strong> qui définissent des métadonnées pour l'extension et décrivent certains aspects de son comportement.</li>
+ <li>Du code JavaScript qui accède à un ensemble d'API JavaScript privilégiées et qui reste chargé tant que l'extension est activée.</li>
+ <li>La possibilité d'ajouter des éléments d'interface utilisateur spécifiques, tels que des boutons, au navigateur.</li>
+</ul>
+
+<p>Cependant, au-delà de cela, les systèmes sont très différents, notamment :</p>
+
+<ul>
+ <li>Par rapport aux extensions XUL/XPCOM, les WebExtensions fournissent des options beaucoup plus limitées pour l'interface utilisateur de l'extension et un ensemble beaucoup plus restreint d'API JavaScript privilégiées.</li>
+ <li>WebExtensions ne peut accéder au contenu Web qu'en injectant des scripts distincts dans des pages Web et en les communiquant à l'aide d'une API de messagerie (ceci est également vrai pour les extensions XUL/XPCOM fonctionnant avec le mode multiprocessus de Firefox).</li>
+</ul>
+
+<h2 id="Le_manifeste">Le manifeste</h2>
+
+<p>Les extensions XUL/XPCOM possèdent deux manifestes :</p>
+
+<ul>
+ <li>Le fichier <code><a href="/fr/Add-ons/Install_Manifests">install.rdf</a></code> contient des métadonnées sur l'extension telles que son nom, ses icônes, etc.</li>
+ <li>Le fichier <code><a href="/fr/docs/Mozilla/Enregistrement_chrome">chrome.manifest</a></code> qui indique à Firefox où trouver les composants de l'extension, y compris les <em>overlays</em> XUL pour l'interface de l'extension, les scripts pour son comportement et les fichiers contenant des chaines localisées.</li>
+</ul>
+
+<p>WebExtensions possède un seul manifeste appelé <code><a href="/fr/Add-ons/WebExtensions/manifest.json">manifest.json</a></code>. Celui-ci est utilisé pour indiquer le nom de l'extension, la description, les icônes, etc. Il permet aussi d'indiquer les boutons ajoutés à Firefox et pour répertorier les scripts dont il a besoin pour son exécution. Pour obtenir un aperçu des composants d'une extension développée à l'aide des API WebExtensions, ainsi que la manière dont elles sont spécifiées dans le fichier <code>manifest.json</code>, voir l'article <a href="/fr/Add-ons/WebExtensions/Anatomy_of_a_WebExtension">Anatomie d'une extension</a>.</p>
+
+<h3 id="En_savoir_plus">En savoir plus</h3>
+
+<ul>
+ <li><a href="/fr/Add-ons/WebExtensions/manifest.json">La documentation sur <code>manifest.json</code></a></li>
+ <li><a href="/fr/Add-ons/WebExtensions/Anatomy_of_a_WebExtension">Anatomie d'une extension</a></li>
+</ul>
+
+<h2 id="Interface_utilisateur">Interface utilisateur</h2>
+
+<p>Les extensions XUL/XPCOM peuvent créer leur interface utilisateur en manipulant directement le XUL utilisé pour spécifier l'interface utilisateur du navigateur. Elles le font en utilisant des superpositions ou avec du code JavaScript (pour les extensions bootstrapées/sans redémarrage) qui modifie le document XUL. Elles peuvent ajouter des éléments à l'interface utilisateur du navigateur et aussi modifier ou supprimer des éléments existants. De plus, elles peuvent utiliser des API telles que <a href="/fr/docs/Mozilla/JavaScript_code_modules/CustomizableUI.jsm">CustomizableUI.jsm</a> pour créer leur interface utilisateur.</p>
+
+<p>Les extensions construites avec les API WebExtensions ne possèdent pas ce type d'accès direct. À la place, une combinaison de clés contenues dans le fichier <code>manifest.json</code> et d'API JavaScript leur permet d'ajouter un ensemble limité de composants graphiques au navigateur. Les composants disponibles sont : </p>
+
+<table class="fullwidth-table standard-table">
+ <thead>
+  <tr>
+   <th scope="col">Nom</th>
+   <th scope="col">Description</th>
+   <th scope="col">Utilisation indiquée par</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>Action du navigateur</td>
+   <td>Bouton dans la barre d'outils du navigateur, avec un panneau contextuel facultatif</td>
+   <td>
+    <p>La clé du manifeste <code><a href="/fr/Add-ons/WebExtensions/manifest.json/browser_action">browser_action</a></code> </p>
+
+    <p>L'API <code><a href="/fr/Add-ons/WebExtensions/API/browserAction">browserAction</a></code></p>
+   </td>
+  </tr>
+  <tr>
+   <td>Action de la page</td>
+   <td>Bouton dans la barre d'URL, avec un panneau contextuel facultatif.</td>
+   <td>
+    <p>La clé du manifeste <code><a href="/fr/Add-ons/WebExtensions/manifest.json/page_action">page_action</a></code></p>
+
+    <p>L'API <code><a href="/fr/Add-ons/WebExtensions/API/pageAction">pageAction</a></code></p>
+   </td>
+  </tr>
+  <tr>
+   <td>Commandes</td>
+   <td>Raccourcis clavier</td>
+   <td>
+    <p>La clé du manifeste <code><a href="/fr/Add-ons/WebExtensions/manifest.json/commands">commands</a></code></p>
+
+    <p>L'API <code><a href="/fr/Add-ons/WebExtensions/API/commands">commands</a></code></p>
+   </td>
+  </tr>
+  <tr>
+   <td>Menu contextuel</td>
+   <td>Ajoute des éléments et des sous-menus au menu contextuel du navigateur</td>
+   <td>L'API <code><a href="/fr/Add-ons/WebExtensions/API/contextMenus">contextMenus</a></code></td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="API_privilégiées">API privilégiées</h2>
+
+<p>Les extensions XUL/XPCOM ainsi que celles créées avec les API WebExtensions peuvent contenir des scripts qui restent chargés tant que l'extension elle-même est activée et qui ont accès à un ensemble d'API privilégiées. Cependant, les extensions XUL/XPCOM accèdent à une gamme beaucoup plus large d'API.</p>
+
+<p>Les scripts empaquetés avec les extensions XUL/XPCOM ont accès à l'ensemble complet des <a href="/fr/docs/Mozilla/Tech/XPCOM/Reference/Interface">API XPCOM</a> et des  <a href="/fr/docs/Mozilla/JavaScript_code_modules">modules de code JavaScript</a> via l'objet <code><a href="/fr/docs/Mozilla/Tech/XPCOM/Language_Bindings/Components_object">Components</a></code>. Ils ont également un accès direct aux éléments internes du navigateur à travers des variables globales telles que <code><a href="/fr/docs/Mozilla/Tech/XUL/tabbrowser">gBrowser</a></code>.</p>
+
+<p>Les scripts WebExtensions équivalents sont appelés <a href="/fr/Add-ons/WebExtensions/Anatomy_of_a_WebExtension#Background_scripts">scripts d'arrière-plan</a> et ont accès à un ensemble beaucoup plus restreint d'API JavaScript de haut niveau. Pour voir toutes les API privilégiées disponibles pour les scripts d'arrière-plan, consultez la <a href="/fr/Add-ons/WebExtensions/API">page d'aperçu des API</a>. Les scripts d'arrière-plan disposent également d'un objet <code><a href="/fr/docs/Web/API/Window">window</a></code> global, avec tous les objets DOM disponibles dans une page web classique.</p>
+
+<p>Il y a bien plus d'API disponibles pour les extensions XUL/XPCOM que d'API disponibles pour les WebExtensions. Pour de nombreuses API XUL/XPCOM, il n'existe pas de substitut WebExtensions. Le tableau ci-dessous répertorie l'ensemble des API populaires du module <a href="/fr/docs/Mozilla/JavaScript_code_modules/Services.jsm">Services.jsm</a> et décrit l'API WebExtensions équivalente si elle existe.</p>
+
+<p>Vous verrez que de nombreuses API n'ont pas encore d'équivalent WebExtensions. Cependant, nous avons l'intention d'étendre les API WebExtensions pour répondre aux besoins des développeurs de modules complémentaires. Aussi, si vous avez des idées, nous aimerions les entendre. Vous pouvez nous joindre sur la <a class="external external-icon" href="https://mail.mozilla.org/listinfo/dev-addons">liste de diffusion dev-addons</a> ou  <a class="external external-icon" href="irc://irc.mozilla.org/webextensions">#webextensions</a> sur <a href="https://wiki.mozilla.org/IRC">IRC</a>.</p>
+
+<table class="fullwidth-table standard-table">
+ <thead>
+  <tr>
+   <th>Services.jsm API</th>
+   <th>Équivalent WebExtensions</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{interface("nsIAndroidBridge")}}</td>
+   <td>Aucun</td>
+  </tr>
+  <tr>
+   <td>{{interface("nsIXULAppInfo")}}<br>
+    {{interface("nsIXULRuntime")}}</td>
+   <td>Aucun</td>
+  </tr>
+  <tr>
+   <td>{{interface("nsIAppShellService")}}</td>
+   <td>Aucun</td>
+  </tr>
+  <tr>
+   <td>{{interface("nsIBlocklistService")}}</td>
+   <td>Aucun</td>
+  </tr>
+  <tr>
+   <td>{{interface("nsICacheService")}}</td>
+   <td>Aucun</td>
+  </tr>
+  <tr>
+   <td>{{interface("nsICacheStorageService")}}</td>
+   <td>Aucun</td>
+  </tr>
+  <tr>
+   <td>{{interface("nsIClipboard")}}</td>
+   <td>Partiel: voir l'API  {{WebExtAPIRef("clipboard")}}, et  <a href="/fr/Add-ons/WebExtensions/Interact_with_the_clipboard">Interacting with the clipboard</a>.</td>
+  </tr>
+  <tr>
+   <td>{{interface("nsIConsoleService")}}</td>
+   <td><code><a href="/fr/docs/Web/API/Console">window.console</a></code></td>
+  </tr>
+  <tr>
+   <td>{{interface("nsIContentPrefService")}}</td>
+   <td>Aucun</td>
+  </tr>
+  <tr>
+   <td>{{interface("nsICookieManager2")}}</td>
+   <td><code><a href="/fr/Add-ons/WebExtensions/API/cookies">cookies</a></code></td>
+  </tr>
+  <tr>
+   <td>{{interface("nsIMessageSender")}}</td>
+   <td><a href="/fr/Add-ons/WebExtensions/Content_scripts">Content scripts</a></td>
+  </tr>
+  <tr>
+   <td><code><a href="https://dxr.mozilla.org/mozilla-central/source/toolkit/components/crashes/CrashManager.jsm">CrashManager.jsm</a></code></td>
+   <td>Aucun</td>
+  </tr>
+  <tr>
+   <td>{{interface("nsIDirectoryService")}}<br>
+    {{interface("nsIProperties")}}</td>
+   <td>Aucun</td>
+  </tr>
+  <tr>
+   <td>{{interface("nsIDOMStorageManager")}}</td>
+   <td>Aucun</td>
+  </tr>
+  <tr>
+   <td>{{interface("nsIDOMRequestService")}}</td>
+   <td>Aucun</td>
+  </tr>
+  <tr>
+   <td>{{interface("nsIDownloadManager")}}</td>
+   <td><code><a href="/fr/Add-ons/WebExtensions/API/downloads">downloads</a></code></td>
+  </tr>
+  <tr>
+   <td>{{interface("nsIDroppedLinkHandler")}}</td>
+   <td>Aucun</td>
+  </tr>
+  <tr>
+   <td>{{interface("nsIEventListenerService")}}</td>
+   <td>Aucun</td>
+  </tr>
+  <tr>
+   <td>{{interface("nsIEffectiveTLDService")}}</td>
+   <td>Aucun</td>
+  </tr>
+  <tr>
+   <td>{{interface("nsIFocusManager")}}</td>
+   <td>Aucun</td>
+  </tr>
+  <tr>
+   <td>{{interface("nsIIOService")}}<br>
+    {{interface("nsIIOService2")}}</td>
+   <td>Aucun</td>
+  </tr>
+  <tr>
+   <td>{{interface("nsILocaleService")}}</td>
+   <td><code><a href="/fr/Add-ons/WebExtensions/API/i18n">i18n</a></code></td>
+  </tr>
+  <tr>
+   <td>{{interface("nsILoginManager")}}</td>
+   <td>Aucun</td>
+  </tr>
+  <tr>
+   <td>{{interface("nsIWinMetroUtils")}}</td>
+   <td>Aucun</td>
+  </tr>
+  <tr>
+   <td>{{interface("nsIMessageBroadcaster")}}<br>
+    {{interface("nsIFrameScriptLoader")}}</td>
+   <td><a href="/fr/Add-ons/WebExtensions/Content_scripts">Scripts de contenu</a></td>
+  </tr>
+  <tr>
+   <td>{{interface("nsIObserverService")}}</td>
+   <td>Aucun</td>
+  </tr>
+  <tr>
+   <td>{{interface("nsIPermissionManager")}}</td>
+   <td>Aucun</td>
+  </tr>
+  <tr>
+   <td>{{interface("nsIMessageBroadcaster")}}<br>
+    {{interface("nsIProcessScriptLoader")}}</td>
+   <td><a href="/fr/Add-ons/WebExtensions/Content_scripts">Scripts de contenu</a></td>
+  </tr>
+  <tr>
+   <td>{{interface("nsIPrefBranch")}}<br>
+    {{interface("nsIPrefBranch2")}}<br>
+    {{interface("nsIPrefService")}}</td>
+   <td>Voir <a href="/fr/Add-ons/WebExtensions/Comparison_with_XUL_XPCOM_extensions#Paramètres">Paramètres</a> ci-après.</td>
+  </tr>
+  <tr>
+   <td>{{interface("nsIPromptService")}}</td>
+   <td>Aucun</td>
+  </tr>
+  <tr>
+   <td>{{interface("mozIJSSubScriptLoader")}}</td>
+   <td>Aucun</td>
+  </tr>
+  <tr>
+   <td>{{interface("nsIScriptSecurityManager")}}</td>
+   <td>Aucun</td>
+  </tr>
+  <tr>
+   <td>{{interface("nsIBrowserSearchService")}}</td>
+   <td>Aucun</td>
+  </tr>
+  <tr>
+   <td>{{interface("nsIAppStartup")}}</td>
+   <td>Aucun</td>
+  </tr>
+  <tr>
+   <td>{{interface("mozIStorageService")}}</td>
+   <td><code><a href="/fr/Add-ons/WebExtensions/API/storage">storage</a></code></td>
+  </tr>
+  <tr>
+   <td>{{interface("nsIStringBundleService")}}</td>
+   <td><code><a href="/fr/Add-ons/WebExtensions/API/i18n">i18n</a></code></td>
+  </tr>
+  <tr>
+   <td>{{interface("nsIPropertyBag2")}}</td>
+   <td>Aucun</td>
+  </tr>
+  <tr>
+   <td>{{interface("nsITelemetry")}}</td>
+   <td>Aucun</td>
+  </tr>
+  <tr>
+   <td>{{interface("nsIThreadManager")}}</td>
+   <td>Aucun</td>
+  </tr>
+  <tr>
+   <td>{{interface("nsIURIFixup")}}</td>
+   <td>Aucun</td>
+  </tr>
+  <tr>
+   <td>{{interface("nsIURLFormatter")}}</td>
+   <td>Aucun</td>
+  </tr>
+  <tr>
+   <td>{{interface("nsIVersionComparator")}}</td>
+   <td>Aucun</td>
+  </tr>
+  <tr>
+   <td>{{interface("nsIWindowMediator")}}</td>
+   <td>Aucun</td>
+  </tr>
+  <tr>
+   <td>{{interface("nsIWindowWatcher")}}</td>
+   <td>Aucun</td>
+  </tr>
+ </tbody>
+</table>
+
+<h3 id="En_savoir_plus_2">En savoir plus</h3>
+
+<ul>
+ <li><a href="/fr/Add-ons/WebExtensions/API">Les API JavaScript disponibles pour les extensions</a></li>
+ <li><a href="/fr/Add-ons/WebExtensions/Anatomy_of_a_WebExtension#Background_scripts">Les scripts d'arrière-plan pour les extensions</a></li>
+</ul>
+
+<h2 id="Intéragir_avec_le_contenu_web">Intéragir avec le contenu web</h2>
+
+<p>Historiquement, les extensions XUL/XPCOM ont pu accéder directement au contenu web. Par exemple, elles peuvent directement accéder et modifier la page DOM en utilisant <code><a href="/fr/docs/Mozilla/Tech/XUL/tabbrowser">gBrowser</a></code> :</p>
+
+<pre class="brush: js">gBrowser.contentWindow.document.querySelector("h1").innerHTML = "a kadok";</pre>
+
+<p>Cependant, cela n'est possible que dans un seul processus Firefox. En mode <a href="/fr/docs/Mozilla/Firefox/Multiprocess_Firefox">multiprocessus</a>, le contenu web et le code d'extension s'exécutent dans différents processus et cet accès direct n'est plus possible. Les extensions qui s'appuient dessus ne fonctionnent plus.</p>
+
+<p>Les extensions XUL/XPCOM peuvent toujours interagir avec le contenu web en mode multiprocessus en <a href="/fr/Add-ons/Working_with_multiprocess_Firefox">refactorant le code qui accède au contenu Web dans les scripts séparés appelés scripts de trame, et en utilisant le gestionnaire de messages pour communiquer avec les scripts</a>. Toutefois, cette modification peut s'avérer complexe et impliquer des changements profonds au code de l'extension.</p>
+
+<p>Par défaut, les WebExtensions sont compatibles avec le mode multiprocessus : le code qui interagit avec le contenu Web est factorisé en scripts distincts appelés <a href="/fr/Add-ons/WebExtensions/Content_scripts">scripts de conenu</a>, qui peuvent communiquer avec le reste de l'extension grâce à une API de messagerie.</p>
+
+<h3 id="En_savoir_plus_3">En savoir plus</h3>
+
+<ul>
+ <li><a href="/fr/Add-ons/WebExtensions/Content_scripts">Scripts de contenu pour les extensions</a></li>
+</ul>
+
+<h2 id="Localisation">Localisation</h2>
+
+<p>Dans une extension XUL/XPCOM, la localisation est gérée grâce à des fichiers DTD ou <code>properties</code> pour chaque langue prise en charge et en y faisant référence dans le fichier <code>chrome.manifest</code> via des instructions <code>locales</code>. On peut ensuite inclure des chaînes localisées dans les éléments de l'interface utilisateur ou dans le code.</p>
+
+<p>L'approche générale avec WebExtensions est similaire, mais les détails diffèrent. Avec WebExtensions, les chaînes localisées sont fournies via un ensemble de fichiers JSON (un fichier par locale). La récupération des chaînes localisées dans l'extension passe par l'API  <code><a href="/fr/Add-ons/WebExtensions/API/i18n">i18n</a></code>.</p>
+
+<p>WebExtensions ne prend pas nativement en charge la localisation des chaînes utilisées dans les documents HTML. Il faut donc le faire soi-même grâce à JavaScript en récupérant les chaînes localisées et en remplaçant dynamiquement le contenu HTML.</p>
+
+<h3 id="En_savoir_plus_4">En savoir plus</h3>
+
+<ul>
+ <li><a href="/fr/Add-ons/WebExtensions/Internationalization">Guide d'internationalisation des extensions</a></li>
+ <li><a href="https://github.com/mdn/webextensions-examples/tree/master/notify-link-clicks-i18n">Exemple d'extension internationalisée</a></li>
+</ul>
+
+<h2 id="Paramètres">Paramètres</h2>
+
+<p>Les extensions XUL/XPCOM stockent généralement les paramètres en utilisant le <a href="/en-US/docs/Archive/Add-ons/Code_snippets/Preferences">service de préférences XPCOM</a> ou le système d'<a href="/en-US/docs/Archive/Add-ons/Inline_Options">options inline</a>.</p>
+
+<p>Avec WebExtensions, on écrit un fichier HTML qui présente l'interface utilisateur des paramètres. Ce fichier peut inclure un script pour conserver les paramètres de l'extension. Le script accède à toutes les API WebExtensions et on utilisera généralement l'API <code><a href="/fr/Add-ons/WebExtensions/API/storage">storage</a></code> pour conserver les paramètres.</p>
+
+<p>L'URL du fichier HTML est ensuite indiquée dans la clé <code><a href="/fr/Add-ons/WebExtensions/manifest.json/options_ui">options_ui</a></code> du fichier <code>manifest.json</code>. Votre page de paramètres apparaît ensuite dans l'entrée de l'extension dans le Gestionnaire de modules complémentaires. La page d'options peut également être ouverte via le code en utilisant un appel à l'API <code><a href="/fr/Add-ons/WebExtensions/API/runtime/openOptionsPage">browser.runtime.openOptionsPage</a></code>.</p>
+
+<p>On notera WebExtensions ne donne pas accès à l'<a href="/fr/docs/Mozilla/Tech/Preferences_API">API Preferences</a>. On ne peut donc pas obtenir ou définir directement les préférences du navigateur.<br>
+ Certaines préférences spécifiques au navigateur peuvent toutefois être contrôlées via l'API <code><a href="/fr/Add-ons/WebExtensions/API/browserSettings">browser.browserSettings</a></code> ou <code><a href="/fr/Add-ons/WebExtensions/API/privacy">browser.privacy</a></code>.</p>
+
+<h3 id="En_savoir_plus_5">En savoir plus</h3>
+
+<ul>
+ <li><a href="/fr/Add-ons/WebExtensions/Anatomy_of_a_WebExtension#Les_options_de_page">Introduction aux pages d'options</a></li>
+ <li><a href="https://github.com/mdn/webextensions-examples/tree/master/favourite-colour">Un exemple d'extension avec une page d'options</a></li>
+</ul>

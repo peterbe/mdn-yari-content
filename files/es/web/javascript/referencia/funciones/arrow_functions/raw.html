@@ -1,0 +1,347 @@
+<div>{{jsSidebar("Funciones")}}</div>
+
+<p>La <strong>expresión de función flecha</strong> tiene una sintaxis más corta que una <a href="https://developer.mozilla.org/es/docs/Web/JavaScript/Referencia/Operadores/function">expresión de función</a> convencional y no vincula sus propios <a href="/es/docs/Web/JavaScript/Reference/Operators/this">this</a>, <a href="https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Functions/arguments">arguments</a>, <a href="https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Operators/super">super</a>, o <a href="https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Operators/new.target">new.target</a>. Las funciones flecha siempre son <a href="/es/docs/Web/JavaScript/Reference/Global_Objects/Function/name">anónimas</a>. Estas funciones son funciones no relacionadas con métodos y no pueden ser usadas como constructores.</p>
+
+<p>{{EmbedInteractiveExample("pages/js/functions-arrow.html")}}</p>
+
+<h2 id="Sintaxis">Sintaxis</h2>
+
+<h3 id="Sintaxis_Básica">Sintaxis Básica</h3>
+
+<pre class="brush: js"><strong>(</strong>param1, param2, …, paramN<strong>) =&gt; { </strong>sentencias <strong>}</strong>
+<strong>(</strong>param1, param2, …, paramN<strong>) =&gt; </strong>expresion
+// Equivalente a: () =&gt; { return expresion; } 
+
+// Los paréntesis son opcionales cuando sólo dispone de un argumento: singleParam <strong>=&gt; {</strong> statements <strong>}</strong> 
+(singleParam) <strong>=&gt;</strong> { sentencias } singleParam =&gt; { sentencias }
+
+// Una función sin argumentos requiere paréntesis: 
+() =&gt; { sentencias }</pre>
+
+<h3 id="Sintaxis_Avanzada">Sintaxis Avanzada</h3>
+
+<pre class="brush: js">// Incluir entre paréntesis el cuerpo para retornar un objeto literal:
+<em>params</em> =&gt; ({<em>foo: bar</em>})
+
+// Soporta <a href="/es/docs/Web/JavaScript/Reference/Functions/rest_parameters">parámetros rest</a> y <a href="https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Functions/Default_parameters">parámetros por default</a>
+(param1, param2, ...rest) =&gt; { sentencias }
+(param1 = defaultValue1, param2, …, paramN = defaultValueN) =&gt; { sentencias }
+
+// <a href="https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment">Destructuración</a> mediante la lista de parámetros también es soportada
+var f = ([a, b] = [1, 2], {x: c} = {x: a + b}) =&gt; a + b + c; f(); // 6
+</pre>
+
+<h2 id="Descripción">Descripción</h2>
+
+<p>Consulta también <a href="https://hacks.mozilla.org/2015/06/es6-in-depth-arrow-functions/">"ES6 In Depth: Arrow functions" en hacks.mozilla.org</a>.</p>
+
+<p>La inclusión de las funciones flecha se vieron influenciadas por dos factores: sintaxis reducida y <code>this</code> no vinculable.</p>
+
+<h3 id="Funciones_reducidas">Funciones reducidas</h3>
+
+<pre class="brush: js">var elementos = [
+  "Hidrógeno",
+  "Helio",
+  "Litio",
+  "Beril­io"
+];
+
+elementos.map(function(elemento){ 
+    return elemento.length;
+});  // [8, 6, 7, 9]
+
+elementos.map((elemento) =&gt; {
+  return elemento.length;
+}); // [8, 6, 7, 9]
+
+elementos.map(({length}) =&gt; length); // [8, 6, 7, 9]</pre>
+
+<h3 id="this_Contextual"><code>this</code> Contextual</h3>
+
+<p>Antes de las funciones flecha, cada nueva función definía su propio valor de <code><a href="/en-US/docs/Web/JavaScript/Reference/Operators/this">this</a></code> (un nuevo objeto en el caso de un constructor, <em>undefined</em> en llamadas a funciones en <a href="/es/docs/Web/JavaScript/Reference/Strict_mode">modo estricto</a>, el objeto contextual si la función se llama como un "método de un objeto", etc.). Lo cual resultaba molesto cuando se intentaba aplicar programación orientada a objetos.</p>
+
+<pre class="brush: js">function Persona() { 
+   // El constructor Persona() define `<code>this`</code> como una instancia de sí mismo.   
+   this.edad = 0; 
+   setInterval(function crecer() { 
+      // En modo no estricto, la función crecer() define `this` 
+      // como el objeto global, el cual es diferente al objeto `this` 
+      // definido por el constructor Persona().
+      this.edad++; 
+   }, 1000); 
+} 
+
+var p = new Persona();</pre>
+
+<p>En ECMAScript 3/5, este problema fué corregido asignándosele el valor de <code>this</code> a una variable por fuera de la función interna.</p>
+
+<pre class="brush: js">function Persona() {
+  var self = this; // Algunas personas prefieren `that` en lugar de `self`. 
+                   // Escoja cualquiera pero sea consistente.
+  self.edad = 0;
+
+  setInterval(function crecer() {
+    // La función tipo <em>callback</em> apunta a la variable `self` la cual
+    // contiene el objeto esperado.
+    self.edad++;
+  }, 1000);
+}</pre>
+
+<p>Alternativamente, <a href="/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind">el método bind</a> puede ser utilizado para crear una functión donde podremos asignar <code>this</code> al valor deseado, de esta forma podemos pasar <code>this</code> a la función <code>crecer()</code>.</p>
+
+<p>Una función flecha no tiene su propio <code>this</code>; utiliza el valor del contexto de ejecución que la contiene. Por lo que, en el siguiente código, <code>this</code> dentro de la función que se pasa a <code>setInterval</code> tiene el mismo valor que <code>this</code> en la función que la envuelve:</p>
+
+<pre class="brush: js">function Persona(){
+  this.edad = 0;
+
+  setInterval(() =&gt; {
+    this.edad++; // |this| apunta al objeto Persona
+  }, 1000);
+}
+
+var p = new Persona();</pre>
+
+<h4 id="Relación_con_modo_estricto_(sctrict_mode)">Relación con modo estricto (sctrict mode)</h4>
+
+<p>Debido a que <code>this</code> es contextual, las reglas del <a href="/en-US/docs/Web/JavaScript/Reference/Strict_mode">modo estricto</a> asociadas a <font face="consolas, Liberation Mono, courier, monospace"><span style="background-color: rgba(220, 220, 220, 0.5);">this</span></font> son simplemente ignoradas.</p>
+
+<pre class="brush: js">var f = () =&gt; {'use strict'; return this};
+f() === window; // o el objeto global</pre>
+
+<p>El resto de reglas asociadas a modo estricto aplican de forma normal.</p>
+
+<h4 id="Función_de_flecha_invocada_a_través_de_los_métodos_call_y_apply">Función de flecha invocada a través de los métodos call y apply</h4>
+
+<p>Dado que las funciones flecha no tienen su propio <code>this</code>, los métodos <code>call()</code> y <code>apply()</code> sólo pueden pasar parámetros. <code>thisArg</code> es ignorado:</p>
+
+<pre class="brush: js">var adder = {
+  base : 1,
+    
+  add : function(a) {
+    var f = v =&gt; v + this.base;
+    return f(a);
+  },
+
+  addThruCall: function(a) {
+    var f = v =&gt; v + this.base;
+    var b = {
+      base : 2
+    };
+            
+    return f.call(b, a);
+  }
+};
+
+console.log(adder.add(1));         // Imprime 2 como es esperado
+console.log(adder.addThruCall(1)); // También imprime 2 aunque se esperaba 3 </pre>
+
+<h3 id="Argumentos_contextuales"><font face="Open Sans, Arial, sans-serif">A</font>rgumentos contextuales</h3>
+
+<p>Las funciones de flecha no tienen su propio <a href="/en-US/docs/Web/JavaScript/Reference/Functions/arguments">objeto <code>arguments</code></a>. Por lo que, en este ejemplo, <code>arguments</code> es simplemente una referencia a los argumentos del contexto superior:</p>
+
+<pre class="brush: js">var arguments = 42;
+var arr = () =&gt; arguments;
+
+arr(); // 42
+
+function foo() {
+  var f = () =&gt; arguments[0]; // Referencia al objeto <code>arguments</code>
+  return f(2);
+}
+
+foo(1); // 1</pre>
+
+<p>En la mayoría de los casos, el uso de <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/rest_parameters">parámetros rest</a> es una buena alternativa al uso del objeto <code>arguments</code>:</p>
+
+<pre class="brush: js">function foo(n) { 
+  var f = (...args) =&gt; args[0] + n; 
+  return f(10); 
+}
+
+foo(1); // 11
+</pre>
+
+<h3 id="Funciones_Flecha_usadas_como_métodos">Funciones Flecha usadas como métodos</h3>
+
+<p>Como se ha indicado anteriormente, las expresiones de función de flecha son las más adecuadas para funciones que no son métodos. Veamos qué pasa cuando intentamos usarlos como métodos:</p>
+
+<pre class="brush: js">'use strict';
+
+var obj = {
+  i: 10,
+  b: () =&gt; console.log(this.i, this),
+  c: function() {
+    console.log(this.i, this);
+  }
+}
+
+obj.b(); // prints undefined, Window {...} (or the global object)
+obj.c(); // prints 10, Object {...}</pre>
+
+<p>Las funciones flecha no tienen su propio <code>this</code>. Otro ejemplo usando {{jsxref("Object.defineProperty()")}}:</p>
+
+<pre class="brush: js">'use strict';
+
+var obj = {
+  a: 10
+};
+
+Object.defineProperty(obj, 'b', {
+  get: () =&gt; {
+    console.log(this.a, typeof this.a, this);
+    return this.a + 10; // represents global object 'Window', therefore 'this.a' returns 'undefined'
+  }
+});</pre>
+
+<h3 id="Uso_del_operador_new">Uso del operador <code>new</code></h3>
+
+<p>Las funciones flecha no pueden ser usadas como constructores, arrojarán un error cuando sea usada con <code>new</code>.</p>
+
+<pre class="brush: js">var Foo = () =&gt; {};
+var foo = new Foo(); // TypeError: Foo is not a constructor</pre>
+
+<h3 id="Uso_de_la_propiedad_prototype">Uso de la propiedad <code>prototype</code></h3>
+
+<p>Las funciones flecha no tienen una propiedad de prototipo <code>prototype</code>.</p>
+
+<pre class="brush: js">var Foo = () =&gt; {};
+console.log(Foo.prototype); // undefined</pre>
+
+<h3 id="Uso_de_la_expresión_yield">Uso de la expresión <code>yield</code></h3>
+
+<p>La expresión <code><a href="/en-US/docs/Web/JavaScript/Reference/Operators/yield">yield</a></code> no puede ser usada dentro de una función de flecha (excepto dentro de funciones tradicionales anidadas).  Como consecuencia, las funciones de flecha no pueden ser usadas como funciones generadoras.</p>
+
+<h2 id="Cuerpo_de_una_función">Cuerpo de una función</h2>
+
+<p>Las funciones flecha pueden tener ya sea un "cuerpo conciso" o el usual "cuerpo de bloque".</p>
+
+<p>En un cuerpo conciso, solo una expreción es especificada, la cual convierte el valor de retorno explícito. En un cuerpo de bloque, se tiene que usar una declaración de retorno explícita.</p>
+
+<pre class="brush: js"><code>var func = x =&gt; x * x;                  
+// sintaxis de cuerpo conciso, el "return" está implícito
+
+var func = (x, y) =&gt; { return x + y; }; 
+// con cuerpo de bloque, se necesita "return" explícito</code></pre>
+
+<h2 id="Retorno_de_objetos_literales">Retorno de objetos literales</h2>
+
+<p>Tenga en cuenta que retornar objetos literales usando la sintaxis simplificada <code>params =&gt; {objeto:literal}</code> no funciona como se esperaría:</p>
+
+<pre class="brush: js">var func = () =&gt; {  foo: 1  };               
+// Al llamar func() retorna undefined!
+
+var func = () =&gt; {  foo: function() {}  };   
+// Error de sintaxis: SyntaxError: function statement requires a name</pre>
+
+<p>Eso es debido a que el código dentro de las llaves ({}) es leído como una secuencia de sentencias (p.ej <code>foo</code> es tratado como una etiqueta  o label y no como una propiedad del objeto literal).</p>
+
+<p>En este caso, recuerde encerrar el objeto literal entre paréntesis:</p>
+
+<pre class="brush: js">var func = () =&gt; ({ foo: 1 });</pre>
+
+<h2 id="Saltos_de_línea">Saltos de línea</h2>
+
+<p>Una función flecha no puede contener un salto de línea entre sus parámetros y su flecha.</p>
+
+<pre class="brush: js"><code>var func = ()
+           =&gt; 1; 
+// SyntaxError: expected expression, got '=&gt;'</code></pre>
+
+<h2 id="Orden_de_parseo">Orden de parseo</h2>
+
+<p>Aunque la flecha en una función flecha no es un operador, las funciones flecha tienen reglas de parseo especiales que interactúan de forma diferente con la <a href="https://developer.mozilla.org/es/docs/Web/JavaScript/Referencia/Operadores/Operator_Precedence">precedencia de operadores</a> en comparación con las funciones normales.</p>
+
+<pre class="brush: js"><code>let callback;
+
+callback = callback || function() {}; // ok
+
+callback = callback || () =&gt; {};      
+// SyntaxError: invalid arrow-function arguments
+
+callback = callback || (() =&gt; {});    // ok</code></pre>
+
+<h2 id="Más_ejemplos">Más ejemplos</h2>
+
+<pre class="brush: js">// Una función de flecha vacía retorna undefined
+let empty = () =&gt; {};
+
+(() =&gt; "foobar")() 
+// retorna "foobar" 
+// (this is an Immediately Invoked Function Expression 
+// see 'IIFE' in glossary)
+
+var simple = a =&gt; a &gt; 15 ? 15 : a; 
+simple(16); // 15
+simple(10); // 10
+
+let max = (a, b) =&gt; a &gt; b ? a : b;
+
+// Métodos de arreglos como filtering, mapping mas sencillos...
+
+var arr = [5, 6, 13, 0, 1, 18, 23];
+
+var sum = arr.reduce((a, b) =&gt; a + b);
+// 66
+
+var even = arr.filter(v =&gt; v % 2 == 0);
+// [6, 0, 18]
+
+var double = arr.map(v =&gt; v * 2);
+// [10, 12, 26, 0, 2, 36, 46]
+
+//Encadenamiento de promesas de manera sencilla
+promise.then(a =&gt; {
+  // ...
+}).then(b =&gt; {
+  // ...
+});
+
+// Funciones de flecha sin parámetros son más fáciles de visualizar
+setTimeout( () =&gt; {
+  console.log('Yo voy primero');
+  setTimeout( () =&gt; {
+    // deeper code
+    console.log('Yo voy despues');
+  }, 1);
+}, 1);
+</pre>
+
+<h2 id="Especificaciones">Especificaciones</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Especificación</th>
+   <th scope="col">Estado</th>
+   <th scope="col">Comentario</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-arrow-function-definitions', 'Arrow Function Definitions')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td>
+    <p>Definición inicial.</p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>{{SpecName('ESDraft', '#sec-arrow-function-definitions', 'Arrow Function Definitions')}}</p>
+   </td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Compatibilidad_en_navegadores">Compatibilidad en navegadores</h2>
+
+<div class="hidden">
+<p>The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</p>
+</div>
+
+<p>{{Compat("javascript.functions.arrow_functions")}}</p>
+
+<h2 id="Vea_también">Vea también</h2>
+
+<ul>
+ <li><a href="https://hacks.mozilla.org/2015/06/es6-in-depth-arrow-functions/">"ES6 en Profundidad: Funciones de flecha" en hacks.mozilla.org</a></li>
+</ul>

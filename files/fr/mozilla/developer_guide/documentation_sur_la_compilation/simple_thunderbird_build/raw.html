@@ -1,0 +1,210 @@
+<p>Cette page détaille les étapes nécessaires pour compiler la toute dernière version en cours de développement de Thunderbird. Pour plus de détails, voir la <a class="internal" href="../../../../En/Developer_Guide/Build_Instructions" rel="internal">documentation</a> détaillée.</p>
+
+<h2 id="Pré-requis">Pré-requis</h2>
+
+<h4 id="Spécifications_matérielles">Spécifications matérielles</h4>
+
+<ul>
+ <li>Recommandé : 4 Gio de mémoire RAM (2 Gio RAM et 2 Gio swap peut générer des erreurs à la compilation)</li>
+ <li>Connexion haut débit</li>
+</ul>
+
+<h4 id="Installation">Installation</h4>
+
+<p>La procédure d'installation diffère selon votre système d'exploitation. D'abord, réalisez les instructions pour votre OS et ensuite, revenez aux instruction de compilation. Notez que pour les compilations sous Linux/MacOS, vous devriez suivre la procédure de clonage des sources qui est sur cette page.</p>
+
+<p><a href="/en-US/docs/Developer_Guide/Build_Instructions/Windows_Prerequisites" title="/en-US/docs/Developer_Guide/Build_Instructions/Windows_Prerequisites">Prérequis de compilation pour Windows [en-US]</a></p>
+
+<p><a href="/en-US/docs/Simple_Firefox_build/Linux_and_MacOS_build_preparation" title="/en-US/docs/Simple_Firefox_build/Linux_and_MacOS_build_preparation">Prérequis de compilation pour Linux/MacOS [en-US]</a></p>
+
+<h2 id="Obtenir_le_code_source">Obtenir le code source</h2>
+
+<div class="note"><strong>Note:</strong> Sous windows, vous ne pourrez pas compiler Thunderbird si le dossier où vous compilez contient un espace dans son chemin (ex:,  n'utilisez pas "Program Files" dans votre chemin). il est conseillé d'utiliser un autre chemin comme C:/thunderbird-src.</div>
+
+<div class="note"><strong>Note:</strong> Certaines phases de la compilation posent aussi problème lorsque le code source se trouve dans un dossier où le chemin est trop long (arborescence trop profonde de dossiers). Sous Linux, cela peut s'exprimer par des problèmes d'installation de virtualenv pour exécuter les tests (echec à l'installation de pip ou virtualenv à cause d'accès refusés par l'OS, pas à cause des permissions mais parce que le chemin du dossier a été tronqué et donc n'existe pas). Ce problème de chemin trop longs peut aussi causer des problèmes avec la compilation de pymake sous Windows. Si vous faites face à ce genre de problèmes en compilant les sources, essayez de déplacer les sources plus près de la racine de la machine et réessayez.</div>
+
+<p>Récuperez la dernière version du code source depuis les dépôts Mercurial <code>comm-central</code> de Mozilla :</p>
+
+<pre>hg clone http://hg.mozilla.org/comm-central 
+</pre>
+
+<p>Ensuite, récuperez toutes ses dépendances. Le dépôt comm-central contient un script pour faire cela. Cela peut prendre du temps, Il y a beaucoup de choses à faire ! Pour ça, descendez dans le sous-dossier<code> comm-</code><code>central </code>(créé automatiquement par la commande précédente):</p>
+
+<pre>cd comm-central</pre>
+
+<p>Ensuite lancez :</p>
+
+<pre>python2 client.py checkout
+</pre>
+
+<div class="warning">Avec certaines connexion internet, "hg clone" peut échouer car Mercurial a été interrompu. Il est plus rapide et plus efficace d'utiliser les <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code/Mercurial/Bundles">paquets Mercurial</a> (bundles) à la place la première fois que vous clonez tout le projet. Dans ce cas, vous aurez besoin d'un bundle pour comm-central et un bundle pour mozilla-central. Décompressez mozilla-central dans un sous-dossier du comm-central racine après avoid décompressez comm-central. Ensuite lancez <span style="color: #d3d3d3;">python client.py checkout</span> pour vérifier que vous êtes bien à jour</div>
+
+<p class="editable">Le code source requiert 3.2 Gio ou plus d'espace disque et de 5 Gio supplémentaires pour un build par défaut.</p>
+
+<p class="editable">Pour en savoir plus sur le code source et sa récupération, voir <a href="/en-US/docs/Developer_Guide/Source_Code/Getting_comm-central" title="/en-US/docs/Developer_Guide/Source_Code/Getting_comm-central">Récupérer le code source comm-central depuis Mercurial [en-US]</a>.</p>
+
+<h2 class="editable" id="Configuration_de_compilation">Configuration de compilation</h2>
+
+<p>Pour compiler thunderbird, vous devez créer un fichier <code>.mozconfig</code> dans le dossier comm-central et d'y ajouter la ligne suivante :</p>
+
+<pre>ac_add_options --enable-application=mail</pre>
+
+<p>Si vous oubliez cette ligne, vous allez compiler Firefox à la place. D'autres d'options configuration peuvent être ajoutées dans ce fichier bien qu'il soit fortement <strong>recommandé </strong>de n'utiliser que des options dont vous avez completement compris la signification.  Par exemple, pour compiler en mode "debug" au lieu du mode "release", rajoutez :</p>
+
+<pre>ac_add_options --enable-debug
+</pre>
+
+<p>For more on configuration options, see the page <a href="/en/Configuring_Build_Options" rel="internal" title="en/Configuring Build Options">Configuring build options</a>. Note that if you use an MOZ_OBJDIR it cannot be a sibling folder to your source directory. Use an absolute path to be sure!</p>
+
+<h3 id="OS_X_10.910.10_Notice">OS X 10.9/10.10 Notice</h3>
+
+<p>Because of an issue with the 10.9 OS X SDK, you must use an earlier SDK version. To do this add the following to your .mozconfig:</p>
+
+<pre class="bz_comment_text" id="comment_text_14">ac_add_options --with-macos-sdk=path/to/older/sdk</pre>
+
+<p>The path to the SDKs are usually located at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/.</p>
+
+<h2 id="Building_Thunderbird">Building Thunderbird</h2>
+
+<p>Before you start, make sure that the version you checked out is not busted. For hg tip, you should see green Bs on <a href="https://treeherder.mozilla.org/ui/#/jobs?repo=comm-central">https://treeherder.mozilla.org/ui/#/jobs?repo=comm-central</a></p>
+
+<p>To start the build, cd into the <code>comm-central</code> subdirectory (created automatically by the <code>hg clone</code> command), and run:</p>
+
+<pre>./mozilla/mach build
+</pre>
+
+<p>mach is our command-line tool to streamline common developer tasks. See the <a href="/en-US/docs/Developer_Guide/mach" title="/en-US/docs/Developer_Guide/mach">mach</a> article for more.</p>
+
+<p>Building can take a significant amount of time, depending on your system, OS, and chosen build options. Linux builds on a fast box may take under 15 minutes, but Windows builds on a slow box may take several hours. <strong><a href="/en/Developer_Guide/Mozilla_build_FAQ#Making_builds_faster" rel="internal" title="https://developer.mozilla.org/en/Mozilla_Build_FAQ#Making_builds_faster">Tips for making builds faster</a></strong>.</p>
+
+<p><span style="line-height: 1.572;">The executable will be at the location listed under <strong>Running</strong> below.</span></p>
+
+<h4 id="Building_Thunderbird_and_Lightning">Building Thunderbird and Lightning</h4>
+
+<p>If you've set up your build environment as above, then all you need to do is:</p>
+
+<pre>echo 'ac_add_options --enable-calendar' &gt;&gt; .mozconfig
+</pre>
+
+<p>in the <code>comm-central </code>directory, or just add the <code>ac_add_options --enable-calendar</code> line to your .mozconfig with your favorite editor.</p>
+
+<p>Then just re-run the <em>mach</em> command above (you can do the addition before running make for the first time).</p>
+
+<h2 id="Running">Running</h2>
+
+<p>Various temporary files, libraries, and the Thunderbird executable will be found in your <strong>object directory</strong> (under <code>comm-central/</code>), which is prefixed with <strong><code>obj-</code></strong>. The exact name depends on your system and OS. For example, a Mac user may get an object directory name of <strong><code>obj-x86_64-apple-darwin10.7.3/</code></strong>.</p>
+
+<p>The Thunderbird executable in particular, and its dependencies, are located under the <code>dist/bin</code> folder under the object directory. To run the executable from your <code>comm-central</code> working directory:</p>
+
+<ul>
+ <li><strong>Windows:</strong> <code>obj-.../dist/bin/thunderbird.exe</code></li>
+ <li><strong>Linux:</strong> <code>obj-.../dist/bin/thunderbird</code></li>
+ <li><strong>OS X:</strong> <code>obj-.../dist/Daily.app/Contents/MacOS/thunderbird</code></li>
+</ul>
+
+<h2 id="How_to_update_and_build_again">How to update and build again</h2>
+
+<p>In your <code>comm-central</code> directory, run the same command as before:</p>
+
+<pre>python client.py checkout
+</pre>
+
+<p>Then just re-run the <em>mach</em> command above. This will only recompile files that changed, but it's still a long haul.</p>
+
+<h2 id="Rebuilding">Rebuilding</h2>
+
+<p>To build after making changes, run</p>
+
+<pre>./mozilla/mach build
+</pre>
+
+<p>again. This will only rebuild what is necessary for these changes. It is also possible to use</p>
+
+<pre>./mach build path/to/dir
+</pre>
+
+<p>to build parts of the tree. However, this approach may or may not yield correct results, so it is <strong>not recommended</strong>.</p>
+
+<p>It is important to specify the correct path (obviously):</p>
+
+<p>For code under<em> /mozilla</em>, for example in the spellchecker, run</p>
+
+<pre>./mozilla/mach build extensions/spellcheck/src
+</pre>
+
+<p>without <em>/mozilla</em> in the path. For code outside the /mozilla directory, specify the complete relative path, for example run</p>
+
+<pre>./mozilla/mach build mailnews/import/outlook/src</pre>
+
+<h2 id="Problems_Building">Problems Building?</h2>
+
+<p>Have you:</p>
+
+<ul>
+ <li>Checked <a class="external" href="https://treeherder.mozilla.org/#/jobs?repo=comm-central" title="https://treeherder.mozilla.org/#/jobs?repo=comm-central">comm-central on Treeherder</a> for known failures at the time you pulled the code?
+
+  <ul>
+   <li>If the trunk is broken, you may wish to consider building <a href="/En/Developer_Guide/Source_Code/Getting_comm-central" title="https://developer.mozilla.org/En/Developer_Guide/Source_Code/Getting_comm-central">one of the branches</a> (to pull the source code from a branch, just replace the url to the repository in the hg clone instruction).</li>
+  </ul>
+ </li>
+ <li>On Windows: Checked that the MAPI header files from <a href="http://www.microsoft.com/en-us/download/details.aspx?id=12905">http://www.microsoft.com/en-us/download/details.aspx?id=12905</a> are installed because the MAPI header files are not bundled with Visual Studio 2013 (Windows SDK 8.1). You should copy the header files to a Windows SDK include directory so that the build process will find the files, for example to <code>C:\Program Files (x86)\Windows Kits\8.1\Include\shared</code>.</li>
+ <li>Checked to make sure that the path in which you placed the source code has no spaces, and is not too long?</li>
+ <li>Have you searched the <a class="link-https" href="https://bugzilla.mozilla.org/" title="https://bugzilla.mozilla.org/">bug database</a> for issues relating to your problem (e.g., platform-specific issues)?</li>
+ <li>Try asking in <a class="external" href="http://groups.google.com/group/mozilla.dev.builds/" title="http://groups.google.com/group/mozilla.dev.builds/">mozilla.dev.builds</a> - don't forget to include details of what is in your mozconfig, and what the actual error is.</li>
+ <li>Did you make mozilla/ a symlink? That doesn't work.</li>
+ <li>Do you have <code>@TOPSRCDIR@</code> or relative paths in your mozconfig? Those have caused several problems historically and tend to be poorly tested when the build system changes.</li>
+</ul>
+
+<h3 id="References">References</h3>
+
+<ul>
+ <li><a class="internal" href="/En/Developer_Guide/Build_Instructions" title="En/Developer Guide/Build Instructions">General Build Documentation</a></li>
+ <li><a class="internal" href="/en/comm-central" title="en/comm-central">comm-central</a></li>
+ <li><a href="/en/Using_the_Mozilla_symbol_server" title="en/Using the Mozilla symbol server">Using the Mozilla symbol server</a></li>
+</ul>
+
+<div class="displayNone" id="axon-annotation-container">
+<div id="annotation-main">
+<div id="annotation-close"> </div>
+
+<div id="annotation-title-row">
+<div id="annotation-title"> </div>
+
+<div class="displayNone" id="annotation-audio-icon"> </div>
+</div>
+
+<div id="annotation-definition"> </div>
+
+<div class="displayNone" id="annotation-attribution">
+<div> </div>
+</div>
+
+<div class="displayNone" id="annotation-more"><a>More</a></div>
+</div>
+
+<div id="annotation-tail-container">
+<div id="annotation-tail-main">
+<div id="annotation-tail-inner-down"> </div>
+
+<div id="annotation-tail-outer-down"> </div>
+</div>
+</div>
+</div>
+
+<div class="displayNone" id="axon-example-container">
+<div id="example-main">
+<div id="example-close"> </div>
+
+<div id="example-text"> </div>
+
+<div id="example-attribution"> </div>
+</div>
+
+<div id="example-tail-container">
+<div id="example-tail-main">
+<div id="example-tail-inner-left"> </div>
+
+<div id="example-tail-outer-left"> </div>
+</div>
+</div>
+</div>

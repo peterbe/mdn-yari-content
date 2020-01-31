@@ -1,0 +1,431 @@
+<p>Voir aussi :</p>
+<ul>
+ <li><a href="/en/Debugging_Mozilla_on_Windows_FAQ">en:Debugging Mozilla on Windows FAQ</a> : Astuces sur le débogage de Mozilla sous Windows</li>
+</ul>
+<h3 id="Questions_g.C3.A9n.C3.A9rales" name="Questions_g.C3.A9n.C3.A9rales">Questions générales</h3>
+<p> </p>
+<p> </p>
+<dl>
+ <dt id="platform">
+  Quels systèmes sont supportés comme plateformes de compilation de Mozilla ?</dt>
+ <dd>
+  Il y a différents niveaux ou « tiers » de support pour la compilation de Mozilla.
+  <p>Les plateformes du premiers tiers sont celles qui sont l'objectif principal du développement. Des problèmes majeurs sur ces plateformes sont considérés comme bloquants. Ce sont également les plateformes qui apparaissent sur la <a class="external" href="http://tinderbox.mozilla.org/showbuilds.cgi?tree=SeaMonkey">page tinderbox de SeaMonkey</a>.</p>
+  <p>Les plateformes du premiers tiers (Tier-1) sont :</p>
+  <ul>
+   <li>linux/x86 (gcc)</li>
+   <li>win32/x86 (msvc)</li>
+   <li>OS X (gcc)</li>
+  </ul>
+  <p>Les plateformes du second tiers sont celles pour lesquelles un petit groupe variable de développeurs et contributeurs esssaient activement de maintenir un support, mais le développement général ne s'arrête pas en cas de problème sur ces plateformes. Celles-ci sont souvent appelées <em>ports</em> étant donné que la plupart d'entre-elles figurent sur la page tinderbox SeaMonkey-Ports.</p>
+  <p>Les plateformes du second tiers (Tier-2) sont :</p>
+  <ul>
+   <li>aix 4.3 (aCC)</li>
+   <li>beos 5.0.3 (gcc)</li>
+   <li>bsdi 4.x (gcc)</li>
+   <li>hpux 10.x,11.x (HP cc)</li>
+   <li>irix 6.x/gcc (gcc/MIPSpro)</li>
+   <li>linux/ppc (gcc)</li>
+   <li>os/2 (gcc)</li>
+   <li>osf1 5.x (Compaq cc)</li>
+   <li>solaris (sparc &amp; x86) 2.6+ (gcc/Forte)</li>
+  </ul>
+  <p>Les plateforms du troisième tiers sont celles qui ne sont pas généralement entretenues par les développeurs principaux du projet, mais disposent de certaines corrections fournis par des tierces parties.</p>
+  <p>Les plateformes du troisième tiers (Tier-3) sont :</p>
+  <ul>
+   <li>freebsd (gcc)</li>
+   <li>linux/alpha (gcc)</li>
+   <li>netbsd (gcc)</li>
+   <li>openvms (?)</li>
+   <li>ps2linux (gcc)</li>
+   <li>qnx 6 (gcc)</li>
+   <li>win32/x86 (gcc)</li>
+  </ul>
+  <p>Toutes les autres plateformes sont « non supportées » par les principaux développeurs de Mozilla, où « non supportées » signifie en réalité « non prioritaires, et personne n'y travaille activement ».</p>
+  <p>La plupart des développeurs de Mozilla n'ont pas accès à d'autres plateformes que celles du premier tiers, c'est pourquoi les rapports de bugs concernant ces autres plateformes doivent être très fournies en informations afin d'aider le propriétaire du bug à déterminer la cause du problème et la solution appropriée. Si vous pouvez fournir un patch et/ou vérifier qu eles patches du développeur fonctionne sur votre plateforme, cela aidera beaucoup à la résolution de vos bugs et leur inclusion dans l'arbre commun.</p>
+  <p> </p>
+ </dd>
+ <dt>
+  Quel est le type de système de compilation utilisé par Mozilla ?</dt>
+ <dd>
+  Mozilla utilise une fine couche de GNU configure par dessus un système basé sur un système de makefile récursifs datant de Netscape sur toutes les plateformes. Comme la plupart des projets basés sur configure, Mozilla utilise GNU autoconf pour générer le script configuret. GNU make est utilisé pour contrôler le processus de compilation.
+  <p> </p>
+ </dd>
+ <dt>
+  Pourquoi utiliser GNU make ?</dt>
+ <dd>
+  GNU make a été porté sur de nombreux systèmes. Cela rend le portage de Mozilla vers ces systèmes un peu plus facile. Utiliser uniquement le sous-ensemble des fonctionnalités de make existant sur les programmes natifs sur 10 plateformes différentes rendrait le système plus compliqué sans que ce soit nécessaire.
+  <p> </p>
+ </dd>
+ <dt>
+  Est-ce que d'autres versions de make fonctionneront ?</dt>
+ <dd>
+  Non. Les fichiers makefile de Mozilla utilisent des fonctionnalités spécifiques de GNU make qui fonctionneront uniquement avec celui-ci.
+  <p> </p>
+ </dd>
+ <dt>
+  Pourquoi ne pas utiliser automake ?</dt>
+ <dd>
+  Une partie du système datant de Netscape utilise la fonctionnalité -include de GNU make pour inclure un ensemble commun de règles depuis une série de fichiers dans chaque fichier Makefile qui en a besoin. Avec ce système de règles centralisées, un des principaux avantages d'automake devient inutile. Par ailleurs, à l'époque, la méthode de compilation des bibliothèques utilisée par Mozilla ne fonctionnait pas bien avec libtool.
+  <p> </p>
+ </dd>
+ <dt>
+  Qu'est-il advenu des systèmes de compilation nmake et CodeWarrior ?</dt>
+ <dd>
+  Ils n'existent plus dans l'arbre actuel. Le support de nmake a été abandonné au cours du cycle Mozilla 1.2a. Le système mac cfm a été abandonné en même temps que le support OS9 peu après la sortie de Mozilla 1.3.
+  <p> </p>
+ </dd>
+ <dt>
+  Pourquoi ne pas utiliser ant, tmake, scons ou <em>insérez votre système de compilation préféré ici</em> ?</dt>
+ <dd>
+  Principalement parce que personne n'a implémenté ces systèmes pour Mozilla. Lorsque Mozilla a été placé en open source au départ, il contenait uniquement le système de Netscape. La couche autoconf a été ajoutée sur une branche et maintenue en parallèle pendant 6 mois avant de devenir le système standard pour la compilation sous unix.
+  <p> </p>
+ </dd>
+ <dt>
+  Si je décidais d'implémenter mon système préféré de compilation pour Mozilla, est-ce que Mozilla se mettrait à l'utiliser ? Je n'ai pas envie de perdre mon temps si vous ne l'utilisez pas.</dt>
+ <dd>
+  Il n'y a aucune garantie que n'importe quel code écrit pour Mozilla soit accepté dans l'arbre par défaut. Tout système implémenté devra faire la preuve qu'il est meilleur en tous points que le système actuel. La vitesse, la flexibilité, la portabilité et la possibilité pour un important groupe de développeurs ayantplus de 3 ans d'expérience avec le système actuel de passer facilement au nouveau système sont les critères majeurs sur lesquels se baserait une décision de changer. Si vous êtes sérieux et prêt à travailler énormément, contactez <a href="/User:Benjamin_Smedberg">en:User:Benjamin Smedberg</a> pour discuter des détails de votre proposition.
+  <p> </p>
+ </dd>
+ <dt>
+  Pourquoi Mozilla ne supporte-t-il pas autoconf 2.5x ?</dt>
+ <dd>
+  Pour faire simple, autoconf 2.5x n'offre rien qui vaudrait les efforts nécessaires pour effectuer la mise à jour. Autoconf 2.5x n'est plus compatible avec autoconf 2.13 et les restrictions supplémentaires introduites par les nouvelles versions d'autoconf demanderaient une réécriture importante du système de compilation de Mozilla pour des gains discutables.
+  <p>Certaines des fonctionnalités de la version 2.13, comme la possibilité de passer des arguments supplémentaires à des fichires sous-configures, ne sont pas disponibles avec la version 2.5x. Ces fonctionnalités ont été demandées plusieurs fois sur la mailing list d'autoconf sans recevoir de réponse favorable. La réécriture des fichiers configure de tous les sous-projets de Mozilla (NSPR et LDAP) n'est pas une option acceptable. Ces sous-projets sont également des projets standalone et le fork de l'ensemble du code à cause d'une incompatibilité dans le système de compilation serait ridicule.</p>
+  <p> </p>
+ </dd>
+ <dt>
+  Pourquoi NSS n'utilise-t-il pas autoconf ?</dt>
+ <dd>
+  Le projet NSS est également utilisé à l'extérieur du projet Mozilla et les membres du projet NSS n'ont pas considéré que migrer vers autoconf en valait la peine. Voir le {{ Bug(52990) }} pour plus de détails.
+  <p> </p>
+ </dd>
+ <dt>
+  Est-il possible de compiler plusieurs projets Mozilla depuis un seul arbre de sources ?</dt>
+ <dd>
+  Oui ! Chaque projet doit alors être compilé dans son propre répertoire objdir.
+  <p> </p>
+ </dd>
+ <dt>
+  Qu'est-ce qu'un répertoire objdir ?</dt>
+ <dd>
+  Une compilation objdir se réfère au processus de création des fichiers de sortie à un emplacement différent que celui où la source réside. Il s'agit d'une fonctionnalité standard de la plupart des projets basés sur configure. Cela permet de compiler pour plusieurs configurations, ou même plusieurs plateformes si vous utilisez un système de fichiers en réseau, depuis un seul arbre de sources. Cela évite également de toucher à l'arbre des sources, vous savez donc que les fichiers de l'arbre n'ont pas été modifiés par le processus de compilation.
+  <p>Si vous lancez configure à la main, vous pouvez utiliser la méthode standard qui est de créer un répertoire vide à n'importe quel emplacement sur le disque, vous rendre dans ce répertoire et lancer /chemin/vers/mozilla/configure depuis cet emplacement.</p>
+  <pre class="eval">mkdir obj-debug
+cd obj-debug
+../mozilla/configure
+</pre>
+  <p>Si vous utiliser client.mk pour compiler, vous pouvez ajouter la ligne suivante à votre fichier mozconfig :</p>
+  <pre class="eval">mk_add_options MOZ_OBJDIR=/chemin/vers/objdir
+</pre>
+  <p> </p>
+ </dd>
+ <dt>
+  Peut-on cross-compiler Mozilla ?</dt>
+ <dd>
+  Oui, consultez le document <a class="external" href="http://www.mozilla.org/build/cross-compiling.html">Cross-Compiling Mozilla</a> pour plus de détails. Par contre, le <a class="external" href="http://www.vmlinux.org/joachim/mirror/www.objsw.com/CrossGCC/FAQ-4.html#ss4.9">Canadian Cross-Compiling</a> n'est pas supporté.
+  <p> </p>
+ </dd>
+ <dt>
+  Comment tester la compilation de certains fichiers uniquement plutôt que de l'arbre complet, lorsque du code a été modifié ?</dt>
+ <dd>
+  Placez-vous dans votre répertoire objdir, puis dans le répertoire spécifique où vous désirez compiler (la structure du répertoire objdir correspond à la structure des répertoires de source), et tapez simplement « make » (ou « gmake » si nécessaire). Cela fonctionne uniquement si vous trouvez un répertoire contenant un « Makefile » (le répertoire équivalent dans l'arbre des sources contiendra un fichier « Makefile.in »). Si vous voulez être encore plus précis que cela, vous pouvez essayer de faire « make &lt;nomfichier&gt;.obj ». Consultez <a href="/fr/Compilation_Incrémentale" title="fr/Compilation_Incrémentale">Compilation Incrémentale</a>.
+  <p> </p>
+ </dd>
+ <dt>
+  Est-ce que les compilations parallèles (make -j) fonctionnent pour Mozilla ?</dt>
+ <dd>
+  Oui. Consultez l'entrée de manuel <a class="external" href="http://www.gnu.org/software/make/manual/html_node/Parallel.html">GNU Make Parallel Execution</a> pour leur utilisation optimale.
+  <p>Si vous obtenez des erreurs de compilation obscures loes de compilations parallèles (en particulier si vous utilisez -j au lieu de -jN pour exécuter autant de tâches que possible en parallèle), essayez de réduire le nombre de tâches en réduisant N (ou, si vous avez utilisé le parallélisme illimité, ajoutez un nombre peu élevé N à -j).</p>
+  <p>La compilation parallèle avec -j4 et -j8 semble bien fonctionner.</p>
+  <p> </p>
+ </dd>
+ <dt>
+  Comment obliger le système de compilation à reconnaitre les changements faits à mon fichier mozconfigv?</dt>
+ <dd>
+  Touchez à n'importe lequel des scripts configure dans l'arbre. Il n'y a pas de dépendance explicite envers le fichier mozconfig étant donné qu'il peut résider n'importe où via la variable d'environnement MOZCONFIG.
+  <p> </p>
+ </dd>
+ <dt>
+  erreur : le fichier '../../toolkit/locales/en-US/chrome/necko/contents.rdf' n'existe pas à ../../config/make-jars.pl line 418, &lt;STDIN&gt; ligne 9.</dt>
+ <dd>
+  Vous essayez de compiler Firefox sans suivre les instructions fournies dans <a href="/fr/Configuration_des_options_de_compilation" title="fr/Configuration_des_options_de_compilation">Configuration des options de compilation</a>. En particulier, votre fichier mozconfig <strong>doit</strong> inclure le fichier mozconfig par défaut de Firefox :
+  <pre class="eval">. $topsrcdir/browser/config/mozconfig
+# ajoutez vos options personnalisées supplémentaires ici
+</pre>
+  <p> </p>
+ </dd>
+ <dt>
+  Le checkout cvs initial échoue avec le message : <code>cvs {{ mediawiki.external('checkout aborted') }}: *PANIC* administration files missing</code></dt>
+ <dd>
+  Vous ne pouvez pas créer un arbre cvs dans un répertoire appelé « CVS ». C'est une fonctionnalité/un bug de cvs. cvs s'attend à trouver certains fichiers d'administration dans un répertoire appelé CVS et affichera une erreur si ils ne s'y trouvent pas.
+  <p> </p>
+ </dd>
+ <dt>
+  Error: ../coreconf/rules.mk:406: target `c' doesn't match the target pattern</dt>
+ <dd>
+  Vous avez besoin de make 3.80 et pas d'une autre version comme la 3.81
+  <ul>
+   <li>make 3.80 n'est plus disponible dans l'installation de Cygwin, vous devrez donc le trouver ailleurs. Vous pouvez faire une recherche du fichier make-3.80-1.tar.bz2 et celui-ci est également disponible <a class="external" href="http://cygwin.paracoda.com/release/make/make-3.80-1.tar.bz2">à cette adresse</a>.</li>
+  </ul>
+  <p> </p>
+ </dd>
+</dl>
+<h3 id="Questions_sp.C3.A9cifiques_au_Mac" name="Questions_sp.C3.A9cifiques_au_Mac">Questions spécifiques au Mac</h3>
+<p> </p>
+<dl>
+ <dt>
+  Peut-on compiler une application Mozilla comme Universal Binary ?</dt>
+ <dd>
+  Oui. Consultez <a href="/fr/Binaires_universels_pour_Mac_OS_X" title="fr/Binaires_universels_pour_Mac_OS_X">Binaires universels pour Mac OS X</a> pour les instructions.
+  <p> </p>
+ </dd>
+ <dt>
+  Comment activer distcc pour faciliter la compilation ?</dt>
+ <dd>
+  C'est prévu.
+  <p> </p>
+ </dd>
+ <dt>
+  Est-ce que Mozilla compile sur UFS ?</dt>
+ <dd>
+  Oui, le {{ Bug(157036) }} a été corrigé.
+  <p> </p>
+ </dd>
+ <dt>
+  Est-ce que Mozilla fonctionne sur UFS ?</dt>
+ <dd>
+  Oui.
+  <p> </p>
+ </dd>
+ <dt>
+  Peut-on utiliser CodeWarrior pour compiler la version Mach-O ?</dt>
+ <dd>
+  Non, CodeWarrior n'est plus maintenu. Consultez le {{ Bug(119589) }} pour plus de détails.
+  <p> </p>
+ </dd>
+ <dt>
+  Après recompilation, par exemple de layout, comment faire pour que FirefoxDebug.app intègre les changements ?</dt>
+ <dd>
+  make -C browser/app.
+  <p> </p>
+ </dd>
+</dl>
+<p>Pour les erreurs ce compilation habituelles sous Mac et des astuces pour les résouvre, consultez <a href="/fr/Préalables_à_la_compilation_sous_Mac_OS_X#R.C3.A9solution_des_probl.C3.A8mes" title="fr/Préalables_à_la_compilation_sous_Mac_OS_X#R.C3.A9solution_des_probl.C3.A8mes">Résolution des problèmes</a> dans <a href="/fr/Préalables_à_la_compilation_sous_Mac_OS_X" title="fr/Préalables_à_la_compilation_sous_Mac_OS_X">Préalables à la compilation sous Mac OS X</a>.</p>
+<h3 id="Questions_sp.C3.A9cifiques_.C3.A0_Win32" name="Questions_sp.C3.A9cifiques_.C3.A0_Win32">Questions spécifiques à Win32</h3>
+<p> </p>
+<p> </p>
+<dl>
+ <dt>
+  Existe-t-il un fichier de projet Microsoft Visual Studio pour compiler Mozilla ?</dt>
+ <dd>
+  Non. Vous devez utiliser cygwin et GNU make.
+  <p> </p>
+ </dd>
+ <dt>
+  Peut-on lancer les commandes de compilation depuis cmd.exe ?</dt>
+ <dd>
+  Oui. Make invoque des sous-shells /bin/sh de cygwin pour exécuter des commandes, donc le shell utilisé pour invoquer make au départ n'a pas d'importance.
+  <p> </p>
+ </dd>
+ <dt>
+  Quelle version du package autoconf de cygwin faut-il utiliser ?</dt>
+ <dd>
+  À cause des incompatibilités entre autoconf 2.1x et 2.5x, les mainteneurs de cygwin ont écrit un script capable de déterminer la version d'autoconf dont votre script configure a besoin et d'invoquer cette version d'autoconf. Vous aurez besoin des packages autoconf(-wrapper) et autoconf-stable. Consultez <a class="external" href="http://cygwin.com/ml/cygwin-announce/2001/msg00177.html" rel="freelink">http://cygwin.com/ml/cygwin-announce.../msg00177.html</a> pour plus de détails.
+  <p> </p>
+ </dd>
+ <dt>
+  Les outils Microsoft (CL, LINK, RC) donnent des erreurs <em>fichier non trouvé</em></dt>
+ <dd>
+  Les variables d'environnement INCLUDE et LIB sont utilisées par les outils Microsoft Visual C++. Ils sont habituellement définis dans vcvars32.bat. Suivant les modules que vous compilez, vous pouvez avoir besoin ou non de MFC et ATL. Ci-dessous, les chemins qui fonctionnent si Visual C++ est installé dans « C:\msvs » :
+  <pre class="eval">set INCLUDE=C:\msvs\VC\Include;C:\msvs\VC\ATLMFC\Include
+set LIB=C:\msvs\VC\Lib;C:\msvs\VC98\ATLMFC\Lib
+</pre>
+  <p> </p>
+ </dd>
+ <dt>
+  cvs update: authorization failed: server XXXX rejected access -- used empty password; try "cvs login" with a real password</dt>
+ <dd>
+  Vous mélangez wincvs et le cvs de cygwin. Utilisez uniquement l'un des deux.
+  <p> </p>
+ </dd>
+ <dt>
+  cvs {{ mediawiki.external('checkout aborted') }}: cannot rename file CVS/Entries.Backup to CVS/Entries: Permission denied</dt>
+ <dd>
+  Depuis cygwin 1.3.13, ntsec est activé par défaut. ntsec est la tentative de cygwin d'avoir une stucture de permissions ressemblant plus à celle d'UNIX basée sur les fonctionnalités de sécurité de Windows NT. Le message d'erreur indique qu'il y a une erreur de correspondance entre les permissions unix listées dans le fichier /etc/passwd de cygwin et celles utilisées par Windows NT. Pour contourner cela, vous pouvez ajouter, « nontsec » à votre variable d'environnement CYGWIN. La bonne manière serait de corriger le problème de correspondance.
+  <p> </p>
+ </dd>
+ <dt>
+  Make affiche une erreur à propos d'une commande manquante ou d'un fichier .dtd non trouvé</dt>
+ <dd>
+  Vous avez probablement utilisé WinZip pour décompresser l'archive de sources. Ne faites pas cela. WinZip, par défaut, ne décompresse pas les fichiers de taille nulle des archives tar.gz. Utilisez un autre utilitaire, ou le script de téléchargement pour récupérer les fichiers que WinZip n'a pas extraits.
+  <p> </p>
+ </dd>
+ <dt>
+  nsinstall ou un autre programme win32 natif se plaint à propos d'un fichier non trouvé</dt>
+ <dd>
+  Vérifiez votre table de montage cygwin. Exécuter la commande mount devrait afficher quelque chose de similaire à :
+  <pre class="eval">c: on /cygdrive/c type user (binmode,noumount)
+e: on /cygdrive/e type user (binmode,noumount)
+c:\cygwin on / type system (binmode)
+c:\cygwin\bin on /usr/bin type system (binmode)
+c:\cygwin\lib on /usr/lib type system (binmode)
+</pre>
+  <p>Le système de compilation s'attend à ce que les partitions de disque soient montées avec /cygdrive comme préfixe. Si c: ou e: n'utilisent pas /cygdrive comme préfixe, il ne sera pas possible de compiler Mozilla à l'aide de ces disques. Vous devrez monter manuellement le disque à l'emplacement attendu en utilisant la commande :</p>
+  <pre class="eval">mount -s "e:\" /cygdrive/e
+</pre>
+  <p>Si votre arbre des sources est sous votre $HOME, les modes de montage devraient être binmode (fins de ligne de style UNIX). Autrement, la compilation échouera suite à la corruption de certains fichiers. Si l'arbre des sources est en dehors de votre $HOME, le montage n'a pas d'importance tant que votre éditeur de code reconnait les fins de ligne Unix.</p>
+  <p> </p>
+ </dd>
+ <dt>
+  Erreurs de fichier ou répertoire introuvable depuis certaines lignes de votre mozconfig</dt>
+ <dd>
+  Cela peut être causé par un fichier mozconfig avec des fins de ligne de style Windows. Convertissez-les en style Unix et l'erreur devrait disparaitre.
+  <p> </p>
+ </dd>
+ <dt>
+  xpidl.exe plante avec une violation d'accès</dt>
+ <dd>
+  Ceci se produit habituellement à cause d'une incompatibilité entre votre compilateur et vos bibliothèques glib et/ou libIDL.
+  <p>Si vous compilez avec Visual Studio .NET, vous devez linker les versions VC7 des DLL glib et libIDL. Pour Visual Studio .NET 2003, utilisez les versions VC7.1, et pour Visual Studio 2005, utilisez les versions VC8</p>
+  <p>Le répertoire contenant les versions appropriées de ces DLL pour votre ordinateur doit être dans votre PATH avant toute autre version de ces bibliothèques. Les fichiers <code>.dll</code> et <code>.lib</code> doivent être exécutables (utilisez simplement <code>chmod 755</code> dessus) ou cygwin ne les chargera pas.</p>
+  <p>Consultez <a href="/fr/Préalables_à_la_compilation_sous_Windows/Compilateurs_Microsoft_gratuits" title="fr/Préalables_à_la_compilation_sous_Windows/Compilateurs_Microsoft_gratuits">Préalables à la compilation sous Windows</a> pour plus d'astuces sur la compilation avec VC7 et les versions plus récentes.</p>
+  <p>Des bibliothèques statiques alternatives existent également dans le {{ Bug(242870) }}. Celles-ci peuvent être utilisées à la place des bibliothèques spécifiques à un compilateur.</p>
+  <p>Si vous compilez avec VC6, veuillez vous assurer que vous n'utilisez <em>pas</em> les bibliothèques VC7 à la compilation ni à l'exécution.</p>
+  <p> </p>
+ </dd>
+ <dt>
+  configure: error: the midl major version, , does not match the compiler suite version, &lt;numéro de version de Visual C++&gt; — idem pour le linker.</dt>
+ <dd>
+  L'outil cygwin « link.exe » pour les liens symboliques ne trouve pas le bon linker objet du compilateur Microsoft, ou midl n'a pas été trouvé. Vérifiez que les outils Microsoft sont avant cygwin dans votre PATH (consultez les <a href="/fr/Préalables_à_la_compilation_sous_Windows#Configuation_de_l.27environnement" title="fr/Préalables_à_la_compilation_sous_Windows#Configuation_de_l.27environnement">instructions</a>), ou renommez ou supprimez <code>/bin/link.exe</code>. Notez que cygwin peut modifier le chemin de démarrage de son shell, vérifiez donc également la valeur <code>export</code> dans le shell cygwin.
+  <p> </p>
+ </dd>
+ <dt>
+  configure: error: installation or configuration problem: C compiler cannot create executables.</dt>
+ <dd>
+  Essayez de vérifier si votre variable PATH renseigne tous les répertoires nécessaires. Si vous utilisez MS Visual Studio, lancez vcvars32.bat (qui définit vos variables PATH, LIB, et INCLUDE). Si votre environnement de compilation a changé, il peut être nécessaire de supprimer votre fichier config.cache (dans votre répertoire mozilla ou object) et de relancer la compilation ensuite.
+  <p> </p>
+ </dd>
+ <dt>
+  build error: ../coreconf/rules.mk:365: target `c' doesn't match the target pattern</dt>
+ <dd>
+  Vous avez utilisé la version de make 3.81 venant de l'installation de cygwin. Vous devez utiliser make 3.80. Veuillez lire les <a href="/fr/Préalables_à_la_compilation_sous_Windows#make" title="fr/Préalables_à_la_compilation_sous_Windows#make">instructions</a>.
+  <p> </p>
+ </dd>
+ <dt>
+  fatal error LNK1112: module machine type 'IA64' conflicts with target machine type 'X86'</dt>
+ <dd>
+  Essayez de changer l'ordre des répertoires dans vos variables PATH, LIB, et INCLUDE. Déplacez tous les répertoires mentionnant « win64 » ou « IA64 » (ou « AMD64 ») plus près de la fin de la variable.
+  <p> </p>
+ </dd>
+ <dt>
+  LINK : fatal error LNK1104: cannot open file 'atlthunk.lib'</dt>
+ <dd>
+  D'après <a class="external" href="http://forums.microsoft.com/msdn/ShowPost.aspx?PostID=64509">ce fil de forum de Microsoft</a>, la version de l'Active Template Library (ATL) dans le Platform Software Development Kit (PSDK) gratuit est différente de celle de Visual Studio. L'ATL fourni avec le PSDK ne prend pas en compte le code 32-bit, uniquement le code 64-bit, tandis que l'ATL de Visual Studio gère les deux et n'a pas besoin de <code>atlthunk.lib</code>. Apparemment, le fichier <code>atlthunk.lib</code> n'est pas disponible et ne peut pas être créé à partir d'<a href="/fr/Préalables_à_la_compilation_sous_Windows/Compilateurs_Microsoft_gratuits" title="fr/Préalables_à_la_compilation_sous_Windows/Compilateurs_Microsoft_gratuits">outils disponibles gratuitement</a> comme le toolkit Visual C++ et Visual Studio Express. Vous pouvez soit mettre à jour vers la version complète de Visual Studio pour utiliser sa version d'ATL, ou vous pouvez contourner le problème en modifiant quelques lignes dans <code>atlbase.h</code> (dans <code>\include\atl</code> sous le répertoire PSDK) comme suit :
+  <pre class="eval">--- atlbase.h.old       2006-06-08 08:20:26.671875000 -0400
++++ atlbase.h   2006-06-08 08:13:26.578125000 -0400
+@@ -283,7 +283,7 @@
+         }
+ };
+ #pragma pack(pop)
+-
++/*
+ PVOID __stdcall __AllocStdCallThunk(VOID);
+ VOID  __stdcall __FreeStdCallThunk(PVOID);
+
+@@ -291,6 +291,11 @@
+ #define FreeStdCallThunk(p) __FreeStdCallThunk(p)
+
+ #pragma comment(lib, "atlthunk.lib")
++*/
++
++// workaround for not having atlthunk.lib in PSDK or VC++ 2005 Express Edition
++#define AllocStdCallThunk() HeapAlloc(GetProcessHeap(),0,sizeof(_stdcallthunk))
++#define FreeStdCallThunk(p) HeapFree(GetProcessHeap(), 0, p)
+
+ #elif defined (_M_AMD64)
+ #pragma pack(push,2)
+</pre>
+  <p>Il peut aussi être nécessaire de supprimer le répertoire objet et de recompiler depuis le début afin que le compilateur remarque ce changement.</p>
+  <p> </p>
+ </dd>
+ <dt>
+  La compilation ou la création d'un exécutable avec cygwin et VS6.0 débouche sur FIND: Parameter format not correct</dt>
+ <dd>
+  Il y a confusion entre le <code>find</code> de System32 et <code>/usr/bin/find</code> de cygwin. Celui dont on a besoin est celui de cygwin. Ceci est causé par l'ordre du Path. Certaines solutions sont possibles :
+  <ul>
+   <li>renommer temporairement <code>system32/find.exe</code></li>
+   <li>s'assurer que le chemin d'accès de cygwin se trouve avant system32 dans le path</li>
+  </ul>
+  <p> </p>
+ </dd>
+ <dt>
+  J'ai packagé Firefox dans un installeur : <code>make -C ${OBJ_DIR}/browser/installer installer</code> sans le moindre problème. À l'exécution, l'installeur demande un fichier <code>mozz.dll</code> ; l'installation échoue</dt>
+ <dd>
+  Tant Thunderbird que Firefox doivent être compilés avec les flags configure --enable-static et --disable-shared
+  <p> </p>
+ </dd>
+ <dt>
+  shlibsign.exe - Entry Point Not Found ; The procedure entry point CERT_GetFirstEmailAddress could not be located in the dynamic link library nss3.dll.</dt>
+ <dd>
+  Il se peut que vous ayiez plusieurs instances de nss3.dll sur votre machine et dans votre path. Effectuez une recherche sur votre machine pour trouver toutes les instances de ce fichier. Déplacez-les en dehors de votre arbre de compilation de Firefox durant la compilation. Remettez-les ensuite à leur place dès que la compilation est terminée.
+  <p> </p>
+ </dd>
+ <dt>
+  Erreurs aléatoires de permissions refusées (si ZoneAlarm 7 free edition est installé)</dt>
+ <dd>
+  L'édition gratuite de ZoneAlarm 7 pose un problème juste après le démarrage du processus de compilation avec l'environnement recommandé sous Windows XP — vsmon.exe (le fichier de contrôle de ZoneAlarm) se plante, bash renvoie une erreur de permission refusée et le système devient presque inutilisable. D'autres pare-feux logiciels peuvent provoquer des symptômes similaires !
+  <p>Vous devriez désinstaller ZoneAlarm 7 et essayer un autre pare-feu logiciel comme Comodo ou Jetico.</p>
+ </dd>
+</dl>
+<h3 id="Questions_sp.C3.A9cifiques_.C3.A0_Mingw32" name="Questions_sp.C3.A9cifiques_.C3.A0_Mingw32">Questions spécifiques à Mingw32</h3>
+<ul>
+ <li>Si le configure ou la compilation échoue suite à une w32api manquante, ajoutez le répertoire /include de mingw32 à la fin de votre variable d'environnement INCLUDE. Les bibliothèques ou binaires Mingw32 ne devraient pas être nécessaires, uniquement les en-têtes.</li>
+</ul>
+<h3 id="Questions_sp.C3.A9cifiques_.C3.A0_Unix" name="Questions_sp.C3.A9cifiques_.C3.A0_Unix">Questions spécifiques à Unix</h3>
+<p> </p>
+<dl>
+ <dt>
+  Galeon a besoin de libgtksuperwin.so mais je n'ai pas ce fichier dans ma version gtk2 de Mozilla. Où est-il ?</dt>
+ <dd>
+  Seules les versions gtk1 de Mozilla utilisent libgtksuperwin.so. Si vous voulez utiliser galeon avec une compilation gtk2, vous devrez utiliser galeon2.
+  <p> </p>
+ </dd>
+ <dt>
+  Pourquoi configure dit-il qu'il a besoin de libIDL &gt;= 0.6.3 alors que libIDL 0.8.x est installé ?</dt>
+ <dd>
+  libIDL 0.8x ne peut être utilisé qu'en compilant avec gtk2. Mozilla compile avec gtk1 par défaut. Pour utiliser libIDL 0.8.x et gtk2, vous devez spécifier --enable-default-toolkit=gtk2 sur la ligne de commande de configure ou dans votre fichier mozconfig. NOTE : Ceci est un ancien problème qui a été corrigé dans Mozilla 1.8.
+  <p> </p>
+ </dd>
+ <dt>
+  Comment compiler sous Solaris 10 x86 (Seamonkey)?</dt>
+ <dd>
+  Voici ce qui a du être fait pour obtenir un environnement fonctionnel :</dd>
+ <dd>
+  1. Installer forte (gratuit chez Sun)</dd>
+ <dd>
+  2. Installer gmake (de blastwave)</dd>
+ <dd>
+  3. mv /usr/ucb/cc /usr/ucb/cc.hold</dd>
+ <dd>
+  4. CFLAGS="-xlibmil"; export CFLAGS</dd>
+ <dd>
+  5. CXXFLAGS="-xlibmil -xlibmopt -features=tmplife -norunpath"; export CXXFLAGS</dd>
+ <dd>
+  6. LDFLAGS='-R$ORIGIN -R/usr/sfw/lib -R/opt/sfw/lib -R/usr/local/lib -R/opt/csw/lib'; export LDFLAGS</dd>
+ <dd>
+  7. PATH=$PATH:/opt/SUNWspro/bin:/opt/csw/bin:/opt/csw/sbin:/usr/ucb/bin:/usr/ccs/bin; export PATH</dd>
+ <dd>
+  8. LD_LIBRARY_PATH=/opt/SUNWspro/lib:$LD_LIBRARY_PATH; export LD_LIBRARY_PATH</dd>
+ <dd>
+  9. Créer un fichier mozconfig et compiler normalement</dd>
+ <dd>
+  10. Si la compilation du package (tar et gzip) échoue, les fichiers du répertoire dist peuvent être simplement archivés manuellement avec tar
+  <p> </p>
+ </dd>
+ <dt>
+  libxpcom_core.so: cannot restore segment prot after reloc: Permission denied&lt;/dt&gt;</dt>
+ <dd>
+  Vous utilisez probablement Fedora Core 5, ou une autre distribution Linux avec SELinux activé. Utilisez la commande <code>chcon -t chcon -t texrel_shlib_t lib*</code> dans votre répertoire <code>dist/bin</code> pour corriger cela.&lt;/dd&gt;</dd>
+</dl>
+<p>{{ languages( { "en": "en/Mozilla_Build_FAQ", "es": "es/Preguntas_frecuentes_sobre_la_compilaci\u00f3n_de_Mozilla", "ja": "ja/Mozilla_Build_FAQ" } ) }}</p>

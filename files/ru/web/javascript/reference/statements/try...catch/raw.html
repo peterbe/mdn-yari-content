@@ -1,0 +1,356 @@
+<div>{{jsSidebar("Statements")}}</div>
+
+<p>Конструкция <code>try...catch</code> помечает блок инструкций как <code>try</code>, и в зависимости от того, произошла ошибка или нет, вызывает дополнительный блок инструкций <code>catch</code>.</p>
+
+<h2 id="Синтаксис">Синтаксис</h2>
+
+<pre class="syntaxbox">try {
+   <em>try_statements</em>
+}
+[catch (<em>exception_var_1</em> if <em>condition_1</em>) { // не стандартно
+   <em>catch_statements_1</em>
+}]
+...
+[catch (<em>exception_var_2</em>) {
+   <em>catch_statements_2</em>
+}]
+[finally {
+   <em>finally_statements</em>
+}]
+</pre>
+
+<dl>
+ <dt><code>try_statements</code></dt>
+ <dd>Инструкция, которая будет выполнена.</dd>
+</dl>
+
+<dl>
+ <dt><code>catch_statements_1</code>, <code>catch_statements_2</code></dt>
+ <dd>
+ <p>Инструкции, которые будут выполнены, если произойдёт ошибка в блоке <font face="Consolas, Liberation Mono, Courier, monospace">try</font>.</p>
+ </dd>
+</dl>
+
+<dl>
+ <dt><code>exception_var_1</code>, <code>exception_var_2</code></dt>
+ <dd>Идентификатор для хранения объекта ошибки, который впоследствии используется в блоке <code>catch</code></dd>
+</dl>
+
+<dl>
+ <dt><code>condition_1</code></dt>
+ <dd>Выражение состояния</dd>
+</dl>
+
+<dl>
+ <dt><code>finally_statements</code></dt>
+ <dd>Инструкции, которые выполняются после завершения блока <code>try</code>. Выполнение происходит независимо от того, была ошибка или нет.</dd>
+</dl>
+
+<h2 id="Описание">Описание</h2>
+
+<p>Конструкция <code>try</code> содержит блок <code>try</code>, в котором находится одна или несколько инструкций (<code>{}</code> должно быть всегда использовано, даже для одиночных инструкций), и как минимум один блок <code>catch</code>, или один блок <code>finally</code>, или оба. Здесь приведены три возможных варианта использования конструкции <code>try</code>:</p>
+
+<ol>
+ <li><code>try...catch</code></li>
+ <li><code>try...finally</code></li>
+ <li><code>try...catch...finally</code></li>
+</ol>
+
+<p>Блок<code> catch</code> содержит инструкции, которые будут выполнены, если в блоке <code>try</code> произошла ошибка. Это сделано для того, чтобы была возможность обработать ошибку в блоке <code>catch</code>, при её возникновении. Если какая-либо инструкция вызывает ошибку в <code>try</code> блоке, то управление незамедлительно переходит в блок <code>catch</code>. Если в <code>try</code> блоке не будет никакой ошибки, то блок <code>catch</code> пропустится.</p>
+
+<p>Блок <code>finally</code> выполнится после выполнения блоков <code>try</code> и <code>catch</code>, но перед инструкциями, следующими за конструкцией <code>try...catch</code>. Этот блок всегда выполняется независимо от того, была ошибка или нет.</p>
+
+<p>Вы можете размещать один или более <code>try</code> оператор. Если внутренний <code>try</code> оператор не имеет <code>catch</code> блок, будет использован <code>сatch</code> внешнего оператора <code>try</code>.</p>
+
+<p><code>Вы также можете использовать оператор try</code> для обработки JavaScript исключений. Загляните в <a href="/ru-RU/docs/Web/JavaScript/Guide">JavaScript руководство</a> для получения большей информации о JavaScript исключениях.</p>
+
+<h3 id="Специальный_вызов_ошибки">Специальный вызов ошибки</h3>
+
+<p>При специальном вызове ошибки, вход в блок <code>catch</code> происходит тогда, когда ошибка вызвана. Для примера, когда ошибка '<code>myException</code> вызывается в следующем коде, управление переходит в блок <code>catch</code> незамедлительно:</p>
+
+<pre class="brush: js">try {
+   throw 'myException'; // создание ошибки
+}
+catch (e) {
+   // инструкции для работы с ошибками
+   logMyErrors(e); // передает объект ошибки для управления им
+}
+</pre>
+
+<p>Блок <code>catch</code> задает идентификатор (<code>e</code> в примере выше) который содержит заданное оператором <code>throw</code>. Блок catch в JavaScript создает идентификатор когда произошел вход в блок и добавляет его в область видимости блока; <code>идентификатор действителен только во время исполнения блока catch</code>; после того, как <code>catch</code> блок заканчивает свое исполнение идентификатор перестаёт быть доступным.</p>
+
+<h3 id="Условные_catch_обработчики">Условные <code>catch</code> обработчики</h3>
+
+<p>{{non-standard_header}}</p>
+
+<p>Вы также можете использовать один или несколько условных <code>catch</code> обработчиков чтобы отловить конкретные исключения. В этом случае, подходящий <code>catch</code> блок сработает когда конкретное исключение будет выброшено. В этом примере, код вынутри блока <code>try</code> может выкинуть три типа исключений: {{jsxref("TypeError")}}, {{jsxref("RangeError")}}, и {{jsxref("EvalError")}}.<br>
+ Когда будет выброшено исключение, управление передается подходящему блоку <code>catch</code>. Если исключение не соотсветствует ни одному из указаных типов и присутствует безусловный блок <code>catch</code>, то управление будет передано ему.</p>
+
+<p>Если вы используете безусловный блок <code>catch</code> с одним или более условным блоком <code>catch,</code> то безусловный блок <code>catch</code> должен находиться в конце, иначе безусловный блок <code>catch</code> будет обрабатывать исключения любого типа до того, как они достигнут остальных.</p>
+
+<p>Напоминание: Эта функциональность не является частью ECMAScript спецификации.</p>
+
+<pre class="brush: js">try {
+    myroutine(); // может бросить три типа исключений
+} catch (e if e instanceof TypeError) {
+    // statements to handle TypeError exceptions
+} catch (e if e instanceof RangeError) {
+    // statements to handle RangeError exceptions
+} catch (e if e instanceof EvalError) {
+    // statements to handle EvalError exceptions
+} catch (e) {
+    // statements to handle any unspecified exceptions
+    logMyErrors(e); // pass exception object to error handler
+}
+</pre>
+
+<p>И вот пример того, как реализовать "условные catch-блоки" используя простой JavaScript согласно спецификации ECMAScript (очевидно, это более многословный способ но работает везде):</p>
+
+<pre class="brush: js">try {
+    myroutine(); // может выкинуть три типа исключений
+} catch (e) {
+    if (e instanceof TypeError) {
+        // код для обработки исключений TypeError
+    } else if (e instanceof RangeError) {
+        // код для обработки исключений RangeError
+    } else if (e instanceof EvalError) {
+        // код для обработки исключений EvalError
+    } else {
+       // код для обработки всех остальных типов исключений
+       logMyErrors(e); // передача исключения обработчику исключений
+    }
+}
+</pre>
+
+<h3 id="The_exception_identifier">The exception identifier</h3>
+
+<p>When an exception is thrown in the <code>try</code> block, <em><code>exception_var</code></em> (e.g. the <code>e</code> in <code>catch (e)</code>) holds the value specified by the <code>throw</code> statement. You can use this identifier to get information about the exception that was thrown.</p>
+
+<p>This identifier is local to the <code>catch</code> clause. That is, it is created when the <code>catch</code> clause is entered, and after the <code>catch</code> clause finishes executing, the identifier is no longer available.</p>
+
+<h3 id="Блок_finally">Блок <code>finally</code></h3>
+
+<p>Блок <code>finally</code> содержит код который будет запущен после кода в блоках <code>try</code> и <code>catch</code>. Обратите внимание, что код в блоке <code>finally</code> запускается не зависимо от того, было ли выброшено исключение или нет. Также, если было выброшено исключение, код в блоке <code>finally</code> будет запущен вне зависимости от того,  присутствует ли блок <code>catch</code> или нет. Также вы можете использовать блок <code>finally</code> для того, чтобы скрипт безопасно завершил работу в случае ошибки. Например, вам необходимо освободить память и ресурсы которые скрипт использовал.</p>
+
+<p>Наличие специального блока, связанного с ошибкой, который выполняется вне зависимости от наличия исключительной ситуации, может показаться странным, но эта конструкция на самом деле весьма полезна. Однако важно скорее не то, что код в finally выполняется всегда, а то, КОГДА код, который следует ЗА try...catch НЕ выполняется. К примеру: если в блоке catch ВНУТРЕННЕГО try...catch возникает исключение, весь оставшийся код ВНЕШНЕГО try...catch, который оборачивает внутренний (или же в основном потоке выполнения, если внешнего try...catch нету) не будет выполнен, так как контроль немедленно передаётся либо в catch ВНЕШНЕГО try...catch, либо во внутренний генератор исключений, если ВНЕШНИЙ try...catch отсутствует. По этой причине, любой код, предназначенный для очистки ресурсов, во внешней или внутренней секциях будет пропущен. Однако, если ВНУТРЕННИЙ try...catch содержит блок finally, тогда код этого finally будет выполнен ПЕРВЫМ, с целью позволить очистку ресурсов, и только ПОТОМ внешний catch (или же генератор исключений) получит контроль, что бы обработать новое исключение. И теперь, если эта очистка ресурсов должна быть выполнена вне зависимости от того, успешно ли выполнен код в try...catch, то, если бы блок finally выполнялся только после исключения, код очистки ресурсов нужно было бы продублировать что в finally (в случае когда исключения произошло), что в блоке try, если ошибки не было. Однако блок finally выполняется ВСЕГДА, вне зависимости от того было исключение или нет, и по этому нет причин не указать блок finally и дать ему выполняться вне зависимости от того была ошибка или нет.</p>
+
+<p>The following example opens a file and then executes statements that use the file (server-side JavaScript allows you to access files). If an exception is thrown while the file is open, the <code>finally</code> clause closes the file before the script fails. The code in <code>finally</code> also executes upon explicitly returning from <code>try</code> or <code>catch</code> block.</p>
+
+<pre class="brush: js">openMyFile();
+try {
+   // tie up a resource
+   writeMyFile(theData);
+}
+finally {
+   closeMyFile(); // always close the resource
+}
+</pre>
+
+<h2 id="Примеры">Примеры</h2>
+
+<h3 id="Вложенные_блоки_try">Вложенные блоки try</h3>
+
+<p>Для начала давайте посмотрим что происходит с этим блоком кода:</p>
+
+<pre class="brush: js">try {
+  try {
+    throw new Error('oops');
+  }
+  finally {
+    console.log('finally');
+  }
+}
+catch (ex) {
+  console.error('outer', ex.message);
+}
+
+// Вывод:
+// "finally"
+// "outer" "oops"
+</pre>
+
+<p>Now, if we already caught the exception in the inner try-block by adding a catch block</p>
+
+<pre class="brush: js">try {
+  try {
+    throw new Error('oops');
+  }
+  catch (ex) {
+    console.error('inner', ex.message);
+  }
+  finally {
+    console.log('finally');
+  }
+}
+catch (ex) {
+  console.error('outer', ex.message);
+}
+
+// Output:
+// "inner" "oops"
+// "finally"
+</pre>
+
+<p>И сейчас, давайте перевыбросим ошибку</p>
+
+<pre class="brush: js">try {
+  try {
+    throw new Error('oops');
+  }
+  catch (ex) {
+    console.error('inner', ex.message);
+    throw ex;
+  }
+  finally {
+    console.log('finally');
+  }
+}
+catch (ex) {
+  console.error('outer', ex.message);
+}
+
+// Вывод:
+// "inner" "oops"
+// "finally"
+// "outer" "oops"
+</pre>
+
+<p>Any given exception will be caught only once by the nearest enclosing catch-block, unless it is re-thrown. Of course, any new exceptions raised in the "inner" block (because code in catch-block may do something that throws), will be caught by the "outer" block.</p>
+
+<h3 id="Returning_from_a_finally_block">Returning from a finally block</h3>
+
+<p>If the <code>finally</code> block returns a value, this value becomes the return value of the entire <code>try-catch-finally</code> production, regardless of any <code>return</code> statements in the <code>try</code> and <code>catch</code> blocks. This includes exceptions thrown inside of the catch block:</p>
+
+<pre class="brush: js">try {
+  try {
+    throw new Error('oops');
+  }
+  catch (ex) {
+    console.error('inner', ex.message);
+    throw ex;
+  }
+  finally {
+    console.log('finally');
+    return;
+  }
+}
+catch (ex) {
+  console.error('outer', ex.message);
+}
+
+// Output:
+// "inner" "oops"
+// "finally"
+</pre>
+
+<p>The outer "oops" is not thrown because of the return in the finally block. The same would apply to any value returned from the catch block.</p>
+
+<h2 id="Спецификации">Спецификации</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Спецификация</th>
+   <th scope="col">Состояние</th>
+   <th scope="col">Примечание</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES3')}}</td>
+   <td>{{Spec2('ES3')}}</td>
+   <td>Изначальная редакция. Реализовано в JavaScript 1.4</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-12.14', 'try statement')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-try-statement', 'try statement')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-try-statement', 'try statement')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td>Not part of the current ECMA-262 standard: Multiple catch clauses and conditional clauses (SpiderMonkey extension, JavaScript 1.5).</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Совместимость">Совместимость</h2>
+
+<p>{{CompatibilityTable}}</p>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatGeckoDesktop("6")}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+  <tr>
+   <td>Conditional clauses<br>
+    (non-standard)</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Chrome for Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+  <tr>
+   <td>Conditional clauses<br>
+    (non-standard)</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="См._также">См. также</h2>
+
+<ul>
+ <li>{{jsxref("Error")}}</li>
+ <li>{{jsxref("Statements/throw", "throw")}}</li>
+</ul>

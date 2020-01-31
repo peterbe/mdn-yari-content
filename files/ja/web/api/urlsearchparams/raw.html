@@ -1,0 +1,124 @@
+<p>{{ApiRef("URL API")}}</p>
+
+<p><strong><code>URLSearchParams</code></strong> インターフェイスは URL のクエリー文字列の操作に役立つメソッドを定義します。</p>
+
+<p><code>URLSearchParams</code> を実装するオブジェクトは 直接 {{jsxref("Statements/for...of", "for...of")}} で使うことができます。 例えば次の2行は等価です。</p>
+
+<pre class="brush: js">for (const [key, value] of mySearchParams) {}
+for (const [key, value] of mySearchParams.entries()) {}</pre>
+
+<p>{{availableinworkers}}</p>
+
+<h2 id="Constructor" name="Constructor">コンストラクター</h2>
+
+<dl>
+ <dt>{{domxref("URLSearchParams.URLSearchParams", 'URLSearchParams()')}}</dt>
+ <dd><code>URLSearchParams</code> オブジェクトを返すコンストラクターです。</dd>
+</dl>
+
+<h2 id="Methods" name="Methods">メソッド</h2>
+
+<dl>
+ <dt>{{domxref("URLSearchParams.append()")}}</dt>
+ <dd>指定されたキーと値のペアを新しい検索パラメーターとして追加します。</dd>
+ <dt>{{domxref("URLSearchParams.delete()")}}</dt>
+ <dd>指定された検索パラメーターとその値を、検索パラメーターのリストから全て削除します。</dd>
+ <dt>{{domxref("URLSearchParams.entries()")}}</dt>
+ <dd>このオブジェクトに含まれる全てのキーと値のペアを列挙するための {{jsxref("Iteration_protocols","iterator")}} を返します。</dd>
+ <dt>{{domxref("URLSearchParams.forEach()")}}</dt>
+ <dd>コールバック関数を介して、このオブジェクトに含まれる全ての値を列挙します。</dd>
+ <dt>{{domxref("URLSearchParams.get()")}}</dt>
+ <dd>指定された検索パラメーターに対応する最初の値を返します。</dd>
+ <dt>{{domxref("URLSearchParams.getAll()")}}</dt>
+ <dd>指定された検索パラメーターに対応する全ての値を返します。</dd>
+ <dt>{{domxref("URLSearchParams.has()")}}</dt>
+ <dd>指定された検索パラメーターが存在するかを表す {{jsxref("Boolean")}} 値を返します。</dd>
+ <dt>{{domxref("URLSearchParams.keys()")}}</dt>
+ <dd>このオブジェクトに含まれる全てのキーと値のペアの<strong>キー</strong>を列挙する {{jsxref("Iteration_protocols", "iterator")}} を返します。</dd>
+ <dt>{{domxref("URLSearchParams.set()")}}</dt>
+ <dd>指定された検索パラメーターに対応する値を設定します。 複数の値が存在していた場合、それらは削除されます。</dd>
+ <dt>{{domxref("URLSearchParams.sort()")}}</dt>
+ <dd>全てのキーと値のペアを、キーを基準にソートします。</dd>
+ <dt>{{domxref("URLSearchParams.toString()")}}</dt>
+ <dd>URL で使用するのに適したクエリー文字列を返します。</dd>
+ <dt>{{domxref("URLSearchParams.values()")}}</dt>
+ <dd>このオブジェクトに含まれる全てのキーと値のペアの<strong>値</strong>を列挙する {{jsxref("Iteration_protocols", "iterator")}} を返します。</dd>
+</dl>
+
+<h2 id="Example" name="Example">例</h2>
+
+<pre class="brush: js">var paramsString = "q=URLUtils.searchParams&amp;topic=api";
+var searchParams = new URLSearchParams(paramsString);
+
+// 検索パラメーターを列挙する
+for (let p of searchParams) {
+  console.log(p);
+}
+
+searchParams.has("topic") === true; // true
+searchParams.get("topic") === "api"; // true
+searchParams.getAll("topic"); // ["api"]
+searchParams.get("foo") === null; // true
+searchParams.append("topic", "webdev");
+searchParams.toString(); // "q=URLUtils.searchParams&amp;topic=api&amp;topic=webdev"
+searchParams.set("topic", "More webdev");
+searchParams.toString(); // "q=URLUtils.searchParams&amp;topic=More+webdev"
+searchParams.delete("topic");
+searchParams.toString(); // "q=URLUtils.searchParams"
+</pre>
+
+<h3 id="コラム">コラム</h3>
+
+<p><code>URLSearchParams</code> コンストラクターは完全な URL をパースしません。 ただし先頭の <code>?</code> は読み飛ばします。</p>
+
+<pre class="brush: js line-numbers language-js"><code class="language-js"><span class="keyword token">var</span> paramsString1 <span class="operator token">=</span> <span class="string token">"http://example.com/search?query=%40"</span><span class="punctuation token">;</span>
+<span class="keyword token">var</span> searchParams1 <span class="operator token">=</span> <span class="keyword token">new</span> <span class="class-name token">URLSearchParams</span><span class="punctuation token">(</span>paramsString1<span class="punctuation token">)</span><span class="punctuation token">;</span>
+
+searchParams1<span class="punctuation token">.</span><span class="function token">has</span><span class="punctuation token">(</span><span class="string token">"query"</span><span class="punctuation token">)</span><span class="punctuation token">;</span> <span class="comment token">// false </span>
+searchParams1<span class="punctuation token">.</span><span class="function token">has</span><span class="punctuation token">(</span><span class="string token">"http://example.com/search?query"</span><span class="punctuation token">)</span><span class="punctuation token">;</span> <span class="comment token">// true</span>
+
+searchParams1<span class="punctuation token">.</span><span class="function token">get</span><span class="punctuation token">(</span><span class="string token">"query"</span><span class="punctuation token">)</span><span class="punctuation token">;</span> <span class="comment token">// null</span>
+searchParams1<span class="punctuation token">.</span><span class="function token">get</span><span class="punctuation token">(</span><span class="string token">"http://example.com/search?query"</span><span class="punctuation token">)</span><span class="punctuation token">;</span> <span class="comment token">// "@" (decodeURIComponent('%40') と同等)</span>
+
+<span class="keyword token">var</span> paramsString2 <span class="operator token">=</span> <span class="string token">"?query=value"</span><span class="punctuation token">;</span>
+<span class="keyword token">var</span> searchParams2 <span class="operator token">=</span> <span class="keyword token">new</span> <span class="class-name token">URLSearchParams</span><span class="punctuation token">(</span>paramsString2<span class="punctuation token">)</span><span class="punctuation token">;</span>
+searchParams2<span class="punctuation token">.</span><span class="function token">has</span><span class="punctuation token">(</span><span class="string token">"query"</span><span class="punctuation token">)</span><span class="punctuation token">;</span> <span class="comment token">// true </span>
+
+<span class="keyword token">var</span> url <span class="operator token">=</span> <span class="keyword token">new</span> <span class="class-name token">URL</span><span class="punctuation token">(</span><span class="string token">"http://example.com/search?query=%40"</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+<span class="keyword token">var</span> searchParams3 <span class="operator token">=</span> <span class="keyword token">new</span> <span class="class-name token">URLSearchParams</span><span class="punctuation token">(</span>url<span class="punctuation token">.</span>search<span class="punctuation token">)</span><span class="punctuation token">;</span>
+searchParams3<span class="punctuation token">.</span><span class="function token">has</span><span class="punctuation token">(</span><span class="string token">"query"</span><span class="punctuation token">)</span> <span class="comment token">// true</span></code></pre>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">策定状況</th>
+   <th scope="col">コメント</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName('URL', '#urlsearchparams', "URLSearchParams")}}</td>
+   <td>{{Spec2('URL')}}</td>
+   <td>初期定義</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="See_also" name="See_also">ブラウザ実装状況</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("api.URLSearchParams")}}</p>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li>{{domxref("URL")}} インターフェイス。</li>
+ <li><a href="https://developers.google.com/web/updates/2016/01/urlsearchparams?hl=en">Google Developers: URLSearchParams を使用した簡単な URL 操作</a>（英語）</li>
+</ul>
+
+<dl>
+</dl>

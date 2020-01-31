@@ -1,0 +1,85 @@
+<p><a href="fr/Mercurial">Mercurial</a> est un outil de gestion de code source permettant aux utilisateurs de suivre les changements du code source localement et de partager ces changements avec d'autres. Le projet Mozilla est en transition depuis <a href="fr/Code_source_de_Mozilla_(CVS)">CVS</a> pour le développement de Mozilla 1.9 vers Mercurial pour Mozilla 1.9.1 et au-delà.</p>
+<p>{{ Note("Si vous désirez soumettre des patchs pour le développement de Thunderbird 2.0, SeaMonkey 1.1 ou Firefox 3.0, utilisez <a href='\"fr/Code_source_de_Mozilla_(CVS)\"'>CVS</a>.") }}</p>
+<h3 id="Param.C3.A8tres_client" name="Param.C3.A8tres_client">Paramètres client</h3>
+<p>Les paramètres sont les mêmes que pour le développement principal de Firefox 3/XULRunner 1.9.1. Consultez <a href="fr/Code_source_de_Mozilla_(Mercurial)#Param.C3.A8tres_client">Code source de Mozilla (Mercurial)#Paramètres client</a>.</p>
+<h3 id="R.C3.A9cup.C3.A9ration_d.27un_arbre_de_sources" name="R.C3.A9cup.C3.A9ration_d.27un_arbre_de_sources">Récupération d'un arbre de sources</h3>
+<p>Différents référentiels hg sont hébergés à mozilla.org, consultez <a class="external" href="http://hg.mozilla.org/" rel="freelink">http://hg.mozilla.org/</a> pour la liste complète.</p>
+<p>Le référentiel d'intégration pour le développement de Thunderbird 3.0/SeaMonkey 2.0 est <a href="fr/Comm-central">comm-central</a>. Il contient le code nécessaire pour Thunderbird et SeaMonkey.</p>
+<p>Pour obtenir les sources de comm-central (« cloner » le référentiel, selon la terminologie de Mercurial) :</p>
+<pre class="eval"># Récupération du code source de Mozilla dans le dossier src/ - peut prendre un certain temps
+# car des centaines de mégaoctets d'historieque sont téléchargés vers .hg
+hg clone <span class="nowiki">http://hg.mozilla.org/comm-central/</span> src
+
+cd src
+</pre>
+<p>mettez à jour ou récupérez toutes les autres sources nécessaires via client.py :</p>
+<pre class="eval">python client.py checkout
+</pre>
+<p>{{ Note("Si vous obtenez le message d\'erreur « No module named subprocess », vous devrez installer python 2.4 ou supérieur") }}</p>
+<p>Si vous n'avez pas lancé client.py, la compilation ne se fera pas. client.py effectue plusieurs actions :</p>
+<ul>
+ <li>Récupère la base de code principale <a href="fr/Mozilla-central">mozilla-central</a> (Firefox 3.1/XULRunner 1.9.1) dans mozilla/</li>
+ <li>Récupère les répertoires suivants de CVS (les répertoires préfixés par extensions/ vont dans mozilla/extensions) :
+  <ul>
+   <li>calendar</li>
+   <li>extensions/irc (Chatzilla)</li>
+   <li>extensions/typeaheadfind</li>
+   <li>extensions/venkman</li>
+   <li>extensions/wallet</li>
+   <li>extensions/webdav</li>
+   <li>directory/c-sdk</li>
+  </ul>
+ </li>
+ <li>Exécute un « hg pull » pour obtenir les changements. Ce n'est pas obligatoire (en fait, il peut être préférable de le faire manuellement). Passez <code>--skip-comm</code> à <code>client.py</code> pour passer cette étape.</li>
+</ul>
+<p>{{ Note("Cette étape téléchargera des centaines de mégaoctets de données. Elle peut prendre un certain temps, dépendant de votre connexion au réseau.") }}</p>
+<p><br>
+ {{ Note("La récupération des référentiels liés signifie que vous pouvez utiliser les mêmes répertoires de sources pour développer et compiler tous ces éléments, mais pas que vous pouvez créer des patchs couvrant plusieurs référentiels. Les patches couvrant plusieurs référentiels nécessiteront des ensemble de modifications séparés.") }}</p>
+<h3 id="Compilation" name="Compilation">Compilation</h3>
+<h4 id="Thunderbird_et_SeaMonkey" name="Thunderbird_et_SeaMonkey">Thunderbird et SeaMonkey</h4>
+<p><a href="fr/Configuration_des_options_de_compilation">Configurez</a> et compilez comme d'habitude avec un fichier <code>.mozconfig</code> et <code>make -f client.mk</code> :</p>
+<pre class="eval"># Entrée dans le répertoire de source
+cd src
+
+# Générez un mozconfig vous-même, ou utilisez cette version minimale par défaut pour Thunderbird
+echo 'ac_add_options --enable-application=mail' &gt; .mozconfig
+
+# Builds with the object directory the same as the source directory are not
+# supported, so set the object directory here. Note: Whether you have the
+# object directory within the source directory is up to you. .hgignore includes
+# objdir-* and obj-*, making your object directory start with one of them
+# will make change finding easier and hg faster, but moving it to outside
+# will make things like grep easier and quicker as well.
+echo 'mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/../objdir-tb' &gt;&gt; .mozconfig
+
+# configure will be automatically generated using the 'autoconf-2.13'
+# command.  If autoconf-2.13 isn't the right name for your system, as
+# is the case on OS X using MacPorts and on Ubuntu Linux, use the 
+# real command name as demonstrated below. (Note: it's "autoconf2.13"
+# rather than "autoconf213" for Ubuntu 8.04, at least.)
+echo 'mk_add_options AUTOCONF=autoconf213' &gt;&gt; .mozconfig
+
+# Now do the build; configure will be run automatically
+make -f client.mk build
+</pre>
+<p>{{ Note("Le répertoire dist pour la sortie se trouvera à présent sous <code>
+ <i>
+  objdir</i>
+ /mozilla</code> plutôt que simplement <code>
+ <i>
+  objdir</i>
+ /</code>") }}</p>
+<p>{{ Note("Il ne suffit <b>plus</b> de faire <code>make -f client.mk</code> pour mettre à jour le code ! Vous <b>devrez</b> lancer <code>python client.py checkout</code> auparavant !") }}</p>
+<h4 id="Firefox_et_XULRunner" name="Firefox_et_XULRunner">Firefox et XULRunner</h4>
+<p>Vous pouvez, si nécessaire, compiler Firefox ou XULRunner depuis cet arbre. Comme client.py récupère le référentiel mozilla-central, les compilations et développements de Firefox et XULRunner peuvent avoir lieu depuis un référentiel venant de comm-central. La seule différence est que vous devrez vous rendre dans le répertoire mozilla/ avant de lancer la commande de compilation :</p>
+<pre class="eval">cd src/mozilla
+make -f client.mk build
+</pre>
+<h3 id="Voir_.C3.A9galement" name="Voir_.C3.A9galement">Voir également</h3>
+<ul>
+ <li><a href="fr/Comm-central">comm-central</a></li>
+ <li><a href="fr/Mercurial">Mercurial</a></li>
+ <li><a href="fr/FAQ_sur_Mercurial">FAQ sur Mercurial</a></li>
+ <li><a href="fr/Code_source_de_Mozilla_(Mercurial)">Code source de Mozilla (Mercurial)</a></li>
+</ul>
+<p>{{ languages( { "en": "en/Comm-central_source_code_(Mercurial)" } ) }}</p>

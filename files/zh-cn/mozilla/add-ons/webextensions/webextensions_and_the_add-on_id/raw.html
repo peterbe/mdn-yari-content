@@ -1,0 +1,69 @@
+<div>{{AddonSidebar}}</div>
+
+<div class="summary">
+<p>火狐附加组件包括了一个唯一的ID，用来与其他附加组件区分.</p>
+
+<p>这篇文章描述附加组件的ID是如何处理WebExtensions APIs构建的扩展。</p>
+</div>
+
+<p>火狐附加组件包括了一个唯一的身份，用来在火狐自己里面使用以及在<a href="https://addons.mozilla.org/">addons.mozilla.org</a> (AMO)网页中使用。举个例子，他被火狐用来检测附加组件的更新以及确认那些对象（比如数据存储）由这个附加组件控制。</p>
+
+<p>对于旧版本的火狐附加组件，附加组件的作者必须设置附件组件的显式的ID。XUL/XPCOM 附加组件在<a href="/en-US/docs/Mozilla/Add-ons/Install_Manifests">install manifest</a>中设置ID, 而SDK附加组件要在<a href="/en-US/docs/Mozilla/Add-ons/SDK/Tools/package_json">package.json</a>中设置ID。</p>
+
+<p>然而，从Firefox 48 开始，你就可以开发，调试，发行以及更新组件，而不需要设置显式的ID。</p>
+
+<div class="note">
+<p>提示下，在最新的Firefox 48 开发和调试附加组件将不需要包含ID 。如果你需要使用早期版本的Firefox，你必须使用<code><a href="/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/applications">applications</a></code> key 来显式设置ID</p>
+</div>
+
+<h2 id="无附加组件_ID的基本工作流程">无附加组件 ID的基本工作流程</h2>
+
+<p>附加组件可以使用<code><a href="/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/applications">applications</a></code> key 显式设置附加组件ID，在manifest.json中使用。然而，这个key通常是可选的。如果你不设置它，你也能进行一般的开发，调试，发布以及升级你的附加组件，而不需要处理ID。一个优点是谷歌的Chrome不识别application key，如果你包括了它，将会出现警告。</p>
+
+<p>提示，即使如此，还有一些WebExtension APIs 使用附件组件ID，以及期望它从一个浏览器会话到下一个浏览器会话。如果你在Firefox中使用这些APIs，你将必须使用<code><a href="/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/applications">applications</a></code> key显式设置ID。具体查看<a href="/en-US/Add-ons/WebExtensions/WebExtensions_and_the_Add-on_ID#When_do_you_need_an_Add-on_ID">When do you need an Add-on ID</a><a href="/en-US/Add-ons/WebExtensions/manifest.json/applications#When_do_I_need_the_applications_key">?</a>.</p>
+
+<h3 id="开发和调试">开发和调试</h3>
+
+<p>从Firefox 48 开始,如果你的manifest.json没有包含一个ID，附加组件将会被分配一个随机生成的暂时的ID，当你在 about:debugging 中将它<a href="/en-US/Add-ons/WebExtensions/Temporary_Installation_in_Firefox">安装到Firfox</a>。如果你使用“Reload"按钮，重新加载附加组件，将会使用相同的ID。如果你重启了Firefox ，再次加载附加组件，将会产生一个新的ID。</p>
+
+<p>如果你把扩展变为一个.xpi 或者 .zip 的文件，通过about:addons安装到浏览器，它将不会工作。要想让它在这种环境中工作，你需要在manifest.json中添加 <code><a href="/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/applications">applications</a></code> key。</p>
+
+<h3 id="发布">发布</h3>
+
+<p>一旦你完成了扩展的开发，你可以<a href="/en-US/Add-ons/WebExtensions/Publishing_your_WebExtension">打包它和提交它到AMO，来审查和签署</a>。如果你上传的打包后的扩展没有包括一个ID，AMO将会生成一个给你。只有在这时，附加组件会被加上一个永久的ID，它将被嵌入到签名后的打包组件中。</p>
+
+<p>提示，一旦组件被给了一个永久的ID，你不能使用附加组件SDK或者XUL/XPCOM 技术。如果你切换到其中的一个平台，你必须当作一个新的附加组件，以及一个新的ID，来提交它。</p>
+
+<h3 id="更新">更新</h3>
+
+<p>在这一点上，你通常不需要处理ID。你可以继续开发附加组件，而不需要ID，但你想要更新，通过访问附加组件的AMO页面上传新的版本。因为你是在哪个页面上传附加组件的，AMO知道那是一个更新，即使它没有包含一个ID。</p>
+
+<div class="note">
+<p>这个工作流很重要，你<em>手动访问AMO页面来更新附加组件</em>, 否则AMO将不能理解提交的是一个已经存在附加组件的更新，而是将会把更新当成一个新的附加组件来对待。</p>
+</div>
+
+<p>你可以做相同的事，如果你从旧的附加组件类型，比如一个 XUL/XPCOM附加组件，使用WebExtensions APIs. 仅仅在AMO访问旧的附加组件页面，在那上传新的扩展，它将会将其当作旧版本的更新。</p>
+
+<h2 id="什么时候你需要一个附加组件_ID">什么时候你需要一个附加组件 ID?</h2>
+
+<ul>
+ <li>I如果你从XPI 文件加载附加组件,将不能使用 about:debugging加载，它将不能被签名。</li>
+ <li>如果你使用 <a href="https://addons-server.readthedocs.io/en/latest/topics/api/signing.html">AMO's API</a> 来上传你的附加组件，而不是在它的页面上手动上传，你需要在请求中包含一个附加组件ID。</li>
+ <li>一些WebExtension APIs使用附加组件ID以及 use the add-on ID
+  <div class="toggle-js" id="trans">
+  <div class="tran-result">以及期望它从一个浏览器会话到下一个浏览器会话。如果你使用这些APIs，你必须使用<code><a href="/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/applications">applications</a></code> key来显式生成ID，这适用于一下APIs:</div>
+  </div>
+
+  <ul>
+   <li>{{WebExtAPIRef("storage.sync")}}</li>
+   <li>{{WebExtAPIRef("identity.getRedirectURL")}}</li>
+   <li><a href="https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Native_messaging">Native messaging</a></li>
+  </ul>
+ </li>
+</ul>
+
+<p> </p>
+
+<p> </p>
+
+<p> </p>

@@ -1,0 +1,156 @@
+<div>{{APIRef("Fetch")}}</div>
+
+<p><a href="/ja/docs/Web/API/Fetch_API">Fetch API</a> の <strong><code>Request</code></strong> インターフェイスは、リソースのリクエストを表します。</p>
+
+<p>{{domxref("Request.Request()")}} コンストラクタを使用することで、新しい <code>Request</code> オブジェクトを生成できますが、service worker の {{domxref("FetchEvent.request")}} のような別の API 操作の結果として返される <code>Request</code> オブジェクトに遭遇することの方が多いでしょう。</p>
+
+<h2 id="Constructor" name="Constructor">コンストラクタ</h2>
+
+<dl>
+ <dt>{{domxref("Request.Request()")}}</dt>
+ <dd>新しい <code>Request</code> オブジェクトを生成する。</dd>
+</dl>
+
+<h2 id="Properties" name="Properties">プロパティ</h2>
+
+<dl>
+ <dt>{{domxref("Request.method")}} {{readonlyInline}}</dt>
+ <dd>リクエストメソッド（<code>GET</code>、<code>POST</code> など）を含む。</dd>
+ <dt>{{domxref("Request.url")}} {{readonlyInline}}</dt>
+ <dd>リクエストの URL を含む。</dd>
+ <dt>{{domxref("Request.headers")}} {{readonlyInline}}</dt>
+ <dd>リクエストの {{domxref("Headers")}} に関連したオブジェクトを含む。</dd>
+ <dt>{{domxref("Request.context")}} {{readonlyInline}} {{deprecated_inline()}}</dt>
+ <dd>リクエストのコンテクスト（たとえば、<code>audio</code>、<code>image</code>、<code>iframe</code> など）を含む。</dd>
+ <dt>{{domxref("Request.referrer")}} {{readonlyInline}}</dt>
+ <dd>リクエストのリファラ（ たとえば、<code>client</code>）を含む。</dd>
+ <dt>{{domxref("Request.referrerPolicy")}} {{readonlyInline}}</dt>
+ <dd>リファラに関するポリシー（例えば<code> no-referrer</code>）を含む。</dd>
+ <dt>{{domxref("Request.mode")}} {{readonlyInline}}</dt>
+ <dd>リクエストのモード（ たとえば、<code>cors、no-cors</code>、<code>same-origin</code>、<code>navigate</code>）を含む。</dd>
+ <dt>{{domxref("Request.credentials")}} {{readonlyInline}}</dt>
+ <dd>リクエストのクレデンシャル（ たとえば、<code>omit</code>、<code>same-origin</code>）を含む。</dd>
+ <dt>{{domxref("Request.redirect")}} {{readonlyinline}}</dt>
+ <dd>リダイレクトの処理方法のためのモードを含む。<code>follow</code>、<code>error</code>、<code>manual</code> のいずれかである。</dd>
+ <dt>{{domxref("Request.integrity")}} {{readonlyInline}}</dt>
+ <dd>リクエストの <a href="/jadocs/Web/Security/Subresource_Integrity">subresource integrity</a> 値（ たとえば、<code>sha256-BpfBw7ivV8q2jLiT13fxDYAe2tJllusRSZ273h2nFSE=</code>）を含む。</dd>
+ <dt>{{domxref("Request.cache")}} {{readonlyInline}}</dt>
+ <dd>リクエストのキャッシュモード（たとえば、<code>default、reload、no-cache</code>）を含む。</dd>
+</dl>
+
+<p><code>Request</code> は、{{domxref("Body")}} を実装しているため、次のプロパティも利用可能です：</p>
+
+<dl>
+ <dt>{{domxref("Body.body")}} {{readonlyInline}}</dt>
+ <dd>body コンテンツの {{domxref("ReadableStream")}} として晒すのに使うシンプルなゲッター。</dd>
+</dl>
+
+<dl>
+ <dt>{{domxref("Body.bodyUsed")}} {{readonlyInline}}</dt>
+ <dd>response でボディが使われたかどうかを示す {{domxref("Boolean")}} 値を保持する。</dd>
+</dl>
+
+<h2 id="Methods" name="Methods">メソッド</h2>
+
+<dl>
+ <dt>{{domxref("Request.clone()")}}</dt>
+ <dd>現在の <code>Request</code> オブジェクトのコピーを生成する。</dd>
+</dl>
+
+<p><code>Request</code> は {{domxref("Body")}} を実装しているため、次のメソッドも利用可能です：</p>
+
+<dl>
+ <dt>{{domxref("Body.arrayBuffer()")}}</dt>
+ <dd>リクエスト本体を表す {{domxref("ArrayBuffer")}} が解決される Promise が返る。</dd>
+ <dt>{{domxref("Body.blob()")}}</dt>
+ <dd>リクエスト本体を表す {{domxref("Blob")}} が解決される Promise が返る。</dd>
+ <dt>{{domxref("Body.formData()")}}</dt>
+ <dd>リクエスト本体を表す {{domxref("FormData")}} が解決される Promise が返る。</dd>
+ <dt>{{domxref("Body.json()")}}</dt>
+ <dd>リクエスト本体を表す {{domxref("JSON")}} が解決される Promise が返る。</dd>
+ <dt>{{domxref("Body.text()")}}</dt>
+ <dd>リクエスト本体を表す {{domxref("USVString")}} が解決される Promise が返る。</dd>
+</dl>
+
+<div class="note">
+<p><strong>付記</strong>: {{domxref("Body")}} の関数は 1 度しか呼べません。2 回目以降は空の文字列、もしくは ArrayBuffer が解決されます。</p>
+</div>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<p>次のスニペットでは、<code>Request()</code> コンストラクタを使用して （スクリプトと同じディレクトリーにある画像ファイルのために） 新しい request を生成し、いくつかリクエストのプロパティ値を返しています：</p>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js"><span class="keyword token">const</span> myRequest <span class="operator token">=</span> <span class="keyword token">new</span> <span class="class-name token">Request</span><span class="punctuation token">(</span><span class="string token">'http://localhost/flowers.jpg'</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+
+<span class="keyword token">const</span> myURL <span class="operator token">=</span> myRequest<span class="punctuation token">.</span>url<span class="punctuation token">;</span> <span class="comment token">// http://localhost/flowers.jpg</span>
+<span class="keyword token">const</span> myMethod <span class="operator token">=</span> myRequest<span class="punctuation token">.</span>method<span class="punctuation token">;</span> <span class="comment token">// GET</span>
+<span class="keyword token">const</span> myCred <span class="operator token">=</span> myRequest<span class="punctuation token">.</span>credentials<span class="punctuation token">;</span> <span class="comment token">// omit</span></code></pre>
+
+<p>次に、{{domxref("GlobalFetch.fetch()")}} <span id="result_box" lang="ja"><span>の呼び出し</span><span>パラメータとして</span></span> <code>Request</code> オブジェクトを渡すことにで、このリクエストを取得できます。たとえば：</p>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js"><span class="function token">fetch</span><span class="punctuation token">(</span>myRequest<span class="punctuation token">)</span>
+  <span class="punctuation token">.</span><span class="function token">then</span><span class="punctuation token">(</span>response <span class="operator token">=</span><span class="operator token">&gt;</span> response<span class="punctuation token">.</span><span class="function token">blob</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">)</span>
+  <span class="punctuation token">.</span><span class="function token">then</span><span class="punctuation token">(</span>blob <span class="operator token">=</span><span class="operator token">&gt;</span> <span class="punctuation token">{</span>
+    myImage<span class="punctuation token">.</span>src <span class="operator token">=</span> URL<span class="punctuation token">.</span><span class="function token">createObjectURL</span><span class="punctuation token">(</span>blob<span class="punctuation token">)</span><span class="punctuation token">;</span>
+  <span class="punctuation token">}</span><span class="punctuation token">)</span><span class="punctuation token">;</span></code></pre>
+
+<p>次のスニペットでは、初期化データとbodyコンテンツつきの <code>Request()</code> コンストラクタを使用して、bodyペイロードを必要とするAPIリクエストのための新しい request を生成します:</p>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js"><span class="keyword token">const</span> myRequest <span class="operator token">=</span> <span class="keyword token">new</span> <span class="class-name token">Request</span><span class="punctuation token">(</span><span class="string token">'http://localhost/api'</span><span class="punctuation token">,</span> <span class="punctuation token">{</span>method<span class="punctuation token">:</span> <span class="string token">'POST'</span><span class="punctuation token">,</span> body<span class="punctuation token">:</span> <span class="string token">'{"foo":"bar"}'</span><span class="punctuation token">}</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+ 
+<span class="keyword token">const</span> myURL <span class="operator token">=</span> myRequest<span class="punctuation token">.</span>url<span class="punctuation token">;</span> <span class="comment token">// http://localhost/api</span>
+<span class="keyword token">const</span> myMethod <span class="operator token">=</span> myRequest<span class="punctuation token">.</span>method<span class="punctuation token">;</span> <span class="comment token">// POST</span>
+<span class="keyword token">const</span> myCred <span class="operator token">=</span> myRequest<span class="punctuation token">.</span>credentials<span class="punctuation token">;</span> <span class="comment token">// omit</span>
+<span class="keyword token">const</span> bodyUsed <span class="operator token">=</span> myRequest<span class="punctuation token">.</span>bodyUsed<span class="punctuation token">;</span> <span class="comment token">// true</span></code></pre>
+
+<div class="note">
+<p><strong>注:</strong> body タイプは {{domxref("Blob")}}, {{domxref("BufferSource")}}, {{domxref("FormData")}}, {{domxref("URLSearchParams")}}, {{domxref("USVString")}} {{domxref("ReadableStream")}} のいずれかで、ペイロードにそのオブジェクトを文字列化するのに必要な JSON オブジェクトでも同様です。</p>
+</div>
+
+<p>すると<code>Request</code> オブジェクトを、例えば {{domxref("GlobalFetch.fetch()")}} 呼び出しの引数として渡すことでAPIリクエストを取得できて、レスポンスを取得できます:</p>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js"><span class="function token">fetch</span><span class="punctuation token">(</span>myRequest<span class="punctuation token">)</span>
+  <span class="punctuation token">.</span><span class="function token">then</span><span class="punctuation token">(</span>response <span class="operator token">=</span><span class="operator token">&gt;</span> <span class="punctuation token">{</span>
+    <span class="keyword token">if</span> <span class="punctuation token">(</span>response<span class="punctuation token">.</span>status <span class="operator token">===</span> <span class="number token">200</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+      <span class="keyword token">return</span> response<span class="punctuation token">.</span><span class="function token">json</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+    <span class="punctuation token">}</span> <span class="keyword token">else</span> <span class="punctuation token">{</span>
+      <span class="keyword token">throw</span> <span class="keyword token">new</span> <span class="class-name token">Error</span><span class="punctuation token">(</span><span class="string token">'Something went wrong on api server!'</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+    <span class="punctuation token">}</span>
+  <span class="punctuation token">}</span><span class="punctuation token">)</span>
+  <span class="punctuation token">.</span><span class="function token">then</span><span class="punctuation token">(</span>response <span class="operator token">=</span><span class="operator token">&gt;</span> <span class="punctuation token">{</span>
+    console<span class="punctuation token">.</span><span class="function token">debug</span><span class="punctuation token">(</span>response<span class="punctuation token">)</span><span class="punctuation token">;</span>
+    <span class="comment token">// ...</span>
+  <span class="punctuation token">}</span><span class="punctuation token">)</span><span class="punctuation token">.</span><span class="keyword token">catch</span><span class="punctuation token">(</span>error <span class="operator token">=</span><span class="operator token">&gt;</span> <span class="punctuation token">{</span>
+    console<span class="punctuation token">.</span><span class="function token">error</span><span class="punctuation token">(</span>error<span class="punctuation token">)</span><span class="punctuation token">;</span>
+  <span class="punctuation token">}</span><span class="punctuation token">)</span><span class="punctuation token">;</span></code></pre>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">状態</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('Fetch','#request-class','Request')}}</td>
+   <td>{{Spec2('Fetch')}}</td>
+   <td>初期定義</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザー実装状況</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("api.Request")}}</p>
+
+<h2 id="See_also" name="See_also">関連項目</h2>
+
+<ul>
+ <li><a href="/ja/docs/Web/API/ServiceWorker_API">ServiceWorker API</a></li>
+ <li><a href="/ja/docs/Web/HTTP/Access_control_CORS">HTTP access control (CORS)</a></li>
+ <li><a href="/ja/docs/Web/HTTP">HTTP</a></li>
+</ul>

@@ -1,0 +1,107 @@
+<div>{{APIRef("HTML DOM")}}</div>
+
+<p><span class="seoSummary">当{{jsxref("Promise")}} 被 reject 且没有 reject 处理器的时候，会触发 <strong><code>unhandledrejection</code></strong> 事件；这可能发生在 {{domxref("window")}} 下，但也可能发生在 {{domxref("Worker")}} 中。</span> 这对于调试回退错误处理非常有用。</p>
+
+<table class="properties">
+ <tbody>
+  <tr>
+   <th scope="row">是否冒泡</th>
+   <td>No</td>
+  </tr>
+  <tr>
+   <th scope="row">是否可取消</th>
+   <td>Yes</td>
+  </tr>
+  <tr>
+   <th scope="row">接口</th>
+   <td>{{domxref("PromiseRejectionEvent")}}</td>
+  </tr>
+  <tr>
+   <th scope="row">事件处理器属性</th>
+   <td>{{domxref("WindowEventHandlers.onunhandledrejection", "onunhandledrejection")}}</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="使用备注">使用备注</h2>
+
+<p><code>unhandledrejection</code> 继承自 {{domxref("PromiseRejectionEvent")}}，而 {{domxref("PromiseRejectionEvent")}} 又继承自 {{domxref("Event")}}。因此<code>unhandledrejection</code> 含有 <code>PromiseRejectionEvent</code> 和 <code>Event</code> 的属性和方法。</p>
+
+<h2 id="例子">例子</h2>
+
+<p>Here we have a few examples showing ways you can make use of the <code>unhandledrejection</code> event. The event includes two useful pieces of information:</p>
+
+<p>我们将通过几个例子来展示 <code>unhandledrejection</code> 事件的使用方式。该事件主要包含两部分有用的信息：</p>
+
+<dl>
+ <dt><code>promise</code></dt>
+ <dd>The actual {{jsxref("Promise")}} which was rejected with no handler available to deal with the rejection.</dd>
+ <dd>特定的 {{jsxref("Promise")}} 被 reject 而没有被相应的异常处理方法所处理时</dd>
+ <dt><code>reason</code></dt>
+ <dd>The reason that would have been passed into the rejection handler if one had existed. See {{jsxref("Promise.catch", "catch()")}} for details.</dd>
+ <dd>将会传入异常处理方法中的错误原因（如果存在），查看 {{jsxref("Promise.catch", "catch()")}} 相关以获取更多细节。</dd>
+</dl>
+
+<h3 id="基本的异常上报">基本的异常上报</h3>
+
+<p>This example simply logs information about the unhandled promise rejection to the console.</p>
+
+<pre class="brush:js;">window.addEventListener("unhandledrejection", event =&gt; {
+  console.warn(`UNHANDLED PROMISE REJECTION: ${event.reason}`);
+});
+</pre>
+
+<p>You can also use the {{domxref("WindowEventHandlers.onunhandledrejection", "onunhandledrejection")}} event handler property to set up the event listener:</p>
+
+<pre class="brush: js">window.onunhandledrejection = event =&gt; {
+  console.warn(`UNHANDLED PROMISE REJECTION: ${event.reason}`);
+};
+</pre>
+
+<h3 id="Preventing_default_handling">Preventing default handling</h3>
+
+<p>Many environments (such as {{Glossary("Node.js")}}) report unhandled promise rejections to the console by default. You can prevent that from happening by adding a handler for <code>unhandledrejection</code> events that—in addition to any other tasks you wish to perform—calls {{domxref("Event.preventDefault()", "preventDefault()")}} to cancel the event, preventing it from bubbling up to be handled by the runtime's logging code. This works because <code>unhandledrejection</code> is cancelable.</p>
+
+<pre class="brush:js;">window.addEventListener('unhandledrejection', function (event) {
+  // ...your code here to handle the unhandled rejection...
+
+  // Prevent the default handling (such as outputting the
+  // error to the console
+
+  event.preventDefault();
+});
+</pre>
+
+<h2 id="说明">说明</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('HTML WHATWG', 'webappapis.html#unhandled-promise-rejections', 'unhandledrejection')}}</td>
+   <td>{{Spec2('HTML WHATWG')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="浏览器兼容性">浏览器兼容性</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("api.Window.unhandledrejection_event")}}</p>
+
+<h2 id="参考">参考</h2>
+
+<ul>
+ <li>{{SectionOnPage("/en-US/docs/Web/JavaScript/Guide/Using_promises", "Promise rejection events")}}</li>
+ <li>{{domxref("WindowEventHandlers.onunhandledrejection", "onunhandledrejection")}} event handler property<sup><a href="#seealso-footnote-1">1</a></sup></li>
+ <li>{{Event("rejectionhandled")}}</li>
+ <li>{{domxref("Promise")}}</li>
+</ul>
+
+<p><a id="seealso-footnote-1" name="seealso-footnote-1">[1]</a> The corresponding event handler property is defined on the {{domxref("WindowEventHandlers")}} mixin, which is available on both the {{domxref("Window")}} interface and all types of {{domxref("Worker")}} interfaces.</p>

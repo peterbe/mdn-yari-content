@@ -1,0 +1,140 @@
+<p>Diese Seite enthält die Grundschritte um die neuste Entwicklungsversion von Thunderbird zu kompilieren. Für zusätzliche, detailiertere Informationen, sehen Sich bitte die <a class="internal" href="../../../../En/Developer_Guide/Build_Instructions" rel="internal">Kompilierungs-Dokumentation</a>.</p>
+
+<h2 id="Build-Voraussetztungen">Build-Voraussetztungen</h2>
+
+<h4 id="Hardware-Anforderungen">Hardware-Anforderungen:</h4>
+
+<ul>
+ <li>Empfohlen: 4GB Arbeitsspeicher (nur 2GB Arbeitsspeicher und 2GB Swap zu beseitzem verursacht möglicherweise Speicherfehler während des Kompilierens)</li>
+ <li>Breitbandinternet</li>
+</ul>
+
+<h4 id="Setup">Setup:</h4>
+
+<p>Abhängig von ihrem Betriebssystem werden sie verschiedene Prozeduren durchlaufen müssen um ihr System vorzubereiten. Bitte schließen sie diese ab BEVOR sie mit kompilieren beginnen.</p>
+
+<p><a href="/de-DE/docs/Developer_Guide/Build_Instructions/Windows_Prerequisites" title="/de-DE/docs/Developer_Guide/Build_Instructions/Windows_Prerequisites">Windows Buil-Voraussetztungen</a></p>
+
+<p><a href="/de-DE/docs/Simple_Firefox_build/Linux_and_MacOS_build_preparation" title="/de-DE/docs/Simple_Firefox_build/Linux_and_MacOS_build_preparation">Linux und MacOS Build-Voraussetztungen</a></p>
+
+<h2 id="Den_Quellcode_erhalten">Den Quellcode erhalten</h2>
+
+<div class="note"><strong>Beachten Sie:</strong> Unter Windows werden Sie Thunderbird nicht kompilieren können, solange der Pfad Leerzeichen enthält (z.B.: "Dokumente und Einstellungen"). Wählen Sie einen anderren Pfad wie C:\thunderbird-src</div>
+
+<div class="note"><strong>Beachten Sie:</strong> Der Vorgang kann auch Fehlschlagen, wenn der Pfad zu lang ist.  Unter Linux kann das einige Probleme hervorrufen. Den Quellcode in einer tiefen Hierachie zu lagern kann unter Windows Probleme bereiten, solange PyMake  verwendet wird.  Fall Fehler auftreten, versuchen Sie den Quellcode so weit zum Wurzelverzeichnis Ihres Systems zu verschieben, wie für Sie möglich.</div>
+
+<p>Um den neuesten Quellcode zu erhalten, klonen Sie Mozilla's <code>comm-central</code> Mercurial Repository mit dem folgenden Befehl:</p>
+
+<pre>hg clone http://hg.mozilla.org/comm-central 
+</pre>
+
+<p>Für dir restlichen Abhängigkeiten enthält das nun geklonte Repository ein Script, welches das automatisch erledigt. (Das kann einige Zeit in Anspruch nehmen, es ist sehr viel Code!)</p>
+
+<pre>cd comm-central
+python client.py checkout
+</pre>
+
+<div class="warning">Bei einigen Netzwerkstypen kann es passieren dass das Klonen eines Repositorys mit "hg clone" aufgrund einer Unterbrechung fehlschlägt Falls das passieren sollte versuchen Sie ein <a href="/En/Developer_Guide/Source_Code/Mercurial#Bundles" title="https://developer.mozilla.org/en/Mozilla_Source_Code_%28Mercurial%29#Bundles">Mercurial bundle [en-US]</a>.</div>
+
+<p class="editable">Der Quellcode benötigt mindestens 1,5 GB freien Speicher.</p>
+
+<p class="editable">Für weitere Informationen, besuchen Sie die Seite <a href="/de-DE/docs/Developer_Guide/Source_Code/Getting_comm-central" title="/en-US/docs/Developer_Guide/Source_Code/Getting_comm-central">Getting comm-central Source Code Using Mercurial [en-US]</a>.</p>
+
+<h2 class="editable" id="Build_konfigurieren_(optional)_2">Build konfigurieren (optional)</h2>
+
+<div class="note">
+<p class="editable" id="Build_konfigurieren_(optional)"><strong>Beachten Sie:</strong> Unter Windows werden Sie Thunderbird nicht kompilieren können, solange der Pfad Leerzeichen enthält (z.B.: "Dokumente und Einstellungen"). Wählen Sie einen anderren Pfad wie C:\thunderbird-src</p>
+</div>
+
+<p>Um Thunderbird zu kompilieren, muss eine Datei names ".mozconfig" im obersten Verzeichnis des geklonten Repositorys erstellt und die folgende Zeile hinzugefügt werden:</p>
+
+<pre class="language-html"><code class="language-html">ac_add_options --enable-application=mail</code></pre>
+
+<p>Fehlt diese Zeile, so wird stattdessen Firefox kompiliert.</p>
+
+<p>Standardmäßig erstellt das Kompilierungssystem eine Thunderbirdversion, die zum Großteil den offiziellen Versionen entspricht. Für den Fall, dass Sie das ändern wollen, gibt es eine Vielzahl an Konfigurationsmöglichkeiten. Trotzdem ist es empfohlen <strong>ausschließlich</strong> Einstellungen zu verwenden, die Sie vollkommen verstehen. Der übliche Weg, spezifische Einstellungen zu verwenden, ist, sie in eine Datei namens ".mozconfig" im obersten Verzeichnis des geklonten Repositorys einzutragen. Um z.B. eine Debugging-Version zu erstellen, würde die Datei folgende Zeile enthalten:</p>
+
+<pre>ac_add_options --enable-debug
+</pre>
+
+<p>Weitere Informationen dazu finden Sie auf der Seite <a href="/en/Configuring_Build_Options" rel="internal" title="en/Configuring Build Options">Configuring build options [en-US].</a></p>
+
+<h2 id="Kompilieren_von_Thunderbird">Kompilieren von Thunderbird</h2>
+
+<p>Um den Kompilierungsvorgang zu starten, stellen Sie sicher, dass Ihr Arbeitsverzeichnis <code>comm-central</code> ist, und führen Sie folgenden Befehl aus:</p>
+
+<pre>./mozilla/mach build
+</pre>
+
+<p>Mach ist unser Konsolenprogramm um verschiede übliche Entwicklungsaufgaben zu erledigen. Weitere Informationen erhalten Sie auf der Seite <a href="/en-US/docs/Developer_Guide/mach" title="/en-US/docs/Developer_Guide/mach">mach [en-US]</a></p>
+
+<p>Das Kompilieren kann eine signifikante Menge an Zeit benötigen, abhängig von System, Beetriebssystem und gewählten Einstellungen. Unter Linux auf einem schnellen Rechner zu kompilieren kann unter 15 Minuten dauern, ein Kompilierungsvorgang auf einer langsameren Windows-Maschine mehrere Stunden. Hier finden Sie eine hilfreiche Tippsum den Vorgang zu beschleunigen:<strong> <a href="/en/Developer_Guide/Mozilla_build_FAQ#Making_builds_faster" rel="internal" title="https://developer.mozilla.org/en/Mozilla_Build_FAQ#Making_builds_faster">Tips for making builds faster [en-US]</a></strong>.</p>
+
+<h4 id="Thunderbird_mit_Lightning">Thunderbird mit Lightning</h4>
+
+<p>Wenn Sie ihr System wie oben beschrieben aufgesetzt haben, ist das einzige was Sie tun müssen folgenden Befehl innerhalb von <code>comm-central </code>auszuführen:</p>
+
+<pre>echo 'ac_add_options --enable-calendar' &gt;&gt; .mozconfig
+</pre>
+
+<p>oder  <code>ac_add_options --enable-calendar</code> in Ihre .mozconfig mit einem Editor einfügen.</p>
+
+<p>Dann einfach den Kompilierungsprozess wiederholen, mithilfe von Mach:</p>
+
+<pre>./mozilla/mach build</pre>
+
+<p>(Hinweis: Es ist möglich den oberen Befehl VOR der ersten kompilierung auszuführen -&gt; spart Zeit)</p>
+
+<h2 id="Ausführen_von_Thunderbird">Ausführen von Thunderbird</h2>
+
+<p>Sie werden verschiedene temporäre Dateien, Bibliotheken und die ausführbare Thunderbird-Datei innerhalb Ihres<strong> Objektverzeichnisses</strong> (unter <code>mozilla-central/</code>) finden, welches den Präfix <strong><code>obj-</code></strong> besitzt. Der exakte Name variiert je nach Betreibssystem und Architektur. Zum Beispiel würde ein Mac-Benutzer möglicherweise einen Ordner mit  <strong><code>obj-x86_64-apple-darwin10.7.3/</code></strong> finden.</p>
+
+<p>Sie finden Thunderbird im Ordner  <code>mozilla/dist/bin</code>  Unterhalb ihres Objektverzeichnisses. Um Thunderbird zu starten tippen sie innerhalb von <code>mozilla-central </code>folgendes ein:</p>
+
+<pre>./mozilla/mach run</pre>
+
+<h4 id="Thunderbird_installieren">Thunderbird installieren</h4>
+
+<div class="note">
+<div class="warning">
+<p><strong>Achtung: </strong>Sie Können Thunderbird zurzeit nicht mehr deinstallieren, falls die den nachfogenden Befehl ausführen!</p>
+</div>
+</div>
+
+<p>Um Thunderbird zu installieren führen sie folgendes aus:</p>
+
+<pre>./mozilla/mach install</pre>
+
+<p>Jetzt können Sie Thunderbird mit dem Befehl:</p>
+
+<pre>thunderbird</pre>
+
+<p>starten, egal in welchem Verzeichnis Sie sich befinden</p>
+
+<h2 id="Updates_installieren">Updates installieren</h2>
+
+<p>Innerhalb des <code>comm-central</code> Verzeichnisses folgendes ausführen:</p>
+
+<pre>python client.py checkout
+./mozilla/mach build
+</pre>
+
+<p>Das wird nur veränderte Dateien kompilieren, aber ist immer noch eine lange Prozedur. Wie Sie diesen Vorgang beschleunigen können, könen Sie hier nachlesen:  <a class="internal" href="/en/Incremental_Build" title="En/Incremental Build">incremental build [en-US]</a></p>
+
+<h2 id="Probleme">Probleme?</h2>
+
+<p>Haben Sie:</p>
+
+<ul>
+ <li>verifiziert, dass der Pfad weder Leerzeichen enthält, noch zu lang ist?</li>
+ <li>die <a class="link-https" href="https://bugzilla.mozilla.org/" title="https://bugzilla.mozilla.org/">bug database</a> durchsucht?</li>
+ <li>Fragen Sie in <a class="external" href="http://groups.google.com/group/mozilla.dev.builds/" title="http://groups.google.com/group/mozilla.dev.builds/">mozilla.dev.builds</a> - vergessen Sie nicht detailierte Informationen wie Ihre .mozconfig und die genaue Fehler-Ausgabe</li>
+</ul>
+
+<h3 id="Referenzen">Referenzen</h3>
+
+<ul>
+ <li><a class="internal" href="/En/Developer_Guide/Build_Instructions" title="En/Developer Guide/Build Instructions">General Build Documentation</a></li>
+ <li><a class="internal" href="/en/comm-central" title="en/comm-central">comm-central</a></li>
+ <li><a href="/en/Using_the_Mozilla_symbol_server" title="en/Using the Mozilla symbol server">Using the Mozilla symbol server</a></li>
+</ul>

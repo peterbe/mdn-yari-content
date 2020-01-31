@@ -1,0 +1,119 @@
+<div>{{JSRef}}</div>
+
+<p><code><strong>handler.has()</strong></code> は {{jsxref("Operators/in", "in")}} 演算子に対するトラップです。</p>
+
+<div>{{EmbedInteractiveExample("pages/js/proxyhandler-has.html", "taller")}}</div>
+
+<div class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</div>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="brush: js">var p = new Proxy(target, {
+  has: function(target, prop) {
+  }
+});
+</pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<p>次の引数は <code>has</code> メソッドに渡されます。<code>this</code> はハンドラにバインドされます。</p>
+
+<dl>
+ <dt><code>target</code></dt>
+ <dd>ターゲットオブジェクトです。</dd>
+ <dt><code>prop</code></dt>
+ <dd>存在を確認するプロパティ名です。</dd>
+</dl>
+
+<h3 id="Return_value" name="Return_value">戻り値</h3>
+
+<p><code>has</code> メソッドは真偽値を返さなければなりません。</p>
+
+<h2 id="説明">説明</h2>
+
+<p><code><strong>handler.has</strong></code> メソッドは {{jsxref("Operators/in", "in")}} 演算子に対するトラップです。</p>
+
+<h3 id="インターセプト">インターセプト</h3>
+
+<p>このトラップは下記の操作をインターセプトできます。:</p>
+
+<ul>
+ <li>プロパティクエリ: <code>foo in proxy</code></li>
+ <li>継承したプロパティクエリ: <code>foo in Object.create(proxy)</code></li>
+ <li>{{jsxref("Object.prototype.hasOwnProperty()")}}</li>
+ <li>{{jsxref("Reflect.has()")}}</li>
+</ul>
+
+<h3 id="不変条件">不変条件</h3>
+
+<p>次の不変条件に違反している場合、プロキシは{{jsxref("TypeError")}}をスローします。:</p>
+
+<ul>
+ <li>プロパティがターゲットオブジェクトの設定不可の独自プロパティとして存在する場合、存在しないとして報告されてはいけません。</li>
+ <li>プロパティがターゲットオブジェクトの独自プロパティとして存在し、そのターゲットオブジェクトが拡張不可の場合、存在しないとして報告されてはいけません。</li>
+</ul>
+
+<h2 id="例">例</h2>
+
+<p>次のコードでは {{jsxref("Operators/in", "in")}} 演算子をトラップします。</p>
+
+<pre class="brush: js">var p = new Proxy({}, {
+  has: function(target, prop) {
+    console.log('called: ' + prop);
+    return true;
+  }
+});
+
+console.log('a' in p); // "called: a"
+                       // true
+</pre>
+
+<p>次のコードでは不変条件に違反します。</p>
+
+<pre class="brush: js">var obj = { a: 10 };
+Object.preventExtensions(obj);
+var p = new Proxy(obj, {
+  has: function(target, prop) {
+    return false;
+  }
+});
+
+'a' in p; // TypeError is thrown
+</pre>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">状況</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-proxy-object-internal-methods-and-internal-slots-hasproperty-p', '[[HasProperty]]')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td>初期定義</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-proxy-object-internal-methods-and-internal-slots-hasproperty-p', '[[HasProperty]]')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザ実装状況</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.builtins.Proxy.handler.has")}}</p>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li>{{jsxref("Proxy")}}</li>
+ <li>{{jsxref("Proxy.handler", "handler")}}</li>
+ <li>{{jsxref("Operators/in", "in")}} 演算子</li>
+ <li>{{jsxref("Reflect.has()")}}</li>
+</ul>

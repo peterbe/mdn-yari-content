@@ -1,0 +1,139 @@
+<p>{{AddonSidebar}}</p>
+
+<p><span class="seoSummary">Firefox for Android向け拡張機能のコーディングはデスクトップ版と同様に、コードを書くテキストエディタやツールを選択して使用することでできます。</span>しかし、拡張機能のテストやデバッグを行うには違う方法が必要です。この記事ではその方法を説明します。</p>
+
+<p>拡張機能の開発には <a href="/en-US/docs/Mozilla/Add-ons/WebExtensions/Getting_started_with_web-ext">web-ext</a> を使用することもできます。この場合、設定とデバッグのところまではこの記事と同一ですが、<strong>Firefox for Android</strong>で実行するには<code style="white-space: nowrap;"><a href="/en-US/docs/Mozilla/Add-ons/WebExtensions/web-ext_command_reference#web-ext_run">web-ext</a> <a href="/en-US/docs/Mozilla/Add-ons/WebExtensions/web-ext_command_reference#web-ext_run">run</a></code>を使用してください。</p>
+
+<h2 id="コンピュータとAndroidエミュレータまたはデバイスの設定">コンピュータとAndroidエミュレータまたはデバイスの設定</h2>
+
+<p>まず、コンピュータとAndroidデバイスの設定をします。</p>
+
+<p>開発するコンピュータ上：</p>
+
+<ul>
+ <li>Androidエミュレータ上でFirefox for Androidを実行してコンピュータ上でテストを行いたい場合：
+  <ul>
+   <li><a href="https://developer.android.com/studio/index.html">Android Studio</a>をインストールしてください。</li>
+   <li dir="ltr">Android Studio<a href="https://developer.android.com/studio/intro/update.html#sdk-manager"> SDK Manager</a> または<a href="https://developer.android.com/studio/command-line/sdkmanager.html"> sdkmanager</a> command-line tool を使用して<a href="https://developer.android.com/studio/releases/platform-tools.html">Android Platform Tools</a>をインストールしてください。</li>
+  </ul>
+ </li>
+ <li>Firefox for Android を実行するデバイス上でテストを行いたい場合：
+  <ul>
+   <li><a href="https://developer.android.com/studio/releases/platform-tools.html">standalone Android SDK Platform-Tools package</a> をダウンロードし、コンピュータ上の適当な場所へ展開してください。</li>
+   <li>Windows, Mac, Linuxの場合は、システム環境変数PATHに先ほど展開したツールの場所を追加してください。</li>
+   <li>代わりにMacかLinuxの場合、次のコマンドを使用して/usr/local/bin にバイナリをリンクしてください。<code>sudo ln -s /&lt;展開したフォルダ&gt;/platform-tools/adb /usr/local/bin</code>.</li>
+  </ul>
+ </li>
+</ul>
+
+<p>Androidエミュレータまたはデバイス上：</p>
+
+<ul>
+ <li><a href="https://play.google.com/store/apps/details?id=org.mozilla.firefox&amp;referrer=utm_source%3Dmozilla%26utm_medium%3DReferral%26utm_campaign%3Dmozilla-org">Firefox for Android</a>をインストールします。最新の機能をテストしたい場合、<a href="https://play.google.com/store/apps/details?id=org.mozilla.firefox_beta">Firefox for Android Beta</a>または<a href="https://play.google.com/store/apps/details?id=org.mozilla.fennec_aurora">Firefox Nightly for Developers</a>をインストールしてください。</li>
+ <li>(web-extの場合は不要) Firefox for Androidを開き、署名を不要にします。<code>about:config</code>にアクセスし、<code>xpinstall</code><code>.signatures.required</code>の項目をfalseにします。<br>
+  <img alt="Firefox for Android with about:config open, showing xpinstall.signatures.required set to false." src="https://mdn.mozillademos.org/files/15101/set_xpinstall.png" style="display: block; height: 492px; margin-left: auto; margin-right: auto; width: 300px;"></li>
+</ul>
+
+<p>デバイスを使用する場合：</p>
+
+<ul>
+ <li><a href="https://developer.android.com/studio/run/device.html">Android USB debugging on the deviceを有効にします</a>。これは2ステップで完了します。この項目が現れない場合、 <a href="https://developer.android.com/studio/debug/dev-options.html">the developer optionsを有効にしてください。</a></li>
+ <li>USBを使用してコンピュータとデバイスを接続します。プロンプトが現れた時、USBデバッグを許可してください。</li>
+</ul>
+
+<p>(web-extの場合は不要) 開発するコンピュータ上：</p>
+
+<ul>
+ <li>コマンドshellを開きます。</li>
+ <li><code>adb devices</code>を実行します。このとき<br>
+  <code>List of devices attached<br>
+  51800F220F01564 device</code>に似た出力が表示されます。<br>
+  16進数の文字列があなたのデバイス（またはエミュレータ）のコードです。これはadbがあなたのデバイス（またはエミュレータ）を発見したことを意味します。</li>
+</ul>
+
+<h2 id="Firefox_for_Androidでの拡張機能のインストールと実行">Firefox for Androidでの拡張機能のインストールと実行</h2>
+
+<p>拡張機能において、manifest.jsonで<a href="/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/browser_specific_settings">browser_specific_settings</a>キーを移用してアプリケーションIDを設定していることを確認してください。</p>
+
+<pre class="brush: json; auto-links: false; no-line-numbers">"browser_specific_settings": {
+  "gecko": {
+    "id": "borderify@example.com"
+  }
+},</pre>
+
+<p><a href="https://developer.mozilla.org/ja/docs/Mozilla/Add-ons/WebExtensions/Publishing_your_WebExtension">zipに圧縮し、xpiファイルにパッケージ化します</a>。名称はアプリケーションIDにしてください。例えば<code>borderify@example.com.xpi</code>。</p>
+
+<p>拡張機能の転送と実行にはadbを用いた方法か、ウェブサイトを用いた方法の２つあります。</p>
+
+<h3 id="adbを用いて拡張機能を転送する">adbを用いて拡張機能を転送する</h3>
+
+<p>コンピュータ上で<code>/path/to/adb push /path/to/&lt;extension file name&gt;.xpi /mnt/sdcard/</code>を実行します。拡張機能のxpiファイルを接続したデバイスやエミュレータに転送されます。</p>
+
+<p>Androidデバイスまたはエミュレータ上でFirefox for Androidを起動し、<code>file:///mnt/sdcard</code>にアクセスします。</p>
+
+<p><img alt="Firefox for Android showing the add-on xpi file located on the memory card" src="https://mdn.mozillademos.org/files/15103/xpi%20file%20on%20memory%20card.png" style="display: block; height: 492px; margin-left: auto; margin-right: auto; width: 300px;"></p>
+
+<p><code>&lt;拡張機能のファイル名&gt;.xpi</code>をタップし、インストールします。このとき拡張機能をブロックしている旨の警告が出るので、許可(ALLOW)をタップします。</p>
+
+<p><img alt="Firefox for Android blocked add-on message" src="https://mdn.mozillademos.org/files/15105/blocked-add-on-message.png" style="display: block; height: 492px; margin-left: auto; margin-right: auto; width: 300px;"></p>
+
+<p>次に、認証されていない旨の警告が出るのでインストール(INSTALL)をタップします。</p>
+
+<p><img alt="Firefox for Android unverified add-on message" src="https://mdn.mozillademos.org/files/15107/unverified_add_on_messages.png" style="display: block; height: 492px; margin-left: auto; margin-right: auto; width: 300px;"></p>
+
+<p>拡張機能が実行されます(この例ではサンプル拡張機能の<a href="https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Examples#borderify">borderify</a>のコピー)。</p>
+
+<p><img alt="Borderify shown adding a red border to the www.mozilla.org home page" src="https://mdn.mozillademos.org/files/15109/borderify_in_action.png" style="display: block; height: 492px; margin-left: auto; margin-right: auto; width: 300px;"></p>
+
+<h3 id="ウェブサイトを経由して転送する">ウェブサイトを経由して転送する</h3>
+
+<p>xpiファイルをウェブサイト上にアップロードし、HTTP上でアクセス可能にします。そこにアクセスし、ダウンロードします。インストールはadbを用いた方法と同様です。</p>
+
+<h2 id="拡張機能のデバッグ">拡張機能のデバッグ</h2>
+
+<p>WebIDE上で拡張既往のデバッグができます。manifest.jsonの検証メッセージを確認するにはadb logcatを使用します。これらの機能を使用するためには、<a href="https://developer.mozilla.org/en-US/docs/Tools/Remote_Debugging/Debugging_Firefox_for_Android_with_WebIDE#Enable_remote_debugging_in_Firefox_for_Android">USB</a>または<a href="https://developer.mozilla.org/en-US/docs/Tools/Remote_Debugging/Debugging_Firefox_for_Android_over_Wifi">Wi-Fi</a>を経由したFirefoxリモートデバッグの設定が必要です。</p>
+
+<h3 id="WebIDEを使用して拡張機能をデバッグする">WebIDEを使用して拡張機能をデバッグする</h3>
+
+<p>Firefoxメニューのウェブ開発からWebIDEを開きます。開いたら、はじめは右手のサイドバーから接続したデバイスを選択します。</p>
+
+<p><img alt="Selecting the Firefox for Android device from the list in WebIDE" src="https://mdn.mozillademos.org/files/15111/Select%20Firefox%20on%20Android%20device.png" style="display: block; height: 259px; margin-left: auto; margin-right: auto; width: 422px;"></p>
+
+<p>メインプロセスが表示されるのを確認したら、拡張機能が実行されるページを読み込んでください。</p>
+
+<div class="blockIndicator note">
+<p>デスクトップ版Firefoxと異なり、Firefox for Androidでの拡張機能の実行時は、バックグラウンドスクリプトのコンソールメッセージとコテンツスクリプトのコンソールメッセージ(<a href="https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Debugging#Debugging_content_scripts">Debugging content scriptsも参照</a>)などすべてのメッセージとすべてのスクリプトのデバッグをWebIDE上で行います。</p>
+</div>
+
+<p>コンソールメッセージ(<code>console.log()</code>)などを拡張機能に含む場合、コンソールタブで確認できます。他のコンソールメッセージを隠すコンソールフィルター(以下で強調)も使用できます。</p>
+
+<p><img alt="WebIDE showing console with messages filtered for those including 'borderify'" src="https://mdn.mozillademos.org/files/15113/WebIDE%20console%20messages%20and%20filter.png" style="display: block; height: 564px; margin-left: auto; margin-right: auto; width: 679px;"></p>
+
+<p>デバッガタブでは、バックグラウンドスクリプトやコンテンツスクリプトにアクセスできます。</p>
+
+<p><img alt="The borderify.js script in the WebIDE debugger tab" src="https://mdn.mozillademos.org/files/15115/WebIDE%20script%20in%20debugger.png" style="display: block; height: 564px; margin-left: auto; margin-right: auto; width: 679px;"></p>
+
+<p>ブレークポイントや拡張機能の動作の監視式を適用することも可能です。</p>
+
+<p>Also, you can also target the document related to an extension page, for example, the background page of the borderify example, using the same approach described for the <a href="https://developer.mozilla.org/en-US/docs/Tools/Browser_Toolbox#Targeting_a_document">Browser Toolbox</a>:</p>
+
+<p><img alt="Selecting a specific page to examine in the WebIDE" src="https://mdn.mozillademos.org/files/15117/WebIDE%20selecting%20page.png" style="display: block; height: 637px; margin-left: auto; margin-right: auto; width: 679px;"></p>
+
+<p>Once you have switched to an extension page, you can inspect the extension page’s DOM elements from the Inspector panel (also the "inspect node" toggle button should work as expected) and execute WebExtension API calls from the Console panel:</p>
+
+<p><img alt="Using the interactive console to test the effect of JavaScript on the open page" src="https://mdn.mozillademos.org/files/15119/WebIDE%20testing%20JavaScript.png" style="display: block; margin-left: auto; margin-right: auto;"></p>
+
+<p>For more details on using WebIDE, see the <a href="https://developer.mozilla.org/en-US/docs/Tools/WebIDE">WebIDE section</a>.</p>
+
+<h3 id="Viewing_manifest_validation_messages_using_the_console">Viewing manifest validation messages using the console</h3>
+
+<p>In addition to the console messages output through WebIDE, there may also be messages relating to the validation of the extension’s manifest.json files. These messages can be viewed using the adb logcat command. To avoid receiving other, unrelated messages, you can pipe the output through grep, filtering by the extension’s ID, for example:</p>
+
+<pre class="brush: bash;">/path/to/adb logcat | grep borderify@example.com
+</pre>
+
+<p>This will give output similar to this:</p>
+
+<pre class="brush: none;">I/Gecko   (30440): 1496056181889    addons.xpi    WARN    Addon with ID borderify@example.com already installed, older version will be disabled
+
+If your add-on fails to run, check these messages as they may provide information explaining why.</pre>

@@ -1,0 +1,217 @@
+<p>{{WebGLSidebar("Tutorial")}} {{PreviousNext("Web/API/WebGL_API/Tutorial/Getting_started_with_WebGL", "Web/API/WebGL_API/Tutorial/Using_shaders_to_apply_color_in_WebGL")}}</p>
+
+<p><a href="/ja/docs/Web/API/WebGL_API/Tutorial/Getting_started_with_WebGL">WebGL コンテキストの作成</a>に成功したら、レンダリングを始めることができます。もっとも簡単にできることは、テクスチャが貼り付けられていない単純な 2D のオブジェクトを描画することですので、まずは正方形を描画するコードを作っていきましょう。</p>
+
+<h2 id="Drawing_the_scene" name="Drawing_the_scene">シーンを描画する</h2>
+
+<p>レンダリングを始める前に理解しておくべきもっとも重要なことは、今回の例では 2 次元のオブジェクトをレンダリングしますが、それは 3 次元の空間に描画されるということです。そのためオブジェクトを描画するのと同じように、シーンの外見を作成するシェーダーを立ち上げなければなりません。これは、スクリーン上で正方形がどのように見えるかを設定します。</p>
+
+<h3 id="Initializing_the_shaders" name="Initializing_the_shaders">シェーダーの初期化</h3>
+
+<p>シェーダーは <a href="http://www.khronos.org/registry/gles/specs/2.0/GLSL_ES_Specification_1.0.17.pdf" title="http://www.khronos.org/registry/gles/specs/2.0/GLSL_ES_Specification_1.0.17.pdf">OpenGL ES Shading Language</a> を使用して指定します。コンテンツの管理や更新を簡単にするため、JavaScript ですべてを構築する代わりに、HTML 文書の中にあるシェーダーを読み込むようにコードを記述することができます。それでは、この役割を担う <code>initShaders()</code> ルーチンを見てみましょう:</p>
+
+<pre class="brush: js">function initShaders() {
+  var fragmentShader = getShader(gl, "shader-fs");
+  var vertexShader = getShader(gl, "shader-vs");
+  
+  // シェーダープログラムを作成
+  
+  shaderProgram = gl.createProgram();
+  gl.attachShader(shaderProgram, vertexShader);
+  gl.attachShader(shaderProgram, fragmentShader);
+  gl.linkProgram(shaderProgram);
+  
+  // シェーダープログラムを作成できない場合はアラートを表示
+  
+  if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+    alert("シェーダープログラムを初期化できません。");
+  }
+  
+  gl.useProgram(shaderProgram);
+  
+  vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
+  gl.enableVertexAttribArray(vertexPositionAttribute);
+}
+</pre>
+
+<p>このルーチンでは 2 つのシェーダープログラムを読み込みます。一つ目はフラグメントシェーダーで、ID 値が "shader-fs" である {{HTMLElement("script")}} 要素から読み込みます。二つ目はバーテックスシェーダーで、ID 値が "shader-vs" である {{HTMLElement("script")}} 要素から読み込みます。<code>getShader()</code> 関数については、次の章で確認します (このルーチンは、DOM からシェーダープログラムを引き出す操作を行っています)。</p>
+
+<p>その後 WebGL オブジェクトの <code>createProgram()</code> 関数を呼び出すことでシェーダープログラムを作成し、2 つのシェーダーと接続してシェーダープログラムにリンクします。そして、プログラムが正常にリンクされたことを確認するために <code>gl</code> オブジェクトの <code>LINK_STATUS</code> パラメータをチェックします。チェックが通れば、新しいシェーダープログラムをアクティブにします。</p>
+
+<h3 id="Loading_shaders_from_the_DOM" name="Loading_shaders_from_the_DOM">DOM からシェーダーを読み込む</h3>
+
+<p><code>getShader()</code> ルーチンは、DOM から指定された名称のシェーダープログラムを取り出し、コンパイルされたシェーダープログラムを呼び出し元へ返すか、シェーダーの読み込みやコンパイルができなかった場合に null を返します。</p>
+
+<pre class="brush: js">function getShader(gl, id) {
+  var shaderScript, theSource, currentChild, shader;
+  
+  shaderScript = document.getElementById(id);
+  
+  if (!shaderScript) {
+    return null;
+  }
+  
+  theSource = "";
+  currentChild = shaderScript.firstChild;
+  
+  while(currentChild) {
+    if (currentChild.nodeType == currentChild.TEXT_NODE) {
+      theSource += currentChild.textContent;
+    }
+    
+    currentChild = currentChild.nextSibling;
+  }
+</pre>
+
+<p>指定した ID の要素が見つかった場合は、そのテキストを変数 <code>theSource</code> に格納します。</p>
+
+<pre class="brush: js">  if (shaderScript.type == "x-shader/x-fragment") {
+    shader = gl.createShader(gl.FRAGMENT_SHADER);
+  } else if (shaderScript.type == "x-shader/x-vertex") {
+    shader = gl.createShader(gl.VERTEX_SHADER);
+  } else {
+     // 未知のシェーダータイプ
+     return null;
+  }</pre>
+
+<p>シェーダーのコードを読み込んだら、シェーダーオブジェクトがバーテックスシェーダー (MIME タイプ "x-shader/x-vertex") あるいはフラグメントシェーダー (MIME タイプ "x-shader/x-fragment") であることを判断するために MIME タイプの確認を行い、そして取り出したソースコードから適切なタイプのシェーダーを生成します。</p>
+
+<pre class="brush: js">  gl.shaderSource(shader, theSource);
+    
+  // シェーダープログラムをコンパイル
+  gl.compileShader(shader);  
+    
+  // コンパイルが成功したかを確認
+  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {  
+      alert("シェーダーのコンパイルでエラーが発生しました: " + gl.getShaderInfoLog(shader));  
+      return null;  
+  }
+    
+  return shader;
+}
+</pre>
+
+<p>最後に、ソースコードはシェーダーに渡され、そしてコンパイルされます。シェーダーのコンパイル時にエラーが発生した場合は、警告を表示して null 値を返します。エラーが発生しなかった場合は、コンパイル済みのシェーダーを呼び出し元に返します。</p>
+
+<h3 id="The_shaders" name="The_shaders">シェーダー</h3>
+
+<p>この後、文書を記述している HTML にシェーダープログラム自体を追加することが必要です。シェーダーがどのように動作するかの詳細はこの記事で扱う範囲を超えており、それはシェーダー言語の構文法になります。</p>
+
+<h4 id="Fragment_shader" name="Fragment_shader">フラグメントシェーダー</h4>
+
+<p>ポリゴン内の各ピクセルは、GL の用語で<strong>フラグメント</strong>と呼びます。フラグメントシェーダーは、各ピクセルの色を決定します。今回の例では、各ピクセルには単純に白色を割り当てます。</p>
+
+<p><code>gl_FragColor</code> はフラグメントの色として使用する、GL の組み込み変数です。以下のように値を設定することで、ピクセルの色を定義します。</p>
+
+<pre class="brush: html">&lt;script id="shader-fs" type="x-shader/x-fragment"&gt;
+  void main(void) {
+    gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+  }
+&lt;/script&gt;
+</pre>
+
+<h4 id="Vertex_shader" name="Vertex_shader">バーテックスシェーダー</h4>
+
+<p>バーテックスシェーダーは、各頂点の位置や形状を定義します。</p>
+
+<pre class="brush: html">&lt;script id="shader-vs" type="x-shader/x-vertex"&gt;
+  attribute vec3 aVertexPosition;
+
+  uniform mat4 uMVMatrix;
+  uniform mat4 uPMatrix;
+  
+  void main(void) {
+    gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+  }
+&lt;/script&gt;
+</pre>
+
+<h2 id="Creating_the_object" name="Creating_the_object">オブジェクトを作成する</h2>
+
+<p>正方形を描画する前に、その頂点情報を収めるバッファを作成しなければなりません。これは、<code>initBuffers()</code> 関数を呼び出して行います。WebGL のより高度な概念を探求すると、このルーチンはさらに多くの (かつ複雑な) 3D オブジェクトを作成するものに発展します。</p>
+
+<pre class="brush: js">var horizAspect = 480.0/640.0;
+
+function initBuffers() {
+  squareVerticesBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, squareVerticesBuffer);
+  
+  var vertices = [
+    1.0,  1.0,  0.0,
+    -1.0, 1.0,  0.0,
+    1.0,  -1.0, 0.0,
+    -1.0, -1.0, 0.0
+  ];
+  
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+}
+</pre>
+
+<p>今回の例でこのルーチンは、単純にシーンの基本的な性質を与えます。それは頂点情報を保存するバッファを作り出す機能を持つ、<code>gl</code> オブジェクトの <code>createBuffer()</code> メソッドを呼び出すことから始まります。そしてこのバッファは、<code>bindBuffer()</code> メソッドを呼び出すことでコンテキストに結びつけられます。</p>
+
+<p>以上の手続きを行ったら、正方形の各頂点の座標を収めている JavaScript の配列を作成します。この配列は WebGL 浮動小数点数の配列に変換され、さらに <code>gl</code> オブジェクトの <code>bufferData()</code> メソッドに渡されてオブジェクトの頂点情報が成立します。</p>
+
+<h2 id="Drawing_the_scene_2" name="Drawing_the_scene_2">シーンを描画する</h2>
+
+<p>シェーダーの確立とオブジェクトの構築を行ったら、実際にシーンを描画することができます。今回の例ではアニメーションを行いませんので、<code>drawScene()</code> 関数はとても単純なものになります。ここでは後ほど取り上げる、有用なルーチンをいくつか使用します。</p>
+
+<pre class="brush: js">function drawScene() {
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  
+  perspectiveMatrix = makePerspective(45, 640.0/480.0, 0.1, 100.0);
+  
+  loadIdentity();
+  mvTranslate([-0.0, 0.0, -6.0]);
+  
+  gl.bindBuffer(gl.ARRAY_BUFFER, squareVerticesBuffer);
+  gl.vertexAttribPointer(vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
+  setMatrixUniforms();
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+}
+</pre>
+
+<p>まずは、コンテキストを背景色でクリアします。そしてカメラの遠近感を定義します。視野角を 45 度、縦横の比を 640/480 (canvas の寸法) に設定しています。また、描画するオブジェクトはカメラから 0.1 ～ 100 ユニットの範囲内のもののみにすることを指定します。</p>
+
+<p>そして正方形の位置を、初期位置への読み込みおよびカメラから 6 ユニット分遠方へ移動したところに定義します。その後正方形の頂点バッファをコンテキストに結びつけ、設定を行い、そして <code>drawArrays()</code> メソッドを呼び出してオブジェクトを描画します。</p>
+
+<p>{{EmbedGHLiveSample('webgl-examples/tutorial/sample2/index.html', 670, 510)}}</p>
+
+<p><a href="https://github.com/mdn/webgl-examples/tree/gh-pages/tutorial/sample2">コードを確認する</a> | <a href="http://mdn.github.io/webgl-examples/tutorial/sample2/">新しいページでデモを開く</a></p>
+
+<h2 id="Matrix_utility_operations" name="Matrix_utility_operations">行列の実用的な操作法</h2>
+
+<p>行列の操作はとてもわかりにくいものです。行列を操作するコードのすべてを自分で記述したがる人はいません。幸い、JavaScript でベクトルや行列を操作するのに役立つライブラリである <a href="http://sylvester.jcoglan.com/" title="http://sylvester.jcoglan.com/">Sylvester</a> があります。</p>
+
+<p>今回のデモで使用している <a href="https://github.com/mdn/webgl-examples/blob/gh-pages/tutorial/glUtils.js">glUtils.js</a> ファイルは、Web 上にある多くの WebGL デモで使用されています。これは由来がはっきりしていないようですが、特別な種類の行列を構築したり、それらを表示するための HTML を出力するメソッドを追加することで、Sylvester を簡単に使用できるようにします。</p>
+
+<p>加えて、このデモでは特定の作業のためにこれらのライブラリとの橋渡しを行う、有用なルーチンをいくつか定義しています。これらが何を行っているかについては今回のデモで扱う範囲を超えていますが、インターネット上には行列に関する多くのすばらしい参考文書があります。そのいくつかが<a href="#See_also">関連情報</a>にありますのでご覧ください。</p>
+
+<pre class="brush: js">function loadIdentity() {
+  mvMatrix = Matrix.I(4);
+}
+
+function multMatrix(m) {
+  mvMatrix = mvMatrix.x(m);
+}
+
+function mvTranslate(v) {
+  multMatrix(Matrix.Translation($V([v[0], v[1], v[2]])).ensure4x4());
+}
+
+function setMatrixUniforms() {
+  var pUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
+  gl.uniformMatrix4fv(pUniform, false, new Float32Array(perspectiveMatrix.flatten()));
+
+  var mvUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
+  gl.uniformMatrix4fv(mvUniform, false, new Float32Array(mvMatrix.flatten()));
+}
+</pre>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li>Wolfram MathWorld の <a href="http://mathworld.wolfram.com/Matrix.html" title="http://mathworld.wolfram.com/Matrix.html">Matrices</a></li>
+ <li>Wikipedia の <a href="http://en.wikipedia.org/wiki/Matrix_(mathematics)" title="http://en.wikipedia.org/wiki/Matrix_(mathematics)">Matrix</a> (<a href="https://ja.wikipedia.org/wiki/%E8%A1%8C%E5%88%97" title="行列">日本語版</a>)</li>
+</ul>
+
+<div>{{PreviousNext("Web/API/WebGL_API/Tutorial/Getting_started_with_WebGL", "Web/API/WebGL_API/Tutorial/Using_shaders_to_apply_color_in_WebGL")}}</div>

@@ -1,0 +1,108 @@
+<p>{{CSSRef}}</p>
+
+<p class="summary">虽然弹性盒子被各种现代浏览器很好的支持, 但是你或许还会遇到一些问题。在这个文档中，我们将会了解到浏览器支持弹性盒子的情况和一些潜在的问题, 以及处理它们的资源和方法。</p>
+
+<h2 id="弹性盒子的历史">弹性盒子的历史</h2>
+
+<p>与所有CSS标准一样，弹性盒子标准经历了一系列的改动，直到它成为我们现有的候选推荐版本。作为候选推荐，我们不该着重于当下对于该规范的大量变动，尽管历来弹性盒子的迭代情况有所不同。</p>
+
+<p>弹性盒子曾在许多浏览器中作为实验功能的方式被实现。当时进行实验性的实现的方式是使用浏览器前缀。这种关于前缀的构思是为了让规范的实现能被测试，并被浏览器工程师和网页开发者等在不和其他实现冲突的情况下浏览。也就是说不再生产代码中使用实验性的实现。然后，前缀最终被用在了生产代码中，结果对实验性规范的不管修改导致了人们需要不断对网站进行对应的修改。</p>
+
+<p>在2009年时，规则看起来很不一样。当时，要创建一个弹性容器你会用<code>display: box</code> ，会有一大堆 <code>box-*</code> 属性，和现在的弹性盒子显然完全不同。</p>
+
+<p>曾有一个<a href="https://www.w3.org/TR/2012/WD-css3-flexbox-20120322/">规范的更新</a>将语法换成了 <code>display: flexbox</code> ——这仍旧是浏览器前缀。</p>
+
+<p>最后规范被修改成，定义 <code>display: flex</code> 作为创建弹性容器的方式。对于最新版本规范的浏览器支持自此就尽善尽美了。</p>
+
+<p>有很多老的关于弹性盒子规范旧版本的文章还存着，但他们都容易通过弹性盒子容器创建的方式来辨别。如果你在其中找到任何关于<code>display: box</code>或者<code>display: flexbox</code>的内容，那么它们就是过时的信息。</p>
+
+<h2 id="浏览器支持情况">浏览器支持情况</h2>
+
+<p>现代浏览器能够很好的支持flexbox，并且大多数浏览器不需要前缀。2015年，Safari9是最后一个移除前缀的主流浏览器。2个需要注意浏览器兼容的浏览器是：</p>
+
+<p>Internet Explorer 10： 使用<code>-ms-前缀；</code></p>
+
+<p><code>UC浏览器： 使用-webkit-前缀。</code></p>
+
+<p><code>现在，IE11 已经支持display: flex，但是在使用的时候会有一些bug。</code></p>
+
+<h2 id="常见问题">常见问题</h2>
+
+<p>由于经过了发展,flexbox的大多数问题与规范的变更有关，而且事实上我们很多人都试图在生产中环境中使用实验性的规范。 如果您要确保与旧版本的浏览器（尤其是IE10和11）向后兼容，则Flexbugs网站是一个有用的资源。 您将看到许多列出的bug都适用于旧的浏览器版本，并且在当前的浏览器中已修复。 每个错误都有列出的解决方法-可以节省许多时间。</p>
+
+<p>如果你想要支持非常旧的浏览器使用flexbox属性，在CSS中加入：</p>
+
+<pre>.wrapper {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+}</pre>
+
+<p><a href="https://autoprefixer.github.io/">Autoprefixer Online</a>是查看推荐使用前缀浏览器的有效方式，具体取决于您希望通过浏览器支持返回多少版本。 您还可以从 <a href="https://caniuse.com/#feat=flexbox">Can I Use</a>中以获取浏览器支持的信息,以便在已经支持的浏览器中删除前缀</p>
+
+<h2 id="sect1"></h2>
+
+<h2 id="Useful_fallback_techniques">Useful fallback techniques</h2>
+
+<p>Given that flexbox usage is initiated with value of the {{cssxref("display")}} property, when needing to support very old browsers which do not support flexbox at all, fallbacks can be created by overwriting one layout method with another. The specification defines what happens if you use other layout methods on an element which then becomes a flex item.</p>
+
+<h3 id="Floated_items">Floated items</h3>
+
+<blockquote>
+<p>“float and clear do not create floating or clearance of flex item, and do not take it out-of-flow.” - <a href="https://www.w3.org/TR/css-flexbox-1/#flex-containers">3. Flex Containers</a></p>
+</blockquote>
+
+<p>In the following live example, I have floated two blocks and then set <code>display: flex</code> on the container. The items are now flex items, which means they stretch to equal height. Any float behaviour does not apply.</p>
+
+<p>You can test the fallback behaviour by removing <code>display: flex</code> from the wrapper.</p>
+
+<p>{{EmbedGHLiveSample("css-examples/flexbox/browsers/float.html", '100%', 550)}}</p>
+
+<h3 id="display_inline-block">display: inline-block</h3>
+
+<p>Once an <code>inline-block</code> item becomes a flex item, it is <code>block</code>ified and so behavior of <code>display: inline-block</code> like preserving white space between items no longer applies.</p>
+
+<p>Remove <code>display: flex</code> to see the fallback behavior. You'll see white space added between the items, which is what happens when using <code>display: inine-block</code> as it prefers white space like other inline items.</p>
+
+<p>{{EmbedGHLiveSample("css-examples/flexbox/browsers/inline-block.html", '100%', 550)}}</p>
+
+<h3 id="display_table-">display: table-<em> </em></h3>
+
+<p>The CSS table display properties are potentially very useful as a fallback, due to the fact that they allow design patterns such as full height columns and vertical centering and work back as far as Internet Explorer 8.</p>
+
+<p>If you use <code>display: table-cell</code> on an item in your HTML it takes on the styling of an HTML table cell. CSS creates anonymous boxes to represent these items so that you do not need to wrap each item in a wrapper to represent the HTML table row, and a second one to represent the table element itself, You can’t see or style these anonymous boxes; they are there purely to fix up the tree.</p>
+
+<p>If you then declare <code>display: flex</code> on the parent item, these anonymous boxes do not get created and so your item remains a direct child and can become a flex item — losing any of the table display features.</p>
+
+<blockquote>
+<p>“Note: Some values of display normally trigger the creation of anonymous boxes around the original box. If such a box is a flex item, it is blockified first, and so anonymous box creation will not happen. For example, two contiguous flex items with display: table-cell will become two separate display: block flex items, instead of being wrapped into a single anonymous table.” - <a href="https://www.w3.org/TR/css-flexbox-1/#flex-items">4. Flex Items</a></p>
+</blockquote>
+
+<p>{{EmbedGHLiveSample("css-examples/flexbox/browsers/table-cell.html", '100%', 550)}}</p>
+
+<h3 id="The_vertical-align_property">The vertical-align property</h3>
+
+<p>The live example below demonstrates use of the {{cssxref("vertical-align")}} property along with <code>display: inline-block</code>. Both <code>display: table-cell</code> and <code>display: inline-block</code> allow for the use of this property. Use of <code>vertical-align</code> enables vertical alignment prior to flexbox. The property is ignored by flexbox and so you can use it in conjunction with <code>display: table-cell</code> or <code>display: inline-block</code> as a fallback and then safely use box alignment properties in flexbox instead.</p>
+
+<p>{{EmbedGHLiveSample("css-examples/flexbox/browsers/vertical-align.html", '100%', 550)}}</p>
+
+<h2 id="Feature_Queries_and_flexbox">Feature Queries and flexbox</h2>
+
+<p>You can use <a href="/en-US/docs/Web/CSS/%40supports">feature queries</a> to detect flexbox support:</p>
+
+<pre class="brush: css">@supports (display: flex) {
+  // code for supporting browsers
+}</pre>
+
+<p>Note that Internet Explorer 11 does not support feature queries yet <em>does</em> support flexbox. If you decide the IE11 implementation is too buggy and you wish to serve it the fallback layout then you could use feature queries to serve flexbox rules only to those browsers with good flexbox support. Remember that if you want to include versions of browsers that had vendor-prefixed flexbox you would need to include the prefixed version in your feature query. The following feature query would include UC Browser, which supports feature queries and old flexbox syntax, prefixed:</p>
+
+<pre class="brush: css">@supports (display: flex) or (display: -webkit-box) {
+  // code for supporting browsers
+}</pre>
+
+<p>For more information about using Feature Queries see <a href="https://hacks.mozilla.org/2016/08/using-feature-queries-in-css/">Using Feature Queries in CSS</a> on the Mozilla Hacks blog.</p>
+
+<h2 id="Conclusion">Conclusion</h2>
+
+<p>While I’ve spent some time in this guide going through potential issues and fallbacks, flexbox is very much ready for you to be using in production work. This guide will help you in those cases where you do come across an issue or have the requirement to support older browsers.</p>

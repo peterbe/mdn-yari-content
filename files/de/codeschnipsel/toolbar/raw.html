@@ -1,0 +1,64 @@
+<h2 id="Toolbarknopf_hinzufügen">Toolbarknopf hinzufügen</h2>
+
+<p>Hier sind zwei Tutorials verfügbar:</p>
+
+<ul>
+ <li>Ein Step-by-step-tutorial für Anfänger: <a href="/en/XUL/Toolbars/Custom_toolbar_button" title="en/Custom_Toolbar_Button">Custom Toolbarknopf</a></li>
+ <li>Ein Tutorial, welches die Schritte, die gebraucht werden,  um einen Toolbarknopf hinzuzufügen. Es wird erwartet, dass Sie bereits eine funktionierende Erweiterung haben und die Basis von Erweiterungsentwicklung wissen: <a href="/en/XUL/Toolbars/Creating_toolbar_buttons" title="en/Creating_toolbar_buttons">Toolbarknöpfe erstellen</a></li>
+</ul>
+
+<h2 id="Adding_button_by_default">Adding button by default</h2>
+
+<p>When you create and deploy your extension and include a toolbar button for it by overlaying the Customize toolbarpalette, it is not available by default. The user has to drag it onto the toolbar. The following code will place your button on the toolbar by default. This should only be done on the first run of your add-on after installation so that if the user decides to remove your button, it doesn't show up again every time they start the application.</p>
+
+<h3 id="Notes">Notes</h3>
+
+<ul>
+ <li>Insert your button by default <strong>only once, at <a href="/en/XUL_School/Appendix_B:_Install_and_Uninstall_Scripts#Install_Scripts" title="en/XUL_School/Appendix_B:_Install_and_Uninstall_Scripts#Install_Scripts">first run</a></strong>, or when an extension update adds a new button.</li>
+ <li>Please only add your button by default if it adds real value to the user and will be a frequent entry point to your extension.</li>
+ <li>You <strong>must not</strong> insert your toolbar button between any of the following elements: the combined back/forward button, the location bar, the stop botton, or the reload button. These elements have special behaviors when placed next to eachother, and will break if separated by another element.</li>
+</ul>
+
+<pre class="brush: js">/**
+ * Installs the toolbar button with the given ID into the given
+ * toolbar, if it is not already present in the document.
+ *
+ * @param {string} toolbarId The ID of the toolbar to install to.
+ * @param {string} id The ID of the button to install.
+ * @param {string} afterId The ID of the element to insert after. @optional
+ */
+function installButton(toolbarId, id, afterId) {
+    if (!document.getElementById(id)) {
+        var toolbar = document.getElementById(toolbarId);
+
+        // If no afterId is given, then append the item to the toolbar
+        var before = null;
+        if (afterId) {
+            let elem = document.getElementById(afterId);
+            if (elem &amp;&amp; elem.parentNode == toolbar)
+                before = elem.nextElementSibling;
+        }
+
+        toolbar.insertItem(id, before);
+        toolbar.setAttribute("currentset", toolbar.currentSet);
+        document.persist(toolbar.id, "currentset");
+
+        if (toolbarId == "addon-bar")
+            toolbar.collapsed = false;
+    }
+}
+
+if (firstRun) {
+    installButton("nav-bar", "my-extension-navbar-button");
+    // The "addon-bar" is available since Firefox 4
+    installButton("addon-bar", "my-extension-addon-bar-button");
+}
+</pre>
+
+<h2 id="Siehe_auch">Siehe auch</h2>
+
+<ul>
+ <li><a class="external" href="http://blog.pearlcrescent.com/archives/24">Programmatically adding items to the Firefox toolbar</a></li>
+ <li><a href="/en-US/docs/Mozilla/JavaScript_code_modules/CustomizableUI.jsm">CustomizableUI.jsm</a> - Firefox 29+</li>
+ <li>{{ Bug(242071) }}</li>
+</ul>

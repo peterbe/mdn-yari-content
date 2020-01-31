@@ -1,0 +1,179 @@
+<div>{{AddonSidebar}}</div>
+
+<p class="summary">web-ext es una herramienta de línea de comano diseñada para acelerar varias partes del proceso de desarrollo de WebExtension, haciendo el desarrollo más rápido y fácil. Este artículo explica cómo instalar y usar web-ext.</p>
+
+<h2 id="Instalación">Instalación</h2>
+
+<p>web-ext es una aplicación basada en node que puedes instalar con la herramienta <a href="https://nodejs.org/">nodejs/npm</a>. Instala web-ext usando el siguiente comando:</p>
+
+<pre class="brush: bash"><code>npm install --global web-ext</code></pre>
+
+<p>Ahora puedes probar si tu instalación funciona ejecutanddo el siguiente comando, que lista el número de versión instalada de web-ext:</p>
+
+<pre class="brush: bash"><code>web-ext --version</code></pre>
+
+<h2 id="Usando_web-ext">Usando web-ext</h2>
+
+<p>Una vez que la has instalado, ya puedes probar web-ext. En este punto, es buena idea tener un ejemplo de WebExtension con la cual probar — si no tiene una propia, puedes clonar nuestro repositorio <a href="https://github.com/mdn/webextensions-examples">webextensions-examples</a>.</p>
+
+<h3 id="Probando_una_extensión">Probando una extensión</h3>
+
+<p>Puedes probar una extensión en Firefox yendo al directorio raiz de tu extensión e ingresando el siguiente comando:</p>
+
+<pre class="brush: bash"><code>web-ext run</code></pre>
+
+<p>Esto iniciará Firefox y cargará la extensión temporalmente en el navegador, como puedes hacerlo en la  <a href="/en-US/docs/Tools/about:debugging#Add-ons">página de bout:debugging</a>.</p>
+
+<p>Revisa la <a href="/en-US/Add-ons/WebExtensions/web-ext_command_reference#web-ext_run">guía de referencia de ejecución</a> para aprender sobre todas las opciones disponibles.</p>
+
+<h3 id="Recargar_la_extensión_automáticamente">Recargar la extensión automáticamente</h3>
+
+<p>El comando <code>run</code> observará tus archivos fuente y le dirá a Firefox que recargue la extensión después que has editado y guardado un archivo. Por ejemplo, si cambias la propiedad <code>name</code> en tu archivo <code>manifest.json</code>, Firefox mostraría el nuevo nombre. Esto hace más fácil probar nuevas características y verlas inmediátamente. Para usar la función de recarga automática, ejecuta el comando <code>run</code>:</p>
+
+<pre class="brush: bash"><code>web-ext run</code></pre>
+
+<p>Presionando 'R' mientras el comando run está activo lanzará la recarga manualmente.</p>
+
+<p>Si se produce un comportamiento inesperado con la función de recarga, por favor <a href="https://github.com/mozilla/web-ext/issues">registra un bug</a>. También puedes deshabilitar la recarga con esto:</p>
+
+<pre class="brush: bash"><code>web-ext run --no-reload</code></pre>
+
+<div class="note">
+<p>La recarga de extension está sólo soportada desde Firefox 49 en adelante.</p>
+</div>
+
+<h3 id="Probar_un_diferentes_versiones_de_Firefox">Probar un diferentes versiones de Firefox</h3>
+
+<p>Para ejecutar tu extensión en una versión de Firefox que no sea tu versión por defecto, usa la opción <code>--firefox</code> para especificar la ruta completa al archivo binario. Aquí un ejemplo en Mac OS:</p>
+
+<pre class="brush: bash">web-ext run --firefox=/Applications/FirefoxNightly.app/Contents/MacOS/firefox-bin</pre>
+
+<p>En Windows, la ruta necesita incluir la parte del archivo <code>firefox.exe</code>, por ejemplo:</p>
+
+<pre class="brush: bash">web-ext run --firefox="C:\Program Files\Mozilla Firefox\firefox.exe"</pre>
+
+<h3 id="Probando_en_48">Probando en 48</h3>
+
+<p>Firefox 48 fue la primera versión estable de la plataforma de WebExtension pero éste no permite <code>web-ext</code> para instalar una extensión remotamente. Necesitas ejecutar tu extensión en Firefox 48 con una opción de instalación diferente:</p>
+
+<pre class="brush: bash">web-ext run --pre-install</pre>
+
+<h3 id="Probando_extensiones_sin_firmar">Probando extensiones sin firmar</h3>
+
+<p>Cuando ejecutas <a href="/en-US/Add-ons/WebExtensions/web-ext_command_reference#web-ext_run">web-ext run</a>, la extensión se instala temporalmente hasta que cierres Firefox. Esto no viola las restricciones de firma. Si creas un archivo zip con <a href="/en-US/Add-ons/WebExtensions/web-ext_command_reference#web-ext_build">web-ext build</a> e intentas instalarlo en Firefox, verás un error diciendo que el complemento no está firmado. Necesitarás usar una <a href="https://wiki.mozilla.org/Addons/Extension_Signing#Unbranded_Builds">versión sin marca</a> o usar una <a href="https://www.mozilla.org/en-US/firefox/developer/">versión de desarrollo</a> para instalar versiones sin firmar.</p>
+
+<h3 id="Usando_un_perfil_personalizado">Usando un perfil personalizado</h3>
+
+<p>Por defecto, el comando creará un perfil de Firefox temporal. Puedes ejecutar tu extensión con un perfil específico usando la opción <code>--firefox-profile</code>, como esto:</p>
+
+<pre class="brush: bash">web-ext run --firefox-profile=chris-work-profile</pre>
+
+<p>Esta opción acepta una cadena de texto que contenga el nombre de tu perfil o una ruta absoluta al directorio del perfil.</p>
+
+<div class="note">
+<p>Cuando usas un perfil personalizado, <code>web-ext</code> primero copia el perfil. El perfil personalizado no será alterado.</p>
+</div>
+
+<h3 id="Empaquetando_tu_extensión">Empaquetando tu extensión</h3>
+
+<p>Una vez que has probado tu extensión y verificado que funciona, puedes convertirla en un paquete enviandola a <a href="https://addons.mozilla.org">addons.mozilla.org</a> usando el siguiente:</p>
+
+<pre class="brush: bash"><code>web-ext build</code></pre>
+
+<p>Esto mostrará la ruta completa al archivo <code>.zip</code> generado que puede ser cargado dentro un navegador.</p>
+
+<div class="warning">
+<p>El archivo <code>.zip</code> generado no funciona en Firefox sin firmarlo, o sin agregar la propiedad <code><a href="/en-US/Add-ons/WebExtensions/manifest.json/applications">applications</a>.gecko.id</code> dentro del <code><a href="/en-US/Add-ons/WebExtensions/manifest.json">manifest.json</a></code>. Para más información, por favor revisa la página de <a href="https://developer.mozilla.org/en-US/Add-ons/WebExtensions/WebExtensions_and_the_Add-on_ID">WebExtensions y el identificador de complemento</a>.</p>
+</div>
+
+<p><code>web-ext build</code> está diseñado para ignorar autimáticamente archivos que son comunmente no necesarios en paquetes, como <code>.git</code>, <code>node_modules</code>, y otros artefactos.</p>
+
+<p>Revisa la <a href="/en-US/Add-ons/WebExtensions/web-ext_command_reference#web-ext_build">guía de referencia sobre construcción</a> para aprender más.</p>
+
+<h3 id="Firmando_tu_WebExtension_para_distribución">Firmando tu WebExtension para distribución</h3>
+
+<p>Como una alternativa a publicar tu extensión en <a href="https://addons.mozilla.org/">addons.mozilla.org</a>, puedes publicar tu mismo tu paquete pero éste necesita estar <a href="https://developer.mozilla.org/Add-ons/Distribution">firmado por Mozilla</a> primero. El siguiente comando empaqueta y firma un archivo ZIP, y lo convierte en un archivo XPI formado para distribución:</p>
+
+<pre class="brush: bash"><code>web-ext sign --api-key=$AMO_JWT_ISSUER --api-secret=$AMO_JWT_SECRET </code></pre>
+
+<p>Las opciones del API son requeridas para especificar tus <a href="https://addons.mozilla.org/en-US/developers/addon/api/key/">credenciales de addons.mozilla.org</a>.</p>
+
+<ul>
+ <li><code>--api-key</code>: the API key (JWT issuer) de <code>addons.mozilla.org</code> necesario para firmar la extensión. Esto debe ser siempre una cadena de texto.</li>
+ <li><code>--api-secret</code>: the API secret (JWT secret) de <code>addons.mozilla.org</code> necesario para firmar la extensión. Esto debe ser siempre una cadena de texto.</li>
+</ul>
+
+<p>Revisa la <a href="https://developer.mozilla.org/en-US/Add-ons/WebExtensions/web-ext_command_reference#web-ext_sign">guía de referencia sobre firmas</a> para aprender sobre todas las opciones disponible.</p>
+
+<h3 id="Firmando_extensiones_sin_un_ID_explícto">Firmando extensiones sin un ID explícto</h3>
+
+<p><code>web-ext</code> soporta completamente firma de extensiones que no declaran la propiedad <a href="/en-US/Add-ons/WebExtensions/manifest.json/applications">applications.gecko.id</a> en su manifiesto. La primera vez que tu firmas una extensión sin un ID explícito, <a href="https://addons.mozilla.org/">addons.mozilla.org</a> generará automáticamente un ID y <code>web-ext</code> lo guardará en <code>.web-extension-id</code> en el actual directorio de trabajo. Deberás guardar el archivo de ID para poder firmar futuras versiones de la misma extensión. Si pierdes el archivo de ID, tendrás que agregar de nuevo la propiedad <code>applications.gecko.id</code> o usar la opción <code>--id</code> cuando firmes versiones futuras, por ejemplo:</p>
+
+<pre class="brush: bash"><code>web-ext sign --api-key=... --api-secret=... --id="</code>{c23c69a7-f889-447c-9d6b-7694be8035bc}<code>"</code></pre>
+
+<h3 id="Firmando_en_un_entorno_restringido">Firmando en un entorno restringido</h3>
+
+<p>Si estás trabajando en un entorno que restringe el acceso a ciertos dominios, puedes intentar usar un proxi cuando hagas el firmado:</p>
+
+<pre class="brush: bash"><code>web-ext sign --api-key=... --api-secret=... --api-proxy=https://yourproxy:6000</code></pre>
+
+<p>Lee más sobre <a href="/en-US/Add-ons/WebExtensions/web-ext_command_reference#--api-proxy">--api-proxy</a> para detalles.</p>
+
+<p>Si sólo necesitas permitir los dominios usados para firmar y descargar, sigue estos:</p>
+
+<ul>
+ <li>addons.mozilla.org</li>
+ <li>addons.cdn.mozilla.net</li>
+</ul>
+
+<h3 id="Verificando_código_con_lint">Verificando código con "lint"</h3>
+
+<p>Antes de probar tu extensión con el comando <a href="/en-US/Add-ons/WebExtensions/web-ext_command_reference#web-ext_run">run</a> o enviar tu paquete a <a href="https://addons.mozilla.org/en-US/firefox/">addons.mozilla.org</a>, puedes usar el comando <code>lint</code> para asegurarte que tu <a href="/en-US/Add-ons/WebExtensions/manifest.json">manifest</a> y otros archivos fuente no contienen errors. Por ejemplo:</p>
+
+<pre class="brush: bash">web-ext lint</pre>
+
+<p>Esto usar la libería <a href="https://github.com/mozilla/addons-linter">addons-linter</a> para recorrer el directorio de tu código fuente y reportar de cualquier error, como la declaración de un permiso desconocido.</p>
+
+<p>Revisa la <a href="/en-US/Add-ons/WebExtensions/web-ext_command_reference#web-ext_lint">guía de referencia sobre lint</a> para aprender sobre todas las opciones disponibles.</p>
+
+<h3 id="Especificando_diferentes_directorios_de_origen_y_destino">Especificando diferentes directorios de origen y destino</h3>
+
+<p>Todos los comandos anteriores usan los directorios por defecto para el origen de la extensión y la creación del artefacto (p.ej.<code> archivos.zip</code> construidos). Los directorios por defecto son:</p>
+
+<ul>
+ <li>Origen: El directorio dentro del cual estás actualmente.</li>
+ <li>Artefactos: Un directorio llamado <code>./web-ext-artifacts</code>, creado dentro el directorio actual.</li>
+</ul>
+
+<p>Puedes especificar diferentes directorios de origen y destino usando las opciones de comando <code>--source-dir</code> (o el alias <code>-s</code>) y <code>--artifacts-dir</code> (o el alias <code>-a</code>) cuando ejecutes tus comandos. Estos valores pueden ser rutas relativas o absolutas, pero siempre deben estar especificadas como cadenas de texto. Aquí hay un ejemplo especificando ambas opciones al mismo tiempo cuando se construye la extensión:</p>
+
+<pre class="brush: bash"><code>web-ext build --source-dir=webextension-examples/notify-link-clicks-i18n --artifacts-dir=zips</code></pre>
+
+<h3 id="Mostrando_mensajes_detallados">Mostrando mensajes detallados</h3>
+
+<p>Si quieres ver lo que está web-ext está haciendo exactamente cuando ejecutas un comando, puedes incluir la opción <code>--verbose</code> option (o el alias <code>-v</code>). Por ejemplo:</p>
+
+<pre class="brush: bash"><code>web-ext build --verbose</code></pre>
+
+<h3 id="Revisando_todos_los_comandos_y_opciones">Revisando todos los comandos y opciones</h3>
+
+<p>Puedes listar todos comandos y opciones con esto:</p>
+
+<pre class="brush: bash"><code>web-ext --help</code></pre>
+
+<div class="note">
+<p><strong>Nota</strong>: También puedes usar el alias <code>-h</code>.</p>
+</div>
+
+<p>Puedes listar las opciones de un comando específico agregandolo como un argumento:</p>
+
+<pre class="brush: bash"><code>web-ext --help run</code></pre>
+
+<h2 id="Revisa_también">Revisa también</h2>
+
+<ul>
+ <li><a class="external external-icon" href="https://github.com/mozilla/web-ext">web-ext repo</a></li>
+ <li>
+  <p><a href="/en-US/docs/Mozilla/Add-ons/WebExtensions/web-ext_command_reference">referencia del comando web-ext</a></p>
+ </li>
+</ul>

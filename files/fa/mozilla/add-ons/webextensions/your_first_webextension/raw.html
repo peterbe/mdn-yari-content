@@ -1,0 +1,145 @@
+<div>{{AddonSidebar}}</div>
+
+<p dir="rtl">در این مقاله ما از ابتدا تا انتهای ساخت یک افزونه برای فایر فاکس را با هم مرور میکنیم. این <span id="result_box" lang="fa"><span>افزونه فقط یک قاب قرمز را به</span></span><span lang="fa"><span> هر صفحه ای که از «mozilla.org» یا هر کدام از زیر دامنه های آن فراخوانی شده باشد را اضافه میکند .</span></span></p>
+
+<p>منبع کد این مثال بر روی گیت هاب: <a href="https://github.com/mdn/webextensions-examples/tree/master/borderify">https://github.com/mdn/webextensions-examples/tree/master/borderify</a>.</p>
+
+<p dir="rtl">در ابتدا شما به فایرفاکس نسخه 45 یا بالاتر نیاز دارید.</p>
+
+<h2 id="Writing_the_extension">Writing the extension</h2>
+
+<p>Create a new directory and navigate to it:</p>
+
+<pre class="brush: bash">mkdir borderify
+cd borderify</pre>
+
+<h3 id="manifest.json">manifest.json</h3>
+
+<p>Now create a new file called "manifest.json" directly under the "borderify" directory. Give it the following contents:</p>
+
+<pre class="brush: json">{
+
+  "manifest_version": 2,
+  "name": "Borderify",
+  "version": "1.0",
+
+  "description": "Adds a red border to all webpages matching mozilla.org.",
+
+  "icons": {
+    "48": "icons/border-48.png"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["*://*.mozilla.org/*"],
+      "js": ["borderify.js"]
+    }
+  ]
+
+}</pre>
+
+<ul>
+ <li>The first three keys: <code><a href="/en-US/Add-ons/WebExtensions/manifest.json/manifest_version">manifest_version</a></code>, <code><a href="/en-US/Add-ons/WebExtensions/manifest.json/name">name</a></code>, and <code><a href="/en-US/Add-ons/WebExtensions/manifest.json/version">version</a></code>, are mandatory and contain basic metadata for the extension.</li>
+ <li><code><a href="/en-US/Add-ons/WebExtensions/manifest.json/description">description</a></code> is optional, but recommended: it's displayed in the Add-ons Manager.</li>
+ <li><code><a href="/en-US/Add-ons/WebExtensions/manifest.json/icons">icons</a></code> is optional, but recommended: it allows you to specify an icon for the extension, that will be shown in the Add-ons Manager.</li>
+</ul>
+
+<p>The most interesting key here is <code><a href="/en-US/Add-ons/WebExtensions/manifest.json/content_scripts">content_scripts</a></code>, which tells Firefox to load a script into Web pages whose URL matches a specific pattern. In this case, we're asking Firefox to load a script called "borderify.js" into all HTTP or HTTPS pages served from "mozilla.org" or any of its subdomains.</p>
+
+<ul>
+ <li><a href="/en-US/Add-ons/WebExtensions/Content_scripts">Learn more about content scripts.</a></li>
+ <li><a href="/en-US/Add-ons/WebExtensions/Match_patterns">Learn more about match patterns</a>.</li>
+</ul>
+
+<div class="warning">
+<p><a href="/en-US/Add-ons/WebExtensions/WebExtensions_and_the_Add-on_ID#When_do_you_need_an_Add-on_ID">In some situations you need to specify an ID for your extension</a>. If you do need to specify an add-on ID, include the  <code><a href="/en-US/Add-ons/WebExtensions/manifest.json/applications">applications</a></code> key in <code>manifest.json</code> and set its <code>gecko.id</code> property:</p>
+
+<pre class="brush: json">"applications": {
+  "gecko": {
+    "id": "borderify@example.com"
+  }
+}</pre>
+</div>
+
+<h3 id="iconsborder-48.png">icons/border-48.png</h3>
+
+<p>The extension should have an icon. This will be shown next to the extension's listing in the Add-ons Manager. Our manifest.json promised that we would have an icon at "icons/border-48.png".</p>
+
+<p>Create the "icons" directory directly under the "borderify" directory. Save an icon there named "border-48.png".  You could use <a href="https://github.com/mdn/webextensions-examples/blob/master/borderify/icons/border-48.png">the one from our example</a>, which is taken from the Google Material Design iconset, and is used under the terms of the <a href="https://creativecommons.org/licenses/by-sa/3.0/">Creative Commons Attribution-ShareAlike</a> license.</p>
+
+<p>If you choose to supply your own icon, It should be 48x48 pixels. You could also supply a 96x96 pixel icon, for high-resolution displays, and if you do this it will be specified as the <code>96</code> property of the <code>icons</code> object in manifest.json:</p>
+
+<pre class="brush: json">"icons": {
+  "48": "icons/border-48.png",
+  "96": "icons/border-96.png"
+}</pre>
+
+<p>Alternatively, you could supply an SVG file here, and it will be scaled correctly. (Though: if you're using SVG and your icon includes text, you may want to use your SVG editor's "convert to path" tool to flatten the text, so that it scales with a consistent size/position.)</p>
+
+<ul>
+ <li><a href="/en-US/Add-ons/WebExtensions/manifest.json/icons">Learn more about specifying icons.</a></li>
+</ul>
+
+<h3 id="borderify.js">borderify.js</h3>
+
+<p>Finally, create a file called "borderify.js" directly under the "borderify" directory. Give it this content:</p>
+
+<pre class="brush: js">document.body.style.border = "5px solid red";</pre>
+
+<p>This script will be loaded into the pages that match the pattern given in the <code>content_scripts</code> manifest.json key. The script has direct access to the document, just like scripts loaded by the page itself.</p>
+
+<ul>
+ <li><a href="/en-US/Add-ons/WebExtensions/Content_scripts">Learn more about content scripts.</a></li>
+</ul>
+
+<h2 id="Trying_it_out">Trying it out</h2>
+
+<p>First, double check that you have the right files in the right places:</p>
+
+<pre>borderify/
+    icons/
+        border-48.png
+    borderify.js
+    manifest.json</pre>
+
+<h3 id="Installing">Installing</h3>
+
+<p>Open "about:debugging" in Firefox, click "Load Temporary Add-on" and select any file in your extension's directory:</p>
+
+<p>{{EmbedYouTube("cer9EUKegG4")}}</p>
+
+<p>The extension will now be installed, and will stay until you restart Firefox.</p>
+
+<p>Alternatively, you can run the extension from the command line using the <a href="/en-US/docs/Mozilla/Add-ons/WebExtensions/Getting_started_with_web-ext">web-ext</a> tool.</p>
+
+<h3 id="Testing">Testing</h3>
+
+<p>Now try visiting a page under "mozilla.org", and you should see the red border round the page:</p>
+
+<p>{{EmbedYouTube("rxBQl2Z9IBQ")}}</p>
+
+<div class="note">
+<p>Don't try it on addons.mozilla.org, though! Content scripts are currently blocked on that domain.</p>
+</div>
+
+<p>Try experimenting a bit. Edit the content script to change the color of the border, or do something else to the page content. Save the content script, then reload the extensions's files by clicking the "Reload" button in about:debugging. You can see the changes right away:</p>
+
+<p>{{EmbedYouTube("NuajE60jfGY")}}</p>
+
+<ul>
+ <li><a href="/en-US/Add-ons/WebExtensions/Temporary_Installation_in_Firefox">Learn more about loading extensions</a></li>
+</ul>
+
+<h2 id="Packaging_and_publishing">Packaging and publishing</h2>
+
+<p>For other people to use your extension, you need to package it and submit it to Mozilla for signing. To learn more about that, see <a href="/en-US/docs/Mozilla/Add-ons/WebExtensions/Publishing_your_WebExtension">"Publishing your extension"</a>.</p>
+
+<h2 id="What's_next">What's next?</h2>
+
+<p>Now you've got an idea of the process of developing a WebExtension for Firefox, try:</p>
+
+<ul>
+ <li><a href="/en-US/Add-ons/WebExtensions/Anatomy_of_a_WebExtension">reading more about the anatomy of an extension</a></li>
+ <li><a href="/en-US/Add-ons/WebExtensions/Your_second_WebExtension">writing a more complex extension</a></li>
+ <li><a href="/en-US/Add-ons/WebExtensions/API">reading about the JavaScript APIs available for extensions.</a></li>
+</ul>

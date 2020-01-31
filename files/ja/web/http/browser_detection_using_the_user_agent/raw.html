@@ -1,0 +1,337 @@
+<div>{{HTTPSidebar}}</div>
+
+<p>ブラウザーによって異なるウェブページまたはサービスを提供するのは、ふつうは良いことではありません。ウェブは使用しているブラウザーや機器に関係なく、誰からでもアクセスできるものです。ウェブサイトを開発する方法として、特定のブラウザーを対象にするのではなく、機能が利用できるかどうかに基づいたプログレッシブエンハンスメントにする方法があります。</p>
+
+<p>しかし、ブラウザーや標準は完全ではなく、ブラウザーの判定を必要とする場合も稀にあります。ユーザーエージェント文字列を使用してブラウザーを判定することは簡単に見えますが、うまく行くようにするのは、実はとても難しい問題です。この文書では、これをできるだけ正しく行う方法を案内します。</p>
+
+<div class="note">
+<p>繰り返します。ユーザーエージェントを調べるのが良いことはめったにありません。問題を解決するには、もっと良い、もっと広く互換性のある方法が見つかるはずです。</p>
+</div>
+
+<h2 id="Considerations_before_using_browser_detection" name="Considerations_before_using_browser_detection">ブラウザーの判定を用いる前に考えること</h2>
+
+<p>ユーザーエージェント文字列を使用して、使用されているブラウザーを判定することを検討している場合は、できればまずは回避するようにしてください。<strong>なぜ</strong>それをやりたいのかを見分けることから始めましょう。</p>
+
+<dl>
+ <dt>ブラウザーのあるバージョンの特有のバグを回避しようとしているのですか？</dt>
+ <dd>専門のフォーラムで見たり尋ねたりしてみましょう。この問題に最初に遭遇したのがあなたであることはほとんどありません。また専門家、あるいは単に別の視点を持つ人々が、バグを回避するためのアイディアをくれるかもしれません。珍しい問題である場合は、このバグがバグ追跡システム (<a class="link-https" href="https://bugzilla.mozilla.org">Mozilla</a>; <a class="external" href="http://bugs.webkit.org">WebKit</a>; <a href="https://www.chromium.org/issue-tracking">Blink</a>; <a class="link-https" href="https://bugs.opera.com/">Opera</a>) を介してブラウザーのベンダーに報告されているかどうかを確認することが重要です。ブラウザーメーカーはバグレポートに注意を払い、そのバグの他の回避策を分析するかもしれません。</dd>
+ <dt>特定の機能が存在するかどうか確認しようとしているのですか？</dt>
+ <dd>一部のブラウザーがまだ対応していない特定のウェブ機能をサイトで使用する必要がある場合、未対応のブラウザーのユーザーには、より機能が少ないものの動作することが分かっている古いウェブサイトを送信したい場合があります。これはユーザーエージェントの検出を使用する最悪の理由です。なぜなら、この差は最終的に他のすべてのブラウザーが追いつくからです。さらに、それほど一般的でないブラウザーを１つ１つ全てテストするのは現実的ではありません。ユーザーエージェントによる判定は<strong>決して</strong>行うべきではありません。その代わりに<strong>常に</strong>機能の検出を行う代替手段があります。</dd>
+</dl>
+
+<dl>
+ <dt>使用されているブラウザーによって異なる HTML を提供する予定ですか？</dt>
+ <dd>通常では悪い慣例ですが、これが必要な場合もあります。このような場合は、まず自分の状況を分析してそれが本当に必要であることを確認してください。形式的な {{ HTMLElement("div") }} または {{ HTMLElement("span") }} 要素を追加することで、それを防ぐことができませんか？ユーザーエージェントの検出を正しく行うことは、 HTML の純度をいくらか損なっても構わないくらい難しいものです。また、デザインを考え直してください。プログレッシブエンハンスメントや流体レイアウトを使用することで、回避することはできませんか？</dd>
+</dl>
+
+<h2 id="Avoiding_user_agent_detection" name="Avoiding_user_agent_detection">ユーザーエージェントの判定の回避</h2>
+
+<p>ユーザーエージェントの検出を使用しないようにするのであれば、いくつかの選択肢があります。</p>
+
+<dl>
+ <dt>機能の検出</dt>
+ <dd>機能の検出とは、ページを表示しているブラウザーを特定するのではなく、必要な機能が利用可能であるかどうかを確認することです。利用できない場合は代替手段を使用します。ブラウザーによって異なる動作をする場合は稀ですが、ユーザーエージェント文字列をチェックする代わりに、ブラウザーがその API をどう実装しているか検査する処理を実装し、そこから使い方を判断しましょう。機能の検出の今のところ良い例は次の通りです。最近、 Chrome は<a href="https://www.chromestatus.com/feature/5668726032564224">正規表現に実験的な後方参照の対応を追加しました</a>が、他のブラウザーは今のところ対応していません。ですから、間違って以下のようにするべきと思うかもしれません。</dd>
+ <dd>
+ <pre class="brush: js">// this code snippet splits a string in a special notation
+
+if (navigator.userAgent.indexOf("Chrome") !== -1){
+    // YES! The user is suspected to support look-behind regexps
+    // DO NOT USE /(?&lt;=[A-Z])/. It will cause a syntax error in
+    //  browsers that do not support look-behind expressions
+    //  because all browsers parse the entire script, including
+    //  sections of the code that are never executed.
+    var camelCaseExpression = new RegExp("(?&lt;=[A-Z])"); 
+    var splitUpString = function(str) {
+        return (""+str).split(camelCaseExpression);
+    };
+} else {
+    /*This fallback code is much less performant, but works*/
+    var splitUpString = function(str){
+        return str.replace(/[A-Z]/g,"z$1").split(/z(?=[A-Z])/g);
+    };
+}
+console.log(splitUpString("fooBare")); // ["fooB", "are"]
+console.log(splitUpString("jQWhy")); // ["jQ", "W", "hy"]</pre>
+
+ <p>しかし、上記のコードは絶対的に劣悪で、分かりにくいものです。 Chrome がこの後方参照機能を削除したらどうなりますか？他のブラウザーが正規表現で後方参照を実装したらどうなりますか？別なブラウザーがユーザーエージェント文字列に <em>Chrome</em> を使用したらどうなりますか？このリストはひどい間違いであることを繰り返します。したがって、次のような機能の検出を代わりに使用してください。</p>
+
+ <pre class="brush: js">var isLookBehindSupported = false;
+try { isLookBehindSupported = !!new RegExp("(?&lt;=)"); }catch(e){
+    // In unsupported browsers, lookbehind expressions err
+}
+var splitUpString = isLookBehindSupported ? function(str) {
+    return (""+str).split(new RegExp("(?&lt;=[A-Z])"));
+} : function(str) {
+    return str.replace(/[A-Z]/g,"z$1").split(/z(?=[A-Z])/g);
+};
+</pre>
+
+ <p>上記のコードが示すように、ブラウザーの対応をユーザーエージェントの判定なしに行う方法は<strong>常に</strong>あります。このためにユーザーの文字列をチェックする理由は<strong>決してありません</strong>。</p>
+
+ <p>最後に、上記のコードスニペットは、常に考慮しなければならないクロスブラウザーのコーディングで重大な問題を引き起こします。サポート対象外のブラウザーでテストしている API を意図せず使用しないでください。これは明らかでシンプルに聞こえるかもしれませんが、そうでない時もあります。たとえば、上記のコードスニペットでは、短い regexp 表記 (たとえば /reg/igm) で lookbehind を使用すると、サポートされていないブラウザーで parser エラーが発生します。したがって、あなたのコードの lookbehind がサポートされているセクションであっても、上記の例では <em>/(?&lt;=look_behind_stuff)/ </em>の代わりに <em>new RegExp("(?&lt;=look_behind_stuff)"); </em>を使用します。</p>
+ </dd>
+ <dt>プログレッシブエンハンスメント</dt>
+ <dd>この設計手法は、ウェブサイトを「階層」で開発し、ボトムアップのアプローチを使用して、より簡単な階層から始め、階層が上がるに従ってより多くの機能を使用して、サイトの機能を向上させる方法です。</dd>
+ <dt>グレイスフルデグラデーション</dt>
+ <dd>これはトップダウンのアプローチで、必要なすべての機能を使用して最適なサイトを構築し、それを古いブラウザーでも使用できるように調整する方法です。これは、プログレッシブエンハンスメントよりも難しく、有効性が低くなりますが、場合によっては有用であることがあります。</dd>
+ <dt id="Mobile_Device_Detection">モバイル端末の検出</dt>
+ <dd>おそらく、ユーザーエージェントの判定で最も一般的かつ誤った使用法は、その端末がモバイル端末であるかどうかを検出することです。しかし、それが後で本当にどうなるかは見過ごされがちです。開発者はユーザーエージェントの判定を使用して、ユーザーの端末がタッチ操作であることや小さい画面であることを判別し、それに応じてウェブサイトを最適化することがあります。ユーザーエージェントの判定でこれらを検出できることもありますが、すべての端末が同じではありません。モバイル端末が大きなサイズの画面を持っている場合もあるし、デスクトップが小さなタッチ画面を持っている場合もあるし、まったく異なる球技であるスマートテレビで見ている場合もあるし、タブレットの向きを回転させて画面の幅や高さを動的に変化させている人もいます。よって、ユーザーエージェントの検出は決定的な方法ではありません。幸い、はるかに良い代替方法があります。ユーザーの端末にタッチ画面があるかどうかを検出するには、 <a href="/ja/docs/Web/API/Navigator/maxTouchPoints">Navigator.maxTouchPoints</a> を使用しましょう。そして、 <em>if (!("maxTouchPoints" in navigator)) { /*Code here*/}</em> の場合のみ、ユーザーエージェントの画面をチェックする既定に戻します。この情報を使用して端末にタッチ画面があるかどうかを確認することができますが、タッチ端末であるだけのためにウェブサイトのレイアウト全体を変更しないようにしてください。これは自分の作業とメンテナンスの量を増やすだけです。それよりも、タッチに適したより大きい、よりクリックしやすいボタンを追加しましょう (CSS を使用してフォントサイズを上げるだけです)。モバイル端末で #exampleButton のパディングを 1em に拡張するコードの例を示します。</dd>
+ <dd>
+ <pre class="brush: js">var hasTouchScreen = false;
+if ("maxTouchPoints" in navigator)) { 
+    hasTouchScreen = navigator.maxTouchPoints &gt; 0;
+} else if ("msMaxTouchPoints" in navigator)) {
+    hasTouchScreen = navigator.msMaxTouchPoints &gt; 0; 
+} else {
+    var mQ = window.matchMedia &amp;&amp; matchMedia("(pointer:coarse)");
+    if (mQ &amp;&amp; mQ.media === "(pointer:coarse)") {
+        hasTouchScreen = !!mQ.matches;
+    } else if ('orientation' in window) {
+        hasTouchScreen = true; // depedicated, but good fallback
+    } else {
+        // Only as a last resort, fall back to user agent sniffing
+        var UA = navigator.userAgent;
+        hasTouchScreen = (
+            /\b(BlackBerry|webOS|iPhone|IEMobile)\b/i.test(UA) ||
+            /\b(Android|Windows Phone|iPad|iPod)\b/i.test(UA)
+        );
+    }
+}
+if (hasTouchScreen)
+    document.getElementById("exampleButton").style.padding="1em";</pre>
+ </dd>
+ <dd>画面のサイズについては、 <em>window.innerWidth</em> と window.addEventListener("resize", function(){ /*refresh screen size dependent things*/ }) を使用するだけです。画面サイズの対策としてやりたいことは、小さな画面の時に情報を削らないことです。デスクトップバージョンを使用するようになるので、人々を悩ますだけです。むしろ、小さい画面で長いページでは情報の列数を少なくし、画面サイズが大きいほど短いページで多くの列を持つようにしてください。この効果は、 CSS <a href="/ja/docs/Learn/CSS/CSS_layout/Flexbox">フレックスボックス</a>を使用し、時には部分的な代替手段として<a href="/en-US/docs/Learn/CSS/CSS_layout/Floats">浮動レイアウト</a>を用いることで簡単に達成できます。</dd>
+ <dd>Also try to move less relevant/important information down to the bottom and group the page's content together meaningfully. Although it is off-topic, perhapse the following detailed example might give you insights and ideas that persuade you to forgo user agent sniffing. Let us imagine a page composed of boxes of information; each box is about a different feline breed or canine breed. Each box has an image, an overview, and a historical funfact. The pictures are kept to a maximum reasonable size even on large screens. For the purposes of grouping the content meaningfully, all the cat boxes are separated from all the dog boxes such that the cat and dog boxes are not intermixed together. On a large screen, it saves space to have multiple columns to reduce the space waisted to the left and to the right of the pictures. The boxes can be separated into multiple columns via two equally fair method. From this point on, we shall assume that all the dog boxes are at the top of the source code, that all the cat boxes are at the bottom of the source code, and that all these boxes have the same parent element. There a single instance of a dog box immediately above a cat box, of course. The first method uses horizontal <a href="/ja/docs/Learn/CSS/CSS_layout/Flexbox">Flexboxs</a> to group the content such that when the page is displayed to the end user, all the dogs boxs are at the top of the page and all the cat boxes are lower on the page. The second method uses a <a href="/ja/docs/Web/CSS/Layout_cookbook/Column_layouts">Column</a> layout and resents all the dogs to the left and all the cats to the right. Only in this particular scenario, it is appropriate to provide no fallback for the flexboxes/multicolumns, resulting in a single column of very wide boxes on old browsers. Also consider the following. If more people visit the webpage to see the cats, then it might be a good idea to put all the cats higher in the source code than the dogs so that more people can find what they are looking for faster on smaller screens where the content collapses down to one column.</dd>
+ <dd>次に、コードを常に動的にしましょう。ユーザーは携帯端末の向きを回転させて、ページの幅と高さを変更することがあります。または、将来は広げると画面が拡張できるような、折り畳み式電話のような奇妙な端末が現れるかもしれません。折り畳み式電話のような端末をどのように扱うかということに頭を悩ませないでください。開発者ツールのサイドパネルを開いて画面のサイズを変更してみて、ウェブページが滑らかに、流動的に、動的にサイズ変更されるようになるまで満足しないようにしてください。 The simplest way to do this is to separate all the code that moves content around based on screen size to a single function that is called when the page is loaded and at each <a href="/en-US/docs/Web/API/Window/resize_event">resize</a> event thereafter. If there is a lot calculated by this layout function before it determines the new layout of the page, then consider debouncing the event listener such that it is not called as often. Also note that there is a huge difference between the media queries <code>(max-width: 25em)</code>, <code>not all and (min-width: 25em)</code>, and <code>(max-width: 24.99em)</code>: <code>(max-width: 25em)</code> excludes <code>(max-width: 25em)</code>, whereas <code>not all and (min-width: 25em)</code> includes <code>(max-width: 25em)</code>. <code>(max-width: 24.99em)</code> is simply a poor man's version of  <code>not all and (min-width: 25em)</code>: do not use <code>(max-width: 24.99em)</code> because the layout <em>might</em> break on very high font sizes on very high definition devices in the future. Always be very deliberate about choosing the right media query and choosing the right &gt;=, &lt;=, &gt;, or &lt; in any corresponding Javascript because it is very easy to get these mixed up, resulting in the website looking wonking right at the screen size where the layout changes.  Thus, thouroughly test the website at the exact widths/heights where layout changes occur to ensure that the layout changes occur properly.</dd>
+</dl>
+
+<h2 id="Making_the_best_of_user_agent_sniffing" name="Making_the_best_of_user_agent_sniffing">最適なユーザーエージェントの判定</h2>
+
+<p>After reviewing all of the above better alternatives to user agent sniffing, there are still some potential cases where user agent sniffing is appropriate and justified.</p>
+
+<p>One such case is using user agent sniffing as a fallback when detecting if the device has a touch screen. See the <a href="#Mobile_Device_Detection">Mobile Device Detection</a> section for more information.</p>
+
+<p>Another such case is for fixing bugs in browsers that do not automatically update. Internet Explorer (on Windows) and Webkit (on iOS) are two perfect examples. Prior to version 9, Internet Explorer had unbelievable issues with rendering bugs, css bugs, API bugs, and so forth. However, Internet Explorer was such a special little <s>wasp</s> exception prior to version 9 that it was very easy to detect the browser based upon the browser-specific features avalable. Webkit is a bit worse because Apple forces all of the browsers on iOS to use Webkit internally, thus the user has no way to get a better more updated browser on older devices. Most bugs can be detected, but some bugs take more effort to detect than others. In such cases, it might be beneficial to use user agent sniffing to save on performance. For example, Webkit 6 has a bug whereby when the device orientation changes, the browser might not fire <a href="/en-US/docs/Web/API/MediaQueryList">MediaQueryList</a> listeners when it should. To overcome this bug, observe the code below.</p>
+
+<pre class="brush: js">var UA=navigator.userAgent, isWebkit=/\b(iPad|iPhone|iPod)\b/.test(UA) &amp;&amp; 
+               /WebKit/.test(UA) &amp;&amp; !/Edge/.test(UA) &amp;&amp; !window.MSStream;
+
+var mediaQueryUpdated = true, mqL = [];
+function whenMediaChanges(){mediaQueryUpdated = true}
+
+var listenToMediaQuery = isWebkit ? function(mQ, f) {
+    if(/height|width/.test(mQ.media)) mqL.push([mQ, f]);
+    mQ.addListener(f), mQ.addListener(whenMediaChanges);
+} : function(){};
+var destroyMediaQuery = isWebkit ? function(mQ) {
+    for (var i=0,len=mqL.length|0; i&lt;len; i=i+1|0)
+        if (mqL[i][0] === mQ) mqL.splice(i, 1);
+    mQ.removeListener(whenMediaChanges);
+} : listenToMediaQuery;
+        
+var orientationChanged = false;
+addEventListener("orientationchange", function(){
+    orientationChanged = true;
+}, PASSIVE_LISTENER_OPTION);
+
+addEventListener("resize", setTimeout.bind(0,function(){
+    if (orientationChanged &amp;&amp; !mediaQueryUpdated)
+        for (var i=0,len=mqL.length|0; i&lt;len; i=i+1|0)
+            mqL[i][1]( mqL[i][0] );
+    mediaQueryUpdated = orientationChanged = false;
+},0));</pre>
+
+<h2 id="Which_part_of_the_user_agent_contains_the_information_you_are_looking_for" name="Which_part_of_the_user_agent_contains_the_information_you_are_looking_for">探している情報がユーザーエージェント文字列のどの部分に含まれているか</h2>
+
+<p>ユーザーエージェント文字列のそれぞれの部分には統一性がないので、これは難しい部分です。</p>
+
+<h3 id="Browser_Name" name="Browser_Name">ブラウザー名</h3>
+
+<p>開発者が「ブラウザーを判定したい」という場合、実際は「レンダリングエンジンを判定したい」場合であることがしばしばあります。実際に SeaMonkey と Firefox を、または Chromium と Chrome を区別したいのでしょうか。それとも、実際にはブラウザーがレンダリングエンジンに Gecko を使用しているか、 WebKit を使用しているかを確認したいだけでしょうか。これが必要なのであれば、ページのもっと下を見てください。</p>
+
+<p>ほとんどのブラウザーは、 Internet Explorer の例外を除いて、名前とバージョンを <em>BrowserName/VersionNumber</em> の形式で設定します。しかし、ユーザーエージェント文字列はこのような形式の名前だけから成っている訳ではないので、ブラウザーの名前が分かるわけではなく、探している名前があるかどうかを確認することしかできません。しかし、ブラウザーによってはうそをつくこともあります。例えば Chrome は、 Chrome と Safari の両方の文字列を含みます。ですから Safari を判定するには、 Safari の文字列があって Chrome の文字列がないことを確認する必要がありますし、 Chromium は自分自身を Chrome と報告することがよくあり、 Seamonkey は自分自身を Firefox として報告することが時々あります。</p>
+
+<p>また、 BrowserName に単純な正規表現を使用しないように注意してください。ユーザーエージェント文字列には、 Keyword/Value 構文以外の文字列も含まれています。例えば、 Safari や Chrome では、 'like Gecko' のような文字列が含まれています。</p>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col"></th>
+   <th scope="col">必ず含む</th>
+   <th scope="col">決して含まない</th>
+   <th scope="col"></th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>Firefox</td>
+   <td>Firefox/xyz</td>
+   <td>Seamonkey/xyz</td>
+   <td></td>
+  </tr>
+  <tr>
+   <td>Seamonkey</td>
+   <td>Seamonkey/xyz</td>
+   <td></td>
+   <td></td>
+  </tr>
+  <tr>
+   <td>Chrome</td>
+   <td>Chrome/xyz</td>
+   <td>Chromium/xyz</td>
+   <td></td>
+  </tr>
+  <tr>
+   <td>Chromium</td>
+   <td>Chromium/xyz</td>
+   <td></td>
+   <td></td>
+  </tr>
+  <tr>
+   <td>Safari</td>
+   <td>Safari/xyz</td>
+   <td>Chrome/xyz または Chromium/xyz</td>
+   <td>Safari はバージョン番号を2つ提供しており、一方は技術的な Safari/xyz のトークン、もう一方はユーザーに分かりやすい Version/xyz のトークンです</td>
+  </tr>
+  <tr>
+   <td>Opera</td>
+   <td>
+    <p>OPR/xyz <sup>[1]</sup></p>
+
+    <p>Opera/xyz <sup>[2]</sup></p>
+   </td>
+   <td></td>
+   <td>
+    <p><sup>[1]</sup> Opera 15+ (Blink-based engine)</p>
+
+    <p><sup>[2]</sup> Opera 12- (Presto-based engine)</p>
+   </td>
+  </tr>
+  <tr>
+   <td>Internet Explorer</td>
+   <td>; MSIE xyz;</td>
+   <td></td>
+   <td>Internet Explorer は名前を <em>BrowserName/VersionNumber</em> の書式では入れません</td>
+  </tr>
+ </tbody>
+</table>
+
+<p>もちろん、他のブラウザーがこれらの一部をハイジャックしないという絶対的な保証はありません (過去に Chrome が Safari の文字列をハイジャックしたように)。そのため、ユーザーエージェント文字列を使用したブラウザーの判定は信頼性が低いので、バージョン番号をチェックするのみにしてください (過去のバージョンをハイジャックすることはあまりありません)。</p>
+
+<h3 id="Browser_version" name="Browser_version">ブラウザーのバージョン</h3>
+
+<p>ブラウザーのバージョンは、例外はあるものの、多くがユーザーエージェント文字列の <em>BrowserName/VersionNumber</em> トークンの値の部分に入れられます。もちろんこれは Internet Explorer の場合は当てはまらず (MSIE トークンの直後にバージョン番号を入れる)、 Opera のバージョン10以降では、 Version/<em>VersionNumber</em> トークンが追加されています。</p>
+
+<p>ここで再度、探しているブラウザーの正しいトークンを取得していることを確認してください。他には妥当な番号が含まれているという保証はありません。</p>
+
+<h3 id="Rendering_engine" name="Rendering_engine">レンダリングエンジン</h3>
+
+<p>前述のように、多くの場合はレンダリングエンジンを探した方が良い方法になります。これは、あまり知られていないブラウザーを除外しないためにも役立つでしょう。共通のレンダリングエンジンを持つブラウザーはページを同じ方法で表示します。一方で動作するものはもう一方でも動作するということを想定することができます。</p>
+
+<p>主なレンダリングエンジンには、 Trident, Gecko, Presto, Blink, WebKit の5つがあります。レンダリングエンジンの名前を探すのが一般的であるため、たくさんのレンダリングエンジンが他の連らリングエンジンの名前も追加して検出されるようにしています。したがって、レンダリングエンジンを判定する際には誤判定をしないように注意を払うことが重要です。</p>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col"></th>
+   <th scope="col">必ず含む</th>
+   <th scope="col"></th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>Gecko</td>
+   <td>Gecko/xyz</td>
+   <td></td>
+  </tr>
+  <tr>
+   <td>WebKit</td>
+   <td>AppleWebKit/xyz</td>
+   <td>注意: WebKit ブラウザーは 'like Gecko' の文字列を追加するので、判定時に注意しないと Gecko と誤認することがあります。</td>
+  </tr>
+  <tr>
+   <td>Presto</td>
+   <td>Opera/xyz</td>
+   <td><strong>Note:</strong> Presto is no longer used in Opera browser builds &gt;= version 15 (see 'Blink')</td>
+  </tr>
+  <tr>
+   <td>Trident</td>
+   <td>Trident/xyz</td>
+   <td>Internet Explorer put this token in the <em>comment</em> part of the User Agent String</td>
+  </tr>
+  <tr>
+   <td>Blink</td>
+   <td>Chrome/xyz</td>
+   <td></td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Rendering_engine_version" name="Rendering_engine_version">レンダリングエンジンのバージョン</h2>
+
+<p>ほとんどのレンダリングエンジンは、 Gecko を除いて <em>RenderingEngine/VersionNumber</em> のトークンにバージョン番号を入れています。 Gecko はユーザーエージェント文字列のコメント部分の中で、 <code>rv:</code> 文字列の後にバージョン番号を入れます。モバイル版の Gecko 14 とデスクトップ版の Gecko 17 から、この値を <code>Gecko/version</code> のトークン (以前のバージョンではビルド日付、その後は GeckoTrail と呼ばれる固定日付) に置きます。</p>
+
+<h2 id="OS">OS</h2>
+
+<p>オペレーティングシステムは、多くのユーザーエージェント文字列で提供されますが (ただし Firefox OS のようなウェブ用のプラットフォームでは提供されません)、書式は大幅に異なります。これはユーザーエージェント文字列のコメント部分にある2つのセミコロン間の固定文字列です。これらの文字列はブラウザーに依存します。これは OS を示しますが、しばしばバージョンや依存するハードウェア (32/64ビットや、 Mac の場合の Intel / PPC) も示します。</p>
+
+<p>すべての場合と同様に、これらの文字列は将来変更される可能性があり、既にリリースされているブラウザーの判定と組み合わせて使用する必要があります。新しいバージョンのブラウザーが出現したときは、スクリプトを適合させるための技術調査が必要です。</p>
+
+<h3 id="Mobile_Tablet_or_Desktop" name="Mobile_Tablet_or_Desktop">モバイルか、タブレットか、デスクトップか</h3>
+
+<p>ユーザーエージェントの判別を行う最も一般的な理由は、ブラウザーが実行されている端末の種類を判別することです。目的は、それぞれの種類の端末に別々な HTML を提供することです。</p>
+
+<ul>
+ <li>ブラウザーやレンダリングエンジンは、1種類の端末でしか動作しないと想定しないでください。ブラウザーやレンダリングエンジンごとに、異なる既定値を設定しないでください。</li>
+ <li>ブラウザーがモバイル、タブレット、デスクトップのいずれであるかを定義するために、 OS トークンを使用しないでください。 OS は複数の種類の端末 (Android はタブレットや携帯電話など) で動作します。</li>
+</ul>
+
+<p>次の表は主要なブラウザーのベンダーが、ブラウザーがモバイル端末上で動作していることを示す方法をまとめたものです。</p>
+
+<table>
+ <caption>各ブラウザーのユーザーエージェント文字列</caption>
+ <thead>
+  <tr>
+   <th scope="col">ブラウザー</th>
+   <th scope="col">ルール</th>
+   <th scope="col">例</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>Mozilla (Gecko, Firefox)</td>
+   <td><a href="/ja/docs/Gecko_user_agent_string_reference"><strong>Mobile</strong> または <strong>Tablet</strong> のトークン</a>がコメントの中にある。</td>
+   <td>Mozilla/5.0 (Android; Mobile; rv:13.0) Gecko/13.0 Firefox/13.0</td>
+  </tr>
+  <tr>
+   <td>WebKit ベースのもの (Android, Safari)</td>
+   <td><a href="https://developer.apple.com/library/safari/documentation/AppleApplications/Reference/SafariWebContent/OptimizingforSafarioniPhone/OptimizingforSafarioniPhone.html#//apple_ref/doc/uid/TP40006517-SW3"><strong>Mobile Safari</strong> のトークン</a>がコメントの外にある。</td>
+   <td>Mozilla/5.0 (Linux; U; Android 4.0.3; de-ch; HTC Sensation Build/IML74K) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30</td>
+  </tr>
+  <tr>
+   <td>Blink ベースのもの (Chromium, Google Chrome, Opera 15 以降)</td>
+   <td><a href="https://developers.google.com/chrome/mobile/docs/user-agent"><strong>Mobile Safari</strong> のトークン</a>がコメントの外にある。</td>
+   <td>Mozilla/5.0 (Linux; Android 4.4.2); Nexus 5 Build/KOT49H) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/33.0.1750.117 Mobile Safari/537.36 OPR/20.0.1396.72047</td>
+  </tr>
+  <tr>
+   <td>Presto ベースのもの (Opera 12 まで)</td>
+   <td>
+    <p><a href="http://my.opera.com/community/openweb/idopera/"><strong>Opera Mobi/xyz</strong> のトークン</a>がコメントの中にある。 (Opera 12 まで)</p>
+   </td>
+   <td>
+    <p>Opera/9.80 (Android 2.3.3; Linux; Opera Mobi/ADR-1111101157; U; es-ES) Presto/2.9.201 Version/11.50</p>
+   </td>
+  </tr>
+  <tr>
+   <td>Internet Explorer</td>
+   <td><strong>IEMobile/xyz</strong> のトークンがコメントの中にある。</td>
+   <td>Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0)</td>
+  </tr>
+ </tbody>
+</table>
+
+<p>要するに、モバイル端末を検出するには、ユーザーエージェント文字列のどこかに文字列 “Mobi” があるかどうかを探すことをお勧めします。</p>
+
+<div class="note">
+<p>端末が大きくて “Mobi” と表示されていない場合は、デスクトップサイトを提供してください (ベストプラクティスとして、デスクトップ機にタッチ画面が採用されつつあるので、どちらにしてもタッチ入力に対応するようにしてください)。</p>
+</div>

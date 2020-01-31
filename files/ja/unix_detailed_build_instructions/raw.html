@@ -1,0 +1,73 @@
+<p>これは以下のものを含む、Unix 上で Mozilla をビルドするためのガイドです:
+</p>
+<ul><li> 必要な開発ツールの一覧
+</li><li> Autoconf ビルドシステムを使って Mozilla をビルドするためのコマンド
+</li></ul>
+<p>機能を開発したりバグを修正するためのドキュメントは、<a href="ja/Main_Page">Mozilla テクニカルドキュメント</a> または <a class="external" href="http://www.mozilla.org/library.html">ライブラリ</a> を参照してください。一般的な Unix の問題は、<a class="external" href="http://www.mozilla.org/unix/">Mozilla Unix</a> を参照してください。
+</p>
+<h3 id=".E4.BB.96.E3.81.AE_Unix_.E3.83.93.E3.83.AB.E3.83.89.E3.83.9A.E3.83.BC.E3.82.B8"> 他の Unix ビルドページ </h3>
+<ul><li> <a href="ja/Adding_Files_to_the_Build">ファイルを追加し、ビルドを壊さない方法</a>
+</li><li> <a class="external" href="http://www.mozilla.org/build/configurator-faq.html">Build Configuator FAQ</a>: <a class="external" href="http://webtools.mozilla.org/build/config.cgi">Unix Build Configurator</a> のための FAQ です。
+</li></ul>
+<h3 id=".E5.BF.85.E8.A6.81.E7.92.B0.E5.A2.83"> 必要環境 </h3>
+<p><a href="ja/Linux_Build_Prerequisites">Unix ビルド必要環境</a> をご覧ください。
+</p>
+<h3 id=".E3.82.B3.E3.83.BC.E3.83.89.E3.82.92.E5.85.A5.E6.89.8B.E3.81.99.E3.82.8B"> コードを入手する </h3>
+<p>ソースコードを手に入れるには、2つの方法があります:
+</p>
+<h4 id="FTP"> <a href="ja/Mozilla_Source_Code_(HTTP%2f%2fFTP)">FTP</a> </h4>
+<p>これは少なくとも 1 週間に 1 度 (普通は毎日) 作成され、コンパイルでき、プラットフォームによってはそのまま作動さえします。
+</p>
+<h4 id="CVS"> <a href="ja/Mozilla_Source_Code_(CVS)">CVS</a> </h4>
+<p>最も新しいコードを提供しますが、FTP より低速です。(はじめに <a class="external" href="http://tinderbox.mozilla.org/showbuilds.cgi?tree=SeaMonkey">Tinderbox</a> が緑色になっていて、コンパイルできることを確認してください。)
+</p>
+<pre class="eval">setenv CVSROOT <a class=" link-mailto" href="mailto::pserver:anonymous@cvs-mirror.mozilla.org">:pserver:anonymous@cvs-mirror.mozilla.org</a>:/cvsroot
+cvs login
+<span>(パスワード: anonymous) (一度ログインすれば大丈夫です)</span>
+cvs co mozilla/client.mk
+cd mozilla
+gmake -f client.mk checkout
+</pre>
+<p>makefile は Mozilla のビルドのために正しいソースを引っ張ってきます。それには、いくつかのタグ付けされたブランチ (NSPR など) も含まれます。
+</p><p>HEAD ブランチにある mozilla/ CVS を手作業でチェックアウトしようとしないでください。うまくいかないはずです。
+</p>
+<h3 id=".E3.83.88.E3.82.AB.E3.82.B2_.28Lizard.29_.E3.82.92.E3.83.93.E3.83.AB.E3.83.89.E3.81.99.E3.82.8B"> トカゲ (Lizard) をビルドする </h3>
+<h4 id=".E6.89.8B.E5.8B.95.E3.81.A7.E3.83.93.E3.83.AB.E3.83.89.E3.81.99.E3.82.8B"> 手動でビルドする </h4>
+<ol><li> <code>cd mozilla</code>
+</li><li> <code>./configure &lt;var&gt;{{ mediawiki.external('オプション') }}&lt;/var&gt;</code><br>オプションを設定するには、<code>./configure --help</code> を実行するか、<a class="external" href="http://webtools.mozilla.org/build/config.cgi">Unix Build Configurator</a> を使用してください。<i>If you don't know what a configure option does</i>, don't use it. The default is to create a un-optimized build with debugging information. If you want an optimized build, use the configure options <code>--disable-debug --enable-optimize</code>.
+</li><li> <code>gmake</code>
+</li></ol>
+<p>設定 (configure) が終了している場合で、Makefile.in ファイル (cvs update で出来ます。気をつけて！) を追加したり削除したい場合は、 <b><code>configure</code></b> を実行するだけです。 makefile のリストは <b><code>mozilla/allmakefiles.sh</code></b> にあります。
+</p><p>ビルドシステムハッカーへ: configure.in を変更した場合、mozilla へ cd し、 <b><code>autoconf-2.13</code></b> を実行してください。これで新しいコンフィギュレータスクリプトを生成することが出来ます。(configure.in をチェックインする時、cvs は新しいコンフィギュレータスクリプト内で autoconf および check を実行します。) </p>
+<h4 id=".E8.87.AA.E5.8B.95.E3.83.93.E3.83.AB.E3.83.89_.28client.mk.29"> 自動ビルド (client.mk) </h4>
+<ol><li> <a class="external" href="http://webtools.mozilla.org/build/config.cgi">Unix Build Configurator</a> からのスクリプトを <b><code>~/.mozconfig</code></b> として保存します。
+</li><li> <code>cvs co -f mozilla/client.mk</code>
+</li><li> <code>cd mozilla</code>
+</li><li> <code>gmake -f client.mk</code>
+</li></ol>
+<p>ツリーを引っ張ってくることなくビルドを行いたい場合 (すでに手元にあるソースを利用する場合など)、<code>gmake -f client.mk build</code>
+</p><p>ツリーを引っ張ってくるだけでとめておきたい場合、<code>gmake -f client.mk checkout</code>
+</p><p>If you want to build <a class="external" href="http://www.mozilla.com/firefox/">Firefox</a>, use the {{ Source("browser/config/mozconfig", "example mozconfig file") }} in the mozilla/browser/config source directory.
+</p>
+<h3 id=".E3.83.93.E3.83.AB.E3.83.89.E3.81.AE.E5.BE.8C"> ビルドの後 </h3>
+<ul><li> <b><code>cd dist/bin</code></b> および実行ファイルを走らせるためのスクリプトへのリンクが出来ているはずです: <code>mozilla</code> および <code>mozilla-viewer.sh</code>
+</li><li> そのスクリプトが作動しない場合、<b><code>LD_LIBRARY_PATH</code></b> を設定し、<code>mozilla-bin</code> および <code>viewer</code> を直接走らせてください。 <b><code>LD_LIBRARY_PATH</code></b> を設定して dist/bin、 NSPR および GTK を含んでください (例えば、<code>.:../../nspr/lib</code> と設定することができます)。
+<ul><li> HP-UX 上で対応する環境変数は <code>SHLIB_PATH</code> です。
+</li><li> AIX 上で対応する環境変数は <code>LIBPATH</code> です。 </li></ul>
+</li><li> dist/bin 以外のどこからでも実行ファイルを走らせたい場合は、 環境変数の <b><code>MOZILLA_FIVE_HOME</code></b> が dist/bin ディレクトリを 絶対パス で指定していなければなりません。
+</li><li> 再 checkout を行ってソースを更新してください、e.g. 最初のチェックアウトプロセスを繰り返します。 </li></ul>
+<h3 id=".E3.81.9D.E3.81.AE.E4.BB.96"> その他 </h3>
+<p>パラレルビルド: gmake に -j4 を追加するだけでは作動しません。以下のことをしなければなりません:
+</p>
+<pre>setenv MAKE gmake -j4
+</pre>
+<div class="originaldocinfo">
+<h2 id=".E5.8E.9F.E6.96.87.E6.9B.B8.E3.81.AE.E6.83.85.E5.A0.B1"> 原文書の情報 </h2>
+<ul><li> 著者: <a class="link-mailto" href="mailto:leaf@mozilla.org">Daniel Nunes</a>
+</li><li> 最終更新日: October 9, 2004
+</li><li> 著作権: Portions of this content are © 1998–2007 by individual mozilla.org contributors; content available under a Creative Commons license | <a class="external" href="http://www.mozilla.org/foundation/licensing/website-content.html">詳細</a>
+</li></ul>
+</div>
+<div class="noinclude">
+</div>
+{{ languages( { "en": "en/Unix_Detailed_Build_Instructions" } ) }}

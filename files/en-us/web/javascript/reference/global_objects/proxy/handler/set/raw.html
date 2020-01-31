@@ -1,0 +1,116 @@
+<div>{{JSRef}}</div>
+
+<p>The <code><strong>handler.set()</strong></code> method is a trap for setting a property value.</p>
+
+<div>{{EmbedInteractiveExample("pages/js/proxyhandler-set.html", "taller")}}</div>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<h2 id="Syntax">Syntax</h2>
+
+<pre class="brush: js">var p = new Proxy(target, {
+  set: function(target, property, value, receiver) {
+  }
+});
+</pre>
+
+<h3 id="Parameters">Parameters</h3>
+
+<p>The following parameters are passed to the <code>set</code> method. <code>this</code> is bound to the handler.</p>
+
+<dl>
+ <dt><code>target</code></dt>
+ <dd>The target object.</dd>
+ <dt><code>property</code></dt>
+ <dd>The name or {{jsxref("Symbol")}}  of the property to set. </dd>
+ <dt><code>value</code></dt>
+ <dd>The new value of the property to set.</dd>
+ <dt><code>receiver</code></dt>
+ <dd>The object to which the assignment was originally directed. This is usually the proxy itself. But a <code>set</code> handler can also be called indirectly, via the prototype chain or various other ways.</dd>
+ <dd>For example, suppose a script does <code>obj.name = "jen"</code>, and <code>obj</code> is not a proxy, and has no own property <code>.name</code>, but it has a proxy on its prototype chain. That proxy's <code>set</code> handler will be called, and <code>obj</code> will be passed as the receiver.</dd>
+</dl>
+
+<h3 id="Return_value">Return value</h3>
+
+<p>The <code>set</code> method should return a boolean value. Return <code>true</code> to indicate that assignment succeeded. If the <code>set</code> method returns <code>false</code>, and the assignment happened in strict-mode code, a <code>TypeError</code> will be thrown.</p>
+
+<h2 id="Description">Description</h2>
+
+<p>The <code><strong>handler.set</strong></code> method is a trap for setting property value.</p>
+
+<h3 id="Interceptions">Interceptions</h3>
+
+<p>This trap can intercept these operations:</p>
+
+<ul>
+ <li>Property assignment: <code>proxy[foo] = bar</code> and <code>proxy.foo = bar</code></li>
+ <li>Inherited property assignment: <code>Object.create(proxy)[foo] = bar</code></li>
+ <li>{{jsxref("Reflect.set()")}}</li>
+</ul>
+
+<h3 id="Invariants">Invariants</h3>
+
+<p>If the following invariants are violated, the proxy will throw a {{jsxref("TypeError")}}:</p>
+
+<ul>
+ <li>Cannot change the value of a property to be different from the value of the corresponding target object property if the corresponding target object property is a non-writable, non-configurable data property.</li>
+ <li>Cannot set the value of a property if the corresponding target object property is a non-configurable accessor property that has <code>undefined</code> as its [[Set]] attribute.</li>
+ <li>In strict mode, a <code>false</code> return value from the <code>set</code> handler will throw a {{jsxref("TypeError")}} exception.</li>
+</ul>
+
+<h2 id="Examples">Examples</h2>
+
+<p>The following code traps setting a property value.</p>
+
+<pre class="brush: js">var p = new Proxy({}, {
+  set: function(target, prop, value, receiver) {
+    target[prop] = value;
+    console.log('property set: ' + prop + ' = ' + value);
+    return true;
+  }
+})
+
+console.log('a' in p);  // false
+
+p.a = 10;               // "property set: a = 10"
+console.log('a' in p);  // true
+console.log(p.a);       // 10
+</pre>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-proxy-object-internal-methods-and-internal-slots-set-p-v-receiver', '[[Set]]')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-proxy-object-internal-methods-and-internal-slots-set-p-v-receiver', '[[Set]]')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<div>
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.builtins.Proxy.handler.set")}}</p>
+</div>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li>{{jsxref("Proxy")}}</li>
+ <li>{{jsxref("Proxy.handler", "handler")}}</li>
+ <li>{{jsxref("Reflect.set()")}}</li>
+</ul>

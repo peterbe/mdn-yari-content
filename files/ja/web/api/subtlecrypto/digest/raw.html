@@ -1,0 +1,127 @@
+<div>{{APIRef("Web Crypto API")}}</div>
+
+<div></div>
+
+<p>{{domxref("SubtleCrypto")}} インターフェースの <code><strong>digest()</strong></code> メソッドは、指定されたデータの {{Glossary("digest")}} を返します。ダイジェストとは、可変長の入力に由来する固定長の短い値です。暗号的ダイジェスト値は耐衝突性を示すため、同じダイジェスト値を持つ2つの異なる入力を見つけるのは非常に困難です。</p>
+
+<p>引数として、使用するダイジェストアルゴリズムの識別子とダイジェスト値の元となるデータを受け取ります。ダイジェスト値で解決される <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise" title="The Promise object represents the eventual completion (or failure) of an asynchronous operation, and its resulting value."><code>Promise</code></a> を返します。</p>
+
+<h2 id="構文">構文</h2>
+
+<pre class="syntaxbox">const digest = <em>crypto</em><code>.subtle.digest(<em>algorithm</em>, <em>data</em>)</code>;
+</pre>
+
+<h3 id="パラメータ">パラメータ</h3>
+
+<ul>
+ <li><em><code>algorithm</code></em> は、使用するダイジェストアルゴリズムを定義する {{domxref("DOMString")}} です。サポートされる値は次のとおりです:
+
+  <ul>
+   <li><code>SHA-1</code> (暗号化アプリケーションではこれを使用しないでください)</li>
+   <li><code>SHA-256</code></li>
+   <li><code>SHA-384</code></li>
+   <li><code>SHA-512</code></li>
+  </ul>
+ </li>
+ <li><em><code>data</code></em> は、ダイジェスト値の元となるデータを含む {{jsxref("ArrayBuffer")}} もしくは {{domxref("ArrayBufferView")}} です。</li>
+</ul>
+
+<h3 id="返り値">返り値</h3>
+
+<ul>
+ <li><code><em>digest</em></code> は、ダイジェスト値を含む <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer" title="The ArrayBuffer object is used to represent a generic, fixed-length raw binary data buffer. You cannot directly manipulate the contents of an ArrayBuffer; instead, you create one of the typed array objects or a DataView object which represents the buffer in a specific format, and use that to read and write the contents of the buffer.">ArrayBuffer</a></code> で解決される <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise" title="The Promise object represents the eventual completion (or failure) of an asynchronous operation, and its resulting value."><code>Promise</code></a> です。</li>
+</ul>
+
+<h2 id="サポートされるアルゴリズム">サポートされるアルゴリズム</h2>
+
+<p>ダイジェストアルゴリズムは <a href="/en-US/docs/Glossary/Cryptographic_hash_function">暗号ハッシュ関数</a> とも呼ばれ、任意の大きなデータブロックを固定サイズの出力 (通常は入力よりもはるかに短い出力) に変換します。暗号化にはさまざまな用途があります。</p>
+
+<h3 id="SHA-1">SHA-1</h3>
+
+<p>このアルゴリズムは <a href="https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf">FIPS 180-4</a>, section 6.1 で定義されており、160 bit 長の出力を生成します。</p>
+
+<div class="blockIndicator warning">
+<p><strong>警告</strong>: このアルゴリズムは現在脆弱であると見なされているため、暗号化アプリケーションには使用しないでください。</p>
+</div>
+
+<h3 id="SHA-256">SHA-256</h3>
+
+<p>このアルゴリズムは <a href="https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf">FIPS 180-4</a>, section 6.2 で定義されており、256 bit 長の出力を生成します。</p>
+
+<h3 id="SHA-384">SHA-384</h3>
+
+<p>このアルゴリズムは <a href="https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf">FIPS 180-4</a>, section 6.5 で定義されており、384 bit 長の出力を生成します。</p>
+
+<h3 id="SHA-512">SHA-512</h3>
+
+<p>このアルゴリズムは <a href="https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf">FIPS 180-4</a>, section 6.4 で定義されており、512 bit 長の出力を生成します。</p>
+
+<div class="blockIndicator note">
+<p>ヒント: キー付きハッシュメッセージ認証コード (<a href="/en-US/docs/Glossary/HMAC">HMAC</a>), の作成方法をここで探している場合は、代わりに <a href="/en-US/docs/Web/API/SubtleCrypto/sign#HMAC">SubtleCrypto.sign()</a> を使用する必要があります。</p>
+</div>
+
+<h2 id="例">例</h2>
+
+<h3 id="基本的な例">基本的な例</h3>
+
+<p>この例では、メッセージをエンコードし、SHA-256ダイジェスト値を計算して、ダイジェスト長を記録します:</p>
+
+<pre class="brush: js">const text = 'An obscure body in the S-K System, your majesty. The inhabitants refer to it as the planet Earth.';
+
+async function digestMessage(message) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(message);
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return hash;
+}
+
+const digestBuffer = await digestMessage(text);
+console.log(digestBuffer.byteLength);
+</pre>
+
+<h3 id="ダイジェスト値を16進文字列に変換する">ダイジェスト値を16進文字列に変換する</h3>
+
+<p>ダイジェストは<code>ArrayBuffer</code>として返されますが、比較および表示のために、ダイジェスト値は多くの場合16進文字列として表されます。 この例では、ダイジェストを計算し、<code>ArrayBuffer</code>を16進文字列に変換します:</p>
+
+<pre class="brush: js">const text = 'An obscure body in the S-K System, your majesty. The inhabitants refer to it as the planet Earth.';
+
+async function digestMessage(message) {
+  const msgUint8 = new TextEncoder().encode(message);                           // encode as (utf-8) Uint8Array
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);           // hash the message
+  const hashArray = Array.from(new Uint8Array(hashBuffer));                     // convert buffer to byte array
+  const hashHex = hashArray.map(b =&gt; b.toString(16).padStart(2, '0')).join(''); // convert bytes to hex string
+  return hashHex;
+}
+
+const digestHex = await digestMessage(text);
+console.log(digestHex);
+</pre>
+
+<h2 id="仕様書">仕様書</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">状態</th>
+   <th scope="col">備考</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('Web Crypto API', '#dfn-SubtleCrypto-method-digest', 'SubtleCrypto.digest()')}}</td>
+   <td>{{Spec2('Web Crypto API')}}</td>
+   <td>初回定義</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="ブラウザの互換性">ブラウザの互換性</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("api.SubtleCrypto.digest")}}</p>
+
+<h2 id="関連情報">関連情報</h2>
+
+<ul>
+ <li><a href="https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf" rel="noopener">FIPS 180-4</a> specifies the SHA family of digest algorithms.</li>
+</ul>

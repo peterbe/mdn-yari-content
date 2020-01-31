@@ -1,0 +1,149 @@
+<p>对于 Web 设计者来说, 想移除其设计中某些 (或全部) 超链接的下划线是相当常见的事情。但是由于在过去浏览器中的一些不标准的行为, 一些人在删除超链接中下划线的正确方法方面存在一些问题。最常见的错误是这样做：</p>
+
+<pre>&lt;a href="link.html"&gt;
+&lt;span style="text-decoration: none;"&gt;一个链接&lt;/span&gt;
+&lt;/a&gt;</pre>
+
+<p>与大部分人的想法相反，这样去除下划线是不应该的。本文将会探讨去除下滑的正确方法及其原因。正确的处理下划线有很大的好处，譬如简洁的标签及高可读性的源代码。</p>
+
+<h3 id="How_Text_Gets_Decorated" name="How_Text_Gets_Decorated">文字是如何被加上修饰线（decoration）的</h3>
+
+<p>了解如何正确删除下划线之前，我们先了解一下修饰线（<code>decoration</code> 下同）是如何被应用的。首先，让我们先思考一个 <code>span</code> 在一个 <code>p</code> 中会是什么样子。</p>
+
+<pre class="brush: html">&lt;p&gt;&lt;span style="text-decoration: underline;"&gt;
+这里有一些文字
+&lt;/span&gt;&lt;/p&gt;</pre>
+
+<p>很明显，就像下面所展示的：文字被加上了下划线。</p>
+
+<p> </p>
+
+<p><u>这里有一些文字。</u></p>
+
+<p> </p>
+
+<p>现在，让我们添加再添加一个 <code>span</code> 嵌套在之前的 <code>span</code> 里面。然后再给后加的 <code>span</code> 一个不一样的线样式：</p>
+
+<pre class="brush: html">&lt;p&gt;&lt;span style="text-decoration: underline;"&gt;
+这里有一些
+&lt;span style="text-decoration: overline;"&gt;额外的&lt;/span&gt; 
+文字。
+&lt;/span&gt;&lt;/p&gt;</pre>
+
+<p> </p>
+
+<p><u>这里有一些<span style="text-decoration: overline;">额外的</span>文字。</u></p>
+
+<p> </p>
+
+<p>我们发现此例的 “额外的” 一词出现了既有上划线也有下划线的情况。但是这为什么呢？我们仅给最里面 <code>span</code> 标签设置了上划线。<code>text-decoration</code> 的值并不会被继承。那么为什么 “额外的” 下面会有下划线呢？</p>
+
+<p>现在让我们把最里面 <code>span</code> 的文字颜色（<code>color</code> 下同）改一下，比如红色，我们就能知道怎么回事了。</p>
+
+<p> </p>
+
+<p><u>这里有一些<span style="color: red; text-decoration: overline;">额外的</span>文字。</u></p>
+
+<p> </p>
+
+<p>上划线和文字一起变成了红色，但是下划线并没有。这是因为下划线实际上是外面 <code>span</code> 的一部分，它只是在最里面 <code>span</code> 的下方经过而已。如果我们给外面的 <code>span</code> 加个背景，我们一般是希望背景也能穿过里面 <code>span</code> 显示出来。同样的，父级的文字修饰线就会显示在子级元素上，即使你并没有给子级元素设置或继承修饰线。</p>
+
+<p>现在，让我们明确地移除里面 <code>span</code> 的修饰线样式。</p>
+
+<pre class="brush: html">&lt;p&gt;&lt;span style="text-decoration: underline;"&gt;
+这里有一些
+&lt;span style="text-decoration: none; color: red;"&gt;额外的&lt;/span&gt; 
+文字。
+&lt;/span&gt;&lt;/p&gt;</pre>
+
+<p>这样意味着不应有任何修饰线样式在里面的 <code>span</code> 上，但是这样并不会阻止外面的 <code>span</code> 显示下划线。这就和 “把里面 <code>span</code> 的背景设为透明并不会让我们看不到外面 <code>span</code> (或者 <code>body</code> 之类的) 的背景” 一样。我们可以在下面看见，下划线仍旧是外面 <code>span</code> 的颜色。</p>
+
+<p> </p>
+
+<p><u>这里有一些<span style="color: red; text-decoration: none;">额外的</span>文字。</u></p>
+
+<p> </p>
+
+<p>那么让我们考虑一下这种情况：你在一个超链接 <code>a</code> 里添加了一个 <code>span</code> ，如果你想移除链接的下划线。但是因为上面所说的原因，你是没办法这样达成目的：</p>
+
+<pre>&lt;a href="http://developer.netscape.com/"&gt;这个链接
+&lt;span style="text-decoration: none; font-weight: bold;"&gt;
+有个span
+&lt;/span&gt;在里面&lt;/a&gt;</pre>
+
+<p> </p>
+
+<p><img alt="Figure 5"></p>
+
+<p> </p>
+
+<p>因此，我们不能使用这种方式移除下划线，我们需要其他的方法。而这其他的方法比你想象的要简单许多。</p>
+
+<h3 id="How_to_Really_Turn_Off_Underlines" name="How_to_Really_Turn_Off_Underlines">如何真正地将下划线移除</h3>
+
+<p>答案很简单：The answer is simple: if you don't want a link to have an underline, then turn off the underlining for the link itself. Don't try to override the decoration with a <code>span</code> inside the link. It won't work in properly written browsers, and even if it did it would be a wasteful practice.</p>
+
+<p>For example, let's say you wanted to remove the underlining from all hyperlinks throughout the document. That's as easy as:</p>
+
+<pre>a:link, a:visited {text-decoration: none;}</pre>
+
+<p>Another common situation is to remove the underlines from only a select set of links. For example, navigation links across the top of a page are often a target for the no-underline treatment. In that case, your best bet is to class (or ID) an element that those links share in common, and then write styles accordingly. For example, suppose you have all of your links in a table. Adding an <code>id</code> attribute to the <code>table</code> itself is the way to go.</p>
+
+<pre>&lt;table id="navbar"&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="link1.html"&gt;Home&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href="link2.html"&gt;Electronics&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href="link3.html"&gt;Accessories&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href="link4.html"&gt;Software&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href="link5.html"&gt;Checkout&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;</pre>
+
+<p>With the <code>id</code> in place, we can now write a single CSS rule:</p>
+
+<p><code>table#navbar a {text-decoration: none;}</code></p>
+
+<p>The biggest beneficial side-effect is that it's possible to expand on this rule to give the links other styles. For example:</p>
+
+<pre>table#navbar a {text-decoration: none; color: yellow;
+font: 10px sans-serif; letter-spacing: 1px; padding: 0 1em;}</pre>
+
+<p>Of course, you could put classes directly on the links you wish to style, and in some cases that's necessary. However, in the majority of cases, authors will be well served by an approach similar to the one shown here.</p>
+
+<h3 id="Other_Decorations" name="Other_Decorations">其他修饰线</h3>
+
+<p>This article has focused on underlines because they are by far the most common text decoration in use on the Web. However, the principles discussed here apply to any form of decoration. If text is styled with a strike-through line, then that will run through the element's text and the text of any descendant elements, no matter what value they are given for <code>text-decoration</code>. As an example:</p>
+
+<pre>&lt;p style="text-decoration: line-through;"&gt;
+This text has been 
+&lt;span style="text-decoration: none; color: red;"&gt;stricken&lt;/span&gt; 
+with a line.
+&lt;/p&gt;</pre>
+
+<p>The text in this paragraph will all be stricken, although the word "stricken" will be red. This is shown in Figure 6.</p>
+
+<p><img alt="Figure 6"></p>
+
+<h3 id="Conclusion" name="Conclusion">结论</h3>
+
+<p>Although some browsers will let you get away with it, the use of <code>span</code> to "switch off" text decorations is not correct CSS and will not work in CSS-conformant browsers. Thus, many Web sites authored to proprietary behavior will not display as the designer intended in more recent browsers. Fortunately, there are several benefits to abandoning this legacy code practice in favor of directly styling hyperlinks.</p>
+
+<h3 id="Recommendations" name="Recommendations">建议</h3>
+
+<ul>
+ <li>Do <strong>not</strong> try to style links with <code>span</code> elements; the practice is wasteful and cannot be used to "remove" text decorations such as underlines in CSS-conformant browsers.</li>
+ <li>Make use of CSS selectors and the ability to class or ID elements to bring efficiency to your CSS.</li>
+</ul>
+
+<div class="originaldocinfo">
+<h3 id=".E6.96.87.E7.AB.A0.E5.8E.9F.E5.A7.8B.E4.BF.A1.E6.81.AF" name=".E6.96.87.E7.AB.A0.E5.8E.9F.E5.A7.8B.E4.BF.A1.E6.81.AF">文章原始信息</h3>
+
+<ul>
+ <li>作者： Eric A. Meyer, Netscape Communications</li>
+ <li>最后更新： Published 2002年3月5日</li>
+ <li>版权信息： Copyright © 2001-2003 Netscape. All rights reserved.</li>
+ <li>注意： This reprinted article was originally part of the DevEdge site.</li>
+</ul>
+</div>
+
+<p> </p>

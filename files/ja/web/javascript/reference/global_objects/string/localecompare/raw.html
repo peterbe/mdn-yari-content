@@ -1,0 +1,184 @@
+<div>{{JSRef("Global_Objects", "String")}}</div>
+
+<h2 id="概要">概要</h2>
+
+<p><strong><code>localeCompare()</code></strong> メソッドは参照文字列がソート順で引数で与えられた文字列と大なり、小なり、等しいとなるかどうかを示す数値を返します。</p>
+
+<p>新しい<code>locales</code> と <code>options</code> 引数によってアプリケーションはソート順で使われる言語を指定し関数の振る舞いをカスタマイズできます。古い実装では、<code>locales</code>引数と<code>options</code>引数は無視されます。使用されるローケルとソート順は完全に実装依存しています。</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox"><code><var>str</var>.localeCompare(<var>compareString</var>[, <var>locales</var>[, <var>options</var>]])</code></pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<p>どのブラウザが<code>locales</code>引数と<code>options</code>引数をサポートしているか確かめるために、<a href="#Browser_compatibility">ブラウザ実装状況</a> セクションを調べて下さい。 特徴検出のために、<a href="#Example:_Checking_for_support_for_locales_and_options_arguments">例: <code>locales</code>引数と<code>options</code>引数をサポートしているか調べる</a>を調べて下さい。</p>
+
+<dl>
+ <dt><code>compareString</code></dt>
+ <dd>参照している文字列と比較する文字列</dd>
+</dl>
+
+<div>{{page('/docs/Web/JavaScript/Reference/Global_Objects/Collator', 'Parameters')}}</div>
+
+<h2 id="Description" name="Description">説明</h2>
+
+<p>参照文字列がソート順に引数で与えられた文字列と大なり、小なり、等しいかを示す数値を返します。参照文字列がソート順で<code>compareString</code>より前になったら負の数を返します。参照文字列がソート順で後になったら正の数を返します。等しいなら、0を返します。</p>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<h3 id="Example:_Using_localeCompare" name="Example:_Using_localeCompare">例: <code>localeCompare()</code>を使う</h3>
+
+<p>次の例では、ある文字列が大なり、小なり、等しいとなる異なる潜在的な結果を実証します。:</p>
+
+<pre class="brush: js">console.log('a'.localeCompare('c')); // -2, or -1, or some other negative value
+console.log('c'.localeCompare('a')); // 2, or 1, or some other positive value
+console.log('a'.localeCompare('a')); // 0
+</pre>
+
+<p>上記のコードで示される結果はブラウザ間やバージョン間で異なることに注意して下さい。値が実装依存のためです。すなわち、仕様では小なり、大なりの値は、負の値、正の値であることのみ要求しています。</p>
+
+<h3 id="Example:_Checking_for_support_for_locales_and_options_arguments" name="Example:_Checking_for_support_for_locales_and_options_arguments">例: <code>locales</code>引数と<code>options</code>引数をサポートしているか調べる</h3>
+
+<p><code>locales</code>引数と<code>options</code>引数はすべてのプラウザでまだサポートされていません。実装がすでにサポートしているか調べるために、<code>RangeError</code>例外で違法な言語タグが拒否される要件を使用してください。:</p>
+
+<pre class="brush: js">function localeCompareSupportsLocales() {
+  try {
+    'a'.localeCompare​('b', 'i');
+  } catch (e) {
+    return e​.name === 'RangeError';
+  }
+  return false;
+}
+</pre>
+
+<h3 id="Example:_Using_locales" name="Example:_Using_locales">例: <code>locales</code>を使う</h3>
+
+<p><code>localeCompare()</code>によって得られる結果は言語間で違います。アプリケーションのユーザインターフェイスで使用される言語のソート順を得るために、 <code>locales</code>引数を使用してその言語(そしておそらくいくつかのフォールバック言語)を指定していることを確かめて下さい。:</p>
+
+<pre class="brush: js">console.log('ä'.localeCompare('z', 'de')); // a negative value: in German, ä sorts with a
+console.log('ä'.localeCompare('z', 'sv')); // a positive value: in Swedish, ä sorts after z
+</pre>
+
+<h3 id="Example:_Using_options" name="Example:_Using_options">例: <code>options</code>を使う</h3>
+
+<p><code>localeCompare()</code>によって得られる結果は<code>options</code>引数を使用することによってカスタマイズされます。:</p>
+
+<pre class="brush: js">// in German, ä has a as the base letter
+console.log('ä'.localeCompare('a', 'de', { sensitivity: 'base' })); // 0
+
+// in Swedish, ä and a are separate base letters
+console.log('ä'.localeCompare('a', 'sv', { sensitivity: 'base' })); // a positive value
+</pre>
+
+<h2 id="Performance" name="Performance">性能</h2>
+
+<p>大きな配列をソートするような、多数の文字列を比較するとき、{{jsxref("Global_Objects/Collator", "Intl.Collator")}}オブジェクトを生成して、{{jsxref("Collator.prototype.compare", "compare")}}プロパティによって得られる関数を使用するほうが良いです。</p>
+
+<h2 id="仕様">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">状況</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>ECMAScript 3rd Edition.</td>
+   <td>Standard</td>
+   <td>Initial definition. Implemented in JavaScript 1.2.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-15.5.4.9', 'String.prototype.localeCompare')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-string.prototype.localecompare', 'String.prototype.localeCompare')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES Int 1.0', '#sec-13.1.1', 'String.prototype.localeCompare')}}</td>
+   <td>{{Spec2('ES Int 1.0')}}</td>
+   <td><code>locale</code> and <code>option</code> parameter defintions</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="ブラウザ実装状況">ブラウザ実装状況</h2>
+
+<div>{{CompatibilityTable}}</div>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>機能</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>基本サポート</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>locales</code>引数と<code>options</code>引数</td>
+   <td>{{CompatChrome("24")}}</td>
+   <td>{{CompatGeckoDesktop("29")}}</td>
+   <td>{{CompatIE("11")}}</td>
+   <td>{{CompatOpera("15")}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>機能</th>
+   <th>Android</th>
+   <th>Chrome for Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>基本サポート</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>locales</code>引数と<code>options</code>引数</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatChrome("26")}}</td>
+   <td>{{CompatNo}}<br>
+    {{bug("864843")}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li>{{jsxref("Global_Objects/Collator", "Intl.Collator")}}</li>
+</ul>

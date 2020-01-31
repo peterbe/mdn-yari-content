@@ -1,0 +1,128 @@
+<h2 id="対象読者">対象読者</h2>
+
+<p>開発者、セキュリティに関係する人、Firefox セキュリティに関心のある人。</p>
+
+<h2 id="定義">定義</h2>
+
+<p>Content - Web ページなどの信頼できないソースからロードされたもの(主にスクリプト)。セキュリティの討論では、'content' は Web コンテンツ内スクリプトにアクセスできるようにするための制限された権限セットを参照することができます。</p>
+
+<p><a href="/docs/Chrome">Chrome</a> - ブラウザに属する(Web コンテンツとは対立する)ものです。セキュリティの討論では、Chrome は全てのコードにアクセスできる権限セットを参照できます。(制限された Web コンテンツとは違います)</p>
+
+<p><a href="https://wiki.mozilla.org/DocShell:Home_Page">DocShell</a> - ホストドキュメントのオブジェクトです。docshell は URI からコンテンツをロードする初期化処理を担い、コンテンツのビューアを作成し、コンテンツから受信したものをフックします。全てのウィンドウ(タブ)やフレームごとに関連した docshell が存在します。</p>
+
+<p><a href="/docs/Security_check_basics#Principals">Principal</a> - セキュリティコンテキストです。Web では概して、スキーマ・ホストそしてポートの組み合わせになります。</p>
+
+<p><a href="/en-US/docs/Same_origin_policy_for_JavaScript">Same-Origin Policy</a> - ある origin からロードしたドキュメントやスクリプトが、他の origin のドキュメントのプロパティにアクセスることを防ぐためのポリシーです。</p>
+
+<p><a href="/en-US/docs/Components.utils.Sandbox">Sandbox</a> - 制限された権限内で JavaScript コードを実行することを許可するオブジェクトです。通常の Web ページとして実行された場合、sandbox 内で評価されたコードは同じ権限を持ちます。</p>
+
+<p><a href="/en-US/docs/XPConnect_wrappers">Wrappers</a> - Wrapper はセーフガードや、Smae-Origin Policy のような基本的なセキュリティルールを強制することによって、信頼しないコンテンツから extionsion を保護します。</p>
+
+<h2 id="前提">前提</h2>
+
+<p>このドキュメントでは、セキュリティ principal や共通の脆弱性、そして攻撃手法の前提知識があることを想定しています。言及しているコンセプトには、このドキュメントで記載している以上のコンセプトに関する情報が得られる外部リソースを参照するようにしています。</p>
+
+<p>開発者は普段利用する技術に関連するセキュリティの落とし穴について熟知している必要があります。Web 開発者は XSS や CSRF について知っている必要があります。C++ であれば、バッファオーバーフローや書式文字列の脆弱性などについて知っている必要があります。</p>
+
+<h2 id="ゴール">ゴール</h2>
+
+<p>Firefox で実行されるコードは以下のような外部コード(例えば Web ページで実行されている物など)を防ぐ必要があります。</p>
+
+<ul>
+ <li>Chrome 権限で実行されている物</li>
+ <li>ファイルシステムにアクセスするコード</li>
+ <li>証明書を扱うコード</li>
+ <li>パーミッション無しで個人情報にアクセスするコード</li>
+ <li>(銀行などの)信頼されたページになりすましたコード</li>
+ <li>Firefox をクラッシュさせたり、利用不可能なものにするコード</li>
+</ul>
+
+<p>ダウンロードして明示的に実行されたネイティブコードはユーザーを保護することができないことに注意してください。</p>
+
+<h2 id="フロントエンド">フロントエンド</h2>
+
+<div>フロントエンドのセキュリティでは、Web セキュリティの習わしと同じくいくつかの方法があります。Firefox デスクトップでは UI は XUL になります(HTML に似たものです)。そこでは、センシティブな API 群を利用して(Firefoxの)バックエンドにアクセスするコードが含まれ、そのコードではコンテンツ(例えばブラウザを利用したドキュメントビュー)やユーザー(入力など)のデータなど信頼しないデータにアクセスすることができます。</div>
+
+<ul>
+ <li>通常、コンテンツは chrome オブジェクトの参照を取得することができません。</li>
+ <li>content から　chrome に対する XSS はやってはいけないです。Firefox 上のユーザーアカウントに関するすべての権限を持っているためです。これはリモートの攻撃コードを実行することができるようになり、黙ってインストールされるマルウェア(キーロガーなど)やパスワードマネージャのコンテンツを読み込むことなどができるようになってしまいます。</li>
+ <li>XUL と HTML の UI 要素の信頼しないデータを扱ううえでも注意すべきことがあります。innerHTML の扱いや <a href="/docs/DOM/document.createTextNode">createTextNode </a>などの代わりとなるようなものを扱う事です。</li>
+ <li>Web コンテンツと chrome コードを実装する上で重要な違いは、iframe はデフォルトで chrome 権限を持つことです。もしそれを望まない場合(恐らくそれは望まない事でしょう)、コンテンツ上にそれを避けるために定義を書く必要があります。iframe.setAttribute("type", "content") です。</li>
+</ul>
+
+<h2 id="General">General</h2>
+
+<h3 id="セキュリティチェック">セキュリティチェック</h3>
+
+<p>一般的な状況下では、コンテンツをロードするときに、阻害するコードなどが含まれる異なるドメインのドキュメントを防ぐために、 Same Origin Policy が強制されます。</p>
+
+<p>もし chrome から web コンテンツをロードするような状況に陥ったら、同じ処理を使って可能ならばすべてチェックするようにしたいと思うでしょう。もちろん <a href="/en-US/docs/XPCOM_Interface_Reference/nsIPrincipal">principals</a> 上でドキュメントを検証して、地震のチェックを実装する前に <a href="/docs/Security_check_basics">セキュリティチェックがされているか</a> 確認できます。重複した処理は危険性をはらんでいます。この状況の場合、いくつかの理由から URL を直接扱う必要があり、そこにはいくつか気を付けないといけない落とし穴があります。(次のセクションを見てください。)</p>
+
+<h3 id="URI">URI</h3>
+
+<p>URI を扱う際には以下の現象に注意を払ってください。</p>
+
+<ul>
+ <li>URI を操作する場合、ASCII のホスト名(例えば表示だけに用意されているような getASCIIHost から得られるホスト名)ではなく、直接 nsURI を使ってください。nsURI は標準に従った形式であるか保証するためです（nsIPrincipal は nsIURL のチェックしています)。</li>
+ <li>スキーマをチェックする際は、希望するスキーマの URI だけを許可するようにしてください。</li>
+ <li>Watch out for pseudoschemes -- in security checks it is the inner URI that is significant (e.g., jar:http://example.com -- http://example.com is the relevant part).</li>
+ <li>全てをロードする前に、
+  <ul>
+   <li>ロードを許可するかチェックしてください。<a href="http://doxygen.db48x.net/mozilla/html/interfacensIScriptSecurityManager.html">nsIScriptSecurityManager</a> と <a href="http://doxygen.db48x.net/mozilla/html/interfacensIPrincipal.html">nsIPrincipal</a> はリソースをロードするにあたって安全かどうかチェックする機能を提供しており、いつでも利用できます。ContentPolicy.shouldLoad も参照してください。</li>
+   <li>Web ページのリクエスト、またはリンクによってロードする場合、正しいリファラーを設定してください。しかし、ブックマークからロードする場合はリファラーを設定する必要はありません。</li>
+  </ul>
+ </li>
+</ul>
+
+<h3 id="サンドボックス">サンドボックス</h3>
+
+<p>サンドボックスは、明示的に Chrome 権限で実行する必要が無い Chrome コードを評価するときに利用します。（そして、スクリプトのコンテンツを完全に信頼します)</p>
+
+<p>サンドボックスを作成して利用する：</p>
+
+<pre class="brush:js">// サンドボックスのインスタンスを生成する
+var mySandbox = new Components.utils.Sandbox("http://www.example.com/");
+
+mySandbox.y = 5;  // グローバルスコープの変数 'y' に 5 を代入
+
+var result = Components.utils.evalInSandbox("x = y + 2; x + 3", mySandbox);
+// result は 10, mySandbox.x は現在 7</pre>
+
+<p>サンドボックスに注入されたオブジェクトはサンドボックスの権限を継承しません。</p>
+
+<p>しかし、サンドボックスがいの全ての関数は Chrome 権限で実行されます。</p>
+
+<p>たとえば以下のコード：</p>
+
+<pre class="brush:js">var s = new Components.utils.Sandbox(url);
+var x = Components.utils.evalInSandbox(untrusted_code, s);</pre>
+
+<p>Any method calls on x are unsafe, including the use of == which when evaluated will call the x.valueOf() method.</p>
+
+<h3 id="Interactions_with_content_DOM">Interactions with content DOM</h3>
+
+<p>Firefox relies on wrappers to provide 'safe' representations of objects from one context in another (e.g., chrome from content and vice versa). In simple terms, wrappers can be thought of as filtering proxies which enforce the rules on how content and script from different principals may interact. For example, if a chrome object is exported to web content it will be wrapped in a ChromeObjectWrapper; this ensures that only the properties which are supposed to be exposed to web content (there's a whitelist in the __exposedProps__ property) can be accessed.</p>
+
+<p>Whilst these wrappers provide a good level of protection against accidental problems, there are some things to be aware of. In particular, take care when using wrappedJSObject on content objects from chrome code (for more information on safely accessing content DOM from chrome, refer to <a href="/en-US/docs/Safely_accessing_content_DOM_from_chrome">this document</a>).</p>
+
+<p>More information on wrappers can be found in <a href="https://blog.mozilla.org/gabor/2012/04/18/security-wrappers-part-1/">this article</a>.</p>
+
+<h3 id="Chrome_JS_Dangerous_functions">Chrome JS Dangerous functions</h3>
+
+<p>Avoid using eval or setTimeout(string, time) and other related functions if at all possible.</p>
+
+<h2 id="Further_Reading">Further Reading:</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Safely_accessing_content_DOM_from_chrome">https://developer.mozilla.org/en-US/docs/Safely_accessing_content_DOM_from_chrome</a></li>
+ <li><a href="/en-US/docs/XPConnect_wrappers">https://developer.mozilla.org/en-US/docs/XPConnect_wrappers</a></li>
+ <li><a href="/en-US/docs/XPConnect_security_membranes">https://developer.mozilla.org/en-US/docs/XPConnect_security_membranes</a></li>
+ <li><a href="http://blog.mozilla.org/gabor/2012/04/18/security-wrappers-part-1/">http://blog.mozilla.org/gabor/2012/04/18/security-wrappers-part-1/</a></li>
+ <li>Linked from the above, but worth noting as well:
+  <ul>
+   <li><a href="http://www.squarefree.com/securitytips/mozilla-developers.html">http://www.squarefree.com/securitytips/mozilla-developers.html</a> (* StfMed)</li>
+   <li><a href="http://www.mozilla.org/projects/security/components/reviewguide.html">http://www.mozilla.org/projects/security/components/reviewguide.html</a></li>
+   <li><a href="/en-US/docs/Components.utils.evalInSandbox">https://developer.mozilla.org/en-US/docs/Components.utils.evalInSandbox</a></li>
+  </ul>
+ </li>
+</ul>

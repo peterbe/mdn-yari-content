@@ -1,0 +1,136 @@
+<div>{{jsSidebar("Statements")}}</div>
+
+<p>The <strong><code>for await...of</code> statement </strong>creates a loop iterating over async iterable objects as well as on sync iterables, including: built-in {{jsxref("String")}}, {{jsxref("Array")}}, <code>Array</code>-like objects (e.g., {{jsxref("Functions/arguments", "arguments")}} or {{domxref("NodeList")}}), {{jsxref("TypedArray")}}, {{jsxref("Map")}}, {{jsxref("Set")}}, and user-defined async/sync iterables. It invokes a custom iteration hook with statements to be executed for the value of each distinct property of the object.</p>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<h2 id="Syntax">Syntax</h2>
+
+<pre class="syntaxbox">for await (<em>variable</em> of <em>iterable</em>) {
+  <em>statement
+</em>}
+</pre>
+
+<dl>
+ <dt><code>variable</code></dt>
+ <dd>On each iteration a value of a different property is assigned to <em>variable</em>. <em>variable</em> may be declared with <code>const</code>, <code>let</code>, or <code>var</code>.</dd>
+ <dt><code>iterable</code></dt>
+ <dd>Object whose iterable properties are to be iterated over.</dd>
+</dl>
+
+<h3 id="Iterating_over_async_iterables">Iterating over async iterables</h3>
+
+<p>You can also iterate over an object that explicitly implements async iterable protocol:</p>
+
+<pre class="brush:js">var asyncIterable = {
+  [Symbol.asyncIterator]() {
+    return {
+      i: 0,
+      next() {
+        if (this.i &lt; 3) {
+          return Promise.resolve({ value: this.i++, done: false });
+        }
+
+        return Promise.resolve({ done: true });
+      }
+    };
+  }
+};
+
+(async function() {
+   for await (let num of asyncIterable) {
+     console.log(num);
+   }
+})();
+
+// 0
+// 1
+// 2
+</pre>
+
+<h3 id="Iterating_over_async_generators">Iterating over async generators</h3>
+
+<p>Since async generators implement async Iterator protocol, they can be looped using <code>for await... of</code></p>
+
+<pre class="brush: js">async function* asyncGenerator() {
+  var i = 0;
+  while (i &lt; 3) {
+    yield i++;
+  }
+}
+
+(async function() {
+  for await (let num of asyncGenerator()) {
+    console.log(num);
+  }
+})();
+// 0
+// 1
+// 2</pre>
+
+<p>For a more concrete example of iterating over an async generator using <code>for await... of</code>, consider iterating over data from an API. This example first creates an async iterator for a stream of data, then uses it to find the size of the response from the API.</p>
+
+<pre class="brush: js">async function* streamAsyncIterator(stream) {
+  const reader = stream.getReader();
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        return;
+      }
+      yield value;
+    }
+  } finally {
+    reader.releaseLock();
+  }
+}
+// Fetches data from url and calculates response size using the async generator.
+async function getResponseSize(url) {
+  const response = await fetch(url);
+  // Will hold the size of the response, in bytes.
+  let responseSize = 0;
+  // The for-await-of loop. Async iterates over each portion of the response.
+  for await (const chunk of streamAsyncIterator(response.body)) {
+    // Incrementing the total response length.
+    responseSize += chunk.length;
+  }
+  
+  console.log(`Response Size: ${responseSize} bytes`);
+  // expected output: "Response Size: 1071472"
+  return responseSize;
+}
+getResponseSize('https://jsonplaceholder.typicode.com/photos');</pre>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-for-in-and-for-of-statements', 'ECMAScript Language: The for-in, for-of, and for-await-of Statements')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td></td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2018', '#sec-for-in-and-for-of-statements', 'ECMAScript Language: The for-in, for-of, and for-await-of Statements')}}</td>
+   <td>{{Spec2('ES2018')}}</td>
+   <td></td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.statements.for_await_of")}}</p>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li>{{jsxref("Statements/for...of")}}</li>
+</ul>

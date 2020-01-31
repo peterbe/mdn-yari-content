@@ -1,0 +1,55 @@
+<div>{{jsSidebar("Errors")}}</div>
+
+<h2 id="メッセージ">メッセージ</h2>
+
+<pre class="syntaxbox">TypeError: Function.prototype.toString called on incompatible object (Firefox)
+TypeError: Function.prototype.bind called on incompatible target (Firefox)
+TypeError: Method Set.prototype.add called on incompatible receiver undefined (Chrome)
+TypeError: Bind must be called on a function (Chrome)
+</pre>
+
+<h2 id="エラータイプ">エラータイプ</h2>
+
+<p>{{jsxref("TypeError")}}</p>
+
+<h2 id="何がうまくいかなかったのか？">何がうまくいかなかったのか？</h2>
+
+<p>このエラーがスローされる場合、(指定されたオブジェクト上の) 関数が、関数が予期する型に対応していない <code>this</code> と共に呼び出されています。</p>
+
+<p>この問題は {{jsxref("Function.prototype.call()")}} メソッドか {{jsxref("Function.prototype.apply()")}} メソッドを使用して、予期していない型の <code>this</code> 引数を渡した場合に発生します。</p>
+
+<p>また、この問題は別の関数の引数として（オブジェクトに格納された）関数を提供する場合にも発生する可能性があります。この場合、オブジェクトはこの関数の <code>this</code> のターゲットではありません。この問題を回避するには、呼び出しを行うラムダを指定するか、<code>this</code> 引数に想定する型を強制するために {{jsxref("Function.prototype.bind()")}} 関数を使用するかのいずれかを行います。</p>
+
+<h2 id="例">例</h2>
+
+<h3 id="不正な場合">不正な場合</h3>
+
+<pre class="brush: js example-bad">var mySet = new Set;
+['bar', 'baz'].forEach(mySet.add);
+// mySet.add is a function, but "mySet" is not captured as this.
+
+var myFun = function () {};
+['bar', 'baz'].forEach(myFun.bind);
+// myFun.bind is a function, but "myFun" is not captured as this.
+
+</pre>
+
+<h3 id="有効な場合">有効な場合</h3>
+
+<pre class="brush: js example-good">var mySet = new Set;
+['bar', 'baz'].forEach(mySet.add.bind(mySet));
+// This works due to binding "mySet" as this.
+
+var myFun = function () {};
+['bar', 'baz'].forEach(x =&gt; myFun.bind(x));
+// This works using the "bind" function. It creates a lambda forwarding the argument.
+
+</pre>
+
+<h2 id="関連項目">関連項目</h2>
+
+<ul>
+ <li>{{jsxref("Function.prototype.call()")}}</li>
+ <li>{{jsxref("Function.prototype.apply()")}}</li>
+ <li>{{jsxref("Function.prototype.bind()")}}</li>
+</ul>

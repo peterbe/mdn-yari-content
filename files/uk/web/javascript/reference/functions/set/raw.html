@@ -1,0 +1,213 @@
+<div>{{jsSidebar("Functions")}}</div>
+
+<p>Оператор <strong><code>set</code></strong> прив'язує властивість об'єкта до функції, яка буде викликана під час спроби присвоїти значення даній властивості.</p>
+
+<h2 id="Синтаксис">Синтаксис</h2>
+
+<pre class="syntaxbox">{set <em>prop</em>(<em>val</em>) { . . . }}
+{set [expression](<em>val</em>) { . . . }}</pre>
+
+<h3 id="Параметри">Параметри</h3>
+
+<dl>
+ <dt><code>prop</code></dt>
+ <dd>Ім'я властивості, котра має бути прив'язана до даної функції.</dd>
+</dl>
+
+<dl>
+ <dt><code>val</code></dt>
+ <dd>Псевдонім змінної зі значенням,  для якого виконується спроба присвоїти його властивості <code>prop.</code></dd>
+ <dt>expression</dt>
+ <dd>Починаючи від ECMAScript 2015 можна також використовувати вираз (expression) для вираховування імені властивості, до якої буде прив'язана дана функція.</dd>
+</dl>
+
+<h2 id="Опис">Опис</h2>
+
+<p>В JavaScript сетер можна використати для виконання функції під час здійснення спроби змінити певну властивість. Найчастіше сетери використовуються у поєднанні з ґетерами для створення одного виду псевдо-властивостей. Не можна  водночас мати сетера на властивості, яка містить фактичне значення.</p>
+
+<p>Зауважте особливість використання синтаксису <code>set</code>:</p>
+
+<div>
+<ul>
+ <li>Він може мати ідентифікатор, який є або number, або string;</li>
+ <li>Він повинен мати тільки параметр (дивіться <a class="external" href="http://whereswalden.com/2010/08/22/incompatible-es5-change-literal-getter-and-setter-functions-must-now-have-exactly-zero-or-one-arguments/" rel="external nofollow">Incompatible <abbr title="ECMAScript 5th edition">ES5</abbr> change: literal getter and setter functions must now have exactly zero or one arguments</a> для більш детальної інформації);</li>
+ <li>Він не може бути оголошений в літералові об'єкта зі ще одним <code>set</code> або з присвоєнням даних для властивості з такою самою назвою.<br>
+  ( <code>{ set x(v) { }, set x(v) { } }</code>  і  <code>{ x: ..., set x(v) { } }</code> заборонені)</li>
+</ul>
+</div>
+
+<p>Сетер можна усунути, використовуючи оператор <a href="/en-US/docs/Web/JavaScript/Reference/Operators/delete" title="en-US/docs/JavaScript/Reference/Operators/Special/delete"><code>delete</code></a>.</p>
+
+<h2 id="Приклади">Приклади</h2>
+
+<h3 id="Надання_значення_сетерові_під_час_ініціалізації_нового_об'єкта">Надання значення сетерові під час ініціалізації нового об'єкта</h3>
+
+<p>Це надасть значення псевдо-властивості <code>current</code> об'єкта <font face="consolas, Liberation Mono, courier, monospace">language,який під час присвоєння значення додасть його також у властивість </font><code>log</code>:</p>
+
+<pre class="brush: js">var language = {
+  log: [],
+  set current(name) {
+    this.log.push(name);
+  }  
+}
+
+language.current = 'UK';
+console.log(language.log); // ['UK']
+
+language.current = 'EN';
+console.log(language.log); // ['UK', 'EN']
+</pre>
+
+<p>Зверніть увагу, що  властивість <code>current</code> не визначена, а будь-які спроби викликати її повернуть значення <code>undefined</code>.</p>
+
+<h3 id="Усування_сетера_за_допомогою_оператора_delete">Усування сетера за допомогою оператора <code>delete</code></h3>
+
+<p>Якщо потрібно усунути сетер, це можна знобити помістивши оператор <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/delete">delete</a></code> перед ним:</p>
+
+<pre class="brush: js">delete o.current;
+</pre>
+
+<h3 id="Присвоєння_сетера_вже_створеному_об'єктові_використовуючи_defineProperty">Присвоєння сетера вже створеному об'єктові, використовуючи <code>defineProperty</code></h3>
+
+<p>Щоби в будь-який час присвоїти сетер об'єктові, який вже існує, використовуйте {{jsxref("Object.defineProperty()")}}.</p>
+
+<pre class="brush: js">var o = {a: 0};
+
+Object.defineProperty(o, 'b', { set: function(x) { this.a = x / 2; } });
+
+o.b = 10; // Виконує сетер, який приписує 10 / 2 (5) властивості 'a'
+console.log(o.a) // 5</pre>
+
+<h3 id="Використання_вирахуваного_імені_властивості_об'єкта">Використання вирахуваного імені властивості об'єкта</h3>
+
+<pre class="brush: js">var expr = 'foo';
+
+var obj = {
+  baz: 'bar',
+  set [expr](v) { this.baz = v; }
+};
+
+console.log(obj.baz); // "bar"
+obj.foo = 'baz';      // виконати сетер
+console.log(obj.baz); // "baz"
+</pre>
+
+<h2 id="Специфікації">Специфікації</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Специфікація</th>
+   <th scope="col">Статус</th>
+   <th scope="col">Коментар</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-11.1.5', 'Object Initializer')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-method-definitions', 'Method definitions')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td>Added computed property names.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-method-definitions', 'Method definitions')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Сумісність_з_браузерами">Сумісність з браузерами</h2>
+
+<p>{{CompatibilityTable}}</p>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Властивість</th>
+   <th>Chrome</th>
+   <th>Edge</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>Базова підтримка</td>
+   <td>{{CompatChrome(1)}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{ CompatGeckoDesktop("1.8.1") }}</td>
+   <td>{{ CompatIE(9) }}</td>
+   <td>9.5</td>
+   <td>3</td>
+  </tr>
+  <tr>
+   <td>Computed property names</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{ CompatGeckoDesktop("34") }}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Властивість</th>
+   <th>Android</th>
+   <th>Chrome for Android</th>
+   <th>Edge</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>Базова підтримка</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{ CompatGeckoMobile("1.8.1") }}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+  <tr>
+   <td>Computed property names</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{ CompatGeckoMobile("34.0") }}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="SpiderMonkey-specific_notes">SpiderMonkey-specific notes</h2>
+
+<ul>
+ <li>Starting with<a href="/en-US/docs/Web/JavaScript/New_in_JavaScript/1.8.1"> JavaScript 1.8.1</a>, setters are no longer called when setting properties in object and array initializers.</li>
+ <li>From SpiderMonkey 38 on, a setter with a {{jsxref("Functions/rest_parameters", "rest parameter", "", 1)}} is a {{jsxref("SyntaxError")}} as per the ES2015 specification.</li>
+</ul>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Web/JavaScript/Reference/Functions/get">getter</a></li>
+ <li>{{jsxref("Operators/delete", "delete")}}</li>
+ <li>{{jsxref("Object.defineProperty()")}}</li>
+ <li>{{jsxref("Object.defineGetter", "__defineGetter__")}}</li>
+ <li>{{jsxref("Object.defineSetter", "__defineSetter__")}}</li>
+ <li><a href="/en-US/docs/Web/JavaScript/Guide/Working_with_Objects#Defining_getters_and_setters">Defining Getters and Setters</a> in JavaScript Guide</li>
+</ul>

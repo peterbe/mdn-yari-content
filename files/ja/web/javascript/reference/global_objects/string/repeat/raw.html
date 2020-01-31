@@ -1,0 +1,114 @@
+<div>{{JSRef}}</div>
+
+<p><strong><code>repeat()</code></strong> メソッドは、呼び出し元の文字列を指定した数だけコピーして結合した新しい文字列を作成して返します。</p>
+
+<div>{{EmbedInteractiveExample("pages/js/string-repeat.html")}}</div>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox"><code><var>str</var>.repeat(<var>count</var>)</code></pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<dl>
+ <dt><code>count</code></dt>
+ <dd>0 以上、正の無限数未満の整数 です: （0, +∞)。返却される新しく生成される文字列として、既存の文字列を繰り返す回数を示します。</dd>
+</dl>
+
+<h3 id="Return_value" name="Return_value">戻り値</h3>
+
+<p>与えられた文字列の指定した回数分のコピーを含む新しい文字列です。</p>
+
+<h3 id="Exceptions" name="Exceptions">例外</h3>
+
+<ul>
+ <li>{{jsxref("Errors/Negative_repetition_count", "RangeError")}}: 繰り返し数は非負数でなければなりません。</li>
+ <li>{{jsxref("Errors/Resulting_string_too_large", "RangeError")}}: 繰り返し回数は無限数未満かつ、最大文字列サイズをオーバーフローしないものでなければなりません。</li>
+</ul>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<pre class="brush:js">'abc'.repeat(0);      // ''
+'abc'.repeat(1);      // 'abc'
+'abc'.repeat(2);      // 'abcabc'
+'abc'.repeat(3.5);    // 'abcabcabc' (小数は丸められ、整数の結果が返されます)
+'abc'.repeat(-1);     // RangeError: repeat count must be positive and less than inifinity
+'abc'.repeat(1/0);    // RangeError: repeat count must be positive and less than inifinity
+
+({toString: () =&gt; 'abc', repeat: String.prototype.repeat }).repeat(2);
+// "abcabc" が返されます (repeat() は一般メソッドです)</pre>
+
+<h2 id="Polyfill" name="Polyfill">ポリフィル</h2>
+
+<p>このメソッドは、ECMAScript 2015 仕様で追加されたため、まだすべての JavaScript 実装で使用できるわけではありません。しかし、次のスニペットで <code>String.prototype.repeat()</code> をポリフィルできます:</p>
+
+<pre class="brush: js" dir="rtl">if (!String.prototype.repeat) {
+  String.prototype.repeat = function(count) {
+    'use strict';
+    if (this == null)
+      throw new TypeError('can\'t convert ' + this + ' to object');
+
+    var str = '' + this;
+    // To convert string to integer.
+    count = +count;
+    // Check NaN
+    if (count != count)
+      count = 0;
+
+    if (count &lt; 0)
+      throw new RangeError('repeat count must be non-negative');
+
+    if (count == Infinity)
+      throw new RangeError('repeat count must be less than infinity');
+
+    count = Math.floor(count);
+    if (str.length == 0 || count == 0)
+      return '';
+
+    // Ensuring count is a 31-bit integer allows us to heavily optimize the
+    // main part. But anyway, most current (August 2014) browsers can't handle
+    // strings 1 &lt;&lt; 28 chars or longer, so:
+    if (str.length * count &gt;= (1 &lt;&lt; 28))
+      throw new RangeError('repeat count must not overflow maximum string size');
+
+    var maxCount = str.length * count;
+    count = Math.floor(Math.log(count) / Math.log(2));
+    while (count) {
+       str += str;
+       count--;
+    }
+    str += str.substring(0, maxCount - str.length);
+    return str;
+  }
+}
+</pre>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">ステータス</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-string.prototype.repeat', 'String.prototype.repeat')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td>初期定義。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-string.prototype.repeat', 'String.prototype.repeat')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザー実装状況</h2>
+
+<p class="hidden">The compatibility table in this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</p>
+
+<p>{{Compat("javascript.builtins.String.repeat")}}</p>

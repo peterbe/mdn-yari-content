@@ -1,0 +1,238 @@
+<div>{{JSRef}}</div>
+
+<p>配列の要素を<em><a href="https://ja.wikipedia.org/wiki/In-placeアルゴリズム">in place</a>で</em>ソートします。このソートは <a href="https://en.wikipedia.org/wiki/Sorting_algorithm#Stability">stable</a> ではありません(訳注:同じ序列を持つ値の順番が保証されません)。 デフォルトではUnicodeコードポイントの昇順にソートされます。</p>
+
+<p>このソートで消費されるCPU時間やメモリスペースは実装に依存するので、ここで言及することは出来ません。</p>
+
+<div>{{EmbedInteractiveExample("pages/js/array-sort.html")}}</div>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<h2 id="構文">構文</h2>
+
+<pre class="syntaxbox"><var>arr</var>.sort(<var>[compareFunction]</var>)
+</pre>
+
+<h3 id="引数">引数</h3>
+
+<dl>
+ <dt><code>compareFunction</code> {{optional_inline}}</dt>
+ <dd>ソート順を定義する関数を指定します。省略された場合、配列は各要素の文字列比較に基づき辞書順にソートされます。</dd>
+</dl>
+
+<h3 id="戻り値">戻り値</h3>
+
+<p>ソートされた結果の配列。ソートは対象配列上で直接行われることに注意して下さい。コピーされた別の配列が準備されることはありません。</p>
+
+<h2 id="説明">説明</h2>
+
+<p><code>compareFunction</code> (比較関数) が与えられなかった場合、要素はそれぞれの文字列に変換したものを比較して辞書 (あるいは電話帳。数的でない) 順にソートされます。例えば、"80" は辞書順では "9" の前に来ますが、数的なソートでは 9 が 80 の前に来ます。</p>
+
+<p><code>compareFunction</code> が与えられた場合、配列の要素は比較関数の返り値に基づきソートされます。もし <code>a</code> と <code>b</code> が比較されようとしている要素の場合、</p>
+
+<ul>
+ <li><code>compareFunction(a, b)</code> が 0 未満の場合、<code>a</code> を <code>b</code> より小さい添字にソートします。</li>
+ <li><code>compareFunction(a, b)</code> が 0 を返す場合、<code>a</code> と <code>b</code> は互いに変更せず、他のすべての要素に対してソートします。注意: ECMAScript 標準はこの振る舞いを保証していないため、一部のブラウザ (例えば、遅くとも 2003 年以前のバージョンの Mozilla) はこれを遵守していません。</li>
+ <li><code>compareFunction(a, b)</code> が 0 より大きい場合、<code>b</code> を <code>a</code> より小さい添字にソートします。</li>
+ <li><code>compareFunction(a, b)</code> に与えられた引数が同じなら戻り値も同じでなければなりません。もし一貫性のない値を返した場合の挙動は未定義となります。</li>
+</ul>
+
+<p>よって、比較関数は以下のような形式をもちます。</p>
+
+<pre class="brush: js">function compare(a, b) {
+  if (ある順序の基準において a が b より小) {
+     return -1;
+  }
+  if (その順序の基準において a が b より大) {
+     return 1;
+  }
+  // a は b と等しいはず
+  return 0;
+}
+</pre>
+
+<p>文字列の代わりに数字を比較する場合、比較関数は単純に <code>a</code> から <code>b</code> を引けばよいでしょう。次のように比較関数を定義すれば昇順に並べることが出来ます(<code>Infinity</code> や <code>NaN</code>がなければですが)。</p>
+
+<pre class="brush: js">function compareNumbers(a, b) {
+  return a - b;
+}
+</pre>
+
+<p>比較関数には{{jsxref("Operators/function", "関数式", "", 1)}}や<a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Guide/Closures">クロージャ</a>を使うと便利です。</p>
+
+<pre class="brush: js">var numbers = [4, 2, 5, 1, 3];
+numbers.sort(function(a, b) {
+  return a - b;
+});
+console.log(numbers);
+
+// [1, 2, 3, 4, 5]</pre>
+
+<p>オブジェクトはプロパティの値の1つを指定して並べ替えることができます。</p>
+
+<pre class="brush: js">var items = [
+  { name: 'Edward', value: 21 },
+  { name: 'Sharpe', value: 37 },
+  { name: 'And', value: 45 },
+  { name: 'The', value: -12 },
+  { name: 'Magnetic', value: 13 },
+  { name: 'Zeros', value: 37 }
+];
+
+// 値順にソート
+items.sort(function (a, b) {
+  return a.value - b.value;
+});
+
+// 名前順にソート
+items.sort(function(a, b) {
+  var nameA = a.name.toUpperCase(); // 大文字と小文字を無視する
+  var nameB = b.name.toUpperCase(); // 大文字と小文字を無視する
+  if (nameA &lt; nameB) {
+    return -1;
+  }
+  if (nameA &gt; nameB) {
+    return 1;
+  }
+
+  // names must be equal
+  return 0;
+});</pre>
+
+<h2 id="例">例</h2>
+
+<h3 id="例_配列を生成し、表示し、ソートする">例: 配列を生成し、表示し、ソートする</h3>
+
+<p>以下の例は 4 つの配列を生成し、元の配列を表示したのちに、ソートした配列を表示します。数値の配列は比較関数なしでソートされたのち、比較関数ありでソートされます。</p>
+
+<pre class="brush: js">var stringArray = ['Blue', 'Humpback', 'Beluga'];
+var numericStringArray = ['80', '9', '700'];
+var numberArray = [40, 1, 5, 200];
+var mixedNumericArray = ['80', '9', '700', 40, 1, 5, 200];
+
+function compareNumbers(a, b) {
+  return a - b;
+}
+
+// 再び、print 関数が定義されているとして
+console.log('stringArray:', stringArray.join());
+console.log('ソート結果:', stringArray.sort());
+
+console.log('numberArray:', numberArray.join());
+console.log('比較関数なしのソート結果:', numberArray.sort());
+console.log('compareNumbers でのソート結果:', numberArray.sort(compareNumbers));
+
+console.log('numericStringArray:', numericStringArray.join());
+console.log('比較関数なしのソート結果:', numericStringArray.sort());
+console.log('compareNumbers でのソート結果:', numericStringArray.sort(compareNumbers));
+
+console.log('mixedNumericArray:', mixedNumericArray.join());
+console.log('比較関数なしのソート結果:', mixedNumericArray.sort());
+console.log('compareNumbers でのソート結果:', mixedNumericArray.sort(compareNumbers));
+</pre>
+
+<p>この例は以下のような出力をもたらします。出力結果が示すように、比較関数が使われた場合、数値はそれが数値か数字の文字列かにかかわらず正しくソートされます。</p>
+
+<pre>stringArray: Blue,Humpback,Beluga
+ソート結果: Beluga,Blue,Humpback
+
+numberArray: 40,1,5,200
+比較関数なしのソート結果: 1,200,40,5
+compareNumbers でのソート結果: 1,5,40,200
+
+numericStringArray: 80,9,700
+比較関数なしのソート結果: 700,80,9
+compareNumbers でのソート結果: 9,80,700
+
+mixedNumericArray: 80,9,700,40,1,5,200
+比較関数なしのソート結果: 1,200,40,5,700,80,9
+compareNumbers でのソート結果: 1,5,9,40,80,200,700
+</pre>
+
+<h3 id="非ASCII文字のソート">非ASCII文字のソート</h3>
+
+<p>非ASCII文字、つまりアクセント記号付き文字（e, é, è, a, ä など）を含む文字列をソートする場合、英語以外の文字列は {{jsxref("String.localeCompare")}} を使用してください。この関数は、それらの文字を比較して正しい順序で表示することができます。</p>
+
+<pre class="brush: js">var items = ['réservé', 'premier', 'cliché', 'communiqué', 'café', 'adieu'];
+items.sort(function (a, b) {
+  return a.localeCompare(b);
+});
+
+// items は ['adieu', 'café', 'cliché', 'communiqué', 'premier', 'réservé']
+</pre>
+
+<h3 id="Sorting_with_map">Sorting with map</h3>
+
+<p>The <code>compareFunction</code> can be invoked multiple times per element within the array. Depending on the <code>compareFunction</code>'s nature, this may yield a high overhead. The more work a <code>compareFunction</code> does and the more elements there are to sort, the wiser it may be to consider using a <a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/Array/map">map</a> for sorting. The idea is to walk the array once to extract the actual values used for sorting into a temporary array, sort the temporary array and then walk the temporary array to achieve the right order.</p>
+
+<pre class="brush: js" dir="rtl">// ソートする配列
+var list = ['Delta', 'alpha', 'CHARLIE', 'bravo'];
+
+// temporary array holds objects with position and sort-value
+var mapped = list.map(function(el, i) {
+  return { index: i, value: el.toLowerCase() };
+})
+
+// sorting the mapped array containing the reduced values
+mapped.sort(function(a, b) {
+  if (a.value &gt; b.value) {
+    return 1;
+  }
+  if (a.value &lt; b.value) {
+    return -1;
+  }
+  return 0;
+});
+
+// container for the resulting order
+var result = mapped.map(function(el){
+  return list[el.index];
+});
+</pre>
+
+<h2 id="仕様">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES1')}}</td>
+   <td>{{Spec2('ES1')}}</td>
+   <td>初期定義。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-15.4.4.11', 'Array.prototype.sort')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-array.prototype.sort', 'Array.prototype.sort')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-array.prototype.sort', 'Array.prototype.sort')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="ブラウザ実装状況">ブラウザ実装状況</h2>
+
+<div>
+<div class="hidden">The compatibility table in this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.builtins.Array.sort")}}</p>
+</div>
+
+<h2 id="関連情報">関連情報</h2>
+
+<ul>
+ <li>{{jsxref("Array.prototype.reverse()")}}</li>
+ <li>{{jsxref("String.prototype.localeCompare()")}}</li>
+</ul>

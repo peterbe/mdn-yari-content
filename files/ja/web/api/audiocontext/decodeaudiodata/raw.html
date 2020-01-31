@@ -1,0 +1,209 @@
+<p>{{ APIRef("Web Audio API") }}</p>
+
+<div>
+<p>インターフェースの<code>decodeAudioData()</code>メソッドは、{{domxref("ArrayBuffer")}}に書き込まれたオーディオファイルデータを非同期にデコードするために使われます。この場合、<code>ArrayBuffer</code>は、通常は{{domxref("XMLHttpRequest")}}の<code>responseType</code>に<code>arraybuffer</code>を設定して<code>、response</code>属性を読み込んで取得します。</p>
+</div>
+
+<p>これはオーディオトラックからWeb Audio APIで音源を生成するよい方法です。</p>
+
+<h2 id="構文">構文</h2>
+
+<p>古いコールバックベースの構文:</p>
+
+<pre class="brush: js">audioCtx.decodeAudioData(audioData, function(decodedData) {
+  // デコードしたデータをここで使う
+});</pre>
+
+<p>新しいプロミスベースの構文:</p>
+
+<pre class="brush: js">audioCtx.decodeAudioData(audioData).then(function(decodedData) {
+  // デコードしたデータをここで使う
+});</pre>
+
+<h2 id="例">例</h2>
+
+<p>ここでは最初に古いコールバックベースを、次に新しいプロミスベースの構文を取り上げます。</p>
+
+<h3 id="古いコールバックベースの構文">古いコールバックベースの構文</h3>
+
+<p>この例では、<code>getData()</code>関数はオーディオトラックを読み込むためにXMLHttpRequestを使っています。<code>responseType</code>に<code>arraybuffer</code>を設定してリクエストします。その結果、<code>response</code>は<code>ArrayBuffer</code>を返し、<code>audioBuffer</code>変数に格納されます。そしてそのバッファを<code>decodeAudioData()</code>関数に渡します。そのコールバックがデコードされたPCMデータを受け取れば、{{ domxref("AudioContext.createBufferSource()") }}で生成した{{ domxref("AudioBufferSourceNode") }}に渡し、sourceを{{domxref("AudioContext.destination") }}に接続してループさせます。</p>
+
+<p>ボタンは単に<code>getData()</code>を実行して、それぞれトラックの読み込みと再生、停止を行うだけです。sourceの<code>stop()</code>メソッドが呼ばれると、sourceは消滅します。</p>
+
+<div class="note">
+<p><strong>注:</strong> <a class="external external-icon" href="http://mdn.github.io/audio-buffer/">コードの実行</a>(と<a class="external external-icon" href="https://github.com/mdn/audio-buffer">ソースの閲覧</a>)もできます。</p>
+</div>
+
+<pre class="brush: js">// 変数の定義
+
+var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+var source;
+
+var pre = document.querySelector('pre');
+var myScript = document.querySelector('script');
+var play = document.querySelector('.play');
+var stop = document.querySelector('.stop');
+
+// オーディオトラックの読み込みにはXHRを使い、decodeAudioDataでデコードし、bufferに格納する
+// そして、そのbufferをsourceに設定する
+
+function getData() {
+  source = audioCtx.createBufferSource();
+  request = new XMLHttpRequest();
+
+  request.open('GET', 'viper.ogg', true);
+
+  request.responseType = 'arraybuffer';
+
+
+  request.onload = function() {
+    var audioData = request.response;
+
+    audioCtx.decodeAudioData(audioData, function(buffer) {
+        source.buffer = buffer;
+
+        source.connect(audioCtx.destination);
+        source.loop = true;
+      },
+
+      function(e){"Error with decoding audio data" + e.err});
+
+  }
+
+  request.send();
+}
+
+// 音声の停止と再生を行うボタン
+
+play.onclick = function() {
+  getData();
+  source.start(0);
+  play.setAttribute('disabled', 'disabled');
+}
+
+stop.onclick = function() {
+  source.stop(0);
+  play.removeAttribute('disabled');
+}
+
+
+// pre要素にスクリプトを設定する
+
+pre.innerHTML = myScript.innerHTML;</pre>
+
+<h3 id="新しいプロミスベースの構文">新しいプロミスベースの構文</h3>
+
+<pre class="brush: js">ctx.decodeAudioData(compressedBuffer).then(function(decodedData) {
+ // デコードしたデータをここで使う
+});</pre>
+
+<h2 id="引数">引数</h2>
+
+<dl>
+ <dt>ArrayBuffer</dt>
+ <dd>通常は{{domxref("XMLHttpRequest")}}の<code>responseType</code>に<code>arraybuffer</code>を設定し、<code>response</code>から獲得します。</dd>
+ <dt>DecodeSuccessCallback</dt>
+ <dd>デコードが完了すると呼ばれるコールバック関数。コールバック関数の引数は1つで、デコードされたオーディオデータが書き込まれた<code>AudioBuffer</code>です。通常はデコードされたデータは、再生や操作をするために{{domxref("AudioBufferSourceNode")}}に渡します。</dd>
+ <dt>DecodeErrorCallback {{optional_inline}}</dt>
+ <dd>(任意) エラーコールバック。オーディオデータのデコードでエラーが発生すると呼ばれます。</dd>
+</dl>
+
+<h2 id="戻り値">戻り値</h2>
+
+<p>{{domxref("AudioBuffer") }}で表されたデコードされたPCMオーディオデータ</p>
+
+<h2 id="仕様">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('Web Audio API', '#widl-AudioContext-decodeAudioData-Promise-AudioBuffer--ArrayBuffer-audioData-DecodeSuccessCallback-successCallback-DecodeErrorCallback-errorCallback', 'decodeAudioData()')}}</td>
+   <td>{{Spec2('Web Audio API')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="ブラウザ互換性">ブラウザ互換性</h2>
+
+<div>{{CompatibilityTable}}</div>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari (WebKit)</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatChrome(10.0)}}{{property_prefix("webkit")}}</td>
+   <td>{{CompatGeckoDesktop(25.0)}} </td>
+   <td>{{CompatNo}}</td>
+   <td>15.0{{property_prefix("webkit")}}<br>
+    22 (unprefixed)</td>
+   <td>6.0{{property_prefix("webkit")}}</td>
+  </tr>
+  <tr>
+   <td>Promise-based syntax</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>Firefox OS</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+   <th>Chrome for Android</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatUnknown}}</td>
+   <td>26.0</td>
+   <td>1.2</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>33.0</td>
+  </tr>
+  <tr>
+   <td>Promise-based syntax</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="参考">参考</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Web_Audio_API/Using_Web_Audio_API">Using the Web Audio API</a></li>
+</ul>

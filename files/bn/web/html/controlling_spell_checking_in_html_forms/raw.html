@@ -1,0 +1,59 @@
+<p><span class="seoSummary"> {{ gecko_minversion_header("1.8.1") }} Firefox 2 introduces spell checking support to text areas and text fields in web forms.</span> The user can specify using the about:config interface whether or not spellchecking is enabled and whether to check both text areas and text fields or only text areas.</p>
+
+<p>By default, text areas and <code>designMode</code> documents get spell checked while single-line input boxes do not. This is because it would be distracting to users if Firefox marked things like user IDs, and e-mail addresses as errors.</p>
+
+<p>However, there may be situations in which this behavior is not necessarily appropriate. For instance, if a text area is intended to be used for editing HTML or other non-prose data, the spell checker would be a hindrance rather than a help. Similarly, there may be cases in which a web site would like to recommend to Firefox that spell checking be enabled for a specific text field; for example, for search boxes and e-mail subject line fields.</p>
+
+<p>If a web site wishes to recommend whether or not to use spell checking for a specific <code>&lt;input&gt;</code> element, it can use the <code>spellcheck</code> attribute, specifying a value of <code>true</code> to recommend enabling spell checking or <code>false</code> to recommend against using it.</p>
+
+<p>Keep in mind that the site's recommendation may be ignored if the user has disabled spell checking entirely by setting <code>layout.spellcheckDefault</code> to 0. If <code>layout.spellcheckDefault</code> has any other value, the recommendations are taken into account.</p>
+
+<p>You can code a single-line text field (HTML <code>&lt;input&gt;</code> element) with spell checking on with HTML like this:</p>
+
+<pre class="eval"><span class="nowiki">&lt;input type="text" size="50" spellcheck="true"&gt;</span>
+</pre>
+
+<p>Likewise, you can code a text area with spell checking off with HTML like this:</p>
+
+<pre class="eval"><span class="nowiki">&lt;textarea spellcheck="false"&gt;&lt;/textarea&gt;</span>
+</pre>
+
+<p>You can control a document in <code>designMode</code> (typically used to implement rich text editing) by setting the <code>spellcheck</code> attribute on the document's <code>&lt;body&gt;</code> tag.</p>
+
+<p>You can apply the <code>spellcheck</code> attribute to other elements as well, such as <code>&lt;span&gt;</code> and <code>&lt;div&gt;</code> elements, in which case any contained <code>&lt;input&gt;</code> elements inherit that setting; <code>&lt;input&gt;</code> elements that do not have a <code>spellcheck</code> attribute inherit the spell check setting specified by their parent. If there is no setting specified in any ancestor elements, the user's default setting is used.</p>
+
+<p>For example:</p>
+
+<pre class="brush: html">&lt;div spellcheck="true"&gt;
+  &lt;label&gt;Type a sentence: &lt;/label&gt;&lt;input type="text" size="50"&gt;
+  &lt;br&gt;
+  &lt;label&gt;Type another: &lt;/label&gt;&lt;input type="text" size="50"&gt;
+&lt;/div&gt;
+&lt;br&gt;
+&lt;label&gt;Type a third: &lt;/label&gt;&lt;input type="text" size="50"&gt;
+</pre>
+
+<p>In this HTML snippet, the first two text fields are spell checked while the third is not.</p>
+
+<p id="lang">{{ h1_gecko_minversion("Controlling the spellchecker language", "9.0") }}</p>
+
+<p>Starting in Gecko 9.0 {{ geckoRelease("9.0") }}, the spell checker uses the {{ HTMLElement("input") }} element's {{ htmlattrxref("lang", "input") }} attribute to determine the default spell checker language. If {{ HTMLElement("input") }} doesn't have a <code>lang</code> attribute, that attribute is searched each successive parent element and upward toward the root node until one is found.</p>
+
+<p>By doing this, if a user has both French and English dictionaries installed, and an editable element has <code>lang="en"</code>, the English dictionary will be used automatically for that element.</p>
+
+<p>For example:</p>
+
+<pre class="brush: html">&lt;html lang="en"&gt;
+&lt;body&gt;
+  &lt;textarea&gt;&lt;/textarea&gt;
+  &lt;textarea lang="fr"&gt;&lt;/textarea&gt;
+  &lt;div lang="ru"&gt;
+    &lt;textarea&gt;&lt;/textarea&gt;
+  &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+
+<p>In this HTML snippet, the first {{ HTMLElement("textarea") }} will be spell checked in English, the second in French, and the third in Russian.</p>
+
+<p>If an element specifies a language, and the user has no dictionary installed for that language, spell check is disabled by default, although the user may choose to manually enable it.</p>

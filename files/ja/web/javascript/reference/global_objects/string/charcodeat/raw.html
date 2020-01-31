@@ -1,0 +1,198 @@
+<div>{{JSRef}}</div>
+
+<p><strong><code>charCodeAt()</code></strong> メソッドは、与えられたインデックスに位置する文字の UTF-16 コードを表す 0 から 65535 の整数を返します（UTF-16 コードユニットは、単一の UTF-16 コードユニットで表現可能なコードポイントの Unicode コードポイントと一致しますが、単一の UTF-16 コードユニットでは表現できないコードポイントのサロゲートペアの最初のコードユニットでもあります。 例えば Unicodeコードポイント&gt; 0x10000）。コードポイント値全体を取得したいなら、<strong><code>codePointAt()</code></strong> を使用してください。</p>
+
+<h2 id="構文">構文</h2>
+
+<pre class="syntaxbox"><code><var>str</var>.charCodeAt(<var>index</var>)</code></pre>
+
+<h3 id="引数">引数</h3>
+
+<dl>
+ <dt><code>index</code></dt>
+ <dd>0 と文字列の長さの間の整数。指定されなかった場合のデフォルトは 0 です。</dd>
+</dl>
+
+<h3 id="戻り値">戻り値</h3>
+
+<p>与えられたインデックス位置の文字の UTF-16 コードユニット値を表す数値。<code>index</code> が範囲外だった場合、{{jsxref("Global_Objects/NaN", "NaN")}}。</p>
+
+<h2 id="詳細">詳細</h2>
+
+<p>Unicode コードポイントの範囲は、0 から 1,114,111（0x10FFFF）です。最初の 128 の Unicode コードポイントは、ASCII 文字エンコーディングに直接対応しています。Unicode についての情報は、<a href="/ja/docs/Web/JavaScript/Guide/Values,_variables,_and_literals#Unicode">Values, variables, and literals#Unicode</a> を参照してください。</p>
+
+<p><code>charCodeAt()</code> は常に 65,536{{ 訳注("2 の16乗") }}より小さい値を返すであろうことに注意してください。これは、より高いコードポイントは、実際の文字を含むように使用されている（下の値）の "代理" 擬似文字のペアで表されているためです。これにより、65,536 以上の値の個々の文字について完全な文字を検証したり再現したりするためには、<code>charCodeAt(i)</code> だけではなく、 <code>charCodeAt(i+1)</code>（2 文字の文字列を検証/再現する場合）か codePointAt(i) を代わりに使用する必要があります。下記の例 2 と 3 を見てください。</p>
+
+<p>与えられたインデックスが 0 と文字列の長さの間にない場合、<code>charCodeAt()</code> は {{jsxref("Global_Objects/NaN", "NaN")}} を返します。</p>
+
+<p>後方互換: （JavaScript 1.2 のような）過去のバージョンでは、<code>charCodeAt()</code> メソッドは、与えられたインデックスの文字の ISO-Latin-1 コードセットの値を示す数を返します。ISO-Latin-1 コードセットの範囲は 0 から 255 です。最初の 0 から 127 までは ASCII 文字セットに直接対応しています。</p>
+
+<h2 id="例">例</h2>
+
+<h3 id="charCodeAt()_を使用する"><code>charCodeAt()</code> を使用する</h3>
+
+<p>次の例は、A のユニコード値である 65 を返します。</p>
+
+<pre class="brush: js">'ABC'.charCodeAt(0); // returns 65
+</pre>
+
+<h3 id="文字列の前に存在するものが不明な場合、非_BMP_文字を操作できるように_charCodeAt()_を修正する">文字列の前に存在するものが不明な場合、非 BMP 文字を操作できるように <code>charCodeAt()</code> を修正する</h3>
+
+<p>このバージョンは、指定されたインデックス位置の前に非 BMP 文字が存在するかどうかが不明な場合に for ループなどで使用される可能性があります。</p>
+
+<pre class="brush: js">function fixedCharCodeAt(str, idx) {
+  // ex. fixedCharCodeAt('\uD800\uDC00', 0); // 65536
+  // ex. fixedCharCodeAt('\uD800\uDC00', 1); // false
+  idx = idx || 0;
+  var code = str.charCodeAt(idx);
+  var hi, low;
+  
+  // High surrogate (could change last hex to 0xDB7F to treat high
+  // private surrogates as single characters)
+  if (0xD800 &lt;= code &amp;&amp; code &lt;= 0xDBFF) {
+    hi = code;
+    low = str.charCodeAt(idx + 1);
+    if (isNaN(low)) {
+      throw 'High surrogate not followed by low surrogate in fixedCharCodeAt()';
+    }
+    return ((hi - 0xD800) * 0x400) + (low - 0xDC00) + 0x10000;
+  }
+  if (0xDC00 &lt;= code &amp;&amp; code &lt;= 0xDFFF) { // Low surrogate
+    // We return false to allow loops to skip this iteration since should have
+    // already handled high surrogate above in the previous iteration
+    return false;
+    /*hi = str.charCodeAt(idx - 1);
+    low = code;
+    return ((hi - 0xD800) * 0x400) + (low - 0xDC00) + 0x10000;*/
+  }
+  return code;
+}
+</pre>
+
+<h3 id="文字列の前に存在するものが分かっている場合、非_BMP_文字を操作できるように_charCodeAt()_を修正する">文字列の前に存在するものが分かっている場合、非 BMP 文字を操作できるように <code>charCodeAt()</code> を修正する</h3>
+
+<pre class="brush: js">function knownCharCodeAt(str, idx) {
+  str += '';
+  var code,
+      end = str.length;
+
+  var surrogatePairs = /[\uD800-\uDBFF][\uDC00-\uDFFF]/g;
+  while ((surrogatePairs.exec(str)) != null) {
+    var li = surrogatePairs.lastIndex;
+    if (li - 2 &lt; idx) {
+      idx++;
+    }
+    else {
+      break;
+    }
+  }
+
+  if (idx &gt;= end || idx &lt; 0) {
+    return NaN;
+  }
+
+  code = str.charCodeAt(idx);
+
+  var hi, low;
+  if (0xD800 &lt;= code &amp;&amp; code &lt;= 0xDBFF) {
+    hi = code;
+    low = str.charCodeAt(idx + 1);
+    // Go one further, since one of the "characters" is part of a surrogate pair
+    return ((hi - 0xD800) * 0x400) + (low - 0xDC00) + 0x10000;
+  }
+  return code;
+}
+</pre>
+
+<h2 id="仕様">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">ステータス</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES1')}}</td>
+   <td>{{Spec2('ES1')}}</td>
+   <td>初期定義。JavaScript 1.2 で実装。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-15.5.4.5', 'String.prototype.charCodeAt')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-string.prototype.charcodeat', 'String.prototype.charCodeAt')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-string.prototype.charcodeat', 'String.prototype.charCodeAt')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="ブラウザー実装状況">ブラウザー実装状況</h2>
+
+<div>{{CompatibilityTable}}</div>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>機能</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>基本サポート</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>機能</th>
+   <th>Android</th>
+   <th>Chrome for Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>基本サポート</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="関連項目">関連項目</h2>
+
+<ul>
+ <li>{{jsxref("String.fromCharCode()")}}</li>
+ <li>{{jsxref("String.prototype.charAt()")}}</li>
+ <li>{{jsxref("String.fromCodePoint()")}}</li>
+ <li>{{jsxref("String.prototype.codePointAt()")}}</li>
+</ul>

@@ -1,0 +1,145 @@
+<div>{{JSRef}}</div>
+
+<p>A <strong><code>Function</code></strong> <strong>konstruktora</strong> létrehoz egy új <code>Function</code> <strong>objektumot</strong>. A konstruktort közvetlenül meghívva dinamikusan hozhat létre függvényeket, de ez biztonsági és teljesítménybeli problémákat okozhat hasonlóan a {{jsxref("eval")}} híváshoz. Viszont az {{jsxref("eval")}} függvénnyel ellentétben a Function konstruktor csak olyan függvényeket hoz létre, amely a globális hatókörben hajtódik végre.</p>
+
+<div>{{EmbedInteractiveExample("pages/js/function-constructor.html")}}</div>
+
+<p class="hidden">Ezen interaktív példa egy GitHub tárolóban van tárolva. Ha szeretne közreműködni az interaktív példák projektben, akkor klónozza a <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> tárolót, és küldjön egy beolvasztási kérést.</p>
+
+<p>Minden JavaScript függvény tulajdonképpen egy <code>Function</code> objektum. Ez látható a következő kódnál, amely igazat ad vissza: <code>(function(){}).constructor === Function</code>.</p>
+
+<h2 id="Szintaxisa">Szintaxisa</h2>
+
+<pre class="syntaxbox"><code>new Function ([<var>arg1</var>[, <var>arg2</var>[, ...<var>argN</var>]],] függvényTörzs)</code></pre>
+
+<h3 id="Paraméterei">Paraméterei</h3>
+
+<dl>
+ <dt><code>arg1, arg2, ... arg<em>N</em></code></dt>
+ <dd>A függvény által használt formális argumentumok elnevezéseai. Mindegyik kötelezően egy-egy karakterlánc, amely érvényes JavaScript azonosítónak felel meg, vagy ilyen típusú karakterláncok listája vesszővel elválasztva. Például „<code>x</code>”, „<code>theValue</code>”, vagy „<code>a,b</code>”.</dd>
+ <dt><code>függvényTörzs</code></dt>
+ <dd>Azokat a JavaScript utasításokat tartalmazó karakterlánc, amely megadja a függvény definícióját.</dd>
+</dl>
+
+<h2 id="Leírás">Leírás</h2>
+
+<p>A <code>Function</code> objektumokat a <code>Function</code> konstruktorral lehet létrehozni, és a függvény meghívásakor kerülnek feldolgozásra. Ez kevésbé hatékony, mint egy <a href="/en-US/docs/Web/JavaScript/Reference/Operators/function">függvénykifejezés</a> vagy egy <a href="/en-US/docs/Web/JavaScript/Reference/Statements/function">függvény utasítás</a> és annak meghívása a kódban, mert az ilyen függvények a kód többi részével együtt kerülnek feldolgozásra.</p>
+
+<p>Az összes a függvénynek átadott argumentum azonosítónévként lesz kezelve a létrehozandó függvényben, a megadásuk sorrendjében.</p>
+
+<p>A <code>Function</code> konstruktor függvényként történő (<code>new</code> operátor nélkül) meghívása ugyanazt eredményezi, mintha konstruktorként hívta volna meg.</p>
+
+<h2 id="A_Function_tulajdonságai_és_metódusai">A Function tulajdonságai és metódusai</h2>
+
+<p>A globális <code>Function</code> objektumnak sem metódusai, sem tulajdonságai sincsenek. Viszont, mivel maga is egy függvény, ezért örököl néhány metódust és tulajdonságot a {{jsxref("Function.prototype")}} prototípusláncából.</p>
+
+<h2 id="Function_prototípus_objektum">Function prototípus objektum</h2>
+
+<h3 id="Tulajdonságok">Tulajdonságok</h3>
+
+<div>{{page('/en-US/docs/JavaScript/Reference/Global_Objects/Function/prototype', 'Properties')}}</div>
+
+<h3 id="Metódusok">Metódusok</h3>
+
+<div>{{page('/en-US/docs/JavaScript/Reference/Global_Objects/Function/prototype', 'Methods')}}</div>
+
+<h2 id="Function_példányok">Function példányok</h2>
+
+<p>A <code>Function</code> példányok öröklik a {{jsxref("Function.prototype")}} metódusait és tulajdonságait. Ahogy az összes konstruktornál, módosíthatja a konstruktor prototípus objektumát, hogy módosításokat végezzen az összes <code>Function</code> példányon.</p>
+
+<h2 id="Példák">Példák</h2>
+
+<h3 id="Argumentumok_megadása_a_Function_konstruktorral">Argumentumok megadása a <code>Function</code> konstruktorral</h3>
+
+<p>A következő létrehoz egy <code>Function</code> objektumot, amely két argumentumot fogad.</p>
+
+<pre class="brush: js">// A példa közvetlenül futtatható a JavaScript konzolban
+
+// Új függvény létrehozása, amely két argumentumot fogad és visszaadja azok összegét
+var adder = new Function('a', 'b', 'return a + b');
+
+// A függvény meghívása
+adder(2, 6);
+// &gt; 8
+</pre>
+
+<p>Az „<code>a</code>” és „<code>b</code>”  formális argumentumnevek, amelyek a függvénytörzsben használatosak: „<code>return a + b</code>”.</p>
+
+<h3 id="Különbség_a_Function_konstruktor_és_a_függvénydeklaráció_között">Különbség a Function konstruktor és a függvénydeklaráció között</h3>
+
+<p>A <code>Function</code> konstruktorral létrehozott függvények nem hoznak létre zárványt a létrehozási környezetükhöz, mindig a globális hatókörbe kerülnek. Ha futtatja őket, akkor csak a saját helyi változóit és a globálisakat fogják elérni, a <code>Function</code> konstruktor meghívásakor aktív hatókörben szereplőket nem. Ez különbözik attól, mintha az {{jsxref("eval")}} függvényt használná egy függvénykifejezéshez.</p>
+
+<pre class="brush: js">var x = 10;
+
+function createFunction1() {
+    var x = 20;
+    return new Function('return x;'); // az |x| a globális |x|-et jelenti
+}
+
+function createFunction2() {
+    var x = 20;
+    function f() {
+        return x; // ez az |x| a fent lévő helyi |x|-et jelenti
+    }
+    return f;
+}
+
+var f1 = createFunction1();
+console.log(f1());          // 10
+var f2 = createFunction2();
+console.log(f2());          // 20
+</pre>
+
+<p>A kód működik a webböngészőkben, de az <code>f1()</code> <code>ReferenceError</code> hibát okoz Node.js-ben, mert az <code>x</code> nem található. Ez azért van, mert a Node felsző szintű hatóköre nincs a globális hatókörben, és az <code>x</code> a modulra nézve helyi változó lesz.</p>
+
+<h2 id="Specifikációk">Specifikációk</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES1')}}</td>
+   <td>{{Spec2('ES1')}}</td>
+   <td>Kezdeti definíció. A JavaScript 1.0-ban megvalósítva.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-15.3', 'Function')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td></td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-function-objects', 'Function')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td></td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-function-objects', 'Function')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td></td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Böngésző_kompatibilitás">Böngésző kompatibilitás</h2>
+
+<div>
+<div class="hidden">Az oldalon lévő kompatibilitási táblázat strukturált adatokból kerül előállításra. Ha közreműködne az adatokban, akkor keresse fel a <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> tárolót, és küldjön beolvasztási kérést.</div>
+
+<p>{{Compat("javascript.builtins.Function")}}</p>
+</div>
+
+<h2 id="Lásd_még">Lásd még:</h2>
+
+<ul>
+ <li>{{jsxref("Functions", "Functions and function scope")}}</li>
+ <li>{{jsxref("Function")}}</li>
+ <li>{{jsxref("Statements/function", "function statement")}}</li>
+ <li>{{jsxref("Operators/function", "function expression")}}</li>
+ <li>{{jsxref("Statements/function*", "function* statement")}}</li>
+ <li>{{jsxref("Operators/function*", "function* expression")}}</li>
+ <li>{{jsxref("GeneratorFunction")}}</li>
+</ul>

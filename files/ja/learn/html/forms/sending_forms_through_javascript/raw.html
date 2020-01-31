@@ -1,0 +1,433 @@
+<p class="summary">{{LearnSidebar}}{{PreviousMenuNext("Learn/HTML/Forms/How_to_build_custom_form_widgets", "Learn/HTML/Forms/HTML_forms_in_legacy_browsers", "Learn/HTML/Forms")}}</p>
+
+<p class="summary"><a href="/ja/docs/Learn/HTML/Forms/Sending_and_retrieving_form_data">前回の記事</a>と同様に、<span class="seoSummary">HTML フォームは <a href="/ja/docs/Web/HTTP">HTTP</a> リクエストを宣言的に送信できます。しかし、フォームは JavaScript 経由で送信する HTTP リクエストを準備することもできます。この記事ではその方法を探ります。</span></p>
+
+<h2 id="A_form_is_not_always_a_form" name="A_form_is_not_always_a_form">フォームは必ずしもフォームであるとは限らない</h2>
+
+<p><a href="/ja/docs/Open_Web_apps_and_Web_standards" title="Open_Web_apps_and_Web_standards">open Web apps</a> が現れたことで <a href="/ja/docs/HTML/Forms" title="HTML/Forms">HTML フォーム</a>を、人が記入する文字どおりのフォーム以外に使用することが次第に一般的になってきました。ますます多くの開発者が、伝送するデータの処理を制御しようとしています。</p>
+
+<h3 id="Gaining_control_of_the_global_interface" name="Gaining_control_of_the_global_interface">グローバルインターフェイスの制御を取得</h3>
+
+<p>標準の HTML フォーム送信では、データが送信された URL がロードされます。つまり、ブラウザウィンドウは全ページロードで移動します。ページ全体の読み込みを回避すると、ちらつきやネットワークの遅延を隠して、よりスムーズな操作を提供できます。</p>
+
+<p>最近の多くの UI は、HTML フォームを使用してユーザからの入力を収集します。ユーザがデータを送信しようとすると、アプリケーションはバックグラウンドでデータを非同期的に制御して送信し、変更が必要な UI の部分のみを更新します。</p>
+
+<p>任意のデータを非同期に送信することは、"Asynchronous JavaScript And XML" を表す頭字語である <a href="/ja/docs/AJAX" title="AJAX">AJAX</a> として知られています。</p>
+
+<h3 id="How_is_it_different" name="How_is_it_different">その違いは?</h3>
+
+<p><a href="/ja/docs/Web/Guide/AJAX">AJAX</a> は {{domxref("XMLHttpRequest")}} (XHR) DOM オブジェクトを使用します。HTTP リクエストを作成して送信し、結果を取得することができます。</p>
+
+<div class="note">
+<p><strong>注記:</strong> 古い AJAX 技術は {{domxref("XMLHttpRequest")}} に依存しないかもしれません。たとえば、<a href="https://ja.wikipedia.org/wiki/JSONP" rel="external">JSONP</a> と <a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/eval">eval()</a> 関数を組み合わせたものです。うまくいきますが、深刻なセキュリティ問題のためにお勧めできません。使用する唯一の理由は、{{domxref("XMLHttpRequest")}} や JSON をサポートしていない従来のブラウザ用ですが、それらは非常に古いブラウザです。<strong>そのようなテクニックは避けてください</strong>。</p>
+</div>
+
+<p>歴史的には、{{domxref("XMLHttpRequest")}} は交換フォーマットとして <a href="/ja/docs/XML_Introduction">XML</a> を取得して送信するように設計されていました。しかし、<a href="/ja/docs/Glossary/JSON">JSON</a> は XML に取って代わり、今日では圧倒的に一般的になっています。</p>
+
+<p>しかし、XML も JSON もフォームデータリクエストのエンコーディングには適合しません。フォームデータ (<code>application/x-www-form-urlencoded</code>) は、キーと値のペアの URL エンコードリストで構成されています。バイナリデータを送信するために、HTTP リクエストは <code>multipart/form-data</code> に再形成されます。</p>
+
+<p>フロントエンド (ブラウザで実行されるコード) とバックエンド (サーバで実行されるコード) を制御すれば、JSON/XML を送信して必要に応じて処理することができます。</p>
+
+<p>しかし、サードパーティのサービスを利用したい場合、それほど簡単ではありません。一部のサービスはフォームデータのみを受け付けます。フォームデータを使用する方が簡単な場合もあります。データがキー/値のペア、または生のバイナリデータである場合、既存のバックエンドツールは追加のコードを必要とせずにそれを処理できます。</p>
+
+<p>ではどのようにしてそのようなデータを送信するのでしょうか?</p>
+
+<h2 id="Sending_form_data" name="Sending_form_data">フォームデータの送信</h2>
+
+<p>フォームデータを送信するには、従来の方法から新しい {{domxref("FormData")}} オブジェクトまで3つの方法があります。それらを詳しく見てみましょう。</p>
+
+<h3 id="Building_an_XMLHttpRequest_manually" name="Building_an_XMLHttpRequest_manually">手作業での XMLHttpRequest の作成</h3>
+
+<p>{{domxref("XMLHttpRequest")}} は、HTTP リクエストを作成する最も安全で信頼性の高い方法です。{{domxref("XMLHttpRequest")}} を使用してフォームデータを送信するには、URL エンコードしたデータを準備し、フォームデータリクエストの詳細に従ってください。</p>
+
+<div class="note">
+<p><strong>注記:</strong> <code>XMLHttpRequest</code> についてさらに学ぶ場合、これらの記事に興味を持つかもしれません: <a href="/ja/docs/Web/Guide/AJAX/Getting_Started">AJAX の入門記事</a>と <a href="/ja/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest"><code>XMLHttpRequest</code> の使用</a>についてのより高度なチュートリアルです。</p>
+</div>
+
+<p>先ほどの例を再構築しましょう:</p>
+
+<pre class="brush: html">&lt;button type="button" onclick="sendData({test:'ok'})"&gt;Click Me!&lt;/button&gt;</pre>
+
+<p>ご覧のとおり、HTML はそれほど変わっていません。しかし、JavaScript はまったく異なります。</p>
+
+<pre class="brush: js">function sendData(data) {
+  var XHR = new XMLHttpRequest();
+  var urlEncodedData = "";
+  var urlEncodedDataPairs = [];
+  var name;
+
+  // data オブジェクトを、URL エンコードしたキーと値のペアの配列に変換します
+  for(name in data) {
+    urlEncodedDataPairs.push(encodeURIComponent(name) + '=' + encodeURIComponent(data[name]));
+  }
+
+  // キーと値のペアをひとつの文字列に連結して、Web ブラウザのフォーム送信方式に 
+  // 合うよう、エンコードされた空白をプラス記号に置き換えます。
+  urlEncodedData = urlEncodedDataPairs.join('&amp;').replace(/%20/g, '+');
+
+  // データが正常に送信された場合に行うことを定義します
+  XHR.addEventListener('load', function(event) {
+    alert('Yeah! Data sent and response loaded.');
+  });
+
+  // エラーが発生した場合に行うことを定義します
+  XHR.addEventListener('error', function(event) {
+    alert('Oups! Something goes wrong.');
+  });
+
+  // リクエストをセットアップします
+  XHR.open('POST', 'http://ucommbieber.unl.edu/CORS/cors.php');
+
+  // フォームデータの POST リクエストを扱うために必要な HTTP ヘッダを追加します
+  XHR.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+
+  // 最後に、データを送信します
+  XHR.send(urlEncodedData);
+}</pre>
+
+<p>そして、結果は以下のとおりです:</p>
+
+<p>{{EmbedLiveSample("Building_an_XMLHttpRequest_manually", "100%", 50)}}</p>
+
+<div class="note">
+<p><strong>注記:</strong> この {{domxref("XMLHttpRequest")}} の使用は、第三者の Web サイトにデータを送信したい場合にも、同一生成元ポリシーの対象となります。クロスオリジンリクエストの場合は、<a href="/ja/docs/Web/HTTP/CORS">CORS と HTTP のアクセス制御</a>が必要です。</p>
+</div>
+
+<h3 id="Using_XMLHttpRequest_and_the_FormData_object" name="Using_XMLHttpRequest_and_the_FormData_object">XMLHttpRequest と FormData オブジェクトの使用</h3>
+
+<p>HTTP リクエストを手作業で作成するのは大変なことです。 幸いなことに、最近の <a href="http://www.w3.org/TR/XMLHttpRequest/">XMLHttpRequest 仕様</a>では {{domxref("FormData")}} オブジェクトを使ってフォームデータリクエストを処理する便利で簡単な方法が提供されています。</p>
+
+<p>{{domxref("FormData")}} オブジェクトは、送信用のフォームデータを作成したり、送信方法を管理するフォーム要素内のデータを取得するために使用できます。{{domxref("FormData")}} オブジェクトは "書き込み専用" であることに注意してください。つまり、変更することはできますが、内容を取得することはできません。</p>
+
+<p>このオブジェクトの使い方は <a href="/ja/docs/Web/API/FormData/Using_FormData_Objects">FormData オブジェクトの使用</a>で詳述されていますが、2つの例があります。</p>
+
+<h4 id="Using_a_standalone_FormData_object" name="Using_a_standalone_FormData_object">独立した FormData オブジェクトを使用する</h4>
+
+<pre class="brush: html">&lt;button type="button" onclick="sendData({test:'ok'})"&gt;Click Me!&lt;/button&gt;</pre>
+
+<p>HTML のサンプルはおわかりでしょう。</p>
+
+<pre class="brush: js">function sendData(data) {
+  var XHR = new XMLHttpRequest();
+  var FD  = new FormData();
+
+  // データを FormData オブジェクトに投入します
+  for(name in data) {
+    FD.append(name, data[name]);
+  }
+
+  // データが正常に送信された場合に行うことを定義します
+  XHR.addEventListener('load', function(event) {
+    alert('Yeah! Data sent and response loaded.');
+  });
+
+  // エラーが発生した場合に行うことを定義します
+  XHR.addEventListener('error', function(event) {
+    alert('Oups! Something goes wrong.');
+  });
+
+  // リクエストをセットアップします
+  XHR.open('POST', 'http://ucommbieber.unl.edu/CORS/cors.php');
+
+  // FormData オブジェクトを送信するだけです。HTTP ヘッダは自動的に設定されます
+  XHR.send(FD);
+}</pre>
+
+<p>そして、結果は以下のとおりです:</p>
+
+<p>{{EmbedLiveSample("Using_a_standalone_FormData_object", "100%", 50)}}</p>
+
+<h4 id="Using_FormData_bound_to_a_form_element" name="Using_FormData_bound_to_a_form_element">form 要素に紐づけた FormData を使用する</h4>
+
+<p><code>FormData</code> オブジェクトを {{HTMLElement("form")}} 要素に紐づけることもできます。これにより、フォームに含まれるデータを表す <code>FormData</code> をすばやく得ることができます。</p>
+
+<p><code>FormData</code> オブジェクトを {{HTMLElement("form")}} 要素にバインドすることもできます。これにより、フォームに含まれるデータを表す <code>FormData</code> が作成されます。</p>
+
+<p>HTML の部分はかなり典型的です:</p>
+
+<pre class="brush: html">&lt;form id="myForm"&gt;
+  &lt;label for="myName"&gt;Send me your name:&lt;/label&gt;
+  &lt;input id="myName" name="name" value="John"&gt;
+  &lt;input type="submit" value="Send Me!"&gt;
+&lt;/form&gt;</pre>
+
+<p>しかし、JavaScript がフォームを乗っ取ります。</p>
+
+<pre class="brush: js">window.addEventListener("load", function () {
+  function sendData() {
+    var XHR = new XMLHttpRequest();
+
+    // FormData オブジェクトと form 要素を紐づけます
+    var FD  = new FormData(form);
+
+    // データが正常に送信された場合に行うことを定義します
+    XHR.addEventListener("load", function(event) {
+      alert(event.target.responseText);
+    });
+
+    // エラーが発生した場合に行うことを定義します
+    XHR.addEventListener("error", function(event) {
+      alert('Oups! Something goes wrong.');
+    });
+
+    // リクエストをセットアップします
+    XHR.open("POST", "http://ucommbieber.unl.edu/CORS/cors.php");
+
+    // 送信したデータは、ユーザがフォームで提供したものです
+    XHR.send(FD);
+  }
+ 
+  // form 要素にアクセスしなければなりません
+  var form = document.getElementById("myForm");
+
+  // フォームの submit イベントを乗っ取ります
+  form.addEventListener("submit", function (event) {
+    event.preventDefault();
+
+    sendData();
+  });
+});</pre>
+
+<p>そして、結果は以下のとおりです:</p>
+
+<p>{{EmbedLiveSample("Using_FormData_bound_to_a_form_element", "100%", 50)}}</p>
+
+<p>フォームの {{domxref("HTMLFormElement.elements", "elements")}} プロパティを使用してフォーム内のすべてのデータ要素のリストを取得し、それらを一度に1つずつ手動で管理することで、このプロセスにさらに関わることができます。詳細については、{{SectionOnPage("/ja/docs/Web/API/HTMLFormElement.elements", "要素リストの内容にアクセスする")}}の例を参照してください。</p>
+
+<p> </p>
+
+<h3 id="Building_a_DOM_in_a_hidden_iframe" name="Building_a_DOM_in_a_hidden_iframe">隠し iframe での DOM 作成</h3>
+
+<p>フォームデータを非同期的に送信する最も古い方法は、DOM API を使用してフォームを作成してから、そのデータを非表示の {{HTMLElement("iframe")}} に送信することです。送信結果にアクセスするには、{{HTMLElement("iframe")}} のコンテンツを取得します。</p>
+
+<div class="warning">
+<p><strong>警告:</strong> <strong>この手法を使用しないでください</strong>。サードパーティのサービスでは、<a href="https://ja.wikipedia.org/wiki/%E3%82%AF%E3%83%AD%E3%82%B9%E3%82%B5%E3%82%A4%E3%83%88%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%97%E3%83%86%E3%82%A3%E3%83%B3%E3%82%B0">スクリプトインジェクション攻撃</a>にさらされる可能性があるため、セキュリティ上のリスクがあります。HTTPS を使用すると、<a href="/ja/docs/Web/Security/Same-origin_policy">同一生成元ポリシー</a>に影響を与え、{{HTMLElement("iframe")}} の内容にアクセスできなくなる可能性があります。ただし、非常に古いブラウザをサポートする必要がある場合は、この方法が唯一の選択肢となるでしょう。</p>
+</div>
+
+<p>以下は簡単な例です:</p>
+
+<pre class="brush: html">&lt;button onclick="sendData({test:'ok'})"&gt;Click Me!&lt;/button&gt;</pre>
+
+<pre class="brush: js">// データの送信に使用する iFrame を作成しましょう
+var iframe = document.createElement("iframe");
+iframe.name = "myTarget";
+
+// 次に、主ドキュメントに iframe を付加します
+window.addEventListener("load", function () {
+  iframe.style.display = "none";
+  document.body.appendChild(iframe);
+});
+
+// これは実際にデータを送信するために使用する関数です
+// 引数は 1 つあり、それはキーと値のペアを持っているオブジェクトです。
+function sendData(data) {
+  var name,
+      form = document.createElement("form"),
+      node = document.createElement("input");
+
+  // レスポンスが読み込まれたときにする行うべきことを定義します
+  iframe.addEventListener("load", function () {
+    alert("Yeah! Data sent.");
+  });
+    
+  form.action = "http://www.cs.tut.fi/cgi-bin/run/~jkorpela/echo.cgi";
+  form.target = iframe.name;
+
+  for(name in data) {
+    node.name  = name;
+    node.value = data[name].toString();
+    form.appendChild(node.cloneNode());
+  }
+
+  // フォームは送信するために、主ドキュメントに付加することが必要です
+  form.style.display = "none";
+  document.body.appendChild(form);
+
+  form.submit();
+
+  // しかしフォームを送信した後は、置いたままにしても役に立ちません
+  document.body.removeChild(form);
+}</pre>
+
+<p>そして、結果は以下のとおりです:</p>
+
+<p>{{EmbedLiveSample("Building_a_DOM_in_a_hidden_iframe", "100%", 50)}}</p>
+
+<h2 id="Dealing_with_binary_data" name="Dealing_with_binary_data">バイナリデータを扱う</h2>
+
+<p><code>&lt;input type="file"&gt;</code> ウィジェットを含むフォームで {{domxref("FormData")}} オブジェクトを使用すると、データは自動的に処理されます。しかし、バイナリデータを手動で送るには、追加でやるべきことがあります。</p>
+
+<p>現代の Web には、バイナリデータのソースが多数あります。たとえば、{{domxref("FileReader")}}、{{domxref("HTMLCanvasElement","Canvas")}}、<a href="/ja/docs/Web/API/Navigator/getUserMedia">WebRTC</a> などです。残念ながら、一部の従来のブラウザではバイナリデータにアクセスできないか、または複雑な回避策が必要です。これらのレガシーケースはこの記事の範囲外です。<code>FileReader</code> API について詳しく知りたい場合は、<a href="/ja/docs/Web/API/File/Using_files_from_web_applications">Web アプリケーションからファイルを扱う</a>を読んでください。</p>
+
+<p>{{domxref("FormData")}} をサポートするバイナリデータを送信するのは簡単です。<code>append()</code> メソッドを使用すれば完了です。手動でやらなければならないならば、それはトリッキーです。</p>
+
+<p>以下の例ではバイナリデータへのアクセスに {{domxref("FileReader")}} API を使用しており、また手作業でマルチパートのフォームデータを作成しています:</p>
+
+<p>次の例では、{{domxref("FileReader")}} API を使用してバイナリデータにアクセスしてから、手動でマルチパートフォームデータリクエストを作成します。</p>
+
+<pre class="brush: html">&lt;form id="myForm"&gt;
+  &lt;p&gt;
+    &lt;label for="i1"&gt;text data:&lt;/label&gt;
+    &lt;input id="i1" name="myText" value="Some text data"&gt;
+  &lt;/p&gt;
+  &lt;p&gt;
+    &lt;label for="i2"&gt;file data:&lt;/label&gt;
+    &lt;input id="i2" name="myFile" type="file"&gt;
+  &lt;/p&gt;
+  &lt;button&gt;Send Me!&lt;/button&gt;
+&lt;/form&gt;</pre>
+
+<p>ご覧のとおり、HTMLは標準の <code>&lt;form&gt;</code> です。不思議なところは何もありません。「魔法」は JavaScript にあります。</p>
+
+<pre class="brush: js">// DOM ノードにアクセスしたいため、
+// ページをロードしたときにスクリプトを初期化します。
+window.addEventListener('load', function () {
+
+  // この変数は、フォームデータを格納するために使用します。
+  var text = document.getElementById("i1");;
+  var file = {
+        dom    : document.getElementById("i2"),
+        binary : null
+      };
+ 
+  // ファイルコンテンツへのアクセスに FileReader API を使用します。
+  var reader = new FileReader();
+
+  // FileReader API は非同期であるため、ファイルの読み取りが完了したときに
+  // その結果を保存しなければなりません。
+  reader.addEventListener("load", function () {
+    file.binary = reader.result;
+  });
+
+  // ページを読み込んだとき、すでに選択されているファイルがあればそれを読み取ります。
+  if(file.dom.files[0]) {
+    reader.readAsBinaryString(file.dom.files[0]);
+  }
+
+  // 一方、ユーザがファイルを選択したらそれを読み取ります。
+  file.dom.addEventListener("change", function () {
+    if(reader.readyState === FileReader.LOADING) {
+      reader.abort();
+    }
+    
+    reader.readAsBinaryString(file.dom.files[0]);
+  });
+
+  // sendData 関数がメインの関数です。
+  function sendData() {
+    // 始めに、ファイルが選択されている場合はファイルの読み取りを待たなければなりません。
+    // そうでない場合は、関数の実行を遅延させます。
+    if(!file.binary &amp;&amp; file.dom.files.length &gt; 0) {
+      setTimeout(sendData, 10);
+      return;
+    }
+
+    // マルチパートのフォームデータリクエストを構築するため、
+    // XMLHttpRequest のインスタンスが必要です。
+    var XHR      = new XMLHttpRequest();
+
+    // リクエストの各パートを定義するためのセパレータが必要です。
+    var boundary = "blob";
+
+    // 文字列としてリクエストのボディを格納します。
+    var data     = "";
+
+    // そして、ユーザがファイルを選択したときに
+    if (file.dom.files[0]) {
+      // リクエストのボディに新たなパートを作ります
+      data += "--" + boundary + "\r\n";
+
+      // フォームデータであることを示します (他のものになる場合もあります)
+      data += 'content-disposition: form-data; '
+      // フォームデータの名前を定義します
+            + 'name="'         + file.dom.name          + '"; '
+      // 実際のファイル名を与えます
+            + 'filename="'     + file.dom.files[0].name + '"\r\n';
+      // ファイルの MIME タイプを与えます
+      data += 'Content-Type: ' + file.dom.files[0].type + '\r\n';
+
+      // メタデータとデータの間に空行を置きます
+      data += '\r\n';
+      
+      // リクエストのボディにバイナリデータを置きます
+      data += file.binary + '\r\n';
+    }
+
+    // テキストデータの場合はシンプルです。
+    // リクエストのボディに新たなパートを作ります
+    data += "--" + boundary + "\r\n";
+
+    // フォームデータであることと、データの名前を示します。
+    data += 'content-disposition: form-data; name="' + text.name + '"\r\n';
+    // メタデータとデータの間に空行を置きます
+    data += '\r\n';
+
+    // リクエストのボディにテキストデータを置きます。
+    data += text.value + "\r\n";
+
+    // 完了したら、リクエストのボディを "閉じます"。
+    data += "--" + boundary + "--";
+
+    // データが正常に送信された場合に行うことを定義します
+    XHR.addEventListener('load', function(event) {
+      alert('Yeah! Data sent and response loaded.');
+    });
+
+    // エラーが発生した場合に行うことを定義します
+    XHR.addEventListener('error', function(event) {
+      alert('Oups! Something goes wrong.');
+    });
+
+    // リクエストをセットアップします
+    XHR.open('POST', 'http://ucommbieber.unl.edu/CORS/cors.php');
+
+    // マルチパートのフォームデータの POST リクエストを扱うために必要な HTTP ヘッダを追加します。
+    XHR.setRequestHeader('Content-Type','multipart/form-data; boundary=' + boundary);
+    XHR.setRequestHeader('Content-Length', data.length);
+
+    // 最後に、データを送信します
+    // Firefox のバグ 416178 により、send() の代わりに sendAsBinary() を使用することが必要です。
+    XHR.sendAsBinary(data);
+  }
+
+  // 少なくとも、フォームにアクセスしなければなりません。
+  var form   = document.getElementById("myForm");
+
+  // submit イベントを乗っ取ります。
+  form.addEventListener('submit', function (event) {
+    event.preventDefault();
+    sendData();
+  });
+});</pre>
+
+<p>そして、結果は以下のとおりです:</p>
+
+<p>{{EmbedLiveSample("Dealing_with_binary_data", "100%", 150)}}</p>
+
+<h2 id="Conclusion" name="Conclusion">おわりに</h2>
+
+<p>ブラウザによっては、JavaScript を介してフォームデータを送信するのが簡単な場合と難しい場合があります。{{domxref("FormData")}} オブジェクトが一般的な答えであり、レガシーブラウザでポリフィルを使用することをためらってはいけません。</p>
+
+<ul>
+ <li><a href="https://gist.github.com/lemonhall/3120320">この gist</a> は、<code>FormData</code> に {{domxref("Web_Workers_API.Using_web_workers","Web Workers")}} を入力します。</li>
+ <li><a href="https://github.com/francois2metz/html5-formdata" rel="external">HTML5-formdata</a> は <code>FormData</code> オブジェクトに入力しますが、<a href="https://www.w3.org/TR/FileAPI/">File API</a> が必要です。</li>
+ <li><a href="https://github.com/jimmywarting/FormData">この polyfill</a> は FormData が持っているほとんどの新しいメソッド (エントリ、キー、値、<code>for...of</code> のサポート) を提供します。</li>
+</ul>
+
+<p>{{PreviousMenuNext("Learn/HTML/Forms/How_to_build_custom_form_widgets", "Learn/HTML/Forms/HTML_forms_in_legacy_browsers", "Learn/HTML/Forms")}}</p>
+
+<h2 id="In_this_module" name="In_this_module">このモジュール</h2>
+
+<ul>
+ <li><a href="/ja/docs/Learn/HTML/Forms/Your_first_HTML_form">初めての HTML フォーム</a></li>
+ <li><a href="/ja/docs/Learn/HTML/Forms/How_to_structure_an_HTML_form">HTML フォームの構築方法</a></li>
+ <li><a href="/ja/docs/Learn/HTML/Forms/The_native_form_widgets">ネイティブフォームウィジェット</a></li>
+ <li><a href="/ja/docs/Learn/HTML/Forms/Sending_and_retrieving_form_data">フォームデータの送信</a></li>
+ <li><a href="/ja/docs/Learn/HTML/Forms/Data_form_validation">フォームデータの検証</a></li>
+ <li><a href="/ja/docs/Learn/HTML/Forms/How_to_build_custom_form_widgets">カスタムフォームウィジェットの作成方法</a></li>
+ <li><a href="/ja/docs/Learn/HTML/Forms/Sending_forms_through_JavaScript">JavaScript によるフォームの送信</a></li>
+ <li><a href="/ja/docs/Learn/HTML/Forms/HTML_forms_in_legacy_browsers">古いブラウザでの HTML フォーム</a></li>
+ <li><a href="/ja/docs/Learn/HTML/Forms/Styling_HTML_forms">HTML フォームへのスタイル設定</a></li>
+ <li><a href="/ja/docs/Learn/HTML/Forms/Advanced_styling_for_HTML_forms">HTML フォームへの高度なスタイル設定</a></li>
+ <li><a href="/ja/docs/Property_compatibility_table_for_form_widgets">フォームウィジェット向けプロパティ実装状況一覧</a></li>
+</ul>

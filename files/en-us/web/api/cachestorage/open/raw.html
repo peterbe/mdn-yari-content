@@ -1,0 +1,80 @@
+<p>{{APIRef("Service Workers API")}}</p>
+
+<p><span class="seoSummary">The <strong><code>open()</code></strong> method of the {{domxref("CacheStorage")}} interface returns a {{jsxref("Promise")}} that resolves to the {{domxref("Cache")}} object matching the <code>cacheName</code>.</span></p>
+
+<div class="note">
+<p><strong>Note</strong>: If the specified {{domxref("Cache")}} does not exist, a new cache is created with that <code>cacheName</code> and a {{jsxref("Promise")}} that resolves to this new {{domxref("Cache")}} object is returned.</p>
+</div>
+
+<h2 id="Syntax">Syntax</h2>
+
+<pre class="brush: js">// "caches" is a global read-only variable, which is an instance of CacheStorage,
+// For more info, refer to: https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/caches
+
+caches.open(<em>cacheName</em>).then(function(<em>cache</em>) {
+  // Do something with your cache
+});
+</pre>
+
+<h3 id="Parameters">Parameters</h3>
+
+<dl>
+ <dt>cacheName</dt>
+ <dd>The name of the cache you want to open.</dd>
+</dl>
+
+<h3 id="Return_value">Return value</h3>
+
+<p>A {{jsxref("Promise")}} that resolves to the requested {{domxref("Cache")}} object.</p>
+
+<h2 id="Examples" style="line-height: 30px; font-size: 2.14285714285714rem;">Examples</h2>
+
+<p>This example is from the MDN <a href="https://github.com/mdn/sw-test/">sw-test example</a> (see <a href="https://mdn.github.io/sw-test/">sw-test running live</a>). Here we wait for a {{domxref("FetchEvent")}} to fire. Then we construct a custom response like so:</p>
+
+<ol>
+ <li>Check whether a match for the request is found in the {{domxref("CacheStorage")}} using {{domxref("CacheStorage.match","CacheStorage.match()")}}. If so, serve that.</li>
+ <li>If not, open the <code>v1</code> cache using {{domxref("CacheStorage.open","CacheStorage.open()")}}, put the default network request in the cache using {{domxref("Cache.put","Cache.put()")}} and return a clone of the default network request using <code>return response.clone()</code>. The last is necessary because <code>put()</code> consumes the response body.</li>
+ <li>If this fails (e.g., because the network is down), return a fallback response.</li>
+</ol>
+
+<pre class="brush: js">var cachedResponse = caches.match(event.request).catch(function() {
+  return fetch(event.request);
+}).then(function(response) {
+  caches.open('v1').then(function(cache) {
+    cache.put(event.request, response);
+  });  
+  return response.clone();
+}).catch(function() {
+  return caches.match('/sw-test/gallery/myLittleVader.jpg');
+});</pre>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('Service Workers', '#dom-cachestorage-open', 'CacheStorage: open')}}</td>
+   <td>{{Spec2('Service Workers')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("api.CacheStorage.open")}}</p>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorker_API/Using_Service_Workers">Using Service Workers</a></li>
+ <li>{{domxref("Cache")}}</li>
+ <li>{{domxref("WorkerGlobalScope.caches")}}</li>
+</ul>

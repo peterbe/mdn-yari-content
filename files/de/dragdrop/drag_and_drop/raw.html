@@ -1,0 +1,53 @@
+<p>Firefox und andere Mozilla-Produkte unterstützen eine Anzahl der Features von den Ziehen-und-Ablegen-Funktionen (drag and drop). Dies Features erlauben dem Nutzer auf ein Element zu klicken, dann die Maustaste halten um das Element an eine anderen Ort zu ziehen und die Maustaste dort los lassen um es dort Abzulegen. Eine lichtdurchlässige Darstellung des Elements, das gezogen wird, folgt dem Mauszeiger während der Durchführung. Der Ablegeort kann auch in einer anderen Applikation sein. Webseiten, Erweiterungen und XUL-Applikationen können diese <span class="short_text" id="result_box" lang="de"><span class="hps">Funktionalität nutzen zum A</span></span>npassen ihrer Produkte.</p>
+
+<div class="note">This section covers drag and drop in Firefox 3.5 (Gecko 1.9.1) and later. For the older API for Firefox 3.0 and earlier, which is not exposed to web pages, see the <a href="/en/Drag_and_Drop" title="Older Drag and Drop API">older API documentation</a>.</div>
+
+<h2 id="Die_Grundlagen_des_Ziehen_und_Ablegen">Die Grundlagen des Ziehen und Ablegen</h2>
+
+<p>Vor Beginn der Zieh-Operation wird eine Anzahl an Information vorausgesetzt:</p>
+
+<ul>
+ <li>die Objekte, die gezogen werden, können verschiedene Fomate besitzen. Zum Beispiel enthalten Textdaten eine <span class="short_text" id="result_box" lang="de"><span class="hps">Zeichenfolge, die gezogen wird. Für weitere Informationen finden Sie unter</span></span> <a href="/En/DragDrop/Drag_Operations#dragdata" title="Drag Data">Drag Data</a>.</li>
+ <li>das Drag-Feedbackbild. Dieses erscheint neben dem Mauszeiger während der Drag-Operation. Dieses Bild kann angepasst werden, standardmäßig wird es aus gezogenenen Element generiert. Um mehr über das Drag-Feedback-Bild zu lernen gehen sie auf <a href="/En/DragDrop/Drag_Operations#dragfeedback" title="Setting the Drag Feedback Image">Setting the Drag Feedback Image</a>.</li>
+ <li>die Zieh-Effekte, die erlaubt sind: das Kopieren, das Bewegen und das Verbinden (link). Sie finden unter <a href="/En/DragDrop/Drag_Operations#drageffects" title="Drag Effects">Drag Effects</a> weitere Details.</li>
+</ul>
+
+<p>Mozilla und Firefox unterstützen eine Anzahl von Features die nicht in dem Standard des Ziehen und Ablegens definiert sind. Diese Features erlauben das Ziehen von mehren Items und das Ziehen von Nicht-Zeichenketten. Für weitere Information, siehe <a href="/En/DragDrop/Dragging_and_Dropping_Multiple_Items" title="Dragging and Dropping Multiple Items">Dragging and Dropping Multiple Items</a>.</p>
+
+<p>Eine Liste aller üblicherweise für Drag&amp;Drop verwendeten Datentypen finden Sie unter <a href="/En/DragDrop/Recommended_Drag_Types" title="Recommended Drag Types">Recommended Drag Types</a>. Für die folgenden Datentypen ist eine Schnellübersicht inklusive der Best-Practices verfügbar:</p>
+
+<ul>
+ <li><a href="/En/DragDrop/Recommended_Drag_Types#text" title="Text">Text</a></li>
+ <li><a href="/En/DragDrop/Recommended_Drag_Types#link" title="Links">Links</a></li>
+ <li><a href="/En/DragDrop/Recommended_Drag_Types#html" title="HTML and XML">HTML and XML</a></li>
+ <li><a href="/En/DragDrop/Recommended_Drag_Types#file" title="Files">Files</a></li>
+ <li><a href="/En/DragDrop/Recommended_Drag_Types#image" title="Images">Images</a></li>
+ <li><a href="/En/DragDrop/Recommended_Drag_Types#node" title="Document Nodes">Document Nodes</a></li>
+</ul>
+
+<p>See <a href="/En/DragDrop/DataTransfer" title="DataTransfer">DataTransfer</a> for a reference to the DataTransfer object.</p>
+
+<h2 id="events" name="events">Drag events</h2>
+
+<p>A number of events are used which are fired during various stages of the drag and drop operation. Note that only drag events are fired; mouse events such as <code>mousemove</code> are not fired during a drag operation.</p>
+
+<p>The <a href="/En/DragDrop/DataTransfer" title="dataTransfer">dataTransfer</a> property of all drag events holds data about the drag and drop operation.</p>
+
+<dl>
+ <dt>dragstart</dt>
+ <dd>Fired on an element when a drag is started. The user is requesting to drag the element the dragstart event is fired at. During this event, a listener would set information such the drag data and image to be associated with the drag. For information about this, see <a href="/En/DragDrop/Drag_Operations#dragstart" title="Starting a Drag Operation">Starting a Drag Operation</a>.</dd>
+ <dt>dragenter</dt>
+ <dd>Fired when the mouse is first moved over an element while a drag is occuring. A listener for this event should indicate whether a drop is allowed over this location. If there are no listeners, or the listeners perform no operations, then a drop is not allowed by default. This is also the event to listen to if you want to provide feedback that a drop is allowed such as displaying a highlight or insertion marker. For information about this, see <a href="/En/DragDrop/Drag_Operations#droptargets" title="Specifying Drop Targets">Specifying Drop Targets</a>.</dd>
+ <dt>dragover</dt>
+ <dd>This event is fired as the mouse is moved over an element when a drag is occuring. Much of the time, the operation that occurs during a listener will be the same as the dragenter event. For information about this, see <a href="/En/DragDrop/Drag_Operations#droptargets" title="Specifying Drop Targets">Specifying Drop Targets</a>.</dd>
+ <dt>dragleave</dt>
+ <dd>This event is fired when the mouse leaves an element while a drag is occuring. Listeners should remove any highlighting or insertion markers used for drop feedback.</dd>
+ <dt>drag</dt>
+ <dd>This event is fired at the source of the drag, that is, the element where dragstart was fired, during the drag operation.</dd>
+ <dt>drop</dt>
+ <dd>The drop event is fired on the element where the drop was occured at the end of the drag operation. A listener would be responsible for retrieving the data being dragged and inserting it at the drop location. This event will only fire if a drop is desired. It will not fire if the user cancelled the drag operation, for example by pressing the Escape key, or if the mouse button was released while the mouse was not over a valid drop target. For information about this, see <a href="/En/DragDrop/Drag_Operations#drop" title="Performing a Drop">Performing a Drop</a>.</dd>
+ <dt>dragend</dt>
+ <dd>The source of the drag will receive a dragend event when the drag operation is complete, whether it was successful or not. See <a href="/En/DragDrop/Drag_Operations#dragend" title="Finishing a Drag">Finishing a Drag</a> for more information.</dd>
+</dl>
+
+<p>{{ languages( { "es": "es/ArrastrarSoltar/Arrastrar_y_soltar", "ja": "Ja/DragDrop/Drag_and_Drop","fr": "Fr/DragDrop/Drag_and_Drop" } ) }}</p>

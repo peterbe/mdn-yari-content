@@ -1,0 +1,223 @@
+<p>DOM {{ domxref("window") }} объект предоставляет доступ к истории браузера через объект {{ domxref("window.history", "history") }}. Он расширяет полезные свойства и методы, которые позволяют двигаться вперед и назад по истории пользователя, а также - начиная с HTML5 - манипулировать содержимым стека истории.</p>
+
+<h2 id="Путешествие_по_истории">Путешествие по истории</h2>
+
+<p>Перемещайтесь вперед и назад по истории, используя методы <code>back()</code>, <code>forward()</code> и <code>go()</code>.</p>
+
+<h3 id="Передвижение_вперёд_и_назад">Передвижение вперёд и назад</h3>
+
+<p>Чтобы переместиться назад, сделайте:</p>
+
+<pre class="brush: js">window.history.back();
+</pre>
+
+<p>Это будет действовать так же, как если бы пользователь нажал на кнопку Назад на панели инструментов браузера.</p>
+
+<p>Похожим образом, вы можете перемещаться вперед (как если бы пользователь нажал на кнопку Вперед), так:</p>
+
+<pre class="brush: js">window.history.forward();
+</pre>
+
+<h3 id="Перемещение_на_определенный_момент_в_истории">Перемещение на определенный момент в истории</h3>
+
+<p>Вы можете использовать метод <code>go()</code>, чтобы загрузить конкретную страницу из истории сессии, определяемую относительной позицией к текущей странице (относительный показатель текущей страницы равен 0).</p>
+
+<p>Переместиться на страницу назад (эквивалент <code>back()</code>):</p>
+
+<pre class="brush: js">window.history.go(-1);
+</pre>
+
+<p>Вперед на страницу(или вызвав <code>forward()</code>):</p>
+
+<pre class="brush: js">window.history.go(1);
+</pre>
+
+<p>Кроме того, вы можете двигаться вперед на 2 страницы, передавая 2, и так далее.</p>
+
+<p>Вы можете определить количество страниц в стеке истории, посмотрев свойство length:</p>
+
+<pre class="brush: js">var numberOfEntries = window.history.length;
+</pre>
+
+<div class="note"><strong>Замечание:</strong> Internet Explorer поддерживает передачу URL в <code>go()</code>; это не стандартизировано и не поддерживается в Gecko.</div>
+
+<h2 id="Добавление_и_изменение_записей_истории">Добавление и изменение записей истории</h2>
+
+<p>{{ gecko_minversion_header("2") }}</p>
+
+<p>В HTML5 были представлены методы <code>history.pushState()</code> и <code>history.replaceState()</code>, которые позволяют добавлять и изменять записи истории, соответственно. Эти методы работают вместе с событием {{ domxref("window.onpopstate") }}.</p>
+
+<p>Используя <code>history.pushState()</code> можно изменить referrer, который будет использоваться в HTTP заголовке referrer для <a href="/en/DOM/XMLHttpRequest" title="en/XMLHttpRequest"><code>XMLHttpRequest</code></a> объектов. Referrer будет URL документа, в окне которого создали объект <a href="/en/DOM/XMLHttpRequest" title="en/XMLHttpRequest"><code>XMLHttpRequest</code></a>.</p>
+
+<h3 id="Пример">Пример</h3>
+
+<p><span class="nowiki">Представьте страницу http://mozilla.org/foo.html, которая выполняет следующий</span> JavaScript:</p>
+
+<pre class="brush: js">var stateObj = { foo: "bar" };
+history.pushState(stateObj, "page 2", "bar.html");
+</pre>
+
+<p><span class="nowiki">В этом случае адресная строка станет показывать http://mozilla.org/bar.html</span>, но браузер не будет загружать страницу <code>bar.html</code> и даже проверять существует ли она.</p>
+
+<p><span class="nowiki">Предположим, затем пользователь перешел на http://google.com</span>, а затем кликнул Назад. В этом случае URL отобразится как <span class="nowiki">http://mozilla.org/bar.html</span>, а на странице произойдет событие <code>popstate</code>, тогда объект состояния будет содержать копию <code>stateObj</code>. Сама страница будет выглядеть как <code>foo.html</code>, хотя страница могла изменить своё содержание из-за события <code>popstate</code>.</p>
+
+<p><span class="nowiki">Если мы опять нажмём назад, URL изменится на http://mozilla.org/foo.html</span>, а в документе снова произойдёт событие <code>popstate</code>, в этот раз объект состояния будет пуст. Как видим, возвращаясь мы не изменяем содержимое документа, хотя документ может обновить содержимое сам после получения события popstate.</p>
+
+<h3 id="Метод_pushState()">Метод pushState()</h3>
+
+<p><code>pushState()</code> принимает три параметра: объект состояния, заголовок (сейчас игнорируется) и необязательный URL. Давайте рассмотрим каждый из этих трех параметров более детально:</p>
+
+<ul>
+ <li>
+  <p><strong>объект состояния </strong>— JavaScript объект, ассоциированный с новой записью истории, созданной <code>pushState()</code>. Всякий раз, когда пользователь переходит к новому состоянию, происходит событие popstate, и свойство события state содержит копию объекта записи истории.</p>
+
+  <p>Объект состояния может быть всем, что может сериализироваться. Так как Firefox сохраняет его на диск пользователя, он может быть восстановлен, после того, как пользователь перезапустит браузер. Мы наложили ограничение на этот объект в 640КБ. Если вы передадите больший объект в <code>pushState()</code>, метод бросит исключение. Если вам нужно больше места используйте <code>sessionStorage</code> и/или <code>localStorage</code>.</p>
+ </li>
+ <li>
+  <p><strong>заголовок</strong> — Firefox в данный момент игнорирует этот параметр, хотя может начать использовать его в будущем. Передача пустой строки будет безопасна для следующих реализаций метода. Хотя можете добавить заголовок для состояния, к которому вы направляетесь.</p>
+ </li>
+ <li>
+  <p><strong>URL</strong> —  URL новой записи истории. Заметьте, что браузер не пытается загрузить этот URL после вызова <code>pushState()</code>, хотя может попытаться позже, например, когда пользователь перезапустит браузер. URL не обязан быть абсолютным, он может быть относительным текущей страницы. Новый URL должен идти на тот же домен, протокол и порт, иначе <code>pushState()</code> выбросит исключение. Параметр не обязателен, если он не указан, то будет использоваться URL текущего документа.</p>
+ </li>
+</ul>
+
+<div class="note"><strong>Замечание:</strong> В Gecko 2.0 {{ geckoRelease("2.0") }} до Gecko 5.0 {{ geckoRelease("5.0") }}, передаваемый объект сериарилизовался в JSON. Начиная с Gecko 6.0 {{ geckoRelease("6.0") }}, объект обрабатывается по <a href="/en/DOM/The_structured_clone_algorithm" title="en/DOM/The structured clone algorithm">алгоритму структурированного клонирования</a>. Он позволяет передавать более широкое разнообразие объектов.</div>
+
+<p>В определенном смысле, вызов <code>pushState()</code> похож на установку <code>window.location = "#foo"</code>, в обоих случаях будет создаваться и активироваться другая запись истории, связанная с текущим документом. Но у <code>pushState()</code> несколько преимуществ:</p>
+
+<ul>
+ <li>Новый URL может быть любым в пределах домена, порта и протокола. В отличие от установки <code>window.location</code>, при которой вы остаетесь в том же {{ domxref("document") }} лишь в случае, если вы меняете только хэш.</li>
+ <li>Вам не нужно менять URL, если не хочется. Тогда как <code>window.location = "#foo";</code> создает новую запись истории, только если текущий hash не <code>#foo</code>.</li>
+ <li>Вы можете связать произвольные данные с вашим новым элементом истории. При "hash-based" подходе необходимо кодировать все соответствующие данные в короткую строку.</li>
+ <li>Если <code>title</code> в дальнейшем используется браузерами, эти данные можно удалить (независимо от хеша).</li>
+</ul>
+
+<p>Стоит отметить, что <code>pushState()</code> никогда не вызывает событие <code>hashchange</code>, даже если новый URL отличается только хэшем.</p>
+
+<p>В <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XUL">XUL</a>-документах он создаёт указанный XUL-элемент.</p>
+
+<p>В других документах он создаёт элемент с <code>null</code> namespace URI.</p>
+
+<h3 id="Метод_replaceState()">Метод replaceState()</h3>
+
+<p><code>history.replaceState()</code> работает также, как и <code>history.pushState()</code>, но <code>replaceState()</code> заменяет последнюю запись истории вместо создания новой.</p>
+
+<p><code>replaceState()</code> особенно полезна, когда вы хотите обновить объект состояния или URL текущей записи истории в ответ на действия пользователя.</p>
+
+<div class="note"><strong>Замечание:</strong> В Gecko 2.0 {{ geckoRelease("2.0") }} до Gecko 5.0 {{ geckoRelease("5.0") }}, передаваемый объект сериарилизовался в JSON. Начиная с Gecko 6.0 {{ geckoRelease("6.0") }}, объект обрабатывается по <a href="/en/DOM/The_structured_clone_algorithm" title="en/DOM/The structured clone algorithm">алгоритму структурированного клонирования</a>. Он позволяет передавать более широкое разнообразие объектов.</div>
+
+<h3 id="Событие_popstate">Событие popstate</h3>
+
+<p>Событие <code>popstate</code> вызывается каждый раз, когда история изменятся. Если запись истории была создана с помощью вызова <code>pushState</code> или <code>replaceState</code>, свойство <code>state</code><em> </em>события <code>popstate</code> будет содержать копию состояния записи истории.</p>
+
+<p>Смотрите пример использования {{ domxref("window.onpopstate") }}.</p>
+
+<h3 id="Чтение_текущего_состояния">Чтение текущего состояния</h3>
+
+<p>Когда страница загружается, объект состояния может быть отличным от null.  Это может произойти в случае, если страница установила объект состояния (используя <code>pushState()</code> или <code>replaceState()</code>), а затем пользователь перезагрузил браузер.  Когда страница перезагружается, произойдёт событие <span style="font-family: courier new;">onload</span><span style="font-family: helvetica;">, но не <span style="font-family: courier new;">popstate</span>.</span>  Однако, если вы прочитаете <span style="font-family: courier new;">history.state, </span>то получите объект состояния, который получили бы в случае, если событие popstate произошло.</p>
+
+<p>Вы можете прочитать объект состояния текущей записи истории, без ожидания события <code>popstate</code> используя свойство <code>history.state</code>:</p>
+
+<pre class="brush: js">var currentState = history.state;
+</pre>
+
+<h2 id="Пример_2">Пример</h2>
+
+<p>Для полного примера AJAX сайта, смотрите: <a href="/en-US/docs/Web/Guide/API/DOM/Manipulating_the_browser_history/Example" title="/en-US/docs/Web/Guide/API/DOM/Manipulating_the_browser_history/Example">Ajax пример навигации</a>.</p>
+
+<h2 id="Спецификации">Спецификации</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Спецификация</th>
+   <th scope="col">Статус</th>
+   <th scope="col">Комментарий</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('HTML WHATWG', "browsers.html#history", "History")}}</td>
+   <td>{{Spec2('HTML WHATWG')}}</td>
+   <td>Нет изменений по сравнению с {{SpecName("HTML5 W3C")}}.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('HTML5 W3C', "browsers.html#history", "History")}}</td>
+   <td>{{Spec2('HTML5 W3C')}}</td>
+   <td>Изначальное определение</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Поддержка_браузерами">Поддержка браузерами</h2>
+
+<p>{{ CompatibilityTable() }}</p>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Функциональность</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>replaceState, pushState</td>
+   <td>5</td>
+   <td>{{ CompatGeckoDesktop("2.0") }}</td>
+   <td>10</td>
+   <td>11.50</td>
+   <td>5.0</td>
+  </tr>
+  <tr>
+   <td>history.state</td>
+   <td>18</td>
+   <td>{{ CompatGeckoDesktop("2.0") }}</td>
+   <td>10</td>
+   <td>11.50</td>
+   <td>6.0</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Функциональность</th>
+   <th>Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>replaceState, pushState</td>
+   <td>{{ CompatUnknown() }}</td>
+   <td>{{ CompatUnknown() }}</td>
+   <td>{{ CompatUnknown() }}</td>
+   <td>{{ CompatUnknown() }}</td>
+   <td>{{ CompatUnknown() }}</td>
+  </tr>
+  <tr>
+   <td>history.state</td>
+   <td>{{ CompatUnknown() }}</td>
+   <td>{{ CompatUnknown() }}</td>
+   <td>{{ CompatUnknown() }}</td>
+   <td>{{ CompatUnknown() }}</td>
+   <td>{{ CompatUnknown() }}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="Смотрите_также">Смотрите также</h2>
+
+<ul>
+ <li>{{ domxref("window.history") }}</li>
+ <li>{{ domxref("window.onpopstate") }}</li>
+</ul>
+
+<p>{{ languages( { "ja": "ja/DOM/Manipulating_the_browser_history"} ) }}</p>

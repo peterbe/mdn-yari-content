@@ -1,0 +1,58 @@
+<p>本文介绍了网站如何禁用表单字段的自动完成功能。</p>
+
+<p>默认情况下，浏览器会记录用户网页上提交的<a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input">输入</a>框的信息。这样浏览器便能够做到自动完成（在用户开始输入的时候给用户提供可能的内容）和自动填充（在加载的时候预先填充某些字段）功能。</p>
+
+<p>这些功能可能涉及用户的隐私，因此浏览器让用户可以禁用它（自动完成或自动填充），（不幸的是）它们默认是启用的。当然，许多提交的表单信息并不见得是有用的（例如：一次性的身份验证码-我把它理解为验证码）或是某些敏感信息（例如政府分发的身份识别码和信用卡安全码-我把它理解为身份证号和信用卡安全码）。即使浏览器的自动填充出去开启状态，网站（提供商）可能也不是那么喜欢浏览器记住这些字段的值。</p>
+
+<h2 id="禁用自动填充">禁用自动填充</h2>
+
+<p>要禁用的表单自动填充，网页可以将 {{htmlattrxref("autocomplete", "input")}} 的属性设置为 "off"：</p>
+
+<pre class="brush: html">autocomplete="off"</pre>
+
+<p>网站可以为整个表单设置或单独设置：</p>
+
+<pre class="brush: html">&lt;form method="post" action="/form" autocomplete="off"&gt;
+[…]
+&lt;/form&gt;</pre>
+
+<pre class="brush: html">&lt;form method="post" action="/form"&gt;
+  […]
+  &lt;div&gt;
+    &lt;label for="cc"&gt;信用卡：&lt;/label&gt;
+    &lt;input type="text" id="cc" name="cc" autocomplete="off"&gt;
+  &lt;/div&gt;
+&lt;/form&gt;</pre>
+
+<p>在这里设置 <code>autocomplete="off"</code> 会有两种效果：</p>
+
+<ul>
+ <li>它会阻止浏览器为了以后自动完成类似的表单来自动保存表单数据，但是浏览器是不一样的。</li>
+ <li>它会阻止浏览器历史记录缓存中的表单数据。当表单数据来自缓存的时候，当用户点击返回按钮来返回的时候，用户填写的信息是可见的。</li>
+</ul>
+
+<p>在某些情况下，即使浏览器的自动填充设置为off，浏览器依然会继续提示自动完成的值。这可能会让开发者百思不得其解。强制浏览器不自动填充的方法是为autocomplete<strong>设置一个随机的字符串</strong>，例如：</p>
+
+<pre class="brush: html">autocomplete="nope"
+</pre>
+
+<p>当这个随机的值不是 {{htmlattrxref("autocomplete", "input", "可用值")}}的时候，浏览器就会放弃自动填充。</p>
+
+<h2 id="自动填充属性和登录">自动填充属性和登录</h2>
+
+<p>现代浏览器继承了密码管理：当用户使用用户名和密码在一个网站上登录了，浏览器会替用户记住它（用户名和密码）。当用户再次访问站点你的时候，浏览器会自动使用存储的数据自动填充登录模块。</p>
+
+<p>另外，浏览器会让用户指定一个Master Password（此处可以理解为主密码、解锁密码）用来加密存储中的登录信息。</p>
+
+<p>即使没有主密码，浏览器的密码管理起通常也被视为是安全的。由于用户不需要浏览器存储密码，因此他们可以选择比其他密码更强大的密码</p>
+
+<p>由于这个原因，许多现代浏览器都不支持在登录模块中设置 <code>autocomplete="off"</code> ：</p>
+
+<ul>
+ <li>如果一个网站为<a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form">表单</a>设置了<code>autocomplete="off"</code>，如果表单包含了用户名和密码，浏览器依然会记住登录信息，并且如果用户同意，浏览器会在下一次用户访问网站的时候自动填充信息。</li>
+ <li>如果网站给用户名和密码的<a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input">输入</a>框设置了<code>autocomplete="off"，浏览器依然会记住这次登录，如果用户同意，浏览器将会在用户下次访问的时候自动填充登录信息。</code></li>
+</ul>
+
+<p>这种行为存在与Firefox（38+）、Google Chrome（34+）、Internet Explorer（11+）上。</p>
+
+<p>如果想要阻止在用户管理页面中填写密码字段，用户可以为自己以外的人指定新的密码，虽然所有的浏览器都还不支持，但是autocomplete = "new-password"应该被指定。</p>

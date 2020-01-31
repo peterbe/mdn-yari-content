@@ -1,0 +1,126 @@
+<h2 id="Purpose">Purpose</h2>
+
+<p>This article will be particularly helpful for people who have recently got their L3 commit access. This describes how to land your patch.</p>
+
+<p> </p>
+
+<h2 id="Actual_Steps">Actual Steps</h2>
+
+<p>The first thing you should do when you're starting is go through the Mozilla-Inbound <a href="https://wiki.mozilla.org/Tree_Rules/Inbound" title="https://wiki.mozilla.org/Tree_Rules/Inbound">tree rules</a>. After that:</p>
+
+<p><span style="line-height: 1.572;"><strong>Obtain Mozilla-Inbound</strong>: </span><span style="line-height: 1.572;">The most convenient way to land patches is to manage a local mozilla-inbound repository, besides your mozilla-central. I keep my mozilla-central for hacking on my bugs and mozilla-inbound only for pushing patches. One way is to clone the entire repo from Mozilla-Inbound. A second, much easier and faster way is to clone it from your existing local mozilla-central. So just run this in the directory where you want to clone your m-i</span><span style="font-family: 'helvetica neue', helvetica, arial, sans-serif; font-size: 16px; line-height: 25px;">:</span></p>
+
+<blockquote>
+<p>hg clone /path/to/m-c mozilla-inbound</p>
+</blockquote>
+
+<p>and then run this command inside your newly cloned repository:</p>
+
+<blockquote>
+<p>hg strip --no-backup 'roots(outgoing())'</p>
+</blockquote>
+
+<p><strong>Make Mozilla-Inbound push compatible</strong>:<span style="line-height: 1.572;"> Edit your .hg/hgrc inside the local m-i to look like below. Some people prefer to name their push url’s to default-push since that enables them to push by simply issuing hg push compared to hg push inbound (which I have to issue to push) according the below configuration. I prefer the latter since typing inbound just makes sure that I am aware of where I am pushing (and just cautions me to be careful). See |hg help urls|.</span></p>
+
+<pre><span style="line-height: 1.572;"><code>[paths]</code></span>
+<span style="font-family: 'Courier New', 'Andale Mono', monospace; line-height: normal;">default = https://hg.mozilla.org/integration/mozilla-inbound</span>
+<span style="line-height: 1.572;"><code style="font-size: 14px;">inbound = ssh://hg.mozilla.org/integration/mozilla-inbound</code></span></pre>
+
+<div><strong style="line-height: 1.572;">Pull the latest changes</strong><span style="line-height: 1.572;">: Run </span></div>
+
+<blockquote>
+<div><span style="line-height: 1.572;">hg pull -u</span></div>
+</blockquote>
+
+<div><span style="line-height: 1.572;">in your local m-i to pull the latest changes from the remote mozilla-inbound repository and update it.</span></div>
+
+<div> </div>
+
+<div><b>Import the patch</b>: Import the patch or mercurial queue that you want to push. In most cases I simply do </div>
+
+<blockquote>
+<div>hg qimport ../mozilla-central/.hg/patches-name_of_queue_to_import/name_of_patch</div>
+</blockquote>
+
+<div>since my changes are in m-c. Now apply the patch by simply running</div>
+
+<blockquote>
+<div>hg qpush</div>
+</blockquote>
+
+<div>If needed, edit the commit message (remember to add <code>r=patch-reviewer-username</code>) by running</div>
+
+<blockquote>
+<div>hg qrefresh -e</div>
+</blockquote>
+
+<div><strong>Move applied patches into repository history</strong>: Run</div>
+
+<blockquote>
+<div>hg qfinish -a</div>
+</blockquote>
+
+<div>which will take your patch from mercurial queues to out of its control and into the actual repo. See |hg qfinish —help| for more details.</div>
+
+<div> </div>
+
+<div><strong>Push</strong>: Run</div>
+
+<blockquote>
+<div>hg push inbound</div>
+</blockquote>
+
+<div>if it spits out a url, then everything has gone according to plan. Simply just go and paste that url to the concerned bug for record keeping and so that others are aware of your push. However, if no urls were printed, you might just have to carry out a few more steps.</div>
+
+<div> </div>
+
+<div><strong>Update bugzilla</strong></div>
+
+<div>Paste the url from above into the associated bug from the patch description, so people following the bug know its commit status.</div>
+
+<div> </div>
+
+<div><strong>Note: </strong><strong style="line-height: 1.572;">Do this only if the push wasn’t successful in the push step.</strong></div>
+
+<div> </div>
+
+<div>The push failure just means that someone else has pushed between you pulling and pushing. Run</div>
+
+<blockquote>
+<div>hg qimport -r tip</div>
+</blockquote>
+
+<div>This just converts your change to the repo back to a mercurial queue. Then run</div>
+
+<blockquote>
+<div>hg qpop</div>
+</blockquote>
+
+<div>to pop off that mq. Repeat these steps until you succeed.</div>
+
+<div> </div>
+
+<h2 id="If_Something_Goes_Wrong">If Something Goes Wrong</h2>
+
+<ul>
+ <li>Join the <a href="https://chat.mibbit.com/?url=irc%3A%2F%2Firc.mozilla.org%2F%23developers" title="https://chat.mibbit.com/?url=irc%3A%2F%2Firc.mozilla.org%2F%23developers">#developers</a> or <a href="https://chat.mibbit.com/?url=irc%3A%2F%2Firc.mozilla.org%2F%23introduction" title="https://chat.mibbit.com/?url=irc%3A%2F%2Firc.mozilla.org%2F%23introduction">#introduction</a> on irc.mozilla.org and ask someone for help.</li>
+ <li>If you know what caused this problem, then simply back out your push. You can also use this nice <a href="https://bitbucket.org/sfink/qbackout" title="https://bitbucket.org/sfink/qbackout">backout extension</a> by Steve Fink for mercurial by doing the following:
+  <ul>
+   <li>Download the <a href="https://bitbucket.org/sfink/qbackout/raw/3bd20ac87a01ca27ef42b72a7897450dada380f6/__init__.py" title="https://bitbucket.org/sfink/qbackout/raw/3bd20ac87a01ca27ef42b72a7897450dada380f6/__init__.py">__init__.py</a> from the repository. Save it in a convenient location.</li>
+   <li>Go to your hgrc (in my case <strong>/etc/mercurial/hgrc</strong>), and add this to it under the section called <strong>[extensions]</strong>: <strong>qbackout = /path/to/qbackout </strong>. Save it and close it.</li>
+   <li>Run <strong>hg qbackout -r</strong> <strong>revnum</strong> from your local mozilla-inbound repository. This will create a mercurial queue out of that revision which you backed out. Now you need to push this onto inbound, similar to what you did previously.</li>
+   <li>Qbackout would have created an mq; pop that queue and run <strong>hg pull -u</strong> in your local mozilla-inbound.</li>
+   <li>hg qpush —move name_of_backout_mq</li>
+   <li>hg qfinish -a</li>
+   <li><span id="cke_bm_425C" style="display: none;"> </span>hg push inbound</li>
+   <li>When successfully pushed, this will spit out a url; paste that url in the concerned bug in <a href="https://bugzilla.mozilla.org/" title="https://bugzilla.mozilla.org/">bugzilla</a> so that others also know about it.</li>
+   <li>If the above fails, repeat the process again.</li>
+  </ul>
+ </li>
+</ul>
+
+<h2 id="Related_Links">Related Links</h2>
+
+<ul>
+ <li><a href="http://jlebar.com/2011/5/20/Faster_and_smaller_clones_of_branches.html" title="http://jlebar.com/2011/5/20/Faster_and_smaller_clones_of_branches.html">http://jlebar.com/2011/5/20/Faster_and_smaller_clones_of_branches.html</a></li>
+</ul>

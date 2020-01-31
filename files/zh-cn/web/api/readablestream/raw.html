@@ -1,0 +1,86 @@
+<p>{{APIRef("Fetch")}}<br>
+ <a href="https://developer.mozilla.org/en-US/docs/Web/API/Streams_API" style="font-size: 1rem; letter-spacing: -0.00278rem;">流操作API</a>中的<code style="font-style: normal; font-size: 1rem; letter-spacing: -0.00278rem;">ReadableStream</code><span style="font-size: 1rem; letter-spacing: -0.00278rem;"> 接口呈现了一个可读取的二进制流操作。</span><a href="https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API" style="font-size: 1rem; letter-spacing: -0.00278rem;">Fetch API</a><span style="font-size: 1rem; letter-spacing: -0.00278rem;"> 通过{{domxref("Response")}}的属性 {{domxref("Body.body", "body")}}提供了一个具体的 </span><code style="font-style: normal; font-size: 1rem; letter-spacing: -0.00278rem;">ReadableStream</code><span style="font-size: 1rem; letter-spacing: -0.00278rem;"> 对象。</span></p>
+
+<h2 id="构造函数">构造函数</h2>
+
+<dl>
+ <dt>{{domxref("ReadableStream.ReadableStream", "ReadableStream()")}}</dt>
+ <dd>创建并从给定的Handler返回一个可读流对象。</dd>
+</dl>
+
+<h2 id="属性">属性</h2>
+
+<dl>
+ <dt>{{domxref("ReadableStream.locked")}} {{readonlyInline}}</dt>
+ <dd>locked返回这个可读流是否被一个<a href="https://streams.spec.whatwg.org/#locked-to-a-reader" id="ref-for-locked-to-a-reader②">读取器锁定</a>。</dd>
+</dl>
+
+<h2 id="方法">方法</h2>
+
+<dl>
+ <dt>{{domxref("ReadableStream.cancel()")}}</dt>
+ <dd>取消读取一束流, 消耗方发出一个信号，表示对这束流失去兴趣. 可以提供一个参数表示其原因给到底层代码, 使得不在应用这束流。</dd>
+ <dt>{{domxref("ReadableStream.getReader()")}}</dt>
+ <dd>创建一个读取器并且锁定流到读取器上，其他的读取器不能再捕获它，直到它被释放。</dd>
+ <dt>{{domxref("ReadableStream.pipeThrough()")}}</dt>
+ <dd>提供一个链式方法用于管道化一个现有的流，通过一个变换流或其他的可写可读对。</dd>
+ <dt>{{domxref("ReadableStream.pipeTo()")}}</dt>
+ <dd>将现有的可读流管道输出给一个给定的可写流{{domxref("WritableStream")}}，并在输出成功时保证填充，或在发生错误时返回拒绝。</dd>
+ <dt>{{domxref("ReadableStream.tee()")}}</dt>
+ <dd><code>tee</code> 方法（tee本意是将高尔夫球放置在球座上）<a href="https://streams.spec.whatwg.org/#tee-a-readable-stream" id="ref-for-tee-a-readable-stream②">tees</a> 了可读流，返回包含两个{{domxref("ReadableStream")}}实例分支的数组，每个元素接收了相同的传输数据。</dd>
+</dl>
+
+<h2 id="使用例程">使用例程</h2>
+
+<p>下面的例子，针对浏览器创建了一个智能的{{domxref("Response")}}来流式化从别的资源处取得的HTML片段。</p>
+
+<p>它演示了{{domxref("Uint8Array")}}与可读流{{domxref("ReadableStream")}} 的协同用法。</p>
+
+<pre class="brush: js">fetch("https://www.example.org/").then((response) =&gt; {
+  const reader = response.body.getReader();
+  const stream = new ReadableStream({
+    start(controller) {
+      // 下面的函数处理每个数据块
+      function push() {
+        // "done"是一个布尔型，"value"是一个Unit8Array
+        reader.read().then(({ done, value }) =&gt; {
+          // 判断是否还有可读的数据？
+          if (done) {
+            // 告诉浏览器已经结束数据发送。
+            controller.close();
+            return;
+          }
+
+          // 取得数据并将它通过controller发送给浏览器。
+          controller.enqueue(value);
+          push();
+        });
+      };
+      
+      push();
+    }
+  });
+
+  return new Response(stream, { headers: { "Content-Type": "text/html" } });
+});</pre>
+
+<h2 id="规范">规范</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('Streams','#rs-class','ReadableStream')}}</td>
+   <td>{{Spec2('Streams')}}</td>
+   <td>初始定义</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="浏览器兼容性">浏览器兼容性</h2>
+
+<p>{{Compat("api.ReadableStream")}}</p>

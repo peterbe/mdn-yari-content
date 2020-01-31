@@ -1,0 +1,154 @@
+<p>{{APIRef}}{{SeeCompatTable}}</p>
+
+<p class="summary">The <strong><code>CSSPseudoElement</code></strong> interface represents a pseudo-element that may be the target of an event or animated using the {{DOMxRef('Web Animations API', '', '', 'true')}}. Instances of this interface may be obtained by calling {{DOMxRef('Element.pseudo()')}}.</p>
+
+<h2 id="Properties" name="Properties">Properties</h2>
+
+<dl>
+ <dt>{{DOMxRef('CSSPseudoElement.element')}} {{Experimental_Inline}} {{readOnlyInline}}</dt>
+ <dd>Returns the originating/parent {{DOMxRef('Element')}} of the pseudo-element.</dd>
+ <dt>{{DOMxRef('CSSPseudoElement.type')}} {{Experimental_Inline}} {{readOnlyInline}}</dt>
+ <dd>Returns the pseudo-element selector as a {{DOMxRef('CSSOMString')}}.</dd>
+</dl>
+
+<h2 id="Methods" name="Methods">Methods</h2>
+
+<p><em><code>CSSPseudoElement</code> implements {{DOMxRef('Animatable')}}, so it has the following methods available to it:</em></p>
+
+<dl>
+ <dt>{{DOMxRef('Animatable.animate()')}} {{Experimental_Inline}}</dt>
+ <dd>A shortcut method to create and run an animation on a pseudo-element. Returns the created {{DOMxRef('Animation')}} object instance.</dd>
+ <dt>{{DOMxRef('Animatable.getAnimations()')}} {{Experimental_Inline}}</dt>
+ <dd>Returns an array of {{DOMxRef('Animation')}} objects currently active on the pseudo-element.</dd>
+</dl>
+
+<p><em><code>CSSPseudoElement</code> extends {{DOMxRef('EventTarget')}}, so it also inherits the following methods:</em></p>
+
+<dl>
+ <dt>{{domxref("EventTarget.addEventListener()")}}</dt>
+ <dd>Registers an event handler of a specific event type on the pseudo-element.</dd>
+ <dt>{{domxref("EventTarget.dispatchEvent()")}}</dt>
+ <dd>Dispatches an event to this pseudo-element.</dd>
+ <dt>{{domxref("EventTarget.removeEventListener()")}}</dt>
+ <dd>Removes an event listener from the pseudo-element.</dd>
+</dl>
+
+<h2 id="Examples">Examples</h2>
+
+<h3 id="Basic_example_using_Element.pseudo">Basic example using Element.pseudo</h3>
+
+<p>Using pseudo-elements, most modern browsers will automatically add quotation marks around text inside a {{HTMLElement('q')}} element. (A style rule may be needed to add quotation marks in older browsers.) The example below would cause the opening quotation mark of the first {{HTMLElement('q')}} element in the page to flash red twice in a row.</p>
+
+<pre class="brush: js">const element = document.querySelector('q');
+const cssPseudoElement = element.pseudo('::before');
+myAnimation(cssPseudoElement);
+
+function myAnimation(cssPseudoElement) {
+	let color;
+	switch (cssPseudoElement.type) {
+		case '::before':
+			color = 'red';
+			break;
+		case '::after':
+			color = 'green';
+			break;
+		default:
+			color = 'blue';
+			break;
+	}
+	cssPseudoElement.animate([
+		{ color: 'currentColor' },
+		{ color: color }
+	], {
+		duration: 250,
+		direction: 'alternate',
+		iterations: 4
+	});
+}
+</pre>
+
+<h3 id="Adding_additional_animations_using_getAnimations()">Adding additional animations using getAnimations()</h3>
+
+<p>The example below uses <a href="/en-US/docs/Web/CSS/CSS_Animations">CSS Animations</a> to animate the opacity of a pseudo-element, causing it to flash once per second. By calling either {{DOMxRef('Document.getAnimations')}} or {{DOMxRef('Element.getAnimations')}}, it is possible to obtain a reference to the animated <code>CSSPseudoElement</code> by reading the animation's effect target. In the example below, the pseudo-element will have a second animation placed upon it programmatically, causing its colour to alternate with every flash in supporting browsers.</p>
+
+<h4 id="HTML">HTML</h4>
+
+<pre class="brush: html">&lt;div&gt;&lt;/div&gt;
+</pre>
+
+<h4 id="CSS">CSS</h4>
+
+<pre class="brush: css">div::before {
+	content: "Hello, world!";
+	animation-name: cssAnimation;
+	animation-duration: 500ms;
+	animation-direction: alternate;
+	animation-iteration-count: infinite;
+}
+
+@keyframes cssAnimation {
+	from {
+		opacity: 0.99;
+	}
+	to {
+		opacity: 0.2;
+	}
+}
+</pre>
+
+<h4 id="JavaScript">JavaScript</h4>
+
+<pre class="brush: js">const animations = document.getAnimations({subtree: true});
+const cssPseudoElement = animations[0].effect.target;
+cssPseudoElement.animate([
+	{ color: 'currentColor' },
+	{ color: 'red' }
+], {
+	duration: 1000,
+	direction: 'alternate',
+	iterations: Infinity
+});
+</pre>
+
+<h4 id="Result">Result</h4>
+
+<p>{{EmbedLiveSample('Adding_additional_animations_using_getAnimations()')}}</p>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('Web Animations', '#extensions-to-the-pseudoelement-interface', 'CSSPseudoElement')}}</td>
+   <td>{{Spec2('Web Animations')}}</td>
+   <td>Added inheritance of the {{DOMxRef('Animatable')}} interface.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('CSS4 Pseudo-Elements', '#CSSPseudoElement-interface', 'CSSPseudoElement')}}</td>
+   <td>{{Spec2('CSS4 Pseudo-Elements')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<div class="hidden">
+<p>The compatibility table in this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</p>
+</div>
+
+<p>{{Compat('api.CSSPseudoElement')}}</p>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li>{{DOMxRef('Element.pseudo()')}}</li>
+ <li>{{DOMxRef('Web Animations API', '', '', 'true')}}</li>
+ <li>{{DOMxRef('Element.animate()')}}</li>
+ <li>{{DOMxRef('Element.getAnimations()')}}</li>
+</ul>

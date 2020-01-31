@@ -1,0 +1,343 @@
+<div>{{HTMLSidebar}}</div>
+
+<div class="warning">
+<p><strong>重要</strong>: ウェブブラウザーや支援技術の中で、提案されているアウトラインアルゴリズムを実装したものはありません。これは最終的な W3C の仕様書に含まれていません。したがって、<a href="http://www.w3.org/TR/html5/sections.html#outline">アウトライン</a>アルゴリズムを、ユーザーに文書の構造を伝えるために<em>使用するべきではありません</em>。作者には、見出しの<a href="http://www.w3.org/TR/html5/sections.html#rank">順位</a> (<code><a href="http://www.w3.org/TR/html5/sections.html#the-h1,-h2,-h3,-h4,-h5,-and-h6-elements">h1</a></code>-<code><a href="http://www.w3.org/TR/html5/sections.html#the-h1,-h2,-h3,-h4,-h5,-and-h6-elements">h6</a></code>) を使用して文書の構造を伝えることを推奨します。</p>
+</div>
+
+<p>HTML5 の仕様はウェブ文書の構造を標準的なセマンティクスで記述できるようにするいくつかの新しい要素をウェブ開発者にもたらします。この文書では、これらの要素についてと、それらを用いて、どんな文書でも望んだアウトラインを定義するための方法について述べます。</p>
+
+<h2 id="Structure_of_a_document_in_HTML_4" name="Structure_of_a_document_in_HTML_4">HTML 4 文書の構造</h2>
+
+<p>文書の構造、例えば、 <code>&lt;body&gt;</code> と <code>&lt;/body&gt;</code> の間にある内容のセマンティックな構造は、ユーザに対してページを提供するためになくてはならないものです。HTML4 は自身の構造を記述するために文書のセクションとサブセクションを用いる記法を使用します。セクションは HTML の 分割 (Dividing) ({{HTMLElement("div")}}) 要素を HTML の 見出し (Heading) 要素 ({{HTMLElement("h1")}}、{{HTMLElement("h2")}}、{{HTMLElement("h3")}}、{{HTMLElement("h4")}}、{{HTMLElement("h5")}}、{{HTMLElement("h6")}}) とともに定義し、そして、タイトルを定義します。これらの HTML の分割要素および HTML の見出し要素の関連性は文書の構造とアウトラインを導き出します。</p>
+
+<p>よって、以下のマークアップは……</p>
+
+<div style="overflow: hidden;">
+<pre class="brush:xml">&lt;div class="section" id="forest-elephants" &gt;
+  &lt;h1&gt;マルミミゾウ&lt;/h1&gt;
+  &lt;p&gt;このセクションでは、あまり知られていないマルミミゾウについて説明します。
+    ...このセクションの内容が続きます...
+  &lt;div class="subsection" id="forest-habitat"&gt;
+    &lt;h2&gt;生態&lt;/h2&gt;
+    &lt;p&gt;マルミミゾウはサバンナには生息せず、森林に生息しています。
+     ...このサブセクションの内容が続きます...
+  &lt;/div&gt;
+&lt;/div&gt;
+</pre>
+</div>
+
+<p>……以下のアウトラインを導き出します (暗黙のレベル番号の表示なしで)。</p>
+
+<pre>1. マルミミゾウ
+   1.1 生態
+</pre>
+
+<p>{{HTMLElement("div")}} 要素には新しいセクションを定義する強制力はありません。新しいセクションを暗黙的に生成するには、単に HTML 見出し要素があるだけで十分です。ゆえに以下のマークアップは……</p>
+
+<pre class="brush:xml">&lt;h1&gt;マルミミゾウ&lt;/h1&gt;
+  &lt;p&gt;このセクションでは、あまり知られていないマルミミゾウについて説明します。
+    ...このセクションの内容が続きます...
+  &lt;h2&gt;生態&lt;/h2&gt;
+  &lt;p&gt;マルミミゾウはサバンナには生息せず、森林に生息しています。
+    ...このセクションの内容が続きます...
+  &lt;h2&gt;食性&lt;/h2&gt;
+&lt;h1&gt;スナネズミ&lt;/h1&gt;
+</pre>
+
+<p>……以下のアウトラインを導き出します。</p>
+
+<pre>1. マルミミゾウ
+   1.1 生態
+   1.2 食性
+2. スナネズミ
+</pre>
+
+<h2 id="Problems_solved_by_HTML5" name="Problems_solved_by_HTML5">HTML5 によって解決された問題</h2>
+
+<p>HTML 4 定義による文書の構造と間接的アウトライン化アルゴリズムは非常におおざっぱであり、そこから数多くの問題が生じます。</p>
+
+<ol>
+ <li>セマンティックなセクション定義のために {{HTMLElement("div")}} を使用するときは、<strong>class</strong> 属性に特定の値を定義しない方法でアウトライン化アルゴリズムを自動化すること不可能です ("ページのアウトラインの {{HTMLElement("div")}} パートは、セクションとサブセクションを定義することになりますか？" あるいは "表現だけに関する {{HTMLElement("div")}} なのか、スタイルだけに関するものなのかを判別できますか？")。他の面から言えば、HTML4 仕様はどこがセクションでそのスコープがどのように定義されるのかが非常にあいまいです。 アウトラインの自動生成は、文書構造に従ってユーザに情報を提供する方法を採用するような、<a class="external" href="http://en.wikipedia.org/wiki/Assistive_technology" title="http://en.wikipedia.org/wiki/Assistive_technology">支援技術</a>にとって特に重要です。HTML5 では HTML セクション要素である {{HTMLElement("section")}} という新しい要素が導入され、アウトライン化アルゴリズムから {{HTMLElement("div")}} 要素の必要性が排除されます。</li>
+ <li>文書をマージすることが困難: メイン文書にサブ文書が含まれることは、HTML 見出し要素のレベルの変更を意味し、そうしてアウトラインが維持されます。この問題は HTML5 では新しくセクショニング要素 ({{HTMLElement("article")}}、{{HTMLElement("section")}}、 {{HTMLElement("nav")}} および {{HTMLElement("aside")}}) <em>）</em> が導入されることで解決されます。これらの要素は、内部の見出しによって作成されたセクションが何であるかに関わらず、常にそれらの一番近い祖先のサブセクションです。</li>
+ <li>HTML4では、すべてのセクションは文書アウトラインの一部でした。 しかし、文書はしばしば一本筋ではありません。 文書には、広告や説明用の領域のように、本筋と関係があってもその一部分ではない情報を含む特別なセクションがあることがあります。 HTML5 では、メインアウトラインの一部ではないそのようなセクションを示すことができる {{HTMLElement("aside")}} 要素が導入されます。</li>
+ <li>繰り返しになりますが、HTML4 では、 すべてのセクションは文書アウトラインの一部なので、ロゴ、メニュー、目次、あるいは、著作権情報および法的通知のような、文書にではなく、サイト全体に関連する情報を含むセクションを示す方法がありません。そのような目的のために、HTML5 では、次の 3 つの特有のセクション要素が導入されます。: 目次のようなリンクの集まりのための {{HTMLElement("nav")}}、サイトに関連した情報のための {{HTMLElement("footer")}} と {{HTMLElement("header")}} 。{{HTMLElement("header")}} と {{HTMLElement("footer")}} は、{{HTMLElement("section")}} のようなセクショニングコンテンツではなく、セクションの一部をセマンティックにマークアップするための要素ですので注意してください。</li>
+</ol>
+
+<p>一般的には、 HTML5 により、正確にセクション指定と見出し指定が可能になり、それによって、文書のアウトラインが正確に予測できるようになり、それらを利用することで、ブラウザーはユーザエクスペリエンスを向上させます。</p>
+
+<h2 id="The_HTML5_outline_algorithm" name="The_HTML5_outline_algorithm">HTML5 のアウトラインアルゴリズム</h2>
+
+<div class="warning">
+<p><strong>重要</strong>: ウェブブラウザーや支援技術の中で、提案されているアウトラインアルゴリズムを実装したものはありません。これは最終的な W3C の仕様書に含まれていません。したがって、<a href="http://www.w3.org/TR/html5/sections.html#outline">アウトライン</a>アルゴリズムを、ユーザーに文書の構造を伝えるために<em>使用するべきではありません</em>。作者には、見出しの<a href="http://www.w3.org/TR/html5/sections.html#rank">順位</a> (<code><a href="http://www.w3.org/TR/html5/sections.html#the-h1,-h2,-h3,-h4,-h5,-and-h6-elements">h1</a></code>-<code><a href="http://www.w3.org/TR/html5/sections.html#the-h1,-h2,-h3,-h4,-h5,-and-h6-elements">h6</a></code>) を使用して文書の構造を伝えることを推奨します。</p>
+</div>
+
+<p>HTML がセクションやアルゴリズムを扱う方法のアルゴリズムを考えてみましょう。</p>
+
+<h3 id="Defining_sections" name="Defining_sections">セクションの定義</h3>
+
+<p>{{HTMLElement("body")}} 要素内に置かれるすべての内容がセクションの一部です。 HTML5 でのセクションは入れ子にできます。 {{HTMLElement("body")}} 要素によって定義される、メインセクションの他にも、セクションの境界は明示的に、または、暗黙的に定義されます。 明示的に定義されるセクションは、 {{HTMLElement("body")}}、{{HTMLElement("section")}}、{{HTMLElement("article")}}、 {{HTMLElement("aside")}}、{{HTMLElement("nav")}} タグ内の内容です。</p>
+
+<div class="note">各セクションは独自の見出し階層を持つことができます。ですから、入れ子の中のセクションでも、{{HTMLElement("h1")}} を持つことができます。{{anch("Defining headings", "見出しの定義")}}をご覧ください。</div>
+
+<p>例を見てみましょう。 — ここに、最上位のセクションとフッターが定義されている文書があります。最上位のセクションの中に、３つのサブセクションあり、２つの {{htmlelement("section")}} 要素と１つの {{htmlelement("aside")}} 要素で定義されています。</p>
+
+<pre class="brush:xml">&lt;section&gt;
+
+  &lt;h1&gt;マルミミゾウ&lt;/h1&gt; 
+
+  &lt;section&gt;
+    &lt;h1&gt;はじめに&lt;/h1&gt;
+    &lt;p&gt;このセクションでは、あまり知られていない方のマルミミゾウについて説明します。&lt;/p&gt;
+  &lt;/section&gt;
+
+  &lt;section&gt;
+    &lt;h1&gt;生態&lt;/h1&gt;
+    &lt;p&gt;マルミミゾウはサバンナには生息せず、森林に生息しています。&lt;/p&gt;
+  &lt;/section&gt;
+
+  &lt;aside&gt;
+    &lt;p&gt;広告ブロック&lt;/p&gt;
+  &lt;/aside&gt;
+
+&lt;/section&gt;
+
+&lt;footer&gt;
+  &lt;p&gt;(c) 2010 The Example company&lt;/p&gt;
+&lt;/footer&gt;</pre>
+
+<p>これは以下の構造を導き出します。</p>
+
+<pre>1. マルミミゾウ
+   1.1 はじめに
+   1.2 生態
+</pre>
+
+<h3 id="Defining_headings" name="Defining_headings">見出しの定義</h3>
+
+<div class="warning">
+<p><strong>重要</strong>: ウェブブラウザーや支援技術の中で、提案されているアウトラインアルゴリズムを実装したものはありません。これは最終的な W3C の仕様書に含まれていません。したがって、<a href="http://www.w3.org/TR/html5/sections.html#outline">アウトライン</a>アルゴリズムを、ユーザーに文書の構造を伝えるために<em>使用するべきではありません</em>。作者には、見出しの<a href="http://www.w3.org/TR/html5/sections.html#rank">順位</a> (<code><a href="http://www.w3.org/TR/html5/sections.html#the-h1,-h2,-h3,-h4,-h5,-and-h6-elements">h1</a></code>-<code><a href="http://www.w3.org/TR/html5/sections.html#the-h1,-h2,-h3,-h4,-h5,-and-h6-elements">h6</a></code>) を使用して文書の構造を伝えることを推奨します。</p>
+</div>
+
+<p>HTML のセクショニング要素が文書構造を定義する一方で、アウトラインは利便性のために見出しも必要とします。基本的なルールは単純です: 最初の HTML 見出し要素 ({{HTMLElement("h1")}}、{{HTMLElement("h2")}}、{{HTMLElement("h3")}}、 {{HTMLElement("h4")}}、{{HTMLElement("h5")}}、{{HTMLElement("h6")}} の中から 1 つ) が現在のセクションの見出しを定義します。</p>
+
+<p>見出し要素は要素名の数字によって与えられる<em>順位</em>を持っています。 {{HTMLElement("h1")}} が<em>最も高い</em>順位であり、 {{HTMLElement("h6")}} が<em>最も低い</em>順位です。相対的な順位付けはセクション内のみのことであり、セクションの見出し順位ではなく、セクションの構造がアウトラインを決定します。例えば、このコードはを考えてください。</p>
+
+<pre class="brush:xml">&lt;section&gt;
+  &lt;h1&gt;マルミミゾウ&lt;/h1&gt;
+  &lt;p&gt;このセクションでは、あまり知られていない方のマルミミゾウについて説明します。 
+    ...このセクションが続きます...
+  &lt;section&gt;
+    &lt;h2&gt;生態&lt;/h2&gt;
+    &lt;p&gt;マルミミゾウはサバンナには生息せず、森林に生息しています。
+        ...このサブセクションが続きます...
+  &lt;/section&gt;
+&lt;/section&gt;
+&lt;section&gt;
+  &lt;h3&gt;スナネズミ&lt;/h3&gt;
+  &lt;p&gt;このセクションでは、有名なスナネズミについて説明します。 
+    ...このセクションが続きます...
+&lt;/section&gt;</pre>
+
+<p>これは次のようなアウトラインを生成します。</p>
+
+<pre>1. マルミミゾウ
+   1.1 生態
+2. スナネズミ</pre>
+
+<p>見出し要素の順位 (例では、最初のトップレベルセクションのための {{HTMLElement("h1")}}、サブセクションの {{HTMLElement("h2")}}、および、セカンドトップレベルセクションのための {{HTMLElement("h3")}} ) は重要ではないことに注意してください。明確さを失いますし、推奨しませんが、どんな順位でも明確に定義されたセクションでの見出しとして用いることができます。</p>
+
+<h3 id="Implicit_sectioning" name="Implicit_sectioning">暗黙的なセクショニング</h3>
+
+<p>HTML5 のセクショニング要素は HTML4 が多数である既存のウェブと互換性を保つようにアウトラインを定義することを強制しないので、それらを用いずにセクションを定義する方法があります。これは<em>暗黙的なセクショニング</em>と呼ばれます。</p>
+
+<p>HTML 見出し要素 ({{HTMLElement("h1")}} から {{HTMLElement("h6")}} まで) が自身の親要素内で、明示的であるセクションの最初の見出しではないとき、それらは新しい、暗黙的なセクションを定義します。この方法では、この暗黙的なセクションは親セクションでの以前の見出しとの相対的な順位によって定義されたアウトライン内に配置されます。 もしそれが以前の見出しより低い順位である場合は、暗黙的なサブセクションが始まります。このコードは:</p>
+
+<pre class="brush:xml">&lt;section&gt;
+  &lt;h1&gt;マルミミゾウ&lt;/h1&gt;
+  &lt;p&gt;このセクションでは、あまり知られていない方のマルミミゾウについて説明します。
+    ...このセクションが続きます...
+  &lt;h3 class="implicit subsection"&gt;生態&lt;/h3&gt;
+  &lt;p&gt;マルミミゾウはサバンナには生息せず、森林に生息しています。
+    ...このサブセクションが続きます...
+&lt;/section&gt;</pre>
+
+<p>以下のアウトラインを導き出します。</p>
+
+<pre>1. マルミミゾウ
+   1.1 生態 <em>(h3 要素によって暗黙的に定義)</em>
+   </pre>
+
+<p>もしそれが以前の見出しと同じ順位である場合は、以前のセクションが終了して (たとえ明示的なものであっても!) 、新しい暗黙的なセクションが同じレベルで始まります。:</p>
+
+<pre class="brush:xml">&lt;section&gt;
+  &lt;h1&gt;マルミミゾウ&lt;/h1&gt;
+  &lt;p&gt;このセクションでは、あまり知られていない方のマルミミゾウについて説明します。
+    ...このセクションが続きます...
+  &lt;h1 class="implicit section"&gt;スナネズミ&lt;/h1&gt;
+  &lt;p&gt;スナネズミはかわいくて小さな哺乳類です。
+    ...このセクションが続きます...
+&lt;/section&gt;</pre>
+
+<p>これは次の様なアウトラインを導き出します。</p>
+
+<pre>1. マルミミゾウ
+2. スナネズミ <em>(h1 要素によって暗黙的に定義された。それと同時に以前のセクションが終了する )</em>
+</pre>
+
+<p>もし以前の見出しより高い順位の見出しが現れた時点で、以前のセクションは終了し、新しい暗黙的なセクションがより高いレベルで始まります。</p>
+
+<pre class="brush:xml">&lt;body&gt;
+  &lt;h1&gt;哺乳類&lt;/h1&gt;
+  &lt;h2&gt;くじら&lt;/h2&gt;
+  &lt;p&gt;このセクションでは、泳ぐくじらについて説明します。
+     ...このセクションが続きます...
+  &lt;section&gt;
+    &lt;h3&gt;マルミミゾウ&lt;/h3&gt;  
+    &lt;p&gt;このセクションでは、あまり知られていない方のマルミミゾウについて説明します。
+      ...このセクションが続きます...
+    &lt;h3&gt;スナネズミ&lt;/h3&gt;
+      &lt;p&gt;大多数のスナネズミ (訳注：モンゴリアン・ジャービル) はモンゴルから遠く離れた範囲にも広く生息しています。
+      ...このサブセクションが続きます...
+    &lt;h2&gt;爬虫類&lt;/h2&gt;
+      &lt;p&gt;爬虫類は冷血動物です。
+      ...このサブセクションが続きます...
+  &lt;/section&gt;
+&lt;/body&gt;</pre>
+
+<p>上記コードは、以下のアウトラインを導き出します。</p>
+
+<pre>1. 哺乳類
+   1.1 くじら <em>(h2 要素によって暗黙的に定義された)</em>
+   1.2 マルミミゾウ <em>(セクション要素によって明示的に定義された)</em>
+   1.3 スナネズミ <em>(h3 要素によって暗黙的に定義された。それと同時に以前のセクションが終了する)</em>
+2. 爬虫類 <em>(h2 要素によって暗黙的に定義された。それと同時に以前のセクションが終了する)</em>
+</pre>
+
+<p>これは見出しタグをぱっと見て期待するであろうアウトラインとは異なるかもしれません。マークアップを人間が理解できるようにするためには、セクションの開始と終了のために明示的なタグを用い、セクションの入れ子になっているレベルの意図された通りに見出しの順位を付けるのが良い習慣です。しかし、これは HTML5 の仕様が要求するものではありません。ブラウザーが文書のアウトラインを意図しない方法で描画するのであれば、セクションが見出し要素によって暗黙的に閉じられていないかどうか確認してください。</p>
+
+<p>見出しの順位をセクションが入れ子になっているレベルに合わせるべきであるという習慣的ルールの例外は、複数の文書で再利用される可能性があるセクションです。例えば、1 つのセクションがコンテンツマネジメントシステム内に保存され、閲覧時に複数の文書内に埋め込まれるかもしれません。このケースでは、再利用可能なセクションの一番最初の見出しレベル向けに {{HTMLElement("h1")}} で始めるのが良い習慣です。再利用可能なセクションの入れ子のレベルはそれが表示される文書のセクションの階層によって決定されることになります。明示的なセクションタグはこのケースでも有用です。</p>
+
+<h3 id="Sectioning_roots" name="Sectioning_roots">区分化ルート</h3>
+
+<p><span id="sectioning_root">区分化ルート</span>はそれ自身がアウトラインを持っていますが、それらの中のセクションと見出しはそれらの祖先のアウトラインに影響を与えない HTML 要素です。文書の論理的な区分化ルートである {{HTMLElement("body")}} を除けば、 {{HTMLElement("blockquote")}}, {{HTMLElement("details")}}, {{HTMLElement("fieldset")}}, {{HTMLElement("figure")}}, {{HTMLElement("td")}} の各要素が外部コンテンツをページに持ち込みます。 。</p>
+
+<p>例:</p>
+
+<pre class="brush:xml">&lt;section&gt;
+  &lt;h1&gt;マルミミゾウ&lt;/h1&gt; 
+  &lt;section&gt;
+    &lt;h2&gt;はじめに&lt;/h2&gt;
+    &lt;p&gt;このセクションでは、あまり知られていない方のマルミミゾウについて説明します。&lt;/p&gt;
+  &lt;/section&gt;
+  &lt;section&gt;
+    &lt;h2&gt;生態&lt;/h2&gt;
+    &lt;p&gt;マルミミゾウはサバンナには生息せず、森林に生息しています。
+       「&lt;cite&gt;ボルネオ島におけるマルミミゾウ&lt;/cite&gt;」で科学者が言っていることを見てましょう。:&lt;/p&gt;
+    &lt;blockquote&gt;
+       &lt;h1&gt;ボルネオ島
+       &lt;p&gt;マルミミゾウはボルネオ島に住んでいます...&lt;/p&gt;
+    &lt;/blockquote&gt;
+  &lt;/section&gt;
+&lt;/section&gt;
+</pre>
+
+<p>この例は以下のアウトラインを導き出します。</p>
+
+<pre>1. マルミミゾウ
+   1.1 はじめに
+   1.2 生態</pre>
+
+<p>このアウトラインには、外部からの引用である {{HTMLElement("blockquote")}} 要素の内部のアウトラインは含まれません。{{HTMLElement("blockquote")}} 要素は区分化ルートであり、その内部のアウトラインは独立しています。</p>
+
+<h3 id="Sections_outside_the_outline" name="Sections_outside_the_outline">アウトライン外のセクション</h3>
+
+<p>HTML5 では、ウェブ文書のメインアウトラインに属さないセクションの定義を可能にする 2 つの新しい要素が導入されました。</p>
+
+<ol>
+ <li>HTML のアサイドセクション要素 ({{HTMLElement("aside")}}) は、主要素に関連するけれども、説明コラムや広告などの本筋には属さないセクションを定義します。それ自身のアウトラインを持ちますが、メインアウトラインには属しません。</li>
+ <li>HTML ナビゲーションセクション要素 ({{HTMLElement("nav")}}) は、ナビゲーションリンクを含むセクションを定義します。文書内に存在するそのようなものの例は、ページ内リンクや、目次、サイトナビゲーションリンクなどのようなものです。これらのリンクは本筋およびメインアウトラインの一部ではありません。 また、一般的にはスクリーンリーダーやそれに類似した支援技術では、最初に情報として提供されないでしょう。</li>
+</ol>
+
+<h3 id="Headers_and_Footers" name="Headers_and_Footers">ヘッダーとフッター</h3>
+
+<p>HTML5 では、セクションのヘッダーやフッターをマークアップするために使用できる、2 つの新たな要素を導入しました:</p>
+
+<ol>
+ <li>HTML ヘッダー要素 ({{HTMLElement("header")}}) は、ページのヘッダー (一般的にはサイト名のロゴと水平方向のメニューを含んでいます) やセクションのヘッダー (セクションの見出し、作者名などを含むでしょう) を定義します。 {{HTMLElement("article")}}、{{HTMLElement("section")}}、{{HTMLElement("aside")}}、{{HTMLElement("nav")}} が、自身の {{HTMLElement("header")}} を持つことができます。{{HTMLElement("header")}} という名前ですが、必ずしもページの最初に配置する必要があるわけではありません。</li>
+ <li>HTML フッター要素 ({{HTMLElement("footer")}}) は、ページのフッター (一般的には著作権と法的通知、および、ときどき、いくつかのリンクを含んでいます) やセクションのフッター (セクションの発行日、ライセンス情報などを含むでしょう) を定義します。 {{HTMLElement("article")}}、{{HTMLElement("section")}}、{{HTMLElement("aside")}}、{{HTMLElement("nav")}} が、自身の {{HTMLElement("footer")}} を持つことができます。{{HTMLElement("footer")}} という名前ですが、必ずしもページの最後に配置する必要があるわけではありません。</li>
+</ol>
+
+<p>これらはアウトラインの新たなセクションを生成せず、ページ内のセクションのコンテンツをマークアップするものです。</p>
+
+<h2 id="Addresses_in_sectioning_elements" name="Addresses_in_sectioning_elements">セクショニング要素でのアドレス</h2>
+
+<p>文書の作者はしばしば、作者の名前やアドレスなどの連絡情報を公開したいことがあります。HTML4 では、{{HTMLElement("address")}} 要素によりこれが可能でしたが、HTML5 ではそれが拡張されています。</p>
+
+<p>文書は別々の作者による異なるセクションから作られることがあります。メインページの作者とは異なる作者によるセクションは {{HTMLElement("article")}} 要素を用いて定義されます。 その結果として、{{HTMLElement("address")}} 要素はそれの一番近い {{HTMLElement("body")}} または {{HTMLElement("article")}} の先祖とリンクされるようになります。</p>
+
+<h2 id="Using_HTML5_elements_in_non-HTML5_browsers" name="Using_HTML5_elements_in_non-HTML5_browsers">HTML5 非対応ブラウザーでのHTML5 要素の利用</h2>
+
+<p>セクションと見出しの要素は、いくつかの手順を踏むことで多くの HTML5 非対応ブラウザーでも動作させることができます。オーディエンスの特定の対象が Internet Explorer 8 以前を使用している場合、以下の手順に従うと期待通りに動作させることができます。ただし、グローバルではこれらのブラウザーの使用はとても少なくなったので、そのような場面はわずかです。</p>
+
+<p>HTML5 のセマンティック要素は特別な DOM インターフェイスを必要としませんが、これらに明示的に対応していない古いブラウザーは、特定の CSS スタイルが必要です。未知の要素は既定で <code>display:inline</code> としてスタイル付けされるため、これらには <code>display: block</code> と設定したいところです。</p>
+
+<pre class="brush: css">article, aside, footer, header, nav, section {
+  display:block;
+}
+</pre>
+
+<p>もちろんウェブ開発者はそれらに異なるスタイルを指定できますが、 HTML5 非対応ブラウザーでは、そのような要素のための既定のスタイル指定が意図通りにはならないことを忘れないでください。 {{HTMLElement("time")}} 要素が含まれていないのは、 HTML5 非対応ブラウザーのそれに対する既定のスタイル指定が、 HTML5 対応ブラウザーにおけるスタイル指定と同じだからということにも注意してください。</p>
+
+<p>さらに、より古いバージョンの IE では、 DOM のインスタンスを生成しない限り、対応していない要素のスタイル指定ができません。以下のように、特定のスクリプトを追加することで実現することができます。</p>
+
+<pre class="brush:xml">&lt;!--[if lt IE 9]&gt;
+  &lt;script&gt;
+    document.createElement("article");
+    document.createElement("aside");
+    document.createElement("footer");
+    document.createElement("header");
+    document.createElement("nav");
+    document.createElement("section");
+    document.createElement("time");
+  &lt;/script&gt;
+&lt;![endif]--&gt;
+</pre>
+
+<p>最後の予防措置として、 {{HTMLElement("head")}} 要素内に明示的に {{HTMLElement("noscript")}} 要素を追加して、 JavaScript を無効にしたユーザーに対して、このページが JavaScript に依存していることを警告することができます。</p>
+
+<pre class="brush:xml">&lt;noscript&gt;
+  &lt;p&gt;&lt;strong&gt;このウェブページは JavaScript を有効にする必要があります。&lt;/strong&gt;&lt;/p&gt;
+  &lt;p&gt;JavaScript はオブジェクト指向のコンピュータープログラミング言語で、
+    ウェブブラウザー内で対話的な効果を生成するためによく使われます。&lt;/p&gt;
+  &lt;p&gt;&lt;a href="https://goo.gl/koeeaJ"&gt;JavaScript を有効化する方法&lt;/a&gt;&lt;/p&gt;
+&lt;/noscript&gt;
+</pre>
+
+<p>まとめると、 Internet Explorer (バージョン 8 以下) を含め、また、それらのブラウザーがスクリプトを利用しないように設定されていても正しく表示を代替する、 HTML5 非対応ブラウザー向けの HTML5 のセクショニングおよび見出し要素の対応を可能にするコードは以下になります。:</p>
+
+<pre class="brush:xml">&lt;!--[if lt IE 9]&gt;
+  &lt;script&gt;
+    document.createElement("article");
+    document.createElement("aside");
+    document.createElement("footer");
+    document.createElement("header");
+    document.createElement("nav");
+    document.createElement("section");
+    document.createElement("time");
+  &lt;/script&gt;
+&lt;![endif]--&gt;
+&lt;noscript&gt;
+  &lt;p&gt;&lt;strong&gt;このウェブページは JavaScript を有効にする必要があります。&lt;/strong&gt;&lt;/p&gt;
+  &lt;p&gt;JavaScript はオブジェクト指向のコンピュータープログラミング言語で、
+    ウェブブラウザー内で対話的な効果を生成するためによく使われます。&lt;/p&gt;
+  &lt;p&gt;&lt;a href="https://goo.gl/koeeaJ"&gt;JavaScript を有効化する方法&lt;/a&gt;&lt;/p&gt;
+&lt;/noscript&gt;
+</pre>
+
+<div class="blockIndicator note">
+<p><strong>メモ</strong>: このコードは <a href="https://validator.w3.org/">HTML validator</a> でエラーを発生させます。これは必ずしも本当に悪いことだとは言えません — サイトには若干のバリデーションエラーがあるものです — が、気を付けなければなりません。</p>
+</div>
+
+<h2 id="Conclusion" name="Conclusion">まとめ</h2>
+
+<p>HTML5 で導入された新しいセクションおよび見出し要素はウェブ文書の構造とアウトラインを標準の方法で表現できるようにします。それらは HTML5 ブラウザーを持ち、ページを理解することを助けるための構造を必要とする人々、例えば、いくつかの支援技術の助けを必要とする人々に大きな利点をもたらします。これらの新しいセマンティック要素は単純に利用でき、負担は非常に少なく. HTML5 非対応ブラウザーでも動作するようにできます。それゆえ、それらを制限なく利用すべきです。</p>

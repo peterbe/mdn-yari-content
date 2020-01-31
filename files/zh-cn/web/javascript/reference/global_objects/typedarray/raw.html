@@ -1,0 +1,228 @@
+<div>{{JSRef}}</div>
+
+<p>一个<strong>TypedArray </strong>对象描述一个底层的<a href="/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer">二进制数据缓存区</a>的一个类似数组(array-like)视图。事实上，没有名为 <strong>TypedArray</strong>的全局对象，也没有一个名为的 <strong>TypedArray</strong>构造函数。相反，有许多不同的全局对象，下面会列出这些针对特定元素类型的类型化数组的构造函数。在下面的页面中，你会找到一些不管什么类型都公用的属性和方法。</p>
+
+<div>{{EmbedInteractiveExample("pages/js/typedarray-constructor.html")}}</div>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<h2 id="语法">语法</h2>
+
+<pre class="syntaxbox">new TypedArray(); // ES2017中新增
+new<em> TypedArray</em>(length); 
+new <em>TypedArray</em>(typedArray); 
+new <em>TypedArray</em>(object); 
+new <em>TypedArray</em>(buffer [, byteOffset [, length]]); 
+
+<em>TypedArray()指的是以下的其中之一：</em> 
+
+Int8Array(); 
+Uint8Array(); 
+Uint8ClampedArray();
+Int16Array(); 
+Uint16Array();
+Int32Array(); 
+Uint32Array(); 
+Float32Array(); 
+Float64Array();</pre>
+
+<h3 id="参数">参数</h3>
+
+<dl>
+ <dt>length</dt>
+ <dd>当传入<code>length</code>参数时，一个内部数组缓冲区会被创建在内存中。该缓存区的大小是传入的<code>length</code>乘以数组中每个元素的字节数（<code>BYTES_PER_ELEMENT</code>），每个元素的值都为0。(译者注：每个元素的字节数是由具体的构造函数决定的，比如Int16Array的每个元素的字节数为2，Int32Array的每个元素的字节数为4)</dd>
+ <dt>typedArray</dt>
+ <dd>当传入一个包含任意类型元素的任意类型化数组对象<code>typedArray</code>（比如<code>Int32Array</code>）作为参数时，<code>typedArray</code>被复制到一个新的类型数组。<code>typedArray</code>中的每个值会在复制到新的数组之前根据构造器进行转化。新的生成的类型化数组对象将会有跟传入的数组相同的长度（译者注：比如原来的typedArray.length==2，那么新生成的数组的length也是2，只是数组中的每一项进行了转化）</dd>
+ <dt>object</dt>
+ <dd>
+ <p>当传入一个 <font face="Consolas, Liberation Mono, Courier, monospace"><code>object</code>作为参数时，如同通过</font> <code><em>TypedArray</em>.from()</code> 方法一样创建一个新的类型数组。</p>
+ </dd>
+ <dt>buffer, byteOffset, length</dt>
+ <dd>当传入一个<code>buffer</code>参数，或者再另外加上可选参数<code>byteOffset</code>和<code>length</code>时，一个新的类型化数组视图将会被创建并可用于呈现传入的<code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer" title="The ArrayBuffer object is used to represent a generic, fixed-length raw binary data buffer. You cannot directly manipulate the contents of an ArrayBuffer; instead, you create one of the typed array objects or a DataView object which represents the buffer in a specific format, and use that to read and write the contents of the buffer.">ArrayBuffer</a></code>实例。<code>byteOffset</code>和<code>length</code>指定类型化数组视图暴露的内存范围，如果两者都未传入，那么整个buffer都会被呈现。如果仅仅忽略<code>length</code>，那么<code>buffer</code>中偏移<code>byteOffset</code>后剩下的buffer将会被呈现。</dd>
+ <dt>
+ <h2 id="描述">描述</h2>
+ </dt>
+</dl>
+
+<p>ECMAScript 6定义TypeArray构造器作为所有的类型化数组构造器(Int8Array,Int16Array等)的原型.该构造器不会直接暴露:没有全局的%TypedArray%和TypeArray属性.只能通过使用类似Object.getPrototypeOf(<code>Int8Array.prototype</code>)的方式进行访问.所有的类型化数组构造器(Int8Array,Int16Array等)都会继承TypeArray构造器的通用属性和方法.此外,所有的类型化数组原型(Int8Array.prototype,Int16Array.prototype等)的原型都以TypeArray.prototype作为原型.</p>
+
+<p>TypedArray构造器自身不是特别有用.调用或在一个表达式中使用它都会抛出一个TypeError异常,除非在支持通过继承创建对象的JS引擎下运行.但直到现在还没有这样的JS引擎出现,因此TypeArray仅仅是对所有的类型化类构造器(Int8Array,Int16Array等)的方法和属性进行polyfill的时候比较有用.</p>
+
+<p>当创建一个TypedArray实例（例如:Int8Array）时，一个数组缓冲区将被创建在内存中，如果ArrayBuffer对象被当作参数传给构造函数将使用传入的ArrayBuffer代替。缓冲区的地址被存储在实例的内部属性中，所有的%TypedArray%.prototype上的方法例如set value和get value等都会操作在数组缓冲区上。</p>
+
+<h3 id="属性访问">属性访问</h3>
+
+<p>你可以参考使用标准数组索引数组中的元素的方法(其实就是方括号里面写下标).然而,原型链上面定义的索引属性(译者注:即用数字作为属性,例如Int16Array.prototype[0]=12;),在实例化的对象上面是获取不到该属性的(int16Array[0]==undefined).通过查询 {{jsxref("ArrayBuffer")}} 是找不到索引属性的.但您仍然可以使用命名属性(译者注:就是键不是数字的),就像所有对象一样。</p>
+
+<pre class="brush: js">// 设置和使用标准数组语法
+var int16 = new Int16Array(2);
+int16[0] = 42;
+console.log(int16[0]); // 42
+
+// Indexed properties on prototypes are not consulted (Fx 25)
+Int8Array.prototype[20] = "foo";
+(new Int8Array(32))[20]; // 0
+// even when out of bound
+Int8Array.prototype[20] = "foo";
+(new Int8Array(8))[20]; // undefined
+// or with negative integers
+Int8Array.prototype[-1] = "foo";
+(new Int8Array(8))[-1]; // undefined
+
+// Named properties are allowed, though (Fx 30)
+Int8Array.prototype.foo = "bar";
+(new Int8Array(32)).foo; // "bar"</pre>
+
+<h2 id="TypedArray_对象">TypedArray 对象</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <td class="header">类型</td>
+   <td class="header">大小（字节单位）</td>
+   <td class="header">描述</td>
+   <td class="header">Web IDL type</td>
+   <td class="header">C语言中的等效类型</td>
+  </tr>
+  <tr>
+   <td>{{jsxref("Int8Array")}}</td>
+   <td>1</td>
+   <td>8位二进制带符号整数 -2^7~(2^7) - 1</td>
+   <td>byte</td>
+   <td>int8_t</td>
+  </tr>
+  <tr>
+   <td>{{jsxref("Uint8Array")}}</td>
+   <td>1</td>
+   <td>8位无符号整数 0~(2^8) - 1</td>
+   <td>octet</td>
+   <td>uint8_t</td>
+  </tr>
+  <tr>
+   <td>{{jsxref("Int16Array")}}</td>
+   <td>2</td>
+   <td>16位二进制带符号整数 -2^15~(2^15)-1</td>
+   <td><code>short</code></td>
+   <td>int16_t</td>
+  </tr>
+  <tr>
+   <td>{{jsxref("Uint16Array")}}</td>
+   <td>2</td>
+   <td>16位无符号整数 0~(2^16) - 1</td>
+   <td><code>unsigned short</code></td>
+   <td>uint16_t</td>
+  </tr>
+  <tr>
+   <td>{{jsxref("Int32Array")}}</td>
+   <td>4</td>
+   <td>32位二进制带符号整数 -2^31~(2^31)-1</td>
+   <td><font face="Consolas, Liberation Mono, Courier, monospace">long</font></td>
+   <td>int32_t</td>
+  </tr>
+  <tr>
+   <td>{{jsxref("Uint32Array")}}</td>
+   <td>4</td>
+   <td>32位无符号整数 0~(2^32) - 1</td>
+   <td><code>unsigned int</code></td>
+   <td>uint32_t</td>
+  </tr>
+  <tr>
+   <td>{{jsxref("Float32Array")}}</td>
+   <td>4</td>
+   <td>32位IEEE浮点数</td>
+   <td>unrestricted float</td>
+   <td>float</td>
+  </tr>
+  <tr>
+   <td>{{jsxref("Float64Array")}}</td>
+   <td>8</td>
+   <td>64位IEEE浮点数</td>
+   <td>unrestricted double</td>
+   <td>double</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="属性">属性</h2>
+
+<dl>
+ <dt>{{jsxref("TypedArray.BYTES_PER_ELEMENT")}}</dt>
+ <dd>返回不同类型的数组对象的元素大小的数字值。</dd>
+ <dt><em>TypedArray</em>.length</dt>
+ <dd>Length property whose value is 3.(译者注:应该是数组的长度吧???)</dd>
+ <dt>{{jsxref("TypedArray.name")}}</dt>
+ <dd>返回构造器的名称,例如"Int8Array".</dd>
+ <dt>{{jsxref("TypedArray.@@species", "get TypedArray[@@species]")}}</dt>
+ <dd>用于创建派生对象的构造函数函数.</dd>
+ <dt>{{jsxref("TypedArray.prototype")}}</dt>
+ <dd>TypedArray的原型.</dd>
+ <dt>
+ <h2 id="方法">方法</h2>
+ </dt>
+ <dt>{{jsxref("TypedArray.from()")}}</dt>
+ <dd>使用类数组(array-like)或迭代对象创建一个新的类型化数组.参见 {{jsxref("Array.from()")}}.</dd>
+ <dt>{{jsxref("TypedArray.of()")}}</dt>
+ <dd>通过可变数量的参数创建新的类型化数组.参见 {{jsxref("Array.of()")}}.</dd>
+ <dt>
+ <h2 id="TypedArray_原型">TypedArray 原型</h2>
+
+ <p>所有的类型化数组都是继承自{{jsxref("TypedArray.prototype")}}.</p>
+
+ <h3 id="属性_2">属性</h3>
+
+ <p>{{page('zh-CN/Web/JavaScript/Reference/Global_Objects/TypedArray/prototype','属性')}}</p>
+
+ <h3 id="方法_2">方法</h3>
+
+ <p>{{page('zh-CN/Web/JavaScript/Reference/Global_Objects/TypedArray/prototype','methods')}}</p>
+ </dt>
+</dl>
+
+<h2 id="规范">规范</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">规范</th>
+   <th scope="col">状态</th>
+   <th scope="col">说明</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('Typed Array')}}</td>
+   <td>{{Spec2('Typed Array')}}</td>
+   <td>Defined as <code>TypedArray</code> and <code>ArrayBufferView</code> interface with typed array view types. Superseded by ECMAScript 6.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-typedarray-objects', 'TypedArray Objects')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td>Initial definition in an ECMA standard. Specified behaviour for indexed and named properties. Specified that <code>new</code> is required.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-typedarray-objects', 'TypedArray Objects')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="浏览器支持">浏览器支持</h2>
+
+<p><span style='background-color: transparent; color: #333333; display: inline !important; float: none; font-family: "Open Sans",arial,x-locale-body,sans-serif; font-size: 16px; font-style: normal; font-variant: normal; font-weight: 400; letter-spacing: normal; text-align: left; text-decoration: none; text-indent: 0px; text-transform: none; white-space: normal;'>{{Compat("javascript.builtins.TypedArray")}}</span></p>
+
+<h2 id="兼容性注意事项">兼容性注意事项</h2>
+
+<p>从ECMAScript 2015 (ES6)开始,TypedArray 构造函数使用的时候必须要使用new.从现在开始不使用new调用TypedArray构造函数将会抛出异常{{jsxref("TypeError")}}</p>
+
+<pre class="brush: js example-bad">var dv = Int8Array([1, 2, 3]);
+// TypeError: 不使用new调用内置的Int8Array构造函数是被禁止的
+</pre>
+
+<pre class="brush: js example-good">var dv = new Int8Array([1, 2, 3]);</pre>
+
+<h2 id="相关链接">相关链接</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Web/JavaScript/Typed_arrays" title="en/JavaScript typed arrays">JavaScript typed arrays</a></li>
+ <li>{{jsxref("ArrayBuffer")}}</li>
+ <li>{{jsxref("DataView")}}</li>
+</ul>

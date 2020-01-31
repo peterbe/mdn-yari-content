@@ -1,0 +1,83 @@
+<p>{{ Outdated("It was last updated in 2002.") }}
+</p><p>このページは、比較的 Unix を使い始めて日が浅いプログラマを対象にしています。Linux マシーンにアクセスし、mozilla ビルドやパッチの適用／生成をサクッと済ませたい人向きです。
+</p><p>Linux のビルドシステムについてより詳しい情報を探している場合、または独自の Linux ビルドマシーンを構築しようとしている場合は、必ず公式の <a href="ja/Linux_Build_Prerequisites">Unix ビルドガイド</a> を読んでください。
+</p>
+<h3 id=".E4.BB.96.E3.81.AE.E3.83.9E.E3.82.B7.E3.83.BC.E3.83.B3.E3.81.8B.E3.82.89_Linux_.E3.83.9E.E3.82.B7.E3.83.BC.E3.83.B3.E3.81.B8.E3.81.AF.E3.81.A9.E3.81.AE.E3.82.88.E3.81.86.E3.81.AB.E3.81.97.E3.81.9F.E3.82.89.E3.83.AD.E3.82.B0.E3.82.A4.E3.83.B3.E3.81.A7.E3.81.8D.E3.82.8B.E3.81.AE.E3.81.A7.E3.81.99.E3.81.8B.EF.BC.9F"> 他のマシーンから Linux マシーンへはどのようにしたらログインできるのですか？ </h3>
+<p>好きなプラットフォームから telnet を使ってリモートの Linux (または他の Unix) マシーンにログインしてください。そのリモートマシーンのホスト名 (静的な IP ではなく DHCP を使っている場合は、マシーンがリブートされる度に異なる理解困難なものになります) を入力しなければなりません。
+</p><p>勿論、そのマシーンが誰かの所有物だったら、必ず事前に持ち主から使用許可を貰わなくてはなりません。
+</p><p>ログインできたら、"cd" (change directory: もっと文字を入力したいなら chdir も通じます) を使って、ビルドツリーのあるところまで移動します。
+</p>
+<h3 id=".E6.96.B0.E3.81.97.E3.81.84.E3.83.93.E3.83.AB.E3.83.89.E3.82.92.E5.A7.8B.E3.82.81.E3.82.8B.E3.81.AB.E3.81.AF.EF.BC.9F"> 新しいビルドを始めるには？ </h3>
+<p>まず、ビルド先をどこにするか決めなければなりません。取り敢えず、ディスク容量が十分にある事を確認します。現在、完全なビルドデバッグツリーは約 1.6Gb 必要です。<code>df -k</code> とすると、マシーンにマウントされている全ファイルシステム上の利用可能なディスク容量が表示されます。ここに集う多くの Linux Mozilla 開発者は /builds ディレクトリを作成して、ビルドツリーを置いています。<code>df -k /builds</code> とすると、ディレクトリが存在するかどうか、そしてそのスペースの容量が表示されます。(-k とするとディスクブロックの替わりにキロバイトで表示されます。システムによっては変化がありません。)
+</p><p>ログインすると、あなたのホームディレクトに入る事になります。大規模な会社のマシーンでは、ホームディレクトリがリモートサーバからマウントされた NFS である可能性もあります (例: Netscape はそうしています)。(これを確かめるには、"df" としてください。そうすると "Filesystem" コラムにホスト名が表れます) あなたのホームディレクトリがマウントされた NFS である場合、そこではビルドしない方が良いでしょう。ビルドをローカルディスクで行うと、ずっと早く処理できます。
+</p><p>ビルドを置くための新しいディレクトリを作成する: {{ 訳注("myname は使用しているユーザー名です") }}
+</p>
+<pre>mkdir /builds/myname</pre>
+<p>そのディレクトリへ移動する:
+</p>
+<pre>cd /builds/myname</pre>
+<p>cvsroot を設定する。これはあなたの使用シェルによって違います。良くわからない場合は両方試してください。どちらか一方は作動します。
+</p>
+<pre>setenv CVSROOT :pserver:myname%netscape.com@cvs.mozilla.org:/cvsroot</pre>
+<p>(csh/tcsh) または、sh/bash を使用している場合、
+</p>
+<pre>set CVSROOT=:pserver:myname%netscape.com@cvs.mozilla.org:/cvsroot; export CVSROOT</pre>
+<p><code>client.mk</code> を引っ張ってくる:
+</p>
+<pre>cvs co mozilla/client.mk</pre>
+<p>mozilla ディレクトリに移動する:
+</p>
+<pre>cd mozilla</pre>
+<p>全てを引っ張ってきてビルドする:
+</p>
+<pre>make -f client.mk</pre>
+<p>1、2 時間ほど待って...
+</p><p>バイナリーのある場所まで移動する:
+</p>
+<pre>cd dist/bin</pre>
+<p>mozilla を実行する:
+</p>
+<pre>./mozilla</pre>
+<h3 id=".E3.83.84.E3.83.AA.E3.83.BC.E3.81.AE.E4.B8.80.E9.83.A8.E3.82.92.E5.86.8D.E3.83.93.E3.83.AB.E3.83.89.E3.81.99.E3.82.8B.E3.81.AB.E3.81.AF.EF.BC.9F"> ツリーの一部を再ビルドするには？ </h3>
+<p>正しいディレクトリ (例: cd layout/base/src) まで移動して、"make" を入力します。
+</p><p>まず始めにそのディレクトリをアップデートしたい場合は、<code>cvs update</code> とするとできます。
+</p><p>ツリーを引っ張ってくる事なく全体を再ビルドしたい場合は、mozilla の階層まで戻り、以下のように入力します。 </p>
+<pre>make -f client.mk build</pre>
+<p>全てを引っ張ってきて再ビルドするには、mozilla の階層まで戻り、以下のように入力します。
+</p>
+<pre>make -f client.mk</pre>
+<h3 id=".E3.83.91.E3.83.83.E3.83.81.E3.81.AF.E3.81.A9.E3.81.AE.E3.82.88.E3.81.86.E3.81.AB.E3.81.97.E3.81.A6.E9.81.A9.E7.94.A8.E3.81.99.E3.82.8B.E3.81.AE.E3.81.A7.E3.81.99.E3.81.8B.EF.BC.9F"> パッチはどのようにして適用するのですか？ </h3>
+<p>マシーンからアクセスできる場所にパッチを保存します。mozilla や 4.x を使ってメールを読んで保存できるように、コマンドライン ftp か GUI クライアントを使ってパッチを ftp から持ってきます。あるいは <a href="#.E3.81.A9.E3.81.AE.E3.82.88.E3.81.86.E3.81.AB.E3.81.97.E3.81.A6.E3.83.95.E3.83.AD.E3.83.83.E3.83.94.E3.83.BC.E3.81.8B.E3.82.89.E8.AA.AD.E3.81.BF.E8.BE.BC.E3.82.80.E3.81.AE.E3.81.A7.E3.81.99.E3.81.8B.EF.BC.9F">フロッピーに保存</a> しても良いでしょう。お勧めする方法は、パッチを /tmp (例: /tmp/my.diff または my.patch) に保存します。(拡張子は問題ではありません。自分が覚えられるものを使ってください。) パッチ本体の前にメールヘッダーが付いていたりしても大丈夫です。
+</p><p>パッチが作成されたソースツリーのあるディレクトリまで移動します。
+</p>
+<pre>patch &lt; /tmp/my.patch</pre>
+<p>(要するにパッチに名前を付けます) パッチが複数のディレクトリに跨がる場合は、以下が必要かもしれません: </p>
+<pre>setenv POSIXLY_CORRECT 1 ; patch -p0 &lt; mypatch.diffs</pre>
+<h3 id=".E3.81.A9.E3.81.AE.E3.82.88.E3.81.86.E3.81.AB.E3.81.97.E3.81.A6.E3.83.95.E3.83.AD.E3.83.83.E3.83.94.E3.83.BC.E3.81.8B.E3.82.89.E8.AA.AD.E3.81.BF.E8.BE.BC.E3.82.80.E3.81.AE.E3.81.A7.E3.81.99.E3.81.8B.EF.BC.9F"> どのようにしてフロッピーから読み込むのですか？ </h3>
+<p>良い質問です。システムによっては自動マウントフロッピーを設定します。そのためフロッピーを入れて以下のように入力してください: </p>
+<pre>mount /mnt/floppy</pre>
+<p>あるいは、
+</p>
+<pre>mount /floppy</pre>
+<p>この方法だとエラーが出てしまう場合は、そのマシーンの管理者に連絡して、<code>/etc/fstab</code> の fd0 の行を以下の文字列に置き換えて貰いましょう: </p>
+<pre>/dev/fd0        /mnt/floppy        auto    noauto,owner    0 0</pre>
+<h3 id=".E3.83.91.E3.83.83.E3.83.81.E3.81.AF.E3.81.A9.E3.81.AE.E3.82.88.E3.81.86.E3.81.AB.E3.81.97.E3.81.A6.E7.94.9F.E6.88.90.E3.81.99.E3.82.8B.E3.81.AE.E3.81.A7.E3.81.99.E3.81.8B.EF.BC.9F"> パッチはどのようにして生成するのですか？ </h3>
+<p>変更されたファイルのあるディレクトリかそれより上位のディレクトリで、cvs diff を実行してください: </p>
+<pre>cvs diff -u [変更されたファイルのリスト]</pre>
+<p>パッチに含まれる新しいファイルも含めいたい場合は、diff の引数として -N を追加しても構いません。
+</p>
+<h3 id=".E3.83.87.E3.83.90.E3.83.83.E3.82.B0.E3.81.AF.E3.81.A9.E3.81.AE.E3.82.88.E3.81.86.E3.81.AB.E3.81.99.E3.82.8B.E3.81.AE.E3.81.A7.E3.81.99.E3.81.8B.EF.BC.9F"> デバッグはどのようにするのですか？ </h3>
+<p>これはまた全然別の話です。より詳しくは <a href="ja/Debugging_on_Linux">Debugging FAQ</a> を参照してください。
+</p>
+<h3 id=".E4.BB.96.E3.81.AE.E4.BA.8B.E3.82.92.E3.81.99.E3.82.8B.E3.81.9F.E3.82.81.E3.81.AB.E3.81.AF.E3.81.A9.E3.81.86.E3.81.99.E3.82.8C.E3.81.B0.E8.89.AF.E3.81.84.E3.81.A7.E3.81.99.E3.81.8B.EF.BC.9F"> 他の事をするためにはどうすれば良いですか？ </h3>
+<p>mozilla-unix alias (購読の仕方、またはニュールブループとしての読み方は <a class="external" href="http://www.mozilla.org/community/developer-forums.html">コミュニティページ</a> を見てください) が Linux ビルドに付いて質問するには良い場所です。または irc.mozilla.org のチャンネル #mozilla に行けば、そこに出没する Xheads を見つける事もできます。
+</p>
+<div class="originaldocinfo">
+<h2 id=".E5.8E.9F.E6.96.87.E6.9B.B8.E3.81.AE.E6.83.85.E5.A0.B1"> 原文書の情報 </h2>
+<ul><li> 最終更新日: August 15, 2002
+</li><li> 著作権: Portions of this content are © 1998–2007 by individual mozilla.org contributors; content available under a Creative Commons license | <a class="external" href="http://www.mozilla.org/foundation/licensing/website-content.html">詳細</a>
+</li></ul>
+</div>
+<div class="noinclude">
+</div>
+{{ languages( { "en": "en/Linux_Cheat_Sheet_for_Mac_and_Windows_Programmers" } ) }}

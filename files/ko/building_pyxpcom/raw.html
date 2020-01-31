@@ -1,0 +1,191 @@
+<p> </p>
+<p>These are the instructions for building <a href="ko/PyXPCOM">PyXPCOM</a>.</p>
+<h3 id="Installing_Python" name="Installing_Python">Installing Python</h3>
+<h4 id="PyXPCOM_Requirements" name="PyXPCOM_Requirements">PyXPCOM Requirements</h4>
+<ul>
+ <li>PyXPCOM requires Python 2.3 or later (Python 2.3 and 2.4 have both been recently tested).</li>
+ <li>PyXPCOM requires access to a shared Python library.</li>
+</ul>
+<h4 id="Linux" name="Linux">Linux</h4>
+<p>For Linux users, the build script should check if you have a suitable shared library version of Python. Jump to <a href="ko/Building_PyXPCOM#Compiling_Mozilla">Compiling Mozilla</a>, and if you receive an error telling you a shared Python can not be located, then you'll need to compile Python with <code>--enable-shared</code> as outlined <a href="ko/Building_PyXPCOM#Other_systems">below</a>.</p>
+<h5 id="Recent_Fedora_and_Ubuntu_builds" name="Recent_Fedora_and_Ubuntu_builds">Recent Fedora and Ubuntu builds</h5>
+<p>These distributions generally have a shared Python already available.</p>
+<h5 id="Gentoo_systems" name="Gentoo_systems">Gentoo systems</h5>
+<p>Building a shared Python library seems to only be possible with <code>python-2.3*</code> or later, so you'll need to upgrade if you're using <code>python-2.2*</code> or earlier. For ebuilds <code>python-2.3*</code> and later the shared library is built and installed by default.</p>
+<h4 id="FreeBSD" name="FreeBSD">FreeBSD</h4>
+<p>Python built from ports (<code>lang/python24</code>) already provides a shared Python library.</p>
+<h4 id="Mac_OS_X" name="Mac_OS_X">Mac OS X</h4>
+<p>For OS X 10.3 and 10.4 users, the Python 2.3 Framework is already available. If you want to build against Python 2.4, you will need to build your own from <a class="external" href="http://www.python.org/download/">source</a>, build via <a class="external" href="http://darwinports.opendarwin.org/">DarwinPorts</a> or <a class="external" href="http://fink.sourceforge.net/">Fink</a>, or install either <a class="external" href="http://undefined.org/python/">MacPython</a> or <a class="external" href="http://www.ActiveState.com/">ActivePython</a>. You can then skip to <a href="ko/Building_PyXPCOM#Compiling_Mozilla">Compiling Mozilla</a>. If you want to distribute your application, you might prefer to use the built-in Python 2.3 Framework at first, since embedding the Python Framework into an application bundle may take some non-standard customizations to the Python build scripts.</p>
+<h4 id="Windows" name="Windows">Windows</h4>
+<p>The official Python installer for Windows installs the shared version of the the library automatically, so Windows users can simply install Python and skip to <a href="ko/Building_PyXPCOM#Compiling_Mozilla">Compiling Mozilla</a>.</p>
+<h4 id="Other_systems" name="Other_systems">Other systems</h4>
+<p>If you
+ <i>
+  don't</i>
+ use any of the above systems, get the latest stable Python source tarball from <a class="external" href="http://python.org/download/">python.org</a> and do:</p>
+<pre>tar xjf Python-2.4.2.tar.bz2
+cd Python-2.4.2
+./configure --enable-shared --prefix=/usr  # Adjust --prefix to install over your current Python
+make
+sudo make install
+</pre>
+<h3 id="Compiling_Mozilla" name="Compiling_Mozilla">Compiling Mozilla</h3>
+<p>You should be familiar with the <a class="external" href="http://www.mozilla.org/developer/">Developer Documentation</a> regarding <a href="ko/Download_Mozilla_Source_Code">downloading the source code</a> and <a href="ko/Build_Documentation">building applications</a> in the Mozilla code base (eg. Firefox, XulRunner).</p>
+<p>Depending on your needs, you will want to pick an appropriate branch of the Mozilla CVS repository.</p>
+<ul>
+ <li>If you need the most stable code base, and only need Python in backend XPCOM classes, check out Mozilla from the MOZILLA_1_8_BRANCH or the MOZILLA_1_8_0_BRANCH in CVS and build it. Note that this branch may **not** automatically check if you have a suitable shared Python build on Linux systems - you must ensure this yourself.</li>
+</ul>
+<ul>
+ <li>Use the Mozilla trunk. This has the latest version of XPCOM, incorporating work done on the DOM branches (see below)</li>
+</ul>
+<p>You can build PyXPCOM against any of the applications available in the CVS repository. The example below shows building PyXPCOM for SeaMonkey, with Python DOM support. You can also build against XULRunner on the HEAD or MOZILLA_1_8_0_BRANCH by removing "python/dom" from the options and changing the branch in the CVS checkout command.</p>
+<h4 id="All_Platforms" name="All_Platforms">All Platforms</h4>
+<p>On all platforms, you should first ensure you can build a vanilla Mozilla
+ <i>
+  without</i>
+ any Python extensions. If you can't build Mozilla without Python, you certainly will not be able to build it
+ <i>
+  with</i>
+ Python :)</p>
+<p>Once you have a successful build, simply enable the extension <code>python</code> (if you are using the 1.8 branch, you must specify <code>python/xpcom</code>). Once this extension has been enabled, rebuild Mozilla.</p>
+<p>For example, 1.8 branch users could add a line:</p>
+<dl>
+ <dd>
+  <pre></pre>
+ </dd>
+ <dd>
+  ac_add_options --enable-extensions=python/xpcom,default</dd>
+</dl>
+<p>Or later versions can add:</p>
+<dl>
+ <dd>
+  <pre></pre>
+ </dd>
+ <dd>
+  ac_add_options --enable-extensions=python,default</dd>
+</dl>
+<p>to your <code>.mozconfig</code> file.</p>
+<h5 id="Nominating_the_Python_version" name="Nominating_the_Python_version">Nominating the Python version</h5>
+<p>The configure script will attempt to locate a Python version to use. In most cases, all you need to do is ensure the Python version you wish to use is on your PATH before configuring Mozilla.</p>
+<p>Alternatively, you can also set a <code>PYTHON</code> environment variable that points to a Python executable (not a directory - it must be a Python executable). If set, the configure script will use the Python pointed to by the variable.</p>
+<p>You can confirm what Python is being used by carefully watching the configure process. You should see a message similar to:</p>
+<pre class="eval">Building PyXPCOM using Python-2.4 from c:/Python24
+</pre>
+<p>Windows/MSVC users: make sure you don't use cygwin's Python. It is likely to cause compilation errors later.</p>
+<h4 id="Linux_and_OS_X" name="Linux_and_OS_X">Linux and OS X</h4>
+<p>There are no special considerations for Linux. Below is an example build session on Linux, building the trunk.</p>
+<dl>
+ <dd>
+  <pre></pre>
+ </dd>
+ <dd>
+  cvs -d <a class="link-mailto" href="mailto::pserver:anonymous@cvs-mirror.mozilla.org" rel="freelink">:pserver:anonymous@cvs-mirror.mozilla.org</a>:/cvsroot co mozilla/client.mk</dd>
+ <dd>
+  cd mozilla</dd>
+ <dd>
+  cat &gt; ~/.mozconfig &lt;&lt; "EOF"</dd>
+ <dd>
+  mk_add_options MOZ_CO_PROJECT=suite</dd>
+ <dd>
+  ac_add_options --enable-application=suite</dd>
+ <dd>
+  ac_add_options --enable-default-toolkit=gtk2</dd>
+ <dd>
+  ac_add_options --enable-xft</dd>
+ <dd>
+  ac_add_options --enable-extensions=python,default</dd>
+ <dd>
+  ac_add_options --disable-optimize</dd>
+ <dd>
+  ac_add_options --enable-debug</dd>
+ <dd>
+  mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/suite-debug</dd>
+ <dd>
+  EOF</dd>
+ <dd>
+  make -f client.mk checkout</dd>
+ <dd>
+  make -f client.mk build</dd>
+</dl>
+<h4 id="Windows_2" name="Windows_2">Windows</h4>
+<p>There are no special build considerations for Windows. Follow the generic instructions above regarding <code>--enable-extensions</code> in your <code>.mozconfig</code> file.</p>
+<p>Note that you'll get build problems if you try to make a debug build of Mozilla using the release version of Python. Building in this configuration is still possible, but not without certain workarounds (one of which is commenting out <code>#define Py_DEBUG</code> in &lt;tt&gt;pyconfig.h&lt;/tt&gt;).</p>
+<h3 id="Testing_PyXPCOM" name="Testing_PyXPCOM">Testing PyXPCOM</h3>
+<p>First test your fresh PyXPCOM build from within Mozilla's runtime environment.</p>
+<p>
+ <i>
+  Linux and OS X:</i>
+</p>
+<dl>
+ <dd>
+  <pre></pre>
+ </dd>
+ <dd>
+  cd suite-debug/dist/bin</dd>
+ <dd>
+  export PYTHONPATH=$PYTHONPATH:$HOME/mozilla/suite-debug/dist/bin/python # Adjust this to your PyXPCOM build path</dd>
+ <dd>
+  ./run-mozilla.sh ./seamonkey -chrome <a class="external" rel="freelink">chrome://pyxultest/content</a></dd>
+</dl>
+<p>
+ <i>
+  Windows:</i>
+</p>
+<dl>
+ <dd>
+  <pre></pre>
+ </dd>
+ <dd>
+  cd dist\bin</dd>
+ <dd>
+  set PYTHONPATH=%PYTHONPATH%;C:\mozilla\dist\bin\python</dd>
+ <dd>
+  seamonkey.exe -chrome <a class="external" rel="freelink">chrome://pyxultest/content</a></dd>
+</dl>
+<p>A window with controls should pop up. Run the tests it contains.</p>
+<p>In the same directory you can also perform a simple test of the Python <code>xpcom</code> module from a standalone Python environment.</p>
+<p>
+ <i>
+  Linux and OS X:</i>
+</p>
+<dl>
+ <dd>
+  <pre></pre>
+ </dd>
+ <dd>
+  export MOZILLA_FIVE_HOME=$HOME/mozilla/suite-debug/dist/bin # Adjust this to your Mozilla build path</dd>
+ <dd>
+  export LD_LIBRARY_PATH=$MOZILLA_FIVE_HOME</dd>
+ <dd>
+  python -c 'from xpcom import components; print components.classes{{ mediawiki.external('\"@mozilla.org/file/local;1\"') }}'</dd>
+</dl>
+<p>
+ <i>
+  Windows:</i>
+</p>
+<dl>
+ <dd>
+  <pre></pre>
+ </dd>
+ <dd>
+  set PATH=%PATH%;C:\mozilla\dist\bin</dd>
+ <dd>
+  set MOZILLA_FIVE_HOME=C:\mozilla\dist\bin</dd>
+ <dd>
+  set LD_LIBRARY_PATH=%MOZILLA_FIVE_HOME%</dd>
+ <dd>
+  python -c "from xpcom import components; print components.classes{{ mediawiki.external('\'@mozilla.org/file/local;1\'') }}"</dd>
+</dl>
+<p>You should see output similar to the following:</p>
+<pre>Type Manifest File: /home/you/mozilla/suite-debug/dist/bin/components/xpti.dat
+&lt;xpcom.components._Class instance at 0xb7c1be8c&gt;
+nsStringStats
+ =&gt; mAllocCount:            431
+ =&gt; mReallocCount:          270
+ =&gt; mFreeCount:             423  --  LEAKED 8 !!!
+ =&gt; mShareCount:            450
+ =&gt; mAdoptCount:              0
+ =&gt; mAdoptFreeCount:          0
+</pre>
+<p>If you see Python error messages instead, make sure <code>$PYTHONPATH</code> is still set the same as in the first test.</p>
+<p>{{ languages( { "ja": "ja/Building_PyXPCOM" } ) }}</p>

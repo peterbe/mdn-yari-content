@@ -1,0 +1,130 @@
+<div>{{JSRef}}</div>
+
+<p>Метод <code><strong>Promise.resolve(value)</strong></code> повертає об'єкт {{jsxref("Promise")}}, що вирішується з заданим значенням. Якщо дане значення дозволяє на собі викликати метод then (thenable) (тобто має {{jsxref("Promise.then", "\"then\" method")}}), то проміс, який буде повертатися, буде дозволяти викликати на собі метод then, і буде встановлювати свій остаточний стан; у іншому випадку проміс, який буде повертатися буде завершено з даним значенням.</p>
+
+<h2 id="Синтаксис">Синтаксис</h2>
+
+<pre class="syntaxbox"><var>Promise.resolve(value)</var>;
+Promise.resolve(promise);
+Promise.resolve(thenable);
+</pre>
+
+<h3 id="Параметри">Параметри</h3>
+
+<dl>
+ <dt>value</dt>
+ <dd>Аргумент, з яким буде виконано даний Проміс (<code>Promise)</code>. Також він може бути Промісом (<code>Promise) або об'єктом, з можливістю викликати на собі метод then</code> для вирішення.</dd>
+</dl>
+
+<h3 id="Значення_яке_повертається">Значення, яке повертається</h3>
+
+<p>{{jsxref("Promise")}} який вирішується з заданим значенням.</p>
+
+<h2 id="Опис">Опис</h2>
+
+<p>Статична функція <code>Promise.resolve</code> повертає <code>Promise,</code> який є вирішеним.</p>
+
+<h2 id="Приклади">Приклади</h2>
+
+<h3 id="Використання_статичного_методу_Promise.resolve">Використання статичного методу <code>Promise.resolve</code></h3>
+
+<pre class="brush: js">Promise.resolve('Success').then(function(value) {
+  console.log(value); // "Success"
+}, function(value) {
+  // not called
+});
+</pre>
+
+<h3 id="Вирішення_проміса_масивом">Вирішення проміса масивом</h3>
+
+<pre class="brush: js">var p = Promise.resolve([1,2,3]);
+p.then(function(v) {
+  console.log(v[0]); // 1
+});
+</pre>
+
+<h3 id="Вирішення_проміса_іншим_промісом">Вирішення проміса іншим промісом</h3>
+
+<pre class="brush: js">var original = Promise.resolve(true);
+var cast = Promise.resolve(original);
+cast.then(function(v) {
+  console.log(v); // true
+});
+</pre>
+
+<h3 id="Вирішення_об'єктів_які_дозволяють_на_собі_викликати_метод_then_і_кидання_помилок">Вирішення об'єктів, які дозволяють на собі викликати метод then і кидання помилок</h3>
+
+<pre class="brush: js">// Вирішення об'єкта з можливістю викликати на собі метод then
+var p1 = Promise.resolve({ 
+  then: function(onFulfill, onReject) { onFulfill('fulfilled!'); }
+});
+console.log(p1 instanceof Promise) // true, об'єкт для Проміса створено
+
+p1.then(function(v) {
+    console.log(v); // "fulfilled!"
+  }, function(e) {
+    // не викликається
+});
+
+// Об'єкт thenable кидає помилку перед функцією callback
+// Проміс відхиляється
+var thenable = { then: function(resolve) {
+  throw new TypeError('Throwing');
+  resolve('Resolving');
+}};
+
+var p2 = Promise.resolve(thenable);
+p2.then(function(v) {
+  // не викликається
+}, function(e) {
+  console.log(e); // TypeError: Помилка
+});
+
+// Об'єкт thenable кидає помилку після функції callback
+// Проміс вирішується
+var thenable = { then: function(resolve) {
+  resolve('Resolving');
+  throw new TypeError('Throwing');
+}};
+
+var p3 = Promise.resolve(thenable);
+p3.then(function(v) {
+  console.log(v); // "Resolving"
+}, function(e) {
+  // не викликається
+});
+</pre>
+
+<h2 id="Специфікації">Специфікації</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Специфікація</th>
+   <th scope="col">Статус</th>
+   <th scope="col">Коментар</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-promise.resolve', 'Promise.resolve')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td>Початкове визначення в стандарті ECMA.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-promise.resolve', 'Promise.resolve')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Сумісність_із_браузерами">Сумісність із браузерами</h2>
+
+<p class="hidden">To contribute to this compatibility data, please write a pull request against this file: <a href="https://github.com/mdn/browser-compat-data/blob/master/javascript/promise.json">https://github.com/mdn/browser-compat-data/blob/master/javascript/promise.json</a>.</p>
+
+<p>{{Compat("javascript/promise","Promise.resolve")}}</p>
+
+<h2 id="Дивитися_також">Дивитися також</h2>
+
+<ul>
+ <li>{{jsxref("Promise")}}</li>
+</ul>

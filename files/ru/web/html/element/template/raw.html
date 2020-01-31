@@ -1,0 +1,169 @@
+<h2 id="Summary" name="Summary">Summary</h2>
+
+<p><span class="seoSummary"><strong><a href="/en-US/docs/Web/HTML">HTML</a> элемент &lt;template&gt; — </strong>это механизм для отложенного рендера клиентского контента, который не отображается во время загрузки, но может быть инициализирован при помощи JavaScript.</span></p>
+
+<p>Template можно представить себе как фрагмент контента, сохранённый для последующего использования в документе. Хотя парсер и обрабатывает содержимое элемента <strong><code>&lt;template&gt;</code> </strong>во время загрузки страницы, он делает это только чтобы убедиться в валидности содержимого; само содержимое при этом не отображается.</p>
+
+<ul class="htmlelt">
+ <li><dfn><a href="/en-US/docs/Web/HTML/Content_categories" title="HTML/Content_categories">Content categories</a></dfn> <a href="/en-US/docs/Web/HTML/Content_categories#Metadata_content">Metadata content</a>, <a href="/en-US/docs/Web/HTML/Content_categories#Flow_content">flow content</a>, <a href="/en-US/docs/Web/Guide/HTML/Content_categories#Phrasing_content">phrasing content</a>, script-supporting element</li>
+ <li><dfn>Permitted content</dfn> <a href="/en-US/docs/Web/HTML/Content_categories#Metadata_content">Metadata content</a>, <a href="/en-US/docs/Web/HTML/Content_categories#Flow_content">flow content, </a>any valid HTML content that is permitted to occur within the {{HTMLElement("ol")}}, {{HTMLElement("dl")}}, {{HTMLElement("figure")}}, {{HTMLElement("ruby")}}, {{HTMLElement("object")}}, {{HTMLElement("video")}}, {{HTMLElement("audio")}}, {{HTMLElement("table")}}, {{HTMLElement("colgroup")}}, {{HTMLElement("thead")}}, {{HTMLElement("tbody")}}, {{HTMLElement("tfoot")}}, {{HTMLElement("tr")}}, {{HTMLElement("fieldset")}}, {{HTMLElement("select")}}, {{HTMLElement("details")}} elements and {{HTMLElement("menu")}} whose <code>type</code> attribute is in popup menu state.</li>
+ <li><dfn>Tag omission</dfn> {{no_tag_omission}}</li>
+ <li><dfn>Permitted parent elements</dfn>{{HTMLElement("body")}}, {{HTMLElement("frameset")}}, {{HTMLElement("head")}} and {{HTMLElement("colgroup")}} without a <code>span</code> attribute</li>
+ <li><dfn>DOM interface</dfn> {{domxref("HTMLTemplateElement")}}</li>
+</ul>
+
+<h2 id="Attributes" name="Attributes">Атрибуты</h2>
+
+<p>Элемент может иметь<a href="/ru/docs/Web/HTML/Общие_атрибуты"> общие атрибуты</a>.</p>
+
+<p>Так же есть доступный только для чтения аттрибут <strong><code>content</code></strong>, который предоставляет доступ к содержимому шаблона. Проверка на наличие этого атрибута является распространённым способом определить, поддерживает ли браузер элемент <code><strong>&lt;template&gt;</strong></code>.</p>
+
+<h2 id="Example" name="Example">Примеры</h2>
+
+<p>Начнём с HTML.</p>
+
+<pre class="brush: html">&lt;table id="producttable"&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;td&gt;UPC_Code&lt;/td&gt;
+      &lt;td&gt;Product_Name&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;!-- existing data could optionally be included here --&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;template id="productrow"&gt;
+  &lt;tr&gt;
+    &lt;td class="record"&gt;&lt;/td&gt;
+    &lt;td&gt;&lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/template&gt; 
+</pre>
+
+<p>Для начала у нас есть таблица, в которую мы собираемся вставить содержимое с помощью Javascript кода. Затем следует шаблон, который описывает структуру HTML фрагмента представляющего одну строку таблицы</p>
+
+<p>Теперь, когда таблица была создана и шаблон определён, мы используем JavaScript чтобы вставить строки в таблицу. Каждая строка строится с использованием шаблона.</p>
+
+<pre class="brush:js;">// Проверяем поддерживает ли браузер тег &lt;template&gt;
+// проверив наличие аттрибута content у элемента template
+if ('content' in document.createElement('template')) {
+
+  // Instantiate the table with the existing HTML tbody and the row with the template
+  var t = document.querySelector('#productrow'),
+  td = t.content.querySelectorAll("td");
+  td[0].textContent = "1235646565";
+  td[1].textContent = "Stuff";
+
+  // клонируем новую строку и вставляем её в таблицу
+  var tb = document.getElementsByTagName("tbody");
+  var clone = document.importNode(t.content, true);
+  tb[0].appendChild(clone);
+  
+  // создаём новую строку
+  td[0].textContent = "0384928528";
+  td[1].textContent = "Acme Kidney Beans";
+
+ // клонируем новую строку и вставляем её в таблицу
+  var clone2 = document.importNode(t.content, true);
+  tb[0].appendChild(clone2);
+
+} else {
+  // необходимо найти другой способ добавить строку в таблицу т.к.
+  // тег &lt;template&gt; не поддерживатся браузером
+}
+</pre>
+
+<p>Как результат имеем HTML таблицу с двумя новыми строками добавленными с помощью JavaScript:</p>
+
+<div class="hidden">
+<pre class="brush: css">table {
+  background: #000;
+}
+table td {
+  background: #fff;
+}</pre>
+</div>
+
+<p>{{EmbedLiveSample("Example", 500, 120)}}</p>
+
+<h2 id="Specifications" name="Specifications">Спецификации</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Спецификация</th>
+   <th scope="col">Статус</th>
+   <th scope="col">Комментарий</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('HTML WHATWG','/scripting-1.html#the-template-element','template element')}}</td>
+   <td>{{Spec2('HTML WHATWG')}}</td>
+   <td>No change</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('HTML5 W3C','/scripting-1.html#the-template-element','template element')}}</td>
+   <td>{{Spec2('HTML5 W3C')}}</td>
+   <td>Initial definition</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">Browser compatibility</h2>
+
+<p>{{CompatibilityTable}}</p>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari (WebKit)</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>26</td>
+   <td>{{CompatGeckoDesktop("22")}}</td>
+   <td>{{CompatNo}}</td>
+   <td>15</td>
+   <td>7.1</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Phone</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>iOS 8</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="See_also" name="See_also">See also</h2>
+
+<ul>
+ <li>Web components: {{HTMLElement("content")}}, {{HTMLElement("shadow")}}</li>
+</ul>
+
+<div>{{HTMLRef}}</div>

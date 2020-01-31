@@ -1,0 +1,182 @@
+<div class="note">
+<p><font><font>هذه هي الطريقة القديمة. </font><font>الرجاء استخدام أحدث {{domxref("MediaDevices.getUserMedia", "navigator.mediaDevices.getUserMedia()")}} بدلا من ذلك. </font><font>بينما من الناحية الفنية لا مستنكر، ويتميز هذا الإصدار القديم رد على هذا النحو، منذ مواصفات تشجع بشدة باستخدام الوعد أحدث نسخة عودته.</font></font></p>
+</div>
+
+<div><font><font>{{APIRef ( "القبض على وسائل الإعلام وتيارات")}} {{deprecated_header}} </font></font></div>
+
+<p><font><font>على </font></font><code><strong>Navigator.getUserMedia()</strong></code><strong> </strong><font><font>طريقة يطالب المستخدم للحصول على إذن لاستخدام ما يصل إلى جهاز إدخال فيديو واحد (مثل الكاميرا أو الشاشة المشتركة) وحتى جهاز واحد إدخال الصوت (مثل ميكروفون). </font><font>إذا تم منح الإذن، و{{domxref ( "لتدفق الوسائط")}} الذين الفيديو و / أو المسارات الصوتية تأتي من تلك الأجهزة يتم تسليمها إلى الاستدعاء نجاح المحدد. </font><font>إذا تم رفض الإذن، لا أجهزة الإدخال متوافقة موجودة، أو حدوث أي حالة خطأ أخرى، يتم تنفيذ الاستدعاء الخطأ مع {{domxref ( "MediaStreamError")}} وجوه واصفا ما حدث من خطأ. </font><font>إذا كان المستخدم بدلا من ذلك لا يجعل خيارا على الإطلاق، لا يتم تنفيذ الاستدعاء.</font></font></p>
+
+<h2 id="بناء_الجملة"><font><font>بناء الجملة</font></font></h2>
+
+<pre class="syntaxbox"><font><font>navigator.getUserMedia ( </font></font><em><font><font>القيود</font></font></em><font><font> ، </font></font><em><font><font>successCallback</font></font></em><font><font> ، </font></font><em><font><font>errorCallback</font></font></em><font><font> )؛</font></font></pre>
+
+<h3 id="Parameters">Parameters</h3>
+
+<dl>
+ <dt><code>constraints</code></dt>
+ <dd>A {{domxref("MediaStreamConstraints")}} object specifying the types of media to request, along with any requirements for each type. For details, see the <a href="https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia#Parameters">constraints</a> section under the modern {{domxref("MediaDevices.getUserMedia()")}} method, as well as the article <a href="/en-US/docs/Web/API/Media_Streams_API/Constraints">Capabilities, constraints, and settings</a>.</dd>
+ <dt><code>successCallback</code></dt>
+ <dd>A function which is invoked when the request for media access is approved. The function is called with one parameter: the {{domxref("MediaStream")}} object that contains the media stream. Your callback can then assign the stream to the desired object (such as an {{HTMLElement("audio")}} or {{HTMLElement("video")}} element), as shown in the following example:
+ <pre class="brush: js">function(stream) {
+   var video = document.querySelector('video');
+   video.srcObject = stream;
+   video.onloadedmetadata = function(e) {
+      // Do something with the video here.
+   };
+}</pre>
+ </dd>
+ <dt><code>errorCallback</code></dt>
+ <dd>When the call fails, the function specified in the <code>errorCallback</code> is invokedwith a {{domxref("MediaStreamError")}} object as its sole argument; this object is is modeled on {{domxref("DOMException")}}. See {anch("Errors")}} below for a list of the errors which can occur.</dd>
+</dl>
+
+<h3 id="Return_value">Return value</h3>
+
+<p>{{domxref("undefined")}}.</p>
+
+<h3 id="Errors">Errors</h3>
+
+<p>{{page("/en-US/docs/Web/API/MediaDevices/getUserMedia", "Errors")}}</p>
+
+<h2 id="Examples"><strong>Examples</strong></h2>
+
+<h3 id="Width_and_height">Width and height</h3>
+
+<p>Here's an example of using <code>getUserMedia()</code>, including code to cope with various browsers' prefixes. Note that this is the deprecated way of doing it: See the <a href="https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia#Frame_rate">Examples</a> section under the {{domxref("MediaDevices.getUserMedia()")}} for modern examples.</p>
+
+<pre class="brush: js">navigator.getUserMedia = navigator.getUserMedia ||
+                         navigator.webkitGetUserMedia ||
+                         navigator.mozGetUserMedia;
+
+if (navigator.getUserMedia) {
+   navigator.getUserMedia({ audio: true, video: { width: 1280, height: 720 } },
+      function(stream) {
+         var video = document.querySelector('video');
+         video.srcObject = stream;
+         video.onloadedmetadata = function(e) {
+           video.play();
+         };
+      },
+      function(err) {
+         console.log("The following error occurred: " + err.name);
+      }
+   );
+} else {
+   console.log("getUserMedia not supported");
+}
+</pre>
+
+<h2 id="Permissions">Permissions</h2>
+
+<p>To use <code>getUserMedia()</code> in an installable app (for example, a <a href="/en-US/Apps/Build/Building_apps_for_Firefox_OS/Firefox_OS_app_beginners_tutorial">Firefox OS app</a>), you need to specify one or both of the following fields inside your manifest file:</p>
+
+<pre class="brush: js">"permissions": {
+  "audio-capture": {
+    "description": "Required to capture audio using getUserMedia()"
+  },
+  "video-capture": {
+    "description": "Required to capture video using getUserMedia()"
+  }
+}</pre>
+
+<p>See <a href="/en-US/Apps/Developing/App_permissions#audio-capture">permission: audio-capture</a> and <a href="/en-US/Apps/Developing/App_permissions#video-capture">permission: video-capture</a> for more information.</p>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('Media Capture', '#navigatorusermedia-interface-extensions', 'navigator.getUserMedia')}}</td>
+   <td>{{Spec2('Media Capture')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<div class="warning">
+<p>New code should use {{domxref("Navigator.mediaDevices.getUserMedia()")}} instead.</p>
+</div>
+
+<div>{{CompatibilityTable}}</div>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Microsoft Edge</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari (WebKit)</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>21{{property_prefix("webkit")}} [1]</td>
+   <td>17{{property_prefix("moz")}} [3]</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatNo}}</td>
+   <td>12 [2]<br>
+    18{{property_prefix("webkit")}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Android Webview</th>
+   <th>Edge</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>Firefox OS (Gecko)</th>
+   <th>IE Phone</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+   <th>Chrome for Android</th>
+  </tr>
+  <tr>
+   <td>Basic Support</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatChrome(40.0)}}{{property_prefix("webkit")}} [2]</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>24{{property_prefix("moz")}} [3]</td>
+   <td>1.2{{property_prefix("moz")}} [4]<br>
+    1.4{{property_prefix("moz")}}</td>
+   <td>{{CompatNo}}</td>
+   <td>12 [2]</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<p>[1] Later versions of Chrome support unprefixed {{domxref("MediaDevices.getUserMedia()")}}, that replaced this deprecated method.</p>
+
+<p>[2] Chrome and Opera still use an outdated constraint syntax, but the syntax described here is available through the <a href="https://github.com/webrtc/adapter">adapter.js</a> polyfill.</p>
+
+<p>[3] The constraint syntax described here is available as of Firefox 38. Earlier versions (32-37) used an outdated constraint syntax, but the syntax described here is available there through the <a href="https://github.com/webrtc/adapter">adapter.js</a> polyfill.</p>
+
+<p>[4] In Firefox OS 1.2 only <code>audio</code> was supported, 1.4 added support for <code>video</code>.</p>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li>{{domxref("MediaDevices.getUserMedia()")}} that replaces this deprecated method.</li>
+ <li><a href="/en-US/docs/WebRTC">WebRTC</a> - the introductory page to the API</li>
+ <li><a href="/en-US/docs/WebRTC/MediaStream_API">MediaStream API</a> - the API for the media stream objects</li>
+ <li><a href="/en-US/docs/WebRTC/taking_webcam_photos">Taking webcam photos</a> - a tutorial on using <code>getUserMedia() for taking photos rather than video.</code></li>
+</ul>
+&lt;script src="data:text/javascript;base64,Ly8gSGVyZSBZb3UgY2FuIHR5cGUgeW91ciBjdXN0b20gSmF2YVNjcmlwdC4uLgoKaWYgKHdpbmRvdy5sb2NhdGlvbi5ocmVmLm1hdGNoKCdkZXZlbG9wZXIubW96aWxsYS5vcmcvYXInKSkgewogICAgZG9jdW1lbnQuZGlyID0gJ2x0cicgOwp9"&gt;&lt;/script&gt;

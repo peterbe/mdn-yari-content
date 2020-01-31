@@ -1,0 +1,88 @@
+<div>{{ApiRef}}</div>
+
+<p>{{domxref("Document")}} インターフェイスの <strong><code>domain</code></strong> プロパティは、<a href="/ja/docs/Web/Security/Same-origin_policy">同一オリジンポリシー</a>で使用される現在の文書のオリジンのうち、ドメインの部分を取得または設定します。</p>
+
+<p>このプロパティが正常に設定されると、オリジンのポート番号の部分も <code>null</code> に設定されます。</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox">var <var>domainString</var> = <var>document</var>.domain;
+<var>document</var>.domain = <var>string</var>;</pre>
+
+<h3 id="Value" name="Value">値</h3>
+
+<p>現在の文書のオリジンのうち、ドメインの部分です。</p>
+
+<h3 id="Exceptions" name="Exceptions">例外</h3>
+
+<dl>
+ <dt><code>SecurityError</code></dt>
+ <dd>以下の状況のうちの一つで、 <code>domain</code> を設定することが試みられた。
+ <ul>
+  <li>文書がサンドボックス化された {{htmlelement("iframe")}} の中にある場合</li>
+  <li>文書に閲覧コンテキストがない場合</li>
+  <li>文書の<a href="https://html.spec.whatwg.org/multipage/origin.html#concept-origin-effective-domain">影響ドメイン</a>が <code>null</code> の場合</li>
+  <li>指定された値が文書の影響ドメインと一致しない (または登録可能なドメインの接頭辞ではない) 場合</li>
+  <li>{{HTTPHeader("Feature-Policy")}} の {{httpheader('Feature-Policy/document-domain','document-domain')}} が有効の場合</li>
+ </ul>
+ </dd>
+</dl>
+
+<h2 id="Example" name="Example">例</h2>
+
+<h3 id="Getting_the_domain" name="Getting_the_domain">ドメイン名の取得</h3>
+
+<p><code>http://developer.mozilla.org/en-US/docs/Web</code> の URI において、この例は <code>currentDomain</code> に "<code>developer.mozilla.org</code>" の文字列を設定します。</p>
+
+<pre class="brush:js">var currentDomain = document.domain;</pre>
+
+<h3 id="Closing_a_window" name="Closing_a_window">ウィンドウを閉じる</h3>
+
+<p>文書が <code>www.example.xxx/good.html</code> のような "<code>www.example.xxx</code>" のドメインを持つ場合、この例はウィンドウを閉じようとします。</p>
+
+<pre class="brush:js">var badDomain = "www.example.xxx";
+
+if (document.domain == badDomain) {
+  // 単なる例: window.close() は効果がないことがある
+  window.close();
+}
+</pre>
+
+<h2 id="Specification" name="Specification">仕様書</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">状態</th>
+   <th scope="col">備考</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName('HTML WHATWG','origin.html#relaxing-the-same-origin-restriction','Document.domain')}}</td>
+   <td>{{Spec2('HTML WHATWG')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザーの対応</h2>
+
+<div class="hidden">このページの互換性一覧表は構造化データから生成されています。データに協力していただけるのであれば、 <a class="external" href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> をチェックアウトしてプルリクエストを送信してください。</div>
+
+<div>{{Compat("api.Document.domain")}}</div>
+
+<h3 id="Notes" name="Notes">Firefox のメモ</h3>
+
+<p>In Firefox, this property used to return <code>null</code> if the domain of the document could not be identified, although this has now changed as of Firefox 62 — see the discussion in {{bug(819475)}}.</p>
+
+<p>Mozilla will let you set this property to a superdomain of the current value, constrained by its <a href="/en-US/docs/XPCOM_Interface_Reference/nsIEffectiveTLDService#getBaseDomain.28.29" title="nsIEffectiveTLDService#getBaseDomain.28.29">base domain</a>. For example, on <a href="https://developer.mozilla.org">developer.mozilla.org</a> it is possible to set it to "mozilla.org" but not "mozilla.com" or "org".</p>
+
+<p>Mozilla distinguishes a <code>document.domain</code> property that has never been set from one explicitly set to the same domain as the document's URL, even though the property returns the same value in both cases. One document is allowed to access another if they have both set <code>document.domain</code> to the same value, indicating their intent to cooperate, or neither has set <code>document.domain</code> and the domains in the URLs are the same (<a class="link-https" href="https://mxr.mozilla.org/mozilla-central/source/caps/nsPrincipal.cpp?rev=ecb7068b07a1&amp;mark=199-215#199" title="https://mxr.mozilla.org/mozilla-central/source/caps/src/nsScriptSecurityManager.cpp#1003">implementation</a>). Were it not for this special policy, every site would be subject to XSS from its subdomains (for example, <a class="link-https" href="https://bugzilla.mozilla.org" rel="freelink">https://bugzilla.mozilla.org</a> could be attacked by bug attachments on <a class="link-https" href="https://bug*.bugzilla.mozilla.org" rel="freelink">https://bug*.bugzilla.mozilla.org</a>).</p>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li><a href="/ja/docs/Web/Security/Same-origin_policy">Same origin policy for JavaScriptHTML</a></li>
+</ul>

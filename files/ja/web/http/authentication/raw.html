@@ -1,0 +1,114 @@
+<p>{{HTTPSidebar}}</p>
+
+<p class="summary">HTTP はアクセス制御と認証の基本的な枠組みを提供しています。最も一般的な HTTP 認証は、 "Basic" 認証に基づいています。このページでは、 HTTP の認証の枠組みを紹介し、サーバーで HTTP の "Basic" 認証を使用してアクセスを制限する方法を紹介します。</p>
+
+<h2 id="The_general_HTTP_authentication_framework" name="The_general_HTTP_authentication_framework">一般的な HTTP 認証の枠組み</h2>
+
+<p>{{RFC("7235")}} は、サーバがクライアント要求を {{glossary("challenge")}} し、クライアントが認証情報を提供するために使用できる HTTP 認証フレームワークを定義します。 チャレンジとレスポンスの流れは以下のようになります：サーバは少なくとも１回目の challenge でクライアントに {{HTTPStatus("401")}} (Unauthorized) レスポンスステータスを返し、{{HTTPHeader("WWW-Authenticate")}} レスポンスヘッダーを含めて認証方法を提供します。サーバで自身を認証したいクライアントは {{HTTPHeader("Authorization")}} リクエストヘッダフィールドにクレデンシャルを含めることでそれを行うことができます。通常、クライアントはユーザーにパスワードのプロンプトを表示し、正しい Authorization ヘッダーを含むリクエストを発行します。</p>
+
+<p><img alt="A sequence diagram illustrating HTTP messages between a client and a server lifeline." src="https://mdn.mozillademos.org/files/14689/HTTPAuth.png" style="height: 335px; width: 710px;" title="Sequence Diagram of Client-server HTTP Authentication"></p>
+
+<p>図に示すような "Basic" 認証の場合、やり取りを安全に行うためにHTTPS (TLS) 接続を介して<strong>行われなければなりません</strong>。</p>
+
+<h3 id="Proxy_authentication" name="Proxy_authentication">プロキシ認証</h3>
+
+<p>プロキシ認証にも同じチャレンジとレスポンスのメカニズムを使用できます。この場合、認証を必要とする中間プロキシです。リソース認証とプロキシ認証の両方が共存できるため、異なるヘッダーとステータスコードのセットが必要です。プロキシの場合、チャレンジしているステータスコードは {{HTTPStatus("407")}} (Proxy Authentication Required) で、{{HTTPHeader("Proxy-Authenticate")}} レスポンスヘッダは プロキシサーバーに資格情報を提供するために、{{HTTPHeader("Proxy-Authorization")}} リクエストヘッダーが使用されます。</p>
+
+<h3 id="Access_forbidden" name="Access_forbidden">アクセスの不許可</h3>
+
+<p>特定のリソースにアクセスするのに十分ではないが有効な資格情報を (プロキシ) サーバーが受け取った場合、サーバーは {{HTTPStatus("403")}} <code>Forbidden</code> ステータスコードでレスポンスする必要があります。{{HTTPStatus("401")}} <code>Unauthorized</code> または {{HTTPStatus("407")}} <code>Proxy Authentication Required</code> とは異なり、このユーザーは認証できません。</p>
+
+<h3 id="Authentication_of_cross-origin_images" name="Authentication_of_cross-origin_images">オリジン間の画像の認証</h3>
+
+<p>ブラウザによって最近修正された潜在的なセキュリティホールは、クロスサイトイメージの認証です。<a href="/ja/docs/Mozilla/Firefox/Releases/59">Firefox 59</a> 以降、異なるオリジンから現在のドキュメントにロードされた画像リソースは、HTTP認証ダイアログ ({{bug(1423146)}}) をトリガすることができなくなり、攻撃者が任意の画像をサードパーティ製のページに埋め込んでユーザの認証情報を盗むことを防ぎます。</p>
+
+<h3 id="Character_encoding_of_HTTP_authentication" name="Character_encoding_of_HTTP_authentication">HTTP 認証の文字エンコーディング</h3>
+
+<p>ブラウザはユーザー名とパスワードに <code>utf-8</code> エンコーディングを使用します。Firefox は  <code>ISO-8859-1</code> を使用していましたが、他のブラウザとの互換性のために <code>utf-8</code> に変更され、 {{bug(1419658)}} で説明されているような潜在的な問題を回避します。</p>
+
+<h3 id="WWW-Authenticate_and_Proxy-Authenticate_headers" name="WWW-Authenticate_and_Proxy-Authenticate_headers"><code>WWW-Authenticate</code> 及び <code>Proxy-Authenticate</code> ヘッダー</h3>
+
+<p>{{HTTPHeader("WWW-Authenticate")}} と {{HTTPHeader("Proxy-Authenticate")}} レスポンスヘッダーは、リソースへのアクセスに使用する認証メソッドを定義します。 どの認証方式を使用するかを指定する必要があるため、認証を希望するクライアントは資格情報の提供方法を知ることができます。 これらのヘッダーの構文は次のとおりです。</p>
+
+<pre class="syntaxbox">WWW-Authenticate: &lt;type&gt; realm=&lt;realm&gt;
+Proxy-Authenticate: &lt;type&gt; realm=&lt;realm&gt;
+</pre>
+
+<p>ここで、<code>&lt;type&gt;</code> は認証スキームです ("Basic" は最も一般的なスキームであり、<a href="/ja/docs/Web/HTTP/Authentication#Basic_authentication_scheme">以下で紹介</a>します)。realm は保護された領域を記述するため、または保護の範囲を示すために使用されます。これは、「ステージングサイトへのアクセス」などのようなメッセージで、ユーザーがアクセスしようとしているスペースを知ることができます。</p>
+
+<h3 id="Authorization_and_Proxy-Authorization_headers" name="Authorization_and_Proxy-Authorization_headers"><code>Authorization</code> 及び <code>Proxy-Authorization</code> ヘッダー</h3>
+
+<p>{{HTTPHeader("Authorization")}} と {{HTTPHeader("Proxy-Authorization")}} リクエストヘッダーには、(プロキシ) サーバを持つ User agent を認証するための認証情報が含まれています。ここでは、タイプが再び必要となり、その後にどの認証方式が使用されるかに応じて符号化または暗号化されることができるクレデンシャルが続きます。</p>
+
+<pre class="syntaxbox">Authorization: &lt;type&gt; &lt;credentials&gt;
+Proxy-Authorization: &lt;type&gt; &lt;credentials&gt;
+</pre>
+
+<h3 id="Authentication_schemes" name="Authentication_schemes">認証方式</h3>
+
+<p>一般的な HTTP 認証フレームワークは、いくつかの認証方式によって使用されます。スキームはセキュリティ強度とクライアント、またはサーバーソフトウェアでの可用性が異なる場合があります。</p>
+
+<p>最も一般的な認証方式は "Basic" 認証方式であり、これについては以下で詳しく説明します。IANA は<a href="https://www.iana.org/assignments/http-authschemes/http-authschemes.xhtml">認証スキームのリスト</a>を管理していますが、Amazon AWS などのホストサービスが提供する他のスキームもあります。一般的な認証方式には次のものがあります。</p>
+
+<ul>
+ <li><strong>Basic</strong> ({{rfc(7617)}}、base64 でコード化された認証情報を参照),</li>
+ <li><strong>Bearer</strong> ({{rfc(6750)}}、OAuth 2.0 で保護されたリソースにアクセスするベアラトークンを参照),</li>
+ <li><strong>Digest</strong> ({{rfc(7616)}}を参照、Firefox では md5 ハッシュだけがサポートされています。SHA 暗号化のサポートについては {{bug(472823)}} を参照),</li>
+ <li><strong>HOBA</strong> ({{rfc(7486)}} (ドラフト) を参照、HTTPオリジン認証 (<strong>H</strong>TTP <strong>O</strong>rigin-<strong>B</strong>ound <strong>A</strong>uthentication)、デジタル署名ベース),</li>
+ <li><strong>Mutual</strong> (<a href="https://tools.ietf.org/html/draft-ietf-httpauth-mutual-11">draft-ietf-httpauth-mutual</a> を参照),</li>
+ <li>
+  <p><strong>AWS4-HMAC-SHA256</strong> (<a href="http://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-auth-using-authorization-header.html">AWS docs</a> を参照).</p>
+ </li>
+</ul>
+
+<h2 id="Basic_authentication_scheme" name="Basic_authentication_scheme">Basic 認証方式</h2>
+
+<p>"Basic" HTTP 認証方式は {{rfc(7617)}} で定義されており、Base64 を使用してエンコードされたユーザー ID とパスワードのペアとしてクレデンシャルを送信します。</p>
+
+<h3 id="Security_of_basic_authentication" name="Security_of_basic_authentication">Basic 認証の安全性</h3>
+
+<p>ユーザーIDとパスワードはネットワークを介してクリアテキスト (base64 でエンコードされていますが、base64 は可逆エンコードです) として渡されるため、Basic 認証方式は安全ではありません。 HTTPS/TLSは Basic 認証と組み合わせて使用する必要があります。 これらの追加のセキュリティ強化機能がなければ、機密情報や重要な情報を保護するために Basic 認証を使用しないでください。</p>
+
+<h3 id="Restricting_access_with_Apache_and_basic_authentication" name="Restricting_access_with_Apache_and_basic_authentication">Apache 及び Basic 認証によるアクセス制限</h3>
+
+<p>Apache サーバー上のディレクトリをパスワードで保護するには、<code>.htaccess</code> ファイルと <code>.htpasswd</code> ファイルが必要です。</p>
+
+<p><code>.htaccess</code> ファイルは通常、次のようになります。</p>
+
+<pre>AuthType Basic
+AuthName "Access to the staging site"
+AuthUserFile /path/to/.htpasswd
+Require valid-user</pre>
+
+<p><code>.htaccess</code> ファイルは <code>.htpasswd</code> ファイルを参照し、各行にはユーザ名とパスワードをコロン (":") で区切って記述します。実際のパスワードは<a href="https://httpd.apache.org/docs/2.4/misc/password_encryptions.html">暗号化されている</a> (この場合は md5) ので表示できません。必要に応じて <code>.htpasswd</code> ファイルの名前を変更することができますが、このファイルには誰にもアクセスできないように注意してください。(Apacheは通常 <code>.ht*</code> ファイルへのアクセスを禁止するように設定されています)。</p>
+
+<pre>aladdin:$apr1$ZjTqBB3f$IF9gdYAGlMrs2fuINjHsz.
+user2:$apr1$O04r.y2H$/vEkesPhVInBByJUkXitA/
+</pre>
+
+<h3 id="Restricting_access_with_nginx_and_basic_authentication" name="Restricting_access_with_nginx_and_basic_authentication">nginx 及び Basic 認証によるアクセス制限</h3>
+
+<p>nginx の場合は、保護する場所とパスワードで保護された領域に名前を指定する <code>auth_basic</code> ディレクティブを指定する必要があります。<code>auth_basic_user_file</code> ディレクティブは上の Apache の例のように、暗号化されたユーザー資格情報を含む .htpasswd ファイルを指します。</p>
+
+<pre>location /status {                                       
+    auth_basic           "Access to the staging site";
+    auth_basic_user_file /etc/apache2/.htpasswd;
+}</pre>
+
+<h3 id="Access_using_credentials_in_the_URL" name="Access_using_credentials_in_the_URL">URL 内の認証情報を使用したアクセス</h3>
+
+<p>多くのクライアントでは次のように、ユーザー名とパスワードを含むエンコードされた URL を使用してログインプロンプトを回避できます。</p>
+
+<pre class="example-bad">https://username:password@www.example.com/</pre>
+
+<p><strong>これらのURLの使用は推奨されていません。</strong>Chrome ではセキュリティ上の理由から、URL の <code>username:password@</code> 部分も<a href="https://bugs.chromium.org/p/chromium/issues/detail?id=82250#c7">削除されています</a>。Firefox ではサイトが実際に認証を要求するかどうかをチェックし、そうでない場合 Firefox はユーザーに「"username" というユーザー名で "www.example.com" というサイトにログインしようとしていますが、ウェブサイトは認証を必要としません。これはあなたを騙そうとしている可能性があります。」と警告します。</p>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li>{{HTTPHeader("WWW-Authenticate")}}</li>
+ <li>{{HTTPHeader("Authorization")}}</li>
+ <li>{{HTTPHeader("Proxy-Authorization")}}</li>
+ <li>{{HTTPHeader("Proxy-Authenticate")}}</li>
+ <li>{{HTTPStatus("401")}}, {{HTTPStatus("403")}}, {{HTTPStatus("407")}}</li>
+</ul>

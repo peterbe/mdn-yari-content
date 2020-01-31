@@ -1,0 +1,191 @@
+<div>{{HTTPSidebar}}</div>
+
+<p><strong>콘텐츠 보안 정책</strong><sup>Content Security Policy </sup>({{Glossary("CSP")}})을 설정하는 것은 어떤 정책을 실행하게 할 것인지를 결정하는 것을 포함하고 이런 정책 실행 부분을 Content-Security-Policy 헤더를 사용해서 정책을 실행하게 설정하는 것입니다.</p>
+
+<p>CSP는 이전 버전과 호환되도록 설계되었습니다 (이전 버전과의 호환이 되지 않음을 명시한 CSP 버전 2는 제외됩니다; <a href="https://www.w3.org/TR/CSP2">여기</a>에서 1.1 섹션의 자세한 내용을 볼 수 있습니다). Browsers that don't support it still work with servers that implement it, and vice-versa: browsers that don't support CSP simply ignore it, functioning as usual, defaulting to the standard same-origin policy for web content. If the site doesn't offer the CSP header, browsers likewise use the standard <a href="https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy" title="En/Same origin policy for JavaScript">same-origin policy</a>.</p>
+
+<p>To enable CSP, you need to configure your web server to return the {{HTTPHeader("Content-Security-Policy")}} HTTP header (sometimes you will see mentions of the <code>X-Content-Security-Policy</code> header, but that's an older version and you don't need to specify it anymore).</p>
+
+<p>Alternatively, the {{HTMLElement("meta")}} element can be used to configure a policy, for example: <code>&lt;meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src https://*; child-src 'none';"&gt;</code></p>
+
+<h2 id="위험_요소">위험 요소</h2>
+
+<h3 id="사이트_간_스크립팅_완화">사이트 간 스크립팅 완화</h3>
+
+<p>A primary goal of CSP is to mitigate and report XSS attacks. XSS attacks exploit the browser's trust of the content received from the server. Malicious scripts are executed by the victim's browser because the browser trusts the source of the content, even when it's not coming from where it seems to be coming from.</p>
+
+<p>CSP makes it possible for server administrators to reduce or eliminate the vectors by which XSS can occur by specifying the domains that the browser should consider to be valid sources of executable scripts. A CSP compatible browser will then only execute scripts loaded in source files received from those whitelisted domains, ignoring all other script (including inline scripts and event-handling HTML attributes).</p>
+
+<p>As an ultimate form of protection, sites that want to never allow scripts to be executed can opt to globally disallow script execution.</p>
+
+<h3 id="패킷_분석_공격_완화">패킷 분석 공격 완화</h3>
+
+<p>In addition to restricting the domains from which content can be loaded, the server can specify which protocols are allowed to be used; for example (and ideally, from a security standpoint), a server can specify that all content must be loaded using HTTPS. A complete data transmission security strategy includes not only enforcing HTTPS for data transfer, but also marking all <a href="/en-US/docs/Web/HTTP/Cookies">cookies with the secure flag</a> and providing automatic redirects from HTTP pages to their HTTPS counterparts. Sites may also use the {{HTTPHeader("Strict-Transport-Security")}} HTTP header to ensure that browsers connect to them only over an encrypted channel<strong>.</strong></p>
+
+<h2 id="CSP_사용하기">CSP 사용하기</h2>
+
+<p>Configuring Content Security Policy involves adding the {{HTTPHeader("Content-Security-Policy")}} HTTP header to a web page and giving it values to control resources the user agent is allowed to load for that page. For example, a page that uploads and displays images could allow images from anywhere, but restrict a form action to a specific endpoint. A properly designed Content Security Policy helps protect a page against a cross site scripting attack. This article explains how to construct such headers properly, and provides examples.</p>
+
+<h3 id="정책_지정">정책 지정</h3>
+
+<p>You can use the {{HTTPHeader("Content-Security-Policy")}} HTTP header to specify your policy, like this:</p>
+
+<pre class="syntaxbox">Content-Security-Policy: <em>policy</em></pre>
+
+<p>The policy is a string containing the policy directives describing your Content Security Policy.</p>
+
+<h3 id="정책_작성">정책 작성</h3>
+
+<p>A policy is described using a series of policy directives, each of which describes the policy for a certain resource type or policy area. Your policy should include a {{CSP("default-src")}} policy directive, which is a fallback for other resource types when they don't have policies of their own (for a complete list, see the description of the {{CSP("default-src")}} directive). A policy needs to include a {{CSP("default-src")}} or {{CSP("script-src")}} directive to prevent inline scripts from running, as well as blocking the use of <code>eval()</code>. A policy needs to include a {{CSP("default-src")}} or {{CSP("style-src")}} directive to restrict inline styles from being applied from a {{HTMLElement("style")}} element or a <code>style</code> attribute.</p>
+
+<h2 id="일반적인_사용_예시">일반적인 사용 예시</h2>
+
+<p>웹 사이트를 위한 보안 정책을 사용하기 위해서 공통적인 시나리오들이 있습니다. 여기서 몇몇 예를 살펴보겠습니다.</p>
+
+<h3 id="예제_1">예제 1</h3>
+
+<p>웹사이트의 관리자가 모든 웹 사이트 내의 콘텐츠는 사이트와 같은 도메인에서 제공하게하려고 한다. 단, 서브도메인은 제외:</p>
+
+<pre class="syntaxbox">Content-Security-Policy: default-src 'self'
+</pre>
+
+<h3 id="예제_2">예제 2</h3>
+
+<p>웹 사이트 관리자가 모든 콘텐츠에 대해 신뢰하는 도메인과 그 서브 도메인에게 허용하려 한다.</p>
+
+<pre class="syntaxbox">Content-Security-Policy: default-src 'self' *.mydomain.com
+</pre>
+
+<h3 id="예제_3">예제 3</h3>
+
+<p>웹 사이트 관리자가 웹 애플리케이션의 사용자가 어느 도메인에서라도 이미지를 웹 콘텐츠에 포함하기를 원하지만 오디오나 비디오는 신뢰하는 도메인만으로 제한하고 모든 스크립트는 신뢰할 수 있는 코드를 호스팅하는 특정 서버만 포함 시키려 한다.</p>
+
+<pre class="syntaxbox">Content-Security-Policy: default-src 'self'; img-src *; media-src media1.com media2.com; script-src userscripts.example.com
+</pre>
+
+<p>이것은 기본적으로 콘텐츠는 문서가 있는 원래 호스트에서만 허용된다. 아래와 같은 예외를 포함하고 있다.:</p>
+
+<ul>
+ <li>이미지들은 어디서나 다운로드 될 수 있다. ( img-src에 "*" 로 표시).</li>
+ <li>미디어는 media1.com 와 media2.com 에서만 허용한다 ( 그리고 이들 호스트의 서브도메인은 제외한다).</li>
+ <li>실행 가능한 스크립트는 오로지 userscripts.example.com에서만 허용한다.</li>
+</ul>
+
+<h3 id="예제_4">예제 4</h3>
+
+<p>온라인 뱅킹 사이트의 관리자가 사용자의 사이트 접속시 공격자가 내용을 엳듣는 것을 방지하기 위해서, 사이트의 모든 콘텐츠가 SSL을 사용해서 전달되도록 하기를 원한다면 다음과 같습니다.</p>
+
+<pre class="syntaxbox">Content-Security-Policy: default-src https://onlinebanking.jumbobank.com
+</pre>
+
+<p>기본 콘텐츠가 전달되는 곳은 지정된 <span style="line-height: inherit;">onlinebanking.jumbobank.com 가 </span><span style="line-height: inherit;">HTTPS를 통해서만 사용하도록 정하고 있다.</span></p>
+
+<h3 id="예제_5">예제 5</h3>
+
+<p>웹 메일 사이트의 관리자가 이메일 안의 HTML을 사용하게 하려하고 이미지는 어느 서버에서나 적재할 수 있지만 Javascript 혹은 다른 잠재적이고 위험한 콘텐츠가 아닌 곳에서는 허용하지 않는다.</p>
+
+<pre class="syntaxbox">Content-Security-Policy: default-src 'self' *.mailsite.com; img-src *
+</pre>
+
+<p>이 예제는 CSP에 <a href="/en/Security/CSP/CSP_policy_directives#script-src" style="line-height: inherit;" title="en/Security/CSP/CSP policy directives#script-src"><code style="font-size: 14px;">script-src</code></a><span style="line-height: inherit;">;를 이용하지 않았지만 이 사이트는</span> {{CSP("default-src")}} 디렉티브에 명시되어 설정된다. 이 의미는 스크립트들은 콘텐츠가 적재된 원래 서버에서만 적재될 수 있다는 의미이다.</p>
+
+<h2 id="정책_테스트">정책 테스트</h2>
+
+<p>To ease deployment, CSP can be deployed in report-only mode. The policy is not enforced, but any violations are reported to a provided URI. Additionally, a report-only header can be used to test a future revision to a policy without actually deploying it.</p>
+
+<p>You can use the {{HTTPHeader("Content-Security-Policy-Report-Only")}} HTTP header to specify your policy, like this:</p>
+
+<pre>Content-Security-Policy-Report-Only: <em>policy</em> 
+</pre>
+
+<p>If both a {{HTTPHeader("Content-Security-Policy-Report-Only")}} header and a {{HTTPHeader("Content-Security-Policy")}} header are present in the same response, both policies are honored. The policy specified in <code>Content-Security-Policy</code> headers is enforced while the <code>Content-Security-Policy-Report-Only</code> policy generates reports but is not enforced.</p>
+
+<h2 id="위반사항_보고하기">위반사항 보고하기</h2>
+
+<p>By default, violation reports aren't sent. To enable violation reporting, you need to specify the {{CSP("report-uri")}} policy directive, providing at least one URI to which to deliver the reports:</p>
+
+<pre class="syntaxbox">Content-Security-Policy: default-src 'self'; report-uri http://reportcollector.example.com/collector.cgi</pre>
+
+<p>Then you need to set up your server to receive the reports; it can store or process them in whatever manner you feel is appropriate.</p>
+
+<h2 id="위반_보고_구문">위반 보고 구문</h2>
+
+<p>The report JSON object contains the following data:</p>
+
+<dl>
+ <dt><code>blocked-uri</code></dt>
+ <dd>The URI of the resource that was blocked from loading by the Content Security Policy. If the blocked URI is from a different origin than the document-uri, then the blocked URI is truncated to contain just the scheme, host, and port.</dd>
+</dl>
+
+<dl>
+ <dt><code>disposition</code></dt>
+ <dd>Either <code>"enforce"</code> or <code>"reporting"</code> depending on whether the {{HTTPHeader("Content-Security-Policy-Report-Only")}} header or the <code>Content-Security-Policy</code> header is used.</dd>
+ <dt><code>document-uri</code></dt>
+ <dd>The URI of the document in which the violation occurred.</dd>
+ <dt><code>effective-directive</code></dt>
+ <dd>The directive whose enforcement caused the violation.</dd>
+ <dt><code>original-policy</code></dt>
+ <dd>The original policy as specified by the <code>Content-Security-Policy</code> HTTP header.</dd>
+ <dt><code>referrer</code></dt>
+ <dd>The referrer of the document in which the violation occurred.</dd>
+ <dt><code>script-sample</code></dt>
+ <dd>The first 40 characters of the inline script, event handler, or style that caused the violation.</dd>
+ <dt><code>status-code</code></dt>
+ <dd>The HTTP status code of the resource on which the global object was instantiated.</dd>
+ <dt><code>violated-directive</code></dt>
+ <dd>The name of the policy section that was violated.</dd>
+</dl>
+
+<h2 id="위반_보고_예제">위반 보고 예제</h2>
+
+<div>Let's consider a page located at <code><a class="external" href="http://example.com/signup.html" rel="freelink">http://example.com/signup.html</a></code>. It uses the following policy, disallowing everything but stylesheets from <code>cdn.example.com</code>.</div>
+
+<div>
+<pre class="syntaxbox">Content-Security-Policy: default-src 'none'; style-src cdn.example.com; report-uri /_/csp-reports</pre>
+</div>
+
+<div>The HTML of <code>signup.html</code> looks like this:</div>
+
+<pre class="brush: html">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+  &lt;head&gt;
+    &lt;title&gt;Sign Up&lt;/title&gt;
+    &lt;link rel="stylesheet" href="css/style.css"&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    ... Content ...
+  &lt;/body&gt;
+&lt;/html&gt;</pre>
+
+<div>Can you spot the mistake? Stylesheets are only allowed to be loaded from <code>cdn.example.com</code>, yet the website tries to load one from its own origin (<code>http://example.com</code>). A browser capable of enforcing CSP will send the following violation report as a POST request to <code><a href="http://example.com/_/csp-reports" rel="freelink">http://example.com/_/csp-reports</a></code>, when the document is visited:</div>
+
+<pre>{
+  "csp-report": {
+    "document-uri": "http://example.com/signup.html",
+    "referrer": "",
+    "blocked-uri": "http://example.com/css/style.css",
+    "violated-directive": "style-src cdn.example.com",
+    "original-policy": "default-src 'none'; style-src cdn.example.com; report-uri /_/csp-reports"
+  }
+}</pre>
+
+<p>As you can see, the report includes the full path to the violating resource in <code>blocked-uri</code>. This is not always the case. For example, when the <code>signup.html</code> would attempt to load CSS from <a href="http://anothercdn.example.com/stylesheet.css"><code>http://anothercdn.example.com/stylesheet.css</code></a>, the browser would <em>not</em> include the full path but only the origin (<code>http://anothercdn.example.com</code>). The CSP specification <a href="http://www.w3.org/TR/CSP/#security-violation-reports">gives an explanation</a> of this odd behaviour. In summary, this is done to prevent leaking sensitive information about cross-origin resources.</p>
+
+<h2 id="브라우저_호환성">브라우저 호환성</h2>
+
+<p class="hidden">The compatibility table in this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</p>
+
+<p>{{Compat("http.headers.csp")}}</p>
+
+<p>A specific incompatibility exists in some versions of the Safari web browser, whereby if a Content Security Policy header is set, but not a Same Origin header, the browser will block self-hosted content and off-site content, and incorrectly report that this is due to a the Content Security Policy not allowing the content.</p>
+
+<h2 id="같이_보기">같이 보기</h2>
+
+<ul>
+ <li>{{HTTPHeader("Content-Security-Policy")}}</li>
+ <li>{{HTTPHeader("Content-Security-Policy-Report-Only")}}</li>
+ <li><a href="/en-US/docs/Mozilla/Add-ons/WebExtensions/Content_Security_Policy">Content Security in WebExtensions</a></li>
+ <li>
+  <p><a href="/en-US/docs/Tools/GCLI/Display_security_and_privacy_policies">Display security and privacy policies In Firefox Developer Tools</a></p>
+ </li>
+</ul>

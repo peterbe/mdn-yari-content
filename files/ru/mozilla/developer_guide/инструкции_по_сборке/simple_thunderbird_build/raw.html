@@ -1,0 +1,138 @@
+<p>Эта страница охватывает базовые шаги, необходимые по сборке конечной  разрабатываемой версии Thunderbird. Для дополнительной, более детальной информации, смотрите <a href="/En/Developer_Guide/Build_Instructions">документацию по сборке</a>.</p>
+
+<h2 id="Требования_к_сборке">Требования к сборке</h2>
+
+<h4 id="Требования_к_характеристикам_компьютера">Требования к характеристикам компьютера:</h4>
+
+<ul>
+ <li>Рекомендовано: 4Гб ОЗУ (имея только 2Гб ОЗУ и 2Гб свап могут возникнуть ошибки при компиляции)</li>
+ <li>Высокоскоростной интернет</li>
+</ul>
+
+<h4 id="Подготовка">Подготовка:</h4>
+
+<p>В зависимости от вашей операционной системы вам нужно выполнить разные процессы по подготовке вашей машины. Сперва выполните инструкции для вашей ОС и затем следуйте этим инструкциям по сборке. Пожалуйста обратите внимание при сборке на <span style="line-height: 1.572;"> Linux/MacOS  следует игнорировать bootstrap скрипты  при клонировании</span><span style="line-height: 1.572;"> mozilla-central репозитория и обратиться к этому документу.</span></p>
+
+<p><a href="https://developer.mozilla.org/ru/docs/Developer_Guide/%D0%98%D0%BD%D1%81%D1%82%D1%80%D1%83%D0%BA%D1%86%D0%B8%D0%B8_%D0%BF%D0%BE_%D1%81%D0%B1%D0%BE%D1%80%D0%BA%D0%B5/Windows_%D0%BA%D0%BE%D0%BC%D0%BF%D0%BE%D0%BD%D0%B5%D0%BD%D1%82%D1%8B">подготовка к сборке на Windows [ru-RU]</a><a href="https://developer.mozilla.org/ru/docs/Developer_Guide/%D0%98%D0%BD%D1%81%D1%82%D1%80%D1%83%D0%BA%D1%86%D0%B8%D0%B8_%D0%BF%D0%BE_%D1%81%D0%B1%D0%BE%D1%80%D0%BA%D0%B5/Windows_%D0%BA%D0%BE%D0%BC%D0%BF%D0%BE%D0%BD%D0%B5%D0%BD%D1%82%D1%8B" title="/en-US/docs/Developer_Guide/Build_Instructions/Windows_Prerequisites"> </a></p>
+
+<p><a href="https://developer.mozilla.org/ru/docs/Simple_Firefox_build/Linux_and_MacOS_build_preparation" title="/en-US/docs/Simple_Firefox_build/Linux_and_MacOS_build_preparation"> подготовка к сборке Linux и MacOS [ru-RU]</a></p>
+
+<p><strong>Получение исходного кода</strong></p>
+
+<div class="note"><strong>Примечание:</strong> На Windows, Вы не сможете собрать Thunderbird из исходного кода, если это директория с пробелами в пути (например, не используйте "Мои документы"). Вы можете выбрать какую-нибудь другую папку, как этот новый каталог C:\thunderbird-src.</div>
+
+<div class="note"><strong>Примечание:</strong> Местами в процессе сборки также возникнут проблемы, когда исходный код  находится в каталоге, путь к которому очень длинный  (вложенном во много уровней в глубину). На Linux, это может проявляться как проблемы с настройкой virtualenv для запуска тестов (ошибка установки pip or virtualenv приведет  к ошибкам доступа к ОС , где  доступ запрещен не из-за проблем с разрешением, а потому что  пути были усечены и теперь не существуют). При нахождении исходного кода глубоко в иерархии файловой системы могут также возникнуть проблемы со сборкой pymake на Windows. Если Вы столкнетесь с казалось бы произвольными проблемами при сборке и глубоко вложенным исходным кодом, попробуйте переместить его, закрыть  root на вашей машине и пересобрать.</div>
+
+<p>Получите исходный код из Mozilla's <code>comm-central</code> Mercurial репозитория:</p>
+
+<pre>hg clone http://hg.mozilla.org/comm-central 
+</pre>
+
+<p>Затем, получите все зависимые репозитории. comm-central репозиторий включает скрипт,который выполнит именно это действие. Это может занять некоторое время, код огромный! Сперва, перейдите в поддиректорию <code>comm-</code><code>central</code> (которая была создана автоматически при выполнении предыдущей команды):</p>
+
+<pre>cd comm-central</pre>
+
+<p>затем запустите:</p>
+
+<pre>python client.py checkout
+</pre>
+
+<div class="warning">На некоторых типах соединений, "hg clone" вызывает ошибки,прерывания. Если ваша команда "hg clone" не завершилась успешно, попробуйте использовать <a href="/En/Developer_Guide/Source_Code/Mercurial#Bundles" title="https://developer.mozilla.org/en/Mozilla_Source_Code_%28Mercurial%29#Bundles">Mercurial bundle</a>.</div>
+
+<p class="editable">исходный код требует 1.5 Гб свободного места или более.</p>
+
+<p class="editable">Более подробную информацию смотрите на странице <a href="/en-US/docs/Developer_Guide/Source_Code/Getting_comm-central" title="/en-US/docs/Developer_Guide/Source_Code/Getting_comm-central">Getting comm-central Source Code Using Mercurial [en-US]</a>.</p>
+
+<h2 class="editable" id="Конфигурирование_сборки">Конфигурирование сборки</h2>
+
+<p>Чтобы собрать thunderbird, Вам нужно добавить файл с именем <code>.mozconfig</code> в comm-central директорию со следущей строчкой:</p>
+
+<pre>ac_add_options --enable-application=mail</pre>
+
+<p>Если Вы не пропишите эту строку, система будет собирать Firefox. Другие опции конфигурации могут быть также добавлены в этот файл, хотя строго рекоммендуется использовать только опции, которые  Вам полностью понятны. Например, чтобы создать отладочную сборку вместо релизной, файл будет содержать:</p>
+
+<pre>ac_add_options --enable-debug
+</pre>
+
+<p>Более подробнее об опциях конфигурации, смотрите страницу <a href="/en/Configuring_Build_Options" rel="internal" title="en/Configuring Build Options"> build options</a>. Обратите внимание на то, что если Вы используете MOZ_OBJDIR, то он не может быть расположен в подпапке с Вашим исходным кодом. Используйте абсолютные пути, чтобы быть уверенным!</p>
+
+<h3 id="Примечание_к_OS_X_10.9">Примечание к OS X 10.9 </h3>
+
+<p>Поскольку проблема при сборке связана с 10.9 OS X SDK, Вы должны использовать SDK версии ниже. Для этого  добавьте следующее в Ваш  .mozconfig:</p>
+
+<pre class="bz_comment_text" id="comment_text_14">ac_add_options --with-macos-sdk=path/to/older/sdk</pre>
+
+<p>SDK располагается по пути  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/.</p>
+
+<p>Смотрите <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=976183">Баг 976183</a> <a href="/ru/docs/"> </a>для подробной информации.</p>
+
+<h2 id="Сборка_Thunderbird">Сборка Thunderbird</h2>
+
+<p>Запустите сборку, перейдя в поддиректорию <code>comm-central</code>  (создана автоматически при выполнении команды <code>hg</code>), и запустите:</p>
+
+<pre>./mozilla/mach build
+</pre>
+
+<p>mach наш консольный инструмент для упрощения общих задач разработки. Смотрите статью <a href="/en-US/docs/Developer_Guide/mach" title="/en-US/docs/Developer_Guide/mach">mach</a> для подробностей. </p>
+
+<p>Сборка может занять некоторое время, в зависимости от вашей машины, OS, и выбранных опций. Linux сборки на мощной машине могут занят 15 минут, но Windows сборки на слабой машине могут занять несколько часов.<a href="https://developer.mozilla.org/en/Developer_Guide/Mozilla_build_FAQ#Making_builds_faster"> Советы по ускорению сборок</a>.</p>
+
+<p>Из-за <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=863409">бага 863409</a> Вы можете увидеть сообщение с ошибкой "<span style="color: rgb(64, 64, 64); font-family: courier new,andale mono,monospace; font-size: 13px; line-height: normal; white-space: pre-wrap;"> Binary expected at ... does not exist."</span><span style="line-height: 1.572;"> Вы можете спокойно игнорировать это сообщение. Исполняемый код будет запущен по адресу, указанному ниже</span></p>
+
+<h4 id="Сборка_Thunderbird_и_Lightning">Сборка Thunderbird и Lightning</h4>
+
+<p>Если Вы настроили переменные сборки как было показано выше, тогда Вам необходимо выполнить :</p>
+
+<pre>echo 'ac_add_options --enable-calendar' &gt;&gt; .mozconfig
+</pre>
+
+<p>в папке <code>comm-central</code> или только добавить  строку <code>ac_add_options --enable-calendar в ваш</code> .mozconfig с помощью вашего любимого редактора.</p>
+
+<p>Затем перезапустить команду <em>mach</em> как показано выше (Вы можете добавить это до  выполнения первого запуска).</p>
+
+<h2 id="Запуск">Запуск</h2>
+
+<p>Различные временные файлы, библиотеки и исполняемый файл Thunderbird будут расположены в вашем <strong>объектном каталоге</strong> (ниже <code>comm-central/</code>), который с приставкой <strong><code>obj-</code></strong>. Точное название зависит от Вашей системы и ОС. Например, пользователь Mac получит имя директории <strong><code>obj-x86_64-apple-darwin10.7.3/</code></strong>.</p>
+
+<p>Исполняемый файл Thunderbird в частности и его зависимости располагаются ниже объектного каталога в <code>dist/bin.</code> Запустите исполняемый файл из вашей рабочей директории <code>comm-central</code>:</p>
+
+<ul>
+ <li><strong>Windows:</strong> <code>obj-.../dist/bin/thunderbird.exe</code></li>
+ <li><strong>Linux:</strong> <code>obj-.../dist/bin/thunderbird</code></li>
+ <li><strong>OS X:</strong> <code>obj-.../dist/Daily.app/Contents/MacOS/thunderbird</code></li>
+</ul>
+
+<h2 id="Как_обновлять_и_собирать_снова">Как обновлять и собирать снова</h2>
+
+<p>В вашей директории <code>comm-central</code>, запустите команду как показано ниже:</p>
+
+<pre>python client.py checkout
+</pre>
+
+<p>Затем пересоберите командой <em>mach</em> как показывалось выше. Будут пересобраны только измененные файлы, но все же это долго. <a href="https://developer.mozilla.org/en/Incremental_Build">Дополнительная сборка</a> может быть быстрее.</p>
+
+<h2 id="Проблемы_сборки">Проблемы сборки?</h2>
+
+<p>Что  у Вас:</p>
+
+<ul>
+ <li>Проверялся <a class="external" href="https://tbpl.mozilla.org/?tree=Thunderbird-Trunk" title="http://tinderbox.mozilla.org/showbuilds.cgi?tree=ThunderbirdTrunk">Thunderbird tbpl</a> для известных ошибок в то время как Вы вытягивали код?
+
+  <ul>
+   <li>Если дерево сломано, Вы можете собрать с <a href="http://hg.mozilla.org/comm-central/branches">одной из веток </a>( вытянуть исходный код из ветки, просто заменив ссылку на репозиторий в hg clone инструкции).</li>
+  </ul>
+ </li>
+ <li>Проверили,чтобы убедиться,что путь, в который Вы поместили исходный код имеет достаточно места?</li>
+ <li>Вы искали в <a href="https://bugzilla.mozilla.org/">баг базе</a> вопросы, связанные с Вашей проблемой(например, вопросы по конкректным платформам)?</li>
+ <li>Попробуйте узнать на <a class="external" href="http://groups.google.com/group/mozilla.dev.builds/" title="http://groups.google.com/group/mozilla.dev.builds/">mozilla.dev.builds</a> - не забудьте включить детали содержания Вашего mozconfig, и какие ошибки возникли.</li>
+ <li>Вы делали символьную ссылку на mozilla/? Она не работает.</li>
+ <li>У Вас имеется <code>@ДИРЕКТОРИЯИСХОДНИКОВ@</code> или  относительные пути в Вашем mozconfig? Они вызвали несколько проблем  и как правило  плохо тестируются, когда внесены изменения в систему сборки.</li>
+</ul>
+
+<h3 id="Реккомендации">Реккомендации</h3>
+
+<ul>
+ <li><a class="internal" href="/En/Developer_Guide/Build_Instructions" title="En/Developer Guide/Build Instructions">Основная Документация по сборке</a></li>
+ <li><a class="internal" href="/en/comm-central" title="en/comm-central">comm-central</a></li>
+ <li><a href="/en/Using_the_Mozilla_symbol_server">Использование Mozilla symbol server</a></li>
+</ul>

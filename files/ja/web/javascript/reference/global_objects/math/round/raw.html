@@ -1,0 +1,241 @@
+<div>{{JSRef}}</div>
+
+<p><strong><code>Math.round()</code></strong> 関数は、引数として与えた数を四捨五入して、もっとも近似の整数を返します。</p>
+
+<div>{{EmbedInteractiveExample("pages/js/math-round.html")}}</div>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<p>ただし上の例では、浮動小数点数の計算に起因する四捨五入の誤差が生じます。1.005 の四捨五入で予測される結果は 1.01 ですが、戻る値は 1 です。</p>
+
+<pre class="brush: js">precisionRound(1.050, 1); // 予測 1.1、結果 1.1 (正しい)
+precisionRound(1.005, 2); // 予測 1.01、結果 1 (誤り)
+</pre>
+
+<p>提案された解決策として、<a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/Math/round#A_better_solution">よりよい解決策</a> の章をご覧ください。</p>
+
+<h2 id="A_better_solution" name="A_better_solution">よりよい解決策</h2>
+
+<p>引数 precision は正の値 1 であれば小数第一未満を四捨五入、-1 であれば十の位未満を四捨五入することで、PHP や Excel と同じように働きます。</p>
+
+<pre class="brush: js">function round(number, precision) {
+  var shift = function (number, precision, reverseShift) {
+    if (reverseShift) {
+      precision = -precision;
+    }  
+    var numArray = ("" + number).split("e");
+    return +(numArray[0] + "e" + (numArray[1] ? (+numArray[1] + precision) : precision));
+  };
+  return shift(Math.round(shift(number, precision, false)), precision, true);
+}
+</pre>
+
+<p>この提案策は、浮動小数点数の計算の問題を回避します。始めに、指定された precision を基にして小数部を整数部に移動します。そして、Math.round() を使用して四捨五入します。最後に、指定された precision を基にして、整数部の値を逆方向に動かして小数に戻します。</p>
+
+<p>提案策を明快かつわかりやすくするため、内部の処理を以下に示します。</p>
+
+<pre class="brush: js">round(1.005, 2);
+</pre>
+
+<pre class="brush: js">1.005 // 2桁左へ移動
+100.5 // Math.round()
+101   // 2桁右へ移動
+1.01  // result</pre>
+
+<h3 id="Test_Results" name="Test_Results">評価結果</h3>
+
+<pre class="brush: js">round(1.050, 1); // 予測 1.1、結果 1.1  (正しい)
+round(1.005, 2); // 予測 1.01、結果 1.01 (正しい)
+
+round(3456.3456,  3); // 3456.346
+round(3456.3456,  2); // 3456.35
+round(3456.3456,  1); // 3456.3
+round(3456.3456,  0); // 3456
+round(3456.3456, -1); // 3460
+round(3456.3456, -2); // 3500
+round(3456.3456, -3); // 3000
+
+round(undefined, 1        ); // NaN
+round(null     , 1        ); // NaN
+round("a"      , 1        ); // NaN
+round(1        , null     ); // NaN
+round(1        , undefined); // NaN
+round(1        , "a"      ); // NaN</pre>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox">Math.round(<var>x</var>)</pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<dl>
+ <dt><code>x</code></dt>
+ <dd>数値</dd>
+</dl>
+
+<h3 id="Return_value" name="Return_value">戻り値</h3>
+
+<p>与えられた値をもっとも近似の整数に四捨五入した値。</p>
+
+<h2 id="Description" name="Description">説明</h2>
+
+<p>引数の小数部分が 0.5 以上の場合、その引数は、次に大きい整数に切り上げられます。引数の小数部分が 0.5 未満の場合、その引数は、次に小さい整数に切り下げられます。小数部分が 0.5 である場合は、正の無限大の方向で次の整数に丸められます。<strong>これは多くの言語の <code>round()</code> 関数と異なることに注意してください。この場合はたいてい、<em>0 から遠ざかる</em>次の整数に丸められます</strong> (小数部分が 0.5 である負の値を四捨五入する場合に、結果が変わります)。</p>
+
+<p><code>round()</code> は <code>Math</code> オブジェクトの静的なメソッドなので、自ら生成した <code>Math</code> オブジェクトのメソッドとしてではなく、常に、<code>Math.round()</code> として使用するようにしてください (<code>Math</code> のコンストラクターはありません)。</p>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<pre class="brush: js">Math.round( 20.49); //  20
+Math.round( 20.5);  //  21
+Math.round( 42  );  //  42
+Math.round(-20.5);  // -20
+Math.round(-20.51); // -21
+</pre>
+
+<h3 id="Decimal_rounding" name="Decimal_rounding">小数の端数処理</h3>
+
+<pre class="brush: js">// Closure
+(function() {
+  /**
+   * Decimal adjustment of a number.
+   *
+   * @param {String}  type  The type of adjustment.
+   * @param {Number}  value The number.
+   * @param {Integer} exp   The exponent (the 10 logarithm of the adjustment base).
+   * @returns {Number} The adjusted value.
+   */
+  function decimalAdjust(type, value, exp) {
+    // If the exp is undefined or zero...
+    if (typeof exp === 'undefined' || +exp === 0) {
+      return Math[type](value);
+    }
+    value = +value;
+    exp = +exp;
+    // If the value is not a number or the exp is not an integer...
+    if (value === null || isNaN(value) || !(typeof exp === 'number' &amp;&amp; exp % 1 === 0)) {
+      return NaN;
+    }
+    // Shift
+    value = value.toString().split('e');
+    value = Math[type](+(value[0] + 'e' + (value[1] ? (+value[1] - exp) : -exp)));
+    // Shift back
+    value = value.toString().split('e');
+    return +(value[0] + 'e' + (value[1] ? (+value[1] + exp) : exp));
+  }
+
+  // Decimal round
+  if (!Math.round10) {
+    Math.round10 = function(value, exp) {
+      return decimalAdjust('round', value, exp);
+    };
+  }
+  // Decimal floor
+  if (!Math.floor10) {
+    Math.floor10 = function(value, exp) {
+      return decimalAdjust('floor', value, exp);
+    };
+  }
+  // Decimal ceil
+  if (!Math.ceil10) {
+    Math.ceil10 = function(value, exp) {
+      return decimalAdjust('ceil', value, exp);
+    };
+  }
+})();
+
+// Round
+Math.round10(55.55, -1);   // 55.6
+Math.round10(55.549, -1);  // 55.5
+Math.round10(55, 1);       // 60
+Math.round10(54.9, 1);     // 50
+Math.round10(-55.55, -1);  // -55.5 -- round works towards +∞ when in-between two values
+Math.round10(-55.551, -1); // -55.6
+Math.round10(-55, 1);      // -50 -- round works towards +∞ when in-between two values
+Math.round10(-55.1, 1);    // -60
+Math.round10(1.005, -2);   // 1.01 -- compare this with Math.round(1.005*100)/100 above
+Math.round10(-1.005, -2);  // -1.0 -- round works towards +∞ when exactly in-between two values
+// Floor
+Math.floor10(55.59, -1);   // 55.5
+Math.floor10(59, 1);       // 50
+Math.floor10(-55.51, -1);  // -55.6 -- floor is always lower than or equal to floored number: -55.6 &lt; -55.51
+Math.floor10(-51, 1);      // -60 -- ditto
+// Ceil
+Math.ceil10(55.51, -1);    // 55.6
+Math.ceil10(51, 1);        // 60
+Math.ceil10(-55.59, -1);   // -55.5 -- ceil is always equal or above ceiled number: -55.5 &gt; -55.59
+Math.ceil10(-59, 1);       // -59 -- ditto
+</pre>
+
+<h3 id="PHP-Like_rounding_Method" name="PHP-Like_rounding_Method">PHP ライクな四捨五入</h3>
+
+<p>以下のコードは、精度の引数を持つ独自の Math.round を自身の名前空間に追加するために使用できます。前出の小数を四捨五入する例とは異なり、こちらは文字列との変換を行いません。引数 precision は正の値 1 であれば小数第一未満を四捨五入、-1 であれば十の位未満を四捨五入することで、PHP や Excel と同じように働きます。</p>
+
+<pre class="brush: js">var myNamespace = {};
+
+myNamespace.round = function(number, precision) {
+    var factor = Math.pow(10, precision);
+    var tempNumber = number * factor;
+    var roundedTempNumber = Math.round(tempNumber);
+    return roundedTempNumber / factor;
+};
+
+myNamespace.round(1234.5678, 1); // 1234.6
+myNamespace.round(1234.5678, -1); // 1230</pre>
+
+<p>ただし上の例では、浮動小数点数の計算に起因する四捨五入の誤差が生じます。1.005 の四捨五入で予測される結果は 1.01 ですが、戻る値は 1 です。</p>
+
+<pre class="brush: js">myNamespace.round(1.050, 1); // 予測 1.1、結果 1.1 (正しい)
+myNamespace.round(1.005, 2); // 予測 1.01、結果 1 (誤り)
+</pre>
+
+<p>提案された解決策として、<a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/Math/round#A_better_solution">よりよい解決策</a> の章をご覧ください。</p>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">策定状況</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES1')}}</td>
+   <td>{{Spec2('ES1')}}</td>
+   <td>初期定義。JavaScript 1.0 で実装。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-15.8.2.15', 'Math.round')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-math.round', 'Math.round')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-math.round', 'Math.round')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザー実装状況</h2>
+
+<p class="hidden">The compatibility table in this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</p>
+
+<p>{{Compat("javascript.builtins.Math.round")}}</p>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li>{{jsxref("Number.toPrecision()")}}</li>
+ <li>{{jsxref("Number.toFixed()")}}</li>
+ <li>{{jsxref("Math.abs()")}}</li>
+ <li>{{jsxref("Math.ceil()")}}</li>
+ <li>{{jsxref("Math.floor()")}}</li>
+ <li>{{jsxref("Math.sign()")}}</li>
+ <li>{{jsxref("Math.trunc()")}}</li>
+</ul>

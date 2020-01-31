@@ -1,0 +1,227 @@
+<div dir="rtl">מתודת ה-<code><strong>()filter.</strong></code> יוצרת מערך חדש עם כל האלמנטים שעברו את מבחן הפונקציה שהוגדרה בתוכה .</div>
+
+<div dir="rtl"> </div>
+
+<div> </div>
+
+<div>{{EmbedInteractiveExample("pages/js/array-filter.html")}}</div>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<h2 id="Syntax">Syntax</h2>
+
+<pre class="syntaxbox"><var>var newArray = arr</var>.filter(<var>callback(element[, index[, array]])</var>[, <var>thisArg</var>])</pre>
+
+<h3 id="Parameters">Parameters</h3>
+
+<dl>
+ <dt><code>callback</code></dt>
+ <dd>Function is a predicate, to test each element of the array. Return <code>true</code> to keep the element, <code>false</code> otherwise. It accepts three arguments:</dd>
+ <dd>
+ <dl>
+  <dt><code>element</code></dt>
+  <dd>The current element being processed in the array.</dd>
+  <dt><code>index</code>{{optional_inline}}</dt>
+  <dd>The index of the current element being processed in the array.</dd>
+  <dt><code>array</code>{{optional_inline}}</dt>
+  <dd>The array <code>filter</code> was called upon.</dd>
+ </dl>
+ </dd>
+ <dt><code>thisArg</code>{{optional_inline}}</dt>
+ <dd>Value to use as <code>this</code> when executing <code>callback</code>.</dd>
+</dl>
+
+<h3 id="Return_value">Return value</h3>
+
+<p>A new array with the elements that pass the test. If no elements pass the test, an empty array will be returned.</p>
+
+<h2 id="Description">Description</h2>
+
+<p><code>filter()</code> calls a provided <code>callback</code> function once for each element in an array, and constructs a new array of all the values for which <code>callback</code> returns <a href="/en-US/docs/Glossary/Truthy">a value that coerces to <code>true</code></a>. <code>callback</code> is invoked only for indexes of the array which have assigned values; it is not invoked for indexes which have been deleted or which have never been assigned values. Array elements which do not pass the <code>callback</code> test are simply skipped, and are not included in the new array.</p>
+
+<p><code>callback</code> is invoked with three arguments:</p>
+
+<ol>
+ <li>the value of the element</li>
+ <li>the index of the element</li>
+ <li>the Array object being traversed</li>
+</ol>
+
+<p>If a <code>thisArg</code> parameter is provided to <code>filter</code>, it will be used as the callback's <code>this</code> value.  Otherwise, the value <code>undefined</code> will be used as its <code>this</code> value. The <code>this</code> value ultimately observable by <code>callback</code> is determined according to <a href="/en-US/docs/Web/JavaScript/Reference/Operators/this">the usual rules for determining the <code>this</code> seen by a function</a>.</p>
+
+<p><code>filter()</code> does not mutate the array on which it is called.</p>
+
+<p>The range of elements processed by <code>filter()</code> is set before the first invocation of <code>callback</code>. Elements which are appended to the array after the call to <code>filter()</code> begins will not be visited by <code>callback</code>. If existing elements of the array are changed, or deleted, their value as passed to <code>callback</code> will be the value at the time <code>filter()</code> visits them; elements that are deleted are not visited.</p>
+
+<h2 id="Examples">Examples</h2>
+
+<h3 id="Filtering_out_all_small_values">Filtering out all small values</h3>
+
+<p>The following example uses <code>filter()</code> to create a filtered array that has all elements with values less than 10 removed.</p>
+
+<pre class="brush: js">function isBigEnough(value) {
+  return value &gt;= 10;
+}
+
+var filtered = [12, 5, 8, 130, 44].filter(isBigEnough);
+// filtered is [12, 130, 44]
+</pre>
+
+<h3 id="Filtering_invalid_entries_from_JSON">Filtering invalid entries from JSON</h3>
+
+<p>The following example uses <code>filter()</code> to create a filtered json of all elements with non-zero, numeric <code>id</code>.</p>
+
+<pre class="brush: js">var arr = [
+  { id: 15 },
+  { id: -1 },
+  { id: 0 },
+  { id: 3 },
+  { id: 12.2 },
+  { },
+  { id: null },
+  { id: NaN },
+  { id: 'undefined' }
+];
+
+var invalidEntries = 0;
+
+function isNumber(obj) {
+  return obj !== undefined &amp;&amp; typeof(obj) === 'number' &amp;&amp; !isNaN(obj);
+}
+
+function filterByID(item) {
+  if (isNumber(item.id) &amp;&amp; item.id !== 0) {
+    return true;
+  } 
+  invalidEntries++;
+  return false; 
+}
+
+var arrByID = arr.filter(filterByID);
+
+console.log('Filtered Array\n', arrByID); 
+// Filtered Array
+// [{ id: 15 }, { id: -1 }, { id: 3 }, { id: 12.2 }]
+
+console.log('Number of Invalid Entries = ', invalidEntries); 
+// Number of Invalid Entries = 5
+</pre>
+
+<h3 id="Searching_in_array">Searching in array</h3>
+
+<p>Following example uses filter() to filter array content based on search criteria</p>
+
+<pre class="brush: js">var fruits = ['apple', 'banana', 'grapes', 'mango', 'orange'];
+
+/**
+ * Filter array items based on search criteria (query)
+ */
+function filterItems(arr, query) {
+  return arr.filter(function(el) {
+      return el.toLowerCase().indexOf(query.toLowerCase()) &gt; -1;
+  })
+}
+
+console.log(filterItems(fruits, 'ap')); // ['apple', 'grapes']
+console.log(filterItems(fruits, 'an')); // ['banana', 'mango', 'orange']</pre>
+
+<h4 id="ES2015_Implementation">ES2015 Implementation</h4>
+
+<pre class="brush: js">const fruits = ['apple', 'banana', 'grapes', 'mango', 'orange'];
+
+/**
+ * Filter array items based on search criteria (query)
+ */
+const filterItems = (arr, query) =&gt; {
+  return arr.filter(el =&gt; el.toLowerCase().indexOf(query.toLowerCase()) &gt; -1);
+};
+
+console.log(filterItems(fruits, 'ap')); // ['apple', 'grapes']
+console.log(filterItems(fruits, 'an')); // ['banana', 'mango', 'orange']
+
+</pre>
+
+<h2 id="Polyfill">Polyfill</h2>
+
+<p><code>filter()</code> was added to the ECMA-262 standard in the 5th edition; as such it may not be present in all implementations of the standard. You can work around this by inserting the following code at the beginning of your scripts, allowing use of <code>filter()</code> in ECMA-262 implementations which do not natively support it. This algorithm is exactly equivalent to the one specified in ECMA-262, 5th edition, assuming that <code>fn.call</code> evaluates to the original value of {{jsxref("Function.prototype.bind()")}}, and that {{jsxref("Array.prototype.push()")}} has its original value.</p>
+
+<pre class="brush: js">if (!Array.prototype.filter){
+  Array.prototype.filter = function(func, thisArg) {
+    'use strict';
+    if ( ! ((typeof func === 'Function' || typeof func === 'function') &amp;&amp; this) )
+        throw new TypeError();
+   
+    var len = this.length &gt;&gt;&gt; 0,
+        res = new Array(len), // preallocate array
+        t = this, c = 0, i = -1;
+    if (thisArg === undefined){
+      while (++i !== len){
+        // checks to see if the key was set
+        if (i in this){
+          if (func(t[i], i, t)){
+            res[c++] = t[i];
+          }
+        }
+      }
+    }
+    else{
+      while (++i !== len){
+        // checks to see if the key was set
+        if (i in this){
+          if (func.call(thisArg, t[i], i, t)){
+            res[c++] = t[i];
+          }
+        }
+      }
+    }
+   
+    res.length = c; // shrink down array to proper size
+    return res;
+  };
+}</pre>
+
+<p> </p>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-15.4.4.20', 'Array.prototype.filter')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td>Initial definition. Implemented in JavaScript 1.6.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-array.prototype.filter', 'Array.prototype.filter')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-array.prototype.filter', 'Array.prototype.filter')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<div>
+<div class="hidden">The compatibility table in this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.builtins.Array.filter")}}</p>
+</div>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li>{{jsxref("Array.prototype.forEach()")}}</li>
+ <li>{{jsxref("Array.prototype.every()")}}</li>
+ <li>{{jsxref("Array.prototype.some()")}}</li>
+ <li>{{jsxref("Array.prototype.reduce()")}}</li>
+</ul>

@@ -1,0 +1,143 @@
+<div>{{DefaultAPISidebar("IndexedDB")}}</div>
+
+<p>IndexedDB — низкоуровневое API для клиентского хранилища большого объема структурированных данных, включая файлы/blobs. Эти API используют индексы для обеспечения высоко-производительного поиска данных. Если <a href="/en-US/docs/DOM/Storage">DOM Storage</a>  полезен для хранения небольшого количества данных, он менее выгоден для большого числа структурированных данных. IndexedDB предоставляет решение. Это основная страница на MDN, покрывающая IndexedDB — здесь мы предоставляем ссылки к полному списку API и руководствам по использованию, детали поддержки браузерами и некоторые объяснения ключевых концепций.</p>
+
+<p>{{AvailableInWorkers}}</p>
+
+<div class="note">
+<p><strong>Заметка</strong>: IndexedDB API мощные, но могут казаться слишком сложными для простых задач. Если вы предпочитаете простые API, попробуйте библиотеки, такие как <a href="https://localforage.github.io/localForage/">localForage</a>, <a href="http://www.dexie.org/">dexie.js</a> и <a href="https://github.com/erikolson186/zangodb">ZangoDB</a>, делающие IndexedDB более дружественным.</p>
+</div>
+
+<h2 id="Ключевые_концепции_и_использование">Ключевые концепции и  использование</h2>
+
+<p>IndexedDB транзакционная система базы данных, как SQL-основанная RDBMS. Однако, в отличие от RDBMS, которая использует таблицы с фиксированными колонками, IndexedDB — JavaScript-основанная объектно-ориентированная база данных. IndexedDB позволяет сохранять и возвращать объекты, которые были проиндексированы с <strong>ключом</strong>; любой объект, поддерживаемый <a href="/en-US/docs/Web/Guide/API/DOM/The_structured_clone_algorithm">структурированным алгоритмом клонирования</a> может быть сохранен. Необходимо описать схему базы данных, установить соединение с ней и затем получить и обновить данные за несколько <strong>транзакций</strong>.</p>
+
+<ul>
+ <li>Читайте больше о <a href="/en-US/docs/Web/API/IndexedDB_API/Basic_Concepts_Behind_IndexedDB">Концепции IndexedDB</a>.</li>
+ <li>Изучите асинхронное использование IndexedDB по первоначальным принципам с руководством <a href="/en-US/docs/Web/API/IndexedDB_API/Using_IndexedDB">Using IndexedDB</a>.</li>
+ <li>Найдите рекомендации по разработке, чтобы заставить ваш сайт работать вне сети, на странице <a href="/en-US/Apps/Build/Offline">Offline Apps</a>.</li>
+</ul>
+
+<div class="note">
+<p><strong>Заметка</strong>: Как и большинство решений web-хранения, IndexedDB следует аналогичной <a class="external" href="http://www.w3.org/Security/wiki/Same_Origin_Policy">same-origin policy</a>. Поэтому вы имеете доступ к хранилищу данных в пределах одного домена, но не можете получать их с любого другого.</p>
+</div>
+
+<h3 id="Синхронность_и_асинхронность">Синхронность и асинхронность</h3>
+
+<p>Выполнение операций использующих IndexedDB происходит асинхронно, т. е. не блокирует приложение. IndexedDB первоначально включал синхронные и асинхронные API. Синхронные API предназначались только для работы с <a href="/en-US/docs/Web/Guide/Performance/Using_web_workers">Web Workers</a>, но были удалены из спецификации, потому что было неясно, нужны ли они. Однако, синхронные API могут быть повторно введены, если появится спрос со стороны веб разработчиков. </p>
+
+<h3 id="Ограничения_памяти_и_критерии_освобождения">Ограничения памяти и критерии освобождения </h3>
+
+<p>Существует несколько веб-технологий, которые хранят данные того или иного вида на стороне клиента (т.е. на вашем локальном диске). Под IndexedDB чаще всего подразумевают одно. Процесс, в котором браузер вычисляет сколько места нужно выделить для хранения веб-данных. <a href="https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API/Browser_storage_limits_and_eviction_criteria">Ограничение памяти браузера и критерии особождения </a>пытаются объяснить как это работает, по крайней мере в случае с Firefox.</p>
+
+<h2 id="Интерфейсы">Интерфейсы</h2>
+
+<p>Чтобы получить доступ к базе данных, вызовите метод  <a href="/en-US/docs/Web/API/IDBFactory.open"><code>open()</code></a> y атрибута <a href="/en-US/docs/Web/API/IDBEnvironment.indexedDB"><code>indexedDB</code></a>  объекта <a href="/en-US/docs/DOM/window">window</a>. Этот метод возвращает объект {{domxref("IDBRequest")}} ; асинхронные операции связываются с вызывающим приложением, вызывая события объекта {{domxref("IDBRequest")}} .</p>
+
+<h3 id="Connecting_to_a_database">Connecting to a database</h3>
+
+<dl>
+ <dt>{{domxref("IDBEnvironment")}}</dt>
+ <dd>Provides access to IndexedDB functionality. It is implemented by the {{domxref("window")}} and {{domxref("worker")}} objects.</dd>
+ <dt>{{domxref("IDBFactory")}}</dt>
+ <dd>Provides access to a database. This is the interface implemented by the global object <a href="/en-US/docs/Web/API/IDBEnvironment.indexedDB"><code>indexedDB</code></a> and is therefore the entry point for the API.</dd>
+ <dt>{{domxref("IDBOpenDBRequest")}}</dt>
+ <dd>Represents a request to open a database.</dd>
+ <dt>{{domxref("IDBDatabase")}}</dt>
+ <dd>Represents a connection to a database. It's the only way to get a transaction on the database.</dd>
+ <dt>Retrieving and modifying data</dt>
+</dl>
+
+<dl>
+ <dt>{{domxref("IDBTransaction")}}</dt>
+ <dd>Represents a transaction. You create a transaction on a database, specify the scope (such as which object stores you want to access), and determine the kind of access (read only or readwrite) that you want.</dd>
+ <dt>{{domxref("IDBRequest")}}</dt>
+ <dd>Generic interface that handles database requests and provides access to results.</dd>
+ <dt>{{domxref("IDBObjectStore")}}</dt>
+ <dd>Represents an object store that allows access to a set of data in an IndexedDB database, looked up via primary key.</dd>
+ <dt>{{domxref("IDBIndex")}}</dt>
+ <dd>Also allows access to a subset of data in an IndexedDB database, but uses an index to retrieve the record(s) rather than the primary key. This is sometimes faster than using {{domxref("IDBObjectStore")}}.</dd>
+ <dt>{{domxref("IDBCursor")}}</dt>
+ <dd>Iterates over object stores and indexes.</dd>
+ <dt>{{domxref("IDBCursorWithValue")}}</dt>
+ <dd>Iterates over object stores and indexes and returns the cursor's current value.</dd>
+ <dt>{{domxref("IDBKeyRange")}}</dt>
+ <dd>Defines a key range that can be used to retrieve data from a database in a certain range.</dd>
+ <dt>{{domxref("IDBLocaleAwareKeyRange")}} {{Non-standard_inline}}</dt>
+ <dd>Defines a key range that can be used to retrieve data from a database in a certain range, sorted according to the rules of the locale specified for a certain index (see <a href="/en-US/docs/Web/API/IDBObjectStore/createIndex#Parameters"><code>createIndex()</code>'s optionalParameters</a>.). This interface isn't part of the 2.0 specification</dd>
+</dl>
+
+<h3 id="Custom_event_interfaces">Custom event interfaces</h3>
+
+<p>This specification fires events with the following custom interface:</p>
+
+<dl>
+ <dt>{{domxref("IDBVersionChangeEvent")}}</dt>
+ <dd>The <code>IDBVersionChangeEvent</code> interface indicates that the version of the database has changed, as the result of an {{domxref("IDBOpenDBRequest.onupgradeneeded")}} event handler function.</dd>
+</dl>
+
+<h3 id="Obsolete_interfaces">Obsolete interfaces</h3>
+
+<p>An early version of the specification also defined these now removed interfaces. They are still documented in case you need to update previously written code:</p>
+
+<dl>
+ <dt>{{domxref("IDBVersionChangeRequest")}} {{obsolete_inline}}</dt>
+ <dd>Represents a request to change the version of a database. The way to change the version of the database has since changed (by calling {{domxref("IDBFactory.open")}} without also calling {{domxref("IDBDatabase.setVersion")}}), and the interface {{domxref("IDBOpenDBRequest")}} now has the functionality of the removed {{domxref("IDBVersionChangeRequest")}}.</dd>
+ <dt>{{domxref("IDBDatabaseException")}}  {{obsolete_inline}}</dt>
+ <dd>Represents exception conditions that can be encountered while performing database operations.</dd>
+ <dt>{{domxref("IDBTransactionSync")}} {{obsolete_inline}}</dt>
+ <dd>Синхронная версия {{domxref("IDBTransaction")}}.</dd>
+ <dt>{{domxref("IDBObjectStoreSync")}} {{obsolete_inline}}</dt>
+ <dd>Синхронная версия {{domxref("IDBObjectStore")}}.</dd>
+ <dt>{{domxref("IDBIndexSync")}} {{obsolete_inline}}</dt>
+ <dd>Синхронная версия {{domxref("IDBIndex")}}.</dd>
+ <dt>{{domxref("IDBFactorySync")}} {{obsolete_inline}}</dt>
+ <dd>Синхронная версия {{domxref("IDBFactory")}}.</dd>
+ <dt>{{domxref("IDBEnvironmentSync")}} {{obsolete_inline}}</dt>
+ <dd>Синхронная версия {{domxref("IDBEnvironment")}}.</dd>
+ <dt>{{domxref("IDBDatabaseSync")}} {{obsolete_inline}}</dt>
+ <dd>Синхронная версия {{domxref("IDBDatabase")}}.</dd>
+ <dt>{{domxref("IDBCursorSync")}} {{obsolete_inline}}</dt>
+ <dd>Синхронная версия {{domxref("IDBCursor")}}.</dd>
+</dl>
+
+<h2 id="Примеры">Примеры</h2>
+
+<ul>
+ <li><a class="external" href="http://marco-c.github.io/eLibri/">eLibri:</a> A powerful library and eBook reader application, written by Marco Castelluccio, winner of the IndexedDB Mozilla DevDerby.</li>
+ <li><a class="external" href="https://github.com/chrisdavidmills/to-do-notifications/tree/gh-pages">To-do Notifications</a> (<a class="external" href="http://mdn.github.io/to-do-notifications/">view example live</a>): The reference application for the examples in the reference docs.</li>
+ <li><a class="external" href="http://hacks.mozilla.org/2012/02/storing-images-and-files-in-indexeddb/">Storing images and files in IndexedDB</a></li>
+</ul>
+
+<h2 id="Спецификации">Спецификации</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Спецификация</th>
+   <th scope="col">Статус</th>
+   <th scope="col">Комментарий</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('IndexedDB')}}</td>
+   <td>{{Spec2('IndexedDB')}}</td>
+   <td>Initial definition</td>
+  </tr>
+  <tr>
+   <td>{{SpecName("IndexedDB 2")}}</td>
+   <td>{{Spec2("IndexedDB 2")}}</td>
+   <td></td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Смотрите_также">Смотрите также</h2>
+
+<ul>
+ <li><a href="https://localforage.github.io/localForage/">localForage</a>: A Polyfill providing a simple name:value syntax for client-side data storage, which uses IndexedDB in the background, but falls back to WebSQL and then localStorage in browsers that don't support IndexedDB.</li>
+ <li><a href="http://www.dexie.org/">Dexie.js</a>: A wrapper for IndexedDB that allows much faster code development via nice, simple syntax.</li>
+ <li><a href="https://github.com/erikolson186/zangodb">ZangoDB</a>: A MongoDB-like interface for IndexedDB that supports most of the familiar filtering, projection, sorting, updating and aggregation features of MongoDB.</li>
+ <li><a href="http://jsstore.net/">JsStore</a>: An IndexedDB wrapper with SQL like syntax.</li>
+ <li><a href="https://github.com/mWater/minimongo">MiniMongo</a>: A client-side in-memory mongodb backed by localstorage with server sync over http. MiniMongo is used by MeteorJS.</li>
+ <li><a href="https://pouchdb.com/">PouchDB</a>: A client-side implementation of CouchDB in the browser using IndexedDB</li>
+</ul>

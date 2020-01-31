@@ -1,0 +1,167 @@
+<div>{{jsSidebar("Operators")}} {{SeeCompatTable}}</div>
+
+<p>The <strong>optional chaining</strong> operator <strong><code>?.</code></strong> permits reading the value of a property located deep within a chain of connected objects without having to expressly validate that each reference in the chain is valid. <span class="seoSummary"><code>?.</code> 演算子の機能は <code>.</code> 演算子に似ています。しかし <code>?.</code> の左側が{{jsxref("null")}}や{{jsxref("undefined")}}である場合、エラーが起きる代わりに式が短絡されて <code>undefined</code> が返る点が <code>.</code> 演算子と異なります。</span> 関数呼び出しで <code>?.</code> 演算子を使うと、関数が存在しない場合に <code>undefined</code> が返ります。</p>
+
+<p>存在しない可能性があるようなチェーンされたプロパティにアクセスする場合、 <code>?.</code> を使うと短く簡潔な式になります。どのプロパティが必須であるかについて保証がないようなオブジェクトの内容を操作するときにも、 <code>?.</code> は役立ちます。</p>
+
+<div class="blockIndicator warning">
+<p><strong>Warning!</strong> As of August 2019, no environment natively implements this feature. If you use Babel, you may use <a href="https://babeljs.io/docs/en/babel-plugin-proposal-optional-chaining">this plugin</a> to emulate optional chaining.</p>
+</div>
+
+<div>{{EmbedInteractiveExample("pages/js/expressions-optionalchainingoperator.html")}}</div>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<h2 id="文法">文法</h2>
+
+<pre class="syntaxbox"><var>obj</var>?.<var>prop</var>
+<var>obj</var>?.[<var>expr</var>]
+<var>func</var>?.(<var>args</var>)
+</pre>
+
+<h2 id="説明">説明</h2>
+
+<p>optional chaining 演算子は、参照や関数が <code>undefined</code> か <code>null</code> である可能性があるときに、オブジェクトの値へ簡単にアクセスする方法を提供します。</p>
+
+<p>例として、入れ子構造を持つオブジェクト <code>obj</code> を考えましょう。 optional chaining 演算子を使わない場合、深い入れ子になったサブプロパティへアクセスするには、次のように途中のプロパティが存在することを検証する必要があります。</p>
+
+<pre class="brush: js">let nestedProp = obj.first &amp;&amp; obj.first.second;</pre>
+
+<p><code>obj.first.second</code> へアクセスする前に、<code>obj.first</code> の値が <code>null</code> や <code>undefined</code> でないことが確認されます。これによって、（ <code>obj.first</code> の確認なしに ）直接 <font face="consolas, Liberation Mono, courier, monospace"><span style="background-color: rgba(220, 220, 220, 0.5);">obj.first.second</span></font> へアクセスしたときに起きるエラーを防ぐことができます。</p>
+
+<p>しかし、optional chaining 演算子 (<code>?.</code>) を使えば、 <code>obj.first.second</code> へアクセスする前に <code>obj.first</code> の状態を明示的に確認する必要がなくなります。</p>
+
+<pre class="brush: js">let nestedProp = obj.first?.second;</pre>
+
+<p><code>?.</code> を <code>.</code> の代わりに用いることで、JavaScriptは <code>obj.first.second</code> へアクセスする前に <code>obj.first</code> が <code>null</code> や <code>undefined</code> でないことを確かめるようになります。<code>obj.first</code> が <code>null</code> や <code>undefined</code> であった場合、式が自動的に短絡され、 <code>undefined</code> が返ります。</p>
+
+<p>optional chaining 演算子を用いた式は次の式と等価です。</p>
+
+<pre class="brush: js">let nestedProp = (obj.first == null ? undefined : obj.first.second);</pre>
+
+<h3 id="関数呼び出しで_optional_chaining_演算子を使う">関数呼び出しで optional chaining 演算子を使う</h3>
+
+<p>存在しない可能性があるメソッドを呼び出そうとするときに optional chaining 演算子を使えます。例えば次のような場合に optional chaining 演算子が便利です。</p>
+
+<ul>
+ <li>実装のバージョンによって利用不可能なAPIのメソッドを使うとき。</li>
+ <li>ユーザーのデバイス特有の機能に関するAPIのメソッドを使うとき。</li>
+</ul>
+
+<p>関数呼び出しで optional chaining 演算子を用いた場合、メソッドが見つからないときは自動的に <code>undefined</code> が返ります。例外はスローされません。</p>
+
+<pre class="brush: js">let result = someInterface.customMethod?.();</pre>
+
+<div class="blockIndicator note">
+<p><strong>Note:</strong> 存在するがメソッドでないプロパティに対して <code>?.</code> を使うと、例外 {{jsxref("TypeError")}} がスローされます (<code>x.y</code><code> is not a function</code>) 。</p>
+</div>
+
+<h4 id="Dealing_with_optional_callbacks_or_event_handlers">Dealing with optional callbacks or event handlers</h4>
+
+<p>If you use callbacks or fetch methods from an object with <a href="/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment#Object_destructuring">a destructuring assignment</a>, you may have non-existent values that you cannot call as functions unless you have tested their existence. Using <code>?.</code>, you can avoid this extra test:</p>
+
+<pre class="brush: js">// Written as of ES2019
+function doSomething(onContent, onError) {
+  try {
+    // ... do something with the data 
+  }
+  catch (err) {
+    if (onError) { // Testing if onError really exists
+      onError(err.message);
+    }
+  }
+}
+</pre>
+
+<pre class="brush: js">// Using optional chaining with function calls
+function doSomething(onContent, onError) {
+  try {
+   // ... do something with the data
+  }
+  catch (err) {
+    onError?.(err.message); // no exception if onError is undefined
+  }
+}
+</pre>
+
+<h3 id="式と一緒に_optional_chaining_演算子を使う">式と一緒に optional chaining 演算子を使う</h3>
+
+<p><a href="/ja/docs/Web/JavaScript/Reference/Operators/Property_Accessors#Bracket_notation">ブラケット表記法</a>と optional chaining 演算子を組み合わせることもできます。</p>
+
+<pre class="brush: js">let nestedProp = obj?.['prop' + 'Name'];
+</pre>
+
+<h2 id="例">例</h2>
+
+<h3 id="基本的な例">基本的な例</h3>
+
+<p>次の例では、マップ <code>myMap</code> に存在しない <code>bar</code> メンバに対して <code>name</code> プロパティを取得しようとしています。<code>TypeError</code> はスローされず、 <code>nameBar</code> に <code>undefined</code> が代入されます。</p>
+
+<pre class="brush: js">let myMap = new Map();
+myMap.set("foo", {name: "baz", desc: "inga"});
+
+let nameBar = myMap.get("bar")?.name;</pre>
+
+<h3 id="Short-circuiting_evaluation">Short-circuiting evaluation</h3>
+
+<p>式と一緒に optional chaining 演算子を用いたとき、左側のオペランドが <code>null</code> または <code>undefined</code> である場合にその式は評価されなくなります。</p>
+
+<p>次の例では、 <code>?.</code> の左側の <code>potentiallyNullObj</code> が <code>null</code> であるため、 <code>x++</code> が評価されません。</p>
+
+<pre class="brush: js">let potentiallyNullObj = null;
+let x = 0;
+let prop = potentiallyNullObj?.[x++];
+
+console.log(x); // 0 as x was not incremented
+</pre>
+
+<h3 id="Stacking_the_optional_chaining_operator">Stacking the optional chaining operator</h3>
+
+<p>ネストされたオブジェクトでは、 optional chaining 演算子を何度でも使えます。</p>
+
+<pre class="brush: js">let customer = {
+  name: "Carl",
+  details: {
+    age: 82,
+    location: "Paradise Falls" // detailed address is unknown
+  }
+};
+let customerCity = customer.details?.address?.city;
+
+// … this also works with optional chaining function call
+let duration = vacations.trip?.getTime?.();
+</pre>
+
+<h2 id="仕様">仕様</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td><a href="https://tc39.es/proposal-optional-chaining/">Proposal for the "optional chaining" operator</a></td>
+   <td>Stage 3</td>
+   <td></td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="ブラウザ実装状況">ブラウザ実装状況</h2>
+
+<div>
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.operators.optional_chaining")}}</p>
+</div>
+
+<h2 id="関連情報">関連情報</h2>
+
+<ul>
+ <li><a href="https://github.com/tc39/proposal-pipeline-operator">Github - Proposal-pipeline-operator</a></li>
+ <li><a href="https://github.com/tc39/proposals">TC39 proposals</a></li>
+</ul>

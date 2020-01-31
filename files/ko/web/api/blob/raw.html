@@ -1,0 +1,123 @@
+<p>{{APIRef("File API")}}</p>
+
+<p>Blob 객체는 파일과 흡사한 불변 객체로 raw data입니다. 데이터를 표현하기 때문에 필연적으로 자바스크립트 네이티브 포맷이 아닙니다. {{domxref("File")}} 인터페이스는 기본적으로 Blob을 통해 이뤄지며, blob의 함수들을 상속받고 확장하여 사용자 시스템의 파일을 지원해줍니다.</p>
+
+<p>Blob을 생성하는 가장 쉬운 방법은 {{domxref("Blob.Blob", "Blob()")}} 생성자를 호출하는 것입니다. 다른 방법은 {{domxref("Blob.slice()", "slice()")}}메서드를 사용하여 다른 blob의 부분 데이터로 구성된 blob을 만드는 것입니다. 사용자의 파일 시스템에있는 파일에 대한 Blob 객체를 가져 오려면 {{domxref ( "File")}} 설명서를 참조하십시오.</p>
+
+<p>Blob 객체를 받아들이는 API는 {{domxref ( "File")}} 문서에도 나열되어 있습니다.</p>
+
+<dl>
+</dl>
+
+<div class="note"><strong>주의:</strong> <code>slice()</code> 메서드는 기본적으로 길이(<code>length</code>) 값을 두 번째 파라미터로 받으며 이는 새로 생성 할 <code>Blob</code>의 byte 단위의 길이 값입니다. 만약 시작 바이트와 길이값을 초과하는 값을 파라미터를 준다면 리턴되는 <code>Blob</code>은 소스 <code>Blob</code>에서 시작과 끝을 포함하는 <code>Blob</code>이 될 것입니다. (역주: 복사와 동일한 결과) </div>
+
+<dl>
+</dl>
+
+<div class="note"><strong>주의:</strong> <code>slice()</code> 메서드 사용에 있어서 제조사와 버전 별 접두사가 붙어 있으니 주의해야 합니다. <code>blob.mozSlice()</code>는 Firefox 12와 더 이전 버전에서 쓰이며, Safari에서는 <code>blob.webkitSlice()</code>로 쓰입니다.  더 오래전 버전의 <code>slice()</code> 메서드는 제조사별 접두사가 없으며 내부적으로 다른 의미를 지니고 있으며 구식입니다.  또한 <code>blob.mozSlice()</code> 메서드는 Firefox 30 버전에서 삭제되었습니다.</div>
+
+<h2 id="생성자">생성자</h2>
+
+<dl>
+ <dt>{{domxref("Blob.Blob", "Blob(blobParts[, options])")}}</dt>
+ <dd>새로 생성된 Blob 객체를 반환합니다.  이는 파라미터로 주어진 값들의 연속적인 배열 형태입니다.</dd>
+</dl>
+
+<h2 id="속성">속성</h2>
+
+<dl>
+ <dt>{{domxref("Blob.size")}} {{readonlyinline}}</dt>
+ <dd><code>Blob</code> 객체에 포함된 데이터의 바이트 단위의 사이즈를 의미합니다. </dd>
+ <dt>{{domxref("Blob.type")}} {{readonlyinline}}</dt>
+ <dd><code>Blob</code>에 포함된 데이터의 MIME 타입을 의미합니다. 만약 unknown으로 나올 경우, 이 문자열은 비어있는 것입니다.</dd>
+</dl>
+
+<h2 id="함수">함수</h2>
+
+<dl>
+ <dt>{{domxref("Blob.slice()", "Blob.slice([start[, end[, contentType]]])")}}</dt>
+ <dd>새로운 Blob 객체를 반환합니다. 반환되는 Blob 객체는 소스가 되는 Blob 객체에서 파라미터로 주어진 바이트 단위 만큼의 데이터를 포함하고 있습니다.</dd>
+</dl>
+
+<h2 id="예제">예제 </h2>
+
+<h3 id="Blob_생성자_사용_예시">Blob 생성자 사용 예시</h3>
+
+<p>{{domxref("Blob.Blob", "Blob() constructor")}}는 다른 객체에서 blob을 만들수있게 합니다.</p>
+
+<p>string에서 blob을 생성하려면 다음과 같습니다:</p>
+
+<pre class="brush: js"><code>var debug = {hello: "world"};
+var blob = new Blob([JSON.stringify(debug, null, 2)], {type : 'application/json'});</code>
+</pre>
+
+<div class="warning">
+<p>blob 생성자를 사용할 수 있게 되기전에는 {{domxref ( "BlobBuilder")}} API를 통해 이 작업을 수행할 수 있습니다. 이 API는 현재 사용되지 않습니다. (deprecated)</p>
+
+<pre class="brush: js"><code>var builder = new BlobBuilder(); 
+var fileParts = ['&lt;a id="a"&gt;&lt;b id="b"&gt;hey!&lt;/b&gt;&lt;/a&gt;']; 
+builder.append(fileParts[0]); 
+var myBlob = builder.getBlob('text/xml');</code>
+</pre>
+</div>
+
+<h3 id="blob을_사용해_typed_array_만들기_예제">blob을 사용해 typed array 만들기 예제 </h3>
+
+<p>아래 코드 참조:</p>
+
+<pre class="brush: js"><code>var typedArray = GetTheTypedArraySomehow();
+var blob = new Blob([typedArray], {type: 'application/octet-stream'}); // pass a useful mime type here
+var url = URL.createObjectURL(blob);
+// url은 이런식으로 나옵니다: blob:d3958f5c-0777-0845-9dcf-2cb28783acaf
+// 이제 만들어낸 URL을 일반적인 URL 처럼 쓸 수 있다. 예를들면 img.src, 같은 곳 등.</code></pre>
+
+<h3 id="Blob에서_데이터_추출_예제">Blob에서 데이터 추출 예제</h3>
+
+<p>Blob에서 데이터를 읽는 한가지 방법은 {{domxref("FileReader")}} 를 사용하는 것입니다. 아래의 코드는 Blob에서 typed array로 데이터를 가져옵니다:</p>
+
+<pre class="brush: js">var reader = new FileReader();
+reader.addEventListener("loadend", function() {
+   // reader.result는 blob에서 가져온 컨텐츠를 typed array로 갖고 있다. 
+});
+reader.readAsArrayBuffer(blob);</pre>
+
+<p>Blob에서 데이터를 읽는 또 다른 방법은 Response를 사용하는 것입니다. 아래의 코드는 Blob의 내용을 텍스트로 가져옵니다:</p>
+
+<pre class="brush: js"><code class="language-js"><span class="keyword token">var</span> text <span class="operator token">=</span> <span class="keyword token">await</span> <span class="punctuation token">(</span><span class="keyword token">new</span> <span class="class-name token">Response</span><span class="punctuation token">(</span>blob<span class="punctuation token">)</span><span class="punctuation token">)</span><span class="punctuation token">.</span><span class="function token">text</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">;</span></code></pre>
+
+<p>{{domxref("FileReader")}} 에서 다른 메서드를 사용한다면, Blob에서 데이터를 string이나 URL 형태의 데이터도 읽어 올 수 있습니다.</p>
+
+<h2 id="명세">명세</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">명세서</th>
+   <th scope="col">상태</th>
+   <th scope="col">비고</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('File API','#blob','Blob')}}</td>
+   <td>{{Spec2('File API')}}</td>
+   <td>기초 정의(Initial definition.)</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="브라우저_호환성">브라우저 호환성</h2>
+
+<div class="hidden">
+<p>이 페이지의 호환성 테이블은 구조화 된 데이터에서 생성됩니다. 데이터에 기여하고 싶다면 https://github.com/mdn/browser-compat-data를 확인하고 pull-request를 보내주세요.</p>
+</div>
+
+<p>{{Compat("api.Blob")}}</p>
+
+<h2 id="같이_보기">같이 보기</h2>
+
+<ul>
+ <li>{{domxref("BlobBuilder")}}</li>
+ <li>{{domxref("FileReader")}}</li>
+ <li>{{domxref("File")}}</li>
+ <li>{{domxref("URL.createObjectURL")}}</li>
+ <li><a href="https://developer.mozilla.org/en-US/docs/Components.utils.importGlobalProperties">Components.utils.importGlobalProperties</a></li>
+</ul>

@@ -1,0 +1,333 @@
+<div>{{jsSidebar("Operators")}}</div>
+
+<p>O <strong><code>operador delete</code></strong> remove uma propriedade de um objeto.</p>
+
+<h2 id="Sintaxe">Sintaxe</h2>
+
+<pre class="syntaxbox">delete <em>expression</em> </pre>
+
+<p>onde <em>expression</em> deve referenciar a propriedade, e.g.:</p>
+
+<pre class="syntaxbox">delete <em>object.property</em>
+delete <em>object</em>['<em>property</em>']
+</pre>
+
+<h3 id="Parâmetros">Parâmetros</h3>
+
+<dl>
+ <dt><code>object</code></dt>
+ <dd>O nome do objeto, ou a expressão de referencia do objeto.</dd>
+ <dt><code>property</code></dt>
+ <dd>A propriedade a ser deletada.</dd>
+</dl>
+
+<h3 id="Valor_de_retorno">Valor de retorno</h3>
+
+<p><code>true</code> para todos os casos exceto quando uma propriedade é própria e não-configurável, nesse caso, <code>false</code> é retornado no modo não-strict.</p>
+
+<h3 id="Exceções">Exceções</h3>
+
+<p>Throws {{jsxref("Global_objects/SyntaxError")}} no <a href="/pt-BR/docs/Web/JavaScript/Reference/Functions_and_function_scope/Strict_mode">modo strict</a> se a propriedade é própria e não-configurável.</p>
+
+<h2 id="Descrição">Descrição</h2>
+
+<p>Ao contrário do que se imagina, o operador <code>delete</code> <strong>não</strong> tem relação direta com<strong> </strong>a desalocação de memória. O gerenciamento de memória é feito indiretamente através das quebras de referência, veja a página de <a href="/pt-BR/docs/Web/JavaScript/Memory_Management">gerenciamento de memória</a> para obter mais detalhes.</p>
+
+<p>O operador <code><strong>delete</strong></code> remove uma determinada propriedade do objeto. Em caso de sucesso, será retornado <code>true,</code> senão <code>false</code> será o retorno. Contudo, é importante considerar os seguintes cenários:</p>
+
+<ul>
+ <li>Se a propriedade que você está tentando deletar não exisitir, <code>delete</code> terá efeito e irá retornar <code>true</code></li>
+ <li>If a property with the same name exists on the object's prototype chain, then, after deletion, the object will use the property from the prototype chain (in other words, <code>delete</code> only has an effect on own properties).</li>
+ <li>Any property declared with {{jsxref("Statements/var","var")}} cannot be deleted from the global scope or from a function's scope.
+  <ul>
+   <li>As such, <code>delete</code> cannot delete any functions in the global scope (whether this is part from a function definition or a function expression).</li>
+   <li>Functions which are part of an object (apart from the global scope) can be deleted with <code>delete</code>.</li>
+  </ul>
+ </li>
+ <li>Any property declared with {{jsxref("Statements/let","let")}} or {{jsxref("Statements/const","const")}} cannot be deleted from the scope within which they were defined.</li>
+ <li>Non-configurable properties cannot be removed. This includes properties of built-in objects like {{jsxref("Math")}}, {{jsxref("Array")}}, {{jsxref("Object")}} and properties that are created as non-configurable with methods like {{jsxref("Object.defineProperty()")}}.</li>
+</ul>
+
+<p>The following snippet gives a simple example:</p>
+
+<pre class="brush: js">var Employee = {
+  age: 28,
+  name: 'abc',
+  designation: 'developer'
+}
+
+console.log(delete Employee.name)   // retorna true
+console.log(delete Employee.age)    // retorna true
+
+// Quando se tenta traduzir uma propriedade que 
+// não existe, o retorno será true 
+console.log(delete Employee.salary) // retorna true
+</pre>
+
+<h3 id="Propriedades_não-configuráveis"><strong>Propriedades não-configuráveis</strong></h3>
+
+<p>Quando uma propriedade é marcada como não-configurável, delete não terá efeito, e irá retornar false. Em modo <em>strict </em>isso irá lançar uma exceção do tipo SyntaxError.</p>
+
+<pre class="brush: js">var Employee = {};
+Object.defineProperty(Employee, 'name', {configurable: false})
+
+console.log(delete Employee.name);  // returns false
+</pre>
+
+<p>{{jsxref("Statements/var","var")}}, {{jsxref("Statements/let","let")}} and {{jsxref("Statements/const","const")}} create non-configurable properties that cannot be deleted with the <code>delete</code> operator:</p>
+
+<pre class="brush: js">var nameOther = 'XYZ';
+
+// We can access this global property using:
+Object.getOwnPropertyDescriptor(window, 'nameOther')   
+
+// output: Object {value: "XYZ", 
+                  writable: true, 
+                  enumerable: true,
+                  <strong>configurable: false</strong>}
+
+// Since "nameOther" is added using with the
+// var keyword, it is marked as "non-configurable"
+
+delete nameOther;   // return false</pre>
+
+<p>Em modo <em>strict</em>, isso teria lançado uma exceção.</p>
+
+<h3 id="Modo_strict_vs._não-strict"><strong>Modo strict vs. não-strict</strong></h3>
+
+<p>When in strict mode, if <code>delete</code> is used on a direct reference to a variable, a function argument or a function name, it will throw a {{jsxref("SyntaxError")}}<strong>.</strong></p>
+
+<p>Any variable defined with <code>var</code> is marked as non-configurable. In the following example, <code>salary</code> is non-configurable and cannot be deleted. In non-strict mode, the <code>delete</code> operation will return <code>false</code>.</p>
+
+<pre class="brush: js">function Employee() { 
+  delete salary;
+  var salary;
+}
+
+Employee()
+</pre>
+
+<p>Vamos ver o comportamento do mesmo código no modo strict. Em vez de retornar false, o trecho de código irá lançar uma exceção do tipo SyntaxError.</p>
+
+<pre class="brush: js">"use strict";
+
+function Employee() {
+  delete salary;  // SyntaxError
+  var salary;        
+}
+
+// Igualmente, qualquer acesso direto a uma função
+// com delete irá lançar uma exceção do tipo SyntaxError
+
+function DemoFunction() {
+  //some code
+}
+
+delete DemoFunction; // SyntaxError
+</pre>
+
+<h2 id="Exemplos">Exemplos</h2>
+
+<pre class="brush: js">// creates the property adminName on the global scope
+adminName = 'xyz';            
+
+// creates the property empCount on the global scope
+// Since we are using var, this is marked as non-configurable. The same is true of let and const.
+var empCount = 43;
+
+EmployeeDetails = {
+  name: 'xyz',
+  age: 5,
+  designation: 'Developer'
+};
+
+// adminName is a property of the global scope.
+// It can be deleted since it is created without var.
+// Therefore, it is configurable.
+delete adminName;       // returns true
+
+// On the contrary, empCount is not configurable, 
+// since var was used.
+delete empCount;       // returns false 
+
+// delete can be used to remove properties from objects  
+delete EmployeeDetails.name; // returns true 
+
+<strong>// </strong>Even when the property does not exists, it returns "true"
+delete EmployeeDetails.salary; // returns true 
+
+// delete does not affect built-in static properties
+delete Math.PI; // returns false 
+
+// EmployeeDetails is a property of the global scope.
+// Since it defined without "var", it is marked configurable
+delete EmployeeDetails;   // returns true
+
+function f() {
+  var z = 44;
+
+  // delete doesn't affect local variable names
+  delete z;     // returns false
+}
+</pre>
+
+<h3 id="delete_and_the_prototype_chain"><code>delete</code> and the prototype chain</h3>
+
+<p>In the following example, we delete an own property of an object while a property with the same name is available on the prototype chain:</p>
+
+<pre class="brush: js">function Foo(){
+  this.bar = 10;
+}
+
+Foo.prototype.bar = 42;
+
+var foo = new Foo();
+
+// Returns true, since the own property
+// has been deleted on the foo object
+delete foo.bar;           
+
+// foo.bar is still available, since it 
+// is available in the prototype chain.
+console.log(foo.bar);
+
+// We delete the property on the prototype
+delete Foo.prototype.bar; 
+
+// logs "undefined" since the property
+// is no longer inherited
+console.log(foo.bar);           </pre>
+
+<h3 id="Removendo_elementos_de_um_array"><strong>Removendo elementos de um array</strong></h3>
+
+<p>When you delete an array element, the array length is not affected. This holds even if you delete the last element of the array.</p>
+
+<p>When the <code>delete</code> operator removes an array element, that element is no longer in the array. In the following example, <code>trees[3]</code> is removed with <code>delete</code>.</p>
+
+<pre class="brush: js">var trees = ["redwood","bay","cedar","oak","maple"];
+delete trees[3];
+if (3 in trees) {
+    // this does not get executed
+}</pre>
+
+<p>If you want an array element to exist but have an undefined value, use the <code>undefined</code> value instead of the <code>delete</code> operator. In the following example, <code>trees[3]</code> is assigned the value undefined, but the array element still exists:</p>
+
+<pre class="brush: js">var trees = ["redwood","bay","cedar","oak","maple"];
+trees[3] = undefined;
+if (3 in trees) {
+    // this gets executed
+}</pre>
+
+<h2 id="Especificações">Especificações</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-delete-operator', 'The delete Operator')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-delete-operator', 'The delete Operator')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-11.4.1', 'The delete Operator')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES1', '#sec-11.4.1', 'The delete Operator')}}</td>
+   <td>{{Spec2('ES1')}}</td>
+   <td>Initial definition. Implemented in JavaScript 1.2.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Compatibilidade_dos_navegadores_(browser)">Compatibilidade dos navegadores (browser)</h2>
+
+<p>{{CompatibilityTable}}</p>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+  <tr>
+   <td>Temporal dead zone</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatGeckoDesktop(36)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Chrome for Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+  <tr>
+   <td>Temporal dead zone</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatGeckoMobile(36)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="Cross-browser_notes">Cross-browser notes</h2>
+
+<p>Although ECMAScript makes iteration order of objects implementation-dependent, it may appear that all major browsers support an iteration order based on the earliest added property coming first (at least for properties not on the prototype). However, in the case of Internet Explorer, when one uses <code>delete</code> on a property, some confusing behavior results, preventing other browsers from using simple objects like object literals as ordered associative arrays. In Explorer, while the property <em>value</em> is indeed set to undefined, if one later adds back a property with the same name, the property will be iterated in its <em>old</em> position--not at the end of the iteration sequence as one might expect after having deleted the property and then added it back.</p>
+
+<p>So, if you want to simulate an ordered associative array in a cross-browser environment, you are forced to either use two separate arrays (one for the keys and the other for the values), or build an array of single-property objects, etc.</p>
+
+<h2 id="Veja_também">Veja também</h2>
+
+<ul>
+ <li><a href="http://perfectionkills.com/understanding-delete/">In depth analysis on delete</a></li>
+ <li>{{jsxref("Reflect.deleteProperty()")}}</li>
+</ul>

@@ -1,0 +1,27 @@
+<p>当浏览器从第三方服务跨域请求资源的时候，在浏览器发起请求之前，这个第三方的跨域域名需要被解析为一个IP地址，这个过程就是DNS解析，DNS缓存可以用来减少这个过程的耗时，DNS解析可能会增加请求的延迟，对于那些需要请求许多第三方的资源的网站而言，DNS解析的耗时延迟可能会大大降低网页加载性能。</p>
+
+<p>dns-prefetch可帮助开发人员处理DNS解析延迟问题。 <a href="https://wiki.developer.mozilla.org/en-US/docs/Web/HTML/Element/link">HTML &lt;link&gt;</a>元素通过dns-prefetch的rel属性值提供此功能。然后在href属性中指定跨域域名：</p>
+
+<pre class="brush: html">&lt;link rel="dns-prefetch" href="https://fonts.googleapis.com/"&gt;</pre>
+
+<p>每当站点引用跨域域上的资源时，都应在<a href="https://wiki.developer.mozilla.org/en-US/docs/Web/HTML/Element/head">&lt;head&gt;元素</a>中放置dns-prefetch提示，但是要记住一些注意事项。首先，dns-prefetch仅对跨域域上的DNS查找有效，因此请避免将其用于您当前访问的站点。这是因为当浏览器解析到当前Link元素内容时，您站点域背后的IP已经被解析。</p>
+
+<p>其次，还可以将dns-prefetch（和其他资源提示）指定为HTTP标头：</p>
+
+<pre class="brush: unix">Link: &lt;https://fonts.googleapis.com/&gt;; rel=dns-prefetch</pre>
+
+<p>第三，考虑将dns-prefetch与<code>preconnect</code>结合。尽管dns-prefetch仅执行DNS查找，但preconnect会建立与服务器的连接。如果站点是通过HTTPS服务的，则此过程包括DNS解析，建立TCP连接以及执行TLS握手。将两者结合起来可提供机会，进一步减少跨源请求的感知延迟。您可以安全地将它们一起使用，如下所示：</p>
+
+<pre class="brush: html">&lt;link rel="preconnect" href="https://fonts.googleapis.com/" crossorigin&gt;
+&lt;link rel="dns-prefetch" href="https://fonts.googleapis.com/"&gt;</pre>
+
+<p>之所以把dns-prefetch放在preconnect之后，是因为浏览器对dns-prefetch的支持比对<code>preconnect</code>的支持要好。不支持<code>preconnect</code>的浏览器仍然可以通过回退到dns-prefetch来获得更多好处。</p>
+
+<p>由于HTML的一些兼容功能，因此容错性很好。如果不支持的浏览器遇到dns-prefetch提示（或任何其他资源提示），您的网站依旧不会中断。您只是不会获得它提供的好处。</p>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Web/HTTP/Headers">HTTP headers</a></li>
+ <li><a href="/en-US/docs/Web/HTML/Element/link">&lt;link&gt;</a></li>
+</ul>

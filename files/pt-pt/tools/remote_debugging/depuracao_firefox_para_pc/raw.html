@@ -1,0 +1,73 @@
+<div>{{ToolsSidebar}}</div><p>This guide explains how you can use the Firefox Developer Tools to debug a different instance of desktop Firefox running on the same machine. In this guide, the instance of Firefox being debugged is called the <em>debuggee</em>, and the instance of Firefox doing the debugging is called the <em>debugger</em>.</p>
+
+<h2 id="Ativar_depuração_remota">Ativar depuração remota</h2>
+
+<p>First, you'll need to ensure that both debugger and debuggee have the "Enable chrome and add-on debugging" and "Enable remote debugging" settings checked in the <a href="/en-US/docs/Tools/Tools_Toolbox#Settings">Developer Tools Settings</a>.</p>
+
+<p>You only need to do this once: the setting values persist across restarts.</p>
+
+<h2 id="Start_the_debugger_server">Start the debugger server</h2>
+
+<p>Next, you need to start the debugger server in the debuggee.</p>
+
+<h3 id="Before_Firefox_37">Before Firefox 37</h3>
+
+<p>Before Firefox 37: open the <a href="/en-US/docs/Tools/GCLI">Developer Toolbar</a> and enter the following command:</p>
+
+<pre>listen 6000</pre>
+
+<p>This tells the debuggee to listen for debugger clients connecting on port 6000. You don't have to use 6000 here.</p>
+
+<p>If you restart the debuggee, you need to enter this command again.</p>
+
+<h3 id="Firefox_37_onwards">Firefox 37 onwards</h3>
+
+<p>From Firefox 37 onwards the above method still works, but there's an alternative: run the debuggee from the command line, passing it the <code>--start-debugger-server</code> option:</p>
+
+<pre>/path/to/firefox --start-debugger-server</pre>
+
+<p>Passed with no arguments, --start-debugger-server makes the debugger server listen on port 6000. To use a different port, pass the desired port number:</p>
+
+<pre>/path/to/firefox --start-debugger-server 1234</pre>
+
+<p>Note: in Windows, the <code>start-debugger-server</code> call will only have one dash:</p>
+
+<pre>firefox.exe -start-debugger-server 1234</pre>
+
+<div class="note">
+<p><strong>Note</strong>: By default, and for security reasons, the <code>devtools.debugger.force-local</code> option is set. If you want to debug a Firefox instance from an external machine, you can change this option, but only do this on a trusted network or set a strong firewall rule to lock down which machines can access it.</p>
+</div>
+
+<h2 id="Ligar">Ligar</h2>
+
+<p>There are two different ways to do this: using the Connect screen, or using WebIDE.</p>
+
+<h3 id="Ecrã_de_ligação">Ecrã de ligação</h3>
+
+<p>In the debugger, under the Tools/Web Developer menu, there's an item labeled "Connect". Click it and you'll see a page like this:</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/10063/remote-connect-1.png" style="display: block; margin-left: auto; margin-right: auto; width: 640px;"></p>
+
+<p>Enter the port number you asked the debuggee to listen on and press "Connect". You should now see a dialog from the debuggee asking to confirm the connection:</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/10073/remote-warning.png" style="display: block; height: 193px; margin-left: auto; margin-right: auto; width: 502px;">Click "OK", and back in the debugger you'll see a page like this:</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/10065/remote-connect-2.png" style="display: block; margin-left: auto; margin-right: auto; width: 640px;"></p>
+
+<ul>
+ <li>Under "Available remote tabs" is a list of all tabs open in the debuggee. Click a tab to attach the developer tools to that tab.</li>
+ <li>Under "Available remote add-ons" is a list of all add-ons installed in the debuggee. Click an add-on to attach the developer tools to that add-on.</li>
+ <li>Under "Available remote processes" is a list of the processes running Firefox. Click "Main process" to attach the developer tools to the browser itself.</li>
+</ul>
+
+<h3 id="WebIDE">WebIDE</h3>
+
+<p>In the debugger open WebIDE, and under "Select Runtime" select "Remote Runtime":</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/10069/remote-webide-1.png" style="display: block; margin-left: auto; margin-right: auto; width: 786px;">You'll be asked to supply a hostname and port. Enter "localhost:6000", or a different port number if you asked the debuggee to listen on a different port.</p>
+
+<p>Then you'll see a warning dialog:</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/10073/remote-warning.png" style="display: block; height: 193px; margin-left: auto; margin-right: auto; width: 502px;">Click OK. WebIDE will attach the developer tools to the main process. If you want to attach to a content tab, open the menu on the left-hand side and select the tab you want to debug.</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/10071/remote-webide-2.png" style="display: block; height: 626px; margin-left: auto; margin-right: auto; width: 786px;"></p>

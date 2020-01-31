@@ -1,0 +1,148 @@
+<div>
+<div>{{JSRef("Global_Objects", "Object")}}</div>
+</div>
+
+<h2 id="Summary" name="Summary">概要</h2>
+
+<p>オブジェクトが凍結されているかを判定します。</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox"><code>Object.isFrozen(<var>obj</var>)</code></pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<dl>
+ <dt>obj</dt>
+ <dd>確認したいオブジェクトです。</dd>
+</dl>
+
+<h2 id="Description" name="Description">説明</h2>
+
+<p>オブジェクトが<a href="/ja/docs/JavaScript/Reference/Global_Objects/Object/isExtensible" title="ja/docs/JavaScript/Reference/Global Objects/Object/isExtensible">拡張可能</a>ではなく、すべてのプロパティは設定変更不可であり、そしてすべてのデータプロパティ (これは getter や setter コンポーネントを持つアクセサプロパティではないものを指します) が書き込み不可である場合に、凍結されているとなります。</p>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<pre class="brush: js">// 新しいオブジェクトは拡張可能であるので、凍結されていません
+assert(Object.isFrozen({}) === false);
+
+// 拡張可能ではない空のオブジェクトは、他に何もしなくても凍結されています
+var vacuouslyFrozen = Object.preventExtensions({});
+assert(Object.isFrozen(vacuouslyFrozen) === true);
+
+// プロパティをひとつ持つ新しいオブジェクトも拡張可能であり、それゆえ凍結されていません
+var oneProp = { p: 42 };
+assert(Object.isFrozen(oneProp) === false);
+
+// オブジェクトを拡張不可にしても、それは凍結されません
+// なぜなら、まだプロパティが設定変更可能 (かつ書き込み可能) であるからです
+Object.preventExtensions(oneProp);
+assert(Object.isFrozen(oneProp) === false);
+
+// ...しかしプロパティを削除すると、そのオブジェクトは他に何もしなくても凍結されます
+delete oneProp.p;
+assert(Object.isFrozen(oneProp) === true);
+
+// 書き込み不可であるが設定変更可能なプロパティを持つ、拡張不可のオブジェクトは、凍結されていません
+var nonWritable = { e: "plep" };
+Object.preventExtensions(nonWritable);
+Object.defineProperty(nonWritable, "e", { writable: false }); // 書き込み不可にします
+assert(Object.isFrozen(nonWritable) === false);
+
+// プロパティを設定変更不可にすると、オブジェクトは凍結されます
+Object.defineProperty(nonWritable, "e", { configurable: false }); // 設定変更不可にします
+assert(Object.isFrozen(nonWritable) === true);
+
+// 設定変更不可であるが書き込み可能なプロパティを持つ、拡張不可のオブジェクトは、やはり凍結されていません
+var nonConfigurable = { release: "the kraken!" };
+Object.preventExtensions(nonConfigurable);
+Object.defineProperty(nonConfigurable, "release", { configurable: false });
+assert(Object.isFrozen(nonConfigurable) === false);
+
+// プロパティを書き込み不可にすると、オブジェクトは凍結されます
+Object.defineProperty(nonConfigurable, "release", { writable: false });
+assert(Object.isFrozen(nonConfigurable) === true);
+
+// 設定変更可能なアクセサプロパティを持つ拡張不可のオブジェクトは、凍結されていません
+var accessor = { get food() { return "yum"; } };
+Object.preventExtensions(accessor);
+assert(Object.isFrozen(accessor) === false);
+
+// ...しかしプロパティを設定変更不可にすると、オブジェクトは凍結されます
+Object.defineProperty(accessor, "food", { configurable: false });
+assert(Object.isFrozen(accessor) === true);
+
+// なお、オブジェクトを凍結するもっとも簡単な方法は、Object.freeze を呼び出すことです
+var frozen = { 1: 81 };
+assert(Object.isFrozen(frozen) === false);
+Object.freeze(frozen);
+assert(Object.isFrozen(frozen) === true);
+
+// 定義によると、凍結されたオブジェクトは拡張不可です
+assert(Object.isExtensible(frozen) === false);
+
+// また、凍結されたオブジェクトは封印されています
+assert(Object.isSealed(frozen) === true);
+</pre>
+
+<h2 id="ブラウザの互換性">ブラウザの互換性</h2>
+
+<p>{{ CompatibilityTable() }}</p>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>機能</th>
+   <th>Firefox (Gecko)</th>
+   <th>Chrome</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>基本サポート</td>
+   <td>4 (2.0)</td>
+   <td>6</td>
+   <td>9</td>
+   <td>{{ CompatNo() }}</td>
+   <td>5.1</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>機能</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>Android</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>基本サポート</td>
+   <td>{{ CompatUnknown() }}</td>
+   <td>{{ CompatUnknown() }}</td>
+   <td>{{ CompatUnknown() }}</td>
+   <td>{{ CompatUnknown() }}</td>
+   <td>{{ CompatUnknown() }}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<p><a class="external" href="http://kangax.github.com/es5-compat-table/">Kangax's compat table</a> に基づきます。</p>
+
+<h2 id="See_also" name="See_also">参考情報</h2>
+
+<ul>
+ <li><strong><a href="/ja/docs/JavaScript/Reference/Global_Objects/Object/freeze" title="ja/docs/JavaScript/Reference/Global Objects/Object/freezed"><code>Object.freeze</code></a></strong></li>
+ <li><a href="/ja/docs/JavaScript/Reference/Global_Objects/Object/preventExtensions" title="ja/docs/JavaScript/Reference/Global Objects/Object/preventExtensions"><code>Object.preventExtensions</code></a></li>
+ <li><a href="/ja/docs/JavaScript/Reference/Global_Objects/Object/isExtensible" title="ja/docs/JavaScript/Reference/Global Objects/Object/isExtensible"><code>Object.isExtensible</code></a></li>
+ <li><a href="/ja/docs/JavaScript/Reference/Global_Objects/Object/seal" title="ja/docs/JavaScript/Reference/Global Objects/Object/seal"><code>Object.seal</code></a></li>
+ <li><a href="/ja/docs/JavaScript/Reference/Global_Objects/Object/isSealed" title="ja/docs/JavaScript/Reference/Global Objects/Object/isSealed"><code>Object.isSealed</code></a></li>
+</ul>

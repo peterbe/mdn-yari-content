@@ -1,0 +1,216 @@
+<div>{{JsSidebar("Functions")}}</div>
+
+<p>ECMAScript 2015 より、オブジェクトイニシャライザのメソッド定義のための短い構文が導入されました。これは、メソッドの名前に割り当てられた関数の省略形です。</p>
+
+<div>{{EmbedInteractiveExample("pages/js/functions-definitions.html")}}</div>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox">var obj = {
+  <var>property</var>( <var>parameters…</var> ) {},
+  *<var>generator</var>( <var>parameters…</var> ) {},
+  async property( <var>parameters…</var> ) {},
+  async* generator( <var>parameters…</var> ) {},
+
+  // 算出されたキーも使用可能:
+  [property]( <var>parameters…</var> ) {},
+  *[generator]( <var>parameters…</var> ) {},
+  async [property]( <var>parameters…</var> ) {},
+
+  // ES5 getter/setter 構文との比較:
+  get <var>property</var>() {},
+  set <var>property</var>(<var>value</var>) {}
+};
+</pre>
+
+<h2 id="Description" name="Description">説明</h2>
+
+<p>簡略構文は、ECMAScript 第 5 版で導入された <a href="/docs/Web/JavaScript/Reference/Functions/get">getter</a> や <a href="/docs/Web/JavaScript/Reference/Functions/set">setter</a> 構文に似ています。</p>
+
+<p>次のコードを例にすると:</p>
+
+<pre class="brush: js">var obj = {
+  foo: function() {
+    /* コード */
+  },
+  bar: function() {
+    /* コード */
+  }
+};
+</pre>
+
+<p>これを以下のように短縮することができます:</p>
+
+<pre class="brush: js">var obj = {
+  foo() {
+    /* コード */
+  },
+  bar() {
+    /* コード */
+  }
+};
+
+</pre>
+
+<div class="note">
+<p><strong>注記:</strong> 簡略構文では、無名関数（ …<code>foo: function() {}</code>… のような）の代わりに名前付き関数を使用します。名前付き関数は関数の本体から呼び出すことができます（無名関数では、参照するための識別子がないため不可能です）。詳しくは {{jsxref("Operators/function","function","#Examples")}} をご覧ください。</p>
+</div>
+
+<h3 id="Generator_methods" name="Generator_methods">短縮形ジェネレーターメソッド</h3>
+
+<p><a href="/ja/docs/Web/JavaScript/Reference/Statements/function*">Generator メソッド</a>は同様に簡略構文を使用して定義することができます。簡略構文ではジェネレータープロパティ名の前にアスタリスク (*)が 必要です。すなわち、<code>* g(){}</code> は動作しますが、<code>g *(){}</code> は動作しません。</p>
+
+<pre class="brush: js;highlight[12]">// 名前付きプロパティを使用 (ES6 より前)
+var obj2 = {
+  g: function*() {
+    var index = 0;
+    while(true)
+      yield index++;
+  }
+};
+
+// 簡略構文を使用して同じオブジェクトを生成
+var obj2 = { 
+  * g() {
+    var index = 0;
+    while(true)
+      yield index++;
+  }
+};
+
+var it = obj2.g();
+console.log(it.next().value); // 0
+console.log(it.next().value); // 1</pre>
+
+<h3 id="Async_methods" name="Async_methods">Async メソッド</h3>
+
+<p>{{jsxref("Statements/async_function", "Async メソッド", "", 1)}}は短縮形を使用して定義することができます。</p>
+
+<pre class="brush: js;highlight[12]">// 名前付きプロパティ
+var obj3 = {
+  f: async function () {
+    await some_promise;
+  }
+};
+
+// 簡略構文を使用して同じオブジェクトを生成
+var obj3 = { 
+  async f() {
+    await some_promise;
+  }
+};
+</pre>
+
+<h3 id="Async_generator_methods" name="Async_generator_methods">Async ジェネレーターメソッド</h3>
+
+<p><a href="/ja/docs/Web/JavaScript/Reference/Statements/function*">Generator メソッド</a>は {{jsxref("Statements/async_function", "async", "", 1)}} 関数にすることができます。</p>
+
+<pre class="brush: js">var obj4 = {
+  f: async function* () {
+    yield 1;
+    yield 2;
+    yield 3;
+  }
+};
+
+// 簡略構文を使用して同じオブジェクトを生成
+var obj4 = {
+  async* f() {
+   yield 1;
+   yield 2;
+   yield 3;
+  }
+};</pre>
+
+<h3 id="Method_definitions_are_not_constructable" name="Method_definitions_are_not_constructable">メソッド定義はコンストラクタブルではない</h3>
+
+<p>すべてのメソッド定義はコンストラクタではないため、インスタンス化しようとすると {{jsxref("TypeError")}} が発生します。</p>
+
+<pre class="brush: js example-bad">var obj = { 
+  method() {},
+};
+new obj.method; // TypeError: obj.method is not a constructor
+
+var obj = { 
+  * g() {} 
+};
+new obj.g; // TypeError: obj.g is not a constructor (ES2016 で変更)
+</pre>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<h3 id="Simple_test_case" name="Simple_test_case">簡単なテストケース</h3>
+
+<pre class="brush: js;highlight[3]">var obj = {
+  a: 'foo',
+  b() { return this.a; }
+};
+console.log(obj.b()); // "foo"
+</pre>
+
+<h3 id="Computed_property_names" name="Computed_property_names">計算されたプロパティ名</h3>
+
+<p>簡略構文は計算されたプロパティ名もサポートします。</p>
+
+<pre class="brush: js;highlight[4]">var bar = {
+  foo0: function() { return 0; },
+  foo1(){ return 1; },
+  ['foo' + 2](){ return 2; },
+};
+
+console.log(bar.foo0()); // 0
+console.log(bar.foo1()); // 1
+console.log(bar.foo2()); // 2</pre>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">ステータス</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-method-definitions', 'Method definitions')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td>初期定義。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES7', '#sec-method-definitions', 'Method definitions')}}</td>
+   <td>{{Spec2('ES7')}}</td>
+   <td>ジェネレーターメソッドも [[Construct]] トラップを持つべきではなく、<code>new</code> とともに使用すると例外が発生するように変更。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-method-definitions', 'Method definitions')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザー実装状況</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.functions.method_definitions")}}</p>
+
+<h2 id="SpiderMonkey固有のメモ">SpiderMonkey固有のメモ</h2>
+
+<ul>
+ <li>SpiderMonkey 38 {{geckoRelease(38)}} 以前では、"<code>get</code>" と "<code>set</code>" がジェネレーターメソッドに対して無効な名前でした。これは {{bug(1073809)}} で修正されています。</li>
+ <li>SpiderMonkey 41 {{geckoRelease(41)}} より前のバージョンでは、メソッド定義で波括弧が必須ではありませんでした。バージョン 41 より ES6 仕様に準拠して波括弧が必須になり、省略すると {{jsxref("SyntaxError")}} が発生します ({{bug(1150855)}})。
+  <pre class="brush: js example-bad">var o = {x() 12}; // SyntaxError</pre>
+ </li>
+ <li>ジェネレーターメソッドのみコンストラクタとする制限は、SpiderMonkey 41 {{geckoRelease(41)}} で実装しました。{{bug(1059908)}} および {{bug(1166950)}} をご覧ください。</li>
+</ul>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li><code><a href="/docs/Web/JavaScript/Reference/Functions/get">get</a></code></li>
+ <li><code><a href="/docs/Web/JavaScript/Reference/Functions/set">set</a></code></li>
+ <li><a href="/docs/Web/JavaScript/Reference/Lexical_grammar">字句文法</a></li>
+</ul>

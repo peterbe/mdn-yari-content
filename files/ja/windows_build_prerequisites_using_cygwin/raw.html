@@ -1,0 +1,214 @@
+<p><span class="comment">NOTE: Do not make substantive changes to this document without consulting Benjamin Smedberg &lt;<a class="link-mailto" href="mailto:benjamin@smedbergs.us" rel="freelink">benjamin@smedbergs.us</a>&gt; or one of the build-config peers.</span></p>
+<div>
+ {{page("/ja/docs/Build_Documentation/TOC")}}</div>
+<h3 id=".E3.81.93.E3.81.AE.E6.96.87.E6.9B.B8.E3.81.AF.E6.AD.B4.E5.8F.B2.E7.9A.84.E3.81.AA.E8.B3.87.E6.96.99.E3.81.A7.E3.81.99" name=".E3.81.93.E3.81.AE.E6.96.87.E6.9B.B8.E3.81.AF.E6.AD.B4.E5.8F.B2.E7.9A.84.E3.81.AA.E8.B3.87.E6.96.99.E3.81.A7.E3.81.99">この文書は歴史的な資料です</h3>
+<p>この文書は 2007 年 3 月の MozillaBuild システム導入前の Mozilla 1.9 コードベースをビルドするためのビルド要件のガイドです。Firefox 1.5.0.10 以上、Firefox 2.0.0.2 以上、Firefox 3 をビルドする場合は標準的な <a href="ja/Windows_Build_Prerequisites">Windows ビルド要件</a> を見てください。</p>
+<p><b>Firefox 2、Firefox 1.5、また、1.9 より前のブランチベースの他の Mozilla 製品をビルドする場合は <a href="ja/Windows_Build_Prerequisites_on_the_1.7_and_1.8_Branches">1.7 および 1.8 ブランチにおける Windows ビルド要件</a> を参照してください。</b></p>
+<p>1.0 ブランチ以前のとても古いバージョンの Mozilla のソースコードをビルドする場合は <a class="external" href="http://www.mozilla.org/build/win32-nmake.html">nmake ビルドガイド</a> に従ってください。</p>
+<h3 id=".E5.BF.85.E8.A6.81.E3.81.AA.E3.83.8F.E3.83.BC.E3.83.89.E3.82.A6.E3.82.A7.E3.82.A2" name=".E5.BF.85.E8.A6.81.E3.81.AA.E3.83.8F.E3.83.BC.E3.83.89.E3.82.A6.E3.82.A7.E3.82.A2">必要なハードウェア</h3>
+<p>Mozilla のビルドには時間がかかります。開発環境の整ったシステムが必要となります。</p>
+<ul>
+ <li>Pentium III または相当のプロセッサ、1GHz 以上、1.5GHz 以上推奨</li>
+ <li>512 MB RAM、1 GB 推奨</li>
+ <li>1.5 GB NTFS または 3 GB FAT 以上のディスクスペース</li>
+ <li>Windows NT 系のオペレーティングシステム（NT4.0、W2K (SP4?)、Windows XP、Windows Vista）</li>
+</ul>
+<h3 id=".E5.BF.85.E8.A6.81.E3.81.AA.E3.82.BD.E3.83.95.E3.83.88.E3.82.A6.E3.82.A7.E3.82.A2" name=".E5.BF.85.E8.A6.81.E3.81.AA.E3.82.BD.E3.83.95.E3.83.88.E3.82.A6.E3.82.A7.E3.82.A2">必要なソフトウェア</h3>
+<p>Windows での標準的なビルドには以下のソフトウェアが必要です。</p>
+<p>スペースやプラス、引用符、メタ文字といった分割文字が含まれるパスにツールがインストールされていると Mozilla をビルドできない可能性があります。Visual C++ ツールはスペースを含むディレクトリにインストールされる可能性があります（デフォルトのインストール場所が望ましい）。</p>
+<h4 id="GNU_Tools_for_Microsoft_Windows_.28Cygwin.29" name="GNU_Tools_for_Microsoft_Windows_.28Cygwin.29">GNU Tools for Microsoft Windows (Cygwin)</h4>
+<p>Cygwin は Windows 用の GNU ツールが利用できる Linux ライクな環境です。Mozilla は GNU パッケージの開発者向けセットを使用します。必ずインストールしてください。これには gawk、make および zip ユーティリティが含まれます。GCC は使用しませんのでインストールする必要はありません。必ず Cygwin 1.1.6 以降を使用してください。ご利用のオペレーティングシステムには cygwin を 1 バージョンしかインストールできません。複数インストールした場合にはそれぞれが干渉し、エラーが生じる可能性があります。</p>
+<p>ここをクリックし、<a class="link-ftp" href="ftp://ftp.cygwin.com/pub/cygwin/setup.exe">setup.exe</a> を実行し、インストールガイドに従ってください。Cygwin インストーラウィザードは Windows プログラムとして実行されます。ウィザードにカテゴリやパッケージの概要が表示されるページがあります。標準の設定に加えてパッケージを追加する必要があります。</p>
+<p>Cygwin を Mozilla のビルドにのみ使うのであれば標準のパッケージと Mozilla で必要となるパッケージのみをインストールしてください。この文書を書いている時点でのバージョンのインストーラ（バージョン 2.510.2.2）では、<b>標準で選択されていない</b>パッケージは以下のとおりです。</p>
+<ul>
+ <li>zip、unzip（Archive 下）</li>
+ <li>cvs（Devel 下。CVS からチェックアウトする場合のみ。tar ボールを使用する場合は不要。）</li>
+ <li>libiconv（Devel 下。インストーラをビルドする場合のみ。）</li>
+ <li>patchutils（Devel 下）</li>
+ <li>perl（Interpreters 下）</li>
+ <li>make 3.80 は入手不可能になっています。下を見てください。</li>
+</ul>
+<p>Cygwin の GNU ツールを他の開発にも使うのであれば、興味のあるものも含めて、エディタや開発者向けツール、インタプリタをインストールしてください。Mozilla が必要とする unzip や zip といったパッケージもすべて忘れないようにしてください！</p>
+<p>以下は Mozilla のビルドに必要な<b>完全な</b> cygwin パッケージのリストです。これを使って手元のパッケージを再確認したり、ビルドプロセスを理解したり変更することもできます。</p>
+<ul>
+ <li>ash -- UNIX ライクなコマンドラインインタプリタシェル（Base カテゴリ）</li>
+ <li>coreutils -- GNU コアユーティリティ集（fileutils、install、sh-utils、textutils を含む）（Base カテゴリ）</li>
+ <li>cvs -- バージョン管理システム（Devel カテゴリ）</li>
+ <li>diffutils -- ファイル比較用ユーティリティ（Base カテゴリ）</li>
+ <li>findutils（Base カテゴリ）</li>
+ <li>gawk -- パターンマッチング言語（Base および Interpreters カテゴリ）</li>
+ <li>grep -- テキスト検索ツール（Base カテゴリ）</li>
+ <li>libiconv -- 文字セット変換（Devel カテゴリ）- libiconv2 にはインストーラで必要な iconv プログラムが入っていません</li>
+ <li>make 3.80（3.81 はだめ！下を見てください）-- ソフトウェアビルド用の依存性アナライザ（Devel カテゴリ）</li>
+ <li>patchutils -- パッチファイルを扱うプログラムのコレクション（Devel カテゴリ）</li>
+ <li>perl -- ビルドの各所をコントロールするために使用されるスクリプト言語（Interpreters カテゴリ）</li>
+ <li>sed -- 検索・置換用言語（Base カテゴリ）</li>
+ <li>unzip -- zip ファイルの解凍（Archive カテゴリ）</li>
+ <li>zip -- zip ファイルの作成（Archive カテゴリ）</li>
+</ul>
+<p>ビルドシステムの configure.in ファイルを変更しようと考えているのであれば、エディタ（xemacs や joe など）と autoconf-2.13（autoconf-2.5x および 2.60 は機能しません）パッケージもインストールする必要があります。</p>
+<p>デバッグビルドをビルドしない場合は binutils パッケージをインストールして strip.exe を使用できるようにすることをお勧めします。</p>
+<p>好みによって、Cygwin の perl パッケージの代わりに <a class="external" href="http://activestate.com/Products/ActivePerl/">ActiveState の ActivePerl</a> を使用してもかまいません。</p>
+<h4 id="make" name="make">make</h4>
+<p>make 3.80 は cygwin のインストーラで入手不可能になっています（バージョン 3.81 は<b>動きません</b>）。そのため、<a class="external" href="http://cygwin.paracoda.com/release/make/make-3.80-1.tar.bz2">paracoda</a> からダウンロードし、その中の make.exe を %cygwin%\bin\ ディレクトリに配置してください。例えば、cygwin の bash シェルを起動し、次を実行します。</p>
+<pre class="eval">cd /
+tar xjf /cygdrive/c/where-your-download-is/make-3.80-1.tar.bz2
+bin/make.exe --version
+</pre>
+<h4 id="moztools" name="moztools">moztools</h4>
+<p>moztools パッケージには Mozilla のビルドに必要なバイナリやライブラリが含まれています。MSVC の全バージョンで動作する全 moztools を含む単一の zip ファイルは <a class="external" href="http://ftp.mozilla.org/pub/mozilla.org/mozilla/libraries/win32/moztools-static.zip">moztools-static.zip</a> から入手可能です。</p>
+<p>zip ファイルには保存すべき
+ <i>
+  moztools</i>
+ という名前のフォルダが格納されています。ツールをインストールしたい場所に zip ファイルを展開してください。しかしながら cygwin ディレクトリ内に moztools ディレクトリをインストールすると Mozilla をビルドできなくなる可能性があります。MOZ_TOOLS 環境変数をこの moztools フォルダを指すようにセットしてください。（$MOZ_TOOLS をそれ相応に更新するのであればフォルダをリネームしても結構です。）</p>
+<p>注意：1.8.1 ブランチ（Firefox 2）は moztools-static パッケージと互換性がありますが、それより古いブランチ（1.8.0 ブランチを含む）は互換性がありません。詳しくは <a href="ja/Windows_Build_Prerequisites_on_the_1.7_and_1.8_Branches">各バージョンのビルド要件</a> をご覧ください。</p>
+<p>moztools の zip ファイルにはコンポーネントのソースは含まれていません。コンポーネントをスクラッチからビルドすることに興味があるのであれば、<a class="link-ftp" href="ftp://ftp.mozilla.org/pub/mozilla.org/mozilla/libraries/win32/historic/src/">ここ</a> からソースを入手できます。OpenOffice.org をビルドするための <a class="external" href="http://www.go-oo.org/">ooo-build</a> のシステムでは、このコードを使ってスクラッチからツールをビルドしており、配布されているバイナリを使いたくない人向けの関連する <a class="external" href="http://go-oo.org/ooo-build/patches/src680/">パッチ</a> もあります。</p>
+<h4 id="cvs" name="cvs">cvs</h4>
+<p>CVS は Mozilla によって使用されるソースコントロールシステムです。FTP 経由でソースの tarball をダウンロードし、それからビルドしようとしているのであれば cvs は不要です。その場合このステップを飛ばしてもかまいません。</p>
+<p><a href="ja/Mozilla_Source_Code_Via_CVS">Mozilla のソースを引っぱってくる</a> のには cvs のバージョン 1.11 以降が必要です。Cygwin CVS を推奨しますが、<a class="external" href="http://www.wincvs.org/download.html">WinCVS</a> も互換性があります。CVS をインストールする際には emacs や Xemacs のようなエディタもインストールするのがよいでしょう。</p>
+<h4 id=".E3.82.B3.E3.83.B3.E3.83.91.E3.82.A4.E3.83.A9.E3.81.A8.E3.83.AA.E3.83.B3.E3.82.AB" name=".E3.82.B3.E3.83.B3.E3.83.91.E3.82.A4.E3.83.A9.E3.81.A8.E3.83.AA.E3.83.B3.E3.82.AB">コンパイラとリンカ</h4>
+<p>CVS トランク（Mozilla 1.9 以上）で開発を行う際に標準的なコンパイラは Microsoft Visual C++ バージョン 8 です。フリーの Microsoft Visual C++ 8 の Express エディション (Visual C++ 2005 Express Edition) は <a href="ja/Building_with_VC8_Express">追加ツールと適切な configure オプション</a> を使用することで動きます。Visual C++ 7.1 も動きます。VC++ 7 は非推奨です。VC6 はサポートされておらず、使えないビルドができるでしょう。</p>
+<p>ビルドは Windows のコマンドラインシェルからも cygwin のシェルからもできるようです。Windows のシェルを使用する場合は Visual Studio に付属している vcvars32.bat スクリプトを使用してコンパイラの環境変数をセットアップする必要があります（スタートメニューの VS のエントリから "Visual C++ Command Prompt" を選択すると、新しいシェルでこのスクリプトが実行されます）。</p>
+<p>（非推奨ながら）MinGW gcc コンパイラを使っても Mozilla をコンパイルすることができます。<a class="external" href="http://gemal.dk/mozilla/build.html">MinGW を使った Mozilla のコンパイル</a> をご覧ください。</p>
+<h5 id="Visual_Studio_.E3.82.B3.E3.83.B3.E3.83.91.E3.82.A4.E3.83.A9.E3.81.AE.E5.AF.BE.E5.BF.9C.E8.A1.A8" name="Visual_Studio_.E3.82.B3.E3.83.B3.E3.83.91.E3.82.A4.E3.83.A9.E3.81.AE.E5.AF.BE.E5.BF.9C.E8.A1.A8">Visual Studio コンパイラの対応表</h5>
+<table>
+ <tbody>
+  <tr>
+   <th>ブランチ</th>
+   <th>HEAD<br>
+    Gecko 1.9<br>
+    Firefox 3</th>
+   <th>MOZILLA_1_8_BRANCH<br>
+    Gecko 1.8.1<br>
+    Firefox 2</th>
+   <th>MOZILLA_1_8_0_BRANCH<br>
+    Gecko 1.8<br>
+    Firefox 1.5.0.x</th>
+  </tr>
+  <tr>
+   <th>VC6</th>
+   <td><font color="#ffffff">×</font></td>
+   <td>○（オフィシャル）</td>
+   <td>○（オフィシャル）</td>
+  </tr>
+  <tr>
+   <th>VC7 (Visual Studio 2002)</th>
+   <td>△</td>
+   <td>○</td>
+   <td>○</td>
+  </tr>
+  <tr>
+   <th>VC7.1 (Visual Studio 2003)</th>
+   <td>○</td>
+   <td>○</td>
+   <td>○</td>
+  </tr>
+  <tr>
+   <th>VC8 (Visual Studio 2005)</th>
+   <td>○（オフィシャル）</td>
+   <td><font color="#ffffff">×</font></td>
+   <td><font color="#ffffff">×</font></td>
+  </tr>
+  <tr>
+   <th>VC9 (Visual Studio Codename "Orcas")</th>
+   <td>○（実験的）</td>
+   <td><font color="#ffffff">×</font></td>
+   <td><font color="#ffffff">×</font></td>
+  </tr>
+ </tbody>
+</table>
+<p><b>注意 1</b>：<a href="ja/Windows_Build_Prerequisites_on_the_1.7_and_1.8_Branches">Firefox 1.5/2.0 / Gecko 1.8.x ビルドガイド</a> はこの文書ではカバーしていません。</p>
+<p><b>注意 2</b>：VC9/"Orcas" に関する情報はすべて January CTP についてのものです。過去や将来のリリースでも当てはまるかもしれませんが、当てはまらないかもしれません。</p>
+<h4 id="Platform_SDK" name="Platform_SDK">Platform SDK</h4>
+<p>Visual Studio .NET 2003 以降を使用しているのであれば、Mozilla のビルドに必要な SDK はすべて揃っているのでこのステップは飛ばしてもかまいません。それよりも古いコンパイラやフリーの Visual Studio Express Edition の場合、GDI+ ヘッダおよび同ライブラリを手に入れるために Microsoft から SDK をダウンロードする必要があります。</p>
+<p><a class="external" href="http://www.microsoft.com/downloads/details.aspx?FamilyId=A55B6B43-E24F-4EA3-A93E-40C0EC4F68E5&amp;displaylang=en">Windows Server 2003 SP1 Platform SDK</a> をダウンロード可能です。"Windows Core SDK"（Tools、Build Environment および Redistributable Components）と "Web Workshop SDK" (Build Environment) を必ずインストールしてください。</p>
+<p>ビルド環境がこの SDK をピックアップできるように、以下のようにして SDK をビルド環境に追加する必要があります。</p>
+<h4 id="NSIS" name="NSIS">NSIS</h4>
+<p>Mozilla コードベースからビルドされるアプリケーションには、そのインストーラとして NSIS を使用するものがあります。これには特に Firefox、Thunderbird そして Sunbird といったツールキットアプリが該当します。NSIS を活用してアンインストーラをビルドするため、通常のビルドプロセスにおいて NSIS が必須になっています。<code>.mozconfig</code> で &lt;tt&gt;ac_add_options --disable-installer&lt;/tt&gt; を指定してインストーラのビルドを無効化しないのであれば、<a class="external" href="http://nsis.sourceforge.net/Download">NSIS</a> をインストールし、そのインストールディレクトリ（インストールディレクトリの "Bin" ディレクトリではない）を PATH に追加してください。バージョン 2.17 以上を推奨します。</p>
+<h3 id=".E7.92.B0.E5.A2.83.E5.A4.89.E6.95.B0.E3.81.AE.E8.A8.AD.E5.AE.9A" name=".E7.92.B0.E5.A2.83.E5.A4.89.E6.95.B0.E3.81.AE.E8.A8.AD.E5.AE.9A">環境変数の設定</h3>
+<p>ビルド環境は mozilla のビルドシステムが適切なコンパイラやライブラリを見つけられるように設定されている必要があります。このためには DOS バッチスクリプトを利用するのが最良です。パスにスペースや他の特殊な文字が入っているとビルドに失敗する可能性があります。Visual C++ を除いてそのようなパスにインストールされているソフトウェアがないかを確認してください。</p>
+<p>以下が環境変数の設定に使うバッチスクリプトです（cmd.exe で実行するか cygwin.bat ファイルを変更してください）。</p>
+<pre class="eval">rem --- cvs や ssh が正常に動くように HOME をセット
+rem --- cvs は .cvspass ファイルを、ssh は .ssh ファイルを置くために HOME を使用する
+rem --- ssh を使用する場合は /etc/passwd で指定されたホームディレクトリに HOME がマッチしている必要がある。<a class="external" href="http://www.cygwin.com/faq/faq0.html" rel="freelink">http://www.cygwin.com/faq/faq0.html</a> を参照。
+set HOME=C:\home
+
+rem --- MSVC の vcvars.bat ファイルがある場所を VCVARS にセット
+set VCVARS=<var>C:\Program Files\Microsoft Visual Studio 8\VC\bin\vcvars32.bat</var>
+
+rem --- MS SDK がインストールされている場所を MSSDK にセット
+rem --- <strong>SDK が付属していない MSVC7 やフリーの MSVC の場合のみ必要</strong>
+set MSSDK=<var>C:\Program Files\Microsoft Platform SDK</var>
+
+rem --- moztools パッケージがインストールされている場所を MOZ_TOOLS にセット
+set MOZ_TOOLS=<var>C:\moztools</var>
+
+rem --- cygwin がインストールされている場所を CYGWINBASE にセット
+rem --- CYGWIN という名前を使ってはならない。cygserver や cygrunsrv、他の Cygwin のサービスが正しく機能しなくなる
+rem --- CYGWIN 変数は Cygwin の挙動を少し変える目的で使用する
+set CYGWINBASE=<var>C:\cygwin</var>
+
+rem --- Cygwin のパスを先頭に追加
+rem --- PATH において cygwin の &lt;tt&gt;find&lt;/tt&gt; が windows の &lt;tt&gt;find.exe&lt;/tt&gt; よりも先に来るようにし、cygwin の &lt;tt&gt;link&lt;/tt&gt; は MSVC の &lt;tt&gt;link.exe&lt;/tt&gt; の後ろに来るようにする
+set PATH=%CYGWINBASE%\bin;%PATH%
+
+rem --- MSVC の環境変数をセット
+call "%VCVARS%"
+ 
+rem --- SDK のパスを先頭に追加
+rem --- <strong>SDK が付属していない MSVC7 やフリーの MSVC の場合のみ必要</strong>
+set PATH=%MSSDK%\bin;%PATH%
+set INCLUDE=%MSSDK%\include;%MSSDK%\include\atl;%INCLUDE%
+set LIB=%MSSDK%\lib;%LIB%
+
+rem --- moztools を最後に持ってくる
+set PATH=%PATH%;%MOZ_TOOLS%\bin
+
+rem --- 現在の PATH の状況：
+rem MS-SDK; MSVC; Cygwin; Windows; glib/libIDL; Moztools
+
+rem --- 基本的にスクリプトが最後にやることは cygwin シェルを立ち上げること
+rem --- 設定した PATH を上書きする可能性がある ~/.profile や /etc/profile を確認すること！
+bash --login -i
+</pre>
+<p>より便利なターミナルとして <a class="external" href="http://web.gccaz.edu/~medgar/puttycyg/">PuTTYcyg</a> というものがあります。これは Cygwin 用ターミナルとして使用できる PuTTY SSH クライアントです。PuTTYcyg をパスの通った場所にインストールし、バッチファイルの最後のコマンドを次のものと置き換えるだけで同様のバッチファイルを使用できます。</p>
+<pre class="eval">start putty -cygterm -
+</pre>
+<p>このコマンドは PuTTY シェルで Cygwin を起動させるものです。</p>
+<h4 id="cygwin_.E3.81.AE.E3.83.91.E3.82.B9.E3.81.AE.E4.BF.AE.E6.AD.A3" name="cygwin_.E3.81.AE.E3.83.91.E3.82.B9.E3.81.AE.E4.BF.AE.E6.AD.A3">cygwin のパスの修正</h4>
+<p>デフォルトでは cygwin は自分自身を PATH の最初に置き、丁寧に組み立てた PATH の順番を壊してしまいます。次のどちらかを選択してください。</p>
+<ul>
+ <li>/etc/profile/ = %CYGWINBASE%\etc\profile を編集（Unix 形式の改行コードを維持するエディタ、よくわからない場合は cygwin パッケージの <code>nano</code> を使用）し、次の行を変更する。</li>
+</ul>
+<pre class="eval">PATH=/usr/local/bin:/usr/bin:/bin:/usr/X11R6/bin:$PATH
+を
+PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/usr/X11R6/bin
+に
+</pre>
+<ul>
+ <li>または .profile か .bash_profile を home ディレクトリに追加する。</li>
+</ul>
+<p>これは Make が "link.exe" というファイルの正しいインスタンスを選択できるようにするために必要です。Cygwin の PATH に手を加えたくない場合は単に link.exe の名前を適当なものに直してください。起動時に自動的にこれを行い、終了時に元に戻すということをバッチファイルにさせることもできます。そうするにはバッチファイルの次の行を置換してください。</p>
+<pre>bash --login -i</pre>
+<p>を次のものに置換</p>
+<pre>rename link.exe cyglink.exe
+bash --login -i
+rename cyglink.exe link.exe</pre>
+<p>この方法を使う場合は単にウィンドウを閉じるのではなく、必ず "Exit" と入力して Cygwin のシェルを終了してください。</p>
+<h3 id=".E3.82.88.E3.81.8F.E3.81.82.E3.82.8B.E5.95.8F.E9.A1.8C.E3.81.A8.E3.83.92.E3.83.B3.E3.83.88.E3.80.81.E5.88.B6.E9.99.90" name=".E3.82.88.E3.81.8F.E3.81.82.E3.82.8B.E5.95.8F.E9.A1.8C.E3.81.A8.E3.83.92.E3.83.B3.E3.83.88.E3.80.81.E5.88.B6.E9.99.90">よくある問題とヒント、制限</h3>
+<ul>
+ <li><a href="ja/Mozilla_Build_FAQ#Win32_.E7.89.B9.E6.9C.89.E3.81.AE.E8.B3.AA.E5.95.8F">Mozilla ビルド FAQ</a> をチェックしてください。頻繁に出くわすビルドについての問題がたくさんリストアップされています。</li>
+ <li>cygwin をインストールするときに DOS 形式の改行コードを選択した場合は必ずソースやオブジェクトツリーを /cygdrive/&lt;c&gt; マウントポイントに置いてください。/home 内に置いてはいけません。</li>
+ <li>cygwin ディレクトリ内に moztools ディレクトリをインストールすると Mozilla をビルドできない可能性があります。</li>
+ <li>PATH 環境変数に引用符 (") が含まれているとビルドに失敗する可能性があります。cygwin のサブシェルに渡す際に引用符を適切に変換できないからです。通常、引用符は必要ないので除去することができます。</li>
+ <li>cygwin パッケージが完全に揃っているか再確認してください。不完全な場合は cygwin インストーラを立ち上げて足りないパッケージを追加してください。
+  <ul>
+   <li>Cygwin のメーリングリストによると、make 3.81 での挙動の変化は DOS 形式のパスのパッチが取り除かれたことによるものとのこと。</li>
+  </ul>
+ </li>
+ <li><a href="ja/Debugging_Mozilla_on_Windows_FAQ">Windows 上での Mozilla のデバッグ FAQ</a>：Windows 上で Mozilla のデバッグする方法。</li>
+ <li><a href="ja/Upgrading_to_VC7">Windows ビルドシステムを VC6 から VC7 へアップグレードする方法</a></li>
+</ul>
+<div class="noinclude">
+  </div>
+<p>{{ languages( { "en": "en/Windows_build_prerequisites_using_cygwin", "fr": "fr/Pr\u00e9alables_\u00e0_la_compilation_sous_Windows_avec_cygwin" } ) }}</p>

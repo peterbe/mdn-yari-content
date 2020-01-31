@@ -1,0 +1,202 @@
+<div class="summary">
+<p>IndexedDB 是一种使用浏览器存储大量数据的方法.它创造的数据可以被查询，并且可以离线使用. IndexedDB对于那些需要存储大量数据，或者是需要离线使用的程序是非常有效的解决方法.</p>
+</div>
+
+<h2 id="关于本文档">关于本文档</h2>
+
+<p>本文档介绍IndexedDB的基本概念. 它给你一个清晰的构架图. 想学到更多，查看 <a href="#definitions">Definitions</a>部分.</p>
+
+<p><a href="/zh-cn/IndexedDB/Using_IndexedDB" title="zh-cn/IndexedDB/IndexedDB primer">使用 IndexedDB</a> 有一个说明如何使用API的教程.  IndexedDB API的参考手册详见 <a href="/zh-cn/IndexedDB" title="https://developer.mozilla.org/zh-cn/IndexedDB">IndexedDB</a> 文章及其子页面，它们描述了 indexedDB 所使用的对象类型，以及同步和异步api的相关方法.</p>
+
+<h2 id="IndexedDB概况"> IndexedDB概况</h2>
+
+<p>使用IndexedDB，你可以存储或者获取数据，使用一个key索引的。 你可以在事务(transaction)中完成对数据的修改。和大多数web存储解决方案相同，indexedDB也遵从同源协议(<a class="external" href="http://www.w3.org/Security/wiki/Same_Origin_Policy" title="http://www.w3.org/Security/wiki/Same_Origin_Policy">same-origin policy</a>). 所以你只能访问同域中存储的数据，而不能访问其他域的。</p>
+
+<p>API包含异步(<a href="/zh-cn/IndexedDB#Asynchronous_API" title="https://developer.mozilla.org/zh-cn/IndexedDB#Asynchronous_API">asynchronous</a>) API 和同步(<a href="/zh-cn/IndexedDB#Synchronous_API" title="https://developer.mozilla.org/zh-cn/IndexedDB#Synchronous_API">synchronous</a>)API两种。  异步API适合大多数情况, 同步API必须同 <a href="/zh-cn/DOM/Using_web_workers" title="https://developer.mozilla.org/zh-cn/Using_web_workers">WebWorkers一同使用</a>. 目前，没有主流浏览器支持同步API。 即使同步API被支持了，你也会在大多数的情况使用异步API。</p>
+
+<p>IndexedDB 是 WebSQL 数据库的取代品, W3C组织在2010年11月18日废弃了webSql.  IndexedDB 和WebSQL的不同点在于WebSQL 是关系型数据库（复杂）IndexedDB 是key-value型数据库（简单好使）.</p>
+
+<h2 id="concepts" name="concepts">基本概念</h2>
+
+<p>像其他key-value数据库一样（不是关系型数据库，nosql的）：</p>
+
+<ul>
+ <li>
+  <p><strong>IndexedDB 数据库使用key-value键值对储存数据.</strong> values 数据可以是非常复杂的结构体.</p>
+ </li>
+ <li>
+  <p><strong>IndexedDB 是事务模式的数据库</strong>. 任何操作都发生在事务(<a href="#gloss_transaction">transaction)</a>中。  IndexedDB API提供了索引, 表, 指针等等, 但是所有这些必须是依赖于某种事务的。 你不能在事务外执行命令或者打开指针.</p>
+
+  <p>事务(transaction)有生存周期, 在生存周期以后使用它会报错。并且，事务(transaction)是自动提交的，不可以手动提交。</p>
+
+  <p>当用户在不同的标签页同时打开Web应用的两个实例时，这个事务模型就会非常有用。如果没有事务操作的支持，这两个实例就会互相影响对方的修改。如果你不熟悉数据库的事务模型，请参考<a class="link-https" href="https://zh.wikipedia.org/wiki/%E6%95%B0%E6%8D%AE%E5%BA%93%E4%BA%8B%E5%8A%A1" title="https://secure.wikimedia.org/wikipedia/zh-cn/wiki/Database_transaction">数据库事务（维基百科）</a>。 同时参考<a href="#gloss_transaction">transaction</a>文章中关于事务的定义部分。</p>
+ </li>
+ <li>
+  <p><strong>The IndexedDB API 基本上是异步的.</strong> IndexedDB的API不通过return语句返回数据，而是需要你提供一个回调函数来接受数据。执行API时，你不以同步（synchronous）方式对数据库进行“存储”和“读取”操作，而是向数据库发送一个操作“请求”。当操作完成时，数据库会以DOM事件的方式通知你，同时事件的类型会告诉你这个操作是否成功完成。这个过程听起来会有些复杂，但是里面是有明智的原因的。这个和<a href="/zh-cn/DOM/XMLHttpRequest" style="line-height: 1.5;" title="https://developer.mozilla.org/zh-cn/xmlhttprequest">XMLHttpRequest</a>请求是类似的。</p>
+ </li>
+ <li>
+  <p><strong>IndexedDB 是面向对象的。</strong></p>
+
+  <p><strong>IndexedDB 不使用</strong><strong><abbr>SQL</abbr>.</strong> 它属于noSQL数据库。</p>
+ </li>
+ <li>
+  <p><strong>IndexedDB数据库“请求”无处不在 </strong>我们上边提到，数据库“请求”负责接受成功或失败的DOM事件。每一个“请求”都包含<code>onsuccess</code>和<code>onerror</code>属性，同时你还对“请求”调用<span style="font-family: courier new,andale mono,monospace; line-height: 1.5;">addEventListener()和</span><span style="font-family: courier new,andale mono,monospace; line-height: 1.5;">removeEventListener()。“请求”还包括</span><code style="font-style: normal; line-height: 1.5;">readyState<font face="Open Sans, sans-serif">，</font></code><code style="font-style: normal; line-height: 1.5;">result</code><span style="line-height: 1.5;">和</span><code style="font-style: normal; line-height: 1.5;">errorCode属性，用来表示“请求”的状态。result属性尤其魔幻，他可以根据“请求”生成的方式变成不同的东西，例如：</code><span style="font-family: courier new,andale mono,monospace; line-height: 1.5;">IDBCursor实例、刚插入数据库的数值对应的键值（key）等<code style="font-style: normal; line-height: 1.5;">。</code></span></p>
+ </li>
+ <li>
+  <p><strong>IndexedDB在结果准备好之后通过DOM事件通知用户</strong> DOM事件总是有一个类型（<code>type</code>）属性（在IndexedDB中，该属性通常设置为<code>success</code>或<code>error</code>）。DOM事件还有一个目标（<code>target</code>）属性，用来告诉事件是在哪里触发的。通常情况下，目标（<code>target</code>）属性是数据库操作生成的<span style="font-family: courier new,andale mono,monospace; line-height: 1.5;">IDBRequest。成功（success）事件不弹出提示并且不能撤销，错误（error）事件会弹出提示且可以撤销。这一点是非常重要的，因为</span><span style="font-family: courier new,andale mono,monospace; line-height: 1.5;">除非错误事件被撤销，<span style="font-family: courier new,andale mono,monospace; line-height: 1.5;">否则他们会终止所在的任何事务。</span></span></p>
+ </li>
+ <li>
+  <p><a name="origin"><strong>IndexedDB遵循同源（same-origin）策略</strong></a> “源”指脚本所在文档URL的域名、应用层协议和端口。每一个“源”都有与其相关联的数据库。在同一个“源”内的所有数据库都有唯一、可区别的名称。</p>
+
+  <p>IndexedDB的安全机制避免应用访问非同“源”的数据。例如，<a class="external" href="http://www.example.com/app/" rel="freelink" style="line-height: 1.5;">http://www.example.com/app/</a>的应用或页面可以访问<a class="external" href="http://www.example.com/dir/" rel="freelink" style="line-height: 1.5;">http://www.example.com/dir/</a>的数据，因为他们同“源”。但是它们不能访问<a class="external" href="http://www.example.com:8080/dir/" rel="freelink" style="line-height: 1.5;">http://www.example.com:8080/dir/</a>（不同端口）或<a class="link-https" href="https://www.example.com/dir/" rel="freelink" style="line-height: 1.5;">https://www.example.com/dir/</a>（不同协议）的数据，因为他们不同“源”。</p>
+ </li>
+</ul>
+
+<h2 id="definitions" name="definitions">名词解释</h2>
+
+<p>本节定义并解释了IndexedDB API中所使用的术语</p>
+
+<h3 id="database" name="database">数据库</h3>
+
+<dl>
+ <dt><a name="gloss_database">数据库</a></dt>
+ <dd>一个信息库，通常包含一个或多个 <a href="/zh-CN/docs/IndexedDB/Basic_Concepts_Behind_IndexedDB$edit#gloss_object_store">object stores</a>. 每个数据库必须包含以下内容：
+ <ul>
+  <li>名字(Name). 它标识了一个特定源中的数据库，并且在数据库的整个生命周期内保持不变.  此名字可以为任意字符串值（包括空字符串）.</li>
+  <li>当前版本(<a href="/zh-CN/docs/IndexedDB/Basic_Concepts_Behind_IndexedDB$edit#gloss_version">version</a>). 当一个数据库首次创建时，它的 version 为1，除非另外指定. 每个数据库在任意时刻只能有一个 version.</li>
+ </ul>
+ </dd>
+ <dt><a name="gloss_object_store">object store</a></dt>
+ <dd>
+ <p>The mechanism by which data is stored in the database. The object store persistently holds records, which are key-value pairs. Records within an object store are sorted according to the <em><a href="#gloss_key">keys</a></em> in an ascending order.</p>
+
+ <p>Every object store must have a name that is unique within its database. The object store can optionally have a <em><a href="#gloss_keygenerator">key generator</a></em> and a <em><a href="#gloss_keypath">key path</a></em>. If the object store has a key path, it is using <em><a href="#gloss_inline_key">in-line keys</a></em>; otherwise, it is using <em><a href="#gloss_outofline_key">out-of-line keys</a></em>.</p>
+
+ <p>For the reference documentation on object store, see <a href="../../../../zh-cn/IndexedDB/IDBObjectStore" rel="internal">IDBObjectStore</a> or <a href="../../../../zh-cn/IndexedDB/IDBObjectStoreSync" rel="internal">IDBObjectStoreSync</a>.</p>
+ </dd>
+ <dt><a name="gloss_version">version</a></dt>
+ <dd>When a database is first created, its version is the integer <code>1</code>. Each database has one version at a time; a database can't exist in multiple versions at once. The only way to change the version is by opening it with a greater version than the current one. This will start a <code>VERSION_CHANGE</code> <em>transaction</em> and fire an <code>upgradeneeded</code> event. The only place where the schema of the database can be updated is inside the handler of that event.</dd>
+ <dd>Note: This definition describes the <a class="external" href="http://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html">most recent specifications</a>, which is only implemented in some up-to-date browsers. Old browsers implemented the now deprecated and removed <code>IDBDatabase.setVersion()</code> method.</dd>
+ <dt><a name="gloss_database_connection">database connection</a></dt>
+ <dd>An operation created by opening a <em><a href="#gloss_database">database</a></em>. A given database can have multiple connections at the same time.</dd>
+ <dt><a name="gloss_transaction">transaction</a></dt>
+ <dd>
+ <p>An atomic and durable set of data-access and data-modification operations on a particular database. It is how you interact with the data in a database. In fact, any reading or changing of data in the database must happen in a transaction.</p>
+
+ <p>A database connection can have several active transaction associated with it at a time, so long as the writing transactions do not have overlapping <a href="#gloss_scope"><em>scopes</em></a>. The scope of transactions, which is defined at creation, determines which object stores the transaction can interact with and remains constant for the lifetime of the transaction. So, for example, if a database connection already has a writing transaction with a scope that just covers the <code>flyingMonkey</code> object store, you can start a second transaction with a scope of the <code>unicornCentaur</code> and <code>unicornPegasus</code> object stores. As for reading transactions, you can have several of them—even overlapping ones.</p>
+
+ <p>Transactions are expected to be short-lived, so the browser can terminate a transaction that takes too long, in order to free up storage resources that the long-running transaction has locked. You can abort the transaction, which rolls back the changes made to the database in the transaction. And you don't even have to wait for the transaction to start or be active to abort it.</p>
+
+ <p>The three modes of transactions are: read/write, read only, and version change. The only way to create and delete object stores and indexes is by using a version-change transaction. To learn more about transaction types, see the reference article for <a href="/zh-cn/IndexedDB" title="https://developer.mozilla.org/zh-cn/IndexedDB">IndexedDB</a>.</p>
+
+ <p>Because everything happens within a transaction, it is a very important concept in IndexedDB. To learn more about transactions, especially on how it relates to versioning, see <a href="../../../../zh-cn/IndexedDB/IDBTransaction" rel="internal">IDBTransaction</a>, which also has reference documentation. For the documentation on the synchronous API, see <a href="../../../../zh-cn/IndexedDB/IDBTransactionSync" rel="internal">IDBTransactionSync</a>.</p>
+ </dd>
+ <dt><a name="gloss_request">request</a></dt>
+ <dd>The operation by which reading and writing on a database is done. Every request represents one read or write operation.</dd>
+ <dt><a name="gloss_index">index</a></dt>
+ <dd>
+ <p>A specialized object store for looking up records in another object store, called the <em>referenced object store</em>. The index is a persistent key-value storage where the value part of its records is the key part of a record in the referenced object store. The records in an index are automatically populated whenever records in the referenced object store are inserted, updated, or deleted. Each record in an index can point to only one record in its referenced object store, but several indexes can reference the same object store. When the object store changes, all indexes that refers to the object store are automatically updated.</p>
+
+ <p>Alternatively, you can also look up records in an object store using the <a href="#gloss_key"> key</a><em>.</em></p>
+
+ <p>To learn more on using indexes, see <a href="/zh-cn/IndexedDB/Using_IndexedDB#Using_an_index" title="zh-cn/IndexedDB/Using_IndexedDB#Using_an_index">Using IndexedDB</a>. For the reference documentation on index, see <a href="../../../../zh-cn/IndexedDB/IDBKeyRange" rel="internal">IDBKeyRange</a>.</p>
+ </dd>
+ <br>
+ <br>
+  
+</dl>
+
+<h3 id="key" name="key">Key and value</h3>
+
+<dl>
+ <dt><a name="gloss_key">key</a></dt>
+ <dd>
+ <p>A data value by which stored values are organized and retrieved in the object store. The object store can derive the key from one of three sources: a <em><a href="#gloss_keygenerator">key generator</a></em>, a <em><a href="#gloss_keypath">key path</a></em>, and an explicitly specified value. The key must be of a data type that has a number that is greater than the one before it. Each record in an object store must have a key that is unique within the same store, so you cannot have multiple records with the same key in a given object store.</p>
+
+ <p>A key can be one of the following type: <a href="/zh-cn/JavaScript/Reference/Global_Objects/String" title="https://developer.mozilla.org/zh-cn/JavaScript/Reference/Global_Objects/String">string</a>, <a href="/zh-cn/JavaScript/Reference/Global_Objects/Date" title="zh-cn/JavaScript/Reference/Global Objects/Date">date</a>, float, and <a href="/zh-cn/JavaScript/Reference/Global_Objects/Array" title="zh-cn/JavaScript/Reference/Global Objects/Array">array</a>. For arrays, the key can range from an empty value to infinity. And you can include an array within an array. Note that Firefox prior to 11 only accepted keys of type string or integer.</p>
+
+ <p>Alternatively, you can also look up records in an object store using the <em><a href="#gloss_index">index</a>.</em></p>
+ </dd>
+ <dt><a name="gloss_keygenerator">key generator</a></dt>
+ <dd>A mechanism for producing new keys in an ordered sequence. If an object store does not have a key generator, then the application must provide keys for records being stored. Generators are not shared between stores. This is more a browser implementation detail, because in web development, you don't really create or access key generators.</dd>
+ <dt><a name="gloss_inline_key">in-line key</a></dt>
+ <dd>A key that is stored as part of the stored value. It is found using a <em>key path</em>. An in-line key can be generated using a generator. After the key has been generated, it can then be stored in the value using the key path or it can also be used as a key.</dd>
+ <dt><a name="gloss_outofline_key">out-of-line key</a></dt>
+ <dd>A key that is stored separately from the value being stored.</dd>
+ <dt><a name="gloss_keypath">key path</a></dt>
+ <dd>Defines where the browser should extract the key from a value in the object store or index. A valid key path can include one of the following: an empty string, a JavaScript identifier, or multiple JavaScript identifiers separated by periods. It cannot include spaces.</dd>
+ <dt><a name="gloss_value">value</a></dt>
+ <dd>
+ <p>Each record has a value, which could include anything that can be expressed in JavaScript, including: <a href="/zh-cn/JavaScript/Reference/Global_Objects/Boolean" rel="internal" title="zh-cn/JavaScript/Reference/Global_Objects/Boolean">boolean</a>, <a href="/zh-cn/JavaScript/Reference/Global_Objects/Number" rel="internal" title="zh-cn/JavaScript/Reference/Global_Objects/Number">number</a>, <a href="/zh-cn/JavaScript/Reference/Global_Objects/String" title="https://developer.mozilla.org/zh-cn/JavaScript/Reference/Global_Objects/String">string</a>, <a href="/zh-cn/JavaScript/Reference/Global_Objects/Date" title="zh-cn/JavaScript/Reference/Global Objects/Date">date</a>, <a href="/zh-cn/JavaScript/Reference/Global_Objects/Object" title="zh-cn/JavaScript/Reference/Global Objects/Object">object</a>, <a href="/zh-cn/JavaScript/Reference/Global_Objects/Array" rel="internal" title="zh-cn/JavaScript/Reference/Global_Objects/Array">array</a>, <a href="/zh-cn/JavaScript/Reference/Global_Objects/RegExp" rel="internal" title="zh-cn/JavaScript/Reference/Global_Objects/RegExp">regexp</a>, <a href="/zh-cn/JavaScript/Reference/Global_Objects/undefined" title="zh-cn/JavaScript/Reference/Global_Objects/undefined">undefined</a>, and null.</p>
+
+ <p>When an object or array is stored, the properties and values in that object or array can also be anything that is a valid value.</p>
+
+ <p>The <a class="external" href="http://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html">specification</a> lets you store files and <a href="/zh-cn/DOM/Blob" title="zh-cn/DOM/Blob">blobs</a>, but this has only been implemented in Firefox 11+.</p>
+ </dd>
+</dl>
+
+<h3 id="range" name="range">Range and scope</h3>
+
+<dl>
+ <dt><a name="gloss_scope">scope</a></dt>
+ <dd>The set of object stores and indexes to which a transaction applies. The scopes of read-only transactions can overlap and execute at the same time. On the other hand, the scopes of writing transactions cannot overlap. You can still start several transactions with the same scope at the same time, but they just queue up and execute one after another.</dd>
+ <dt><a name="gloss_cursor">cursor</a></dt>
+ <dd>A mechanism for iterating over multiple records with a <em>key range</em>. The cursor has a source that indicates which index or object store it is iterating. It has a position within the range, and moves in a direction that is increasing or decreasing in the order of record keys. For the reference documentation on cursors, see <a href="../../../../zh-cn/IndexedDB/IDBCursor" rel="internal">IDBCursor</a> or <a href="../../../../zh-cn/IndexedDB/IDBCursorSync" rel="internal">IDBCursorSync</a>.</dd>
+ <dt><a name="gloss_key_range">key range</a></dt>
+ <dd>
+ <p>A continuous interval over some data type used for keys. Records can be retrieved from object stores and indexes using keys or a range of keys. You can limit or filter the range using lower and upper bounds. For example, you can iterate over all values of a key between x and y.</p>
+
+ <p>For the reference documentation on key range, see <a href="../../../../zh-cn/IndexedDB/IDBKeyRange" rel="internal">IDBKeyRange</a>.</p>
+ </dd>
+</dl>
+
+<h2 id="limitations" name="limitations">局限性</h2>
+
+<p>以下情况不适合使用IndexedDB</p>
+
+<ul>
+ <li>全球多种语言混合存储。国际化支持不好。需要自己处理。</li>
+ <li>和服务器端数据库同步。你得自己写同步代码。</li>
+ <li>全文搜索。</li>
+</ul>
+
+<p>注意，在以下情况下，数据库可能被清除:</p>
+
+<ul>
+ <li>用户请求清除数据。</li>
+ <li>浏览器处于隐私模式。最后退出浏览器的时候，数据会被清除。</li>
+ <li>硬盘等存储设备的容量到限。</li>
+ <li>不正确的</li>
+ <li>不完整的改变.</li>
+</ul>
+
+<h2 id="next" name="next">下一步</h2>
+
+<p>查看如何使用的文档： <a href="/zh-cn/IndexedDB/Using_IndexedDB" title="zh-cn/IndexedDB/IndexedDB primer">Using IndexedDB</a>.</p>
+
+<h2 id="相关文章">相关文章</h2>
+
+<p>标准</p>
+
+<ul>
+ <li><span style="direction: ltr;">{{ spec("http://www.w3.org/TR/IndexedDB/", "Indexed Database API Specification", "WD") }}</span></li>
+</ul>
+
+<p>参考手则</p>
+
+<ul>
+ <li><a href="/zh-cn/IndexedDB" title="https://developer.mozilla.org/zh-cn/IndexedDB">IndexedDB API Reference</a></li>
+</ul>
+
+<p>教程</p>
+
+<ul>
+ <li><a href="/zh-cn/IndexedDB/Using_IndexedDB" title="zh-cn/IndexedDB/IndexedDB primer">Using IndexedDB</a></li>
+ <li><a class="external" href="http://www.html5rocks.com/tutorials/indexeddb/todo/" title="http://www.html5rocks.com/tutorials/indexeddb/todo/">A simple TODO list using HTML5 IndexedDB</a><span class="external">.</span><span class="external"> Note that this example use an old version of the spec and does work only in a few not-up-to-date browsers. </span></li>
+</ul>
+
+<p>其他文章</p>
+
+<ul>
+ <li><a class="external" href="http://msdn.microsoft.com/en-us/scriptjunkie/gg679063.aspx" title="http://msdn.microsoft.com/en-us/scriptjunkie/gg679063.aspx">IndexedDB — The Store in Your Browser</a></li>
+</ul>

@@ -1,0 +1,213 @@
+<p>{{ToolsSidebar}}</p>
+
+<div class="note">
+<p>Esta página describe el depurador de JavaScript como se muestra en Firefox 52 y superiores, en Firefox Nightly y Firefox Developer Edition.</p>
+
+<p>Para ver como luce en versiones anteriores de firefox ó en Firefox Beta y Release, ver <a href="https://developer.mozilla.org/en-US/docs/Tools/Debugger_%28before_Firefox_52%29">Depurador (anterior a Firefox 52)</a>.</p>
+
+<p>Si obtienes esta version del Depurador y requires cambiar a la version anterior, lo puedes hacer visitando about:config y cambiando la preferencia de "devtools.debugger.new-debugger-frontend" a <code>false</code> .</p>
+</div>
+
+<p>{{EmbedYouTube("sK8KU8oiF8s")}}</p>
+
+<p>El depurador te permite inspeccionar paso a paso el código de JavaScript y examinar o modificar su estado ayudando a eliminar errores.</p>
+
+<p>Puedes usarlo para depurar código local o remoto, por ejemplo en un dispositivo Android ejecutando Firefox para Android.  Ver acerca del<a href="https://developer.mozilla.org/en-US/docs/Tools/Remote_Debugging"> depurador remoto </a>para aprender como depurar un objetivo remoto.j</p>
+
+<p>{{ fx_minversion_header("15.0") }}</p>
+
+<p>El depurador JavaScript está disponible en dos variedades: una para depurar contenido que se ejecuta directamente en Firefox, y otra que te permite depurar contenido que se está ejecutando en un dispositivo con Firefox OS , o en Firefox en un dispositivo Android. La principal diferencia entre los dos es que el Depurador Remoto se ejecuta en su propia ventana, mientras que el depurador de contenido web se ejecuta en la misma pestaña de la  Web que se está depurando.</p>
+
+<h2 id="Iniciar_el_depurador">Iniciar el depurador</h2>
+
+<h3 id="Depurando_contenido_web">Depurando contenido web</h3>
+
+<p>Para ejecutar contenido Web ejecutado directamente en Firefox (no importa si está guardado localmente en tu equipo o en un servidor), seleccione la opción Depurador del Menú Desarrollador Web en Herramientas.</p>
+
+<p>Una vez que ha <a href="/en-US/docs/Mozilla/Firefox_OS/Debugging/Setting_up" title="/en-US/docs/Mozilla/Firefox_OS/Debugging/Setting_up">configurado Firefox y Firefox OS para soportar depuración</a>, puede usar el Depurador Remoto para depurar su código ejecutado en  un dispositivo Firefox OS o en el simulador de Firefox OS.</p>
+
+<p>A fin de depurar código  JavaScript ejecutado en un dispositivo  Firefox OS o Android, debe verificar que el dispositivo este conectado al puerto USB y que ese <code>lsusb</code> y <code>adb</code> pueden verlo. Entonces deberá re-enviar el puerto  TCP apropiado al dispositivo abriendo una ventana de  terminal y digitando el siguiente comando:</p>
+
+<pre>adb forward tcp:6000 tcp:6000</pre>
+
+<div class="note">
+<p><strong>Recuerda:</strong> D<span class="rangySelectionBoundary" id="selectionBoundary_1428470313580_2070723245854429" style="display: none; line-height: 0;">﻿</span>eberás re-enviar el puerto cada vez que reinicies el dispositivo.</p>
+</div>
+
+<p>Ahora puede abrir el depurador del menú de desarrolladores. Le pedirá especificar la dirección IP y el puerto al que se quiere conectar. Dé click en "ok" y puede iniciar la depuración.</p>
+
+<p><img alt="A quick look at what the remote debugger looks like" src="/files/4373/remote-debugger-started.png" style="height: 457px; width: 961px;"></p>
+
+<p>Llegado a este punto, el depurador no está ejecutandose todavía. debido a que no se han puesto puntos de ruptura o breakpoints. El dispositivo solo permanece a la espera. De hecho, en las siguientes secciones se explica como usar el depurador.  </p>
+
+
+
+<h2 id="La_Barra_del_Depurador">La Barra del Depurador</h2>
+
+<p>La barra de herramientas tiene diversos controles:</p>
+
+
+
+<p><img alt="PNG of the labeled toolbar diagram" src="/files/4381/Remote%20Debugger%20Toolbar.png" style="height: 157px; width: 868px;"></p>
+
+<dl>
+ <dt>Pause/Resume (F6)</dt>
+ <dd>Pausa o reanuda la ejecución de un script que estas depurando.</dd>
+ <dt>Step Over (F7)</dt>
+ <dd>Steps across the current line of JavaScript code.</dd>
+ <dt>Step Into (F8)</dt>
+ <dd>Steps into the function call on the current line of JavaScript code.</dd>
+ <dt>Step Out (Shift-F8)</dt>
+ <dd>Runs the script until the current function exits.</dd>
+ <dt>Script Chooser (Ctrl-P or Cmd-P)</dt>
+ <dd>This pop-up menu lets you select one of the running scripts in order to read its code, set breakpoints, and so forth.</dd>
+ <dt>Script Filter</dt>
+ <dd>The script filter (which doubles as a search box) lets you type a string to filter what scripts should appear in the Script Chooser. See {{anch("Using the script filter")}} below.</dd>
+ <dt>Expand Panes</dt>
+ <dd>Expands or contracts the window to show or hide the sidebar panels.</dd>
+ <dt>Debugger Options</dt>
+ <dd>Pops up a menu letting you configure the debugger. See {{anch("Debugger options")}} below.</dd>
+</dl>
+
+<div class="note">
+<p><strong>Note:</strong> The Web content debugger has a Close button at the far left end of the toolbar; you can use this to close the debugger.</p>
+</div>
+
+<h3 id="Usando_el_filtro_de_Scripts">Usando el filtro de Scripts</h3>
+
+<p>When you click in the script filter in the toolbar, you can type a string to filter the script chooser menu to only show matching scripts. Also, as you see when you click in this box, there are special operators you can use to use the box as a search box, as well as for other capabilities. Each of these special operators has a keyboard shortcut that will automatically take you to the filter box and insert the operator into the box for you, so that you can just start typing.</p>
+
+<p><img alt="Screenshot of the search box operator popup panel." src="/files/4393/operator-popup.png" style="height: 146px; width: 199px;"></p>
+
+<dl>
+ <dt>Search in all files - ! (Cmd-Opt-F)</dt>
+ <dd>Searches for the text you enter across all running scripts. This adds a pane just below the toolbar showing all the matching files, each with a disclosure box that lets you see the matches found within it.</dd>
+ <dt>Find in this file - # (Cmd-F)</dt>
+ <dd>Searches for the text you enter in the file you're currently looking at.</dd>
+ <dt>Jump to line - : (Cmd-J)</dt>
+ <dd>Jumps to the line number you type into the box.</dd>
+ <dt>Filter variables - * (Cmd-Opt-V)</dt>
+ <dd>Filters the displayed variables to include only those that match the specified string.</dd>
+</dl>
+
+<h3 id="Debugger_options">Debugger options</h3>
+
+<p>The Debugger Options icon, when clicked, presents a pop-up menu of options that you can use to adjust the behavior of the debugger.</p>
+
+<dl>
+ <dt>Pause on exceptions</dt>
+ <dd>When this option is enabled, execution of script will automatically pause whenever a JavaScript exception is thrown.</dd>
+ <dt>Show panes on startup</dt>
+ <dd>When this option is enabled, the debugger's two sidebar panes are visible when you first start the debugger; by default, they are not.</dd>
+ <dt>Show hidden properties</dt>
+ <dd>Unless you enable this option, hidden JavaScript properties (that is, those that are non-enumerable) are not displayed.</dd>
+ <dt>Show variables searchbox</dt>
+ <dd>Enabling this option adds a "Filter variables" search box to the variable panel, so that you can filter the displayed list of variables.</dd>
+</dl>
+
+<h2 id="Using_the_debugger">Using the debugger</h2>
+
+<p>The JavaScript debugger has most of the standard features you expect in a modern debugger.</p>
+
+<h3 id="Breakpoints">Breakpoints</h3>
+
+<p>You can set a breakpoint by choosing the file in which you want to set a breakpoint (if you're not already looking at it) using the script chooser drop-down menu, then clicking in the line number column, to the left of the line number itself, on the line of code on which you'd like to set a breakpoint. You can also right click in the code itself, on the line at which you'd like to create a breakpoint, and use the resulting contextual menu to create either a breakpoint (Ctrl+B or Cmd-B) or conditional breakpoint (Ctrl+Shift+B or Cmd-Shift-B).</p>
+
+<p>For example, let's use the Remote Debugger to set a breakpoint that fires whenever you pull down the notification bar. To do that, choose "app://system.gaiamobile.org/js/quick_settings.js" (this is the quick settings app that appears when you pull down the notification bar). Go to the <code>handleEvent()</code> method and click to the left of the first line of code. This will add a blue breakpoint indicator next to that line, like this:</p>
+
+<p><img alt="Image showing what a set breakpoint looks like" src="/files/4395/set-breakpoint.png" style="border-style: solid; border-width: 1px; height: 45px; width: 404px;"></p>
+
+<p>You can toggle the breakpoint off again, of course, by clicking that breakpoint indicator again. The bottom of the stack panel also shows a list of all currently-set breakpoints. See {{anch("Managing breakpoints")}} for details on things you can do with this list.</p>
+
+<p>Now, pull down the notification bar on your device. The bar will pull down, and then the breakpoint will fire as the app receives its first event. If you don't have the panes displayed, they will open at this time (in order to show you the stack frame, variable display, and so forth). The debugger will, at this point, look something like this:</p>
+
+<p><img alt="An image showing what it looks like when a breakpoint has been reached." src="/files/4397/breakpoint-reached.png"></p>
+
+<p>Meanwhile, your device will look something like this:</p>
+
+<p><img alt="Image showing what the device looks like when the sample breakpoint fires." src="/files/4399/breakpoint-device.png" style="height: 480px; width: 320px;"></p>
+
+<p>You can click back and forth through the stack frame in order to take a look at the calling history. Clicking on "ut_onTouchEnd" in the stack frame panel will show you the code in <code>app://system.gaiamobile.org/js/utility_tray.js</code> that handled the event that occurred when you removed your finger from the screen after pulling down the notification tray, for instance.</p>
+
+<p>You can use the resume, step over, step into, and step out buttons in the toolbar just as in any typical debugger, to step through the code. The next line of code to run has a green arrow to its left. You can, of course, set and remove breakpoints, examine variables, and so forth while doing so.</p>
+
+<p>The gutter to the right of the source code has blue indicators in it that you can click to quickly scroll to the corresponding breakpoint.</p>
+
+<h4 id="Conditional_breakpoints">Conditional breakpoints</h4>
+
+<p>Conditional breakpoints are a special kind of breakpoint that are triggered only when a given JavaScript expression is true. To set a conditional breakpoint, right click on a line of code and choose "Add conditional breakpoint" (or press Ctrl+Shift+B/Cmd-Shift-B). You can also create a regular breakpoint and then add a condition by right-clicking it in the breakpoint list at the lower left corner of the debugger window.</p>
+
+<p>Then you can enter a condition which must be true for the breakpoint to be triggered:</p>
+
+<p><img alt="The box for configuring a conditional breakpoint" src="/files/4431/cond-breakpoint-box.png" style="height: 115px; width: 458px;"></p>
+
+<p>Now, when the corresponding line of code is reached, it will only pause execution of the expression <code>evt.type == 'click'</code> is true.</p>
+
+<h4 id="Managing_breakpoints">Managing breakpoints</h4>
+
+<p>You can manage the breakpoints you've set using the breakpoint list along the lower-left side of your debugger window. Toggling on and off the checkbox to any breakpoint turns the breakpoint on and off. Clicking on any conditional breakpoint will pop up the conditional breakpoint editing panel, as seen in {{anch("Conditional breakpoints")}}.</p>
+
+<p>You can get additional options by right-clicking on any breakpoint:</p>
+
+<dl>
+ <dt>Remove all breakpoints</dt>
+ <dd>Removes all current breakpoints.</dd>
+ <dt>Enable all breakpoints</dt>
+ <dd>Enables all current breakpoints. This is a shortcut for toggling on the checkboxes next to all the breakpoints.</dd>
+ <dt>Disable all breakpoints</dt>
+ <dd>Disables (without removing) all breakpoints. This is a shortcut for toggling off the checkboxes next to all the breakpoints.</dd>
+ <dt>Enable others</dt>
+ <dd>Enables all breakpoints except the one you right-clicked.</dd>
+ <dt>Disable others</dt>
+ <dd>Disables all breakpoints except the one you right-clicked.</dd>
+ <dt>Remove others</dt>
+ <dd>Removes all breakpoints except the one you right-clicked.</dd>
+ <dt>Configure conditional breakpoint</dt>
+ <dd>Configures the conditional breakpoint on which you right-clicked. If the breakpoint isn't a conditional one, you can add a condition and turn it into a conditional breakpoint.</dd>
+ <dt>Disable breakpoint</dt>
+ <dd>Disables the breakpoint you right-clicked.</dd>
+ <dt>Enable breakpoint</dt>
+ <dd>Enables the breakpoint you right-clicked.</dd>
+</dl>
+
+<h3 id="The_variable_panel">The variable panel</h3>
+
+<p><img alt="First shot of the variable panel" src="/files/4403/variable-panel1.png" style="border-style: solid; border-width: 1px; float: left; height: 609px; margin: 8px; width: 208px;">Most of the right-hand pane in the debugger is occupied by the variables available in the scope you're currently viewing. As seen here, it shows the variables for the local scope of the currently executing function (in this case, <code>qs_handleEvent()</code>), the calling function (here it's <code>ut_show()</code>), and the global scope (the {{domxref("Window")}} object, in this case).</p>
+
+<p>Each object can be expanded using a disclosure triangle to show its members, thereby revealing its contents. You can change a variable's value by clicking on its current value and entering a new one; for example, if you click on the "true" next to <code>geolocationEnabled</code>, you can type "false" to set the value to <code>false</code>. Variables whose values you've edited are highlighted in yellow, like this:</p>
+
+<p><img alt="Example of how a changed variable looks." src="/files/4405/changed-variable.png" style="height: 26px; width: 198px;"></p>
+
+<p>Pointing your cursor at a variable provides a tooltip that provides additional information about the variable; for example, pointing at the <code>evt</code> object says "<s>configurable</s> enumerable writable". This tells you that the <code>evt</code> object is not configurable, but is enumerable and writable. See <a href="/en-US/docs/JavaScript/Reference/Global_Objects/Object/defineProperty" title="/en-US/docs/JavaScript/Reference/Global_Objects/Object/defineProperty"><code>Object.defineProperty()</code></a> for details on what these property descriptors mean.</p>
+
+<p>If you've enabled the filter variables box, as shown in the screenshot, you can reduce clutter in this list to limit the list to showing only the things you really want to see. This search is even recursive; it will search through sub-objects. Typing "blue", for example, restricts the list to the <code>this.bluetooth</code> object in the <code>qs_handleEvent()</code> function's scope, and the <code>Bluetooth</code> and <code>BluetoothTransfer</code> objects in the global scope.</p>
+
+<h3 class="cleared" id="Watch_expressions">Watch expressions</h3>
+
+<p>Watch expressions are expressions that are evaluated each time execution pauses. You can then examine the results of these expressions. These are useful in that they let you inspect invariants in your code that you know are there but aren't necessarily in the code ready for inspection. To add a watch expression, click in the box that says "Add watch expression" and enter a JavaScript expression whose output you'd like to monitor as you step through code.</p>
+
+<p>Then start running your code. The watch expression does nothing until you begin to step through your code, so nothing happens until you reach a breakpoint. At that point, a box showing your active watch expressions and their current values will appear.</p>
+
+<p>For example, let's say we're stepping through some code and we want to quickly know what the value of a variable <code>a</code> multiplied by two is, without having to be bothered with any tedious "thinking". We can enter the expression a*2 into the "Add a watch expression box" and hit enter, set an appropriate breakpoint, and run our code.</p>
+
+<p>When our breakpoint is reached, let's say the value of <code>a</code> is 1. The resulting display looks like this:</p>
+
+<p><img alt="What a fired watch expression looks like" src="/files/4433/watch-expression-fired.png" style="height: 105px; width: 209px;"></p>
+
+<p>You can step through your code, watching the value of the expression as it changes; each time it does, the box will flash briefly yellow. You can remove a watch expression by clicking the "x" icon next to it, and, of course, you can have more than one watch expression at a time.</p>
+
+<h2 id="Stopping_the_debugger">Stopping the debugger</h2>
+
+<p>When you're done debugging, if you like, you can turn off remote debugging on the device by opening the Settings app, then chosing Device Information. On that page, you'll see a More Information button. Tap that, then in the following page, scroll down to "Developer" and tap that. That presents a list of developer options. Turn off Remote Debugging there. You don't have to do this though, if you don't want to.</p>
+
+<div class="note">
+<p><strong>Note:</strong> No restart is needed just for toggling on and off remote debugging support on the device, as of Nightly builds from November 29, 2012 or later.]</p>
+</div>
+
+<h2 id="Vea_también">Vea también:</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Mozilla/Firefox_OS/Debugging" title="/en-US/docs/Mozilla/Firefox_OS/Debugging">Debugging on Firefox OS</a></li>
+ <li><a href="https://wiki.mozilla.org/Remote_Debugging_Protocol" title="https://wiki.mozilla.org/Remote_Debugging_Protocol">Remote debugging protocol</a></li>
+ <li><a href="https://hacks.mozilla.org/2012/08/remote-debugging-on-firefox-for-android/" title="https://hacks.mozilla.org/2012/08/remote-debugging-on-firefox-for-android/">Remote Debugging on Firefox for Android</a> (blog post)</li>
+</ul>

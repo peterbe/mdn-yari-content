@@ -1,0 +1,112 @@
+<div>{{PreviousMenuNext("Web/Progressive_web_apps/Offline_Service_workers", "Web/Progressive_web_apps/Re-engageable_Notifications_Push", "Web/Progressive_web_apps")}}</div>
+
+<p class="summary"><span class="seoSummary">前回の記事では、 <a href="https://mdn.github.io/pwa-examples/js13kpwa/">js13kPWA</a> が<a href="/ja/docs/Web/API/Service_Worker_API">サービスワーカー</a>によってオフラインで動作する方法を見てきましたが、さらに、対応しているモバイルブラウザーでは、ネイティブアプリであるかのようにウェブアプリをユーザーがインストールできるようにすることができます。 この記事では、ウェブマニフェストと「ホーム画面に追加」と呼ばれる機能を使用して、これを実現する方法を説明します。</span></p>
+
+<p>これらの技術によって、アプリはブラウザーを起動して URL を入力するのではなく、デバイスのホーム画面から直接起動することができるようになります。 ウェブアプリが第一級市民としてネイティブアプリの隣に座ることができるのです。 従ってよりアクセスしやすく、ブラウザーの周囲のウェブページ以外の部分なしの全画面で実行されるため、もっとネイティブアプリのようにすることができます。</p>
+
+<h2 id="Requirements" name="Requirements">要求事項</h2>
+
+<p>ウェブサイトをインストール可能にするには、以下のものが必要になります。</p>
+
+<ul>
+ <li><a href="/ja/docs/Web/Progressive_web_apps/Add_to_home_screen#Manifest">正しくフィールドが入力された</a>ウェブマニフェスト</li>
+ <li>安全な（HTTPS）ドメインから提供されるウェブサイト</li>
+ <li>デバイス上のアプリを表すアイコン</li>
+ <li>アプリをオフラインで動作させるために登録されたサービスワーカー（現時点では Android の Chrome にのみ必要です）</li>
+</ul>
+
+<h3 id="The_manifest_file" name="The_manifest_file">マニフェストファイル</h3>
+
+<p>重要な要素はウェブマニフェストファイルです。 このファイルには、ウェブサイトに関するすべての情報が JSON 形式でリストされます。</p>
+
+<p>通常はウェブアプリのルートフォルダにあります。 これには、便利な情報が含まれています — アプリのタイトル、モバイル OS でアプリを表示するために使用できるさまざまなサイズのアイコンへのパス（ホーム画面のアイコンなど）、読み込み時やスプラッシュ画面で使用する背景色など。 この情報は、インストール時およびホーム画面にブラウザーがウェブアプリを正しく表示するために必要です。</p>
+
+<p><a href="https://mdn.github.io/pwa-examples/js13kpwa/">js13kPWA</a> ウェブアプリの <code>js13kpwa.webmanifest</code> ファイルは、次のコード行を介して <code>index.html</code> ファイルの {{htmlelement("head")}} セクションに含まれています。</p>
+
+<pre class="brush: html">&lt;link rel="manifest" href="js13kpwa.webmanifest"&gt;</pre>
+
+<div class="note">
+<p><strong>注</strong>: 過去にマニフェストに使用されてきた一般的な拡張機能がいくつかあります — <code>manifest.webapp</code> は Firefox OS アプリのマニフェストで一般的であり、多くの場合、コンテンツは JSON 構造で編成されているためウェブマニフェストには <code>manifest.json</code> を使用します。 しかし、<code>.webmanifest</code> 拡張子は <a href="https://w3c.github.io/manifest/">W3C マニフェスト仕様</a>（英語）で明示的に言及されているので、それに固執しましょう。</p>
+</div>
+
+<p>ファイルの内容は次のようになります。</p>
+
+<pre class="brush: json">{
+    "name": "js13kGames Progressive Web App",
+    "short_name": "js13kPWA",
+    "description": "Progressive Web App that lists games submitted to the A-Frame category in the js13kGames 2017 competition.",
+    "icons": [
+        {
+            "src": "icons/icon-32.png",
+            "sizes": "32x32",
+            "type": "image/png"
+        },
+        // ...
+        {
+            "src": "icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ],
+    "start_url": "/pwa-examples/js13kpwa/index.html",
+    "display": "fullscreen",
+    "theme_color": "#B12A34",
+    "background_color": "#B12A34"
+}</pre>
+
+<p>ほとんどのフィールドは一目瞭然ですが、ドキュメントを細分化して詳細に説明しましょう。</p>
+
+<ul>
+ <li><code>name</code>: ウェブアプリの正式な名前。</li>
+ <li><code>short_name</code>: ホーム画面に表示する省略した名前。</li>
+ <li><code>description</code>: アプリが何をするのかを説明する一つ二つの文章。</li>
+ <li><code>icons</code>: 一連のアイコン情報 — ソース URL、サイズ、種類。 ユーザーのデバイスに最適なものが選択されるように、少なくともいくつか含めるようにしてください。</li>
+ <li><code>start_url</code>: アプリの起動時に起動する index ドキュメント。</li>
+ <li><code>display</code>: アプリの表示方法 — <code>fullscreen</code>（全画面）、<code>standalone</code>（スタンドアロン）、<code>minimal-ui</code>（minimal-ui は iOS 8 ではサポートされなくなりました）、<code>browser</code>（ブラウザー）のいずれかです。</li>
+ <li><code>theme_color</code>: テーマカラー — オペレーティングシステムで使用される UI の基本色です 。</li>
+ <li><code>background_color</code>: 背景色 — インストール中およびスプラッシュ画面で使用します。</li>
+</ul>
+
+<p>ウェブマニフェストの最低限の要件は、<code>name</code> と少なくとも1つのアイコン（<code>src</code>、<code>sizes</code>、<code>type</code>）です。 <code>description</code>、<code>short_name</code>、<code>start_url</code> は推奨です。 上記以外にも使用できるフィールドがあります — 詳細については、<a href="/ja/docs/Web/Manifest">ウェブアプリマニフェストのリファレンス</a>を確認してください。</p>
+
+<h2 id="Add_to_home_screen" name="Add_to_home_screen">ホーム画面に追加</h2>
+
+<p>「ホーム画面に追加」（Add to home screen、略して a2hs）は、モバイルブラウザーによって実装され、アプリのウェブマニフェストにある情報を取得して、それらを使用してデバイスのホーム画面上のアプリをアイコンと名前で表す機能です。 これは、上記のように、アプリが必要な要件をすべて満たしている場合にのみ機能します。</p>
+
+<p>ユーザーがサポートしているモバイルブラウザーで PWA にアクセスすると、アプリを PWA としてインストールすることが可能であることを示すバナーが表示されます。</p>
+
+<p><img alt="js13kPWA のホーム画面に追加のポップアップ。" src="https://mdn.mozillademos.org/files/15928/js13kpwa-icon.png" style="border-style: solid; border-width: 1px; display: block; height: 640px; margin: 0px auto; width: 360px;"></p>
+
+<p>ユーザーがこのバナーをクリックすると、インストールバナーが表示されます。 そのバナーは、マニフェストファイルからの情報に基づいて、ブラウザーによって自動的に作成されます — 名前とアイコンがプロンプトに表示されます。</p>
+
+<p><img alt="js13kPWA のインストールバナー。" src="https://mdn.mozillademos.org/files/15927/js13kpwa-banner.png" style="border-style: solid; border-width: 1px; display: block; height: 640px; margin: 0px auto; width: 360px;"></p>
+
+<p>ユーザーがボタンをクリックすると、アプリがどのように表示されるかを示し、間違いなくアプリを追加するかどうかをユーザーに選択させる最後のステップがあります。</p>
+
+<p><img alt="js13kPWA のホーム画面に追加のポップアップ。" src="https://mdn.mozillademos.org/files/15926/js13kpwa-add.png" style="border-style: solid; border-width: 1px; display: block; height: 640px; margin: 0px auto; width: 360px;"></p>
+
+<p>確認すると、アプリがホーム画面にインストールされます。</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/15834/js13kpwa-installed.png" style="border-style: solid; border-width: 1px; display: block; margin: 0px auto;"></p>
+
+<p>その後、ユーザーはそれを起動してすぐに使い始めることができます。 PWA の場合は（使用しているブラウザーまたはモバイルオペレーティングシステムによっては）、アイコンの右下隅に小さなブラウザー画像が表示され、ユーザにウェブの性質を知らせることがあります。</p>
+
+<h3 id="Splash_screen" name="Splash_screen">スプラッシュ画面</h3>
+
+<p>一部のブラウザーでは、マニフェストの情報からスプラッシュ画面も生成されます。 これは、PWA の起動時に表示されます。</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/15835/js13kpwa-splash.png" style="border-style: solid; border-width: 1px; display: block; margin: 0px auto;"></p>
+
+<p>この画面の作成には、アイコンとテーマカラーと背景色が使用されます。</p>
+
+<h2 id="Summary" name="Summary">まとめ</h2>
+
+<p>この記事では、ウェブマニフェストとホーム画面に追加を使用して、PWA をインストール可能にする方法について説明しました。</p>
+
+<p>ホーム画面に追加の詳細については、必ず<a href="/ja/docs/Web/Progressive_web_apps/Add_to_home_screen">ホーム画面に追加のガイド</a>をお読みください。 ブラウザーのサポートは現在、Android の Firefox 58 以降、Mobile Chrome および Android Webview 31 以降、および Android の Opera 32 以降に制限されていますが、近い将来に改善されるはずです。</p>
+
+<p>それでは、PWA パズルの最後のピース、つまりプッシュ通知による再エンゲージメントに移りましょう。</p>
+
+<p>{{PreviousMenuNext("Web/Progressive_web_apps/Offline_Service_workers", "Web/Progressive_web_apps/Re-engageable_Notifications_Push", "Web/Progressive_web_apps")}}</p>
+
+<div>{{QuickLinksWithSubpages("/ja/docs/Web/Progressive_web_apps/")}}</div>

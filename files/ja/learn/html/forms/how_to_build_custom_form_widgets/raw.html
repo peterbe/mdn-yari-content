@@ -1,0 +1,777 @@
+<p>{{LearnSidebar}}{{PreviousMenuNext("Learn/HTML/Forms/Form_validation", "Learn/HTML/Forms/Sending_forms_through_JavaScript", "Learn/HTML/Forms")}}</p>
+
+<p class="summary"><a href="/ja/docs/HTML/Forms/The_native_form_widgets" title="HTML/Forms/The_native_form_widgets">HTML フォームで使用可能なウィジェット</a>だけでは十分でない場合が多くあります。{{HTMLElement("select")}} 要素のようなウィジェットに<a href="/ja/docs/Advanced_styling_for_HTML_forms" title="Advanced_styling_for_HTML_forms">高度なスタイル設定を行いたい</a>場合や、独自の動作を提供したい場合は、あなた自身のウィジェットを作成するしかありません。</p>
+
+<p>本記事では、そのようなウィジェットの作り方を見ていきます。そのため、次の例に取り組みます: {{HTMLElement("select")}} 要素の再構築です。</p>
+
+<div class="note">
+<p><strong>注記:</strong> ここではウィジェットの構築に注目しており、汎用かつ再利用可能なコードの作成法は見ていきません。それには JavaScript の重要なコードや未知のコンテキストでの DOM 操作が組み合わされており、本記事の対象から外れます。</p>
+</div>
+
+<h2 id="Design_structure_and_semantics" name="Design_structure_and_semantics">デザイン、構造、セマンティクス</h2>
+
+<p>カスタムウィジェットを作成する前に、何をしたいかをはっきりと理解することから始めるべきです。これはあなたの貴重な時間を節約するでしょう。特に、ウィジェットの全状態を明確に定義することが重要です。これを行うには、状態や動作がよく知られている既存のウィジェットからスタートするとよいでしょう。この結果、簡単に可能な限りの模倣を行えます。</p>
+
+<p>本記事の例では、{{HTMLElement("select")}} 要素を再構築します。以下が、私たちが実現したい成果です:</p>
+
+<p><img alt="The three states of a select box" src="/files/4481/custom-select.png" style="height: 135px; width: 366px;"></p>
+
+<p>このスクリーンショットでは、ウィジェットの主要な状態 3 つを示しています: 通常状態 (左)、アクティブ状態 (中央)、そして開いた状態 (右) です。</p>
+
+<p>動作の点では、ネイティブのウィジェットと同様に独自のウィジェットも、キーボードだけでなくマウスでも使用できるようにしたいと考えます。ウィジェットがどのように各状態に達するかを定義することから始めましょう:</p>
+
+<dl>
+ <dt>ウィジェットは以下のときに通常状態になります:</dt>
+ <dd>
+ <ul>
+  <li>ページを読み込む</li>
+  <li>ウィジェットはアクティブであったが、ユーザがウィジェット以外のどこかをクリックした</li>
+  <li>ウィジェットはアクティブであったが、キーボードを使用して別のウィジェットにフォーカスを移した</li>
+ </ul>
+
+ <div class="note">
+ <p><strong>注記:</strong> ページ内のあちこちへのフォーカス移動は通常 Tab キーの押下によって行われますが、これはあらゆる環境における標準ではありません。例えば Safari でページ内のリンクを巡るには、デフォルトで <a href="http://www.456bereastreet.com/archive/200906/enabling_keyboard_navigation_in_mac_os_x_web_browsers/" title="http://www.456bereastreet.com/archive/200906/enabling_keyboard_navigation_in_mac_os_x_web_browsers/">Option+Tab の組み合わせ</a>を使用します。</p>
+ </div>
+ </dd>
+ <dt>ウィジェットは以下のときにアクティブ状態になります:</dt>
+ <dd>
+ <ul>
+  <li>ユーザがウィジェット上でクリックする</li>
+  <li>ユーザが Tab キーを押下して、ウィジェットがフォーカスを得る</li>
+  <li>ウィジェットは開いた状態で、ユーザがウィジェットをクリックする</li>
+ </ul>
+ </dd>
+ <dt>ウィジェットは以下のときに開いた状態になります:</dt>
+ <dd>
+ <ul>
+  <li>ウィジェットが開いた状態ではないときに、ユーザがウィジェットをクリックした</li>
+ </ul>
+ </dd>
+</dl>
+
+<p>状態をどのように変えるかを理解したら、ウィジェットの値をどのように変えるかの定義が重要になります:</p>
+
+<dl>
+ <dt>以下のときに値が変わります:</dt>
+ <dd>
+ <ul>
+  <li>ウィジェットが開いた状態であるときに、ユーザが選択肢をクリックする</li>
+  <li>ウィジェットがアクティブ状態であるときに、ユーザが上下矢印キーを押下する</li>
+ </ul>
+ </dd>
+</dl>
+
+<p>最後に、ウィジェットの選択肢がどのように動作するかを定義しましょう:</p>
+
+<ul>
+ <li>ウィジェットが開いているとき、選択されている選択肢は強調されます</li>
+ <li>マウスポインタが選択肢の上にあるときはその選択肢が強調され、また前に強調されていた選択肢は通常状態に戻ります</li>
+</ul>
+
+<p>この例の用途としては、ここまでです。しかし注意深い読者の方は、いくつかの動作が欠けていることに気づくでしょう。例えば、ウィジェットが開いた状態であるときにユーザが Tab キーを押すと何が起きると考えますか? その答えは... 何も起きません。正しい動作は明らかでしょうが、実際は私たちの仕様で定義されていないため、とても見逃されやすいのです。これは、ウィジェットの動作を設計する人と実装する人が異なるチーム環境で特に当てはまります。</p>
+
+<p>別のおもしろい例です: ウィジェットが開いた状態であるときに上下矢印キーを押すと何が起きるのでしょうか? こちらはやや難しくなります。アクティブ状態と開いた状態をまったく別のものと考えるなら、その答えはやはり "何も起きません" です。これは、開いた状態でのキーボードの作用を定義していないためです。一方、アクティブ状態と開いた状態が少し重なると考えるなら、値は替わるかもしれませんがそれに対応して選択肢が強調されることはないでしょう。繰り返しになりますが、これはウィジェットが開いた状態の選択肢に対するキーボードの作用を定義していないためです (ウィジェットが開いた状態で何が起きるかだけを定義しており、その後がないためです)。</p>
+
+<p>この例では欠けている仕様が明らかですので対処するでしょうが、めずらしい新たなウィジェットではどのような動作が正しいかについて、わずかなアイデアですら誰も持っていないため、真の問題になり得ます。動作の定義が貧弱であったり定義もれがあったりした場合、いったんユーザが使い始めると動作を再定義するのが非常に困難になると思われますので、設計段階に時間をかけることは賢明です。もし疑っているのでしたら、他の人に意見を聞きましょう。また予算を持っているのでしたら、<a href="http://en.wikipedia.org/wiki/Usability_testing" rel="external" title="http://en.wikipedia.org/wiki/Usability_testing">ユーザテストの実施</a>をためらってはいけません。このプロセスは、UX デザインと呼ばれます。この点について詳しく学びたいのでしたら、以下の役に立つリソースをご覧になるとよいでしょう:</p>
+
+<ul>
+ <li><a href="http://www.uxmatters.com/" rel="external" title="http://www.uxmatters.com/">UXMatters.com</a></li>
+ <li><a href="http://uxdesign.com/" rel="external" title="http://uxdesign.com/">UXDesign.com</a></li>
+ <li><a href="http://uxdesign.smashingmagazine.com/" rel="external" title="http://uxdesign.smashingmagazine.com/">The UX Design section of SmashingMagazine</a></li>
+</ul>
+
+<div class="note">
+<p><strong>注記: </strong>さらにほとんどのシステムでは、使用できる選択肢すべてを見るために {{HTMLElement("select")}} 要素を開く手段があります (これは {{HTMLElement("select")}} 要素をマウスでクリックするのと同じです)。これは Windows では Alt + 下矢印キー で実現できますが、この例では実装しません。しかし、仕組みはすでに <code>click</code> イベント向けに実装されていますので、行うのは簡単です。</p>
+</div>
+
+<h3 id="Defining_the_HTML_structure_and_semantics" name="Defining_the_HTML_structure_and_semantics">HTML の構造とセマンティクスの定義</h3>
+
+<p>ウィジェットの基本的な機能が決まりましたので、構築を始めるときが来ました。最初のステップはウィジェットの HTML 構造の定義と、基本的なセマンティクスの付与です。こちらが、{{HTMLElement("select")}} 要素の再構築に必要な HTML です:</p>
+
+<pre class="brush: html">&lt;!-- これはウィジェットの中心的なコンテナです。
+     tabindex 属性は、ユーザがウィジェットにフォーカスを当てられるようにするものです。 
+     これを JavaScript で設定する方がよいことは、後で見ていきます。--&gt;
+&lt;div class="select" tabindex="0"&gt;
+  
+  &lt;!-- このコンテナは、ウィジェットの現在の値を表示するために使用します。 --&gt;
+  &lt;span class="value"&gt;Cherry&lt;/span&gt;
+  
+  &lt;!-- このコンテナは、ウィジェットで使用できるすべての選択肢を包含します。
+       これはリストですから、ul 要素を使用するとよいでしょう。--&gt;
+  &lt;ul class="optList"&gt;
+    &lt;!-- 各々の選択肢は表示される値だけを包含しており、フォームのデータで送信される
+         実際の値を処理する方法は後で見ていきます。 --&gt;
+    &lt;li class="option"&gt;Cherry&lt;/li&gt;
+    &lt;li class="option"&gt;Lemon&lt;/li&gt;
+    &lt;li class="option"&gt;Banana&lt;/li&gt;
+    &lt;li class="option"&gt;Strawberry&lt;/li&gt;
+    &lt;li class="option"&gt;Apple&lt;/li&gt;
+  &lt;/ul&gt;
+
+&lt;/div&gt;</pre>
+
+<p>クラス名の使い方に注目してください。これらは基盤となる実際の HTML とは関係なく、フォームに関するそれぞれの部分を示します。これは CSS や JavaScript を強固な HTML の構造と結びつけないようにするために重要であり、そのためにウィジェットを扱うコードを壊すことなく、後から実装を変更することができます。例えば {{HTMLElement("optgroup")}} 要素と同等の機能を実装したい場合などです。</p>
+
+<h3 id="Creating_the_look_and_feel_using_CSS" name="Creating_the_look_and_feel_using_CSS">CSS でルックアンドフィールを作成する</h3>
+
+<p>構造ができましたので、ウィジェットのデザインを始められます。カスタムウィジェットを作成する上でのポイントは、望むとおりにウィジェットへスタイルを設定できることです。そのために、CSS を 2 つの部分に分けます: ひとつはウィジェットが {{HTMLElement("select")}} 要素のように動作するために欠かせない CSS ルールであり、もうひとつは希望する見た目にするための好みのスタイルで構成されます。</p>
+
+<h4 id="Required_styles" name="Required_styles">必須のスタイル</h4>
+
+<p>必須のスタイルは、ウィジェットの 3 つの状態を扱うために欠かせないものです。</p>
+
+<pre class="brush: css">.select {
+  /* 選択肢のリスト向けのポジショニングコンテキストを作成します */
+  position: relative;
+ 
+  /* ウィジェットをテキストフローの一部かつまとまった大きさにします */
+  display : inline-block;
+}</pre>
+
+<p>アクティブ状態であるウィジェットのルックアンドフィールを定義するため、追加で <code>active</code> クラスが必要です。このウィジェットはフォーカスを得ることができますので、同様に動作させるためにカスタムスタイルを {{cssxref(":focus")}} 疑似クラスにも適用します。</p>
+
+<pre class="brush: css">.select.active,
+.select:focus {
+  outline: none;
+ 
+  /* box-shadow プロパティは必須ではありませんが、これをデフォルト値として使用するのは
+     アクティブ状態を見えるようにするために重要です。自由に書き換えてください。*/
+  box-shadow: 0 0 3px 1px #227755;
+}</pre>
+
+<p>次に、選択肢のリストを扱いましょう:</p>
+
+<pre class="brush: css">/* .select セレクタは、私たちが定義するクラスがウィジェットの内部にあることを
+   確実にするためのシンタックスシュガーです。*/
+.select .optList {
+  /* 選択肢のリストが値の下部かつ HTML フローの外側に表示される
+     ようにします。 */
+  position : absolute;
+  top      : 100%;
+  left     : 0;
+}</pre>
+
+<p>選択肢のリストが隠れている状態を扱うための追加クラスも必要です。これはアクティブ状態と開いた状態で完全には一致しない相違点を扱うために必要です。</p>
+
+<pre class="brush: css">.select .optList.hidden {
+  /* これはアクセシブルな方法でリストを隠すための簡単な方法です。 
+     アクセシビリティについては最後に説明します。 */
+  max-height: 0;
+  visibility: hidden;
+}</pre>
+
+<h4 id="Beautification" name="Beautification">美化</h4>
+
+<p>基本的な機能性を適切に置きましたので、戯れを始められます。以下は何ができるかの例であり、本記事の冒頭で示したスクリーンショットに一致するものです。とはいえ、自由に実験して何ができるかを見てみるとよいでしょう。</p>
+
+<pre class="brush: css">.select {
+  /* アクセシビリティのため、すべてのサイズは em 単位の値で表します
+     (ユーザがテキストのみのモードでブラウザのズーム機能を使用したときに、  
+     ウィジェットをリサイズ可能にします)。算出結果は、ほとんどのブラウザで
+     デフォルト値である 1em == 16px を想定します。
+     px から em への変換がわからない場合は http://riddle.pl/emcalc/ を試してください */
+  font-size   : 0.625em; /* この値 (10px) は、本コンテキストにおける新たなフォントサイズの em 単位値です。 */
+  font-family : Verdana, Arial, sans-serif;
+
+  -moz-box-sizing : border-box;
+  box-sizing : border-box;
+
+  /* 後で追加する下向き矢印のためのスペースが必要です */
+  padding : .1em 2.5em .2em .5em; /* 1px 25px 2px 5px */
+  width   : 10em; /* 100px */
+
+  border        : .2em solid #000; /* 2px */
+  border-radius : .4em; /* 4px */
+  box-shadow    : 0 .1em .2em rgba(0,0,0,.45); /* 0 1px 2px */
+  
+  /* 最初の宣言は、線形グラデーションをサポートしないブラウザ向けのものです。
+     2 番目の宣言は、WebKit ベースのブラウザではまだ接頭辞付きであるためです。
+     古いブラウザもサポートしたい場合は http://www.colorzilla.com/gradient-editor/ を試してください */
+  background : #F0F0F0;
+  background : -webkit-linear-gradient(90deg, #E3E3E3, #fcfcfc 50%, #f0f0f0);
+  background : linear-gradient(0deg, #E3E3E3, #fcfcfc 50%, #f0f0f0);
+}
+
+.select .value {
+  /* 値がウィジェットの幅より大きくなる可能性があるため、ウィジェットの幅を
+     変更しないようにすることが必要です。 */
+  display  : inline-block;
+  width    : 100%;
+  overflow : hidden;
+
+  vertical-align: top;
+
+  /* 内容物がオーバーフローした場合は、省略記号をつけるとよいでしょう。*/
+  white-space  : nowrap;
+  text-overflow: ellipsis;
+}</pre>
+
+<p>下向き矢印をデザインするための追加要素は不要です。代わりに {{cssxref(":after")}} 疑似要素を使用します。ただし、<code>select</code> クラスでシンプルな背景画像を使用することによる実装も可能です。</p>
+
+<pre class="brush: css">.select:after {
+  content : "▼"; /* Unicode 文字 U+25BC を使用します。http://www.utf8-chartable.de をご覧ください */
+  position: absolute;
+  z-index : 1; /* これは、矢印が選択肢のリストに重ならないようにするために重要です */
+  top     : 0;
+  right   : 0;
+
+  -moz-box-sizing : border-box;
+  box-sizing : border-box;
+
+  height  : 100%;
+  width   : 2em;  /* 20px */
+  padding-top : .1em; /* 1px */
+
+  border-left  : .2em solid #000; /* 2px */
+  border-radius: 0 .1em .1em 0;  /* 0 1px 1px 0 */
+
+  background-color : #000;
+  color : #FFF;
+  text-align : center;
+}</pre>
+
+<p>次に、選択肢のリストにスタイルを設定しましょう:</p>
+
+<pre class="brush: css">.select .optList {
+  z-index : 2; /* 選択肢のリストが下向き矢印より上になるよう、明示的に示します。 */
+
+  /* ul 要素のデフォルトスタイルを初期化します。 */
+  list-style: none;
+  margin : 0;
+  padding: 0;
+
+  -moz-box-sizing : border-box;
+  box-sizing : border-box;
+
+  /* 値の幅がウィジェットの幅より小さい場合でも、選択肢のリストの幅が
+     ウィジェット自体と同じになるようにします。 */
+  min-width : 100%;
+
+  /* リストが長すぎる場合に、内容物が垂直方向にはみ出します (自動的に 
+     垂直スクロールバーを表示します) が、水平方向にはみ出しません 
+     (幅を指定しないため、リストは自身の幅へ自動的に調整されます。 
+     それができない場合は、内容物が切り詰められます) 。 */
+  max-height: 10em; /* 100px */
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  border: .2em solid #000; /* 2px */
+  border-top-width : .1em; /* 1px */
+  border-radius: 0 0 .4em .4em; /* 0 0 4px 4px */
+
+  box-shadow: 0 .2em .4em rgba(0,0,0,.4); /* 0 2px 4px */
+  background: #f0f0f0;
+}</pre>
+
+<p>選択肢向けに、ユーザが選択しようとしている (あるいは選択した) 値を示せるようにするための <code>highlight</code> クラスを追加しなければなりません。</p>
+
+<pre class="brush: css">.select .option {
+  padding: .2em .3em; /* 2px 3px */
+}
+
+.select .highlight {
+  background: #000;
+  color: #FFFFFF;
+}</pre>
+
+<p>これで、3 つの状態の結果は以下のようになります:</p>
+
+<table>
+ <thead>
+  <tr>
+   <th scope="col" style="text-align: center;">通常状態</th>
+   <th scope="col" style="text-align: center;">アクティブ状態</th>
+   <th scope="col" style="text-align: center;">開いた状態</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{EmbedLiveSample("Basic_state",120,130, "", "HTML/Forms/How_to_build_custom_form_widgets/Example_1")}}</td>
+   <td>{{EmbedLiveSample("Active_state",120,130, "", "HTML/Forms/How_to_build_custom_form_widgets/Example_1")}}</td>
+   <td>{{EmbedLiveSample("Open_state",120,130, "", "HTML/Forms/How_to_build_custom_form_widgets/Example_1")}}</td>
+  </tr>
+  <tr>
+   <td colspan="3" style="text-align: center;"><a href="/ja/docs/Learn/HTML/Forms/How_to_build_custom_form_widgets/Example_1" title="HTML/Forms/How_to_build_custom_form_widgets/Example_1">ソースコードを確認する</a></td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Bring_your_widget_to_life_with_JavaScript" name="Bring_your_widget_to_life_with_JavaScript">JavaScript でウィジェットに命を吹き込む</h2>
+
+<p>デザインや構造の準備ができましたので、ウィジェットが実際に動作するようにするための JavaScript コードを記述できます。</p>
+
+<div class="warning">
+<p><strong>警告:</strong> 以下は教育目的のコードであり、そのままで使用するべきではありません。ご覧のとおり、さまざまな箇所に将来性のないものや古いブラウザで動作しないものがあります。また、本番のコードでは最適化すべき冗長な箇所もあります。</p>
+</div>
+
+<div class="note">
+<p><strong>注記:</strong> 再利用可能なウィジェットの作成は、若干難しいかもしれません。<a href="http://dvcs.w3.org/hg/webcomponents/raw-file/tip/explainer/index.html" rel="external" title="http://dvcs.w3.org/hg/webcomponents/raw-file/tip/explainer/index.html">W3C Web Component draft</a> は、具体的な問題に対する答えのひとつです。<a href="http://x-tags.org/" rel="external" title="http://x-tags.org/">X-Tag project</a> はこの仕様の試験的な実装です。こちらを見てみることをおすすめします。</p>
+</div>
+
+<h3 id="Why_isn't_it_working" name="Why_isn't_it_working">なぜ動作しないのか?</h3>
+
+<p>始める前に、JavaScript に関する重要事項を覚えておくことが大切です: ブラウザ内で<strong>信頼できる技術ではありません</strong>。カスタムウィジェットを作成するとき、すべてをつなぎ合わせるために必要であることから JavaScript に頼らなければならないでしょう。ところが、JavaScript をブラウザで実行できない場合がいくつもあります:</p>
+
+<ul>
+ <li>ユーザが JavaScript を無効にしている。これはもっともめずらしいケースです。ごく一部の人々は、今でも JavaScript を無効にしています。</li>
+ <li>スクリプトが読み込まれません。これはよくあるケースのひとつであり、特にネットワークの信頼性が低いモバイル環境で発生します。</li>
+ <li>スクリプトに不具合があります。この可能性は常に考慮すべきです。</li>
+ <li>スクリプトがサードパーティのスクリプトと競合しています。これは、トラッキングのスクリプトやユーザが使用するブックマークレットとの間で発生する可能性があります。</li>
+ <li>スクリプトがブラウザの拡張機能 (Firefox の <a href="https://addons.mozilla.org/fr/firefox/addon/noscript/" rel="external" title="https://addons.mozilla.org/fr/firefox/addon/noscript/">NoScript</a> 拡張機能や Chrome の <a href="https://chrome.google.com/webstore/detail/notscripts/odjhifogjcknibkahlpidmdajjpkkcfn" rel="external" title="https://chrome.google.com/webstore/detail/notscripts/odjhifogjcknibkahlpidmdajjpkkcfn">NotScripts</a> 拡張機能など) と競合したり、拡張機能の影響を受けたりしています。</li>
+ <li>ユーザが古いブラウザを使用しており、必要な機能のいずれかがサポートされていません。これは、最先端の API を使用するときに頻繁に発生します。</li>
+</ul>
+
+<p>このようなリスクがあるため、JavaScript が動作しない場合に何が起きるかを注意深く考えることが重要です。この問題について詳しく扱うのは、スクリプトをどれだけ汎用および再利用可能にしたいかと密接に関わりますので本記事の範囲を外れますが、本サンプルでは基本的な部分について考えていきます。</p>
+
+<p>本記事の例では、JavaScript コードが実行されない場合に標準の {{HTMLElement("select")}} 要素にフォールバックします。これを実現するには、2 つのことが必要です。</p>
+
+<p>第一に、カスタムウィジェットを使用する前に通常の {{HTMLElement("select")}} 要素を追加することが必要です。実際は、これは残りのフォームデータと共にカスタムウィジェットのデータを送信できるようにするために必要です。詳しくは後述します。</p>
+
+<pre class="brush: html">&lt;body class="no-widget"&gt;
+  &lt;form&gt;
+    &lt;select name="myFruit"&gt;
+      &lt;option&gt;Cherry&lt;/option&gt;
+      &lt;option&gt;Lemon&lt;/option&gt;
+      &lt;option&gt;Banana&lt;/option&gt;
+      &lt;option&gt;Strawberry&lt;/option&gt;
+      &lt;option&gt;Apple&lt;/option&gt;
+    &lt;/select&gt;
+
+    &lt;div class="select"&gt;
+      &lt;span class="value"&gt;Cherry&lt;/span&gt;
+      &lt;ul class="optList hidden"&gt;
+        &lt;li class="option"&gt;Cherry&lt;/li&gt;
+        &lt;li class="option"&gt;Lemon&lt;/li&gt;
+        &lt;li class="option"&gt;Banana&lt;/li&gt;
+        &lt;li class="option"&gt;Strawberry&lt;/li&gt;
+        &lt;li class="option"&gt;Apple&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/div&gt;
+  &lt;/form&gt;
+
+&lt;/body&gt;</pre>
+
+<p>第二に、不要な要素 (すなわち、スクリプトを実行する場合における "本物の" {{HTMLElement("select")}} 要素や、実行しない場合におけるカスタムウィジェット) を隠せるようにするための新たなクラスが 2 つ必要です。デフォルトでは、HTML コードでカスタムウィジェットを隠すことに注意してください。</p>
+
+<pre class="brush: css">.widget select,
+.no-widget .select {
+  /* この CSS セレクタの基本的な意味は:
+     - body のクラスを "widget" に設定して、本物の {{HTMLElement("select")}} 要素を隠す
+     - または body のクラスを変更せずに "no-widget" のままにしておくことで、
+       クラスが "select" である要素が隠される */
+  position : absolute;
+  left     : -5000em;
+  height   : 0;
+  overflow : hidden;
+}</pre>
+
+<p>ここで、スクリプトを実行するか否かを判断するための JavaScript スイッチが必要になります。このスイッチはとても簡単です: ページを読み込むときにスクリプトを実行したら、<code>no-widget</code> クラスを削除して <code>widget</code> クラスを追加します。これにより {{HTMLElement("select")}} 要素やカスタムウィジェットの可視性を切り替えます。</p>
+
+<pre class="brush: js">window.addEventListener("load", function () {
+  document.body.classList.remove("no-widget");
+  document.body.classList.add("widget");
+});</pre>
+
+<table>
+ <thead>
+  <tr>
+   <th scope="col" style="text-align: center;">JS なし</th>
+   <th scope="col" style="text-align: center;">JS あり</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{EmbedLiveSample("No_JS",120,130, "", "HTML/Forms/How_to_build_custom_form_widgets/Example_2")}}</td>
+   <td>{{EmbedLiveSample("JS",120,130, "", "HTML/Forms/How_to_build_custom_form_widgets/Example_2")}}</td>
+  </tr>
+  <tr>
+   <td colspan="2" style="text-align: center;"><a href="/ja/docs/HTML/Forms/How_to_build_custom_form_widgets/Example_2" title="HTML/Forms/How_to_build_custom_form_widgets/Example_2">ソースコードを確認する</a></td>
+  </tr>
+ </tbody>
+</table>
+
+<div class="note">
+<p><strong>注記:</strong> コードを本当に汎用かつ再利用可能にしたい場合はクラスを切り替えるのではなく、単に {{HTMLElement("select")}} 要素を隠すためのウィジェットのクラスを追加して、ページ内にあるすべての {{HTMLElement("select")}} 要素の後ろにカスタムウィジェットを表す DOM ツリーを動的に追加する方がはるかによいでしょう。</p>
+</div>
+
+<h3 id="Making_the_job_easier" name="Making_the_job_easier">作業をより簡単に</h3>
+
+<p>作成しようとしているコードでは、必要な作業すべてのために標準の DOM API を使用するでしょう。ところが、ブラウザでの DOM API のサポート状況はよくなりましたが、古いブラウザではいつまでも問題があります (特に、古き良き Internet Explorer において)。</p>
+
+<p>古いブラウザでの問題を避けたい場合、そのための手段が 2 つあります: <a href="http://jquery.com/" rel="external" title="http://jquery.com/">jQuery</a>、<a href="https://github.com/julienw/dollardom" rel="external" title="https://github.com/julienw/dollardom">$dom</a>、<a href="http://prototypejs.org/" rel="external" title="http://prototypejs.org/">prototype</a>、<a href="http://dojotoolkit.org/" rel="external" title="http://dojotoolkit.org/">Dojo</a>、<a href="http://yuilibrary.com/" rel="external" title="http://yuilibrary.com/">YUI</a> などの専用フレームワークを使用するか、使用したい不足機能のポリフィルを使用します (これは、例えば <a href="http://yepnopejs.com/" rel="external" title="http://yepnopejs.com/">yepnope</a> ライブラリによって条件付きで読み込むことで簡単にできます)。</p>
+
+<p>ここで使用するつもりである機能は以下のとおりです (リスクが高い順に並べています):</p>
+
+<ol>
+ <li>{{domxref("element.classList","classList")}}</li>
+ <li>{{domxref("EventTarget.addEventListener","addEventListener")}}</li>
+ <li><code><a href="/ja/docs/JavaScript/Reference/Global_Objects/Array/forEach" title="JavaScript/Reference/Global_Objects/Array/forEach">forEach</a></code> (これは DOM ではなく最新の JavaScript 機能です)</li>
+ <li>{{domxref("element.querySelector","querySelector")}} および {{domxref("element.querySelectorAll","querySelectorAll")}}</li>
+</ol>
+
+<p>これら特定機能を利用できるかに加えて、作業を始める前に残されている問題があります。{{domxref("element.querySelectorAll","querySelectorAll()")}} 関数が返すオブジェクトは <code><a href="/ja/docs/JavaScript/Reference/Global_Objects/Array" title="JavaScript/Reference/Global_Objects/Array">Array</a></code> ではなく {{domxref("NodeList")}} です。これは、<code>Array</code> オブジェクトは <code><a href="/ja/docs/JavaScript/Reference/Global_Objects/Array/forEach" title="JavaScript/Reference/Global_Objects/Array/forEach">forEach</a></code> 関数をサポートしているが {{domxref("NodeList")}} はサポートしていないために重要な問題です。{{domxref("NodeList")}} は <code>Array</code> ととても似ており、また <code>forEach</code> はとても便利であることから、作業を楽にするため以下のように {{domxref("NodeList")}} で <code>forEach</code> をサポートさせることができます:</p>
+
+<pre class="brush: js">NodeList.prototype.forEach = function (callback) {
+  Array.prototype.forEach.call(this, callback);
+}</pre>
+
+<p>簡単と言ったのは、ふざけていたわけではありません。</p>
+
+<h3 id="Building_event_callbacks" name="Building_event_callbacks">イベントコールバックを作成する</h3>
+
+<p>基盤が整いましたので、ユーザがウィジェットと対話するたびに使用されるすべての関数を定義し始めることができます。</p>
+
+<pre class="brush: js">// この関数は、カスタムウィジェットを非アクティブにしたいときに使用します。
+// 引数は 1 つあります。
+// select : 非アクティブにする `select` クラスの DOM ノード
+function deactivateSelect(select) {
+
+  // ウィジェットがアクティブではないときは何もしません。
+  if (!select.classList.contains('active')) return;
+
+  // カスタムウィジェットの選択肢のリストを取得することが必要です。
+  var optList = select.querySelector('.optList');
+
+  // 選択肢のリストを閉じます。
+  optList.classList.add('hidden');
+
+  // そして、カスタムウィジェット自身を非アクティブにします。
+  select.classList.remove('active');
+}
+
+// この関数は、ユーザがウィジェットをアクティブ/非アクティブにしたがっているときに使用します。
+// 引数は 2 つあります:
+// select : アクティブにする `select` クラスの DOM ノード
+// selectList : `select` クラスであるすべての DOM ノードのリスト
+function activeSelect(select, selectList) {
+
+  // ウィジェットがすでにアクティブであるときは何もしません。
+  if (select.classList.contains('active')) return;
+
+  // すべてのカスタムウィジェットを非アクティブにすることが必要です。
+  // deactivateSelect 関数は forEach コールバック関数の要件を
+  // すべて満たしていますので、仲介する無名関数を使用せずに
+  // 直接使用しています。
+  selectList.forEach(deactivateSelect);
+
+  // そして、指定されたウィジェットをアクティブ状態にします。
+  select.classList.add('active');
+}
+
+// この関数は、ユーザが選択肢のリストを開く/閉じることを求めたときに使用します。
+// 引数は 1 つあります:
+// select : 表示を切り替えるリストの DOM ノード
+function toggleOptList(select) {
+
+  // リストはウィジェットから確保します。
+  var optList = select.querySelector('.optList');
+
+  // リストのクラスを表示/非表示に切り替えます。
+  optList.classList.toggle('hidden');
+}
+
+// この関数は、選択肢を強調したいときに使用します。
+// 引数は 2 つあります:
+// select : 強調する選択肢を包含する `select` クラスの DOM ノード
+// option : 強調する `option` クラスの DOM ノード
+function highlightOption(select, option) {
+
+  // カスタムウィジェットで使用可能なすべての選択肢のリストを取得します。
+  var optionList = select.querySelectorAll('.option');
+
+  // すべての選択肢から強調効果を取り除きます。
+  optionList.forEach(function (other) {
+    other.classList.remove('highlight');
+  });
+
+  // 適切な選択肢を強調します。
+  option.classList.add('highlight');
+};</pre>
+
+<p>以上が、カスタムウィジェットのさまざまな状態を制御するために必要なもののすべてです。</p>
+
+<p>次に、これらの関数と適切なイベントを関連づけます:</p>
+
+<pre class="brush: js">// ドキュメントが読み込まれたときのイベントの関連づけを制御します。
+window.addEventListener('load', function () {
+  var selectList = document.querySelectorAll('.select');
+
+  // 各々のウィジェットは初期化が必要です。
+  selectList.forEach(function (select) {
+
+    // すべての `option` も同様です。
+    var optionList = select.querySelectorAll('.option');
+
+    // ユーザが選択肢にマウスポインタを乗せるたびに、その選択肢を強調します。
+    optionList.forEach(function (option) {
+      option.addEventListener('mouseover', function () {
+        // 注記: 変数 `select` および `option` は、関数呼び出しのスコープ内でのみ
+        // 使用可能なクロージャです。
+        highlightOption(select, option);
+      });
+    });
+
+    // ユーザが独自の select 要素でクリックするたびに
+    select.addEventListener('click', function (event) {
+      // 注記: 変数 `select` は、関数呼び出しのスコープ内でのみ
+      // 使用可能なクロージャです。
+
+      // 選択肢のリストの可視性を切り替えます。
+      toggleOptList(select);
+    });
+
+    // ウィジェットが再びフォーカスを得た場合
+    // ユーザがウィジェットをクリックしたり、ウィジェットへアクセスするために
+    // Tab キーを使用するたびに、ウィジェットはフォーカスを得ます。
+    select.addEventListener('focus', function (event) {
+      // 注記: 変数 `select` および `selectList` は、関数呼び出しのスコープ内でのみ
+      // 使用可能なクロージャです。
+
+      // ウィジェットをアクティブにします。
+      activeSelect(select, selectList);
+    });
+
+    // ウィジェットがフォーカスを失った場合
+    select.addEventListener('blur', function (event) {
+      // 注記: 変数 `select` は、関数呼び出しのスコープ内でのみ
+      // 使用可能なクロージャです。
+
+      // ウィジェットを非アクティブにします。
+      deactivateSelect(select);
+    });
+  });
+});</pre>
+
+<p>この時点でウィジェットは設計どおりに状態が変わりますが、ウィジェット値はまだ更新されません。次の章でこれを扱います。</p>
+
+<table>
+ <thead>
+  <tr>
+   <th scope="col" style="text-align: center;">Live example</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{EmbedLiveSample("Change_states",120,130, "", "HTML/Forms/How_to_build_custom_form_widgets/Example_3")}}</td>
+  </tr>
+  <tr>
+   <td style="text-align: center;"><a href="/ja/docs/HTML/Forms/How_to_build_custom_form_widgets/Example_3" title="HTML/Forms/How_to_build_custom_form_widgets/Example_3">ソースコードを確認する</a></td>
+  </tr>
+ </tbody>
+</table>
+
+<h3 id="Handling_the_widget's_value" name="Handling_the_widget's_value">ウィジェットの値を制御する</h3>
+
+<p>ウィジェットが動作するようになりましたので、ユーザの入力に従って値を更新して、フォームデータと共にその値を送信できるようにするコードを追加しなければなりません。</p>
+
+<p>これを行うもっとも簡単な方法は、覆い隠したネイティブウィジェットを使用することです。そのようなウィジェットはブラウザが提供するすべての組み込みのコントロールと共に値の経過を保持しており、フォームを送信するときは通常どおりに値を送信します。これらすべてを行えるようにするために、車輪の再発明を行うのは無駄です。</p>
+
+<p>先ほど見たように、アクセシビリティの理由からフォールバック手段としてすでにネイティブの select ウィジェットを使用しています。単純に、その値をカスタムウィジェットの値と同期することができます:</p>
+
+<pre class="brush: js">// この関数は、表示される値を更新してネイティブウィジェットの値と同期します。
+// 引数は 2 つあります:
+// select : 更新する値を持つ `select` クラスの DOM ノード
+// index  : 選択される値のインデックス
+function updateValue(select, index) {
+  // 指定されたカスタムウィジェット向けのネイティブウィジェットを取得することが必要です。
+  // この例では、ネイティブウィジェットはカスタムウィジェットの兄弟です。
+  var nativeWidget = select.previousElementSibling;
+
+  // カスタムウィジェットの値のプレースホルダーの取得も必要です。
+  var value = select.querySelector('.value');
+
+  // そして、選択肢の全リストが必要です。
+  var optionList = select.querySelectorAll('.option');
+
+  // 選択した値のインデックスを、selectedIndex に設定します。
+  nativeWidget.selectedIndex = index;
+
+  // 上記に応じて、値のプレースホルダーも更新します。
+  value.innerHTML = optionList[index].innerHTML;
+
+  // そして、カスタムウィジェットで対応する選択肢を強調します。
+  highlightOption(select, optionList[index]);
+};
+
+// この関数は、ネイティブウィジェットで現在選択されているインデックスを返します。
+// 引数は 1 つあります:
+// select : ネイティブウィジェットに関係する `select` クラスの DOM ノード
+function getIndex(select) {
+  // 指定されたカスタムウィジェット向けのネイティブウィジェットにアクセスすることが必要です。
+  // この例では、ネイティブウィジェットはカスタムウィジェットの兄弟です。
+  var nativeWidget = select.previousElementSibling;
+
+  return nativeWidget.selectedIndex;
+};</pre>
+
+<p>これら 2 つの関数で、ネイティブウィジェットとカスタムウィジェットを関連づけることができます:</p>
+
+<pre class="brush: js">// ドキュメントが読み込まれたときのイベントの関連づけを制御します。
+window.addEventListener('load', function () {
+  var selectList = document.querySelectorAll('.select');
+
+  // 各々のウィジェットは初期化が必要です。
+  selectList.forEach(function (select) {
+    var optionList = select.querySelectorAll('.option'),
+        selectedIndex = getIndex(select);
+
+    // カスタムウィジェットがフォーカスを得られるようにします。
+    select.tabIndex = 0;
+
+    // ネイティブウィジェットがフォーカスを得ないようにします。
+    select.previousElementSibling.tabIndex = -1;
+
+    // デフォルトで選択されている値が正しく表示されるようにします。
+    updateValue(select, selectedIndex);
+
+    // ユーザが選択肢をクリックするのに応じて値を更新します。
+    optionList.forEach(function (option, index) {
+      option.addEventListener('click', function (event) {
+        updateValue(select, index);
+      });
+    });
+
+    // フォーカスがあるウィジェットでユーザがキーボードを使用するのに応じて、値を更新します。
+    select.addEventListener('keyup', function (event) {
+      var length = optionList.length,
+          index  = getIndex(select);
+
+      // ユーザが下矢印キーを押すと、次の選択肢にジャンプします。
+      if (event.keyCode === 40 &amp;&amp; index &lt; length - 1) { index++; }
+
+      // ユーザが上矢印キーを押すと、前の選択肢にジャンプします。
+      if (event.keyCode === 38 &amp;&amp; index &gt; 0) { index--; }
+
+      updateValue(select, index);
+    });
+  });
+});</pre>
+
+<p>上記のコードで、{{domxref("element.tabIndex", "tabIndex")}} プロパティを使用していることは注目に値します。このプロパティは、ネイティブウィジェットにフォーカスが当たらないようにすることと、ユーザがキーボードやマウスを使用するとカスタムウィジェットがフォーカスを得るようにするために必要です。</p>
+
+<p>これで完了です! 結果は以下のとおりです:</p>
+
+<table>
+ <thead>
+  <tr>
+   <th scope="col" style="text-align: center;">Live example</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{EmbedLiveSample("Change_states",120,130, "", "HTML/Forms/How_to_build_custom_form_widgets/Example_4")}}</td>
+  </tr>
+  <tr>
+   <td style="text-align: center;"><a href="/ja/docs/HTML/Forms/How_to_build_custom_form_widgets/Example_4" title="HTML/Forms/How_to_build_custom_form_widgets/Example_4">ソースコードを確認する</a></td>
+  </tr>
+ </tbody>
+</table>
+
+<p>ちょっと待ってください、本当に終わったのでしょうか?</p>
+
+<h2 id="Make_it_accessible" name="Make_it_accessible">アクセシブルにする</h2>
+
+<p>フル機能のセレクトボックスとはかけ離れていますが動作するものはできましたし、よく動作しています。しかし、私たちが行ってきたことは DOM の操作にすぎません。これには実際のセマンティクスがなく、またセレクトボックスのように見えていてもブラウザの視点からはそうではないため、支援技術はそれがセレクトボックスであるとは理解できません。つまり、このきれいなセレクトボックスはアクセシブルではありません!</p>
+
+<p>幸いなことに解決策があり、それは <a href="/ja/docs/Accessibility/ARIA" title="Accessibility/ARIA">ARIA</a> と呼ばれます。ARIA は "Accessible Rich Internet Application" を表し、その <a href="http://www.w3.org/TR/wai-aria/" rel="external" title="http://www.w3.org/TR/wai-aria/">W3C 仕様</a> は私たちがここで行っていることに特化して設計されています: Web アプリケーションやカスタムウィジェットをアクセシブルにします。これは基本的には、私たちが作り出した要素がネイティブウィジェットとして通るかのように、役割や状態や特性をより説明できるようにするために HTML を拡張する属性のセットです。これらの属性の使用はとても簡単ですので、行ってみましょう。</p>
+
+<h3 id="The_role_attribute" name="The_role_attribute"><code>role</code> 属性</h3>
+
+<p><a href="/ja/docs/Accessibility/ARIA" title="Accessibility/ARIA">ARIA</a> で使用される主要な属性が、<a href="/ja/docs/Accessibility/ARIA/ARIA_Techniques" title="Accessibility/ARIA/ARIA_Techniques"><code>role</code></a> 属性です。<a href="/ja/docs/Accessibility/ARIA/ARIA_Techniques" title="Accessibility/ARIA/ARIA_Techniques"><code>role</code></a> 属性は、要素を何に使用するかを定義する値を受け入れます。それぞれのロールは、自身の要件や動作を定義します。本記事の例では、ロール <code><a href="/ja/docs/Accessibility/ARIA/ARIA_Techniques/Using_the_listbox_role" title="Accessibility/ARIA/ARIA_Techniques/Using_the_listbox_role">listbox</a></code> を使用します。これは "composite role" であり、このロールの要素は子要素を持ち、またそれぞれの子要素も特定のロールを持ちます (この例では、ロール <code>option</code> の子要素が少なくとも 1 つ)。</p>
+
+<p>また、ARIA は標準の HTML マークアップにデフォルトで適用されるロールを定義することも特筆に値します。例えば、{{HTMLElement("table")}} 要素はロール <code>grid</code> に、{{HTMLElement("ul")}} 要素はロール <code>list</code> にマッチします。{{HTMLElement("ul")}} 要素を使用しているため、私たちのウィジェットのロール <code>listbox</code> が、{{HTMLElement("ul")}} 要素のロール <code>list</code> を置き換えるようにしなければなりません。そのために、ロール <code>presentation</code> を使用します。このロールは要素に特別な意味はないことを示せるようにするためのものであり、単に情報を与えるために使用されます。これを {{HTMLElement("ul")}} 要素に適用します。</p>
+
+<p>ロール <code><a href="/ja/docs/Accessibility/ARIA/ARIA_Techniques/Using_the_listbox_role" title="Accessibility/ARIA/ARIA_Techniques/Using_the_listbox_role">listbox</a></code> をサポートするため、HTML を以下のように更新することが必要です:</p>
+
+<pre class="brush: html">&lt;!-- 最初の要素に role="listbox" 属性を追加します --&gt;
+&lt;div class="select" role="listbox"&gt;
+  &lt;span class="value"&gt;Cherry&lt;/span&gt;
+  &lt;!-- ul 要素に role="presentation" を追加します --&gt;
+  &lt;ul class="optList" role="presentation"&gt;
+    &lt;!-- すべての li 要素に role="option" 属性を追加します --&gt;
+    &lt;li role="option" class="option"&gt;Cherry&lt;/li&gt;
+    &lt;li role="option" class="option"&gt;Lemon&lt;/li&gt;
+    &lt;li role="option" class="option"&gt;Banana&lt;/li&gt;
+    &lt;li role="option" class="option"&gt;Strawberry&lt;/li&gt;
+    &lt;li role="option" class="option"&gt;Apple&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/div&gt;</pre>
+
+<div class="note">
+<p><strong>注記:</strong> <code>role</code> 属性と <code>class</code> 属性の両方を含める方法は、<a href="/ja/docs/CSS/Attribute_selectors" title="CSS/Attribute_selectors">CSS 属性セレクタ</a>に対応しない古いブラウザをサポートしたい場合にのみ必要です。</p>
+</div>
+
+<h3 id="The_aria-selected_attribute" name="The_aria-selected_attribute"><code>aria-selected</code> 属性</h3>
+
+<p><a href="/ja/docs/Accessibility/ARIA/ARIA_Techniques" title="Accessibility/ARIA/ARIA_Techniques"><code>role</code></a> を使用するだけでは不十分です。<a href="/ja/docs/Accessibility/ARIA" title="Accessibility/ARIA">ARIA</a> は、状態や特性を表す多くの属性も提供します。これらをより多く使用すると、よくなったウィジェットが支援技術に理解されるようになります。ここでは、使用する属性を 1 つに絞ります: <code>aria-selected</code> です。</p>
+
+<p><code>aria-selected</code> 属性は、どの選択肢が現在選択されているかを示すために使用します。これにより、支援技術はユーザに現在何が選択されているかを伝えることができます。ここではユーザが選択肢を選択するたびに、選択された選択肢を示すためにこの属性を JavaScript で動的に使用します。このために、<code>updateValue()</code> 関数の変更が必要です:</p>
+
+<pre class="brush: js">function updateValue(select, index) {
+  var nativeWidget = select.previousElementSibling;
+  var value = select.querySelector('.value');
+  var optionList = select.querySelectorAll('.option');
+
+  // すべての選択肢が選択されていないようにします。
+  optionList.forEach(function (other) {
+    other.setAttribute('aria-selected', 'false');
+  });
+
+  // 指定された選択肢が選択されているようにします。
+  optionList[index].setAttribute('aria-selected', 'true');
+
+  nativeWidget.selectedIndex = index;
+  value.innerHTML = optionList[index].innerHTML;
+  highlightOption(select, optionList[index]);
+};</pre>
+
+<p>以下がこれらの変更を施した最終結果です (<a href="http://www.nvda-project.org/" rel="external" title="http://www.nvda-project.org/">NVDA</a> や <a href="http://www.apple.com/accessibility/voiceover/" rel="external" title="http://www.apple.com/accessibility/voiceover/">VoiceOver</a> などの支援技術でウィジェットを使用してみても、よい感触を得られるでしょう):</p>
+
+<table>
+ <thead>
+  <tr>
+   <th scope="col" style="text-align: center;">Live example</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{EmbedLiveSample("Change_states",120,130, "", "HTML/Forms/How_to_build_custom_form_widgets/Example_5")}}</td>
+  </tr>
+  <tr>
+   <td style="text-align: center;"><a href="/ja/docs/HTML/Forms/How_to_build_custom_form_widgets/Example_5" title="HTML/Forms/How_to_build_custom_form_widgets/Example_2">ソースコードを確認する</a></td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Conclusion" name="Conclusion">おわりに</h2>
+
+<p>独自のフォームウィジェットの作成方法を見てきましたが、ご覧いただいたようにこれは容易なことではなく、フロムスクラッチでコードを作るのではなくサードパーティのライブラリに頼るほうが簡単かつよいことも少なくありません (もちろん、そのようなライブラリを作ることが目的であれば話は別ですが)。</p>
+
+<p>自分でコーディングする前に検討するとよいライブラリをいくつか紹介します:</p>
+
+<ul>
+ <li><a href="http://jqueryui.com/" rel="external" title="http://jqueryui.com/">jQuery UI</a></li>
+ <li><a href="https://github.com/marghoobsuleman/ms-Dropdown" rel="external" title="https://github.com/marghoobsuleman/ms-Dropdown">msDropDown</a></li>
+ <li><a href="http://www.emblematiq.com/lab/niceforms/" rel="external" title="http://www.emblematiq.com/lab/niceforms/">Nice Forms</a></li>
+ <li><a href="https://www.google.fr/search?q=HTML+custom+form+controls&amp;ie=utf-8&amp;oe=utf-8&amp;aq=t&amp;rls=org.mozilla:fr:official&amp;client=firefox-a" rel="external" title="https://www.google.fr/search?q=HTML+custom+form+controls&amp;ie=utf-8&amp;oe=utf-8&amp;aq=t&amp;rls=org.mozilla:fr:official&amp;client=firefox-a">その他たくさん…</a></li>
+</ul>
+
+<p>ここから前進したいのであれば、本記事のコードには汎用および再利用可能にする前に改善が必要な箇所があります。これはあなたが取り組んでみるとよい課題です。ヒントを 2 つ挙げます: すべての関数の第 1 引数は同じであり、これはそれらの関数で同じコンテキストを必要になるということです。このコンテキストを共有するオブジェクトを作成することが賢明でしょう。また、機能への耐性を高めることも必要です。すなわち Web 標準の実装状況がまちまちである、多様なブラウザで良好に動作できるようにすることが必要です。楽しんでください!</p>
+
+<p>{{PreviousMenuNext("Learn/HTML/Forms/Form_validation", "Learn/HTML/Forms/Sending_forms_through_JavaScript", "Learn/HTML/Forms")}}</p>
+
+<h2 id="In_this_module" name="In_this_module">このモジュール</h2>
+
+<ul>
+ <li><a href="/ja/docs/Learn/HTML/Forms/Your_first_HTML_form">初めての HTML フォーム</a></li>
+ <li><a href="/ja/docs/Learn/HTML/Forms/How_to_structure_an_HTML_form">HTML フォームの構築方法</a></li>
+ <li><a href="/ja/docs/Learn/HTML/Forms/The_native_form_widgets">ネイティブフォームウィジェット</a></li>
+ <li><a href="/ja/docs/Learn/HTML/Forms/Sending_and_retrieving_form_data">フォームデータの送信</a></li>
+ <li><a href="/ja/docs/Learn/HTML/Forms/Data_form_validation">フォームデータの検証</a></li>
+ <li><a href="/ja/docs/Learn/HTML/Forms/How_to_build_custom_form_widgets">カスタムフォームウィジェットの作成方法</a></li>
+ <li><a href="/ja/docs/Learn/HTML/Forms/Sending_forms_through_JavaScript">JavaScript によるフォームの送信</a></li>
+ <li><a href="/ja/docs/Learn/HTML/Forms/HTML_forms_in_legacy_browsers">古いブラウザでの HTML フォーム</a></li>
+ <li><a href="/ja/docs/Learn/HTML/Forms/Styling_HTML_forms">HTML フォームへのスタイル設定</a></li>
+ <li><a href="/ja/docs/Learn/HTML/Forms/Advanced_styling_for_HTML_forms">HTML フォームへの高度なスタイル設定</a></li>
+ <li><a href="/ja/docs/Property_compatibility_table_for_form_widgets">フォームウィジェット向けプロパティ実装状況一覧</a></li>
+</ul>

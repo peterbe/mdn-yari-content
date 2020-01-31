@@ -1,0 +1,203 @@
+<div>{{jsSidebar("Statements")}}</div>
+
+<p><strong><code>var</code> 文</strong>は変数を宣言し、任意でそれをある値に初期化します。</p>
+
+<div>{{EmbedInteractiveExample("pages/js/statement-var.html")}}</div>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox">var <em>varname1 [</em>= <em>value1] [</em>, <em>varname2 [</em>= <em>value2] </em><em>... [</em>, <em>varnameN [</em>= <em>valueN]]]</em>;</pre>
+
+<dl>
+ <dt><code>varnameN</code></dt>
+ <dd>変数名。任意の有効な識別子。</dd>
+ <dt><code>valueN</code></dt>
+ <dd>変数の初期値。任意の有効な式。</dd>
+</dl>
+
+<h2 id="Description" name="Description">説明</h2>
+
+<p>現れた場所に関係なく、変数の宣言はコードを実行する前に処理されます。<code>var</code> を伴って宣言した変数のスコープは<em>実行コンテキスト (execution context)</em>であり、これは変数を含んでいる関数、または関数の外で宣言された変数はグローバルになります。</p>
+
+<p>宣言されていない変数への値の代入は、暗黙的にそれをグローバル変数として宣言します（グローバルオブジェクト (global object) のプロパティになります）。宣言した変数と宣言していない変数の違いは以下のとおりです:</p>
+
+<p>1. 宣言した変数は、その変数を宣言した実行コンテキストの内部にあるとみなされます。宣言していない変数は、常にグローバルになります。</p>
+
+<pre class="brush: js">function x() {
+  y = 1;   // strict モードでは ReferenceError をスローします。
+  var z = 2;
+}
+
+x();
+
+console.log(y); // "1" を出力します 
+console.log(z); // ReferenceError をスローします。z は x の外部で定義されていません。
+</pre>
+
+<p>2. 宣言した変数は、コードを実行する前に生成されます。宣言していない変数は、変数に代入するコードを実行するまで存在しません。</p>
+
+<pre class="brush: js">console.log(a);                // ReferenceError をスローします。
+console.log('still going...'); // 実行されません。</pre>
+
+<pre class="brush: js">var a;
+console.log(a);                // ブラウザによって "undefined" または "" を出力
+console.log('still going...'); // "still going..." と出力</pre>
+
+<p>3. 違いは、宣言した変数は実行コンテキスト (関数またはグローバル) の設定変更不可プロパティになります。宣言していない変数は設定変更可能です (例えば、削除できます)。</p>
+
+<pre class="brush: js">var a = 1;
+b = 2;
+
+delete this.a; // strict モードでは TypeError をスローします。そうでなければ静かに失敗します。
+delete this.b;
+
+console.log(a, b); // ReferenceErrorをスローします。 
+// プロパティ 'b' は削除されており、存在しません。</pre>
+
+<p>これら 3 つの違いにより、変数宣言に失敗し予期しない結果につながる可能性が高いです。結論として、<strong>関数スコープかグローバルスコープかにかかわらず、常に変数を宣言することをお勧めします</strong>。また、ECMAScript 5の <a href="/ja/docs/Web/JavaScript/Reference/Strict_mode">Strict モード</a>では関数内で宣言していない変数に値を代入するとエラーをスローします。</p>
+
+<h3 id="var_hoisting" name="var_hoisting">varの巻き上げ（hoisting）</h3>
+
+<p>変数の宣言 (および一般的な宣言) はコードを実行する前に処理されますので、変数はコード内のどこで宣言しても、コードの先頭で宣言したものと等価になります。また、変数を宣言する前に変数を使用することもできます。この動作は、変数の宣言が関数やグローバルのコードの先頭に移動したように見えるため、"巻き上げ (hoisting)" と呼ばれます。</p>
+
+<pre class="brush: js">bla = 2
+var bla;
+// ...
+
+// 次のように見なされます
+
+var bla;
+bla = 2;
+</pre>
+
+<p>このため、変数は常にスコープ (グローバルのコードまたは関数のコード) の先頭で宣言することをお勧めします。そうすればどの変数が関数スコープ (ローカル) であるか、あるいはスコープチェインによって決定されたものかが明確になります。</p>
+
+<p>巻き上げは変数定義に影響して、値の初期化には影響しないことを理解するのも重要です。値は実際代入文に来た時に代入されます:</p>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js"><span class="keyword token">function</span> <span class="function token">do_something</span><span class="punctuation token">(</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+  console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(</span>bar<span class="punctuation token">)</span><span class="punctuation token">;</span> <span class="comment token">// undefined</span>
+  <span class="keyword token">var</span> bar <span class="operator token">=</span> <span class="number token">111</span><span class="punctuation token">;</span>
+  console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(</span>bar<span class="punctuation token">)</span><span class="punctuation token">;</span> <span class="comment token">// 111</span>
+<span class="punctuation token">}</span>
+
+<span class="comment token">// is implicitly understood as: </span>
+<span class="keyword token">function</span> <span class="function token">do_something</span><span class="punctuation token">(</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+  <span class="keyword token">var</span> bar<span class="punctuation token">;</span>
+  console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(</span>bar<span class="punctuation token">)</span><span class="punctuation token">;</span> <span class="comment token">// undefined</span>
+  bar <span class="operator token">=</span> <span class="number token">111</span><span class="punctuation token">;</span>
+  console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(</span>bar<span class="punctuation token">)</span><span class="punctuation token">;</span> <span class="comment token">// 111</span>
+<span class="punctuation token">}</span></code></pre>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<h3 id="Declaring_and_initializing_two_variables" name="Declaring_and_initializing_two_variables">二つの変数を宣言して初期化する</h3>
+
+<pre class="brush: js">var a = 0, b = 0;
+</pre>
+
+<h3 id="Assigning_two_variables_with_single_string_value" name="Assigning_two_variables_with_single_string_value">二つの変数に一つの文字列を代入する</h3>
+
+<pre class="brush: js">var a = "A";
+var b = a;
+
+// 以下と等価です
+
+var a, b = a = "A";
+</pre>
+
+<p>順番に注意してください:</p>
+
+<pre class="brush: js">var x = y, y = 'A';
+console.log(x + y); // undefinedA
+</pre>
+
+<p>ここではコードを実行する前に <code>x</code> と <code>y</code> が宣言され、そのあとに代入を行います。"<code>x = y</code>" を実行したとき、<code>y</code> が存在しますので <code>ReferenceError</code> は発生せず、値は '<code>undefined</code>' になります。よって、<code>x</code> に undefined 値が代入されます。そして、<code>y</code> に値 'A' が代入されます。その結果、1 行目の後は <code>x === undefined &amp;&amp; y === 'A'</code> となり、最終結果に至ります。</p>
+
+<h3 id="Initialization_of_several_variables" name="Initialization_of_several_variables">複数の変数を初期化する</h3>
+
+<pre class="brush: js">var x = 0;
+
+function f(){
+  var x = y = 1; // x はローカルで宣言されます。y は違います!
+}
+f();
+
+console.log(x, y); // 0, 1
+// x は想定どおり、グローバル側の変数です。
+// しかし、y は関数の外部に漏れ出ています!</pre>
+
+<h3 id="Implicit_globals_and_outer_function_scope" name="Implicit_globals_and_outer_function_scope">暗黙のグローバル変数と関数スコープの外部</h3>
+
+<p>暗黙的にグローバルに現れた変数は、関数スコープの外部で参照することができます:</p>
+
+<pre class="brush: js">var x = 0;  // x はファイルスコープで宣言して、値 0 を代入
+
+console.log(typeof z); // z はまだ存在していないため、undefined になる
+
+function a() { // a を呼び出すと、
+  var y = 2;   // y を関数 a のスコープで宣言して、値 2 を代入
+
+  console.log(x, y);   // 0 2 
+
+  function b() {       // b を呼び出すと、
+    x = 3;  // ファイルスコープの x に 3 を代入して、新たなグローバル変数は生成しない
+    y = 4;  // 外側の y に 4 を代入して、新たなグローバル変数は生成しない
+    z = 5;  // 新たなグローバル変数 z を生成して、値 5 を代入 
+  }         // (strict モードでは ReferenceError が発生)
+
+  b();     // b を呼び出すと、グローバル変数として z を生成
+  console.log(x, y, z);  // 3 4 5
+}
+
+a();                   // b も呼び出す
+console.log(x, z);     // 3 5
+console.log(typeof y); // y は関数 a のローカル変数であるため、undefined になる</pre>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">策定状況</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES1')}}</td>
+   <td>{{Spec2('ES1')}}</td>
+   <td>最初期の定義。JavaScript 1.0 で実装。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-12.2', 'var statement')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-variable-statement', 'variable statement')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-variable-statement', 'variable statement')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザ実装状況</h2>
+
+<div>
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.statements.var")}}</p>
+</div>
+
+<h2 id="See_also" name="See_also">参照</h2>
+
+<ul>
+ <li><a href="/ja/docs/Web/JavaScript/Reference/Statements/let"><code>let</code></a></li>
+ <li><a href="/ja/docs/Web/JavaScript/Reference/Statements/const"><code>const</code></a></li>
+</ul>

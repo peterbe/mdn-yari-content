@@ -1,0 +1,150 @@
+<div>{{draft("このWebVR APIドキュメントは現在v1.0の仕様への対応作業の途中です．従って，ここにある情報のいくつかは最新ではありません．この作業について質問がある場合は ~~chrisdavidmills へ連絡をとってください．")}}{{DefaultAPISidebar("WebVR API")}}{{SeeCompatTable}}</div>
+
+<p class="summary">WebVR は，バーチャルリアリティデバイス — 例えばOculus Riftのようなヘッドマウントディスプレイ — をWEBアプリへ公開し，ヘッドマウントディスプレイの位置や動きを3D空間上の動きへと変換する手助けを行います．これによって，バーチャルな製品紹介やインタラクティブな訓練アプリといったものから超臨場感のファーストパーソン・シューティングゲームといったものまで，非常に面白い様々なアプリケーションをつくることができます．</p>
+
+<h2 id="概念と利用方法">概念と利用方法</h2>
+
+<p><img alt='Sketch of a person in a chair with wearing goggles labelled "Head mounted display (HMD)" facing a monitor with a webcam labelled "Position sensor"' src="https://mdn.mozillademos.org/files/11035/hw-setup.png" style="display: block; height: 78px; margin: 0px auto; width: 60%;"></p>
+
+<p>あなたのコンピュータに接続されているVRデバイスは，{{domxref("Navigator.getVRDevices()")}} メソッドで取得できます．接続中のデバイスを表す汎用的な {{domxref("VRDevice")}} を継承したオブジェクトの配列として返されます．一般に，1つのヘッドマウントディスプレイは2つのデバイスを持っていて，1つは {{domxref("HMDVRDevice")}} で表されるヘッドマウントディスプレイ自体で，もう1つは {{domxref("PositionSensorVRDevice")}} で表される頭の位置を追跡する位置センサカメラです．</p>
+
+<p>{{domxref("PositionSensorVRDevice")}} オブジェクトは {{domxref("PositionSensorVRDevice.getState","getState()")}} メソッドを持っています．そのメソッドは，あるタイムスタンプにおけるセンサの状態を表す {{domxref("VRPositionState")}} オブジェクトを返します．そのオブジェクトは，現在の速度，加速度，向きといった便利なデータのプロパティを含んでいて，各フレームで，VRヘッドマウントディスプレイの動きに応じてシーン描画を更新するのに役立ちます．</p>
+
+<p>{{domxref("HMDVRDevice.getEyeParameters()")}} メソッドは {{domxref("VREyeParameters")}} を返し，ヘッドマウントディスプレイでどの程度の画面上の範囲が見られるかを示す FOV (Field of View) 情報を返すために使うことができます．{{domxref("VREyeParameters.currentFieldOfView")}} は現在の中心からの視界を表す4つの角度を持つ {{domxref("VRFieldOfView")}} オブジェクトを返します．{{domxref("HMDVRDevice.setFieldOfView()")}} を用いてFOVを変更することも可能です．</p>
+
+<div class="note">
+<p><span style="font-size: 14px; line-height: 21px;"><strong>注記</strong></span>: あなたのアプリでこれらのインターフェイスを使う方法をもっと知りたい場合は， <a href="/docs/Web/API/WebVR_API/Using_the_WebVR_API">WebVR AP の使い方</a>を読んでください．VRの背景にある基本的な概念については， <a href="/docs/Web/API/WebVR_API/WebVR_concepts">WebVR concepts</a> を読んでください．</p>
+</div>
+
+<h2 id="WebVR_インターフェイス">WebVR インターフェイス</h2>
+
+<dl>
+ <dt>{{domxref("VRDisplay")}}</dt>
+ <dd>このAPIでサポートされているVRデバイスを表します．デバイスIDや説明など汎用的な情報や，VRシーンの表示を開始するためのメソッドや，両目のパラメータやディスプレイの対応機能を受け取るメソッド，その他の重要な機能のためのメソッドを含んでいます．</dd>
+</dl>
+
+<dl>
+ <dt>{{domxref("VRDisplayCapabilities")}}</dt>
+ <dd>{{domxref("VRDisplay")}} の利用可能な機能を示しています — この機能はVRデバイスで使える機能テストを実行するために使うことができ，例えば位置情報を返すことが可能かに使えます．</dd>
+ <dt>{{domxref("VRPose")}}</dt>
+ <dd>指定した時刻における位置の状態を表します（これには向き，位置，速度，加速度を含んでいます）．</dd>
+ <dt>{{domxref("VREyeParameters")}}</dt>
+ <dd>指定した目に対応するシーンを正しくレンダリングするために必要となるすべての情報へのアクセスを提供します．これにはFOV情報を含まれています．</dd>
+ <dt>{{domxref("VRFieldOfView")}}</dt>
+ <dd>中心点からの視界を記述する4つの異なる角度値で定義されるFOVを表します．</dd>
+ <dt>{{domxref("VRLayer")}}</dt>
+ <dd> {{domxref("VRDisplay")}} 内に表示されるレイヤを表します.</dd>
+ <dt>{{domxref("VRStageParameters")}}</dt>
+ <dd>ルームスケール体験をサポートしているデバイスで，ステージエリアを示す値を表します．</dd>
+ <dt>
+ <h3 id="その他のインターフェイスの拡張">その他のインターフェイスの拡張</h3>
+ </dt>
+ <dt>{{domxref("Gamepad.displayId")}} {{readonlyInline}}</dt>
+ <dd><dfn>関連付いている {{domxref("VRDisplay")}} の {{domxref("VRDisplay.displayId")}} を返します — その <code>VRDisplay</code> はゲームパッドが表示シーンのコントロールします．</dfn></dd>
+ <dt>{{domxref("Navigator.activeVRDisplays")}} {{readonlyInline}}</dt>
+ <dd>現在表示されている（{{domxref("VRDisplay.ispresenting")}} が <code>true の</code>）すべての {{domxref("VRDisplay")}} オブジェクトを持つ配列を返します．</dd>
+ <dt>{{domxref("Navigator.getVRDisplays()")}}</dt>
+ <dd>コンピュータに接続されている利用可能なVRデバイスを表す {{domxref("VRDisplay")}} オブジェクトの配列へ解決する promiseを返します．</dd>
+ <dt>{{domxref("Window.onvrdisplayconnected")}}</dt>
+ <dd>互換性のあるVRデバイスがコンピュータに接続されたとき（ {{event("vrdisplayconnected")}} イベントが発火したとき）に実行されるイベントハンドラを表します．</dd>
+ <dt>{{domxref("Window.onvrdisplaydisconnected")}}</dt>
+ <dd>互換性のあるVRデバイスがコンピュータから接続解除されたとき（ {{event("vrdisplaydisconnected")}} イベントが発火したとき）に実行されるイベントハンドラを表します．</dd>
+ <dt>{{domxref("Window.onvrdisplaypresentchange")}}</dt>
+ <dd>VRデバイスの表示状態が変更されたとき — すなわち，表示状態から非表示状態へ変化したときあるいはその逆（ {{event("onvrdisplaypresentchange")}} イベントが発火したとき）に実行されるイベントハンドラを表します．</dd>
+</dl>
+
+<h2 id="例">例</h2>
+
+<p>次の Github リポジトリでいくつかの例を見つけられます:</p>
+
+<ul>
+ <li><a href="https://github.com/mdn/webvr-tests">mdn/webvr-tests</a>: 基本的な機能の使い方を示すためのシンプルなデモ．</li>
+ <li><a href="https://github.com/MozVR/">MozVR team</a>: より高度なデモ，WebVRの仕様書，などなど！</li>
+</ul>
+
+<h2 id="仕様">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">ステータス</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('WebVR')}}</td>
+   <td>{{Spec2('WebVR')}}</td>
+   <td>Initial definition</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="ブラウザの互換性">ブラウザの互換性</h2>
+
+<p>{{CompatibilityTable}}</p>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>機能</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari (WebKit)</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>機能</th>
+   <th>Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>Firefox OS (Gecko)</th>
+   <th>IE Phone</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+   <th>Chrome for Android</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatNo}}</td>
+   <td>
+    <p>{{CompatVersionUnknown}}</p>
+   </td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="参照">参照</h2>
+
+<ul>
+ <li><a href="/docs/Web/API/WebVR_API/WebVR_environment_setup">WebVR environment setup</a></li>
+ <li><a href="/docs/Web/API/WebVR_API/WebVR_concepts">WebVR concepts</a></li>
+ <li><a href="/docs/Web/API/WebVR_API/Using_the_WebVR_API">WebVR API の使い方</a></li>
+ <li><a href="http://mozvr.com/">MozVr.com</a> — Mozilla VR team から提供されるデモ，ダウンロード，その他のリソース．</li>
+ <li><a href="http://dsmu.me/ConsoleGameOnWeb/">Console Game on Web</a> — WebVRも含んだ興味深いゲームコンセプトデモのまとめ．</li>
+ <li><a href="https://github.com/MozVR/vr-web-examples/tree/master/threejs-vr-boilerplate">threejs-vr-boilerplate</a> — WebVRアプリを書き始めるのに，とても便利なスタータテンプレート．</li>
+ <li><a href="https://developer.oculus.com/">Oculus Rift homepage</a></li>
+</ul>
+
+<p> </p>

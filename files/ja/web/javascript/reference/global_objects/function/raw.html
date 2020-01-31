@@ -1,0 +1,144 @@
+
+<div>{{JSRef}}</div>
+
+<p><strong><code>Function</code>コンストラクタ</strong>は新規の <code>Function</code> オブジェクトを作成します。直接コンストラクタを呼ぶことで、関数を動的に作成できますが、 {{jsxref("eval")}} と同じくセキュリティとパフォーマンスの問題に悩まされます。</p>
+
+<div>{{EmbedInteractiveExample("pages/js/function-constructor.html")}}</div>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<p>JavaScript におけるすべての関数は、実際には <code>Function</code> オブジェクトです。</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox"><code>new Function ([<em>arg1</em>[, <em>arg2</em>{{mediawiki.external(', ...<em>argN</em>')}}],] <em>functionBody</em>)</code></pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<dl>
+ <dt><code>arg1, arg2, ... arg<em>N</em></code></dt>
+ <dd>仮引数の名前として関数で用いるための名前。各々は、妥当な JavaScript の識別子と一致する文字列か、コンマで区切られたような文字列のリストでなければなりません。例えば、"<code>x</code>"、"<code>theValue</code>" 、"<code>a,b</code>"。</dd>
+ <dt><code>functionBody</code></dt>
+ <dd>関数定義を形成する JavaScript の文を含む文字列。</dd>
+</dl>
+
+<h2 id="Description" name="Description">説明</h2>
+
+<p><code>Function</code> コンストラクタで生成された <code>Function</code> オブジェクトは、関数が作成されたときにパースされます。これは、関数を<a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Operators/function">関数式</a>や<a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Statements/function">関数宣言</a>を使って定義してコード内で呼び出した場合に比べ、コードの他の部分と一緒にパースされるため、効率が落ちます。</p>
+
+<p>関数に渡されるすべての引数は、関数のパラメーター識別名として、渡される順番どおりに作成されます。</p>
+
+<p>(<code>new</code> 演算子を用いずに) 関数として、<code>Function</code> コンストラクタを実行することは、コンストラクタとして実行することと同じです。</p>
+
+<h2 id="Properties_and_Methods_of_Function" name="Properties_and_Methods_of_Function"><code>Function</code> のメソッドやプロパティ</h2>
+
+<p>グローバル <code>Function</code> オブジェクトは独自のメソッドやプロパティは持ちませんが、{{jsxref("Function.prototype")}} からのプロトタイプチェーンを通じていくつかのメソッドやプロパティを継承しています。</p>
+
+<h2 id="Function_prototype_object" name="Function_prototype_object"><code>Function</code> プロトタイプオブジェクト</h2>
+
+<h3 id="Properties" name="Properties">プロパティ</h3>
+
+<p>{{page('/ja/docs/JavaScript/Reference/Global_Objects/Function/prototype', 'Properties')}}</p>
+
+<h3 id="Methods" name="Methods">メソッド</h3>
+
+<div>{{page('/en-US/docs/JavaScript/Reference/Global_Objects/Function/prototype', 'Methods')}}</div>
+
+<h2 id="Function_instances" name="Function_instances"><code>Function</code> インスタンス</h2>
+
+<p><code>Function</code> インスタンスは {{jsxref("Function.prototype")}} からメソッドとプロパティを継承します。 すべてのコンストラクタと同様に、コンストラクタのプロトタイプオブジェクトを変更することで、すべての <code>Function</code> インスタンスに変更が加えられます。</p>
+
+<h2 id="Example" name="Example">例</h2>
+
+<h3 id="Example.3A_Specifying_arguments_with_the_Function_constructor" name="Example.3A_Specifying_arguments_with_the_Function_constructor"><code>Function</code> コンストラクタの引数を指定する</h3>
+
+<p>次のコードは、2 つの引数を受け取る <code>Function</code> オブジェクトを生成します。</p>
+
+<pre class="brush: js">// 例は JavaScript コンソールで直接実行できます
+
+// 2 つの引数を受け取って、引数の合計を返します
+var adder = new Function("a", "b", "return a + b");
+
+// 関数の呼び出し
+adder(2, 6);
+// &gt; 8</pre>
+
+<p>引数 "<code>a</code>" と "<code>b</code>" は、"<code>return a + b</code>" という関数の中身において使用される仮引数の名前です。</p>
+
+<h3 id="Difference_between_Function_constructor_and_function_declaration" name="Difference_between_Function_constructor_and_function_declaration">関数コンストラクタと関数宣言の違い</h3>
+
+<p><code>Function</code> コンストラクタによる関数の生成は、生成コンテキストにクロージャを作りません。つまり常にグローバルスコープで作成します。これを実行すると、 <code>Function</code> コンストラクタの呼び出し元のスコープは入らず、自身のローカル変数とグローバル変数だけにアクセスできます。これは関数式のコードに {{jsxref("eval")}} を使うのとは異なっています。</p>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js"><span class="keyword token">var</span> x <span class="operator token">=</span> <span class="number token">10</span><span class="punctuation token">;</span>
+
+<span class="keyword token">function</span> <span class="function token">createFunction1</span><span class="punctuation token">(</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+    <span class="keyword token">var</span> x <span class="operator token">=</span> <span class="number token">20</span><span class="punctuation token">;</span>
+    <span class="keyword token">return</span> <span class="keyword token">new</span> <span class="class-name token">Function</span><span class="punctuation token">(</span><span class="string token">'return x;'</span><span class="punctuation token">)</span><span class="punctuation token">;</span> <span class="comment token">// this |x| refers global |x|</span>
+<span class="punctuation token">}</span>
+
+<span class="keyword token">function</span> <span class="function token">createFunction2</span><span class="punctuation token">(</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+    <span class="keyword token">var</span> x <span class="operator token">=</span> <span class="number token">20</span><span class="punctuation token">;</span>
+    <span class="keyword token">function</span> <span class="function token">f</span><span class="punctuation token">(</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+        <span class="keyword token">return</span> x<span class="punctuation token">;</span> <span class="comment token">// this |x| refers local |x| above</span>
+    <span class="punctuation token">}</span>
+    <span class="keyword token">return</span> f<span class="punctuation token">;</span>
+<span class="punctuation token">}</span>
+
+<span class="keyword token">var</span> f1 <span class="operator token">=</span> <span class="function token">createFunction1</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(</span><span class="function token">f1</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">)</span><span class="punctuation token">;</span>          <span class="comment token">// 10</span>
+<span class="keyword token">var</span> f2 <span class="operator token">=</span> <span class="function token">createFunction2</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(</span><span class="function token">f2</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">)</span><span class="punctuation token">;</span>          <span class="comment token">// 20</span></code></pre>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">策定状況</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES1')}}</td>
+   <td>{{Spec2('ES1')}}</td>
+   <td>初期定義JavaScript 1.0 に実装</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-15.3', 'Function')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-function-objects', 'Function')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-function-objects', 'Function')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザ実装状況</h2>
+
+<div>
+<div>
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.builtins.Function")}}</p>
+</div>
+</div>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li>{{jsxref("Functions", "Functions and function scope")}}</li>
+ <li>{{jsxref("Function")}}</li>
+ <li>{{jsxref("Statements/function", "function statement")}}</li>
+ <li>{{jsxref("Operators/function", "function expression")}}</li>
+ <li>{{jsxref("Statements/function*", "function* statement")}}</li>
+ <li>{{jsxref("Operators/function*", "function* expression")}}</li>
+ <li>{{jsxref("GeneratorFunction")}}</li>
+</ul>

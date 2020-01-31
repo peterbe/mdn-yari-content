@@ -1,0 +1,144 @@
+<div>{{JSRef}}</div>
+
+<p><code><strong>Reflect.</strong></code><strong><code>construct()</code> </strong>静的メソッドは、機能として <a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Operators/new"><code>new</code> 演算子</a>のように働きます。これは、<code>new target(...args)</code> の呼び出しと同等です。このメソッドはオプションを追加することで、prototype を変更します。</p>
+
+<div>{{EmbedInteractiveExample("pages/js/reflect-construct.html")}}</div>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox">Reflect.construct(target, argumentsList[, newTarget])
+</pre>
+
+<h3 id="Parameters" name="Parameters">パラメータ</h3>
+
+<dl>
+ <dt><code>target</code></dt>
+ <dd>呼び出し対象の関数。</dd>
+ <dt><code>argumentsList</code></dt>
+ <dd><font face="Courier New"><code>target</code> </font>と一緒に呼び出されるべき引数を指定する配列様のオブジェクト。</dd>
+ <dt><code>newTarget</code> {{optional_inline}}</dt>
+ <dd>使用されるコンストラクタ。<code><a href="/ja/docs/Web/JavaScript/Reference/Operators/new.target">new.target</a></code> 演算子も見てください。<code>newTarget</code> が提供されない場合、 <code>target</code>が使用されます。</dd>
+</dl>
+
+<h3 id="Return_value" name="Return_value">戻り値</h3>
+
+<p>渡された引数をもとに <code>target</code> コンストラクタで初期化された <code>target</code> （<code>newTarget</code> を渡されたならば <code>newTarget</code> ）の新しいインスタンスを返します。</p>
+
+<h3 id="Exceptions" name="Exceptions">スローされる例外</h3>
+
+<p><code><font face="Courier New">target</font></code><font face="Courier New"> または</font> <code><font face="Courier New">newTarget</font></code><font face="Courier New"> </font>がコンストラクタではない場合、{{jsxref("TypeError")}} がスローされます。</p>
+
+<h2 id="Description" name="Description">説明</h2>
+
+<p><code>Reflect.construct</code> では、可変長引数とともにコンストラクタを起動できます。（<a href="/ja/docs/Web/JavaScript/Reference/Operators/new"><u><font color="#0066cc">new 演算子</font></u></a>と組み合わせて<a href="/ja/docs/Web/JavaScript/Reference/Operators/Spread_operator"><u><font color="#0066cc">spread 演算子</font></u></a>を使うこともできます）。</p>
+
+<pre class="brush: js">var obj = new Foo(...args);
+var obj = Reflect.construct(Foo, args);</pre>
+
+<p> </p>
+
+<h3 id="Reflect.construct()_vs_Object.create()" name="Reflect.construct()_vs_Object.create()"><code>Reflect.construct()</code> と <code>Object.create()</code></h3>
+
+<p><code>Reflect</code> が導入される前は、 <code>Object.create()</code> を使用してコンストラクタと prototype を任意の組み合わせで使用することでオブジェクトを構築していました。</p>
+
+<pre class="brush: js">function OneClass() {
+    this.name = 'one';
+}
+
+function OtherClass() {
+    this.name = 'other';
+}
+
+// Calling this:
+var obj1 = Reflect.construct(OneClass, args, OtherClass);
+
+// ...has the same result as this:
+var obj2 = Object.create(OtherClass.prototype);
+OneClass.apply(obj2, args);
+
+console.log(obj1.name); // 'one'
+console.log(obj2.name); // 'one'
+
+console.log(obj1 instanceof OneClass); // false
+console.log(obj2 instanceof OneClass); // false
+
+console.log(obj1 instanceof OtherClass); // true
+console.log(obj2 instanceof OtherClass); // true</pre>
+
+<p>この2つの手法の最終結果は同じですが、その過程に重要な違いがあります。<code>Object.create()</code> と <code>Function.prototype.apply()</code> を使用する場合、<code>new</code> 演算子を用いないため、 <code>new.target</code> 演算子はコンストラクタ内で <code>undefined</code> を返します。</p>
+
+<p>一方、<code>Reflect.construct()</code> を使用する場合、 <code>new.target</code> 演算子は、<code>newTarget</code> を渡されたならそれを、渡されなかった場合は <code>target</code> を返します。</p>
+
+<pre class="brush: js">function OneClass() {
+    console.log('OneClass');
+    console.log(new.target);
+}
+function OtherClass() {
+    console.log('OtherClass');
+    console.log(new.target);
+}
+
+var obj1 = Reflect.construct(OneClass, args);
+// Output:
+//     OneClass
+//     function OneClass { ... }
+
+var obj2 = Reflect.construct(OneClass, args, OtherClass);
+// Output:
+//     OneClass
+//     function OtherClass { ... }
+
+var obj3 = Object.create(OtherClass.prototype);
+OneClass.apply(obj2, args);
+// Output:
+//     OneClass
+//     undefined</pre>
+
+<p> </p>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<h3 id="Using_Reflect.construct()" name="Using_Reflect.construct()"><code>Reflect.construct()</code> の使用</h3>
+
+<pre class="brush: js">var d = Reflect.construct(Date, [1776, 6, 4]);
+d instanceof Date; // true
+d.getFullYear(); // 1776
+</pre>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">状態</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-reflect.construct', 'Reflect.construct')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td>初期定義</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-reflect.construct', 'Reflect.construct')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザ実装状況</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.builtins.Reflect.construct")}}</p>
+
+<h2 id="See_also" name="See_also">関連項目</h2>
+
+<ul>
+ <li>{{jsxref("Reflect")}}</li>
+ <li><a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Operators/new"><code>new</code></a></li>
+ <li><code><a href="/ja/docs/Web/JavaScript/Reference/Operators/new.target">new.target</a></code></li>
+</ul>

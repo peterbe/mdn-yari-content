@@ -1,0 +1,127 @@
+<div>{{HTTPSidebar}}</div>
+
+<p>通常の HTTP レスポンスにおける <code><strong>Content-Disposition</strong></code> レスポンスヘッダーは、コンテンツがブラウザで<em>インライン</em>で表示されることを求められているか、つまり、Webページとして表示するか、Webページの一部として表示するか、ダウンロードしてローカルに保存する添付ファイルとするかを示します。</p>
+
+<p>本文が <code>multipart/form-data</code> である場合、<strong><code>Content-Disposition</code></strong> ヘッダーは、マルチパートを構成する各サブパートに付与され、そのフィールドに関する情報を示します。サブパートは{{HTTPHeader("Content-Type")}} ヘッダーで定義された <em>boundary</em> によって区切られます。マルチパートの本文体に付与した場合、<code>Content-Disposition</code> は何の意味も持ちません。</p>
+
+<p><code>Content-Disposition</code> ヘッダーはメールにおける MIME メッセージのより広い用途で定義されたものですが、HTTP のフォームと {{HTTPMethod("POST")}} リクエストに利用可能な引数は一部だけです。ヘッダーの値である <code>form-data</code> と、省略可能なディレクティブ <code>name</code> と <code>filename</code> のみが HTTP の用途で使用することができます。</p>
+
+<table class="properties">
+ <tbody>
+  <tr>
+   <th scope="row">ヘッダー種別</th>
+   <td>{{Glossary("Response header", "レスポンスヘッダー")}} (本文の場合)<br>
+    {{Glossary("General header", "一般ヘッダー")}} (マルチパート本文の一部の場合)</td>
+  </tr>
+  <tr>
+   <th scope="row">{{Glossary("Forbidden header name", "禁止ヘッダー名")}}</th>
+   <td>いいえ</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<h3 id="As_a_response_header_for_the_main_body" name="As_a_response_header_for_the_main_body">メインボディに適用するレスポンスヘッダーとして</h3>
+
+<p>この用法では、<code>inline</code> (デフォルト値。Web ページの一部として、またはWebページとして表示可能であることを示します)、もしくは <code>attachment</code> (ダウンロードすべきであることを示します。多くのブラウザは <code>filename</code> パラメータの値を使い、「名前を付けて保存」ダイアログを表示します) を最初のパラメータとして指定します。</p>
+
+<pre class="syntaxbox">Content-Disposition: inline
+Content-Disposition: attachment
+Content-Disposition: attachment; filename="filename.jpg"</pre>
+
+<h3 id="As_a_header_for_a_multipart_body" name="As_a_header_for_a_multipart_body">マルチパート本文で使うヘッダーとして</h3>
+
+<p>この用法では最初の引数は常に <code>form-data</code> です。追加のパラメータは大文字小文字を区別せず、<code>'='</code> 記号に続けてクォートされた文字列で引数を指定します。複数のパラメータはセミコロン (<code>';'</code>) で区切ります。</p>
+
+<pre class="syntaxbox">Content-Disposition: form-data
+Content-Disposition: form-data; name="fieldName"
+Content-Disposition: form-data; name="fieldName"; filename="filename.jpg"</pre>
+
+<h3 id="Directives" name="Directives">ディレクティブ</h3>
+
+<dl>
+ <dt><code>name</code></dt>
+ <dd>このサブパートの内容が参照する形式で HTML フィールドの名前を含む文字列が続きます。 同じフィールドで複数のファイルを扱う場合 (たとえば、 <code>{{HTMLElement("input","&lt;input type=file&gt;")}}</code> 要素の {{htmlattrxref("multiple", "input")}} 属性）、同じ名前のサブパートが複数存在する可能性があります。</dd>
+ <dd><code>'_charset_'</code> の値を伴う <code>name</code> は、その部分が HTML フィールドではなく、明示的な文字セット情報なしで部分に使用するデフォルトの文字セットであることを示します。</dd>
+ <dt><code>filename</code></dt>
+ <dd>送信された元のファイル名を含む文字列を指定します。この filename は常に任意であり、アプリケーションで使用する際は注意が必要です。例えばパス情報を取り除いたり、サーバーのファイルシステムに合わせてファイル名の変換を行ったりすべきです。This parameter provides mostly indicative information. <code>Content-Disposition: attachment</code> と組み合わせて使用すれば、「名前を付けて保存」ダイアログのデフォルトのファイル名になります。</dd>
+ <dt>filename*</dt>
+ <dd>
+ <p>filename パラメータと filename* パラメータの唯一の違いは、filename* では <a href="https://tools.ietf.org/html/rfc5987">RFC 5987</a> に基づきエンコードした値を使用できることです。一つのヘッダに filename と filename* の両方が存在している場合、filename* は filename より優先されます。</p>
+ </dd>
+</dl>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<p>[名前を付けて保存] ダイアログを起動するレスポンス</p>
+
+<pre>200 OK
+Content-Type: text/html; charset=utf-8
+Content-Disposition: attachment; filename="cool.html"
+Content-Length: 22
+
+&lt;HTML&gt;Save me!&lt;/HTML&gt;
+
+</pre>
+
+<p>このサンプル HTML ファイルは、ブラウザに表示されるのではなく、通常のダウンロードとして保存されます。ほとんどのブラウザは、<code>cool.html</code> というファイル名で保存することを提案します (デフォルトでは)。</p>
+
+<p><code>Content-Disposition</code> ヘッダーを利用する <code>multipart/form-data</code> フォーマットを使用して投稿された HTML フォームの例：</p>
+
+<pre>POST /test.html HTTP/1.1
+Host: example.org
+Content-Type: multipart/form-data;boundary="boundary"
+
+--boundary
+Content-Disposition: form-data; name="field1"
+
+value1
+--boundary
+Content-Disposition: form-data; name="field2"; filename="example.txt"
+
+value2
+--boundary--</pre>
+
+<h2 id="Specifications" name="Specifications">仕様書</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">タイトル</th>
+  </tr>
+  <tr>
+   <td>{{RFC("7578")}}</td>
+   <td>フォームから値を返します: multipart/form-data</td>
+  </tr>
+  <tr>
+   <td>{{RFC("6266")}}</td>
+   <td>Hypertext Transfer Protocol (HTTP) での Content-Disposition ヘッダーフィールドの使用</td>
+  </tr>
+  <tr>
+   <td>{{RFC("2183")}}</td>
+   <td>インターネットメッセージにおけるプレゼンテーション情報の伝達: Content-Disposition ヘッダーフィールド</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザの対応</h2>
+
+<p class="hidden">このページの互換性一覧表は構造化データから生成されています。データに協力していただけるのであれば、 <a class="external" href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> をチェックアウトしてプルリクエストを送信してください。</p>
+
+<p>{{Compat("http.headers.Content-Disposition")}}</p>
+
+<h2 id="Compatibility_notes" name="Compatibility_notes">互換性に関する注意</h2>
+
+<ul>
+ <li>Firefox 5 は、<code>filename</code> と <code>filename*</code> の両方のパラメータが指定されている場合、<code>Content-Disposition</code> HTTP レスポンスヘッダをより効果的に処理します。たとえ <code>filename</code> パラメータが最初に含まれていても、利用可能ならば <code>filename*</code> パラメータを使用して、提供されたすべての名前を調べます。 以前は、最初に一致したパラメータが使用されていたため、より適切な名前が使用されませんでした。 {{bug(588781)}} をご覧ください。</li>
+</ul>
+
+<h2 id="See_also" name="See_also">あわせて参照</h2>
+
+<ul>
+ <li><a href="/ja/docs/Learn/HTML/Forms">HTML フォーム</a></li>
+ <li>マルチパートボディの境界を定義する {{HTTPHeader("Content-Type")}}</li>
+ <li>{{domxref("XMLHttpRequest")}} API で使用するフォームデータを操作するために使用される {{domxref("FormData")}} インターフェイス</li>
+</ul>

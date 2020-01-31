@@ -1,0 +1,326 @@
+<div>{{JSRef}}</div>
+
+<p>Cette page illustre des exemples supplémentaires pour la méthode {{jsxref("Object.defineProperty()")}}.</p>
+
+<h2 id="Utiliser_des_masques_binaires_(plutôt_qu'un_descripteur_de_propriété)">Utiliser des masques binaires (plutôt qu'un descripteur de propriété)</h2>
+
+<p>Si l'on souhaite définir de nombreuses propriétés via la méthode {{jsxref("Object.defineProperty()")}} , on peut utiliser le même descripteur pour chaque propriété en le modifiant chaque fois que c'est nécessaire avec des marqueurs binaires (<em>flags</em>) pour former un masque binaire.</p>
+
+<pre class="brush: js">var oDesc = {};
+function defProp (oObj, nMask, sKey, vVal_fGet, fSet) {
+  if (nMask &amp; 8) {
+    // descripteur d'accesseur
+    if (vVal_fGet) {
+      oDesc.get = vVal_fGet;
+    } else {
+      delete oDesc.get;
+    }
+    if (fSet) {
+      oDesc.set = fSet;
+    } else {
+      delete oDesc.set;
+    }
+    delete oDesc.value;
+    delete oDesc.writable;
+  } else {
+    // descripteur de données
+    if (arguments.length &gt; 3) {
+      oDesc.value = vVal_fGet;
+    } else {
+      delete oDesc.value;
+    }
+    oDesc.writable = Boolean(nMask &amp; 4);
+    delete oDesc.get;
+    delete oDesc.set;
+  }
+  oDesc.enumerable = Boolean(nMask &amp; 1);
+  oDesc.configurable = Boolean(nMask &amp; 2);
+  Object.defineProperty(oObj, sKey, oDesc);
+  return oObj;
+}
+
+/*
+* :: function defProp ::
+*
+* oObj est le nom de l'objet dont on souhaite définir la propriété;
+* nMask est un masque binaire:
+*  flag 0x1 : la propriété est enumérable,
+*  flag 0x2 : la propriété est configurable,
+*  flag 0x4 : la propriété est accessible en écriture,
+*  flag 0x8 : la propriété est un descripteur d'accesseur.
+* sKey est le nom de la propriété à créer ou modifier;
+* vVal_fGet est la valeur à affecter pour un descripteur de donnée 
+* ou l'accesseur à utiliser pour un descripteur d'accesseur 
+* (selon le masque choisi)
+* fSet est le mutateur à affecter pour un descripteur d'accesseur;
+*
+* Les valeurs possibles du masque binaire :
+*
+*  0  : descripteur de données en lecture seule 
+*       non configurable, non énumérable (0000).
+*  1  : descripteur de données en lecture seule
+*       non configurable, énumérable (0001).
+*  2  : descripteur de données en lecture seule
+*       configurable, non énumérable (0010).
+*  3  : descripteur de données en lecture seule
+*       configurable, énumérable (0011).
+*  4  : descripteur de données en écriture
+*       non configurable, non énumérable (0100).
+*  5  : descripteur de données en écriture 
+*       non configurable, énumérable (0101).
+*  6  : descripteur de données en écriture
+*       configurable, non énumérable (0110).
+*  7  : descripteur de données en écriture
+*       configurable, énumérable (0111).
+*  8  : descripteur d'accessseur
+*       non configurable, non énumérable (1000).
+*  9  : descripteur d'accessseur
+*       non configurable, énumérable (1001).
+*  10 : descripteur d'accessseur
+*       configurable, non énumérable (1010).
+*  11 :  descripteur d'accessseur
+*        configurable, énumérable (1011).
+*  Note : Si le flag 0x8 est mis à "descripteur d'accesseur"
+*  le flag 0x4 (writable) sera ignoré. Sinon, l'argument
+*  fSet sera ignoré.
+*/
+
+// créer un nouvel objet
+var myObj = {};
+
+// ajouter un descripteur de données en écriture 
+// non configurable, non énumérable
+defProp(myObj, 4, "myNumber", 25);
+
+// ajouter un descripteur de données en lecture seule
+// non configurable, énumérable
+defProp(myObj, 1, "myString", "Hello world!");
+
+// ajouter un descripteur d'accesseur
+// non configurable, énumérable
+defProp(myObj, 9, "myArray", function() {
+  for (var iBit = 0, iFlag = 1, aBoolArr = [false];
+        iFlag &lt; this.myNumber + 1 || (this.myNumber &amp; iFlag);
+        iFlag = iFlag &lt;&lt; 1) {
+    aBoolArr[iBit++] = Boolean(this.myNumber &amp; iFlag);
+  }
+  return aBoolArr;
+}, function(aNewMask) {
+  for (var nNew = 0, iBit = 0; iBit &lt; aNewMask.length; iBit++) {
+    nNew |= Boolean(aNewMask[iBit]) &lt;&lt; iBit;
+  }
+  this.myNumber = nNew;
+});
+
+// ajouter un descripteur de données en écriture (undefined)
+// configurable, énumérable
+defProp(myObj, 7, "myUndefined");
+
+// ajouter un descripteur d'accesseur (uniquement le getter)
+// configurable, énumérable
+defProp(myObj, 11, "myDate", function() { return new Date(); });
+
+// ajouter un descripteur d'accesseur (uniquement le setter)
+// non configurable, non énumérable
+defProp(myObj, 8, "myAlert", null, function(sTxt) { alert(sTxt); });
+
+myObj.myAlert = myObj.myDate.toLocaleString() + "\n\n" + myObj.myString +
+      "\nLe nombre " + myObj.myNumber + " représente le masque binaire : " +
+      myObj.myArray.join(", ") + ".";
+
+// on liste les propriétés énumérables 
+var sList = "Voici les propriétés énumérables de l'objet :\n";
+for (var sProp in myObj) {
+    sList += "\nmyObj." + sProp + " =&gt; " + myObj[sProp] + ";"
+}
+
+console.log(sList);
+</pre>
+
+<h2 id="Créer_une_nouvelle_méthode_Object.setProperty()_non_native">Créer une nouvelle méthode <code>Object.setProperty()</code> non native</h2>
+
+<p>On peut faire la même chose avec un descripteur d'objet obtenu via un constructeur en utilisant une méthode adaptée de {{jsxref("Object")}} qu'on peut appeler <code>setProperty()</code> :</p>
+
+<pre class="brush: js">// créer une nouvelle méthode de Object appelée Object.setProperty()
+
+new (function() {
+  var oDesc = this;
+  Object.setProperty = function (oObj, nMask, sKey, vVal_fGet, fSet) {
+    if (nMask &amp; 8) {
+      // accessor descriptor
+      if (vVal_fGet) {
+        oDesc.get = vVal_fGet;
+      } else {
+        delete oDesc.get;
+      }
+      if (fSet) {
+        oDesc.set = fSet;
+      } else {
+        delete oDesc.set;
+      }
+      delete oDesc.value;
+      delete oDesc.writable;
+    } else {
+      // data descriptor
+      if (arguments.length &gt; 3) {
+        oDesc.value = vVal_fGet;
+      } else {
+        delete oDesc.value;
+      }
+      oDesc.writable = Boolean(nMask &amp; 4);
+      delete oDesc.get;
+      delete oDesc.set;
+    }
+    oDesc.enumerable = Boolean(nMask &amp; 1);
+    oDesc.configurable = Boolean(nMask &amp; 2);
+    Object.defineProperty(oObj, sKey, oDesc);
+    return oObj;
+  };
+})();
+
+// on crée un objet vide
+var monObjet = {};
+
+// on ajoute un descripteur de données en écriture
+// non configurable, non énumérable
+Object.setProperty(monObjet, 4, "monNombre", 25);
+
+// on ajoute un descripteur de données en lecture seule
+// non configurable, énumérable
+Object.setProperty(monObjet, 1, "maChaîne", "Hello world!");
+
+// etc. etc. 
+</pre>
+
+<div class="note"><strong>Note :</strong> La méthode <code>Object.setProperty()</code> pourrait faire partie de futures méthodes natives (voir le bug <a class="external" href="https://bugs.ecmascript.org/show_bug.cgi?id=335" rel="external" title="ECMAScript bug 335">ECMAScript 335</a>).</div>
+
+<h3 id="Syntaxe">Syntaxe</h3>
+
+<pre class="syntaxbox">Object.setProperty(<var>obj</var>, <var>bitmask</var>, <var>prop</var>[, <var>value/getter</var>[, <var>setter</var>]])</pre>
+
+<h3 id="Paramètres">Paramètres</h3>
+
+<dl>
+ <dt><code>obj</code></dt>
+ <dd>Le nom de l'objet dont on souhaite définir la propriété.</dd>
+ <dt><code>bitmask</code></dt>
+ <dd>Le descripteur du masque binaire (<em>bitmask</em>), défini ci-après.</dd>
+ <dt><code>prop</code></dt>
+ <dd>Le nom de la propriété à définir ou à modifier.</dd>
+ <dt><code>value/getter</code></dt>
+ <dd>Paramètre optionnel. La valeur à affecter au descripteur de données ou l'accesseur à affecter au descripteur d'accesseur (selon le bitmask choisi).</dd>
+ <dt><code>setter</code></dt>
+ <dd>Paramètre optionnel. Le mutateur à affecter au descripteur de données. Si le marqueur situé en <code>0x8</code> est réglé pour un descripteur de données, cet argument sera ignoré.</dd>
+</dl>
+
+<h3 id="Description">Description</h3>
+
+<p>La méthode, non-native, <code>Object.setProperty()</code> fonctionne comme la méthode<code> Object.defineProperty()</code> mais utilise un descripteur via un masque binaire plutôt qu'un descripteur d'objet. L'argument <code>bitmask</code> a la structure suivante :</p>
+
+<dl>
+ <dt>flag <code>0x1</code></dt>
+ <dd>La propriété est énumérable.</dd>
+ <dt>flag <code>0x2</code></dt>
+ <dd>La propriété est configurable.</dd>
+ <dt>flag <code>0x4</code></dt>
+ <dd>La propriété est accessible en écriture.</dd>
+ <dt>flag <code>0x8</code></dt>
+ <dd>La propriété est un descripteur d'accesseur.</dd>
+</dl>
+
+<p>Le descripteur en masque binaire peut donc prendre les valeurs numériques suivantes :</p>
+
+<ul>
+ <li><strong><code>0</code></strong> : Le masque binaire représente un descripteur de données en lecture seule - non configurable, non énumérable (<code>0000</code>).</li>
+ <li><strong><code>1</code></strong> : Le masque binaire représente un descripteur de données en lecture seule - non configurable, énumérable (<code>0001</code>).</li>
+ <li><strong><code>2</code></strong> : Le masque binaire représente un descripteur de données en lecture seule - configurable, non énumérable (<code>0010</code>).</li>
+ <li><strong><code>3</code></strong> : Le masque binaire représente un descripteur de données en lecture seule - configurable, énumérable (<code>0011</code>).</li>
+ <li><strong><code>4 </code></strong>: Le masque binaire représente un descripteur de données en écriture - non configurable, non énumérable (<code>0100</code>).</li>
+ <li><strong><code>5</code></strong> : Le masque binaire représente un descripteur de données en écriture - non configurable, énumérable (<code>0101</code>).</li>
+ <li><strong><code>6 </code></strong>: Le masque binaire représente un descripteur de données en écriture - configurable, non énumérable (<code>0110</code>).</li>
+ <li><strong><code>7</code></strong> : Le masque binaire représente un descripteur de données en écriture - configurable, énumérable (<code>0111</code>).</li>
+ <li><strong><code>8</code></strong> : Le masque binaire représente un descripteur d'accesseur - non configurable, non énumérable (<code>1000</code>).</li>
+ <li><strong><code>9</code></strong> : Le masque binaire représente un descripteur d'accesseur - non configurable, énumérable (<code>1001</code>).</li>
+ <li><strong><code>10 </code></strong>: Le masque binaire représente un descripteur d'accesseur - configurable, non énumérable (<code>1010</code>).</li>
+ <li><strong><code>11</code></strong> : Le masque binaire représente un descripteur d'accesseur - configurable, énumérable (<code>1011</code>).</li>
+</ul>
+
+<div class="note"><strong>Note :</strong> Si le flag <code>0x8</code> est utilisé pour un descripteur d'accesseur, le flag <code>0x4</code> (<em>writable</em>) sera ignoré. Sinon, l'argument setter sera ignoré.</div>
+
+<h2 id="Implémentation_de_HTMLSelectElement.selectedIndex">Implémentation de HTMLSelectElement.selectedIndex</h2>
+
+<p>La méthode <code>Object.defineProperty()</code> fonctionne également avec les objets natifs. L'exemple qui suit illustre comment implémenter la propriété <code>selectedIndex </code>de {{ domxref("HTMLSelectElement") }} dans les boutons radio.</p>
+
+<pre class="brush: html">&lt;!doctype html&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /&gt;
+&lt;title&gt;
+  Exemple de selectedIndex pour 
+  les groupes de boutons radio
+&lt;/title&gt;
+&lt;script type="text/javascript"&gt;
+Object.defineProperty(NodeList.prototype, "selectedIndex", {
+  get: function() {
+    var nIndex = this.length - 1;
+    while (nIndex &gt; -1 &amp;&amp; !this[nIndex].checked) {
+      nIndex--;
+    }
+    return nIndex;
+  },
+  
+  set: function(nNewIndex) {
+    if (isNaN(nNewIndex)) {
+      return;
+    }
+    var nOldIndex = this.selectedIndex;
+    if (nOldIndex &gt; -1) {
+      this[nOldIndex].checked = false;
+    }
+    if (nNewIndex &gt; -1) {
+      this[nNewIndex].checked = true;
+    }
+  },
+  
+  enumerable: true,
+  configurable: false
+});
+
+// on essaie!
+function checkForm() {
+  var nSelectedIndex = document.myForm.myRadioGroup.selectedIndex;
+  if (nSelectedIndex &lt; 0) {
+    alert("Choisir un élément !!");
+    return false;
+  }
+  alert("Félicitations !! Vous avez choisi le " +
+        document.myForm.myRadioGroup[nSelectedIndex].value + "."
+        );
+  return true;
+}
+&lt;/script&gt;
+&lt;/head&gt;
+
+&lt;body&gt;          
+  &lt;form name="myForm" onsubmit="return(checkForm());"&gt;
+    &lt;fieldset&gt;&lt;legend&gt;Choisir un élément&lt;/legend&gt;
+      &lt;p&gt;
+      &lt;input type="radio" name="myRadioGroup" id="ourShirt" value="chemise"/&gt;
+      &lt;label for="ourShirt"&gt;chemise&lt;/label&gt;&lt;br /&gt;
+      &lt;input type="radio" name="myRadioGroup" id="ourPants" value="pantalon"/&gt;
+      &lt;label for="ourPants"&gt;pantalon&lt;/label&gt;&lt;br /&gt;
+      &lt;input type="radio" name="myRadioGroup" id="ourBelt" value="ceinture"/&gt;
+      &lt;label for="ourBelt"&gt;ceinture&lt;/label&gt;&lt;br /&gt;
+      &lt;input type="radio" name="myRadioGroup" id="ourShoes" value="chaussures"/&gt;
+      &lt;label for="ourShoes"&gt;chaussures&lt;/label&gt;&lt;/p&gt;
+      &lt;p&gt;
+&lt;span style="cursor:pointer;text-decoration:underline;color:#0000ff;" onclick="document.myForm.myRadioGroup.selectedIndex=2;"&gt;
+Choisissez ce que vous préférez
+&lt;/span&gt;
+      &lt;/p&gt;
+      &lt;p&gt;&lt;input type="submit" value="Commander !" /&gt;
+    &lt;/fieldset&gt;
+  &lt;/form&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>

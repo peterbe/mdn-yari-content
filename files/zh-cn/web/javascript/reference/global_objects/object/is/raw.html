@@ -1,0 +1,116 @@
+<div>{{JSRef}}</div>
+
+<p><code><strong>Object.is()</strong></code> 方法判断两个值是否是<a href="/zh-CN/docs/Web/JavaScript/Equality_comparisons_and_sameness">相同的值</a>。</p>
+
+<h2 id="Syntax" name="Syntax">语法</h2>
+
+<pre class="syntaxbox"><code>Object.is(<var>value1</var>, <var>value2</var>);</code></pre>
+
+<h3 id="Parameters" name="Parameters">参数</h3>
+
+<dl>
+ <dt><code>value1</code></dt>
+ <dd>第一个需要比较的值。</dd>
+ <dt><code>value2</code></dt>
+ <dd>第二个需要比较的值。</dd>
+</dl>
+
+<h3 id="返回值">返回值</h3>
+
+<p>表示两个参数是否相同的{{jsxref("Boolean", "布尔值")}} 。</p>
+
+<h2 id="描述">描述</h2>
+
+<p><code>Object.is()</code> 判断两个值是否<a href="/zh-CN/docs/Web/JavaScript/Equality_comparisons_and_sameness">相同</a>。如果下列任何一项成立，则两个值相同：</p>
+
+<ul>
+ <li>两个值都是 {{jsxref("undefined")}}</li>
+ <li>两个值都是 {{jsxref("null")}}</li>
+ <li>两个值都是 <code>true</code> 或者都是 <code>false</code></li>
+ <li>两个值是由相同个数的字符按照相同的顺序组成的字符串</li>
+ <li>两个值指向同一个对象</li>
+ <li>两个值都是数字并且
+  <ul>
+   <li>都是正零 <code>+0</code></li>
+   <li>都是负零 <code>-0</code></li>
+   <li>都是 {{jsxref("NaN")}}</li>
+   <li>都是除零和 {{jsxref("NaN")}} 外的其它同一个数字</li>
+  </ul>
+ </li>
+</ul>
+
+<p>这种相等性判断逻辑和传统的 {{jsxref("Operators/Comparison_Operators", "==", "#Equality")}} 运算不同，{{jsxref("Operators/Comparison_Operators", "==", "#Equality")}} 运算符会对它两边的操作数做隐式类型转换（如果它们类型不同），然后才进行相等性比较，（所以才会有类似 <code>"" == false</code> 等于 <code>true</code> 的现象），但 <code>Object.is</code> 不会做这种类型转换。</p>
+
+<p>这与 {{jsxref("Operators/Comparison_Operators", "===", "#Identity")}} 运算符的判定方式也不一样。{{jsxref("Operators/Comparison_Operators", "===", "#Identity")}} 运算符（和{{jsxref("Operators/Comparison_Operators", "==", "#Equality")}} 运算符）将数字值 <code>-0</code> 和 <code>+0</code> 视为相等，并认为 {{jsxref("Number.NaN")}} 不等于 {{jsxref("NaN")}}。</p>
+
+<h2 id="例子">例子</h2>
+
+<pre class="brush: js">Object.is('foo', 'foo');     // true
+Object.is(window, window);   // true
+
+Object.is('foo', 'bar');     // false
+Object.is([], []);           // false
+
+var foo = { a: 1 };
+var bar = { a: 1 };
+Object.is(foo, foo);         // true
+Object.is(foo, bar);         // false
+
+Object.is(null, null);       // true
+
+// 特例
+Object.is(0, -0);            // false
+Object.is(0, +0);            // true
+Object.is(-0, -0);           // true
+Object.is(NaN, 0/0);         // true
+</pre>
+
+<h2 id="Polyfill">Polyfill</h2>
+
+<pre class="brush: js">if (!Object.is) {
+  Object.is = function(x, y) {
+    // SameValue algorithm
+    if (x === y) { // Steps 1-5, 7-10
+      // Steps 6.b-6.e: +0 != -0
+      return x !== 0 || 1 / x === 1 / y;
+    } else {
+      // Step 6.a: NaN == NaN
+      return x !== x &amp;&amp; y !== y;
+    }
+  };
+}
+</pre>
+
+<h2 id="规范">规范</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">规范</th>
+   <th scope="col">状态</th>
+   <th scope="col">备注</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-object.is', 'Object.is')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-object.is', 'Object.is')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="浏览器兼容性">浏览器兼容性</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.builtins.Object.is")}}</p>
+
+<h2 id="参见">参见</h2>
+
+<ul>
+ <li><a href="/zh-CN/docs/Web/JavaScript/Equality_comparisons_and_sameness">JavaScript 中的相等性判断</a> — JavaScript 中的三种相等性判断方法的比较</li>
+</ul>

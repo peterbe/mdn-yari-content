@@ -1,0 +1,448 @@
+<div>{{JSRef}}</div>
+
+<p>Object <strong><code>Set</code></strong> cho phép bạn lưu các giá trị <em>không trùng lặp</em>,  giá trị đó có thể là {{Glossary("Primitive", "primitive values")}} hoặc một object reference.</p>
+
+<h2 id="Cú_pháp">Cú pháp</h2>
+
+<pre class="syntaxbox">new Set([iterable]);</pre>
+
+<h3 id="Tham_số">Tham số</h3>
+
+<dl>
+ <dt>iterable</dt>
+ <dd>Nếu <a href="/en-US/docs/Web/JavaScript/Reference/Statements/for...of">iterable object </a>hợp lệ, tất cả element của nó sẽ được thêm vào Set mới. null được coi như undefined.</dd>
+</dl>
+
+<h2 id="Mô_tả">Mô tả</h2>
+
+<p><code>Set</code> object chứa một tập các giá trị. Bạn có thể loop qua các item bên trong theo thứ tự lúc khởi tạo. Một giá trị trong  <code>Set</code> chỉ xuất hiện một lần.</p>
+
+<h3 id="Giá_trị_giống_nhau">Giá trị giống nhau</h3>
+
+<p>Vì mỗi giá trị trong Set phải là duy nhất, nó sẽ kiểm tra các giá trị nào bị trùng. Theo như khai báo trước đây của ECMAScript, nó sẽ không dựa trên cùng thuật toán so sánh như thuật toán so sánh  === operator. Cụ thể, <code>Set</code>, <code>+0</code> (thường được xem là bằng với <code>-0</code>) và <code>-0</code> sẽ là 2 giá trị khác nhau. Tuy nhiên, theo khai báo mới nhất của ECMAScript 2015. "Giá trị của -0 và 0" sẽ phụ thuộc trình duyệt, xem <a href="#Browser compatibility">browser compatability</a> ở dưới.</p>
+
+<p>Thêm nữa, <code>NaN</code> và<code>undefined</code> cũng có thể được lưu trong Set. <code>NaN</code> được xem như giống với <code>NaN</code> (mặc dù <code>NaN !== NaN</code>).</p>
+
+<h2 id="Các_thuộc_tính">Các thuộc tính</h2>
+
+<dl>
+ <dt><code>Set.length</code></dt>
+ <dd>Giá trị của thuộc tính <code>length</code> là 0.</dd>
+ <dt>{{jsxref("Set.@@species", "get Set[@@species]")}}</dt>
+ <dd>Hàm constructor dùng để tạo objects.</dd>
+ <dt>{{jsxref("Set.prototype")}}</dt>
+ <dd>Prototype của <code>Set</code> . Cho phép thêm các thuộc tính khác trên <code>Set</code> object.</dd>
+</dl>
+
+<h2 id="Set_instance"><code>Set</code> instance</h2>
+
+<p>Tất cả <code>Set</code> instance kế thừa từ {{jsxref("Set.prototype")}}.</p>
+
+<h3 id="Các_thuộc_tính_2">Các thuộc tính</h3>
+
+<p>{{page('en-US/Web/JavaScript/Reference/Global_Objects/Set/prototype','Properties')}}</p>
+
+<h3 id="Các_phương_thức">Các phương thức</h3>
+
+<p>{{page('en-US/Web/JavaScript/Reference/Global_Objects/Set/prototype','Methods')}}</p>
+
+<h2 id="Ví_dụ">Ví dụ</h2>
+
+<h3 id="Sử_dụng_Set_Object">Sử dụng Set Object</h3>
+
+<pre class="brush: js">var mySet = new Set();
+
+mySet.add(1);
+mySet.add(5);
+mySet.add("some text");
+var o = {a: 1, b: 2};
+mySet.add(o);
+
+mySet.add({a: 1, b: 2}); // o đang reference đến một object khác =&gt; OK
+
+mySet.has(1); // true
+mySet.has(3); // false, 3 chưa được thêm vào trong set
+mySet.has(5);              // true
+mySet.has(Math.sqrt(25));  // true
+mySet.has("Some Text".toLowerCase()); // true
+mySet.has(o); // true
+
+mySet.size; // 5
+
+mySet.delete(5); // xóa 5 khỏi set
+mySet.has(5);    // false, 5 đã được xóa
+
+mySet.size; // 4, độ dài thay đổi do chúng ta mới xóa 1 item
+</pre>
+
+<h3 id="Loop_qua_Set">Loop qua Set</h3>
+
+<pre class="brush: js">// log các item theo thứ tự order: 1, "some text", {"a": 1, "b": 2} 
+for (let item of mySet) console.log(item);
+
+// log các item theo thứ tự: 1, "some text", {"a": 1, "b": 2} 
+for (let item of mySet.keys()) console.log(item);
+ 
+// log các item theo thứ tự: 1, "some text", {"a": 1, "b": 2} 
+for (let item of mySet.values()) console.log(item);
+
+// log các item theo thứ tự: 1, "some text", {"a": 1, "b": 2} 
+//(key và value giống nhau)
+for (let [key, value] of mySet.entries()) console.log(key);
+
+// convert Set object sang Array object, với <a href="/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/from">Array.from</a>
+var myArr = Array.from(mySet); // [1, "some text", {"a": 1, "b": 2}]
+
+// vẫn chạy nếu trên 1 HTML element
+mySet.add(document.body);
+mySet.has(document.querySelector("body")); // true
+
+// convert giữa Set và Array
+mySet2 = new Set([1,2,3,4]);
+mySet2.size; // 4
+[...mySet2]; // [1,2,3,4]
+
+// filter
+var intersection = new Set([...set1].filter(x =&gt; set2.has(x)));
+
+// filter 
+var difference = new Set([...set1].filter(x =&gt; !set2.has(x)));
+
+// bằng forEach
+mySet.forEach(function(value) {
+  console.log(value);
+});
+
+// 1
+// 2
+// 3
+// 4</pre>
+
+<h3 id="Implementing_basic_set_operations">Implementing basic set operations</h3>
+
+<pre class="brush: js">Set.prototype.isSuperset = function(subset) {
+    for (var elem of subset) {
+        if (!this.has(elem)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+Set.prototype.union = function(setB) {
+    var union = new Set(this);
+    for (var elem of setB) {
+        union.add(elem);
+    }
+    return union;
+}
+
+Set.prototype.intersection = function(setB) {
+    var intersection = new Set();
+    for (var elem of setB) {
+        if (this.has(elem)) {
+            intersection.add(elem);
+        }
+    }
+    return intersection;
+}
+
+Set.prototype.difference = function(setB) {
+    var difference = new Set(this);
+    for (var elem of setB) {
+        difference.delete(elem);
+    }
+    return difference;
+}
+
+//Examples
+var setA = new Set([1,2,3,4]),
+    setB = new Set([2,3]),
+    setC = new Set([3,4,5,6]);
+
+setA.isSuperset(setB); // =&gt; true
+setA.union(setC); // =&gt; Set [1, 2, 3, 4, 5, 6]
+setA.intersection(setC); // =&gt; Set [3, 4]
+setA.difference(setC); // =&gt; Set [1, 2]
+
+</pre>
+
+<h3 id="Relation_with_Array_objects">Relation with <code>Array</code> objects</h3>
+
+<pre class="brush: js">var myArray = ["value1", "value2", "value3"];
+
+// Use the regular Set constructor to transform an Array into a Set
+var mySet = new Set(myArray);
+
+mySet.has("value1"); // returns true
+
+// Use the spread operator to transform a set into an Array.
+console.log([...mySet]); // Will show you exactly the same Array as myArray</pre>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-set-objects', 'Set')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-set-objects', 'Set')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility"><a id="Browser compatibility" name="Browser compatibility">Browser compatibility</a></h2>
+
+<p>{{CompatibilityTable}}</p>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Edge</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>
+    <p>{{ CompatChrome(38) }} [1]</p>
+   </td>
+   <td>12</td>
+   <td>{{ CompatGeckoDesktop("13") }}</td>
+   <td>{{ CompatIE("11") }}</td>
+   <td>25</td>
+   <td>7.1</td>
+  </tr>
+  <tr>
+   <td>Constructor argument: <code>new Set(iterable)</code></td>
+   <td>{{ CompatChrome(38) }}</td>
+   <td>12</td>
+   <td>{{ CompatGeckoDesktop("13") }}</td>
+   <td>{{CompatNo}}</td>
+   <td>25</td>
+   <td>9.0</td>
+  </tr>
+  <tr>
+   <td>iterable</td>
+   <td>{{ CompatChrome(38) }}</td>
+   <td>12</td>
+   <td>{{ CompatGeckoDesktop("17") }}</td>
+   <td>{{CompatNo}}</td>
+   <td>25</td>
+   <td>7.1</td>
+  </tr>
+  <tr>
+   <td><code>Set.clear()</code></td>
+   <td>{{ CompatChrome(38) }}</td>
+   <td>12</td>
+   <td>{{CompatGeckoDesktop("19")}}</td>
+   <td>{{ CompatIE("11") }}</td>
+   <td>25</td>
+   <td>7.1</td>
+  </tr>
+  <tr>
+   <td><code>Set.keys(), Set.values(), Set.entries()</code></td>
+   <td>{{ CompatChrome(38) }}</td>
+   <td>12</td>
+   <td>{{CompatGeckoDesktop("24")}}</td>
+   <td>{{CompatNo}}</td>
+   <td>25</td>
+   <td>7.1</td>
+  </tr>
+  <tr>
+   <td><code>Set.forEach()</code></td>
+   <td>{{ CompatChrome(38) }}</td>
+   <td>12</td>
+   <td>{{CompatGeckoDesktop("25")}}</td>
+   <td>{{ CompatIE("11") }}</td>
+   <td>25</td>
+   <td>7.1</td>
+  </tr>
+  <tr>
+   <td>Value equality for -0 and 0</td>
+   <td>{{ CompatChrome(38) }}</td>
+   <td>12</td>
+   <td>{{CompatGeckoDesktop("29")}}</td>
+   <td>{{CompatNo}}</td>
+   <td>25</td>
+   <td>{{CompatSafari(9)}}</td>
+  </tr>
+  <tr>
+   <td>Constructor argument: <code>new Set(null)</code></td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>12</td>
+   <td>{{CompatGeckoDesktop("37")}}</td>
+   <td>{{CompatIE(11)}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatSafari(7.1)}}</td>
+  </tr>
+  <tr>
+   <td>Monkey-patched <code>add()</code> in Constructor</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>12</td>
+   <td>{{CompatGeckoDesktop("37")}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatSafari(9)}}</td>
+  </tr>
+  <tr>
+   <td><code>Set[@@species]</code></td>
+   <td>{{ CompatChrome(51) }}</td>
+   <td>13</td>
+   <td>{{CompatGeckoDesktop("41")}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{ CompatOpera(38) }}</td>
+   <td>{{CompatSafari(10)}}</td>
+  </tr>
+  <tr>
+   <td><code>Set()</code> without <code>new</code> throws</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>12</td>
+   <td>{{CompatGeckoDesktop("42")}}</td>
+   <td>{{CompatIE(11)}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>9</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Chrome for Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatChrome(38)}} [1]</td>
+   <td>{{ CompatGeckoMobile("13") }}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>8</td>
+  </tr>
+  <tr>
+   <td>Constructor argument: <code>new Set(iterable)</code></td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatChrome(38)}}</td>
+   <td>{{ CompatGeckoMobile("13") }}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>9</td>
+  </tr>
+  <tr>
+   <td>iterable</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{ CompatGeckoMobile("17") }}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>8</td>
+  </tr>
+  <tr>
+   <td><code>Set.clear()</code></td>
+   <td>{{CompatNo}}</td>
+   <td>{{ CompatChrome(38) }}</td>
+   <td>{{CompatGeckoMobile("19")}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>8</td>
+  </tr>
+  <tr>
+   <td><code>Set.keys(), Set.values(), Set.entries()</code></td>
+   <td>{{CompatNo}}</td>
+   <td>{{ CompatChrome(38) }}</td>
+   <td>{{CompatGeckoMobile("24")}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>8</td>
+  </tr>
+  <tr>
+   <td><code>Set.forEach()</code></td>
+   <td>{{CompatNo}}</td>
+   <td>{{ CompatChrome(38) }}</td>
+   <td>{{CompatGeckoMobile("25")}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>8</td>
+  </tr>
+  <tr>
+   <td>Value equality for -0 and 0</td>
+   <td>{{CompatNo}}</td>
+   <td>{{ CompatChrome(38) }}</td>
+   <td>{{CompatGeckoMobile("29")}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>9</td>
+  </tr>
+  <tr>
+   <td>Constructor argument: <code>new Set(null)</code></td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatGeckoMobile("37")}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>8</td>
+  </tr>
+  <tr>
+   <td>Monkey-patched <code>add()</code> in Constructor</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatGeckoMobile("37")}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>9</td>
+  </tr>
+  <tr>
+   <td><code>Set[@@species]</code></td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatGeckoMobile("41")}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>10</td>
+  </tr>
+  <tr>
+   <td><code>Set()</code> without <code>new</code> throws</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatGeckoMobile("42")}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>9</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<p>[1] The feature was available behind a preference from Chrome 31. In <code>chrome://flags</code>, activate the entry “Enable Experimental JavaScript”.</p>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li>{{jsxref("Map")}}</li>
+ <li>{{jsxref("WeakMap")}}</li>
+ <li>{{jsxref("WeakSet")}}</li>
+</ul>

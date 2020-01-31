@@ -1,0 +1,121 @@
+<div>{{JSRef}}</div>
+
+<p><code><strong>handler.getOwnPropertyDescriptor()</strong></code> は {{jsxref("Object.getOwnPropertyDescriptor()")}} に対するトラップです。</p>
+
+<div>{{EmbedInteractiveExample("pages/js/proxyhandler-getownpropertydescriptor.html", "taller")}}</div>
+
+<div class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</div>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="brush: js">var p = new Proxy(target, {
+  getOwnPropertyDescriptor: function(target, prop) {
+  }
+});
+</pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<p>次の引数は <code>getOwnPropertyDescriptor</code> メソッドに渡されます。<code>this</code> はハンドラにバインドされます。</p>
+
+<dl>
+ <dt><code>target</code></dt>
+ <dd>ターゲットオブジェクトです。</dd>
+ <dt><code>prop</code></dt>
+ <dd>ディスクリプタを取得されるプロパティ名です。</dd>
+</dl>
+
+<h3 id="Return_value" name="Return_value">戻り値</h3>
+
+<p><code>getOwnPropertyDescriptor</code> メソッドはオブジェクト、または <code>undefined</code> を返さなければなりません。</p>
+
+<h2 id="説明">説明</h2>
+
+<p><code><strong>handler.getOwnPropertyDescriptor()</strong></code> メソッドは {{jsxref("Object.getOwnPropertyDescriptor()")}} に対するトラップです。</p>
+
+<h3 id="インターセプト">インターセプト</h3>
+
+<p>このトラップは下記の操作をインターセプトできます。:</p>
+
+<ul>
+ <li>{{jsxref("Object.getOwnPropertyDescriptor()")}}</li>
+ <li>{{jsxref("Reflect.getOwnPropertyDescriptor()")}}</li>
+</ul>
+
+<h3 id="不変条件">不変条件</h3>
+
+<p>次の不変条件に違反している場合、プロキシは {{jsxref("TypeError")}} をスローします。:</p>
+
+<ul>
+ <li><code>getOwnPropertyDescriptor</code> はオブジェクトか、または <code>undefined</code> を返さなければなりません。</li>
+ <li>プロパティがターゲットオブジェクトの設定不可な独自のプロパティとして存在する場合、存在しないとして報告されてはいけません。</li>
+ <li>プロパティがターゲットオブジェクトの独自のプロパティとして存在し、そのターゲットオブジェクトが拡張不可の場合、存在しないとして報告されてはいけません。</li>
+ <li>プロパティがターゲットオブジェクトの独自のプロパティとして存在せず、そのターゲットオブジェクトが拡張不可の場合、存在するとして報告されてはいけません。</li>
+ <li>プロパティがターゲットオブジェクトの独自のプロパティとして存在しないか、ターゲットオブジェクトの設定可能な独自のプロパティとして存在している場合、設定不可であるとして報告されてはいけません。</li>
+ <li><code>Object.getOwnPropertyDescriptor(target)</code> の結果を <code>Object.defineProperty</code> に使用した時に、ターゲットオブジェクトに適用でき、例外をスローしません。</li>
+</ul>
+
+<h2 id="例">例</h2>
+
+<p>次のコードでは {{jsxref("Object.getOwnPropertyDescriptor()")}} をトラップします。</p>
+
+<pre class="brush: js">var p = new Proxy({ a: 20 }, {
+  getOwnPropertyDescriptor: function(target, prop) {
+    console.log('called: ' + prop);
+    return { configurable: true, enumerable: true, value: 10 };
+  }
+});
+
+console.log(Object.getOwnPropertyDescriptor(p, 'a').value); // "called: a"
+                                                            // 10
+</pre>
+
+<p>次のコードでは不変条件に違反します。</p>
+
+<pre class="brush: js">var obj = { a: 10 };
+Object.preventExtensions(obj);
+var p = new Proxy(obj, {
+  getOwnPropertyDescriptor: function(target, prop) {
+    return undefined;
+  }
+});
+
+Object.getOwnPropertyDescriptor(p, 'a'); // TypeError is thrown
+</pre>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">状況</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-proxy-object-internal-methods-and-internal-slots-getownproperty-p', '[[GetOwnProperty]]')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td>初期定義</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-proxy-object-internal-methods-and-internal-slots-getownproperty-p', '[[GetOwnProperty]]')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザ実装状況</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.builtins.Proxy.handler.getOwnPropertyDescriptor")}}</p>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li>{{jsxref("Proxy")}}</li>
+ <li>{{jsxref("Proxy.handler", "handler")}}</li>
+ <li>{{jsxref("Object.getOwnPropertyDescriptor()")}}</li>
+ <li>{{jsxref("Reflect.getOwnPropertyDescriptor()")}}</li>
+</ul>

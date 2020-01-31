@@ -1,0 +1,66 @@
+<p>{{WebRTCSidebar}}{{draft}}</p>
+
+<p><span class="seoSummary">{{domxref("RTCPeerConnection")}} 인터페이스를 사용하여 WebRTC Peerconnction을 연결하면 이제 두 Peer간의 커넥션을 통하여 미디어 데이터를 주고 받을수 있게됩니다. 그뿐아니라 WebRTC로 할수 있는 일은 더 있습니다. 이 가이드에서 우리는 peer connection에 데이터 채널을 추가하는 방법과 임의의 데이터, 즉 우리가 원하는 어떠한 포멧의 데이터들을 안전하게 주고 받는 방법을 배우게 될 것 입니다.    </span>    </p>
+
+<div class="note">
+<p>모든 WebRTC 컴포넌트들은 암호화를 사용하게 되어 있기 때문에 <code>RTCDataChannel</code>을 이용하는 어떤 데이터 전송도 자동적으로 Datagram Transport Layer Security (<strong>DTLS</strong>)을 사용하여 암호화 됩니다. 자세한 내용은 {{anch("Security")}} 를 참고하십시오.</p>
+</div>
+
+<h2 id="Data_channel_만들기">Data channel 만들기</h2>
+
+<p>{{domxref("RTCDataChannel")}}를 이용한 기초적인 데이터 전송은 아래의 두 방법중 하나를 이용하여 만들수 있습니다.</p>
+
+<ul>
+ <li>WebRTC로부터 전송수단을 만들고 remote peer에 알리게 합니다. 그리고 {{event("datachannel")}} 이벤트를 받습니다. 이것은 쉬운 방법으로 여러가지 활용법이 있습니다. 하지만 단순하기 때문에 하고자하는 모든 요구를 만족해주지는 않습니다.</li>
+ <li>데이터 전송을 할 수 있는 코드를 스스로 작성하고 새로운 채널이 연결되었다는 것을 알려줄수 있는 코드를 작성합니다. </li>
+</ul>
+
+<p>이 두가지 상황을 각각 살펴보겠습니다. 우선은 가장 일반적으로 사용되는 위의 케이스부터 살펴보겠습니다.</p>
+
+<h3 id="자동_협상(Automatic_negotiation)">자동 협상(Automatic negotiation)</h3>
+
+<p>more details soon.</p>
+
+<p><strong>&lt;&lt;&lt;discuss negotiation and connections, especially RTCDataChannel.negotiated and what happens when true vs false&gt;&gt;&gt;</strong></p>
+
+<p>...</p>
+
+<h2 id="버퍼링(Buffering)">버퍼링(Buffering)</h2>
+
+<p>WebRTC 데이터채널은 아웃바운드 데이터에 대해 버퍼링을 제공합니다. 이것은 자동적으로 처리가됩니다. buffer의 사이즈를 컨트롤 할 수 없는 동안 당신은 얼마나 많은 데이터가 현재 버퍼 되어 있는지 배울 수 있고 큐 데이터의 버퍼가 고갈되기 시작할 때 알림을 받도록 선택할 수 도 있습니다. 이것은 메모리 과다사용이나 채널을 완전히 밀어내버리는 것을 없애고 언제나 데이터를 보낼수 있도록 효과적인 루틴을 만들기 쉽게 해줍니다. </p>
+
+<p><strong>&lt;&lt;&lt;write more about using bufferedAmount, bufferedAmountLowThreshold, onbufferedamountlow, and bufferedamountlow here&gt;&gt;&gt;</strong></p>
+
+<p>...</p>
+
+<h2 id="메세지_크기_제한에_대해_이해하기">메세지 크기 제한에 대해 이해하기</h2>
+
+<p>네트워크를 통하여 전송되는 데이터라면 그 데이터는 반드시 사이즈가 제한됩니다. 기초적인 레벨의 이야기를 하자면, 각각의 네트워크 패킷은 어떠한 값보다 클 수 없습니다. (정확한 숫자는 네트워크와 전송 계층이 사용하고 있는 것에 따라 다릅니다.) 어플리케이션 계층에서는 — 즉 당신의 코드가 돌아가고 있는 WebRTC {{Glossary("user agent", "user agent's")}} — WebRTC가 네트워크의 전송계층위의 최대 패킷사이즈보다 메시지가 더 큰지 확인하는 것을 구현할 수 있습니다.</p>
+
+<p>만약 당신이 사이즈 제한 크기가 궁금하지 않다거나 대용량 메세지를 보내거나 받는 것이 필요하지 않다면 이 이야기는 복잡한 이야기가 될 수 있습니다.  Even when user agents share the same underlying library for handling Stream Control Transmission Protocol (SCTP) data, there can still be variations due to how the library is used. 예를들어 Firefox와 구글 크롬은 SCTP를 구현하기 위해 <code><a href="https://github.com/sctplab/usrsctp">usrsctp</a></code> 라이브러리를 사용합니다. 이때 그  두 브라우저가 어떻게 라이브러리에 요청하고 이벤트에 반응하는지에 따라 <code>RTCDataChannel</code> 을 이용한 데이터 전송이 실패하는 경우가 있습니다.</p>
+
+<p>두 유저가 파이어폭스에 있는 데이터채널을 사용하여 통실할 때 메세지 사이즈의 제한은 파이어폭스와 크롬을 각각 사용할 때보다 큽니다. 왜냐하면 파이어폭스의 구현 방법은 현재 다중 SCTP메세지를 전송하는 기술을 deprecated하여 놓았습니다. 하지만 크롬은 여전히 가능합니다. 크롬은 완성 될것이라 확신하는 메시지 시리즈를 보는 대신 RTCDataChannel을 다중 메시지로서 수신하는 것으로 대채할 것입니다. </p>
+
+<p>메세지가 16kiB 작다면 별다른 무리 없이 보낼 수 있을 것 입니다. 대부분의 메이저 user agents도 동일하게 다룹니다. </p>
+
+<h3 id="대용량_메세지에_대해_고려해보기">대용량 메세지에 대해 고려해보기</h3>
+
+<p>현재 메세지 사이즈가 64kiB (16kiB if you want to support cross-browser exchange of data)를 넘는 <code>RTCDataChannel</code> 는 구현되지 않았습니다. 문제는 <code>RTCDataChannel</code>에서 송수신 프로토콜로 사용되는 SCTP가 원래 시그널링 프로토콜로 디자인 되었다는 것 입니다. 그래서 메세지가 상대적으로 작은 사이즈라고 가정하고 만들어진 프로토콜입니다.  Support for messages larger than the network layer's {{interwiki("wikipedia", "Maximum transmission unit", "MTU")}} was added almost as an afterthought, in case signaling messages needed to be larger than the MTU. This feature requires that each piece of the message have consecutive sequence numbers, so they have to be transmitted one after another, without any other data interleaved between them.</p>
+
+<p>This eventually became a problem. Over time, various applications (including those implementing WebRTC) began to use SCTP to transmit larger and larger messages. Eventually it was realized that when the messages become too large, it's possible for the transmission of a large message to block all other data transfers on that data channel—including critical signaling messages.</p>
+
+<p>This will become an issue when browsers properly support the current standard for supporting larger messages—the end-of-record (EOR) flag that indicates when a message is the last one in a series that should be treated as a single payload. This is implemented in Firefox 57, but is not yet implemented in Chrome (see <a href="https://bugs.chromium.org/p/webrtc/issues/detail?id=7774">Chromium Bug 7774</a>). With EOR support in place, <code>RTCDataChannel</code> payloads can be much larger (officially up to 256kiB, but Firefox's implementation caps them at a whopping 1GiB). Even at 256kiB, that's large enough to cause noticeable delays in handling urgent traffic. If you go even larger, the delays can become untenable unless you are certain of your operational conditions.</p>
+
+<p>In order to resolve this issue, a new system of <strong>stream schedulers</strong> (usually referred to as the "SCTP ndata specification") has been designed to make it possible to interleave messages sent on different streams, including streams used to implement WebRTC data channels. This <a href="https://tools.ietf.org/html/draft-ietf-tsvwg-sctp-ndata">proposal</a> is still in IETF draft form, but once implemented, it will make it possible to send messages with essentially no size limitations, since the SCTP layer will automatically interleave the underlying sub-messages to ensure that every channel's data has the opportunity to get through.</p>
+
+<p>Firefox support for ndata is in the process of being implemented; see {{bug(1381145)}} to track it becoming available for general use. The Chrome team is tracking their implementation of ndata support in <a href="https://bugs.chromium.org/p/webrtc/issues/detail?id=5696">Chrome Bug 5696</a>.</p>
+
+<div class="originaldocinfo">
+<p>Much of the information in this section is based in part on the blog post <a href="https://lgrahl.de/articles/demystifying-webrtc-dc-size-limit.html">Demystifyijng WebRTC's Data Channel Message Size Limitations</a>, written by Lennart Grahl. He goes into a bit more detail there, but as browsers have been updated since then some of it may be out-of-date. In addition, as time goes by, it will become more so, especially once EOR and ndata support are fully integrated in the major browsers.</p>
+</div>
+
+<h2 id="보안(Security)">보안(Security)</h2>
+
+<p>All data transferred using WebRTC is encrypted. In the case of <code>RTCDataChannel</code>, the encryption used is Datagram Transport Layer Security (DTLS), which is based on <a href="/en-US/docs/Web/Security/Transport_Layer_Security">Transport Layer Security</a> (TLS). Since TLS is used to secure every HTTPS connection, any data you send on a data channel is as secure as any other data sent or received by the user's browser.</p>
+
+<p>More fundamentally, since WebRTC is a peer-to-peer connection between two user agents, the data never passes through the web or application server. This reduces opportunities to have the data intercepted.</p>

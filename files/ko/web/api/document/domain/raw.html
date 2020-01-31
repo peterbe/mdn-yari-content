@@ -1,0 +1,88 @@
+<div>{{ApiRef}}</div>
+
+<p>{{domxref("Document")}} 인터페이스의 <strong><code>domain</code></strong> 속성은 현재 문서에 속한 상위 도메인을  <a href="/en-US/docs/Web/Security/Same-origin_policy">동일 출처 정책</a>에 따라 설정하거나, 가져온다. </p>
+
+<p>해당 속성이 성공적으로 설정되면, 출처의 포트 부분이 <code>null</code>로 같이 설정된다.</p>
+
+<h2 id="구문">구문</h2>
+
+<pre class="syntaxbox">var <var>domainString</var> = <var>document</var>.domain;
+<var>document</var>.domain = <var>domainString</var>;</pre>
+
+<h3 id="값">값</h3>
+
+<p>현재 문서의 상위 도메인을 가져온다.</p>
+
+<h3 id="예외">예외</h3>
+
+<dl>
+ <dt><code>SecurityError</code></dt>
+ <dd>변경 전 <code>domain</code> 값에 따른 다음 조건에 따라 예외가 발생한다.
+ <ul>
+  <li>샌드박스 설정 된 {{htmlelement("iframe")}} 요소에 속한 문서</li>
+  <li>탐색 컨텍스트가 없어진 문서</li>
+  <li>문서의 <a href="https://html.spec.whatwg.org/multipage/origin.html#concept-origin-effective-domain">유효한 도메인</a> 값이 <code>null</code>인 경우</li>
+  <li>설정한 도메인이  문서의 유효한 도메인과 다를 경우 (또는 도메인의 접미어로 등록할 수 없는 경우)</li>
+  <li>헤더 중 {{httpheader('Feature-Policy/document-domain','document-domain')}} {{HTTPHeader("Feature-Policy")}} 양식이 설정된 경우</li>
+ </ul>
+ </dd>
+</dl>
+
+<h2 id="예제">예제</h2>
+
+<h3 id="도메인_가져오기">도메인 가져오기</h3>
+
+<p>이번 예제에서는, <code>http://developer.mozilla.org/en-US/docs/Web</code>,주소에서 가져와   <code>currentDomain</code> 변수에 "<code>developer.mozilla.org</code>" 라는 문자열을 설정한다.</p>
+
+<pre class="brush:js">var currentDomain = document.domain;</pre>
+
+<h3 id="창_닫기">창 닫기</h3>
+
+<p><code>www.example.xxx/good.html</code>, 주소의 문서가 있을 때, 도메인이  <code>"www.example.xxx"</code> 값과 같을 경우에만 창을 닫을 수 있도록 한다.</p>
+
+<pre class="brush:js">var badDomain = "www.example.xxx";
+
+if (document.domain == badDomain) {
+  // 예시일 뿐이며 window.close() 메소드가 가끔 작동이 안될 수 있다.
+  window.close();
+}
+</pre>
+
+<h2 id="규격">규격</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName('HTML WHATWG','origin.html#relaxing-the-same-origin-restriction','Document.domain')}}</td>
+   <td>{{Spec2('HTML WHATWG')}}</td>
+   <td></td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="브라우저_호환성">브라우저 호환성</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<div>{{Compat("api.Document.domain")}}</div>
+
+<h3 id="Firefox_참고_사항">Firefox 참고 사항</h3>
+
+<p>Firefox에서는, 문서의 도메인을 확인할 수 없을 때 <code>null</code> 로 반환 되었으나, Firefox 62 에서 수정되었다. — {{bug(819475)}} 문서 내 의견을 참고한다(영문).</p>
+
+<p>Mozilla는 <a href="/en-US/docs/XPCOM_Interface_Reference/nsIEffectiveTLDService#getBaseDomain.28.29" title="nsIEffectiveTLDService#getBaseDomain.28.29">기준 도메인</a>에 따른 제한으로 기존 값의 상위 도메인을 설정할 수 있다. 예를 들면, <a href="https://developer.mozilla.org">developer.mozilla.org</a> 도메인에서는 "mozilla.org" 도메인으로 설정할 수 있으나, "mozilla.com" 및 "org" 도메인으로 바꿀 수 없다.</p>
+
+<p>Mozilla는 <code>document.domain</code> 같은 값을 반환하더라도 속성을 설정한 적 없는지, 문서의 도메인과 명시적으로같은 도메인으로 설정하였는지에 따라 구별할 수 있다. 특정 문서가 <code>document.domain</code> 속성을 같은 값으로 설정하여 다른 문서와 작업를 하려는지, 아니면 <code>document.domain</code> 속성을 설정하지 않고 같은 문서와 작업을 하려는지가 구별되도록 <a class="link-https" href="https://mxr.mozilla.org/mozilla-central/source/caps/nsPrincipal.cpp?rev=ecb7068b07a1&amp;mark=199-215#199" title="https://mxr.mozilla.org/mozilla-central/source/caps/src/nsScriptSecurityManager.cpp#1003">구현되어 있다</a>(소스 코드). 이는 특수한 경우가 아니라면 모든 사이트가 하위 도메인을 통한 XSS 공격의 표적이 될 수 있기 때문이다. 예를 들면, <a class="link-https" href="https://bugzilla.mozilla.org" rel="freelink">https://bugzilla.mozilla.org</a> 도메인이 <a class="link-https" href="https://bug*.bugzilla.mozilla.org" rel="freelink">https://bug*.bugzilla.mozilla.org</a> 도메인을 통한 버그 첨부 방식의 공격을 감행할 수 있다.</p>
+
+<h2 id="같이_보기">같이 보기</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Web/Security/Same-origin_policy">JavaScriptHTML의 동일 출처 정책</a></li>
+</ul>

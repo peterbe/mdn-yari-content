@@ -1,0 +1,307 @@
+<div>{{LearnSidebar}}</div>
+
+<div>{{PreviousMenuNext("Learn/CSS/CSS_layout/Practical_positioning_examples", "Learn/CSS/CSS_layout/Grids", "Learn/CSS/CSS_layout")}}</div>
+
+<p class="summary">Una nova tecnologia, però amb suport ara bastant generalitzat en tots els navegadors, Flexbox està començant a estar preparat per a un ús generalitzat. Flexbox proporciona eines que permeten crear ràpidament dissenys complexos i flexibles i característiques que històricament resulten difícils amb CSS. Aquest article explica tots els fonaments.</p>
+
+<table class="learn-box standard-table">
+ <tbody>
+  <tr>
+   <th scope="row">Requisits previs:</th>
+   <td><span id="result_box" lang="ca"><span>Conceptes bàsics d'HTML</span></span> (estudi <a href="https://developer.mozilla.org/en-US/docs/Learn/HTML/Introduction_to_HTML">Introducció a HTML</a>), <span id="result_box" lang="ca"><span>i una idea de com funciona CSS</span></span> (estudi <a href="https://developer.mozilla.org/en-US/docs/Learn/CSS/Introduction_to_CSS">Introducció a CSS</a>).</td>
+  </tr>
+  <tr>
+   <th scope="row">Objectiu:</th>
+   <td>Aprendre sobre com utilitzar el sistema de disseny de Flexbox per crear dissenys web.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Per_què_Flexbox">Per què Flexbox?</h2>
+
+<p>Durant molt de temps, les úniques eines fiables compatibles amb els navegadors, disponibles per crear dissenys CSS, eren coses com ara <a href="/en-US/docs/Learn/CSS/CSS_layout/Floats">flotadors (floats)</a> i <a href="/en-US/docs/Learn/CSS/CSS_layout/Positioning">posicionament</a>. Estan bé i funcionen, però d'alguna manera també són més limitades i frustrants.</p>
+
+<p>Els següents requisits amb dissenys senzills són difícils o impossibles d'aconseguir amb aquestes eines, en qualsevol tipus de forma còmoda i flexible:</p>
+
+<ul>
+ <li>Centrar verticalment un bloc de contingut dins del seu pare.</li>
+ <li>Fer que tots els fills d'un contenidor ocupin una quantitat igual de l'amplada/alçada disponible, independentment de la quantitat d'ample/alçada que hi hagi disponible.</li>
+ <li>Fer que totes les columnes d'un disseny de columnes múltiples adoptin la mateixa alçada tot i que continguin una quantitat de contingut diferent.</li>
+</ul>
+
+<p>Com veureu en seccions posteriors, flexbox fa que moltes tasques de disseny siguin molt més fàcils. Anem a aprofundir en!</p>
+
+<h2 id="Presentant_un_exemple_senzill">Presentant un exemple senzill</h2>
+
+<p>En aquest article, us farem a treballar a través d'una sèrie d'exercicis que us ajudaran a comprendre com funciona flexbox. Per començar, haureu de fer una còpia local del primer fitxer d'inici - <a href="https://github.com/mdn/learning-area/blob/master/css/css-layout/flexbox/flexbox0.html">flexbox0.html</a> del nostre repositori github - carregueu-lo en un navegador modern (com Firefox o Chrome) i consulteu el codi en el vostre editor. Ja ho podeu <a href="http://mdn.github.io/learning-area/css/css-layout/flexbox/flexbox0.html">veure en directe aquí</a> també.</p>
+
+<p>Veureu que tenim un element {{htmlelement("header")}} amb un encapçalament de nivell superior dins d'ell, i un element {{htmlelement("section")}} que conté tres elements {{htmlelement("article")}}s. Anem a utilitzar-los per crear un disseny de tres columnes bastant estàndard.</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/13406/flexbox-example1.png" style="border-style: solid; border-width: 1px; display: block; height: 324px; margin: 0px auto; width: 800px;"></p>
+
+<h2 id="Especificar_quins_elements_es_mostraran_com_caixes_flexibles">Especificar quins elements es mostraran com caixes flexibles</h2>
+
+<p>Per començar, hem de seleccionar quins elements s'han d'establir com caixes flexibles. Per fer-ho, establim un valor especial de {{cssxref("display")}} en l'element pare dels elements que voleu afectar. En aquest cas, volem disposar dels elements {{htmlelement("article")}}, per la qual cosa ho configurem en {{htmlelement("section")}} (que es converteix en un contenidor flex):</p>
+
+<pre class="brush: css">section {
+  display: flex;
+}</pre>
+
+<p>El resultat d'això hauria de ser alguna cosa així:</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/13408/flexbox-example2.png" style="border-style: solid; border-width: 1px; display: block; height: 348px; margin: 0px auto; width: 800px;"></p>
+
+<p>Per tant, aquesta declaració única, ens dóna tot el que necessitem - increïble, oi? Tenim el nostre disseny de columna múltiple amb columnes de mida igual, i les columnes tenen la mateixa alçada. Això es deu a que els valors predeterminats donats als elements flex (els fills del contenidor flex) estan configurats per resoldre problemes comuns com aquest. Més sobre aquells més tard.</p>
+
+<div class="note">
+<p><strong>Note</strong>: També podeu establir un valor {{cssxref("display")}} de <code>inline-flex</code> si voleu establir elements en línia com caixes flexibles.</p>
+</div>
+
+<h2 id="Un_a_part_en_el_model_flex">Un a part en el model flex</h2>
+
+<p>Quan els elements es presentan com caixes flexibles, es distribueixen al llarg de dos eixos:</p>
+
+<p><img alt="flex_terms.png" class="default internal" src="/files/3739/flex_terms.png" style="display: block; margin: 0px auto;"></p>
+
+<ul>
+ <li>L'<strong>eix principal</strong> (<strong>main axis</strong>) és l'eix que corre en la direcció en què s'estan disposant els elements flex (p. ex., com a files al llarg de la pàgina o columnes cap avall de la pàgina). L'inici i el final d'aquest eix s'anomenen <strong>inici principal</strong> (<strong>main start</strong>) i <strong>final principal</strong> (<strong>main end</strong>).</li>
+ <li>L'<strong>eix transversal</strong> (<strong>cross axis</strong>) és l'eix que corre perpendicular a la direcció en què s'estan col·locant els elements flexibles. L'inici i el final d'aquest eix s'anomena <strong>inici transversal</strong> (<strong>cross-start</strong>) i <strong>final tranveral</strong> (<strong>cross-end</strong>).</li>
+ <li>L'element pare que té <code>display: flex</code> establer en ell (la {{htmlelement("section")}} en el nostre exemple) s'anomena <strong>contenidor flexible</strong> (<strong>flex container</strong>).</li>
+ <li>
+  <p>Els elements que es col.locan com caixes flexibles dins del contenidor flexible s'anomenan <strong>elements flexibles</strong> (flex items)  (els elements {{htmlelement("article")}} del nostre exemple).</p>
+ </li>
+</ul>
+
+<p>Tingueu en compte aquesta terminologia a mesura que passem per seccions posteriors. Sempre podeu referir-vos a ella si es confon amb qualsevol dels termes utilitzats.</p>
+
+<h2 id="Columnes_o_files"><span id="result_box" lang="ca"><span>Columnes o files?</span></span></h2>
+
+<p>Flexbox proporciona una propietat anomenada {{cssxref("flex-direction")}} que especifica en quina direcció discorre l'eix principal (a quina direcció es troben els fills flexbox) - per defecte, aquesta s'estableix a la fila, el que fa que s'estableixin en una fila en la direcció de l'idioma predeterminat en el qual funciona el vostre navegador (d'esquerra a dreta, en el cas d'un navegador en anglès).</p>
+
+<p>Proveu d'afegir la següent declaració a la vostra regla section:</p>
+
+<pre class="brush: css">flex-direction: column</pre>
+
+<p>Veureu que això posa els elements de nou en un disseny de columna, igual que estaven abans que haguéssim agregat qualsevol CSS. Abans de continuar, elimineu aquesta declaració del vostre exemple.</p>
+
+<div class="note">
+<p><strong>Nota</strong>: També podeu dissenyar elements flexibles en una direcció inversa utilitzant els valors <code>row-reverse</code> i <code>column-reverse</code>. Experimenta amb aquests valors també!</p>
+</div>
+
+<h2 id="Ajustar">Ajustar</h2>
+
+<p>Un problema que sorgeix quan teniu una quantitat fixa d'amplada o alçada en el disseny, és que eventualment els fills del vostre flexbox desbordaran el contenidor, trencant el disseny. Feu un cop d'ull al nostre exemple <a href="https://github.com/mdn/learning-area/blob/master/css/css-layout/flexbox/flexbox-wrap0.html">flexbox-wrap0.html</a> i proveu de <a href="http://mdn.github.io/learning-area/css/css-layout/flexbox/flexbox-wrap0.html">veure-ho en directe</a> (feu una còpia local d'aquest fitxer, ara, si voleu seguir aquest exemple):</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/13410/flexbox-example3.png" style="display: block; height: 646px; margin: 0px auto; width: 800px;"></p>
+
+<p>Aquí veiem que els fills estan sortint del contenidor. Una manera de solucionar això és afegir la següent declaració a la vostra regla  section:</p>
+
+<pre class="brush: css">flex-wrap: wrap</pre>
+
+<p>Proveu-ho ara; Veureu que el disseny es veu molt millor amb això inclòs:</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/13412/flexbox-example4.png" style="display: block; height: 646px; margin: 0px auto; width: 800px;">Ara tenim diverses files - com molts fills flexbox encaixen a cada fila, el que té sentit, i qualsevol desbordament es mou cap a la línia següent. La declaració <code>flex: 200px</code> establerta en els articles significa que cadascun tindrà almenys 200px d'ample; parlarem més endavant d'aquesta propietat en més detall.També podeu observar que els últims fills de l'última fila són cada vegada més amplis, de manera que tota la fila segueix estant plena.</p>
+
+<p>Però hi ha més que podem fer aquí. Primer de tot, proveu de canviar el valor de la propietat {{cssxref("flex-direction")}} a <code>row-reverse</code> - veureu que encara teniu el disseny de files múltiples, però es comença des de la cantonada oposada de la finestra del navegador i ara flueix en sentit invers.</p>
+
+<h2 id="flex-flow_abreujat">flex-flow abreujat</h2>
+
+<p>En aquest punt, val la pena observar que existeix un abreujat per  {{cssxref("flex-direction")}} i {{cssxref("flex-wrap")}} - {{cssxref("flex-flow")}}. Per exemple, podeu reemplaçar</p>
+
+<pre class="brush: css">flex-direction: row;
+flex-wrap: wrap;</pre>
+
+<p>per</p>
+
+<pre class="brush: css">flex-flow: row wrap;</pre>
+
+<h2 id="Dimensió_flexible_d'elements_flexibles">Dimensió flexible d'elements flexibles</h2>
+
+<p>Tornem ara al nostre primer exemple i observem com podem controlar quina proporció d'espai els elements flexibles poden ocupar. Feu servir la vostra còpia local de <a href="https://github.com/mdn/learning-area/blob/master/css/css-layout/flexbox/flexbox0.html">flexbox0.html</a>, o feu una còpia de <a href="https://github.com/mdn/learning-area/blob/master/css/css-layout/flexbox/flexbox1.html">flexbox1.html</a> com a nou punt de partida (<a href="http://mdn.github.io/learning-area/css/css-layout/flexbox/flexbox1.html">vegeu-lo en directe</a>).</p>
+
+<p>Primer, afegiu la següent regla al final del vostre CSS:</p>
+
+<pre class="brush: css">article {
+  flex: 1;
+}</pre>
+
+<p>Es tracta d'un valor de proporció sense unitat que determina quina quantitat de l'espai disponible al llarg de l'eix principal ocuparà cada element flexible. En aquest cas, estem donant a cada element {{htmlelement("article")}} un valor de 1, el que significa que tots ocuparan una quantitat igual de l'espai sobrant deixat després de que s'hagin establert elements com el farciment i el marge. És una proporció, el que significa que donar a cada element flexible un valor de 400000 tindria exactament el mateix efecte.</p>
+
+<p>Ara, afegiu la següent regla per sota de l'anterior:</p>
+
+<pre class="brush: css">article:nth-of-type(3) {
+  flex: 2;
+}</pre>
+
+<p>Ara, quan actualitzeu, veureu que el tercer {{htmlelement("article")}} ocupa el doble de l'amplada disponible que els altres dos - ara hi ha quatre unitats proporcionals disponibles en total. Els dos primers elements flexibles tenen un cadascun, de manera que prenen 1/4 de l'espai disponible cadascun. El tercer té dues unitats, de manera que ocupa 2/4 de l'espai disponible (o 1/2).</p>
+
+<p>També podeu especificar un valor de mida mínima dins del valor de flex. Intenteu actualitzar les vostres regles article existents, així:</p>
+
+<pre class="brush: css">article {
+  flex: 1 200px;
+}
+
+article:nth-of-type(3) {
+  flex: 2 200px;
+}</pre>
+
+<p>Això bàsicament indica que "Cada element flexible es lliurarà primer a 200px de l'espai disponible. Després d'això, la resta de l'espai disponible es compartirà segons les unitats de proporció". Intenteu actualitzar i veureu una diferència en com es reparteix l'espai.</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/13406/flexbox-example1.png" style="border-style: solid; border-width: 1px; display: block; height: 324px; margin: 0px auto; width: 800px;"></p>
+
+<p>El valor real de flexbox es pot veure en la seva flexibilitat/capacitat de resposta - si canvieu la mida de la finestra del navegador o afegiu un altre element {{htmlelement("article")}}, el disseny continua funcionant bé.</p>
+
+<h2 id="flex_abreujat_versus_no_abreujat">flex: abreujat versus no abreujat</h2>
+
+<p>{{Cssxref("flex")}} és una propietat de abreujada que pot especificar fins a tres valors diferents:</p>
+
+<ul>
+ <li>El valor de la proporció sense unitat que hem comentat anteriorment. Aquest es pot especificar individualment utilitzant la propietat no abreujada {{cssxref("flex-grow")}}.</li>
+ <li>Un segon valor de proporció sense unitat - {{cssxref("flex-shrink")}} - que entra en joc quan els elements flexibles estan desbordats en el seu contenidor. Aquest especifica quant de la quantitat desbordada es treu de la mida de cada element flexible, per evitar que es desbordi del seu contenidor. Aquesta és una característica avançada de flexbox i no la cobrim més enllà en aquest article.</li>
+ <li>El valor mínim de la mida que hem comentat anteriorment. Aquest es pot especificar individualment usant el valor no abreujat {{cssxref("flex-base")}}.</li>
+</ul>
+
+<p>Recomanem evitar l'ús de les propietats flex no abreujades a menys que realment hagueu de (per exemple, substituir alguna cosa anteriorment establerta). Condueix a escriure una gran quantitat de codi addicional, i podent ser una mica confús.</p>
+
+<h2 id="Alineació_horitzontal_i_vertical">Alineació horitzontal i vertical</h2>
+
+<p>També podeu utilitzar funcions flexbox per alinear elements flexibles al llarg dels eixos principals o transversals. Expliquem-ho, examinant un nou exemple - <a href="https://github.com/mdn/learning-area/blob/master/css/css-layout/flexbox/flex-align0.html">flex-align0.html</a> (<a href="http://mdn.github.io/learning-area/css/css-layout/flexbox/flex-align0.html">vegeu-lo també en directe</a>) - que convertirem en un pulcre, botó/barra d'eines flexible. De moment veureu una barra de menú horitzontal, amb alguns botons agrupats a la cantonada superior esquerra.</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/13414/flexbox-example5.png" style="display: block; height: 77px; margin: 0px auto; width: 600px;"></p>
+
+<p><span id="result_box" lang="ca"><span>Primer, feu una còpia local d'aquest exemple</span></span>.</p>
+
+<p>Ara, afegiu el següent a la part inferior del CSS de l'exemple:</p>
+
+<pre class="brush: css">div {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}</pre>
+
+<p>Actualitzeu la pàgina i veureu que els botons estan ben centrats, horitzontal i verticalment. Ho hem fet mitjançant dues noves propietats.</p>
+
+<p>El control {{cssxref("align-items")}} fa que els elements flexibles s'asseguin a l'eix transversal.</p>
+
+<ul>
+ <li>Per defecte, el valor és <code>stretch</code>, que estira tots els elements flexibles per omplir el pare en la direcció de l'eix transversal. Si el pare no té un ample fix en la direcció de l'eix creuat, tots els elements flexibles es convertiran en els elements flexibles més llargs. Així és com el nostre primer exemple tenia columnes d'alçada igual per defecte.</li>
+ <li>El valor <code>center</code> que hem utilitzat en el nostre codi anterior fa que els elements mantinguin les seves dimensions intrínseques, però que estiguin centrats al llarg de l'eix transversal. És per això que els botons de l'exemple actual estan centrats verticalment.</li>
+ <li>També podeu tenir valors com <code>flex-start</code> i <code>flex-end</code>, que alinearan tots els elements al principi i al final de l'eix transversal, respectivament. Vegeu {{cssxref("align-items")}} per obtenir-ne els detalls complets.</li>
+</ul>
+
+<p>Podeu anul·lar el comportament {{cssxref("align-items")}} per a elements flexibles individuals aplicant la propietat {{cssxref("align-self")}}. Per exemple, intenteu afegir el següent al vostre CSS:</p>
+
+<pre class="brush: css">button:first-child {
+  align-self: flex-end;
+}</pre>
+
+<p>Feu un cop d'ull a l'efecte que té i retireu-lo de nou quan hàgiu acabat.</p>
+
+<p>{{cssxref("justify-content")}} controls on els elements flexibles s'assenten a l'eix principal.</p>
+
+<ul>
+ <li>El valor per defecte és <code>flex-start</code>, que fa que tots els elements s'asseguin al principi de l'eix principal.</li>
+ <li>Podeu fer servir <code>flex-end</code> perquè s'asseguin al final.</li>
+ <li><code>center</code> també és un valor per <code>justify-content</code> i farà que els elements flexibles s'asseguin al centre de l'eix principal.</li>
+ <li>El valor que hem utilitzat anteriorment, <code>space-around</code>, és útil - distribueix tots els elements uniformement al llarg de l'eix principal, deixant una mica d'espai a l'esquerra en cada extrem.</li>
+ <li>Hi ha un altre valor, <code>space-between</code>, que és molt similar a <code>space-around</code>, excepte que no deixa cap espai en cap dels dos extrems.</li>
+</ul>
+
+<p>Ens agradaria animar-vos a jugar amb aquests valors per vegeu com funcionen abans de continuar.</p>
+
+<h2 id="Ordre_dels_elements_flexibles">Ordre dels elements flexibles</h2>
+
+<p>Flexbox també té una característica per canviar l'ordre de disposició dels elements flexibles, sense afectar l'ordre d'origen. Aquesta, és una altra cosa que és impossible de fer amb els mètodes tradicionals de disseny.</p>
+
+<p>El codi per això és senzill: intenteu afegir el següent codi CSS al codi d'exemple de la barra de botons:</p>
+
+<pre class="brush: css">button:first-child {
+  order: 1;
+}</pre>
+
+<p>Actualitzeu, i ara veureu que el botó "Smile" s'ha mogut al final de l'eix principal. Parlarem de com això funciona amb una mica més detall:</p>
+
+<ul>
+ <li>Per defecte, tots els elements flexibles tenen un valor de {{cssxref("order")}} de 0.</li>
+ <li>Els elements flexibles amb valors d'ordre superiors establerts en ells apareixeran més endavant en l'ordre de visualització que els elements amb valors de menor ordre.</li>
+ <li>Els elements flexibles amb el mateix valor d'ordre apareixeran en el seu ordre d'origen. Així, si teniu quatre elements amb valors d'ordre 2, 1, 1 i 0 establerts en ells, respectivament, el seu ordre de visualització seria 4rt, 2on, 3er i 1er.</li>
+ <li>El 3er element apareix després del 2on perquè té el mateix valor d'ordre i està després en l'ordre d'origen.</li>
+</ul>
+
+<p>Podeu establir valors d'ordre negatius per fer que els elements apareguin abans que els elements amb 0. Per exemple, podeu fer que el botó "Blush" aparegui al principi de l'eix principal utilitzant la següent regla:</p>
+
+<pre class="brush: css">button:last-child {
+  order: -1;
+}</pre>
+
+<h2 id="Caixes_flexibles_niades">Caixes flexibles niades</h2>
+
+<p>És possible crear alguns dissenys força complexos amb flexbox. Està perfectament correcte establir un element flexible per ser també un contenidor flexible, de manera que els seus fills també estiguin distribuïts com caixes flexibles. Feu un cop d'ull a <a href="https://github.com/mdn/learning-area/blob/master/css/css-layout/flexbox/complex-flexbox.html">complex-flexbox.html</a> (<a href="http://mdn.github.io/learning-area/css/css-layout/flexbox/complex-flexbox.html">vegeu-lo també en directe</a>).</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/13418/flexbox-example7.png" style="border-style: solid; border-width: 1px; display: block; margin: 0px auto;"></p>
+
+<p>L'HTML per a això és bastant senzill. Tenim un element {{htmlelement("section")}} que conté tres {{htmlelement("article")}}s. El tercer {{htmlelement("article")}} conté tres {{htmlelement("div")}}s.:</p>
+
+<pre>section - article
+          article
+          article - div - button   
+                    div   button
+                    div   button
+                          button
+                          button</pre>
+
+<p>Feu un cop d'ull el codi que hem utilitzat per al disseny.</p>
+
+<p>En primer lloc, establim els fills de {{htmlelement("section")}} per ser distribuïts com a caixes flexibles.</p>
+
+<pre class="brush: css">section {
+  display: flex;
+}</pre>
+
+<p>A continuació, establim alguns valors flex en els propis {{htmlelement("article")}}s. Tingueu en compte la 2a regla aquí - estem establint el tercer {{htmlelement("article")}} per tenir els seus fills disposats com elements flexibles també, però aquesta vegada els estem posant com una columna.</p>
+
+<pre class="brush: css">article {
+  flex: 1 200px;
+}
+
+article:nth-of-type(3) {
+  flex: 3 200px;
+  display: flex;
+  flex-flow: column;
+}
+</pre>
+
+<p>A continuació, seleccionem el primer {{htmlelement("div")}}. Primer utilitzem <code>flex: 1 100px;</code> per donar-li efectivament una alçada mínima de 100 px, llavors configurem els seus fills (els elements {{htmlelement("button")}}) que també es defineixen com elements flexibles. Aquí els distribuïm en una fila d'embolcall, i alineats al centre de l'espai disponible com ho vam fer en l'exemple del botó individual que vam veure anteriorment.</p>
+
+<pre class="brush: css">article:nth-of-type(3) div:first-child {
+  flex: 1 100px;
+  display: flex;
+  flex-flow: row wrap;
+  align-items: center;
+  justify-content: space-around;
+}</pre>
+
+<p>Finalment, hem establert una mida del botó, però el més interessant és el valor que li donem a flex de 1. Això té un efecte molt interessant, que veureu si intenteu canviar la mida de l'ample de la finestra del navegador. Els botons ocuparan tant espai com poguin i s'asseuran a la mateixa línia com sigui possible, però quan ja no poguin cabre còmodament en la mateixa línia, es deixaran caure cap avall per crear noves línies.</p>
+
+<pre class="brush: css">button {
+  flex: 1;
+  margin: 5px;
+  font-size: 18px;
+  line-height: 1.5;
+}</pre>
+
+<h2 id="Compatibilitat_amb_altres_navegadors">Compatibilitat amb altres navegadors</h2>
+
+<p>El suport de Flexbox està disponible a la majoria de navegadors nous: Firefox, Chrome, Opera, Microsoft Edge i IE 11, versions més noves d'Android/iOS, etc. No obstant això, heu de tenir en compte que encara hi ha navegadors antics en ús que no suporten Flexbox ( o bé, però, suportan una versió molt antiga i actualitzada).</p>
+
+<p>Mentre estigueu aprenent i experimentant, això no importa massa; No obstant això, si esteu considerant l'ús de flexbox en un lloc web real, heu de fer proves i assegurar-vos que la vostra experiència d'usuari segueixi sent acceptable en el major nombre possible de navegadors.</p>
+
+<p>Flexbox és una mica més complicat que algunes característiques CSS. Per exemple, si un navegador no té cap ombra d'estil CSS, probablement el lloc serà encara útilitzable. La no compatibilitat amb les característiques de flexbox, probablement trencarà un disseny per complet, cosa que ho farà inutilitzable.</p>
+
+<p>Parlarem sobre les estratègies per superar els problemes complicats de suport del navegador en un mòdul futur.</p>
+
+<h2 id="Resum">Resum</h2>
+
+<p>Això conclou el nostre recorregut pels fonaments de flexbox. Esperem que us hàgiu divertit, i sapigueu jugar amb ells mentre viatgeu cap a endavant amb el vostre aprenentatge. A continuació, veurem un altre aspecte important dels dissenys CSS - sistemes de quadrícula.</p>
+
+<div>{{PreviousMenuNext("Learn/CSS/CSS_layout/Practical_positioning_examples", "Learn/CSS/CSS_layout/Grids", "Learn/CSS/CSS_layout")}}</div>

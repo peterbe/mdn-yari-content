@@ -1,0 +1,388 @@
+<div>{{CSSRef}}</div>
+
+<p><span class="seoSummary">CSS3 <strong>Flexible Box</strong> (可変ボックス)、または <strong>flexbox</strong> は、ページレイアウトを様々なスクリーンサイズやディスプレイデバイスに適応しなければならない場合に、ページ上の要素が指定した通りに配置される<a href="/ja/docs/CSS/Layout_mode" title="CSS/Layout_model">レイアウトモード</a>です。</span>多くのアプリケーションにおいて、flexible box モデルは、float を使わず、そして flex container のマージンがそのコンテンツのマージンを相殺することも無く、block モデルを超えるための手段を提供します。</p>
+
+<p>多くのデザイナーが、flexbox モデルを使いやすいと感じるでしょう。flexbox の子要素は任意の方向にレイアウトすることができ、またディスプレイの領域に適応する柔軟な寸法を持つこともできます。要素の表示順はソースコードでの順序に依存しないため子要素の配置はとても容易であり、また複雑なレイアウトをきれいなコードでシンプルに実現できます。この独立性は視覚的なレンダリングにのみ意図的に影響させており、読み上げ順やソースでの順序に基づくナビゲーションには影響しません。</p>
+
+<div class="note"><strong>注記:</strong> <a href="http://www.w3.org/TR/css3-flexbox/">CSS Flexible Boxes Layout 仕様</a>は勧告候補の最終段階にあります (<a href="http://dev.w3.org/csswg/css-flexbox/">最新の Editor draft</a> もご覧ください) が、すべての機能を実装していないブラウザもあります。とは言え、現在の flexbox のサポート状況は全体的に良好です。最新の互換性状況については、各プロパティの<a href="/ja/docs/Web/Guide/CSS/Flexible_boxes#Browser_compatibility">ブラウザ実装状況</a>の表をご覧ください。</div>
+
+<h2 id="Flexible_boxes_concept" name="Flexible_boxes_concept">Flexible box のコンセプト</h2>
+
+<p>flex レイアウトを定義するねらいは、アイテムの幅や高さを、任意のディスプレイデバイスで使用できる領域を最適に埋めるように変更する能力です。flex コンテナはアイテムを、使用可能な空き領域を埋めるように引き延ばしたり、はみ出さないように縮めたりします。</p>
+
+<p>flexbox レイアウトのアルゴリズムは、垂直方向に偏向した (vertically-biased) block レイアウトや水平方向に偏向した (vertically-biased) inline レイアウトとは対照的に、方向について独断的ではありません (direction-agnostic)。block レイアウトはページに対して良好に働きますが、ユーザエージェントの変更や水平・垂直の切り替えなどによる向きの変化・リサイズ・拡大・縮小が必須であるアプリケーションコンポーネントをサポートするのに十分な定義がありません。Flexbox レイアウトはアプリケーションのコンポーネントや小規模のレイアウトにもっとも適している一方で、(新興の) Grid レイアウトは大規模なレイアウトを意図しています。どちらも、さまざまなユーザエージェントや記述様式や他の柔軟性に関する要求を伴う Web アプリケーションの高い相互運用性を提供するための、CSS Working Group による多大な努力の一部です。</p>
+
+<h2 id="Flexible_boxes_vocabulary" name="Flexible_boxes_vocabulary">Flexible box の用語</h2>
+
+<p>flexible の議論では水平/inline 軸や垂直/block 軸といった用語から解放される一方で、モデルを適切に説明するための新たな用語が必要になります。後述の語彙アイテムを復習するときは、以下の図について考えてみましょう。これは <code>row</code> 方向の <code>flex-direction</code> を持つ flex container であり、flex item は要素のテキストフローの方向 (この場合は左から右) によって確立した記述様式に従って、main axis にまたがってお互いに水平方向に続くということです。</p>
+
+<p><img alt="flex_terms.png" class="default internal" src="/files/3739/flex_terms.png"></p>
+
+<dl>
+ <dt>Flex container (Flex コンテナ)</dt>
+ <dd>flex アイテムを含む親要素です。flex コンテナは <a href="/ja/docs/CSS/display" rel="internal" title="display"><code>display</code></a> プロパティの値に <code>flex</code> または <code>inline-flex</code> を指定することによって定義されます。</dd>
+ <dt>Flex item (flex アイテム)</dt>
+ <dd>
+ <p>flex コンテナの子要素が flex アイテムとなります。flex コンテナの直接の子要素になっているテキストは、無名の flex アイテムに包まれています。</p>
+ </dd>
+ <dt>Axis (軸)</dt>
+ <dd>
+ <p>すべての flexible box は 2 つの軸を持っています。<strong>主軸 (main axis)</strong> は flex アイテムのいずれに対しても平行な軸です。<strong>交差軸 (cross axis)</strong> は <strong>main axis</strong> に対して垂直な軸となります。</p>
+
+ <ul>
+  <li><code><a href="/ja/docs/CSS/flex-direction" rel="internal" title="flex-direction">flex-direction</a></code> プロパティは、主軸を定義します。</li>
+  <li><a href="/ja/docs/CSS/justify-content" rel="internal" title="CSS/justify-content"><code>justify-content</code></a> プロパティは、現在の行で flex アイテムをどのように主軸に沿ってレイアウトするかを定義します。</li>
+  <li><a href="/ja/docs/CSS/align-items" title="CSS/align-items"><code>align-items</code></a> プロパティは、現在の行で flex アイテムをどのように交差軸に沿ってレイアウトするかの既定値を定義します。</li>
+  <li><a href="/ja/docs/CSS/align-self" title="CSS/align-self"><code>align-self</code></a> プロパティは、<code>align-items</code> プロパティで定義した既定値を上書きすることにより、ひとつの flex アイテムを交差軸上でどのように配置するかを定義します。</li>
+ </ul>
+ </dd>
+ <dt>Direction (方向)</dt>
+ <dd>
+ <p>flex コンテナの端部である <strong>main start</strong>/<strong>main end</strong> および <strong>cross start</strong>/<strong>cross end</strong> は、flex アイテムのフローの始点と終端を表します。flex アイテムは <code>writing-mode</code> で定義した向き (left-to-right や right-to-left など) をもとに、主軸や交差軸に従います。</p>
+
+ <ul>
+  <li><a href="/ja/docs/CSS/order" rel="internal" title="CSS/order"><code>order</code></a> プロパティは要素を順序グループ (ordinal groups)に割り当てて、どの要素が最初に現れるかを決めます。</li>
+  <li><a href="/ja/docs/CSS/flex-flow" rel="internal" title="flex-flow"><code>flex-flow</code></a> プロパティは、flex アイテムをレイアウトするための <a href="/ja/docs/CSS/flex-direction" rel="internal" title="flex-direction"><code>flex-direction</code></a> および <a href="/ja/docs/CSS/flex-wrap" rel="internal" title="flex-wrap"><code>flex-wrap</code></a> プロパティをまとめたものです。</li>
+ </ul>
+ </dd>
+ <dt>Line (ライン)</dt>
+ <dd>
+ <p>Flex アイテムは <a href="/ja/docs/CSS/flex-wrap" rel="internal" title="flex-wrap"><code>flex-wrap</code></a> プロパティに基づいて、単一の行または複数の行に渡ってレイアウトできます。このプロパティは、交差軸の方向や新しい行が積み重なる方向を制御します。</p>
+ </dd>
+ <dt>Dimension (寸法)</dt>
+ <dd>
+ <p>flex アイテムでは、高さや幅に相当する独断的でない同等物を <strong>main size</strong> および <strong>cross size</strong> としており、これらはそれぞれ flex コンテナの主軸および交差軸に従います。</p>
+
+ <ul>
+  <li><code><a href="/ja/docs/Web/CSS/min-height">min-height</a></code> および <code><a href="/ja/docs/Web/CSS/min-width">min-width</a></code> プロパティの初期値は 0 です。</li>
+  <li><a href="/ja/docs/Web/CSS/flex"><code>flex</code></a> プロパティは、flex アイテムの柔軟性を定めるための <a href="/ja/docs/Web/CSS/flex-grow"><code>flex-grow</code></a>、<a href="/ja/docs/Web/CSS/flex-shrink"><code>flex-shrink</code></a>、<a href="/ja/docs/Web/CSS/flex-basis"><code>flex-basis</code></a> プロパティをまとめたものです。</li>
+ </ul>
+ </dd>
+</dl>
+
+<h2 id="Designating_a_flexible_box" name="Designating_a_flexible_box">flexible box の指定</h2>
+
+<p>要素がこのスタイルを使用するように指定するには、以下のように <a href="/ja/docs/CSS/display" title="CSS/display">display</a> プロパティを指定してください:</p>
+
+<pre class="brush: css">display : flex</pre>
+
+<p>または</p>
+
+<pre class="brush: css">display : inline-flex</pre>
+
+<p>これにより当該要素を flex コンテナとして、また子要素を flex アイテムとして定義します。値 <code>flex</code> は flex コンテナをブロックレベル要素にします。値 <code>inline-flex</code> は、flex コンテナを極小のインラインレベル要素にします。</p>
+
+<div class="note"><strong>注記:</strong> ベンダー接頭辞タグは、display 属性そのものではなく、display プロパティで文字列に付加されます。例えば <code>display : -webkit-flex</code> となります。</div>
+
+<h2 id="Flex_item_considerations" name="Flex_item_considerations">flex アイテムで考慮すべき事柄</h2>
+
+<p>flex コンテナの直接の子要素になっているテキストは、無名の flex アイテムに包まれています。しかし、ホワイトスペースのみを含む無名の flex アイテムはレンダリングされません。これは、<code>display: none</code> が指定されたような状態です。</p>
+
+<p>flex コンテナの子要素で絶対的に配置したものは、静的な位置が flex コンテナの main start 側の content-box の隅に対して決められるように配置されます。</p>
+
+<p>隣接する flex アイテムのマージンは相殺しません。<code>auto</code> マージンを使用すると垂直方向または水平方向に追加のスペースを取り込みますので、flex アイテムの整列や分離に使用できます。詳しくは W3C Flexible Box Layout Model 仕様書の <a href="http://dev.w3.org/csswg/css3-flexbox/#auto-margins" title="http://dev.w3.org/csswg/css3-flexbox/#auto-margins">Aligning with 'auto' margins</a> をご覧ください。</p>
+
+<p><s>flex アイテムの合理的な最小サイズを確保するために、<code>min-width:auto</code> および/または <code>min-height:auto</code> を使用しましょう。flex アイテムでは <code>auto</code> 属性値でアイテムの幅や高さを、内容物の幅や高さを下回らないように算出して、アイテムが内容物を保持するのに十分な大きさでレンダリングされることを保証します。詳しくは {{cssxref("min-width")}} および {{cssxref("min-height")}} をご覧ください。</s></p>
+
+<p>flexbox の整列関連プロパティは CSS における他のセンタリング方式とは異なり、"真の" センタリングを行います。これは、flex アイテムは flex コンテナからはみ出す場合でも中央に置かれるということです。しかし、時に問題になることがあります。ページの上端や左端 (英語など LTR 言語の場合。アラビア語など RTL 言語では右端で問題が起きます) を超えてアイテムがはみ出すとき、内容物があってもその領域にスクロールできません! 将来のリリースでは、整列関連のプロパティが "安全" なオプションも持つように拡張される予定です。現時点では、この懸念がある場合はセンタリングにマージンを使用するとよいでしょう。こちらは "安全な" 手段で対応して、はみ出す場合にセンタリングしないためです。<code>align-</code> プロパティを使用する代わりに、センタリングしたい flex アイテムで auto マージンを置いてください。また <code>justify-</code> プロパティを使用する代わりに、flex コンテナ内の最初と最後にある flex アイテムの外側の端に auto マージンを置いてください。auto マージンは "柔軟" かつ余分なスペースを前提としており、余分なスペースがある場合は flex アイテムをセンタリングを行い、スペースがない場合は通常の整列に切り替えます。ただし、複数行の flexbox において <code>justify-content</code> をマージンによるセンタリングに置き換えようとする場合は、残念なことに各行の最初と最後の flex アイテムにマージンを置かなければなりません。どのアイテムがどの行の最後に来るかを事前に予測できるのでなければ、<code>justify-content</code> プロパティを置き換えるために、主軸でのマージンによるセンタリングに頼ることはできません。</p>
+
+<p>要素の表示順序はソースコードでの順序とは独立していますが、この独立性は視覚的なレンダリングにのみ影響しており、読み上げ順やソースでの順序に基づくナビゲーションには影響しないことを思い出しましょう。{{cssxref("order")}} プロパティも、読み上げやナビゲーションの順序に影響を与えません。よって、開発者はドキュメントのアクセシビリティを壊さないように、ソースコードで適切に要素を並べるように気をつけなければなりません。</p>
+
+<h2 id="Flexible_box_properties" name="Flexible_box_properties">flexible box 関連プロパティ</h2>
+
+<h3 id="Properties_not_affecting_flexible_boxes" name="Properties_not_affecting_flexible_boxes">flexible box に影響を与えないプロパティ</h3>
+
+<p>flexible box は独特のレイアウトアルゴリズムを使用するため、flex コンテナでは意味がないプロパティがあります。</p>
+
+<ul>
+ <li><a href="/ja/docs/CSS/Using_CSS_multi-column_layouts" title="Using CSS multi-column layouts">マルチカラムモジュール</a>の <code>column-*</code> プロパティは、flex アイテムに対する効果がありません。</li>
+ <li>flex アイテムで、{{cssxref("float")}} および {{cssxref("clear")}} は効果がありません。<code>float</code> を使用すると、その要素の <code>display</code> プロパティは <code>block</code> であると算定されます。</li>
+ <li>{{cssxref("vertical-align")}} は、flex アイテムの配置に影響を与えません。</li>
+</ul>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<h3 id="Basic_flex_example" name="Basic_flex_example">基本的な flex の例</h3>
+
+<p>この基本的な例では要素に "柔軟性" を与える方法と、柔軟な状態で兄弟要素がどのようにふるまうかを示します。</p>
+
+<pre class="brush:html;">&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+  &lt;head&gt;
+    &lt;style&gt;
+
+   .flex
+   {
+      /* 基本のスタイルの設定 */
+      width: 350px;
+      height: 200px;
+      border: 1px solid #555;
+      font: 14px Arial;
+
+      /* flexbox の設定 */
+      display: -webkit-flex;
+      -webkit-flex-direction: row;
+
+      display: flex;
+      flex-direction: row;
+   }
+
+   .flex &gt; div
+   {
+      -webkit-flex: 1 1 auto;
+      flex: 1 1 auto;
+
+      width: 30px; /* transition を上手く動作させるために指定します (始めまたは終わりに
+                      "width:auto" を指定している場合の transition は現在の Gecko と Webkit では不安定です。
+                      詳細については http://bugzil.la/731886 を参照してください) */
+
+      -webkit-transition: width 0.7s ease-out;
+      transition: width 0.7s ease-out;
+   }
+
+   /* 色の指定 */
+   .flex &gt; div:nth-child(1){ background : #009246; }
+   .flex &gt; div:nth-child(2){ background : #F1F2F1; }
+   .flex &gt; div:nth-child(3){ background : #CE2B37; }
+
+   .flex &gt; div:hover
+   {
+        width: 200px;
+   }
+   
+   &lt;/style&gt;
+    
+ &lt;/head&gt;
+ &lt;body&gt;
+  &lt;p&gt;Flexbox nuovo&lt;/p&gt;
+  &lt;div class="flex"&gt;
+    &lt;div&gt;uno&lt;/div&gt;
+    &lt;div&gt;due&lt;/div&gt;
+    &lt;div&gt;tre&lt;/div&gt;
+  &lt;/div&gt;
+ &lt;/body&gt;
+&lt;/html&gt;</pre>
+
+<h3 id="Holy_Grail_Layout_example" name="Holy_Grail_Layout_example">Holy Grail レイアウトの例</h3>
+
+<p>この例では、flexbox がいかにしてさまざまな画面解像度に対して動的にレイアウトを変化させることを可能にするかを実証します。以下の図で、その変化を示します。</p>
+
+<p><img alt="HolyGrailLayout.png" class="default internal" src="/files/3760/HolyGrailLayout.png"></p>
+
+<p>ここで示したものは、ブラウザウィンドウに適したページレイアウトをスマートフォンの画面に最適化させなければならないケースです。要素のサイズを小さくしなければならないだけでなく、要素が現れる順序も変えなければなりません。flexbox は、これをとてもシンプルにします。</p>
+
+<pre class="brush: html">​&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+  &lt;head&gt;
+    &lt;style&gt;
+
+  body {
+   font: 24px Helvetica;
+   background: #999999;
+  }
+
+  #main {
+   min-height: 800px;
+   margin: 0px;
+   padding: 0px;
+   display: -webkit-flex;
+   display:         flex;
+   -webkit-flex-flow: row;
+           flex-flow: row;
+   }
+ 
+  #main &gt; article {
+   margin: 4px;
+   padding: 5px;
+   border: 1px solid #cccc33;
+   border-radius: 7pt;
+   background: #dddd88;
+   -webkit-flex: 3 1 60%;
+           flex: 3 1 60%;
+   -webkit-order: 2;
+           order: 2;
+   }
+  
+  #main &gt; nav {
+   margin: 4px;
+   padding: 5px;
+   border: 1px solid #8888bb;
+   border-radius: 7pt;
+   background: #ccccff;
+   -webkit-flex: 1 6 20%;
+           flex: 1 6 20%;
+   -webkit-order: 1;
+           order: 1;
+   }
+  
+  #main &gt; aside {
+   margin: 4px;
+   padding: 5px;
+   border: 1px solid #8888bb;
+   border-radius: 7pt;
+   background: #ccccff;
+   -webkit-flex: 1 6 20%;
+           flex: 1 6 20%;
+   -webkit-order: 3;
+           order: 3;
+   }
+ 
+  header, footer {
+   display: block;
+   margin: 4px;
+   padding: 5px;
+   min-height: 100px;
+   border: 1px solid #eebb55;
+   border-radius: 7pt;
+   background: #ffeebb;
+   }
+ 
+  /* 3 カラム表示には狭すぎる場合 */
+  @media all and (max-width: 640px) {
+  
+   #main, #page {
+    -webkit-flex-flow: column;
+            flex-direction: column;
+   }
+
+   #main &gt; article, #main &gt; nav, #main &gt; aside {
+    /* ドキュメントの順番に戻す */
+    -webkit-order: 0;
+            order: 0;
+   }
+ 
+   #main &gt; nav, #main &gt; aside, header, footer {
+    min-height: 50px;
+    max-height: 50px;
+   }
+  }
+
+ &lt;/style&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+ &lt;header&gt;header&lt;/header&gt;
+ &lt;div id='main'&gt;
+    &lt;article&gt;article&lt;/article&gt;
+    &lt;nav&gt;nav&lt;/nav&gt;
+    &lt;aside&gt;aside&lt;/aside&gt;
+ &lt;/div&gt;
+ &lt;footer&gt;footer&lt;/footer&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</pre>
+
+<h2 id="Playground" name="Playground">遊び場</h2>
+
+<p>実験のためにオンラインで利用できる flexbox の検証環境があります:</p>
+
+<ul>
+ <li><a href="http://demo.agektmr.com/flexbox/" title="http://demo.agektmr.com/flexbox/">Flexbox Playground</a></li>
+ <li><a href="http://the-echoplex.net/flexyboxes" title="http://the-echoplex.net/flexyboxes">Flexy Boxes</a></li>
+ <li><a href="http://codepen.io/justd/pen/yydezN">Flexbox Properties Demonstration</a></li>
+</ul>
+
+<h2 id="Things_to_keep_in_mind" name="Things_to_keep_in_mind">留意点</h2>
+
+<p>flex アイテムをどのようにレイアウトするかを表すアルゴリズムは、とても扱いにくい場合があります。flexible box を使用してデザインするときに、予期せぬ事態を避けるために考慮することを挙げます。</p>
+
+<p>flexibles box は、<a href="https://developer.mozilla.org/ja/docs/CSS/writing-mode" title="mode">記述様式</a>に一致してレイアウトされます。これは、<strong>main start</strong> および <strong>main end</strong> が <strong>start</strong> および <strong>end</strong> の位置に従ってレイアウトされるということです。</p>
+
+<p><strong>cross start</strong> および <strong>cross end</strong> は <a href="/ja/docs/CSS/direction" title="direction"><code>direction</code></a> の値に依存する <strong>start</strong> または <strong>before</strong> の位置の定義に従います。</p>
+
+<p><code>break-</code> プロパティで許可していれば、flexible box のレイアウト内で改ページが可能です。CSS 2.1 の <code>page-break-before</code>、<code>page-break-after</code>、<code>page-break-inside</code> プロパティはもちろん、CSS3 の <code>break-after</code>、<code>break-before</code>、<code>break-inside</code> プロパティが、flex コンテナ、flex アイテム、および flex アイテムの内部で受け入れられます。</p>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザ実装状況</h2>
+
+<div>{{CompatibilityTable}}</div>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>機能</th>
+   <th>Firefox (Gecko)</th>
+   <th>Chrome</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>基本サポート (single-line flexbox)</td>
+   <td>{{CompatGeckoDesktop("18.0")}}<sup>[6]</sup>{{property_prefix("-moz")}}<sup>[2]</sup><br>
+    {{CompatGeckoDesktop("22.0")}}</td>
+   <td>21.0{{property_prefix("-webkit")}}<br>
+    29.0</td>
+   <td>11<sup>[3]</sup></td>
+   <td>12.10{{property_prefix("-webkit")}}<sup>[5]</sup></td>
+   <td>6.1{{property_prefix("-webkit")}}<sup>[1]</sup></td>
+  </tr>
+  <tr>
+   <td>Multi-line flexbox</td>
+   <td>{{CompatGeckoDesktop("28.0")}}</td>
+   <td>21.0{{property_prefix("-webkit")}}<br>
+    29.0</td>
+   <td>11<sup>[3]</sup></td>
+   <td>12.10<sup>[5]</sup><br>
+    15 {{property_prefix("-webkit")}}</td>
+   <td>6.1{{property_prefix("-webkit")}}<sup>[1]</sup></td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>機能</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>Firefox OS</th>
+   <th>Android</th>
+   <th>IE Phone</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>基本サポート (single-line flexbox)</td>
+   <td>{{CompatGeckoMobile("18.0")}}{{property_prefix("-moz")}}<sup>[2]</sup><br>
+    {{CompatGeckoMobile("22.0")}}</td>
+   <td>1.0{{property_prefix("-moz")}}<sup>[2]</sup><br>
+    1.1</td>
+   <td>2.1{{property_prefix("-webkit")}}<sup>[4]</sup><br>
+    4.4</td>
+   <td>11</td>
+   <td>12.10<sup>[5]</sup><br>
+    15{{property_prefix("-webkit")}}</td>
+   <td>7{{property_prefix("-webkit")}}<sup>[1]</sup></td>
+  </tr>
+  <tr>
+   <td>Multi-line flexbox</td>
+   <td>{{CompatGeckoMobile("28.0")}}</td>
+   <td>1.3</td>
+   <td>2.1{{property_prefix("-webkit")}}<sup>[4]</sup><br>
+    4.4</td>
+   <td>11</td>
+   <td>12.10<sup>[5]</sup><br>
+    15{{property_prefix("-webkit")}}</td>
+   <td>7{{property_prefix("-webkit")}}<sup>[1]</sup></td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<p>[1] Safari の 6.0 まで (iOS 版では 6.1 まで) のバージョンは互換性の無い古いバージョンの草案仕様をサポートしています。Safari 6.1 (iOS 版では 7) では最終版の仕様がサポートされています。</p>
+
+<p>[2] Firefox 22 まで、flexbox のサポートを有効にするには、ユーザーが about:config で設定 "layout.css.flexbox.enabled" の値を <code>true</code> にする必要があります。Firefox 22 から 27 まではこの設定の既定値が <code>true</code> であり、また Firefox 28 でこの設定項目を削除しました。</p>
+
+<p>[3] Internet Explorer 10 は互換性の無い古いバージョンの草案仕様をサポートしています。 Internet Explorer 11 では<a href="http://msdn.microsoft.com/en-us/library/ie/dn265027%28v=vs.85%29.aspx">最終版の仕様がサポートされています</a>。</p>
+
+<p>[4] Android 4.3 までのブラウザは互換性の無い古いバージョンの草案仕様をサポートしています。Android 4.4 では最終版の仕様がサポートされています。</p>
+
+<p>[5] Opera 12.10 で最初に実装された <code>flexbox</code> は接頭辞がありませんが、バージョン15 から 16、および Opera Mobile のバージョン 15 から 19 では接頭辞 {{property_prefix("-webkit")}} があります。この接頭辞は Opera 17 および Opera Mobile 24 で再び削除されました。</p>
+
+<p>[6] Firefox 29 まで、flex アイテムで <code>visibility: collapse</code> を指定すると意図された動作である <code>display: none</code> であるようには扱われず、<code>visibility: hidden</code> であるように扱われます。推奨する回避策は、<code>visibility:collapse</code> が指定されたようにふるまうべきである <code>visibility:hidden</code> を flex アイテムに使用することです。詳しくは {{bug(783470)}} をご覧ください。</p>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li>さまざまなブラウザの flexbox 実装に関するバグ情報をまとめた <a href="https://github.com/philipwalton/flexbugs">The Flexbugs project</a></li>
+</ul>

@@ -1,0 +1,321 @@
+<div>{{jsSidebar("Objects")}}</div>
+
+<p><code><strong>eval()</strong></code> は<strong>文字列</strong>として表された JavaScript コードを<strong>式</strong>として評価する関数です。</p>
+
+<div>{{EmbedInteractiveExample("pages/js/globalprops-eval.html")}}</div>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox"><code>eval(<em>string</em>)</code></pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<dl>
+ <dt><code>string</code></dt>
+ <dd>JavaScript の式、文、または一連の文を表す文字列です。式には、既存オブジェクトの変数およびプロパティを含められます。</dd>
+</dl>
+
+<h3 id="Return_value" name="Return_value">戻り値</h3>
+
+<p>与えられたコードの評価結果値を返します。評価結果が空の場合は、{{jsxref("undefined")}} を返します。</p>
+
+<h2 id="Description" name="Description">説明</h2>
+
+<p><code>eval()</code> はグローバルオブジェクトの関数プロパティです。</p>
+
+<p><code>eval()</code> 関数の引数は 1 個の文字列です。その文字列が 1 個の式に相当する場合、<code>eval()</code> は引数を式として評価します。引数が 1 個以上の JavaScript 文に相当する場合、 <code>eval()</code> は引数を文として評価します。算術式を評価する目的で <code>eval()</code> を呼び出してはいけません。JavaScript は算術式を自動的に評価します。</p>
+
+<p>文字列として算術式を構成した場合、後でその式の評価に <code>eval()</code> を使用できます。 例えば <code>x</code> という変数があるとします。ある変数に "<code>3 * x + 2</code>" といった式の文字列値を代入し、そしてスクリプトの後方で <code>eval()</code> を呼び出すことで、 <code>x</code> が関わる式の評価を後回しにできます。</p>
+
+<p><code>eval</code> の引数が文字列でない場合、<code>eval</code> は引数を変更せずに返します。次の例では、<code><a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></code> コンストラクタが記述されている場合、<code>eval</code> はその文字列を評価するのではなく <code><a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></code> オブジェクトを返します。</p>
+
+<pre class="brush:js">eval(new String("2 + 2")); // "2 + 2"<span class="short_text" lang="ja"><span>を含むStringオブジェクトを返します。</span></span>
+eval("2 + 2");             // <span class="short_text" id="result_box" lang="ja"><span>4を返します。</span></span>
+</pre>
+
+<p>この制約は、<code>toString</code> を使用する一般的な方法で回避できます。</p>
+
+<pre class="brush:js">var expression = new String("2 + 2");
+eval(expression.toString()); // <span class="short_text" id="result_box" lang="ja"><span>4を返します。</span></span>
+</pre>
+
+<p><code>eval</code> 関数を <code>eval</code> 以外の名前を参照して呼び出すことで<strong>間接的に</strong>使用した場合、<a href="http://www.ecma-international.org/ecma-262/5.1/#sec-10.4.2">ECMAScript 5</a> 以降ではローカルスコープではなくグローバルスコープで機能します。これは例えると、関数定義によりグローバル関数が作成されるため、評価されたコードはその呼び出されたスコープ内のローカル変数にアクセスできなくなる、ということです。</p>
+
+<pre class="brush:js">function test() {
+  var x = 2, y = 4;
+  console.log(eval("x + y")); // 直接的な呼び出しによってローカルスコープでの使用となり、結果は 6 となる
+  var geval = eval; // グローバルスコープでのeval呼び出しと同等
+  console.log(geval("x + y")); // 間接的な呼び出しによってグローバルスコープでの使用となり、
+  // x は未定義となるため ReferenceError が発生する
+<code class="language-js"><span class="punctuation token">  (</span><span class="number token">0</span><span class="punctuation token">,</span> eval<span class="punctuation token">)</span><span class="punctuation token">(</span><span class="string token">'x + y'</span><span class="punctuation token">)</span><span class="punctuation token">;</span> <span class="comment token">// 間接的な呼び出しのもう一つの例</span></code>
+}
+</pre>
+
+<h2 id="Don't_use_eval_needlessly!" name="Don't_use_eval_needlessly!">必要以上に <code>eval</code> を使用しないで！</h2>
+
+<p><code>eval()</code> は、呼び出し元の持つ権限でコードが実行される危険な関数です。悪意を持つ第三者から影響を受ける可能性がある文字列とともに <code>eval()</code> を実行すると、最終的にウェブページや拡張機能の持つアクセス権でユーザーのマシン上で悪意あるコードが実行されてしまうかもしれません。さらに重要なこととして、<code>eval()</code> が呼び出された先のスコープを第三者から確認することができるため、同様の機能を持つ <a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/Function" title="Functionコンストラクタは新規のFunctionオブジェクトを作成します。JavaScript におけるすべての関数は、実際には Function オブジェクトです。"><code>Function</code></a> オブジェクトなら本来影響のないような方法でも攻撃を受ける可能性があります。</p>
+
+<p>また、ここ最近の JavaScript では多くの制御構造が JS エンジンによって最適化されているのとは異なり、<code>eval()</code> は JS インタプリタを呼び出すため一般に代替手段より低速です。</p>
+
+<p>一般的な使用例であれば、 <code>eval()</code> の安全かつ高速な代案があります。</p>
+
+<p>さらに、現代のjavascriptインタプリタはjavascriptをマシンコードに変換します。 これは、変数命名の概念がすべて消滅することを意味します。 したがって、evalを使用すると、ブラウザが長い高価な変数名検索を実行して、変数がマシンコードのどこに存在しているかを把握し、その値を設定します。 さらに、変数の型を変更するなど、<code>eval()</code>によって新しい変数を導入することができます。これによって、生成されたすべてのマシンコードを再評価して補正することができます。 しかし、そこに（ありがたいことに）evalへの非常に良い選択肢が存在します。単に<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function">window.Function</a>を使うだけです。 悪い<code>eval()</code>を使用したコードから<code>Function()</code>を使用したコードに変換する方法の例として、以下を参照してください。</p>
+
+<p> </p>
+
+<p>evalを使用した悪いコード:</p>
+
+<pre><code>function looseJsonParse(obj){
+    return eval(obj);
+}
+console.log(looseJsonParse(
+   "{a:(4-1), b:function(){}, c:new Date()}"
+))</code></pre>
+
+<p>evalを使用しないより良いコード:</p>
+
+<p> </p>
+
+<pre><code>function looseJsonParse(obj){
+    return Function('"use strict";return (' + obj + ')')();
+}
+console.log(looseJsonParse(
+   "{a:(4-1), b:function(){}, c:new Date()}"
+))</code></pre>
+
+<p>上記の2つのコードスニペットを比較すると、2つのコードスニペットが同じように動作するように見えるかもしれませんが、もう一度考えてみましょう。評価されたスニペットは非常に遅いです。 評価されたオブジェクトの <code>c: new Date()</code> に注目してください。 evalのない関数では、オブジェクトはグローバルスコープで評価されているので、 <code>Date</code> が <code>Date</code> というローカル変数の代わりに <code>window.Date</code> を参照するとブラウザが想定しても安全です。 しかし、コードが次のようになっている場合 <code>eval()</code> を使ったコードでは、ブラウザはこれを仮定することができません：</p>
+
+<p> </p>
+
+<pre><code>function Date(n){
+    return ["Monday","Tuesday","Wednessday","Thursaday","Friday","Saturday","Sunday"][n%7 || 0];
+}
+function looseJsonParse(obj){
+    return eval(obj);
+}
+console.log(looseJsonParse(
+   "{a:(4-1), b:function(){}, c:new Date()}"
+))</code></pre>
+
+<p>したがって、コードの <code>eval()</code> バージョンでは、ブラウザーは高価なルックアップ呼び出しを行い、 <code>Date()</code> というローカル変数があるかどうかを確認します。 これは <code>Function()</code> と比較して非常に非効率的です。</p>
+
+<p>関連する状況では、実際に <code>Date</code> 関数を <code>Function()</code> 内のコードから呼び出せるようにしたい場合はどうでしょうか。 怖気づいて <code>eval()</code> に後退しなければいけないでしょうか？ 絶対にそうではありません。 代わりに以下の方法を試してみてください。</p>
+
+<pre><code>function Date(n){
+    return ["Monday","Tuesday","Wednessday","Thursaday","Friday","Saturday","Sunday"][n%7 || 0];
+}
+function runCodeWithDateFunction(obj){
+    return Function('"use strict";return (' + obj + ')')()(
+        Date
+    );
+}
+console.log(runCodeWithDateFunction(
+   "function(Date){ return Date(5) }"
+))</code></pre>
+
+<p>上記のコードは、トリプルネストされた関数のために非効率的に遅く思えるかもしれませんが、上記の効率的なメソッドの利点を分析してみましょう：</p>
+
+<p>1.これにより、runCodeWithDateFunctionに渡された文字列のコードを縮小できます。</p>
+
+<p>2.関数呼び出しのオーバーヘッドが最小限に抑えられ、はるかに小さなコードサイズが利益に値する</p>
+
+<p>3.  <code>Function()</code> を使用すると、コードでパフォーマンスバタリング <code>"use strict";</code>をより簡単に使用できるようになります。</p>
+
+<p>4.コードは <code>eval()</code> を使用しないため、それ以外の場合よりもはるかに速くなります。</p>
+
+<p>最後に、縮小を検討しましょう。 上記のように  <code>Function()</code> を使用すると、 <code>runCodeWithDateFunction</code> に渡されるコード文字列をはるかに効率的に縮小することができます。なぜなら、関数の引数名は、下の縮小されたコードで見られるように縮小することができるからです。</p>
+
+<pre><code>console.log(Function('"use strict";return(function(a){return a(5)})')()(function(a){
+return"Monday Tuesday Wednessday Thursaday Friday Saturday Sunday".split(" ")[a%7||0]}));</code></pre>
+
+<p>また、eval（）やFunction（）の代わりに、一般的なユースケースに対して、より安全で（より高速な!）代替手段があります。</p>
+
+<p> </p>
+
+<p> </p>
+
+<p> </p>
+
+<h3 id="Accessing_member_properties" name="Accessing_member_properties">メンバのプロパティにアクセスする</h3>
+
+<p>プロパティ名からプロパティ自体への変換を行うのに <code>eval()</code> を使用してはいけません。コードが実行されるまで、アクセスしているオブジェクトのプロパティがわからない、という例について考えてみましょう。<code>eval()</code> を使ってこのように書けます :</p>
+
+<pre class="brush:js">var obj = { a: 20, b: 30 };
+var propname = getPropName();  // "a" か "b" が返される
+
+eval( "var result = obj." + propname );
+</pre>
+
+<p>しかしながら、この場合 <code>eval()</code> は不要です。実際、この使い方はお勧めできません。こういう場合、<a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Operators/Property_Accessors" title="メンバー演算子は、ドット表記法またはブラケット表記法を使用してオブジェクトのプロパティにアクセスする方法を提供します。">プロパティアクセス演算子</a>を使ったほうが、より早くて安全です。</p>
+
+<pre class="brush:js">var obj = { a: 20, b: 30 };
+var propname = getPropName();  // "a" か "b" が返される
+var result = obj[ propname ];  // obj[ "a" ] は obj.a と同じ意味
+</pre>
+
+<p>このメソッドを使用して子孫プロパティにアクセスすることもできます。 <code>eval()</code> を使うと以下のようになります：</p>
+
+<pre class="brush:js line-numbers  language-js"><code class="language-js"><span class="keyword token">var</span> obj <span class="operator token">=</span> <span class="punctuation token">{</span>a<span class="punctuation token">:</span> <span class="punctuation token">{</span>b<span class="punctuation token">:</span> <span class="punctuation token">{</span>c<span class="punctuation token">:</span> <span class="number token">0</span><span class="punctuation token">}</span><span class="punctuation token">}</span><span class="punctuation token">}</span><span class="punctuation token">;</span>
+<span class="keyword token">var</span> propPath <span class="operator token">=</span> <span class="function token">getPropPath</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">;</span>  <span class="comment token">// returns e.g. "a.b.c"</span>
+
+<span class="function token">eval</span><span class="punctuation token">(</span> <span class="string token">'var result = obj.'</span> <span class="operator token">+</span> propPath <span class="punctuation token">)</span><span class="punctuation token">;</span></code></pre>
+
+<p>ここで <code>eval()</code> を避けるには、プロパティのパスを分割し、さまざまなプロパティをループさせます。</p>
+
+<pre class="brush:js line-numbers  language-js"><code class="language-js"><span class="keyword token">function</span> <span class="function token">getDescendantProp</span><span class="punctuation token">(</span>obj<span class="punctuation token">,</span> desc<span class="punctuation token">)</span> <span class="punctuation token">{</span>
+  <span class="keyword token">var</span> arr <span class="operator token">=</span> desc<span class="punctuation token">.</span><span class="function token">split</span><span class="punctuation token">(</span><span class="string token">'.'</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+  <span class="keyword token">while</span> <span class="punctuation token">(</span>arr<span class="punctuation token">.</span>length<span class="punctuation token">)</span> <span class="punctuation token">{</span>
+    obj <span class="operator token">=</span> obj<span class="punctuation token">[</span>arr<span class="punctuation token">.</span><span class="function token">shift</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">]</span><span class="punctuation token">;</span>
+  <span class="punctuation token">}</span>
+  <span class="keyword token">return</span> obj<span class="punctuation token">;</span>
+<span class="punctuation token">}</span>
+
+<span class="keyword token">var</span> obj <span class="operator token">=</span> <span class="punctuation token">{</span>a<span class="punctuation token">:</span> <span class="punctuation token">{</span>b<span class="punctuation token">:</span> <span class="punctuation token">{</span>c<span class="punctuation token">:</span> <span class="number token">0</span><span class="punctuation token">}</span><span class="punctuation token">}</span><span class="punctuation token">}</span><span class="punctuation token">;</span>
+<span class="keyword token">var</span> propPath <span class="operator token">=</span> <span class="function token">getPropPath</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">;</span>  <span class="comment token">// returns e.g. "a.b.c"</span>
+<span class="keyword token">var</span> result <span class="operator token">=</span> <span class="function token">getDescendantProp</span><span class="punctuation token">(</span>obj<span class="punctuation token">,</span> propPath<span class="punctuation token">)</span><span class="punctuation token">;</span></code></pre>
+
+<p>同様にそのようにプロパティを設定する：</p>
+
+<pre class="brush:js line-numbers  language-js"><code class="language-js"><span class="keyword token">function</span> <span class="function token">setDescendantProp</span><span class="punctuation token">(</span>obj<span class="punctuation token">,</span> desc<span class="punctuation token">,</span> value<span class="punctuation token">)</span> <span class="punctuation token">{</span>
+  <span class="keyword token">var</span> arr <span class="operator token">=</span> desc<span class="punctuation token">.</span><span class="function token">split</span><span class="punctuation token">(</span><span class="string token">'.'</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+  <span class="keyword token">while</span> <span class="punctuation token">(</span>arr<span class="punctuation token">.</span>length <span class="operator token">&gt;</span> <span class="number token">1</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+    obj <span class="operator token">=</span> obj<span class="punctuation token">[</span>arr<span class="punctuation token">.</span><span class="function token">shift</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">]</span><span class="punctuation token">;</span>
+  <span class="punctuation token">}</span>
+  <span class="keyword token">return</span> obj<span class="punctuation token">[</span>arr<span class="punctuation token">[</span><span class="number token">0</span><span class="punctuation token">]</span><span class="punctuation token">]</span> <span class="operator token">=</span> value<span class="punctuation token">;</span>
+<span class="punctuation token">}</span>
+
+<span class="keyword token">var</span> obj <span class="operator token">=</span> <span class="punctuation token">{</span>a<span class="punctuation token">:</span> <span class="punctuation token">{</span>b<span class="punctuation token">:</span> <span class="punctuation token">{</span>c<span class="punctuation token">:</span> <span class="number token">0</span><span class="punctuation token">}</span><span class="punctuation token">}</span><span class="punctuation token">}</span><span class="punctuation token">;</span>
+<span class="keyword token">var</span> propPath <span class="operator token">=</span> <span class="function token">getPropPath</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">;</span>  <span class="comment token">// returns e.g. "a.b.c"</span>
+<span class="keyword token">var</span> result <span class="operator token">=</span> <span class="function token">setDescendantProp</span><span class="punctuation token">(</span>obj<span class="punctuation token">,</span> propPath<span class="punctuation token">,</span> <span class="number token">1</span><span class="punctuation token">)</span><span class="punctuation token">;</span>  <span class="comment token">// test.a.b.c will now be 1</span></code></pre>
+
+<h3 id="Use_functions_instead_of_evaluating_snippets_of_code" name="Use_functions_instead_of_evaluating_snippets_of_code">コード断片を評価する場合、代わりに関数を使う</h3>
+
+<p>JavaScript は関数を他の API の引数にしたり、変数やオブジェクトのプロパティに保存したりできる{{interwiki("wikipedia","第一級関数")}}の機能を備えています。多くの DOM API はこれを考慮して作られているので、次のように書くべきです。</p>
+
+<pre class="brush: js">// setTimeout(" ... ", 1000) を使う代わりに :
+setTimeout(function() { ... }, 1000); 
+
+// elt.setAttribute("onclick", " ... ") を使う代わりに :
+elt.addEventListener("click", function() { ... } , false); </pre>
+
+<p>文字列をつなげること無くパラメータから関数を作成したければ、<a href="/ja/docs/Web/JavaScript/Closures">クロージャ</a>を使う方法も便利です。</p>
+
+<h3 id="Parsing_JSON_(converting_strings_to_JavaScript_objects)" name="Parsing_JSON_(converting_strings_to_JavaScript_objects)">JSON の構文解析（文字列を JavaScript オブジェクトに変換）</h3>
+
+<p>データ文字列（例えば、文字列 <code>"[1, 2, 3]"</code> など）の変換に <code>eval()</code> を使いたいなら、{{Glossary("JSON")}} に切り替えるべきです。<a href="/ja/docs/Downloading_JSON_and_JavaScript_in_extensions">Downloading JSON and JavaScript in extensions</a> の記事を参考にしてください。</p>
+
+<p>{{Glossary("JSON")}} の構文は JavaScript 構文に比べ制限があり、多くの有効な JavaScript リテラルが {{Glossary("JSON")}} としては構文解析されないことに注意してください。例えば、末尾に付けられたコンマは {{Glossary("JSON")}} では許可されず、またオブジェクトリテラルのプロパティ名（キー）は引用符で囲まないといけません。あとで {{Glossary("JSON")}} として構文解析される文字列を生成する際は、{{Glossary("JSON")}} シリアライザを使うようにしましょう。</p>
+
+<h3 id="Pass_data_instead_of_code" name="Pass_data_instead_of_code">コードの代わりにデータを渡す</h3>
+
+<p>例えば、ウェブページの内容を取得できるよう設計された拡張であれば、JavaScript コードの代わりに <a href="/ja/docs/Web/XPath">XPath</a> を使って取得ルールを定義できます。</p>
+
+<h3 id="Run_code_with_limited_privileges" name="Run_code_with_limited_privileges">制限された権限でコードを実行する</h3>
+
+<p>どうしてもコードを実行したければ、制限された権限下での実行を検討しましょう。このアドバイスは、拡張機能や XUL アプリケーション上であれば <a href="/ja/docs/Components.utils.evalInSandbox">Components.utils.evalInSandbox</a> を使用すれば適用できます。</p>
+
+<h2 id="Examples" name="Examples">使用例</h2>
+
+<h3 id="Using_eval" name="Using_eval"><code>eval</code> を使用する</h3>
+
+<p>次のコードでは、<code>eval</code> を含むどちらの文も 42 を返します。最初のコードは文字列 "<code>x + y + 1</code>" を評価します。2 番目のコードは文字列 "<code>42</code>" を評価します。</p>
+
+<pre class="brush:js">var x = 2;
+var y = 39;
+var z = "42";
+eval("x + y + 1"); // 42 が返される
+eval(z);           // 42 が返される
+</pre>
+
+<h3 id="Using_eval_to_evaluate_a_string_of_JavaScript_statements" name="Using_eval_to_evaluate_a_string_of_JavaScript_statements">JavaScript 文からなる文字列の評価に <code>eval</code> を使用する</h3>
+
+<p>次の例は、文字列 <code>str</code> の評価に <code>eval</code> を使用しています。この文字列は <code>console.log()</code> 関数を使い、<code>x</code> が 5 なら <code>z</code> に 42 を代入し、それ以外の場合は <code>z</code> に 0 を代入してログに表示させる JavaScript 文で構成されています。2 番目の文が実行される時、<code>eval</code> によってこれらの文が実行され、そして文の集まりを評価して <code>z</code> に代入される値を返します。</p>
+
+<pre class="brush:js">var x = 5;
+var str = "if (x == 5) {console.log('z is 42'); z = 42;} else z = 0; ";
+
+console.log("z is ", eval(str));</pre>
+
+<p>複数の値を定義した場合、最後の値が返されます。</p>
+
+<pre class="brush:js line-numbers  language-js"><code class="language-js"><span class="keyword token">var</span> x <span class="operator token">=</span> <span class="number token">5</span><span class="punctuation token">;</span>
+<span class="keyword token">var</span> str <span class="operator token">=</span> <span class="string token">"if (x == 5) {console.log('z is 42'); z = 42; x = 420; } else z = 0;"</span><span class="punctuation token">;</span> 
+
+console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(</span><span class="string token">'x is '</span><span class="punctuation token">,</span> <span class="function token">eval</span><span class="punctuation token">(</span>str<span class="punctuation token">)</span><span class="punctuation token">)</span><span class="punctuation token">;</span> <span class="comment token">// z is 42  x is 420</span></code></pre>
+
+<h3 id="Last_expression_is_evaluated" name="Last_expression_is_evaluated">評価される最後の式について</h3>
+
+<p><code>eval</code> は最後に評価された式の値を返します。</p>
+
+<pre class="brush:js">var str = "if ( a ) { 1+1; } else { 1+2; }";
+var a = true;
+var b = eval(str);  // 2 が返される
+ 
+console.log("b is : " + b);
+
+a = false;
+b = eval(str);  // 3 が返される
+
+console.log("b is : " + b); // "b is : 3"</pre>
+
+<h3 id="eval_as_a_string_defining_function_requires_(_and_)_as_prefix_and_suffix" name="eval_as_a_string_defining_function_requires_(_and_)_as_prefix_and_suffix">先頭と末尾に丸括弧が必要な関数定義を含む文字列を <code>eval</code> で評価した場合</h3>
+
+<pre class="brush:js">var fctStr1 = "function a() {}"
+var fctStr2 = "(function a() {})"
+var fct1 = eval(fctStr1)  // undefined が返される
+var fct2 = eval(fctStr2)  // 関数が返される
+</pre>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">状況</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES1')}}</td>
+   <td>{{Spec2('ES1')}}</td>
+   <td>初期定義。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-15.1.2.1', 'eval')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-eval-x', 'eval')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-eval-x', 'eval')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザ実装状況</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.builtins.eval")}}</p>
+
+<h2 id="Gecko-specific_notes" name="Gecko-specific_notes">Firefox 特有の註記事項</h2>
+
+<ul>
+ <li>歴史的に、<code>eval()</code> はオプションとして評価が実行される際のコンテキストとなるオブジェクトを指定する第二引数がありました。この引数は非標準なもので、Firefox 4 以降 からは削除されました。{{bug(531675)}} をご覧ください。</li>
+</ul>
+
+<h2 id="See_also" name="See_also">関連項目</h2>
+
+<ul>
+ <li>{{jsxref("Global_Objects/uneval", "uneval()")}}</li>
+ <li><a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Operators/Property_Accessors">Property accessors</a></li>
+ <li><a href="https://developer.mozilla.org/ja/Add-ons/WebExtensions/Content_scripts#Using_eval()_in_content_scripts">WebExtensions: Using eval in content scripts</a></li>
+</ul>

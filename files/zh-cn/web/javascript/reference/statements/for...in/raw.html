@@ -1,0 +1,157 @@
+<div>{{jsSidebar("Statements")}}</div>
+
+<p><strong><code>for...in</code>语句</strong>以任意顺序遍历一个对象的除<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol">Symbol</a>以外的<a href="/zh-CN/docs/Web/JavaScript/Enumerability_and_ownership_of_properties">可枚举</a>属性。</p>
+
+<h2 id="Syntax" name="Syntax">语法</h2>
+
+<pre>for (<var>variable</var> in <var>object</var>)
+  statement</pre>
+
+<dl>
+ <dt><code>variable</code></dt>
+ <dd>在每次迭代时，variable会被赋值为不同的属性名。</dd>
+</dl>
+
+<dl>
+ <dt><code>object</code></dt>
+ <dd>非Symbol类型的可枚举属性被迭代的对象。</dd>
+</dl>
+
+<h2 id="描述">描述</h2>
+
+<p><code>for...in</code> 循环只遍历可枚举属性（包括它的原型链上的可枚举属性）。像 <code>Array</code>和 <code>Object</code>使用内置构造函数所创建的对象都会继承自<code>Object.prototype</code>和<code>String.prototype</code>的不可枚举属性，例如 {{jsxref("String")}} 的 {{jsxref("String.indexOf", "indexOf()")}}  方法或 {{jsxref("Object")}}的{{jsxref("Object.toString", "toString()")}}方法。循环将遍历对象本身的所有可枚举属性，以及对象从其构造函数原型中继承的属性（更接近原型链中对象的属性覆盖原型属性）。</p>
+
+<h4 id="删除，添加或者修改属性">删除，添加或者修改属性</h4>
+
+<p><code>for...in</code> 循环以任意序迭代一个对象的属性（请参阅{{jsxref("Operators/delete", "delete")}}运算符，了解为什么不能依赖于迭代的表面有序性，至少在跨浏览器设置中）。如果一个属性在一次迭代中被修改，在稍后被访问，其在循环中的值是其在稍后时间的值。一个在被访问之前已经被删除的属性将不会在之后被访问。在迭代进行时被添加到对象的属性，可能在之后的迭代被访问，也可能被忽略。</p>
+
+<p>通常，在迭代过程中最好不要在对象上进行添加、修改或者删除属性的操作，除非是对当前正在被访问的属性。这里并不保证是否一个被添加的属性在迭代过程中会被访问到，不保证一个修改后的属性（除非是正在被访问的）会在修改前或者修改后被访问，不保证一个被删除的属性将会在它被删除之前被访问。</p>
+
+<h3 id="数组迭代和_for...in" style="line-height: 24px; font-size: 1.71428571428571rem;">数组迭代和 <code>for...in</code></h3>
+
+<div class="note">
+<p><strong>提示：</strong><code>for...in</code>不应该用于迭代一个 {{jsxref("Array")}}，其中索引顺序很重要。</p>
+</div>
+
+<p>数组索引只是具有整数名称的枚举属性，并且与通用对象属性相同。不能保证<code>for ... in</code>将以任何特定的顺序返回索引。<code>for ... in</code>循环语句将返回所有可枚举属性，包括非整数类型的名称和继承的那些。</p>
+
+<p>因为迭代的顺序是依赖于执行环境的，所以数组遍历不一定按次序访问元素。因此当迭代访问顺序很重要的数组时，最好用整数索引去进行{{jsxref("Statements/for", "for")}}循环（或者使用 {{jsxref("Array.prototype.forEach()")}} 或 {{jsxref("Statements/for...of", "for...of")}} 循环）。</p>
+
+<h3 id="仅迭代自身的属性" style="line-height: 24px; font-size: 1.71428571428571rem;">仅迭代自身的属性</h3>
+
+<p>如果你只要考虑对象本身的属性，而不是它的原型，那么使用 {{jsxref("Object.getOwnPropertyNames", "getOwnPropertyNames()")}} 或执行 {{jsxref("Object.prototype.hasOwnProperty", "hasOwnProperty()")}} 来确定某属性是否是对象本身的属性（也能使用{{jsxref("Object.prototype.propertyIsEnumerable", "propertyIsEnumerable")}}）。或者，如果你知道不会有任何外部代码干扰，您可以使用检查方法扩展内置原型。</p>
+
+<h2 id="Example" name="Example">为什么用for ... in?</h2>
+
+<p><code>for ... in</code>是为遍历对象属性而构建的，不建议与数组一起使用，数组可以用<code>Array.prototype.forEach()</code>和<code>for ... of</code>，那么<code>for ... in</code>的到底有什么用呢？</p>
+
+<p>它最常用的地方应该是用于调试，可以更方便的去检查对象属性（通过输出到控制台或其他方式）。尽管对于处理存储数据，数组更实用些，但是你在处理有<code>key-value</code>数据（比如属性用作“键”），需要检查其中的任何键是否为某值的情况时，还是推荐用<code>for ... in</code>。</p>
+
+<h2 id="Example" name="Example">示例</h2>
+
+<p>下面的函数接受一个对象作为参数。被调用时迭代传入对象的所有可枚举属性然后返回一个所有属性名和其对应值的字符串。</p>
+
+<pre class="brush: js">var obj = {a:1, b:2, c:3};
+    
+for (var prop in obj) {
+  console.log("obj." + prop + " = " + obj[prop]);
+}
+
+// Output:
+// "obj.a = 1"
+// "obj.b = 2"
+// "obj.c = 3"</pre>
+
+<p>下面的函数说明了{{jsxref("Object.prototype.hasOwnProperty", "hasOwnProperty()")}}的用法：继承的属性不显示。</p>
+
+<pre class="brush: js">var triangle = {a: 1, b: 2, c: 3};
+
+function ColoredTriangle() {
+  this.color = 'red';
+}
+
+ColoredTriangle.prototype = triangle;
+
+var obj = new ColoredTriangle();
+
+for (var prop in obj) {
+  if (obj.hasOwnProperty(prop)) {
+    console.log(`obj.${prop} = ${obj[prop]}`);
+  } 
+}
+
+// Output:
+// "obj.color = red"</pre>
+
+<h2 id="规范">规范</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-for-in-and-for-of-statements', 'for...in statement')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td></td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-for-in-and-for-of-statements', 'for...in statement')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td></td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-12.6.4', 'for...in statement')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td></td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES3', '#sec-12.6.4', 'for...in statement')}}</td>
+   <td>{{Spec2('ES3')}}</td>
+   <td></td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES1', '#sec-12.6.3', 'for...in statement')}}</td>
+   <td>{{Spec2('ES1')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="浏览器兼容">浏览器兼容</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.statements.for_in")}}</p>
+
+<h2 id="兼容性：初始化函数表达式">兼容性：初始化函数表达式</h2>
+
+<p>在 SpiderMonkey 40 {{geckoRelease(40)}} 版本之前，可以在使用一个初始化表达式（<code>i=0</code>）在一个<code>for...in</code>循环中：</p>
+
+<pre class="brush: js example-bad">var obj = {a: 1, b: 2, c: 3};
+for (var i = 0 in obj) {
+  console.log(obj[i]);
+}
+// 1
+// 2
+// 3
+</pre>
+
+<p><span style="line-height: 1.5;">这个非标准行为现在在版本40及更高版本中被忽略，并将在严格模式（{{bug(748550)}} 和 </span>{{bug(1164741)}}）<span style="line-height: 1.5;">中呈现{{jsxref("SyntaxError")}}（"<a href="/zh-CN/docs/Web/JavaScript/Reference/Errors/Invalid_for-in_initializer">for-in loop head declarations may not have initializers</a>"）错误。</span></p>
+
+<p><span style="line-height: 1.5;">像其他引擎 V8(Chrome)，</span>Chakra (IE/Edge)， JSC (WebKit/Safari) 正在研究去除这种不标准的行为。</p>
+
+<h2 id="相关链接">相关链接</h2>
+
+<ul>
+ <li>{{jsxref("Statements/for...of", "for...of")}}  一个类似的迭代属性值的语句</li>
+ <li>{{jsxref("Statements/for_each...in", "for each in")}} 一个类似的但是迭代的是对象的属性的值而不是其属性名字的语句（过时的）</li>
+ <li>{{jsxref("Statements/for", "for")}}</li>
+ <li>迭代器和构造器（uses the <code>for...in</code> syntax）</li>
+ <li><a href="/zh-CN/docs/Web/JavaScript/Enumerability_and_ownership_of_properties">属性的可枚举性和所有权</a></li>
+ <li>{{jsxref("Object.getOwnPropertyNames()")}}</li>
+ <li>{{jsxref("Object.prototype.hasOwnProperty()")}}</li>
+ <li>{{jsxref("Array.prototype.forEach()")}}</li>
+</ul>

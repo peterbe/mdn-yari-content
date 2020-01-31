@@ -1,0 +1,130 @@
+<div>{{jsSidebar("More")}}</div>
+
+<p>ECMAScript第５版では、すべての主要なブラウザー(IE10 を含む)で今実装されている <a href="/ja/docs/JavaScript/Strict_mode" title='/ja/docs/JavaScript/Strict_mode"'>strict モード</a>が導入されています。ウェブブラウザーに厳密 (strict) に解釈させるのは簡単ですが (ソースコードの先頭に<code>'use strict';</code>を追加するだけ)、既存のコードベースを strict モードに移行するには、もう少し作業が必要です。</p>
+
+<p>この記事では、開発者のためのガイダンスを提供することを目的とします。</p>
+
+<h2 id="Gradual_transition" name="Gradual_transition">段階的移行</h2>
+
+<p>strict モードは、段階的に移行できるように設計されています。ファイルごとに個別に変更することもできますし、関数の粒度で strict モードにコードを移行することも可能です。</p>
+
+<h2 id="Differences_from_non-strict_to_strict" name="Differences_from_non-strict_to_strict">非strict と strict の違い</h2>
+
+<h3 id="Syntax_errors" name="Syntax_errors">構文エラー</h3>
+
+<p><code>'use strict';</code>を追加すると、スクリプトが実行される前に、以下のケースでは{{jsxref("SyntaxError")}} をスローします。</p>
+
+<ul>
+ <li>8進数構文 <code>var n = 023;</code></li>
+ <li><a href="/docs/Web/JavaScript/Reference/Statements/with" title="/docs/JavaScript/Reference/Statements/with"><code>with</code></a> ステートメント</li>
+ <li>変数名での <code><a href="/docs/Web/JavaScript/Reference/Operators/delete" title="/docs/JavaScript/Reference/Operators/delete">delete</a></code> の使用 <code>delete myVariable</code>;</li>
+ <li>変数または関数の引数名としての <a href="/docs/Web/JavaScript/Reference/Global_Objects/eval"><code>eval</code></a> や <a href="/docs/Web/JavaScript/Reference/Functions/arguments"><code>arguments</code></a> の使用</li>
+ <li>(ECMAScript 2015 以前での) 新しい <a href="/docs/Web/JavaScript/Reference/Lexical_grammar#Keywords">reserved keywords</a> の使用 (<code>implements</code>, <code>interface</code>, <code>let</code>, <code>package</code>, <code>private</code>, <code>protected</code>, <code>public</code>, <code>static</code>,  <code>yield</code>)</li>
+ <li>ブロック内での関数宣言 <code>if(a&lt;b){ function f(){} }</code></li>
+ <li>明らかなエラー
+  <ul>
+   <li>オブジェクトリテラルでプロパティ名に同じ名前を 2 回宣言<code>{a: 1, b: 3, a: 7}</code> これは ECMAScript 2015 ではこのケースはもはや存在しません({{bug(1041128)}})。</li>
+   <li>同じ名前の 2 つの関数の引数の宣言<code>function f(a, b, b){}</code></li>
+  </ul>
+ </li>
+</ul>
+
+<p>単純なエラーや悪習を明らかにするので、こういったエラーは良いものです。これらのエラーは、コードが実行される前に発生します。</p>
+
+<h3 id="New_runtime_errors" name="New_runtime_errors">新しいランタイムエラー</h3>
+
+<p>JavaScript はかつて実行されたものがエラーとなるコンテキストに黙って陥っていました。strict モードでは、そのような場合にエラーをスローします。もしコードベースに、このような場合が含まれているなら、何も壊れていないことを確認するために、テストが必要です。繰り返しますが、関数の粒度レベルで発生する可能性があります。</p>
+
+<h4 id="Setting_a_value_to_an_undeclared_variable" name="Setting_a_value_to_an_undeclared_variable">未宣言変数への値設定</h4>
+
+<pre class="brush: js">function f(x){
+  'use strict';
+  var a = 12;
+  b = a + x * 35; // エラー!
+}
+f();
+</pre>
+
+<p>これはめったに期待される効果はないグローバルオブジェクトの値を変更するために使用されます。本当にグローバルオブジェクトに値を設定したい場合は、それを引数として渡し、明示的にプロパティとして割り当てます:</p>
+
+<pre class="brush: js">var global = this; // トップレベルのコンテキストでは、"this" は常に
+                   // グローバルオブジェクトを参照します
+function f(x){
+  'use strict';
+  var a = 12;
+  global.b = a + x * 35;
+}
+f();
+</pre>
+
+<h4 id="Trying_to_delete_a_non-configurable_property" name="Trying_to_delete_a_non-configurable_property">設定不可能なプロパティの削除</h4>
+
+<pre class="brush: js">'use strict';
+delete Object.prototype; // エラー!
+</pre>
+
+<p>非 strict モードでは、ユーザーの期待に反し、黙って失敗します。</p>
+
+<h4 id="Poisoned_arguments_and_function_properties" name="Poisoned_arguments_and_function_properties">ポイズン引数と関数プロパティ</h4>
+
+<p><code>arguments.callee</code>, <code>arguments.caller</code>, <code>anyFunction.caller</code>, または <code>anyFunction.arguments</code> にアクセスすると strict モードではエラーをスローします。唯一の合法的なユースケースは、以下のように関数を再利用することでしょう。</p>
+
+<pre class="brush: js">// example taken from vanillajs: http://vanilla-js.com/
+var s = document.getElementById('thing').style;
+s.opacity = 1;
+(function(){ 
+  if((s.opacity-=.1) &lt; 0)
+    s.display="none";
+  else
+    setTimeout(arguments.callee, 40);
+})();</pre>
+
+<p>上記は以下のように書き換えられます。</p>
+
+<pre class="brush: js">'use strict';
+var s = document.getElementById('thing').style;
+s.opacity = 1;
+(function fadeOut(){ // name the function
+  if((s.opacity-=.1) &lt; 0)
+    s.display="none";
+  else
+    setTimeout(fadeOut, 40); // 関数名を使用する
+})();</pre>
+
+<h3 id="Semantic_differences" name="Semantic_differences">意味的な違い</h3>
+
+<p>これらの違いは非常に微妙な違いです。テストスイートはこの種の微妙な差を捉えない可能性があります。コードベースを慎重に見直し、おそらくこれらの違いは、コードの意味に影響を与えないことを確認するために必要になります。幸いなことに、この慎重な検討は、関数の粒度で徐々に行えます。</p>
+
+<h4 id="this_in_function_calls" name="this_in_function_calls">関数呼び出しでの <code>this</code></h4>
+
+<p><code>f()</code> のような関数呼び出しで、<code>this</code> 値はグローバルオブジェクトでした。strict モードでは、今<code>undefined</code> です。関数が <code><a href="/docs/Web/JavaScript/Reference/Global_Objects/Function/call" title="/docs/Core_JavaScript_1.5_Reference/Global_Objects/Function/call">call</a></code> または <code><a href="/docs/Web/JavaScript/Reference/Global_Objects/Function/apply" title="/docs/Core_JavaScript_1.5_Reference/Global_Objects/Function/apply">apply</a></code> で呼び出されるとき、値がプリミティブな値であった場合、これはオブジェクト(または、<code>undefined</code> や <code>null</code> に対してはグローバルオブジェクト)にボックス化されました. strict モードでは、値は、変換または交換せずに直接渡されます。</p>
+
+<h4 id="arguments_が名前付きの関数の引数をエイリアスしない"><code>arguments</code> が名前付きの関数の引数をエイリアスしない</h4>
+
+<p>非strict モードでは、<code>arguments</code> オブジェクト内の値を更新すると、対応する名前付きの引数を更新します。これは JavaScript エンジンのための複雑な最適化を行い、読み/理解しにくいコードを作りました。strict モードでは、<code>arguments</code> オブジェクトは名前付き引数と同じ値で生成され初期化されています。しかし、<code>arguments</code> オブジェクトか名前付きの引数への変更はお互いに反映されていません。</p>
+
+<h4 id="Change_to_eval" name="Change_to_eval"><code>eval</code> への変更</h4>
+
+<p>strict モードコードでは、<code>eval</code> は呼び出される範囲で新しい変数を生成しません。また、strict モードでは、もちろん、文字列は strict モードのルールで評価されます。徹底的なテストは確かに何も破綻しないのを確認するために実行する必要があります。本当に必要ではない場合、eval を使用しないのが、別の実用的な解決策であるかもしれません。</p>
+
+<h2 id="Strictness-neutral_code" name="Strictness-neutral_code">厳密性に中立なコード</h2>
+
+<p>strict コードを strict モードに移行するポテンシャルの"downside"は、セマンティクスは、strict モードを実装していないレガシーブラウザーでは異なる場合があることです。(悪い連結または縮小など)いくつかのまれなできごとで、コードもまた、それを書いてテストした通りのモードで実行されない場合があります。ここでは、コードを厳密に中立にするルールがあります。:</p>
+
+<ol>
+ <li>strict としてコードを記述し、strict 専用のエラー (上記「新しいランタイムエラー」セクションにあるもの) がスローされないことを確認しています。</li>
+ <li>意味の違いから離れる
+  <ol>
+   <li><code>eval</code>: 何をやっているか知っている場合にのみ、それを使用してください。</li>
+   <li><code>arguments</code>: 常に名前を経由して関数引数にアクセスしてください。または、使用している arguments オブジェクトのコピーを、下記を関数の最初の行に入れることで実行してください:<br>
+    <code>var args = Array.prototype.slice.call(arguments)</code></li>
+   <li><code>this</code>: 自ら生成したオブジェクトへ参照するときのみ <code>this</code> を使用してください。</li>
+  </ol>
+ </li>
+</ol>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li><a href="/ja/docs/Web/JavaScript/Strict_mode">Strict mode</a></li>
+</ul>

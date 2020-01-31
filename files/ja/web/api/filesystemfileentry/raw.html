@@ -1,0 +1,94 @@
+<div>{{APIRef("File System API")}}{{Non-standard_header}}</div>
+
+<p><a href="https://developer.mozilla.org/en/DOM/File_API/File_System_API" title="en/DOM/File_API/File_System_API">File System API</a> の <strong><code>FileSystemFileEntry</code></strong> インターフェイスは、ファイルシステム内のファイルを表します。<br>
+ このファイルには、ファイルの属性と、ファイルを読むために使用可能な {{domxref("File")}} オブジェクトを作成する {{domxref("FileSystemFileEntry.file", "file()")}} メソッドも含まれます。</p>
+
+<div class="note">
+<p>これは非標準の API なので、仕様が標準化されていないため、すべてのブラウザで実装されているわけではなく、実装するブラウザのほんの一部しか実装できないことに注意してください。詳細については {{anch("Browser compatibility")}} セクションを確認してください。</p>
+</div>
+
+<h2 id="プロパティ" style="line-height: 30px; font-size: 2.14285714285714rem;">プロパティ</h2>
+
+<p><em>親インターフェイス {{domxref("FileSystemEntry")}} のプロパティを継承しますが、このインターフェイスに固有のプロパティはありません。</em></p>
+
+<h2 id="メソッド">メソッド</h2>
+
+<dl>
+ <dt>{{domxref("FileSystemFileEntry.file", "file()")}}</dt>
+ <dd>ファイルの読み込みに使用できる新しい {{domxref("FileWriter")}} オブジェクトを作成します。</dd>
+</dl>
+
+<h3 id="basic_concepts" name="basic_concepts">廃止されたメソッド</h3>
+
+<dl>
+ <dt>{{domxref("FileSystemFileEntry.createWriter", "createWriter()")}} {{obsolete_inline}}</dt>
+ <dd>新しい {{domxref("FileWriter")}} オブジェクトを作成し、ファイルシステムエントリで表されるファイルに書き込むことができます。</dd>
+</dl>
+
+<h2 id="basic_concepts" name="basic_concepts">基本のコンセプト</h2>
+
+<p>コンテンツをファイルに書き込むには、{{domxref("FileSystemFileEntry.createWriter", "createWriter()")}} を呼び出して {{domxref("FileWriter")}} オブジェクトを作成します。 ファイルを読み込むには、{{domxref("FileSystemFileEntry.file", "file()")}} を呼び出すことによってその内容を表す {{domxref("File")}} オブジェクトを取得します。</p>
+
+<h3 id="example" name="example">例</h3>
+
+<p>次のコードは "<code>log.txt"</code> という名前の空のファイルを (存在しない場合は) 作成し、テキスト "Meow" で埋めます。success コールバックの内部では、イベントハンドラは {{event("error")}} イベントと {{event("writeend")}} イベントを処理するように設定されています。 テキストデータは、blobを作成し、それにテキストを追加し、blobを {{domxref("FileWriter.write()")}} に渡すことによってファイルに書き込まれます。</p>
+
+<pre class="brush: js">function onInitFs(fs) {
+  fs.root.getFile('log.txt', {create: true}, function(fileEntry) {
+
+    // Create a FileWriter object for our FileSystemFileEntry (log.txt).
+    fileEntry.createWriter(function(fileWriter) {
+      fileWriter.onwriteend = function(e) {
+        console.log('Write completed.');
+      };
+
+      fileWriter.onerror = function(e) {
+        console.log('Write failed: ' + e.toString());
+      };
+
+      // Create a new Blob and write it to log.txt.
+      var bb = new BlobBuilder();
+      bb.append('Meow');
+      
+      fileWriter.write(bb.getBlob('text/plain'));
+    }, errorHandler);
+
+  }, errorHandler);
+
+}
+
+window.requestFileSystem(window.TEMPORARY, 1024*1024, onInitFs, errorHandler);</pre>
+
+<h2 id="仕様">仕様</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">策定状況</th>
+   <th scope="col">備考</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName('File System API')}}</td>
+   <td>{{Spec2('File System API')}}</td>
+   <td>提案された API のドラフト</td>
+  </tr>
+ </tbody>
+</table>
+
+<p>この API には、公式の W3C または WHATWG 仕様はありません。</p>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザの互換性</h2>
+
+<div class="hidden">このページの互換表は構造化データから生成されます。データに貢献したい場合は <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> をチェックし、プルリクエストを送信してください。</div>
+
+<p>{{Compat("api.FileSystemFileEntry")}}</p>
+
+<h2 id="あわせて参照">あわせて参照</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Web/API/File_and_Directory_Entries_API">File and Directory Entries API</a></li>
+ <li><a href="/en-US/docs/Web/API/File_and_Directory_Entries_API/Introduction">Introduction to the File System API</a></li>
+</ul>

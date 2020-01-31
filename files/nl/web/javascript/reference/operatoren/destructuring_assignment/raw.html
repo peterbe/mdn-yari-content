@@ -1,0 +1,447 @@
+<div>{{jsSidebar("Operators")}}</div>
+
+<p>The <strong>destructuring assignment</strong> syntax is a JavaScript expression that makes it possible to extract data from arrays or objects into distinct variables.</p>
+
+<h2 id="Syntax">Syntax</h2>
+
+<pre class="brush:js">var a, b, rest;
+[a, b] = [1, 2];
+console.log(a); // 1
+console.log(b); // 2
+
+[a, b, ...rest] = [1, 2, 3, 4, 5];
+console.log(a); // 1
+console.log(b); // 2
+console.log(rest); // [3, 4, 5]
+
+({a, b} = {a:1, b:2});
+console.log(a); // 1
+console.log(b); // 2
+
+({a, b, ...rest} = {a:1, b:2, c:3, d:4}); 
+// ES2016 - not implemented in Firefox 47a01
+</pre>
+
+<h2 id="Description">Description</h2>
+
+<p>The object and array literal expressions provide an easy way to create <em>ad hoc</em> packages of data.</p>
+
+<pre class="brush: js">var x = [1, 2, 3, 4, 5];</pre>
+
+<p>The destructuring assignment uses similar syntax, but on the left-hand side of the assignment to define what elements to extract from the sourced variable.</p>
+
+<pre class="brush: js">var x = [1, 2, 3, 4, 5];
+var [y, z] = x;
+console.log(y); // 1
+console.log(z); // 2
+</pre>
+
+<p>This capability is similar to features present in languages such as Perl and Python.</p>
+
+<h2 id="Array_destructuring">Array destructuring</h2>
+
+<h3 id="Basic_variable_assignment">Basic variable assignment</h3>
+
+<pre class="brush: js">var foo = ["one", "two", "three"];
+
+var [one, two, three] = foo;
+console.log(one); // "one"
+console.log(two); // "two"
+console.log(three); // "three"
+</pre>
+
+<h3 id="Assignment_separate_from_declaration">Assignment separate from declaration</h3>
+
+<p>A variable can be assigned its value via destructuring separate from the variable's declaration.</p>
+
+<pre class="brush:js">var a, b;
+
+[a, b] = [1, 2];
+console.log(a); // 1
+console.log(b); // 2
+</pre>
+
+<h3 id="Default_values">Default values</h3>
+
+<p>A variable can be assigned a default, in the case that the value pulled from the array is <code>undefined</code>.</p>
+
+<pre class="brush: js">var a, b;
+
+[a=5, b=7] = [1];
+console.log(a); // 1
+console.log(b); // 7
+</pre>
+
+<h3 id="Swapping_variables">Swapping variables</h3>
+
+<p>Two variables values can be swapped in one destructuring expression.</p>
+
+<p>Without destructuring assignment, swapping two values requires a temporary variable (or, in some low-level languages, the <a class="external" href="http://en.wikipedia.org/wiki/XOR_swap">XOR-swap trick</a>).</p>
+
+<pre class="brush:js">var a = 1;
+var b = 3;
+
+[a, b] = [b, a];
+console.log(a); // 3
+console.log(b); // 1
+</pre>
+
+<h3 id="Parsing_an_array_returned_from_a_function">Parsing an array returned from a function</h3>
+
+<p>It's always been possible to return an array from a function. Destructuring can make working with an array return value more concise.</p>
+
+<p>In this example, <code>f()</code> returns the values <code>[1, 2]</code> as its output, which can be parsed in a single line with destructuring.</p>
+
+<pre class="brush:js">function f() {
+  return [1, 2];
+}
+
+var a, b; 
+[a, b] = f(); 
+console.log(a); // 1
+console.log(b); // 2
+</pre>
+
+<h3 id="Ignoring_some_returned_values">Ignoring some returned values</h3>
+
+<p>You can ignore return values that you're not interested in:</p>
+
+<pre class="brush:js">function f() {
+  return [1, 2, 3];
+}
+
+var [a, , b] = f();
+console.log(a); // 1
+console.log(b); // 3
+</pre>
+
+<p>You can also ignore all returned values:</p>
+
+<pre class="brush:js">[,,] = f();
+</pre>
+
+<h3 id="Pulling_values_from_a_regular_expression_match">Pulling values from a regular expression match</h3>
+
+<p>When the regular expression <code><a href="/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/exec"> exec()</a></code> method finds a match, it returns an array containing first the entire matched portion of the string and then the portions of the string that matched each parenthesized group in the regular expression. Destructuring assignment allows you to pull the parts out of this array easily, ignoring the full match if it is not needed.</p>
+
+<pre class="brush:js">var url = "https://developer.mozilla.org/en-US/Web/JavaScript";
+
+var parsedURL = /^(\w+)\:\/\/([^\/]+)\/(.*)$/.exec(url);
+console.log(parsedURL); // ["https://developer.mozilla.org/en-US/Web/JavaScript", "https", "developer.mozilla.org", "en-US/Web/JavaScript"]
+
+var [, protocol, fullhost, fullpath] = parsedURL;
+
+console.log(protocol); // "https"
+</pre>
+
+<h2 id="Object_destructuring">Object destructuring</h2>
+
+<h3 id="Basic_assignment">Basic assignment</h3>
+
+<pre class="brush: js">var o = {p: 42, q: true};
+var {p, q} = o;
+
+console.log(p); // 42
+console.log(q); // true 
+</pre>
+
+<h3 id="Assignment_without_declaration">Assignment without declaration</h3>
+
+<p>A variable can be assigned its value with destructuring separate from its declaration.</p>
+
+<pre class="brush:js">var a, b;
+
+({a, b} = {a:1, b:2});</pre>
+
+<div class="note">
+<p>The <code>( .. )</code> around the assignment statement is required syntax when using object literal destructuring assignment without a declaration.</p>
+
+<p><code>{a, b} = {a:1, b:2}</code> is not valid stand-alone syntax, as the <code>{a, b}</code> on the left-hand side is considered a block and not an object literal.</p>
+
+<p>However, <code>({a, b} = {a:1, b:2})</code> is valid, as is <code>var {a, b} = {a:1, b:2}</code></p>
+</div>
+
+<h3 id="Assigning_to_new_variable_names">Assigning to new variable names</h3>
+
+<p>A variable can be extracted from an object and assigned to a variable with a different name than the object property.</p>
+
+<pre class="brush: js">var o = {p: 42, q: true};
+var {p: foo, q: bar} = o;
+ 
+console.log(foo); // 42 
+console.log(bar); // true  </pre>
+
+<h3 id="Default_values_2">Default values</h3>
+
+<p>A variable can be assigned a default, in the case that the value pulled from the object is <code>undefined</code>.</p>
+
+<pre class="brush: js">var {a=10, b=5} = {a: 3};
+
+console.log(a); // 3
+console.log(b); // 5</pre>
+
+<h3 id="Setting_a_function_parameter's_default_value">Setting a function parameter's default value</h3>
+
+<h4 id="ES5_version">ES5 version</h4>
+
+<pre class="brush: js">function drawES5Chart(options) {
+  options = options === undefined ? {} : options;
+  var size = options.size === undefined ? 'big' : options.size;
+  var cords = options.cords === undefined ? { x: 0, y: 0 } : options.cords;
+  var radius = options.radius === undefined ? 25 : options.radius;
+  console.log(size, cords, radius);
+  // now finally do some chart drawing
+}
+
+drawES5Chart({
+  cords: { x: 18, y: 30 },
+  radius: 30
+});</pre>
+
+<h4 id="ES2015_version">ES2015 version</h4>
+
+<pre class="brush: js">function drawES2015Chart({size = 'big', cords = { x: 0, y: 0 }, radius = 25} = {}) {
+  console.log(size, cords, radius);
+  // do some chart drawing
+}
+
+// In Firefox, default values for destructuring assignments are not yet implemented (as described below). 
+// The workaround is to write the parameters in the following way:
+// ({size: size = 'big', cords: cords = { x: 0, y: 0 }, radius: radius = 25} = {})
+
+drawES2015Chart({
+  cords: { x: 18, y: 30 },
+  radius: 30
+});</pre>
+
+<div class="note">
+<p>In Firefox, default values for destructuring assignments are not yet implemented: var { x = 3 } = {} and var [foo = "bar"] = []. See {{bug(932080)}} for destructured default values in functions.</p>
+</div>
+
+<h3 id="Module_(non-ES2015)_loading">Module (non-ES2015) loading</h3>
+
+<p>Destructuring can help to load specific subsets of a non-ES2015 module like here in the <a href="/en-US/Add-ons/SDK">Add-on SDK</a>:</p>
+
+<pre class="brush: js">const { Loader, main } = require('toolkit/loader');
+</pre>
+
+<div class="note">
+<p>The <code>import</code> statement in ES2015 behaves similarly to destructuring, but it is important to note that it is not actually destructuring.</p>
+</div>
+
+<h3 id="Nested_object_and_array_destructuring">Nested object and array destructuring</h3>
+
+<pre class="brush:js">var metadata = {
+    title: "Scratchpad",
+    translations: [
+       {
+        locale: "de",
+        localization_tags: [ ],
+        last_edit: "2014-04-14T08:43:37",
+        url: "/de/docs/Tools/Scratchpad",
+        title: "JavaScript-Umgebung"
+       }
+    ],
+    url: "/en-US/docs/Tools/Scratchpad"
+};
+
+var { title: englishTitle, translations: [{ title: localeTitle }] } = metadata;
+
+console.log(englishTitle); // "Scratchpad"
+console.log(localeTitle);  // "JavaScript-Umgebung"</pre>
+
+<h3 id="For_of_iteration_and_destructuring">For of iteration and destructuring</h3>
+
+<pre class="brush: js">var people = [
+  {
+    name: "Mike Smith",
+    family: {
+      mother: "Jane Smith",
+      father: "Harry Smith",
+      sister: "Samantha Smith"
+    },
+    age: 35
+  },
+  {
+    name: "Tom Jones",
+    family: {
+      mother: "Norah Jones",
+      father: "Richard Jones",
+      brother: "Howard Jones"
+    },
+    age: 25
+  }
+];
+
+for (var {name: n, family: { father: f } } of people) {
+  console.log("Name: " + n + ", Father: " + f);
+}
+
+// "Name: Mike Smith, Father: Harry Smith"
+// "Name: Tom Jones, Father: Richard Jones"</pre>
+
+<h3 id="Pulling_fields_from_objects_passed_as_function_parameter">Pulling fields from objects passed as function parameter</h3>
+
+<pre class="brush:js">function userId({id}) {
+  return id;
+}
+
+function whois({displayName: displayName, fullName: {firstName: name}}){
+  console.log(displayName + " is " + name);
+}
+
+var user = { 
+  id: 42, 
+  displayName: "jdoe",
+  fullName: { 
+      firstName: "John",
+      lastName: "Doe"
+  }
+};
+
+console.log("userId: " + userId(user)); // "userId: 42"
+whois(user); // "jdoe is John"</pre>
+
+<p>This pulls the <code>id</code>, <code>displayName</code> and <code>firstName</code> from the user object and prints them.</p>
+
+<h3 id="Computed_object_property_names_and_destructuring">Computed object property names and destructuring</h3>
+
+<p>Computed property names, like on <a href="/en-US/docs/Web/JavaScript/Reference/Operators/Object_initializer#Computed_property_names">object literals</a>, can be used with destructuring.</p>
+
+<pre class="brush: js">let key = "z";
+let { [key]: foo } = { z: "bar" };
+
+console.log(foo); // "bar"
+</pre>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-destructuring-assignment', 'Destructuring assignment')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-destructuring-assignment', 'Destructuring assignment')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<div>{{CompatibilityTable}}</div>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Edge</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatChrome(49.0)}}</td>
+   <td>{{ CompatGeckoDesktop("1.8.1") }}</td>
+   <td>14<sup>[1]</sup></td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>7.1</td>
+  </tr>
+  <tr>
+   <td>Computed property names</td>
+   <td>{{CompatChrome(49.0)}}</td>
+   <td>{{ CompatGeckoDesktop("34") }}</td>
+   <td>14<sup>[1]</sup></td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+  <tr>
+   <td>Spread operator</td>
+   <td>{{CompatChrome(49.0)}}</td>
+   <td>{{ CompatGeckoDesktop("34") }}</td>
+   <td>12<sup>[1]</sup></td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Chrome for Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+   <th>Chrome for Android</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatChrome(49.0)}}</td>
+   <td>{{ CompatGeckoMobile("1.0") }}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>8</td>
+   <td>{{CompatChrome(49.0)}}</td>
+  </tr>
+  <tr>
+   <td>Computed property names</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatChrome(49.0)}}</td>
+   <td>{{ CompatGeckoMobile("34") }}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatChrome(49.0)}}</td>
+  </tr>
+  <tr>
+   <td>Spread operator</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatChrome(49.0)}}</td>
+   <td>{{ CompatGeckoMobile("34") }}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatChrome(49.0)}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<p>[1] Requires "Enable experimental Javascript features" to be enabled under `about:flags`</p>
+
+<h2 id="Firefox-specific_notes">Firefox-specific notes</h2>
+
+<ul>
+ <li>Firefox provided a non-standard language extension in <a href="/en-US/docs/Web/JavaScript/New_in_JavaScript/1.7">JS1.7</a> for destructuring. This extension has been removed in Gecko 40 {{geckoRelease(40)}}. See {{bug(1083498)}}.</li>
+ <li>Starting with Gecko 41 {{geckoRelease(41)}} and to comply with the ES2015 specification, parenthesized destructuring patterns, like <code>([a, b]) = [1, 2]</code> or <code>({a, b}) = { a: 1, b: 2 }</code>, are now considered invalid and will throw a {{jsxref("SyntaxError")}}. See <a class="external external-icon" href="http://whereswalden.com/2015/06/20/new-changes-to-make-spidermonkeys-and-firefoxs-parsing-of-destructuring-patterns-more-spec-compliant/">Jeff Walden's blog post</a> and {{bug(1146136)}} for more details.</li>
+</ul>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Web/JavaScript/Reference/Operators/Assignment_Operators">Assignment operators</a></li>
+ <li><a href="https://hacks.mozilla.org/2015/05/es6-in-depth-destructuring/">"ES6 in Depth: Destructuring" on hacks.mozilla.org</a></li>
+</ul>

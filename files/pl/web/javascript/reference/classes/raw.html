@@ -1,0 +1,366 @@
+<div>{{JsSidebar("Classes")}}</div>
+
+<p>Klasy w Javascript zostały wprowadzone ECMAScript 2015 to lukier składniowy<strong> </strong>(ang. <em>syntactic sugar</em>) dla istniejącego, opartego na prototypach modelu dziedziczenia. Składnia klas <strong>nie</strong> wprowadza nowego zorientowanego obiektowo modelu dziedziczenia. Klasy wprowadzają znacznie prostszą i bardziej czytelną składnię do tworzenia obiektów i dziedziczenia.</p>
+
+<h2 id="Definiowanie_klas">Definiowanie klas</h2>
+
+<p>Klasy są w zasadzie "szczególnymi <a href="/pl/docs/Web/JavaScript/Reference/Functions">funkcjami</a>". Pododnie jak w funkcji można definiować <a href="/pl/docs/Web/JavaScript/Referencje/Operatory/Operator_function">wyrażenie <code>function</code></a> i <a href="/pl/docs/Web/JavaScript/Reference/Statements/function">deklaracje funkcji</a>, tak składnia klasy posiada dwa komponenty: <a href="/pl/docs/Web/JavaScript/Reference/Operators/class">wyrażenie <code>class</code></a> i <a href="/pl/docs/Web/JavaScript/Reference/Statements/class">deklaracje klasy</a>.</p>
+
+<h3 id="Deklaracje_klas">Deklaracje klas</h3>
+
+<p>Jednym ze sposobów definiowania klas jest <strong>deklaracja klasy</strong>. Aby zadeklarować klasę, należy użyć wyrażenia <code>class</code> wraz z nazwą klasy (w tym przypadku "Prostokat").</p>
+
+<pre class="brush: js">class Prostokat {
+  constructor(wysokosc, szerokosc) {
+    this.wysokosc = wysokosc;
+    this.szerokosc= szerokosc;
+  }
+}</pre>
+
+<h4 id="Hoisting">Hoisting</h4>
+
+<p>Ważną różnicą pomiędzy <strong>deklaracją funkcji</strong> a <strong>deklaracją klasy</strong> jest to, że deklaracje funkcji są przenoszone na początek ({{Glossary("Hoisting", "hoisted")}}) a klas nie. Najpierw musisz zadeklarować swoją klasę by mieć do niej dostęp, w przeciwnym razie kod, jak ten poniżej, wygeneruje wyjątek {{jsxref("ReferenceError")}}:</p>
+
+<pre class="brush: js example-bad">var p = new Prostokat(); // ReferenceError
+
+class Prostokat {}
+</pre>
+
+<h3 id="Wyrażenie_class">Wyrażenie <code>class</code></h3>
+
+<p><strong>Wyrażenie <code>class</code></strong> jest kolejnym sposobem definiowania klasy. Wyrażenia <code>class</code> mogą być nazwane lub nienazwane. Nazwa przypisana nazwanemu wyrażeniu <code>class</code> jest lokalna dla ciała klasy.</p>
+
+<pre class="brush: js">// nienazwane
+var Prostokat = class {
+  constructor(wysokosc, szerokosc) {
+    this.wysokosc = wysokosc;
+    this.szerokosc = szerokosc;
+  }
+};
+
+// nazwane
+var Prostokat = class Prostokat {
+  constructor(wysokosc, szerokosc) {
+    this.wysokosc = wysokosc;
+    this.szerokosc = szerokosc;
+  }
+};
+</pre>
+
+<p><strong>Uwaga</strong>: <strong>Wyrażenia </strong><code>class</code> dotykają te same kwestie związane z przenoszeniem na początek (ang. hoisting) co wspomnianych <strong>deklaracji </strong>klas.</p>
+
+<h2 id="Ciało_klasy_i_definicje_metod">Ciało klasy i definicje metod</h2>
+
+<p>Ciało klasy jest umieszczane w nawiasach klamrowych <code>{}</code>. To tam definuje się metody, czy konstruktory.</p>
+
+<h3 id="Tryb_ścisły">Tryb ścisły</h3>
+
+<p>Ciało klasy jest wykonywane w <a href="/en-US/docs/Web/JavaScript/Reference/Strict_mode">trybie ścisłym</a> (ang. <em>strict mode</em>). W celu poprawienia wydajności, kod wykorzystywany tutaj podlega scisłej składni; nie pozwala to na ukrycie niektórych <a href="/en-US/docs/Web/Events/error">wyjątków</a>, a pewne słowa kluczowe są rezerwowane dla przyszłych wersji ECMAScript.</p>
+
+<h3 id="Konstruktor">Konstruktor</h3>
+
+<p><code><a href="/en-US/docs/Web/JavaScript/Reference/Classes/constructor">Constructor</a></code> jest szczególną metodą, która służy tworzeniu i inicjalizowaniu obiektu zdefiniowanego słowem kluczowym <code>class</code>. Dozwolony jest tylko jeden konstruktor w danej klasie. Jeśli klasa posiada więcej niż jedno wystąpienie metody <code>constructor</code>, wygenerowany zostanie wyjątek {{jsxref("SyntaxError")}}.</p>
+
+<p>Aby wywołać konstruktor klasy bazowej, należy użyć słowa kluczowego <code>super</code>.</p>
+
+<h3 id="Prototypy">Prototypy</h3>
+
+<p>Zobacz też <a href="/en-US/docs/Web/JavaScript/Reference/Functions/Method_definitions">definiowanie metod</a>.</p>
+
+<pre class="brush: js">class Prostokat {
+  constructor(wysokosc, szerokosc) {
+    this.wysokosc = wysokosc;
+    this.szerokosc = szerokosc;
+  }
+  
+  get pole() {
+    return this.liczPole();
+  }
+
+  liczPole() {
+    return this.wysokosc * this.szerokosc;
+  }
+}
+
+const kwadrat = new Prostokat(10, 10);
+
+console.log(kwadrat.pole);</pre>
+
+<h3 id="Metody_statyczne">Metody statyczne</h3>
+
+<p>Słowo kluczowe <code><a href="/en-US/docs/Web/JavaScript/Reference/Classes/static">static</a></code> definiuje metodę statyczną w klasie. Statyczne metody są wywoływane bez <a href="/pl/docs/Learn/JavaScript/Obiekty" title='An example of class instance is "var john = new Person();"'>inicjalizowania</a> ich klas i <strong>nie mogą</strong> być wywołane przez instancję klasy.</p>
+
+<pre class="brush: js">class Punkt {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+  }
+
+  static odleglosc(a, b) {
+    const dx = a.x - b.x;
+    const dy = a.y - b.y;
+
+    return Math.sqrt(dx*dx + dy*dy);
+  }
+}
+
+const p1 = new Punkt(5, 5);
+const p2 = new Punkt(10, 10);
+
+console.log(Punkt.odleglosc(p1, p2));</pre>
+
+<h3 id="Boxing_with_prototype_and_static_methods">Boxing with prototype and static methods</h3>
+
+<p>Kiedy metoda typu <code>static</code> lub <code>prototype</code> jest wywoływana bez <em>this</em>, wtedy <em>this </em>będzie <code>undefined</code> w środku metody. Takie zachowanie będzie takie same nawet jeżeli dyrektywa <code>"use strict"</code> nie będzie obecna, ponieważ kod w obrębie metody denej klasy zawsze będzie wykonywał się jako <code>strict mode</code>.</p>
+
+<pre class="brush: js">class Animal { 
+  speak() {
+    return this;
+  }
+  static eat() {
+    return this;
+  }
+}
+
+let obj = new Animal();
+let speak = obj.speak;
+speak(); // undefined
+
+let eat = Animal.eat;
+eat(); // undefined</pre>
+
+<p>If we write the above code using traditional function based classes, then autoboxing will happen based on the "this" value for which the function was called.</p>
+
+<pre class="brush: js">function Animal() { }
+
+Animal.prototype.speak = function() {
+  return this;
+}
+
+Animal.eat = function() {
+  return this;
+}
+
+let obj = new Animal();
+let speak = obj.speak;
+speak(); // global object
+
+let eat = Animal.eat;
+eat(); // global object
+</pre>
+
+<h2 id="Podklasy_z_extends">Podklasy z <code>extends</code></h2>
+
+<p>Słowo kluczowe <code><a href="/en-US/docs/Web/JavaScript/Reference/Classes/extends">extends</a></code> jest używane w <em>deklaracjach klas</em> lub <em>wyrażeniach klas</em> do tworzenia klasy jako elementu potomnego innej klasy.</p>
+
+<pre class="brush: js">class Animal { 
+  constructor(name) {
+    this.name = name;
+  }
+  
+  speak() {
+    console.log(this.name + ' makes a noise.');
+  }
+}
+
+class Dog extends Animal {
+  speak() {
+    console.log(this.name + ' barks.');
+  }
+}
+
+var d = new Dog('Mitzie');
+d.speak();
+</pre>
+
+<p>Jeśli w podklasie znajduje się konstruktor, musi najpierw wywołać super() przed użyciem "this".</p>
+
+<p>Można również rozszerzyć tradycyjne klasy oparte na funkcjach:</p>
+
+<pre class="brush: js">function Animal (name) {
+  this.name = name;  
+}
+
+Animal.prototype.speak = function () {
+  console.log(this.name + ' makes a noise.');
+}
+
+class Dog extends Animal {
+  speak() {
+    console.log(this.name + ' barks.');
+  }
+}
+
+var d = new Dog('Mitzie');
+d.speak();
+</pre>
+
+<p>Zwróć uwagę, że klasy nie mogą rozszerzać zwykłych (niezdatnych do konstrukcji) obiektów. Jeśli chcesz dziedziczyć po zwykłym obiekcie, możesz zamiast tego użyć {{jsxref ("Object.setPrototypeOf ()")}}:</p>
+
+<pre class="brush: js">var Animal = {
+  speak() {
+    console.log(this.name + ' makes a noise.');
+  }
+};
+
+class Dog {
+  constructor(name) {
+    this.name = name;
+  }
+}
+
+Object.setPrototypeOf(Dog.prototype, Animal);// If you do not do this you will get a TypeError when you invoke speak
+
+var d = new Dog('Mitzie');
+d.speak(); //Mitzie makes a noise.
+</pre>
+
+<h2 id="Species">Species</h2>
+
+<p>You might want to return {{jsxref("Array")}} objects in your derived array class <code>MyArray</code>. The species pattern lets you override default constructors.</p>
+
+<p>For example, when using methods such as {{jsxref("Array.map", "map()")}} that returns the default constructor, you want these methods to return a parent <code>Array</code> object, instead of the <code>MyArray</code> object. The {{jsxref("Symbol.species")}} symbol lets you do this:</p>
+
+<pre class="brush: js">class MyArray extends Array {
+  // Overwrite species to the parent Array constructor
+  static get [Symbol.species]() { return Array; }
+}
+
+var a = new MyArray(1,2,3);
+var mapped = a.map(x =&gt; x * x);
+
+console.log(mapped instanceof MyArray); // false
+console.log(mapped instanceof Array);   // true
+</pre>
+
+<h2 id="Super_class_calls_with_super">Super class calls with <code>super</code></h2>
+
+<p>The <code><a href="/en-US/docs/Web/JavaScript/Reference/Operators/super">super</a></code> keyword is used to call functions on an object's parent.</p>
+
+<pre class="brush: js">class Cat { 
+  constructor(name) {
+    this.name = name;
+  }
+  
+  speak() {
+    console.log(this.name + ' makes a noise.');
+  }
+}
+
+class Lion extends Cat {
+  speak() {
+    super.speak();
+    console.log(this.name + ' roars.');
+  }
+}
+</pre>
+
+<h2 id="Mix-ins">Mix-ins</h2>
+
+<p>Abstract subclasses or <em>mix-ins</em> are templates for classes. An ECMAScript class can only have a single superclass, so multiple inheritance from tooling classes, for example, is not possible. The functionality must be provided by the superclass.</p>
+
+<p>A function with a superclass as input and a subclass extending that superclass as output can be used to implement mix-ins in ECMAScript:</p>
+
+<pre class="brush: js">var calculatorMixin = Base =&gt; class extends Base {
+  calc() { }
+};
+
+var randomizerMixin = Base =&gt; class extends Base {
+  randomize() { }
+};
+</pre>
+
+<p>A class that uses these mix-ins can then be written like this:</p>
+
+<pre class="brush: js">class Foo { }
+class Bar extends calculatorMixin(randomizerMixin(Foo)) { }</pre>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-class-definitions', 'Class definitions')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-class-definitions', 'Class definitions')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td></td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<p>{{CompatibilityTable}}</p>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Edge</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatChrome(42.0)}}<sup>[1]</sup><br>
+    {{CompatChrome(49.0)}}</td>
+   <td>{{CompatGeckoDesktop(45)}}</td>
+   <td>13</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatSafari(9.0)}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+   <th>Chrome for Android</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatGeckoMobile(45)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>9</td>
+   <td>{{CompatChrome(42.0)}}<sup>[1]</sup><br>
+    {{CompatChrome(49.0)}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<p>[1] Requires strict mode. Non-strict mode support is behind the flag "Enable Experimental JavaScript", disabled by default.</p>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Web/JavaScript/Reference/Functions">Functions</a></li>
+ <li><a href="/en-US/docs/Web/JavaScript/Reference/Statements/class"><code>class</code> declaration</a></li>
+ <li><a href="/en-US/docs/Web/JavaScript/Reference/Operators/class"><code>class</code> expression</a></li>
+ <li>{{jsxref("Operators/super", "super")}}</li>
+ <li><a href="https://hacks.mozilla.org/2015/07/es6-in-depth-classes/">Blog post: "ES6 In Depth: Classes"</a></li>
+</ul>

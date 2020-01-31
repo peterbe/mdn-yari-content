@@ -1,0 +1,82 @@
+<p>{{APIRef("DOM")}}<strong><code>CustomEvent</code></strong> インターフェイスはどんな目的のアプリケーションからも初期化されるイベントを表現します。</p>
+
+<p>{{AvailableInWorkers}}</p>
+
+<h2 id="Constructor" name="Constructor">コンストラクター</h2>
+
+<dl>
+ <dt>{{domxref("CustomEvent.CustomEvent", "CustomEvent()")}}</dt>
+ <dd><code>CustomEvent</code> を生成します。</dd>
+</dl>
+
+<h2 id="Properties" name="Properties">プロパティ</h2>
+
+<dl>
+ <dt>{{domxref("CustomEvent.detail")}} {{readonlyinline}}</dt>
+ <dd>イベント初期化時にどんなデータでも受け渡すことができます。</dd>
+</dl>
+
+<p><em>このインターフェイスは親である {{domxref("Event")}} からプロパティを継承します</em>:</p>
+
+<p>{{Page("/ja/docs/Web/API/Event", "Properties")}}</p>
+
+<h2 id="Methods" name="Methods">メソッド</h2>
+
+<dl>
+ <dt>{{domxref("CustomEvent.initCustomEvent()")}} {{deprecated_inline}}</dt>
+ <dd>
+ <p><code>CustomEvent</code> オブジェクトを初期化します。もし該当イベントがすでに移譲されたことがある場合、この関数は何もしません。</p>
+ </dd>
+</dl>
+
+<p><em>このインターフェイスは親である {{domxref("Event")}} から関数を継承します</em>:</p>
+
+<p>{{Page("/ja/docs/Web/API/Event", "Methods")}}</p>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">ステータス</th>
+   <th scope="col">コメント</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName('DOM WHATWG','#interface-customevent','CustomEvent')}}</td>
+   <td>{{Spec2('DOM WHATWG')}}</td>
+   <td>初回定義。</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザー互換性</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("api.CustomEvent")}}</p>
+
+<h2 id="Firing_from_privileged_code_to_non-privileged_code" name="Firing_from_privileged_code_to_non-privileged_code">特権を持つコードから持たないコードへのイベント発行</h2>
+
+<p>CustomEvent を特権を持つコード (つまり、エクステンション) から持たないコード (つまり、ウェブページ) へ発行する時、セキュリティの問題を考慮すべきです。Firefox と他の Gecko アプリケーションは、自動的にセキュリティホールを防ぐ為、他者から直接利用される1つのコンテキスト内で作られるオブジェクトを制限します。しかし、この制限によりコードが期待した通りに動作しない可能性があります。</p>
+
+<p>CustomEvent オブジェクトが作られている間、同じ <a href="/ja/docs/XUL/window">window</a> からオブジェクトを作る必要があります。作られた CustomEvent の <code>detail</code> 属性は同じ制限の影響を受けるでしょう。制限のないコンテンツからは String と Array の値は読み込み可能ですが、カスタムオブジェクトは読み込めません。カスタムオブジェクトを使用している間、<a href="/ja/docs/">Components.utils.cloneInto()</a> を使ってコンテンツのスクリプトから読み込み可能なオブジェクトの属性を定義する必要があるでしょう。</p>
+
+<pre class="brush: js">// doc はコンテンツのドキュメントの参照
+function dispatchCustomEvent(doc) {
+  var eventDetail = Components.utils.cloneInto({foo: 'bar'}, doc.defaultView);
+  var myEvent = doc.defaultView.CustomEvent("mytype", eventDetail);
+  doc.dispatchEvent(myEvent);
+}</pre>
+
+<p>しかし、関数を外部にさらすと、chrome 特権でコンテンツスクリプトの実行を許可することになり、脆弱性となる可能性があることを覚えておく必要があります。</p>
+
+<h2 id="See_also" name="See_also">参照</h2>
+
+<ul>
+ <li><a href="/ja/docs/Code_snippets/Interaction_between_privileged_and_non-privileged_pages" title="/docs/Code_snippets/Interaction_between_privileged_and_non-privileged_pages">特権を持つページと持たないページの相互作用</a></li>
+ <li><a href="/ja/docs/Web/API/Window/postMessage" title="/docs/Web/API/Window/postMessage">Window.postMessage</a></li>
+ <li><a href="/ja/docs/Web/Guide/Events/Creating_and_triggering_events">イベントの生成とトリガー</a></li>
+</ul>

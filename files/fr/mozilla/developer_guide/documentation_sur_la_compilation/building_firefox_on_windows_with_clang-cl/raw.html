@@ -1,0 +1,56 @@
+<h2 id="Introduction">Introduction</h2>
+
+<p><a href="https://clang.llvm.org/docs/MSVCCompatibility.html">clang-cl</a> est un nouveau compilateur du projet LLVM qui tente de remplacer le cl.exe  MSVC. Il apporte également toute la puissance de la chaîne d'outils LLVM à Windows..</p>
+
+<p><a href="https://lld.llvm.org/">lld-link</a> est un linker de LLVM qui peut être utilisé en remplacement du fichier link.exe MSVC. Il fonctionne beaucoup plus vite que le linker de Microsoft..</p>
+
+<p>Le système de compilation de Firefox supporte maintenant à la fois clang-cl et lld-link.</p>
+
+<h2 id="Prerequisites">Prerequisites</h2>
+
+<p>Tout d'abord, assurez-vous d'avoir un arbre des sources de Mozilla mis à jour, car un certain nombre de correctifs du système de compilation ont atterri très récemment (mars 2018).</p>
+
+<p>Vous devrez obtenir une version récente de clang-cl, en utilisant l'une de ces options  :</p>
+
+<ul>
+ <li>(Recommandé) <code>mach bootstrap</code> téléchargera le paquet clang actuellement utilisé par automation dans votre répertoire <code>~/.mozbuild/clang</code>. Le système de compilation de Mozilla est capable de détecter les binaires clang-cl dans cet emplacement. Il n'est pas nécessaire de changer votre <code>PATH</code>.</li>
+ <li>Téléchargez une version 64-bit <a href="https://releases.llvm.org/download.html">release build</a> ou <a href="https://llvm.org/builds/">trunk snapshot</a> à partir de LLVM. Vous devriez permettre à l'installateur de mettre LLVM sur votre <code>PATH</code>.</li>
+ <li><a href="https://llvm.org/docs/GettingStarted.html">Build your own LLVM from source</a>. Vous devez ajouter le répertoire build à votre  <code>PATH</code> ou fournir un chemin complet dans votre mozconfig.</li>
+</ul>
+
+<p>De même, pour l'exigence du SDK "Windows 10 SDK (N) pour Desktop C++ x86 et x64", N doit être <strong>10.0.15063.0</strong> ou <strong>10.0.17134.0</strong>. <strong>10.0.16299.0</strong> n'est pas supporté avec clang-cl.</p>
+
+<p>Les chemins du SDK sont automatiquement découverts pendant le processus de construction, mais si vous avez besoin de les remplacer explicitement, les variables d'environnement suivantes sont supportées :</p>
+
+<ul>
+ <li><code>WINDOWSSDKDIR</code>, pointant vers le SDK de la plate-forme Windows  (par exemple  <code>%WINDOWSSDKDIR%\Include\10.0.15063.0\um\Windows.h</code>).</li>
+ <li><code>VC_PATH</code>, pointant vers les bibliothèques C+++ standard (par exemple  <code>%VC_PATH%\include\string</code>).</li>
+ <li><code>DIA_SDK_PATH</code>,  pointant vers l'interface de débogage Access SDK (par exemple  <code>%DIA_SDK_PATH%\include\dia2.h</code>).</li>
+</ul>
+
+<h2 id="Construiser_votre_configuration">Construiser votre configuration</h2>
+
+<p>Pour construire avec clang-cl comme compilateur, ajoutez ce qui suit à votre <a href="/fr/docs/Mozilla/Developer_guide/Documentation_sur_la_compilation/Configuration_des_options_de_compilation">mozconfig</a>:</p>
+
+<pre>export CC="clang-cl.exe"
+export CXX="clang-cl.exe"
+</pre>
+
+<p>Pour construire avec lld-link comme éditeur de liens, ajoutez ce qui suit à votre mozconfig:</p>
+
+<pre>export LINKER="lld-link.exe"
+</pre>
+
+<p>Ensuite, procédez à la construction comme d'<a href="/Simple_Firefox_build">habitude</a>.</p>
+
+<h2 id="Pousser_pour_essayer">Pousser pour essayer</h2>
+
+<p>Si vous souhaitez utiliser la chaîne d'outils clang sur votre try push, ajoutez l'une ou les deux lignes suivantes pour <code>build/mozconfig.common.override</code>:</p>
+
+<pre>. "$topsrcdir/build/mozconfig.clang-cl"
+. "$topsrcdir/build/mozconfig.lld-link"
+</pre>
+
+<p>Ces fichiers définissent les <code>export</code>s et ont en outre la logique pour trouver les binaires clang sur les systèmes de fichiers d'automatisation.</p>
+
+<p>Vous pouvez sélectionner une révision LLVM SVN différente en éditant <code>build/build-clang/clang-win64.json</code> (ce fichier gère aussi les builds 32-bit). Quand vous poussez le changement pour essayer, il construira d'abord cette révision de clang (~1hr) et utilisera le compilateur résultant pour construire votre code.</p>

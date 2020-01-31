@@ -1,0 +1,175 @@
+<div>{{jsSidebar("Statements")}}</div>
+
+<p><strong><code>for ... in</code></strong> 문은 객체의 모든 non-<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol">Symbol</a>, <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Enumerability_and_ownership_of_properties">enumerable properties</a>을 반복합니다.</p>
+
+<p>즉, object에 있는 항목들을 반복적으로 반환하여 '무언가'를 할 수 있게 해줍니다.</p>
+
+<p>{{EmbedInteractiveExample("pages/js/statement-forin.html")}}</p>
+
+<h2 id="Syntax" name="Syntax">문법</h2>
+
+<pre class="syntaxbox">for (<var>variable</var> in <var>object</var>) {<em> ... </em>}</pre>
+
+<h3 id="Parameters" name="Parameters">파라메터</h3>
+
+<dl>
+ <dt><code>variable</code></dt>
+ <dd>매번 반복마다 다른 속성이름(Value name)이 변수(<em>variable)</em>로 지정된다.</dd>
+ <dt><code>object</code></dt>
+ <dd>반복작업을 수행할 객체로 열거형 속성을 가지고 있는 객체.</dd>
+</dl>
+
+<h2 id="Description" name="Description">설명</h2>
+
+<p>A <code>for...in</code> loop only iterates over enumerable, non-Symbol properties. Objects created from built–in constructors like <code>Array</code> and <code>Object</code> have inherited non–enumerable properties from <code>Object.prototype</code> and <code>String.prototype</code>, such as {{jsxref("String")}}'s {{jsxref("String.indexOf", "indexOf()")}} method or {{jsxref("Object")}}'s {{jsxref("Object.toString", "toString()")}} method. The loop will iterate over all enumerable properties of the object itself and those the object inherits from its constructor's prototype (properties closer to the object in the prototype chain override prototypes' properties).</p>
+
+<p> </p>
+
+<h3 id="Deleted_added_or_modified_properties">Deleted, added, or modified properties</h3>
+
+<p> </p>
+
+<p> </p>
+
+<p>A <code>for...in</code> loop iterates over the properties of an object in an arbitrary order (see the {{jsxref("Operators/delete", "delete")}} operator for more on why one cannot depend on the seeming orderliness of iteration, at least in a cross-browser setting).</p>
+
+<p>If a property is modified in one iteration and then visited at a later time, its value in the loop is its value at that later time. A property that is deleted before it has been visited will not be visited later. Properties added to the object over which iteration is occurring may either be visited or omitted from iteration.</p>
+
+<p>In general, it is best not to add, modify, or remove properties from the object during iteration, other than the property currently being visited. There is no guarantee whether an added property will be visited, whether a modified property (other than the current one) will be visited before or after it is modified, or whether a deleted property will be visited before it is deleted.</p>
+
+<p> </p>
+
+<h3 id="Array_iteration_and_for...in">Array iteration and for...in</h3>
+
+<div class="note" id="arrayNote">
+<p><strong>Note: </strong><code>for..in</code> should not be used to iterate over an {{jsxref("Array")}} where index order is important.</p>
+</div>
+
+<p> </p>
+
+<p>Array indexes are just enumerable properties with integer names and are otherwise identical to general object properties. There is no guarantee that <code>for...in</code> will return the indexes in any particular order. The <code>for...in</code> loop statement will return all enumerable properties, including those with non–integer names and those that are inherited.</p>
+
+<p>Because the order of iteration is implementation-dependent, iterating over an array may not visit elements in a consistent order. Therefore, it is better to use a {{jsxref("Statements/for", "for")}} loop with a numeric index (or {{jsxref("Array.prototype.forEach()")}} or the {{jsxref("Statements/for...of", "for...of")}} loop) when iterating over arrays where the order of access is important.</p>
+
+<p> </p>
+
+<h3 id="Iterating_over_own_properties_only">Iterating over own properties only</h3>
+
+<p>If you only want to consider properties attached to the object itself, and not its prototypes, use {{jsxref("Object.getOwnPropertyNames", "getOwnPropertyNames()")}} or perform a {{jsxref("Object.prototype.hasOwnProperty", "hasOwnProperty()")}} check ({{jsxref("Object.prototype.propertyIsEnumerable", "propertyIsEnumerable")}} can also be used). Alternatively, if you know there won't be any outside code interference, you can extend built-in prototypes with a check method.</p>
+
+<h2 id="Example" name="Example">예제</h2>
+
+<p>아래 함수는 객체와 객체의 이름을 인자로 받아서 객체의 모든 속성의 이름과 같은 문자열로 반환해주고 있다.</p>
+
+<pre class="brush: js">var o = {a:1, b:2, c:3};
+
+function show_props(obj, objName) {
+  var result = "";
+    
+  for (var prop in obj) {
+    result += objName + "." + prop + " = " + obj[prop] + "\n";
+  }
+    
+  return result;
+}
+
+alert(show_props(o, "o")); /* alerts: o.a = 1 o.b = 2 o.c = 3 */ 
+</pre>
+
+<p>아래는 {{jsxref("Object.prototype.hasOwnProperty", "hasOwnProperty()")}} 를 사용하는 예를 보여주고 있다. 결과적으로 상속한 속성들은 표시되지 않는다.</p>
+
+<pre class="brush: js">var triangle = {a:1, b:2, c:3};
+
+function ColoredTriangle() {
+  this.color = "red";
+}
+
+ColoredTriangle.prototype = triangle;
+
+function show_own_props(obj, objName) {
+  var result = "";
+    
+  for (var prop in obj) {
+    if( obj.hasOwnProperty( prop ) ) {
+      result += objName + "." + prop + " = " + obj[prop] + "\n";
+    } 
+  }
+    
+  return result;
+}
+
+o = new ColoredTriangle();
+alert(show_own_props(o, "o")); /* alerts: o.color = red */ 
+</pre>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table>
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-for-in-and-for-of-statements', 'for...in statement')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-for-in-and-for-of-statements', 'for...in statement')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-12.6.4', 'for...in statement')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES3', '#sec-12.6.4', 'for...in statement')}}</td>
+   <td>{{Spec2('ES3')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES1', '#sec-12.6.3', 'for...in statement')}}</td>
+   <td>{{Spec2('ES1')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<p>The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</p>
+
+<p>{{Compat("javascript.statements.for_in")}}</p>
+
+<h2 id="Compatibility_Initializer_expressions_in_strict_mode">Compatibility: Initializer expressions in strict mode</h2>
+
+<p>Prior to SpiderMonkey 40 {{geckoRelease(40)}}, it was possible to use an initializer expression (<code>i=0</code>) in a <code>for...in</code> loop:</p>
+
+<pre><code>var obj = {a: 1, b: 2, c: 3};
+for (var i = 0 in obj) {
+  console.log(obj[i]);
+}
+// 1
+// 2
+// 3</code></pre>
+
+<p>This nonstandard behavior is now ignored in version 40 and later, and will present a {{jsxref("SyntaxError")}} ("<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Invalid_for-in_initializer">for-in loop head declarations may not have initializers</a>") error in <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Strict_mode">strict mode</a> ({{bug(748550)}} and {{bug(1164741)}}).</p>
+
+<p>Other engines such as v8 (Chrome), Chakra (IE/Edge), and JSC (WebKit/Safari) are investigating whether to remove the nonstandard behavior as well.</p>
+
+<h2 id="See_also섹션">See also<a href="https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Statements/for...in$edit#See_also">섹션</a></h2>
+
+<ul>
+ <li>{{jsxref("Statements/for...of", "for...of")}} – a similar statement that iterates over the property <em>values</em></li>
+ <li>{{jsxref("Statements/for_each...in", "for each...in")}} {{deprecated_inline}} – a similar but deprecated statement that iterates over the values of an object's properties, rather than the property names themselves</li>
+ <li>{{jsxref("Statements/for", "for")}}</li>
+ <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Iterators_and_Generators">Generator expressions</a> (uses the <code>for...in</code> syntax)</li>
+ <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Enumerability_and_ownership_of_properties">Enumerability and ownership of properties</a></li>
+ <li>{{jsxref("Object.getOwnPropertyNames()")}}</li>
+ <li>{{jsxref("Object.prototype.hasOwnProperty()")}}</li>
+ <li>{{jsxref("Array.prototype.forEach()")}}</li>
+</ul>

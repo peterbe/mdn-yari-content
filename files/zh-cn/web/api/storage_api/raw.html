@@ -1,0 +1,113 @@
+<p>{{securecontext_header}}{{DefaultAPISidebar("Storage")}}</p>
+
+<p>Web 存储标准，the Storage Standard，定义了一个通用的、共享的存储系统，供所有 API 和技术使用，以存储各个网站的内容可访问数据。 Storage API 允许网站的代码、Web 应用程序知道它们可以使用、已经使用多少存储空间。空间不足时，{{Glossary("user agent", "用户代理")}}会自动清理站点数据，以便为其他用途腾出空间。而 Storage API 甚至可以控制：在执行清理之前，是否需要提醒代码或 Web 应用程序，以便作出反应。</p>
+
+<p>{{AvailableInWorkers}}</p>
+
+<p>站点存储——由存储标准管理的网站数据——包括以下几种：</p>
+
+<ul>
+ <li><a href="/en-US/docs/Web/API/IndexedDB_API">IndexedDB 数据库</a></li>
+ <li><a href="/en-US/docs/Web/API/Cache">Cache API data</a></li>
+ <li><a href="/en-US/docs/Web/API/Service_Worker_API">Service Worker registrations</a></li>
+ <li><a href="/en-US/docs/Web/API/Web_Storage_API">Web Storage API data</a> managed using {{domxref("window.localStorage")}}</li>
+ <li>History state information saved using {{domxref("History.pushState()")}}</li>
+ <li><a href="/en-US/docs/Web/HTML/Using_the_application_cache">Application caches</a></li>
+ <li><a href="/en-US/docs/Web/API/Notifications_API">Notification data</a></li>
+ <li>Other kinds of site-accessible, site-specific data that may be maintained</li>
+</ul>
+
+<h2 id="站点存储单元">站点存储单元</h2>
+
+<p>The site storage system described by the Storage Standard and interacted with using the Storage API consists of a single <strong>site storage unit</strong> for each {{Glossary("origin")}}. In essence, every Web site or Web application has its own storage unit into which its data gets placed. The diagram below shows a site storage pool with three storage units within, showing how storage units can have different data types stored within and may have different quotas (maximum storage limits).</p>
+
+<p><img alt="A diagram showing how the site storage pool consists of multiple storage units that contain data from various APIs as well as possible unused space left before the quota is reached." src="https://mdn.mozillademos.org/files/14379/StorageUnits.png" style="height: 412px; width: 600px;"></p>
+
+<ul>
+ <li>来源 1 有一些 Web Storage 数据和一些 IndexedDB 数据，还有一些空闲空间。目前它的使用量没有达到配额限制。</li>
+ <li>来源 2 中没有存储任何数据；它只是 it's just an empty box waiting for content. This origin, however, has a lower quota than the other two do. It may be a less-visited site, or one known to have lower data storage requirements.</li>
+ <li>来源 3 的存储单元已被完全填满；它达到了它的配额限制，并且无法在不删除某些现有数据的情况下存储更多数据。</li>
+</ul>
+
+<p>{{Glossary("User agent", "User agent")}} are likely to use various techniques to determine the quota for various origins. One of the most likely methods—one which the specification specifically encourages, in fact—would be to consider the popularity and/or usage levels of individual sites to determine what their quotas should be.  It's also conceivable that the browser might offer a user interface to customize these quotas.</p>
+
+<h2 id="存储模式">存储模式</h2>
+
+<p>每个站点存储单元中的实际数据存储，被称为它的<strong>框</strong> / <strong>盒</strong>（<strong>box</strong>）。每个站点存储单元只有一个盒，盒中包含其所有数据，且有一个<strong>盒存储模式</strong> / <strong>存储模式</strong>（<strong>box mode</strong>），用于描述其数据保留策略。目前有两种模式：</p>
+
+<dl>
+ <dt><code>"best-effort"</code></dt>
+ <dd>用户代理将会将尽可能久地保留 box 中包含的数据，但若因存储空间不足儿必须清空 box 以释放存储压力时，用户代理<strong>不会警告用户</strong>。</dd>
+ <dt><code>"persistent"</code></dt>
+ <dd>用户代理将会将尽可能久地保留此模式的数据，只有在所有被标记为 <code>"best-effort"</code> 的 box 都已被清理后，才会清理被标记为 <code>"persistent"</code> 的 box。If it becomes necessary to consider clearing persistent boxes, the user agent will notify the user and provide a way to clear one or more persistent boxes as needed.</dd>
+</dl>
+
+<p>修改某个来源的 box mode 需要取得使用 <code>"persistent-storage"</code> 特性的权限。</p>
+
+<h2 id="数据持久性与清理">数据持久性与清理</h2>
+
+<p>If the site or app has the <strong><code>"persistent-storage"</code></strong> feature permission, it can use the {{domxref("StorageManager.persist()")}} method to request that its box be made persistent. It's also possible for the user agent to decide to make the site's storage unit persistent due to usage characteristics or other metrics. The <code>"persistent-storage"</code> feature's permission-related flags, algorithms, and types are all set to the standard defaults for a permission, except that the <strong>permission state</strong> must be the same across the entire origin, and that if the permission state isn't <code>"granted"</code> (meaning that for whatever reason, access to the persistent storage feature was denied), the origin's site storage unit's box mode is always <code>"best-effort"</code>.</p>
+
+<div class="note">
+<p><strong>注意</strong>：请参考 <a href="/en-US/docs/Web/API/Permissions_API/Using_the_Permissions_API">使用 Permissions API</a> 以了解更多关于申请与管理权限的信息。</p>
+</div>
+
+<p>When clearing site storage units, an origin's box is treated as a single entity; if the user agent needs to clear it and the user approves, the entire data store is cleared rather than providing some means of clearing only data from individual APIs.</p>
+
+<p>If a box is marked as <code>"persistent"</code>, the contents won't be cleared by the user agent without either the data's origin itself or the user specifically doing so. This includes scenarios such as the user selecting a "Clear Caches" or "Clear Recent History" option. The user will be asked specifically for permission to remove persistent site storage units.</p>
+
+<h2 id="配额与使用量的估算">配额与使用量的估算</h2>
+
+<p>The user agent determines, using whatever mechanism it chooses, the maximum amount of storage a given site can use. This maximum is the origin's <strong>quota</strong>. The amount of this space which is in use by the site is called its <strong>usage</strong>. Both of these values are estimates; there are several reasons why they're not precise:</p>
+
+<ul>
+ <li>User agents are encouraged to obscure the exact size of the data used by a given origin, to prevent these values from being used for fingerprinting purposes.</li>
+ <li>De-duplication, compression, and other methods to reduce the physical size of the stored data may be used.</li>
+ <li>Quotas are conservative estimates of the space available for the origin's use, and should be less than the available space on the device to help prevent overruns.</li>
+</ul>
+
+<p>User agents may use any method they choose to determine the size of origins' quotas, and are encouraged by the specification to provide popular or frequently-used sites with extra space.</p>
+
+<p>To determine the estimated quota and usage values for a given origin, use the {{domxref("StorageManager.estimate", "navigator.storage.estimate()")}} method, which returns a promise that, when resolved, receives a {{domxref("StorageEstimate")}} that contains these figures. For example:</p>
+
+<pre class="brush: js">navigator.storage.estimate().then(estimate =&gt; {
+  // estimate.quota 是估得的配额
+  // estimate.usage 是估得的使用量，单位为 byte 比特
+});</pre>
+
+<h2 id="规范">规范</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">规范</th>
+   <th scope="col">状态</th>
+   <th scope="col">备注</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('Storage')}}</td>
+   <td>{{Spec2('Storage')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="浏览器兼容性">浏览器兼容性</h2>
+
+<div>
+<h3 id="StorageManager"><code>StorageManager</code></h3>
+
+<div>
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("api.StorageManager")}}</p>
+</div>
+</div>
+
+<h2 id="参见">参见</h2>
+
+<ul>
+ <li>{{domxref("NavigatorStorage.storage", "navigator.storage")}}</li>
+ <li>{{domxref("StorageManager")}} (the object returned by <code>navigator.storage</code>)</li>
+ <li><a href="/en-US/docs/Web/API/Permissions_API/Using_the_Permissions_API">使用 Permissions API</a></li>
+</ul>

@@ -1,0 +1,197 @@
+<div>{{JSRef}}</div>
+
+<p>Об'єкти <strong><code>Promise</code></strong> (обіцянка) використовуються для асинхронних операцій і обчислень. <code>Promise повертає значення, яке може бути доступним зараз, або за деякий час, або ніколи.</code></p>
+
+<h2 id="Syntax">Syntax</h2>
+
+<pre class="syntaxbox">new Promise( /* executor */ function(resolve, reject) { ... } );</pre>
+
+<h3 id="Parameters">Parameters</h3>
+
+<dl>
+ <dt>executor (виконавець)</dt>
+ <dd>Функція, яку передають із параметрами <code>resolve</code> та <code>reject</code>. Ця функція виконується одразу, як тільки программа дійде до виклику Promise. Параметри <code>resolve</code> та <code>reject містять посилання на відповідні функції (або можна передати анонімні функції)</code> (executor викликається перед <code>Promise</code> constructor, навіть якщо повертається створенний об'єкт). Коли викликаються функції <code>resolve</code> та <code>reject</code>,  promise опрацьовує вдале завершення (resolve) або реагує на невдачу (reject). Еxecutor ініціює якусь асинхронну роботу. Потім, якщо робота завершилась вдало, викликає функцію <code>resolve</code>. Якщо під час виконання роботи сталась якась помилка, то викликає функцію reject.<br>
+ У разі помилки програма ігнорує значення, яке повертає executor.<br>
+  </dd>
+</dl>
+
+<h2 id="Description">Description</h2>
+
+<p><code><strong>Promise</strong></code> - це представник значення, яке може бути невідомим на момент створення <code>promise</code> . Це дозволяє вам зв'язати обробники з можливими асинхронними діями у випадку вдалого виконнання або помилки. Таким чином асинхронні методи повертають значення так само, як синхронні методи - замість негайного отримання значення, асинхронний метод повертає <em>promise</em> , щоб повернути значення у майбутньому, коли воно буде готове. Наприклад, буде чекати завершення запиту до бази данних або чекати відповідь з віддаленного серверу.</p>
+
+<p><code>Promise</code> може бути в одному із цих станів:</p>
+
+<ul>
+ <li><em>pending</em>: в очікуванні, початковий стан, Ні виконаний, ні відкинутий.</li>
+ <li><em>fulfilled</em>: завершений, тобто операція завершилася вдало.</li>
+ <li><em>rejected</em>: означає, що операція завершилася помилкою.</li>
+</ul>
+
+<p>При створенні об'єкт promise знаходиться в стані <em>pending</em>, а потім переходить до стану <em>fulfilled</em>, повертаючи значення отриманого результату, або до стану <em>rejected</em>, повертаючи причину відмови (помилку). В будь-якому випадку при зміні стану викликається метод об'єкта then, який ставить в чергу відповідні обробники. (Якщо promise був виконаний або завершився з помилкою ще до моменту приєднання обробника, то обробник буде виконаний, таким чином не "стану гонки" між виконанням асинхронної операції та приєднанням обробника)</p>
+
+<p>Оскільки методи <code>{{jsxref("Promise.then", "Promise.prototype.then()")}}</code> та <code>{{jsxref("Promise.catch", "Promise.prototype.catch()")}}</code> повертають "обіцянки", вони можуть бути з'єднані в ланцюжки.</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/8633/promises.png"></p>
+
+<div class="note">
+<p><strong>Не плутати з</strong><span lang="uk"><span><strong>:</strong> деякі інші мови мають механізми лінивих (відкладених), які також називаються "обіцянками" (promises) - наприклад</span> Scheme. <span>Обіцянки в JavaScript представляють процеси, які вже відбуваються, і які можуть бути зв'язані з функціями зворотного виклику (callbacks).</span> <span>Якщо ви хочете лениво обрахувати вираз, розгляньте  </span></span><a href="/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions">стрілкову функцію</a> <span lang="uk"><span> без аргументів: "f = () =&gt; вираз", щоб створити лінивий вираз іf () для розрахунку.</span></span></p>
+</div>
+
+<div class="note">
+<p><strong>Примітка</strong>: Обіцянка називається <em>встановленою</em> (<em>settled)</em> якщо вона або виконана, або відхилена, але не знаходиться в початковому стані. Також існує термін <em>вирішена</em> (<em>resolved</em>) обіцянка, який означає, що обіцянка встановлена (settled) або ж заблокована в ланцюжку обіцянок.</p>
+</div>
+
+<h2 id="Властивості">Властивості</h2>
+
+<dl>
+ <dt><code>Promise.length</code></dt>
+ <dd><span id="result_box" lang="uk"><span>Значення довжини завжди рівне 1 (кількість аргументів конструктора)</span></span>.</dd>
+ <dt>{{jsxref("Promise.prototype")}}</dt>
+ <dd>Представляє прототип для конструктора <code>Promise</code>.</dd>
+</dl>
+
+<h2 id="Методи">Методи</h2>
+
+<dl>
+ <dt>{{jsxref("Promise.all", "Promise.all(iterable)")}}</dt>
+ <dd><span id="result_box" lang="uk"><span>Повертає обіцянку, яка або виконується, коли виконані всі обіцянки в ітерабельному аргументі, або відхиляється, як тільки буде відхилена одна з обіцянок в ітерабельному аргументі.</span> <span>Якщо повернута обіцянка виконується, вона виконується з масивом значень із виконаних обіцянок у тому ж порядку, як і в аргументі.</span> <span>Якщо повернута обіцянка відхиляється, то вона відхиляється з помилкою, взятою з першої відхиленої обіцянки.</span> <span>Цей метод може бути корисним для об'єднання результатів кількох обіцянок.</span></span></dd>
+ <dt> </dt>
+ <dt>{{jsxref("Promise.race", "Promise.race(iterable)")}}</dt>
+ <dd><span id="result_box" lang="uk"><span>Повертає обіцянку, яка виконується або відхиляється  як тільки одна з обіцянок аргументу виконується або відхиляється, з результатом виконання/відмови з цієї обіцянки.</span></span></dd>
+</dl>
+
+<dl>
+ <dt>{{jsxref("Promise.reject", "Promise.reject(reason)")}}</dt>
+ <dd>Повертає об'єкт <code>Promise</code>, відхилений із заданою причиною.</dd>
+</dl>
+
+<dl>
+ <dt>{{jsxref("Promise.resolve", "Promise.resolve(value)")}}</dt>
+ <dd><span id="result_box" lang="uk"><span>Повертає об'єкт Promise, який вирішується із заданим значенням.</span> <span>Якщо значення може бути продовжено, тобто має метод <em>then</em>, повернута обіцянка буде "слідувати" продовженню, набуваючи його стану;</span> <span>Інакше обіцянка буде виконана з поверненням значення.</span></span></dd>
+</dl>
+
+<h2 id="Promise_prototype"><code>Promise</code> prototype</h2>
+
+<h3 id="Properties">Properties</h3>
+
+<p>{{page('en-US/Web/JavaScript/Reference/Global_Objects/Promise/prototype','Properties')}}</p>
+
+<h3 id="Methods">Methods</h3>
+
+<p>{{page('en-US/Web/JavaScript/Reference/Global_Objects/Promise/prototype','Methods')}}</p>
+
+<h2 id="Приклади">Приклади</h2>
+
+<h3 id="Створення_Promise">Створення Promise</h3>
+
+<pre class="brush: html hidden">&lt;button id="btn"&gt;Make a promise!&lt;/button&gt;
+&lt;div id="log"&gt;&lt;/div&gt;
+</pre>
+
+<p>Це маленький приклад роботи <code>Promise</code>. Метод <code>testPromise()</code>викликається кожного разу, коли {{HTMLElement("button")}} клікнуто. Цей метод створює promise, який буде<span class="short_text" id="result_box" lang="uk"><span> заповнено</span></span> за допомогою {{domxref("window.setTimeout()")}}. До рахунку promise (починаючи з 1) кожні 1-3 секунди буде додано значення у випадковому порядку. Конструктор <code>Promise()</code> використовується для створення promise.</p>
+
+<p>The fulfillment of the promise is simply logged, via a fulfill callback set using {{jsxref("Promise.prototype.then()","p1.then()")}}. A few logs shows how the synchronous part of the method is decoupled from the asynchronous completion of the promise.</p>
+
+<pre class="brush: js">'use strict';
+var promiseCount = 0;
+
+function testPromise() {
+    var thisPromiseCount = ++promiseCount;
+
+    var log = document.getElementById('log');
+    log.insertAdjacentHTML('beforeend', thisPromiseCount +
+        ') Started (&lt;small&gt;Sync code started&lt;/small&gt;)&lt;br/&gt;');
+
+    // We make a new promise: we promise a numeric count of this promise, starting from 1 (after waiting 3s)
+    var p1 = new Promise(
+        // The resolver function is called with the ability to resolve or
+        // reject the promise
+        function(resolve, reject) {
+            log.insertAdjacentHTML('beforeend', thisPromiseCount +
+                ') Promise started (&lt;small&gt;Async code started&lt;/small&gt;)&lt;br/&gt;');
+            // This is only an example to create asynchronism
+            window.setTimeout(
+                function() {
+                    // We fulfill the promise !
+                    resolve(thisPromiseCount);
+                }, Math.random() * 2000 + 1000);
+        }
+    );
+
+    // We define what to do when the promise is resolved/fulfilled with the then() call,
+    // and the catch() method defines what to do if the promise is rejected.
+    p1.then(
+        // Log the fulfillment value
+        function(val) {
+            log.insertAdjacentHTML('beforeend', val +
+                ') Promise fulfilled (&lt;small&gt;Async code terminated&lt;/small&gt;)&lt;br/&gt;');
+        })
+    .catch(
+        // Log the rejection reason
+        function(reason) {
+            console.log('Handle rejected promise ('+reason+') here.');
+        });
+
+    log.insertAdjacentHTML('beforeend', thisPromiseCount +
+        ') Promise made (&lt;small&gt;Sync code terminated&lt;/small&gt;)&lt;br/&gt;');
+}</pre>
+
+<pre class="brush:js hidden">if ("Promise" in window) {
+  var btn = document.getElementById("btn");
+  btn.addEventListener("click",testPromise);
+} else {
+  log = document.getElementById('log');
+  log.innerHTML = "Live example not available as your browser doesn't support the &lt;code&gt;Promise&lt;code&gt; interface.";
+}
+</pre>
+
+<p>This example is started by clicking the button. You need a browser that supports <code>Promise</code>. By clicking the button several times in a short amount of time, you'll even see the different promises being fulfilled one after another.</p>
+
+<p>{{EmbedLiveSample("Creating_a_Promise", "500", "200")}}</p>
+
+<h2 id="Loading_an_image_with_XHR">Loading an image with XHR</h2>
+
+<p>Another simple example using <code>Promise</code> and <code><a href="/en-US/docs/Web/API/XMLHttpRequest">XMLHttpRequest</a></code> to load an image is available at the MDN GitHub<a href="https://github.com/mdn/js-examples/tree/master/promises-test"> promise-test</a> repository. You can also <a href="https://mdn.github.io/js-examples/promises-test/">see it in action</a>. Each step is commented and allows you to follow the Promise and XHR architecture closely.</p>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-promise-objects', 'Promise')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td>Initial definition in an ECMA standard.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-promise-objects', 'Promise')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<p class="hidden">To contribute to this compatibility data, please write a pull request against this file: <a href="https://github.com/mdn/browser-compat-data/blob/master/javascript/promise.json">https://github.com/mdn/browser-compat-data/blob/master/javascript/promise.json</a>.</p>
+
+<p>{{Compat("javascript/promise")}}</p>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li><a href="http://promisesaplus.com/">Promises/A+ specification</a></li>
+ <li><a href="https://medium.com/@ramsunvtech/promises-of-promise-part-1-53f769245a53">Venkatraman.R - JS Promise (Part 1, Basics)</a></li>
+ <li><a href="https://medium.com/@ramsunvtech/js-promise-part-2-q-js-when-js-and-rsvp-js-af596232525c#.dzlqh6ski">Venkatraman.R - JS Promise (Part 2 - Using Q.js, When.js and RSVP.js)</a></li>
+ <li><a href="http://www.html5rocks.com/en/tutorials/es6/promises/">Jake Archibald: JavaScript Promises: There and Back Again</a></li>
+ <li><a href="http://de.slideshare.net/domenicdenicola/callbacks-promises-and-coroutines-oh-my-the-evolution-of-asynchronicity-in-javascript">Domenic Denicola: Callbacks, Promises, and Coroutines – Asynchronous Programming Patterns in JavaScript</a></li>
+ <li><a href="http://www.mattgreer.org/articles/promises-in-wicked-detail/">Matt Greer: JavaScript Promises ... In Wicked Detail</a></li>
+ <li><a href="https://www.promisejs.org/">Forbes Lindesay: promisejs.org</a></li>
+ <li><a href="http://pouchdb.com/2015/05/18/we-have-a-problem-with-promises.html">Nolan Lawson: We have a problem with promises — Common mistakes with promises</a></li>
+ <li><a href="https://github.com/jakearchibald/es6-promise/">Promise polyfill</a></li>
+ <li><a href="https://www.udacity.com/course/javascript-promises--ud898">Udacity: JavaScript Promises</a></li>
+</ul>

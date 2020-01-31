@@ -1,0 +1,116 @@
+<div>{{MDNSidebar}}</div>
+
+<p class="summary">関連するインターフェイス、チュートリアル、およびその API に関連するその他のリソースへのリンクを表示できるように、API リファレンスページにカスタムサイドバーを含めることができます。この記事では、この方法について説明します。</p>
+
+<h2 id="サイドバーの作成">サイドバーの作成</h2>
+
+<p>API サイドバーを作成するには、次の3つの手順を実行する必要があります。</p>
+
+<ol>
+ <li>API リファレンスページを作成します</li>
+ <li>特定の API のエントリを <a href="https://github.com/mdn/kumascript">KumaScript リポジトリ</a>の <code>GroupData.json</code> データファイルに追加します</li>
+ <li>{{TemplateLink("APIRef")}} マクロを使用して、表示したい各ページにサイドバーを挿入します</li>
+</ol>
+
+<p>これらのステップを順番に実行しましょう。この記事で参照する例は、<a href="/ja/docs/Web/API/Fetch_API">Fetch API</a> です。</p>
+
+<h3 id="API_リファレンスページの作成">API リファレンスページの作成</h3>
+
+<p>サイドバーをページに追加する前に、ページ自体を作成する必要があります (詳細については、<a href="/ja/docs/MDN/Contribute/Structures/API_references/What_does_an_API_reference_need">API リファレンスの必要なもの</a>ガイドを参照してください)。</p>
+
+<h3 id="GroupData.json_へのエントリの追加">GroupData.json へのエントリの追加</h3>
+
+<p><code><a href="https://github.com/mdn/kumascript/blob/master/macros/GroupData.json">GroupData.json</a></code> ファイルには、API 参照サイドバーに表示されるリンクに関するすべてのデータが格納されます。呼び出されると、{{TemplateLink("APIRef")}} マクロはパラメータとして与えられた API 名を取り、<code>GroupData.json</code> でその名前を検索し、適切なサイドバーを作成してページに挿入します。</p>
+
+<p><code>GroupData.json</code> に項目を追加するには、以下を行う必要があります。</p>
+
+<ol>
+ <li><a href="https://github.com/">GitHub</a> アカウントを持っていることを確認します</li>
+ <li>KumaScript リポジトリをフォークし、新しいブランチを作成して変更を保存し、リポジトリをローカルにクローンします</li>
+ <li>作業を開始する前に新しいブランチをチェックアウトし、作業が終わったら変更を押してください</li>
+ <li>プルリクエストを作成して、MDN チームがあなたの作業をレビューし、必要に応じて変更を求めることができるようにします</li>
+</ol>
+
+<p>GitHub の使用についてサポートが必要な場合は、<a href="/ja/docs/MDN/Contribute/Structures/Compatibility_tables">互換性一覧表</a>に詳細なガイドがあります。</p>
+
+<p><code><a href="https://github.com/mdn/kumascript/blob/master/macros/GroupData.json">GroupData.json</a></code> ファイルは、KumaScript リポジトリの macros ディレクトリ内にあります。それを見ると、巨大な JSON 構造があり、それぞれの API に独自のメンバーがあります。名前は API 名で、値は作成するサイドバーリンクを定義するいくつかのサブメンバーを含むオブジェクトです。</p>
+
+<p>たとえば、MDN の <a href="/ja/docs/Web/API/Fetch_API">Fetch API</a> ページを見てください。 <code>GroupData.json</code> の対応するエントリは次のようになります。</p>
+
+<pre class="brush: json">"Fetch API": {
+    "overview":   [ "Fetch API"],
+    "interfaces": [ "Body",
+                    "Headers",
+                    "Request",
+                    "Response",
+                    "FetchController",
+                    "FetchObserver",
+                    "FetchSignal",
+                    "ObserverCallback" ],
+    "methods":    [ "WindowOrWorkerGlobalScope.fetch()" ],
+    "properties": [],
+    "events":     []
+},</pre>
+
+<p>ご覧のとおり、名前には "Fetch API" を使用し、オブジェクト値の内側には多数のサブメンバーを含めています。</p>
+
+<h4 id="GroupData_エントリ内に含めるサブメンバ">GroupData エントリ内に含めるサブメンバ</h4>
+
+<p>このセクションでは、<code>GroupData</code> エントリに含めることができるすべてのサブメンバーを一覧表示します。</p>
+
+<p>Note that most of the values included inside the listed sub-members equate to both the link text, and slugs appended to the end of the main API index page —  <code>https://developer.mozilla.org/<em>&lt;language-code&gt;</em>/docs/Web/API</code> — to create the final URL for the displayed link. So for example, "Body" will result in a link being created like so in the <em>en-US</em> locale:</p>
+
+<pre class="brush: html">&lt;li&gt;&lt;a href="https://developer.mozilla.org/en-US/docs/Web/API"&gt;Body&lt;/a&gt;&lt;/li&gt;</pre>
+
+<p>There are a few exceptions. For example the "guides" sub-member contains one or more sets of link information (title and slug) that defines links to associated guides/tutorials. In this case the slugs are appended to the end of the MDN docs root — https://developer.mozilla.org/<em>&lt;language-code&gt;</em>/docs — allowing an article anywhere on MDN to be included.</p>
+
+<p>Here are the available members. In each case, an example is included that assumes that the locale is <em>en-US</em>. These are all technically optional, but it is strongly encouraged that instead of omitting them, you include empty arrays.</p>
+
+<ol>
+ <li>
+  <p><code>"overview"</code> — the value is an array, inside of which you include the slug of the API overview page, if there is one. "Fetch API" results in a link being made to <a href="/en-US/docs/Web/API/Fetch_API">https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API</a>.</p>
+ </li>
+ <li>
+  <p><code>"interfaces"</code> — the value is an array in which you should list all of the interfaces that form part of that API. "Body" results in a link being made to <a href="/en-US/docs/Web/API/Body">https://developer.mozilla.org/en-US/docs/Web/API/Body</a>.</p>
+ </li>
+ <li>
+  <p><code>"methods"</code> — the value is an array that should contain any methods the spec adds to interfaces associated with other APIs, such as instantiation methods created on {{domxref("Navigator")}} or {{domxref("Window")}}. If there are a huge number of methods, you might want to consider only listing the most popular ones, or putting them first in the list. "WindowOrWorkerGlobalScope.fetch()" results in a link being made to <a href="/en-US/docs/Web/API/WindowOrWorkerGlobalScope/fetch">https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/fetch</a>. Do <em>not</em> list methods that are members of interfaces that are members of interfaces that are owned by the same API.</p>
+ </li>
+ <li>
+  <p><code>"properties"</code> — the value is an array that should contain all of the properties associated with the API. This can include properties that are members of interfaces defined in the API spec, and properties the API defines on other interfaces. If there are a huge number of properties, you might want to consider only listing the most popular ones, or putting them first in the list. "Headers.append" results in a link being made to <a href="/en-US/docs/Web/API/Headers/append">https://developer.mozilla.org/en-US/docs/Web/API/Headers/append</a>.</p>
+ </li>
+ <li>
+  <p><code>"events"</code> — the value is an array that should contain all of the events associated with the API, defined in the API spec, or elsewhere. If there are a huge number of events, you might want to consider only listing the most popular ones, or putting them first in the list. "animationstart" results in a link being made to <a href="/en-US/docs/Web/Events/animationstart">https://developer.mozilla.org/en-US/docs/Web/Events/animationstart</a>.</p>
+ </li>
+ <li>
+  <p><code>"guides"</code> — the value is an array containing one or more objects that define links to guides explain how to use the API. Each object contains two sub-members — "url", which contains the partial URL pointing to the guide article, and "title", which defines the link test for the link. As an example, the following object:</p>
+
+  <pre class="brush: json">{ "url":   "/docs/Web/API/Detecting_device_orientation",
+"title": "Detecting device orientation" }</pre>
+
+  <p>Creates a link with the title "Detecting device orientation", which points to <a href="/en-US/docs/Web/API/Detecting_device_orientation">https://developer.mozilla.org/en-US/docs/Web/API/Detecting_device_orientation</a>.</p>
+ </li>
+ <li>
+  <p><code>"dictionaries"</code> — an array of strings listing all of the dictionaries which are part of the API. Generally, only dictionaries used by more than one property or method should be listed here, unless they are of special significance or are likely to require being referenced from multiple pages. "RTCConfiguration" results in a link to <a href="https://developer.mozilla.org/en-US/docs/Web/API/RTCConfiguration">https://developer.mozilla.org/en-US/docs/Web/API/RTCConfiguration</a>.</p>
+ </li>
+ <li>
+  <p><code>"types"</code> — an array of typedefs and enumerated types defined by the API. You may choose to only list those that are of special importance or are referenced from multiple pages, in order to keep the list short. "RTCCodecType" creates a link to <a href="https://developer.mozilla.org/en-US/docs/Web/API/RTCCodecType">https://developer.mozilla.org/en-US/docs/Web/API/RTCCodecType</a>.</p>
+ </li>
+ <li>
+  <p><code>"callbacks"</code> — the value is an array containing a list of all the defined callback types for the API. You may find it unnecessary to use this group at all, even on APIs that include callback types, as often they are not useful to document separately. An entry in this array containing the string "RTCSessionDescriptionCallback" results in a link being created to <a href="https://developer.mozilla.org/en-US/docs/Web/API/RTCSessionDescriptionCallback">https://developer.mozilla.org/en-US/docs/Web/API/RTCSessionDescriptionCallback</a>.</p>
+ </li>
+</ol>
+
+<h2 id="サイドバーで使用されるタグ">サイドバーで使用されるタグ</h2>
+
+<p>一部のサブメンバーは、ページタグに基づいて子ページから自動的に検出されます。サイドバーがレンダリングされるたびにトップレベル API の下のページがクロールされ、メソッド ("メソッド" タグ)、プロパティ ("プロパティ" タグ)、およびコンストラクタ ("コンストラクタ" タグ) のエントリが自動的に作成されます。</p>
+
+<p>サブメンバは、タグに基づいて警告アイコンで自動的に装飾されます。実験的 ("実験的" タグ)、非標準的 ("非標準" または "非標準" タグ)、廃止予定 ("非推奨" タグ)、廃止 ("廃止" タグ) のサブメンバー用に装飾が追加されます。</p>
+
+<p>Further information about tag-based processing is available <a href="https://github.com/mdn/kumascript/blob/master/macros/APIRef.ejs">in the APIRef source</a>.</p>
+
+<h2 id="サイドバーを挿入する">サイドバーを挿入する</h2>
+
+<p><code>GroupData.json</code> に API のエントリを追加してプルリクエストとして送信し、その変更をメインリポジトリに受け入れたら、{{TemplateLink("APIRef")}} マクロを使用して API リファレンスページに含めることができ、GroupData の API にパラメータとして使用されます。例として、<a href="/ja/docs/Web/API/WebVR_API">WebVR API</a> のサイドバーは、次のようにそのページに含まれています。</p>
+
+<pre>\{{APIRef("WebVR API")}}</pre>

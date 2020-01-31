@@ -1,0 +1,450 @@
+<p><strong>Mercurial Queues</strong>, or <strong>MQ</strong>, is a <a href="/en/Mercurial" title="en/Mercurial">Mercurial</a> extension that lets you keep work in progress as mutable patches, instead of as immutable changesets.</p>
+
+<div class="warning">
+<p>People who are used to Git's branch-based workflow may find MQ hard to adapt to, and should consider using Mercurial bookmarks or branches instead. Note that Mercurial bookmarks are very similar to Git branches. See <a href="https://www.mercurial-scm.org/wiki/Bookmarks">the official Mercurial docs on bookmarks.</a> Also see <a href="http://mozilla-version-control-tools.readthedocs.org/en/latest/hgmozilla/index.html">Mercurial for Mozillians</a>.</p>
+
+<p><strong>It is strongly recommended that new users adopt a bookmark-based workflow and do not use MQ.</strong></p>
+
+<p>However, MQ remains a feasible patch-management tool for those who are used to older version control systems and don't want to adopt a Git-style workflow. Users should note, though, that MQ is a powerful tool, and this can also lead to mistakes. All users are therefore strongly encouraged to read the <a href="#BeforeYouStart">next section</a> before starting to use MQ.</p>
+</div>
+
+<h3 id="BeforeYouStart" name="BeforeYouStart">Before you start</h3>
+
+<p>You can destroy work with MQ. MQ puts you in a position where you're doing fairly complicated stuff to your uncommitted work. Certain operations make it easy to lose work. Watch your step.</p>
+
+<p>For instance, unless you're running the <a href="https://bitbucket.org/sfink/mqext/" title="https://bitbucket.org/sfink/mqext/">mqext</a>, <code>hg qrefresh</code> is destructive. It replaces your previous version of the current patch with what's in your working directory. The previous version is lost. Other things to keep in mind:</p>
+
+<ul>
+ <li><strong>Don't use MQ in a repository anyone might pull from.</strong> MQ creates temporary changesets in your repo. If someone pulls one of them, you'll never get rid of it.</li>
+ <li><strong>Avoid the <code>-f</code> option.</strong> It is sharp and can mess up your repository if used incorrectly.</li>
+ <li>Ensure you use the git diff format. Otherwise you will lose any changes to binary files.</li>
+ <li>Ensure you use the latest stable release of Mercurial.</li>
+ <li>Version your patch queue to save changes. The mqext extension can make this much easier.</li>
+</ul>
+
+<h3 id="Introduction" name="Introduction">Introduction</h3>
+
+<p>The output of a developer (on a good day, anyway) is patches. The MQ extension lets you treat a stack of patches as works-in-progress. You can apply them as Mercurial changesets, unapply them, edit them, and when they're done, turn them into permanent changesets and push them.</p>
+
+<p>Each repository has its own queue of patches managed by MQ. They're just stored as files in the <code>.hg/patches</code> directory under the repository.</p>
+
+<p>To enable MQ, put this in your Mecurial.ini file for Windows (see mozilla-build in <a href="/En/Developer_Guide/Build_Instructions/Windows_Prerequisites" title="en/Windows_Build_Prerequisites">Windows Build Prerequisites</a>)  or <code>$HOME/.hgrc</code> file:</p>
+
+<pre class="eval">[extensions]
+mq =
+
+[diff]
+git = 1
+unified = 8
+showfunc = 1
+</pre>
+
+<p>Don't forget the <code>git</code> line. This allows changing binary files in your patches. The <code>unified</code> line give 8 lines patch.</p>
+
+<h3 id="Basic_Commands">Basic Commands</h3>
+
+<p>The basic MQ commands are:</p>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">Command</th>
+   <th scope="col">Description</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td><code>hg qnew <var>patch-name</var></code></td>
+   <td>Make a new empty patch and give it a name.</td>
+  </tr>
+  <tr>
+   <td><code>hg qrefresh</code></td>
+   <td>Update the current patch to include your latest uncommitted changes. You'll do this often.</td>
+  </tr>
+  <tr>
+   <td><code>hg qpop</code></td>
+   <td>Removes the current changeset.</td>
+  </tr>
+  <tr>
+   <td><code>hg qpush</code></td>
+   <td>Apply the next patch in your queue.</td>
+  </tr>
+  <tr>
+   <td><code>hg qdelete <var>patch-name</var></code></td>
+   <td>Remove an unapplied patch from your queue. This patch can not be recovered.</td>
+  </tr>
+  <tr>
+   <td><code><code>hg qfinish</code></code></td>
+   <td>"Finish" the bottommost applied patch. It becomes a permanent changeset.</td>
+  </tr>
+  <tr>
+   <td><code>hg qimport <em>filename-or-url</em></code></td>
+   <td>Import a patch into your queue, e.g. from Bugzilla.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h3 id="How_to_use_MQ_for_Mozilla_development"><strong>How to use MQ for Mozilla development</strong></h3>
+
+<p>The following commands demonstrate how to create an MQ entry for a single bug fix, record the changes you make, and turn them into a diff file named "bug-123456-fix.patch" that is ready to be <a href="/En/Developer_Guide/How_to_Submit_a_Patch" title="https://developer.mozilla.org/En/Developer_Guide/How_to_Submit_a_Patch">attached to the corresponding Bugzilla bug</a>.</p>
+
+<pre>$ hg qnew bug-123456-fix
+
+<em><span style="color: #a9a9a9;">... change some files ...</span></em>
+
+$ hg qrefresh
+
+<em><span style="color: #a9a9a9;">... change some more files ...</span></em>
+
+$ hg qrefresh -m "Bug 123456: A brief summary of the changes you have made."
+$ hg export qtip &gt; ~/bug-123456-fix.patch
+</pre>
+
+<p>While the patch is being reviewed, you might want to work on another bug. The process is exactly the same:</p>
+
+<pre>$ hg qnew bug-341896-fix
+
+<em><span style="color: #a9a9a9;">... change some files ...</span></em>
+
+$ hg qrefresh -m "Bug 341896: The fix, summarized briefly."
+$ hg export qtip &gt; ~/bug-341896-fix.patch
+</pre>
+
+<p>If you look at the new patch file you have exported, you'll notice that it only contains the changes for your bug-341896-fix mq entry. MQ allows you to keep your unrelated changes isolated from each other. <code>hg qseries </code>demonstrates this:</p>
+
+<pre>$ hg qseries -v -s
+<span style="color: #a9a9a9;">0 A bug-123456-fix: Bug 123456: A brief summary of the changes you have made.
+1 A bug-341896-fix: Bug 341896: The fix, summarized briefly.
+</span></pre>
+
+<p>This shows all of the patches you have in your queue. Let's say that the your fix for bug 123456 is reviewed, and you need to make a couple changes. MQ makes it easy to go back and fix up earlier work:</p>
+
+<pre>$ hg qpop
+<span style="color: #a9a9a9;">popping bug-341896-fix
+now at: bug-123456-fix</span>
+
+$ hg qseries -v -s
+<span style="color: #a9a9a9;">0 A bug-123456-fix: Bug 123456: A brief summary of the changes you have made.
+1 U bug-341896-fix: Bug 341896: The fix, summarized briefly.</span></pre>
+
+<p>Using qpush and qpop, you can apply and revert your patches until the one you want to modify is current.</p>
+
+<pre><em><span style="color: #a9a9a9;">... make the necessary changes ...</span></em>
+$ hg qrefresh
+$ hg export qtip &gt; ~/bug-123456-fix-v2.patch
+</pre>
+
+<p>If you compare bug-123456-fix.patch and bug-123456-v2.patch, you'll see your most recent changes reflected in the second. You can now qpush your way back to bug-341896-fix if you want to keep working on it, or qnew yourself an entirely new patch to work on!</p>
+
+<p>The last important step is updating your mozilla-central repository. It is very dangerous to pull remote changes while you have MQ patches applied (unless you are using the rebase extension). Instead, you should pop them all before updating, like so:</p>
+
+<pre>$ hg qpop -a
+<span style="color: #a9a9a9;">popping bug-341896-fix
+popping bug-123456-fix
+patch queue now empty</span>
+$ hg pull -u
+<span style="color: #a9a9a9;">...</span>
+$ hg qpush bug-341896-fix
+<span style="color: #a9a9a9;">applying bug-123456-fix
+patching file extensions/cookie/test/test_loadflags.html
+Hunk #1 FAILED at 5
+1 out of 1 hunks FAILED -- saving rejects to file extensions/cookie/test/test_loadflags.html.rej
+errors during apply, please fix and refresh patch</span>
+</pre>
+
+<p>It turns out that the recent changes to mozilla-central have modified the same files as your bug-123456-fix patch. If you haven't setup a merge tool, you'll need to open the files that had conflicts, fix up the bits of your patch that were in conflict (look at the .rej files that are listed), and <code>hg qrefresh</code> the patch to save your changes.</p>
+
+<pre>$ hg qrefresh
+$ hg qpush
+<span style="color: #a9a9a9;">applying bug-314896-fix
+now at: bug-314896-fix
+</span>$ hg qpop -a
+<span style="color: #a9a9a9;">popping bug-341896-fix
+popping bug-123456-fix
+patch queue now empty
+</span>$ hg qpush
+<span style="color: #a9a9a9;">applying bug-123456-fix
+now at: bug-123456-fix</span>
+</pre>
+
+<p>Your patches that conflicted should now apply cleanly until the next time you update and a conflict occurs. You can learn more about advanced MQ usage from the reference page, but you should now know enough to be able to use MQ effectively for Mozilla development work.</p>
+
+<h3 id="Bugzilla" name="Bugzilla"><strong>Bugzilla integration</strong></h3>
+
+<p>Rob Arnold has made a Mercurial extension called <a class="link-https" href="https://hg.mozilla.org/hgcustom/version-control-tools/file/tip/hgext/qimportbz" title="https://hg.mozilla.org/hgcustom/version-control-tools/file/tip/hgext/qimportbz"><code>qimportbz</code></a> that makes it much easier to transfer patches between Bugzilla and your patch queue. See his <a class="external" href="http://robarnold.org/2009/06/02/hg-qimport-my-bugzilla-patch-redux.html" title="http://robarnold.org/2009/06/02/hg-qimport-my-bugzilla-patch-redux.html">blog post</a> for more details. (Since that post was written, the command syntax has changed to: <code>hg qimport bz:1234567</code>)<code> </code></p>
+
+<p>Ted Mielczarek has made a tool that works the other way: <code>bzexport</code> can take patches from your patch queue and attach them to an existing bug in Bugzilla. See his <a class="external" href="http://blog.mozilla.com/ted/2010/09/07/bzexport-a-mercurial-extension/">blog post</a> for details.</p>
+
+<h2 id="Reference"><strong>Reference</strong></h2>
+
+<dl>
+ <dt><strong><code>hg qnew <var>patch-name</var></code></strong></dt>
+ <dd>
+ <p>Make a new empty patch and give it a name. The new patch is <em>applied</em> when it's created. That means it's a changeset. If you do <code>hg log -r .</code> you'll see it. All the other <code>hg</code> commands, like <code>hg annotate</code> and <code>hg grep</code>, see it as a regular changeset.</p>
+
+ <div class="note">Note: If you want to create a patch from a bugzilla attachment or other URL, you actually want <code>qimport</code> not <code>qnew</code>.</div>
+ </dd>
+ <dt><strong><code>hg qrefresh</code></strong></dt>
+ <dd>
+ <p>Update the current patch to include your latest uncommitted changes. You'll do this often.</p>
+
+ <ul>
+  <li><strong><code>qrefresh -e</code></strong> will open an editor to let you set the commit message for a patch.</li>
+  <li><code><strong>qrefresh -m "My commit message"</strong> will </code>set the commit message directly from the command line.</li>
+ </ul>
+ </dd>
+ <dt><strong><code>hg commit --mq -m "backup"</code></strong></dt>
+ <dd>
+ <p>Save a snapshot of your <code>.hg/patches</code> directory as a Mercurial revision in the <code>.hg/patches</code> repository. Do this often, too. This does not save your uncommitted work. Use <code>qrefresh</code> to put edits into patches and <code>commit --mq</code> to save snapshots of those patches. The <a href="https://bitbucket.org/sfink/mqext" title="https://bitbucket.org/sfink/mqext">mqext extension</a> should make managing this mostly automatic.</p>
+ </dd>
+ <dt><strong><code>hg qpop</code></strong></dt>
+ <dd>
+ <p>Unapply a patch. This removes the changeset. The patch is set aside in your <code>.hg/patches</code> directory. You can do other work, then re-apply your patch later.</p>
+
+ <ul>
+  <li><strong><code>hg qpop -a</code></strong> will unapply all of the applied patches in a queue.</li>
+ </ul>
+ </dd>
+ <dt><strong><code>hg qpush</code></strong></dt>
+ <dd>
+ <p>Apply the next unapplied patch. If the patch is out of date—that is, if you've done <code>hg update</code> since the last time you refreshed it—then you might get rejects! The only thing to do in that case is to apply the rejects manually and <code>hg qrefresh</code>.</p>
+
+ <ul>
+  <li><strong><code>hg qpush patch_name</code></strong> will apply patches until the desired patch is on top.</li>
+  <li><strong><code>hg qpush -a</code></strong> will apply all the patches in the queue (until a merge conflict is found).</li>
+ </ul>
+ </dd>
+ <dt><strong><code>hg qdelete <var>patchname</var></code></strong></dt>
+ <dd>
+ <p>Throw an unapplied patch away. This removes the patch from your <code>.hg/patches</code> directory (and from MQ's oversight generally).</p>
+
+ <ul>
+  <li><strong><code>hg qdelete -r qbase</code></strong> will commit a patch as a permanent changeset, the same as <code>hg qfinish</code>.</li>
+ </ul>
+ </dd>
+ <dt><strong><code>hg qfinish</code></strong></dt>
+ <dd>
+ <p>"Finish" the bottommost applied patch. It becomes a permanent changeset, suitable for pushing, using the commit message set with <code>qrefresh</code>. You can only finish patches from the bottom (i.e. you can't finish a patch that's applied over unfinished patches).</p>
+
+ <ul>
+  <li><strong><code>hg qfinish -a</code></strong>  (or <strong><code>hg qdelete -r qbase:qtip</code></strong>) will finish all applied patches. See also <a href="#Reordering_the_queue">#Reordering the queue</a> below.</li>
+ </ul>
+ </dd>
+ <dt><strong><code>hg qimport <em>filename_or_url</em></code></strong></dt>
+ <dd>
+ <p>Import a patch into your queue, e.g. from Bugzilla. It is unapplied by default and the <code><em>filename_or_url</em></code> is the <em>patchname</em>. You can directly import a Bugzilla patch by using the Bugzilla attachment URL as the argument. In that case you may also want to use <code>-n <em>patch_name</em></code> to specify the patch name.</p>
+
+ <ul>
+  <li><strong><code>hg qimport -r tip</code></strong> with no mq patches applied, will reimport the last committed changeset into your mq. This is useful when, e.g., you forget to set a commit message for a patch before <code>qfinish</code>ing it.</li>
+  <li><strong><code>hg qimport <em>filename</em> -n <em>name</em></code></strong> will allow you to name the patch you are importing.</li>
+ </ul>
+ </dd>
+</dl>
+
+<p>Just as important are the commands that show you what's going on:</p>
+
+<dl>
+ <dt><strong><code><code>hg status</code></code></strong></dt>
+ <dd>Show you only uncommitted edits — work that's neither committed nor in an MQ patch. After a qrefresh, they'll both be empty.</dd>
+ <dt><strong><code><code>hg qdiff</code></code></strong></dt>
+ <dd>
+ <p>Show what the topmost applied MQ patch looks like, including any uncommitted edits you've made.</p>
+ </dd>
+ <dd>
+ <ul>
+  <li><strong><code>hg qdiff -p -U 8</code></strong> will produce patches for review.</li>
+  <li><strong><code>hg diff -r qparent</code></strong> will export all applied patches in your queue as a single patch, without disturbing your queue.</li>
+ </ul>
+ </dd>
+ <dt><strong><code><code>hg qseries -v</code></code></strong></dt>
+ <dd>
+ <p>List all MQ patches. Applied patches are listed as A, and unapplied patches as U.</p>
+ </dd>
+ <dt><strong><code><code>hg qapplied</code></code></strong></dt>
+ <dd>
+ <p>List all the MQ patches that are applied, in queue order (that is, the order they were applied).</p>
+ </dd>
+ <dt><strong><code><code>hg qunapplied</code></code></strong></dt>
+ <dd>
+ <p>List all the MQ patches that aren't applied, in queue order (that is, the order they would be applied, if you did <code>hg qpush -a</code>).</p>
+ </dd>
+ <dt><strong><code><code>hg log -r qbase:qtip</code></code></strong></dt>
+ <dd>
+ <p>List all applied patches, just like <code>hg qapplied</code>, but also show the changesets. (<code>qbase</code> and <code>qtip</code> are tags provided by MQ. They always point to the bottom-most and topmost applied patch.)</p>
+ </dd>
+</dl>
+
+<p>To see more advanced commands, use <strong><code>hg help</code></strong>.</p>
+
+<h3 id="Advanced_Topics" name="Advanced_Topics"><strong>Advanced topics</strong></h3>
+
+<h4 id="Rebasing_patches" name="Rebasing_patches">Rebasing patches manually</h4>
+
+<p>Rebasing for dummies. When you write a patch, it's based on whatever version of the repo you had when you started working. Of course, changes are constantly being pushed to the central repository, so by the time you want to push, you'll be out of date. Your changes are <em>based on</em> an old revision.</p>
+
+<pre class="eval">       $ hg glog --template '{node|short} - {author} - {desc|firstline}\n' 
+TIP -&gt; o  cd9f8db8ee0f - Devin Naquin &lt;<a class="link-mailto" href="mailto:dnaquin@example.com" rel="freelink">dnaquin@example.com</a>&gt; - Bug 383223
+       |
+       o  103f04f54b14 - L. David Baron &lt;<a class="link-mailto" href="mailto:dbaron@example.org" rel="freelink">dbaron@example.org</a>&gt; - Tests for z-ordering of text-decorations.
+       |
+       o  e3a4c136455b - Robert O'Callahan &lt;<a class="link-mailto" href="mailto:robert@example.org" rel="freelink">robert@example.org</a>&gt; - Support system proxy settings on OS X, fixi
+       |
+       o  745e0f997344 - Robert O'Callahan &lt;<a class="link-mailto" href="mailto:robert@example.org" rel="freelink">robert@example.org</a>&gt; - Support system proxy settings on OS X, fixi
+       |
+       o  9d80a1461309 - Robert O'Callahan &lt;<a class="link-mailto" href="mailto:robert@example.org" rel="freelink">robert@example.org</a>&gt; - Support system proxy settings on OS X, fixi
+       |
+       o  4721deb1dd19 - Diane Trout &lt;<a class="link-mailto" href="mailto:diane@example.org" rel="freelink">diane@example.org</a>&gt;, James Bunton &lt;<a class="link-mailto" href="mailto:jamesbunton@example.fm" rel="freelink">jamesbunton@example.fm</a>&gt; - Support syst
+       |
+       o  3e166c19d130 - Michael Ventnor &lt;<a class="link-mailto" href="mailto:ventnor.bugzilla@example.com.au" rel="freelink">ventnor.bugzilla@example.com.au</a>&gt; - text-shadow tests (bug 10713)
+       |
+       o  c06307605f98 - Michael Ventnor &lt;<a class="link-mailto" href="mailto:ventnor.bugzilla@example.com.au" rel="freelink">ventnor.bugzilla@example.com.au</a>&gt; - Implement text-shadow rendering.
+       |
+YOU ----&gt;@  d243d3af29ed - Jason Orendorff &lt;<a class="link-mailto" href="mailto:jorendorff@example.com" rel="freelink">jorendorff@example.com</a>&gt; - [mq] Implement trebled fromps.
+       |/
+       o  1df6e4240511 - Shawn Wilsher &lt;<a class="link-mailto" href="mailto:sdwilsh@example.com" rel="freelink">sdwilsh@example.com</a>&gt; - Bug 429987
+       |
+       .
+       .
+       . (the past)
+</pre>
+
+<p>You have two choices:</p>
+
+<ul>
+ <li>Go ahead and finish your patch now, then <code>hg merge</code> with the tip; or</li>
+ <li><em>Rebase</em> your patch before you finish and push it.</li>
+</ul>
+
+<p>Rebasing is considered the polite thing. Merging leaves a merge changeset in the history.</p>
+
+<p>It's best not to <code>hg pull</code> while you have patches applied. The most foolproof way to pull and update is:</p>
+
+<pre class="eval">$ hg qpop -a             <em># Unapply all patches</em>
+$ hg pull
+$ hg update
+$ hg qpush <var>patchname</var>     <em># Reapply patches -- watch out for rejects!</em>
+</pre>
+
+<div class="warning">Warning: Rebasing across changesets that touch the same files as your patches can cause conflicts when you push! If this happens, <code>hg qpush</code> will tell you, and it will leave <code>.rej</code> files in your working directory. To avoid losing work, you must manually apply these rejected changes, then <code>hg qrefresh</code>.</div>
+
+<p>Rebasing for smarties. If you're used to Mercurial and MQ and you dislike <code>.rej</code> files, you might want to consider <a class="external" href="http://www.selenic.com/mercurial/wiki/index.cgi/MqMerge">MqMerge</a>. This technique lets you rebase using your merge program, but it's a bit complex.</p>
+
+<h4 id="Reordering_the_queue" name="Reordering_the_queue"><strong>Reordering the queue</strong></h4>
+
+<p>Sometimes the queue ends up not being in the order you want. For example, maybe you've been working on two patches, and the second one (the topmost one in your queue) is ready to be pushed before the first one is.</p>
+
+<p>If you have Mercurial 1.6 or newer, the best way to reorder your queue is <code>hg qpush --move. For example:</code></p>
+
+<pre><code>
+$ hg qpop -a                   <em># Unapply all patches
+</em>$ hg qpush --move patchname    <em># Apply only one patch, reordering as needed</em>
+</code></pre>
+
+<p>With older Mercurial versions, you can do this:</p>
+
+<pre class="eval"><code>
+$ hg qpop -a                   <em># Unapply all patches</em>
+$ $EDITOR .hg/patches/series   <em># Rearrange the lines of the series file</em>
+$ hg qpush <var>patchname</var>           <em># Reapply patches -- watch out for rejects!</em>
+</code></pre>
+
+<div>Warning: Reordering patches that touch the same file can cause conflicts when you push! If this happens, <code>hg qpush</code> will tell you, and it will leave <code>.rej</code> files in your working directory. To avoid losing work, you must manually apply these rejected changes, then <code>hg qrefresh</code>.</div>
+
+<h4 id="Folding_multiple_patches_into_one"><strong>Folding multiple patches into one</strong></h4>
+
+<p>The <code>hg qfold</code> command allows you to merge a patch into another one:</p>
+
+<pre><code>
+$ hg qpush --move my-first-patch      <em># apply my first patch</em>
+$ hg qfold my-second-patch     <em># fold second patch into it</em>
+</code></pre>
+
+<h4 id="Splitting_a_patch_the_easy_case_per-file_splitting"><strong>Splitting a patch, the easy case: per-file splitting</strong></h4>
+
+<p>If you have a patch that modifies <code>file1</code> and <code>file2</code>, and you want to split it into two patches each modifying only one file, do:</p>
+
+<pre>$ hg qgoto my-patch
+$ hg qref -X path/to/first/file # take changes out of current patch and back into `hg diff`
+$ hg qnew -f patch-modifying-first-file # and take that into a new MQ patch</pre>
+
+<p>Here, the <code>qref -X</code> command takes the changes to the first file out of the patch, so that they now show up in hg diff and therefore get picked up by the hg qnew.</p>
+
+<h4 id="Splitting_a_patch_the_general_case_including_per-hunk_and_per-line_splitting">Splitting a patch: the general case, including per-hunk and per-line splitting</h4>
+
+<p>If you need to perform finer patch splitting, for example per-hunk or even per-line, there's a great tool for that: <code>hg qcrecord</code>. It's provided by the <a href="http://mercurial.selenic.com/wiki/CrecordExtension" title="http://mercurial.selenic.com/wiki/CrecordExtension">Crecord extension</a>. Follow the instructions on that page to install it. Update your Mercurial.ini/.hgrc as follows to preserve authorship information.</p>
+
+<pre>[defaults]
+qcrecord = -Ue
+</pre>
+
+<p>The <code>qcrecord</code> command creates a new patch in your queue from the changes in your working directory (as shown by <code>hg diff</code>) - it does not edit existing mercurial queue patches directly. To split an existing mercurial queue patch you must first move the changes out from the patch and into your working directory, then delete the (now empty) patch from your queue (since qcrecord will create a new patch, not add to that old patch). Say you have a patch in your queue called 'my-patch' that you want to split it into 'my-patch' and 'my-other-patch', you would do something like this:</p>
+
+<pre><code>
+$ hg diff                  # Check there are no local changes in the working directory
+$ hg qgoto my-patch        # Make sure my-patch is the most recently applied
+$ hg qref -X .             # Move all changes out of my-patch and into the working directory
+$ hg qpop -f               # Pop my-patch from the queue so that we can delete it, leaving the changes in the working directory
+$ hg qdelete my-patch      # Delete my-patch (which is now empty) from the queue
+$ hg qcrecord my-patch     # Select the pieces of the diff that you want in my-patch, and save
+$ hg qnew my-other-patch   # Save the remaining pieces of the original patch to the queue as 'my-other-patch'
+</code></pre>
+
+<p>Or, with the latest version of the Crecord extension, that can be simplified to:</p>
+
+<pre><code>
+$ hg diff                  # Check there are no local changes in the working directory
+$ hg qgoto my-patch        # Make sure my-patch is the most recently applied
+$ hg qcrefresh             # Select the pieces of the diff that you want to keep in my-patch
+$ hg qnew my-other-patch   # Save the remaining pieces of the original patch to the queue as 'my-other-patch'
+</code></pre>
+
+<p>When you invoke <code>qcrecord</code>, it will open a console-based dialog allowing you to select file-by-file, hunk-by-hunk, and even line-by-line, what changes you want to record into the patch that qcrecord will create. When you first launch <code>hg qcrecord</code>, it shows you a list of modified files:</p>
+
+<pre><code>
+SELECT CHUNKS: (j/k/up/dn/pgup/pgdn) move cursor; (space/A) toggle hunk/all
+ (f)old/unfold; (c)ommit applied; (q)uit; (?) help | [X]=hunk applied **=folded
+[X]**M hello.cpp
+</code></pre>
+
+<p>Pressing '<code>f</code>' toggles between folding and unfold (collapsing and expanding) the diff of <code>hello.cpp</code>:</p>
+
+<pre><code>
+SELECT CHUNKS: (j/k/up/dn/pgup/pgdn) move cursor; (space/A) toggle hunk/all
+ (f)old/unfold; (c)ommit applied; (q)uit; (?) help | [X]=hunk applied **=folded
+[X]    diff --git a/hello.cpp b/hello.cpp
+       2 hunks, 4 lines changed
+
+   [X]     @@ -1,4 +1,5 @@
+            #include &lt;iostrea&gt;
+      [X]  +#include &lt;cmath&gt;
+           #include &lt;cstdlib&gt;
+
+           double square(double x)
+
+   [X]     @@ -8,5 +9,6 @@
+
+            int main()
+            {
+      [X]  -  std::cout &lt;&lt; square(3.2) &lt;&lt; std::endl;
+      [X]  +  double x = 2.0;
+      [X]  +  std::cout &lt;&lt; std::sqrt(square(x)) &lt;&lt; std::endl;
+           }
+</code></pre>
+
+<p>This allows us to select the lines to record in the patch. When we're done, we press '<code>c</code>'.</p>
+
+<h3 id="See_also"><strong>See also</strong></h3>
+
+<ul>
+ <li><a href="http://hgbook.red-bean.com/read/managing-change-with-mercurial-queues.html" title="http://hgbook.red-bean.com/read/managing-change-with-mercurial-queues.html">Managing change with Mercurial queues</a></li>
+ <li><a href="/en/Creating_Mercurial_User_Repositories#Mercurial_Queue_User_Repository_Workflow" title="Creating Mercurial User Repositories">Sharing patch repositories</a> useful as a backup and for collaboration</li>
+</ul>
+
+<h3 id="Wanted"><strong>Wanted</strong></h3>
+
+<ul>
+ <li>Using MQ to thaw/edit/refreeze history</li>
+ <li>guards, maybe</li>
+ <li>multiple queues, maybe</li>
+ <li>rebase extension instructions (<code>hg pull --rebase</code>)</li>
+</ul>

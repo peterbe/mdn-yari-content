@@ -1,0 +1,101 @@
+<p>クロスコンパイルに関する一般的な情報は、<a class="external" href="http://www.airs.com/ian/configure/">The GNU configure and build system</a> というドキュメントの <a class="external" href="http://www.airs.com/ian/configure/configure_5.html#SEC28">Cross Compilation Tools</a> の章を参照してください。
+</p><p>If you are trying to compile 32-bit Firefox on a 64-bit Linux OS, you don't need to do a full cross-compile... see <a href="ja/Compiling_32-bit_Firefox_on_a_Linux_64-bit_OS">these simpler instructions</a>.
+</p>
+<h3 id=".E3.82.AF.E3.83.AD.E3.82.B9.E3.82.B3.E3.83.B3.E3.83.91.E3.82.A4.E3.83.AB.E7.94.A8.E3.81.AE.E3.83.93.E3.83.AB.E3.83.89.E7.92.B0.E5.A2.83.E3.82.92.E4.BD.9C.E3.82.8B" name=".E3.82.AF.E3.83.AD.E3.82.B9.E3.82.B3.E3.83.B3.E3.83.91.E3.82.A4.E3.83.AB.E7.94.A8.E3.81.AE.E3.83.93.E3.83.AB.E3.83.89.E7.92.B0.E5.A2.83.E3.82.92.E4.BD.9C.E3.82.8B"> クロスコンパイル用のビルド環境を作る </h3>
+<p>このガイドには、クロスコンパイル用のビルド環境を作るために基本的なことは含まれていません。私はこれで出来ましたが、環境によって手順が違うかもしれません。(「どこで○○を手に入れられるのか」「××が動かない」などの質問には答えられません。)
+</p><p>以下の定義が、例の中で使われています:
+</p>
+<table>
+<tbody><tr><td><strong><code>xtarget_arch</code></strong></td><td>目的のシステム名 (例えば i686-linux)</td></tr>
+<tr><td><strong><code>xprefix</code></strong></td><td>クロスコンパイルのディレクトリ階層 (例えば /usr/sparc-linux)</td></tr>
+</tbody></table>
+<p>PATH に <code>${xprefix}/bin</code> を追加してください。
+</p>
+<h4 id="binutils_.E3.82.92.E3.82.AF.E3.83.AD.E3.82.B9.E3.82.B3.E3.83.B3.E3.83.91.E3.82.A4.E3.83.AB.E3.81.99.E3.82.8B" name="binutils_.E3.82.92.E3.82.AF.E3.83.AD.E3.82.B9.E3.82.B3.E3.83.B3.E3.83.91.E3.82.A4.E3.83.AB.E3.81.99.E3.82.8B"> binutils をクロスコンパイルする </h4>
+<p>binutils をダウンロードし、ビルド済みのライブラリをインストールするのを簡単にするために、パッチ <a class="external" href="http://www.mozilla.org/build/binutils-cross-libpath.patch">binutils-cross-libpath.patch</a> を当てます。以下のコマンドを使って configure を実行します:
+</p>
+<pre class="eval">env CROSS_LIB_PATH="${xprefix}/${xtarget_arch}/lib:${xprefix}/${xtarget_arch}/usr/lib" ./configure --prefix=${xprefix} --target=${xtarget_arch}
+</pre>
+<p>パッケージをビルドして、インストールします。
+</p>
+<h4 id=".E3.82.BF.E3.83.BC.E3.82.B2.E3.83.83.E3.83.88.E3.82.B7.E3.82.B9.E3.83.86.E3.83.A0.E3.81.AE.E3.83.98.E3.83.83.E3.83.80.E3.81.A8.E3.83.A9.E3.82.A4.E3.83.96.E3.83.A9.E3.83.AA.E3.82.92.E3.82.A4.E3.83.B3.E3.82.B9.E3.83.88.E3.83.BC.E3.83.AB.E3.81.99.E3.82.8B" name=".E3.82.BF.E3.83.BC.E3.82.B2.E3.83.83.E3.83.88.E3.82.B7.E3.82.B9.E3.83.86.E3.83.A0.E3.81.AE.E3.83.98.E3.83.83.E3.83.80.E3.81.A8.E3.83.A9.E3.82.A4.E3.83.96.E3.83.A9.E3.83.AA.E3.82.92.E3.82.A4.E3.83.B3.E3.82.B9.E3.83.88.E3.83.BC.E3.83.AB.E3.81.99.E3.82.8B"> ターゲットシステムのヘッダとライブラリをインストールする </h4>
+<p>GCC と binutils はシステムヘッダとライブラリを ${xprefix}/${xtarget_arch} にあるものとして探します。よって、これらのファイルはターゲットのシステムからコピーして、ディレクトリの構造を変えないように必要なスクリプトを変更する必要があります。また、X11 のライブラリとインクルードディレクトリも必要です。
+</p><p>{{ Note("ターゲットのシステムが glibc を利用している場合、glibc が自分用のファイルを /usr ではなく $xprefix/$target_arch から探すように、<code>/usr/lib/libc.so</code> ファイル (実際はスクリプト) を、注意深く変更しなくてはなりません。") }}
+</p><p>もしもターゲットのシステムに rpms がインストールしてあり、かつ rpm がビルド用システムにインストールされている場合、この <a class="external" href="http://www.mozilla.org/build/setup-xrpms.sh.txt">ショートカットスクリプト</a> を利用して、rpm2cpio を使って rpms を $xprefix/$xtarget_arch へとインストールできます。
+</p>
+<h4 id="gcc_.E3.82.92.E3.82.AF.E3.83.AD.E3.82.B9.E3.82.B3.E3.83.B3.E3.83.91.E3.82.A4.E3.83.AB.E3.81.99.E3.82.8B" name="gcc_.E3.82.92.E3.82.AF.E3.83.AD.E3.82.B9.E3.82.B3.E3.83.B3.E3.83.91.E3.82.A4.E3.83.AB.E3.81.99.E3.82.8B"> gcc をクロスコンパイルする </h4>
+<p>gcc をダウンロードし、次のコマンドで configure を実行します:
+</p>
+<pre class="eval">./configure --prefix=${xprefix} --with-gnu-ld --with-gnu-as --target=${xtarget_arch} --disable-nls --enable-languages=c++,objc
+</pre>
+<p>パッケージをビルドして、インストールします。
+</p>
+<h4 id=".E7.A2.BA.E8.AA.8D" name=".E7.A2.BA.E8.AA.8D"> 確認 </h4>
+<p>ここまででクロスコンパイル用の環境は整ったはずです。ちゃんと動くかどうか確認してください。<a class="link-ftp" href="ftp://ftp.gnu.org/gnu/hello/">Hello World</a> から初めて、基本的な X11 アプリケーションを作ってみてください。
+</p><p>ほとんどのパッケージは <code>./configure --target=${xtarget_arch}</code> で十分ビルドできます。
+</p><p>出来ない場合は、ビルド用のツールを明示的に設定する必要があるかもしれません。
+</p>
+<pre class="eval">env CC=${xtarget_arch}-gcc CXX=${xtarget_arch}-g++ LD=${xtarget_arch}-ld AS=${xtarget_arch}-as ./configure --prefix=${xprefix} --target=${xtarget_arch}
+</pre>
+<h4 id="glib.E3.80.81libIDL.E3.80.81gtk.2B_.E3.82.92.E3.82.AF.E3.83.AD.E3.82.B9.E3.82.B3.E3.83.B3.E3.83.91.E3.82.A4.E3.83.AB.E3.81.99.E3.82.8B" name="glib.E3.80.81libIDL.E3.80.81gtk.2B_.E3.82.92.E3.82.AF.E3.83.AD.E3.82.B9.E3.82.B3.E3.83.B3.E3.83.91.E3.82.A4.E3.83.AB.E3.81.99.E3.82.8B"> glib、libIDL、gtk+ をクロスコンパイルする </h4>
+<p>これらのビルド済みパッケージをインストールしていなかった場合のみ必要なステップです。上記のステップを利用して、これらをビルド、インストールします。
+</p>
+<h3 id=".E3.83.88.E3.82.AB.E3.82.B2.E3.82.92.E3.82.AF.E3.83.AD.E3.82.B9.E3.82.B3.E3.83.B3.E3.83.91.E3.82.A4.E3.83.AB.E3.81.99.E3.82.8B" name=".E3.83.88.E3.82.AB.E3.82.B2.E3.82.92.E3.82.AF.E3.83.AD.E3.82.B9.E3.82.B3.E3.83.B3.E3.83.91.E3.82.A4.E3.83.AB.E3.81.99.E3.82.8B"> トカゲをクロスコンパイルする </h3>
+<p>上記ステップの順を追って、正しくクロスコンパイル用の環境を整えたとすれば、Mozilla のクロスコンパイルは簡単です。ただし、NSS はクロスコンパイルに正しく対応していません ({{ Bug(104541) }})。
+</p><p>重要なのは、--target=${xtarget_arch} が configure に渡されたとき、configure はコンパイラのツールチェインを ${xtarget_arch}-TOOL (TOOL の部分には gcc、g++、runlib など) にあるとして動作する、ということです。
+</p><p>configure に以下の環境変数を渡す必要があります:
+</p>
+<pre>CROSS_COMPILE=1
+HOST_LIBIDL_CONFIG=/path/to/build/system/libIDL-config
+GLIB_CONFIG=/path/to/target/system/glib-config
+GTK_CONFIG=/path/to/target/system/gtk-config
+LIBIDL_CONFIG=/path/to/target/system/libIDL-config
+</pre>
+<p>そして、以下をコマンドラインの引数として configure に渡します:
+</p>
+<pre>--target=${xtarget_arch}
+--x-includes=/path/to/target/system/x/includedir
+--x-libraries=/path/to/target/system/x/libdir
+</pre>
+<p>以下は、mipsEEel-linux をターゲットとした、クロスコンパイル用の <a class="external" href="http://webtools.mozilla.org/build/config.cgi">mozconfig</a> ファイルの一例です:
+</p>
+<pre># sh
+# Build configuration script
+#
+# See http://www.mozilla.org/build/unix.html for build instructions.
+#
+CROSS_COMPILE=1
+GLIB_CONFIG=/usr/mipsEEel-linux/mipsEEel-linux/usr/bin/glib-config
+GTK_CONFIG=/usr/mipsEEel-linux/mipsEEel-linux/usr/bin/gtk-config
+LIBIDL_CONFIG=/usr/mipsEEel-linux/mipsEEel-linux/usr/bin/libIDL-config
+HOST_LIBIDL_CONFIG=/usr/bin/libIDL-config
+
+ac_add_options --prefix=/usr/mipsEEel-linux
+ac_add_options --target=mipsEEel-linux
+ac_add_options --x-includes=/usr/mipsEEel-linux/mipsEEel-linux/usr/X11R6/include
+ac_add_options --x-libraries=/usr/mipsEEel-linux/mipsEEel-linux/usr/X11R6/lib
+
+# Options for 'configure' (same as command-line options). 
+# all are listed so that one can manually tweak this config file.
+ac_add_options --enable-mathml
+ac_add_options --enable-svg
+ac_add_options --enable-extensions
+#ac_add_options --enable-crypto
+ac_add_options --enable-logrefcnt
+
+ac_add_options --without-system-nspr
+ac_add_options --without-system-zlib
+ac_add_options --without-system-jpeg
+ac_add_options --without-system-png
+ac_add_options --without-system-mng
+</pre>
+<div class="originaldocinfo">
+<h2 id=".E5.8E.9F.E6.96.87.E6.9B.B8.E3.81.AE.E6.83.85.E5.A0.B1" name=".E5.8E.9F.E6.96.87.E6.9B.B8.E3.81.AE.E6.83.85.E5.A0.B1"> 原文書の情報 </h2>
+<ul><li> 著者: <a class="link-mailto" href="mailto:seawood@netscape.com">Chris Seawood</a>
+</li><li> 最終更新日: June 22, 2002
+</li><li> 著作権: Portions of this content are © 1998–2007 by individual mozilla.org contributors; content available under a Creative Commons license | <a class="external" href="http://www.mozilla.org/foundation/licensing/website-content.html">詳細</a>
+</li></ul>
+</div>
+<div class="noinclude">
+</div>
+{{ languages( { "en": "en/Cross-Compiling_Mozilla" } ) }}

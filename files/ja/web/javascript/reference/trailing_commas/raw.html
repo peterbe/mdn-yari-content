@@ -1,0 +1,245 @@
+<div>{{JsSidebar("More")}}</div>
+
+<p><strong>末尾のカンマ</strong> ("最後のカンマ" と呼ばれることもあります) は、JavaScript のコードに新しい要素や引数、プロパティを追加するときに役立ちます。新しいプロパティを追加するとき、最終行ですでに末尾のカンマを使用していれば、最終行を修正することなく新しい行を追加できます。これによって、バージョン管理の差分がより洗練され、コード編集の煩雑さを軽減できます。</p>
+
+<p>JavaScript は、当初から配列リテラルで末尾のカンマを使用できました。そして、ECMAScript 5 でオブジェクトリテラルの、ECMAScript 2017 で関数の引数の末尾のカンマが使用できるようになりました。</p>
+
+<p>しかし、{{Glossary("JSON")}} では末尾のカンマを使用できません。</p>
+
+<h2 id="リテラルの末尾のカンマ">リテラルの末尾のカンマ</h2>
+
+<h3 id="配列">配列</h3>
+
+<p>JavaScript は配列の末尾のカンマを無視します:</p>
+
+<pre class="brush: js">var arr = [
+  1, 
+  2, 
+  3, 
+];
+
+arr; // [1, 2, 3]
+arr.length; // 3</pre>
+
+<p>1 つ以上の末尾のカンマがある場合、省略 (または穴) が作られます。穴がある配列は<em>希薄な</em> (<em>密集した</em>配列は穴がありません) 配列と呼ばれます。たとえば、{{jsxref("Array.prototype.forEach()")}} や {{jsxref("Array.prototype.map()")}} で配列をイテレートするとき、穴はスキップされます。</p>
+
+<pre class="brush: js">var arr = [1, 2, 3,,,];
+arr.length; // 5
+</pre>
+
+<h3 id="オブジェクト">オブジェクト</h3>
+
+<p>ECMAScript 5 から、オブジェクトリテラルの末尾のカンマも使用できるようになりました:</p>
+
+<pre class="brush: js">var object = { 
+  foo: "bar", 
+  baz: "qwerty",
+  age: 42,
+};</pre>
+
+<h2 id="関数の末尾のカンマ">関数の末尾のカンマ</h2>
+
+<p>ECMAScript 2017 では、関数の引数リストで末尾のカンマが使用できるようになりました。</p>
+
+<h3 id="引数定義">引数定義</h3>
+
+<p>次の 2 つの関数定義はともに有効で等しいものです。末尾のカンマは、関数の <code>length</code> プロパティや <code>arguments</code> オブジェクトに影響を与えません。</p>
+
+<pre class="brush: js">function f(p) {}
+function f(p,) {} 
+
+(p) =&gt; {};
+(p,) =&gt; {};
+</pre>
+
+<p>末尾のカンマは 、クラスやオブジェクトの<a href="/ja/docs/Web/JavaScript/Reference/Functions/Method_definitions">メソッド定義</a>でも使用できます:</p>
+
+<pre class="brush: js">class C {
+  one(a,) {},
+  two(a, b,) {},
+}
+
+var obj = {
+  one(a,) {},
+  two(a, b,) {},
+};
+</pre>
+
+<h3 id="関数呼び出し">関数呼び出し</h3>
+
+<p>次の 2 つの関数呼び出しはともに有効で等しいものです。</p>
+
+<pre class="brush: js">f(p);
+f(p,);
+
+Math.max(10, 20);
+Math.max(10, 20,);
+</pre>
+
+<h3 id="不正な末尾のカンマ">不正な末尾のカンマ</h3>
+
+<p>カンマしか含まない関数の引数定義や関数呼び出しは、{{Jsxref("SyntaxError")}} をスローします。さらに、<a href="/ja/docs/Web/JavaScript/Reference/Functions/rest_parameters">rest parameters</a> を使用しているときは、末尾のカンマは許可されません:</p>
+
+<pre class="brush: js example-bad">function f(,) {} // SyntaxError: missing formal parameter
+(,) =&gt; {};       // SyntaxError: expected expression, got ','
+f(,)             // SyntaxError: expected expression, got ','
+
+function f(...p,) {} // SyntaxError: parameter after rest parameter
+(...p,) =&gt; {}        // SyntaxError: expected closing parenthesis, got ','
+</pre>
+
+<h2 id="分割代入での末尾のカンマ">分割代入での末尾のカンマ</h2>
+
+<p>末尾のカンマは、<a href="/ja/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment">分割代入</a>の左辺でも使用できます:</p>
+
+<pre class="brush: js">// array destructuring with trailing comma
+[a, b,] = [1, 2];
+
+// object destructuring with trailing comma
+var o = {
+  p: 42, 
+  q: true,
+};
+var {p, q,} = o;
+</pre>
+
+<p>また、rest element で使用すると、{{jsxref("SyntaxError")}} がスローされます:</p>
+
+<pre class="brush: js example-bad">var [a, ...b,] = [1, 2, 3];
+// SyntaxError: rest element may not have a trailing comma</pre>
+
+<h2 id="JSON_の末尾のカンマ">JSON の末尾のカンマ</h2>
+
+<p>オブジェクトリテラルの末尾のカンマは、ECMAScript 5 でのみ導入されました。JSON は ES5 以前の JavaScript 構文に基づいているため、<strong>末尾のカンマを使用できません</strong>。</p>
+
+<p>次の行は <code>SyntaxError</code> をスローします。:</p>
+
+<pre class="brush: js example-bad">JSON.parse('[1, 2, 3, 4, ]');
+JSON.parse('{"foo" : 1, }');
+// SyntaxError JSON.parse: unexpected character 
+// at line 1 column 14 of the JSON data
+</pre>
+
+<p>正しく JSON をパースするには、カンマを省略します:</p>
+
+<pre class="brush: js example-good">JSON.parse('[1, 2, 3, 4 ]');
+JSON.parse('{"foo" : 1 }');</pre>
+
+<h2 id="仕様">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">ステータス</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td>オブジェクトリテラルの末尾のカンマの追加。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td>変更なし。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td>ES2017 で関数の末尾のカンマの追加。</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="ブラウザー実装状況">ブラウザー実装状況</h2>
+
+<div>{{CompatibilityTable}}</div>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>機能</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>基本サポート</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+  <tr>
+   <td>オブジェクトリテラルの末尾のカンマ</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>9</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+  <tr>
+   <td>関数の末尾のカンマ</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatGeckoDesktop(52)}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>機能</th>
+   <th>Android</th>
+   <th>Chrome for Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>基本サポート</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+  <tr>
+   <td>オブジェクトリテラルの末尾のカンマ</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+  <tr>
+   <td>関数の末尾のカンマ</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatGeckoMobile(52)}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="関連項目">関連項目</h2>
+
+<ul>
+ <li>初期の ECMAScript 提案: <a href="https://github.com/tc39/proposal-trailing-function-commas">trailing function commas</a> by Jeff Morrison</li>
+</ul>

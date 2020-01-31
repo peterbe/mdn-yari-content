@@ -1,0 +1,77 @@
+<div>{{AddonSidebar}}</div>
+
+<p><span class="seoSummary">XUL/XPCOM や Add-on SDK を使った Firefox 拡張機能を開発している場合、このページは拡張機能を WebExtensions API を使ったものに移植するのに役立ちます。Firefox 用の拡張機能を作成する標準は </span><a class="external text" href="https://developer.mozilla.org/ja/Add-ons/WebExtensions" rel="nofollow">WebExtensions</a> APIs を使うものです。これは Firefox で 2017 年11月末までの <a class="external text" href="https://wiki.mozilla.org/RapidRelease/Calendar" rel="nofollow">Firefox 57</a> リリースにてサポートされる唯一の拡張機能の種類です。</p>
+
+<h2 id="Quick_start" name="Quick_start">すばやく始める</h2>
+
+<ol>
+ <li>拡張機能において変える必要のある主なものを理解するには:
+  <ul>
+   <li>自分自身を <a href="/ja/Add-ons/WebExtensions/Anatomy_of_a_WebExtension">WebExtension フォーマットと構造に</a>慣らしておき、<a href="/ja/Add-ons/WebExtensions/Your_first_WebExtension">基本サンプルを作って</a>みます。</li>
+   <li>拡張機能か XUL と XPCOM ベースの場合、<a href="https://developer.mozilla.org/ja/Add-ons/Overlay_Extensions">overlay extension</a> か <a href="https://developer.mozilla.org/ja/docs/Mozilla/Add-ons/Bootstrapped_extensions">bootstrapped extension</a> のどちらかであるかのどちらかであり、<a href="/ja/docs/Mozilla/Add-ons/WebExtensions/Comparison_with_XUL_XPCOM_extensions">XUL/XPCOM extensions との比較</a>を見て、 WebExtensions を使っているレガシーAPI に合わせる方法を見つけます。</li>
+   <li>拡張機能が Add-on SDK ベースの場合、<a href="/ja/docs/Mozilla/Add-ons/WebExtensions/Comparison_with_the_Add-on_SDK">Add-on SDK との比較</a>を見て、WebExtensions を使っているレガシーAPI に合わせる方法を見つけます。</li>
+  </ul>
+ </li>
+ <li>拡張機能のコードを書き直します。下記の拡張機能のいろいろな種類の移行の道筋を見ます。Firefox 51 以降では、WebExtension APIs を使った拡張機能は bootstrapped extension や SDK add-on に組み込むことができて、それゆえにレガシー拡張機能の部分を一度に移植できて、それぞれのステップで拡張機能を動作させることができます。もっと詳しい情報は <a href="/ja/docs/Mozilla/Add-ons/WebExtensions/Embedded_WebExtensions">Embedded WebExtensions</a> を見てください。</li>
+ <li>WebExtension 版の拡張機能を AMO に投稿する準備ができても... ちょっと待って... 本当に準備できていますか? 拡張機能のパーミッションモデルのため、 WebExtensions をレガシー拡張機能フォーマットに戻すことはできません。なので<em>一通り</em>テストしてください、なぜなら永久的な片道旅行ですから。また、下記のハイブリッドの例も見ておいてください。準備できていない場合、レガシー拡張機能のコンテナの中に WebExtension を組み込んでおき、そうすると拡張機能の移植をテストできるけども緊急の場合は必要に応じて戻ることができます。</li>
+ <li><em>本当に </em>WebExtension 版の拡張機能を AMO に投稿する準備ができた場合、まずは古い add-on ID を新しい WebExtension manifest.json ファイルに移します。拡張機能は前のバージョンと同じ ID を持たないといけません。package.json ファイルの中の "id" フィールドの値をコピーして、WebExtension の manifest.json ファイルの中の <a href="/ja/docs/Mozilla/Add-ons/WebExtensions/manifest.json/applications">applications</a> 部の id フィールドに移します。そして AMO に通常通り拡張機能の更新を投稿します。</li>
+</ol>
+
+<div class="note">
+<p>これが一方通行の変換であるのに注意してください: WebExtensions を使った拡張機能からレガシーテクノロジーに更新<strong>できません。</strong>つまり AMO に更新したアドオンょ投稿する前に、WebExtension APIs の使用にコミットする準備ができたのを確認済みでなければならないことを意味します。</p>
+</div>
+
+<h2 id="Migration_paths" name="Migration_paths">移行の道筋</h2>
+
+<h3 id="SDK_Extensions" name="SDK_Extensions"><br>
+ SDK Extensions</h3>
+
+<p>ここに <a href="https://developer.mozilla.org/ja/Add-ons/WebExtensions/Comparison_with_the_Add-on_SDK">SDK APIs と WebExtensions フォーマットの同等品</a>を示す比較チャートがあります。WebExtensions API を使った移植に必要な API が見つからない場合、下記を見て API をリクエストしてそれを実装する方法を見てください。</p>
+
+<h3 id="XULXPCOM_Extensions" name="XULXPCOM_Extensions">XUL/XPCOM Extensions</h3>
+
+<p>ここに <a href="/ja/Add-ons/WebExtensions/Comparison_with_XUL_XPCOM_extensions">XUL/XPCOM APIs と WebExtensions フォーマットの同等品</a>を示す比較チャートがあります。WebExtensions API を使った移植に必要な API が見つからない場合、下記を見て API をリクエストしてそれを実装する方法を見てください。</p>
+
+<h3 id="Partial_migration" name="Partial_migration">Partial migration</h3>
+
+<p><a href="https://developer.mozilla.org/ja/Add-ons/WebExtensions/Embedded_WebExtensions">Embedded WebExtension</a> は 2種類の拡張機能が 1 つに結合された拡張機能で、その方法は bootstrapped 拡張機能や SDK 拡張機能の中に合体させます。ファイルシステムにデータを書き込むレガシー拡張機能があって、WebExtensions に移植したい場合、<a href="https://developer.mozilla.org/ja/Add-ons/WebExtensions/Embedded_WebExtensions">Embedded WebExtensions</a> が-翻訳の助けになります。Embedded WebExtensions は保存データを WebExtension が利用できるフォーマットに変換します。これユーザーが対策を取ることなく、転換させるのに重要です。</p>
+
+<p>Embedded WebExtensions は変換ツールとして考えられ、Firefox 57 を超えるとサポートされないことは強調しておきます。WebExtensions に変換するつもりでないアドオンには使ってはなりません。</p>
+
+<h2 id="Don't_see_the_WebExtensions_APIs_you_need" name="Don't_see_the_WebExtensions_APIs_you_need">必要な WebExtensions APIs が見当たりませんか?</h2>
+
+<p><strong>Firefox用の WebExtension API を開発してください</strong> - Mozilla のインフラの経験があって直接 Firefox用の WebExtension API を開発したい場合、ここに貢献を開始できる<a href="https://mzl.la/2dVs5Ys">認定済み API</a> 一覧があります。</p>
+
+<p><strong>新しい WebExtension API を実験してください</strong> - WebExtension API を Firefox をビルドすることなくプロトタイプしていじくり回したい場合、<a href="http://webextensions-experiments.readthedocs.io/en/latest/index.html">WebExtensions Experiments</a> がぴったりです!</p>
+
+<p><strong>新しい WebExtensions API をリクエストしてください</strong> - 新しい WebExtensions API をリクエストしたい場合、<a class="external text" href="https://wiki.mozilla.org/WebExtensions/NewAPIs" rel="nofollow">このページ</a>を見てください。</p>
+
+<h2 id="Tools" name="Tools">ツール</h2>
+
+<ul>
+ <li><a href="/ja/docs/Mozilla/Add-ons/WebExtensions/Getting_started_with_web-ext">web-ext</a> は拡張機能の開発プロセスをスピードアップするためのコマンドラインツールで、開発をよりすばやく簡単にします。</li>
+ <li><a href="https://github.com/mi-g/weh">WebExtensions Helper</a> はブラウザー拡張機能の開発を、WebExtensions ベース (Firefox, Chrome, Opera, Edge) の拡張機能向けユーティリティを提供することでスピードアップします。</li>
+ <li><a href="https://github.com/yeoman/generator-chrome-extension">Chrome Extension generator </a>は拡張機能開発を始めるために必要なすべてを生成します。ブラウザー UI(ブラウザー、ページアクション、Omnibox) の種類と必要なパーミッションを選択できます。</li>
+ <li><a href="http://extensionizr.com/">Extensionizr</a> は基本的な拡張機能を作るのに役立つウィザードです。</li>
+ <li><a href="https://github.com/mahemoff/chrome-boilerplate">Chrome Boilerplate</a> は Chrome WebE<span class="col-11 mr-2 text-gray-dark">xtension 用のコードのボイラープレートです。</span></li>
+ <li><a href="https://github.com/sitepoint/ChromeSkel_a">Skeleton Chrome Extension</a> は拡張機能のブートストラップとテンプレートです。</li>
+</ul>
+
+<h2 id="Documentation" name="Documentation">文書</h2>
+
+<ul>
+ <li>Mozilla Wiki の <a href="https://wiki.mozilla.org/Add-ons/developer/communication">WebExtensions プロジェクトページ</a></li>
+ <li><a href="https://developer.mozilla.org/ja/Add-ons/WebExtensions">How-to ガイド</a>は良くある拡張機能開発事例、<a href="https://developer.mozilla.org/ja/docs/Mozilla/Add-ons/WebExtensions/Intercept_HTTP_requests">web リクエストの横取り</a>や<a href="https://developer.mozilla.org/ja/docs/Mozilla/Add-ons/WebExtensions/Add_a_button_to_the_toolbar">ツールバーへのボタン追加</a>のようなものをカバーしています</li>
+ <li><a href="https://developer.mozilla.org/ja/Add-ons/WebExtensions/Comparison_with_the_Add-on_SDK">Add-on SDK との比較</a></li>
+ <li><a href="https://developer.mozilla.org/ja/Add-ons/WebExtensions/Comparison_with_XUL_XPCOM_extensions">XUL/XPCOM 拡張機能との比較</a></li>
+ <li>すべての WebExtensions API の<a href="https://developer.mozilla.org/ja/Add-ons/WebExtensions/Browser_support_for_JavaScript_APIs">ブラウザー互換性テーブル</a></li>
+ <li><a href="https://developer.mozilla.org/ja/Add-ons/WebExtensions/Examples">拡張機能の例</a></li>
+</ul>
+
+<h2 id="Contact" name="Contact">連絡先</h2>
+
+<ul>
+ <li>
+  <p>助けを得るには<a href="https://developer.mozilla.org/ja/Add-ons#Contact_us">ここ</a>のリンクを使って、アドオン周りのニュースを追って、フィードバックをください。</p>
+ </li>
+</ul>

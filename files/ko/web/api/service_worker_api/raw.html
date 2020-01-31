@@ -1,0 +1,156 @@
+<div>{{ServiceWorkerSidebar}}</div>
+
+<p class="summary">Service worker는 기본적으로 웹 응용 프로그램, 브라우저 및 네트워크 (사용 가능한 경우) 사이에있는 프록시 서버의 역할을 합니다. 또한 효과적인 오프라인 환경을 만들고 네트워크 요청을 가로 채고 네트워크 사용 가능 여부에 따라 적절한 조치를 취하고 서버에있는 자산을 업데이트하기위한 것입니다. 또한 푸시 알림 및 백그라운드 동기화 API에 대한 액세스를 허용합니다.</p>
+
+<h2 id="Service_worker의_개념과_사용법">Service worker의 개념과 사용법</h2>
+
+<p>service worker는 출발지와 경로에 대해 등록 된 이벤트 중심 <a href="https://developer.mozilla.org/en-US/docs/Web/API/Worker">worker</a>입니다. 연결된 웹 페이지 / 사이트를 제어하고 탐색 및 리소스 요청을 가로 채어 수정하며 리소스를 매우 세부적으로 캐싱하여 특정 상황에서 앱의 동작 방식을 완벽하게 제어 할 수있는 JavaScript 파일 형식을 취합니다 , 네트워크를 사용할 수 없는 경우에 역할이 확실해집니다.</p>
+
+<p>service worker는 작업자 컨텍스트(worker context)에서 실행되기 때문에 DOM 액세스가 없으며 앱에 권한을 부여하는 기본 JavaScript와는 다른 스레드에서 실행되므로 차단되지 않습니다. 완전 비동기로 설계되었습니다. 결과적으로 동기식 <a href="https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest">XHR</a> 및 <a href="https://developer.mozilla.org/en-US/docs/Web/Guide/API/DOM/Storage">localStorage</a>와 같은 API를 서비스 작업자 내부에서 사용할 수 없습니다.</p>
+
+<p>서비스 작업자는 보안상의 이유로 HTTPS를 통해서만 실행됩니다. 네트워크 요청을 수정하면 중간 공격에서 사람에게 크게 개방 될 수 있습니다. Firefox에서는 Service Worker API도 숨겨져있어 사용자가 <a href="https://support.mozilla.org/en-US/kb/private-browsing-use-firefox-without-history">private browsing mode</a>에있을 때 사용할 수 없습니다.</p>
+
+<div class="note">
+<p><strong>Note</strong>: 서비스워커는 이 영역에서 <a href="http://alistapart.com/article/application-cache-is-a-douchebag">앱캐시</a>와 같은 이전의 시도들을 끌어내리려고 하지 않습니다. 왜냐하면 무엇을 시도했는지에 대한 가정을 만들지 않고,  그 가정들이 정확히 일치 하지 않을때 깨기 때문에 당신은 정확히 모든 것을 컨트롤 할 수 있습니다. </p>
+</div>
+
+<div class="note">
+<p><strong>Note</strong>: Service worker는 일반적으로 응답이 오기를 기다릴 것이므로 <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise">promises</a>를 많이 사용합니다. 그 후에 응답자는 성공 또는 실패 조치로 응답합니다. 이를 위해 promise 아키텍처를 사용하는 것이 좋습니다.</p>
+</div>
+
+<h3 id="Registration">Registration</h3>
+
+<p>service worker는 {{domxref ( "ServiceWorkerContainer.register ()")}} 메소드를 사용하여 등록됩니다. 성공하면 서비스 작업자가 클라이언트에 다운로드되고 전체 원본 또는 사용자가 지정한 하위 집합 내에서 사용자가 액세스 한 URL에 대한 설치 / 활성화 (아래 참조)를 시도합니다.</p>
+
+<h3 id="Download_install_and_activate">Download, install and activate</h3>
+
+<p>이 시점에서 service worker는 다음과 같은 수명주기를 가집니다.</p>
+
+<ol>
+ <li>Download</li>
+ <li>Install</li>
+ <li>Activate</li>
+</ol>
+
+<p>service worker는 사용자가 service worker가 제어하는 ​​사이트 / 페이지에 처음 액세스 할 때 즉시 다운로드됩니다.</p>
+
+<p>그 후 24 시간마다 다운로드됩니다. 더 자주 다운로드 될 수 있지만 잘못된 스크립트 때문에 너무 오래 걸리는 것을 방지하기위해 24 시간마다 다운로드해야합니다.</p>
+
+<p>다운로드 한 파일이 기존 service worker와 다르거나(바이트 단위로 비교 한 경우) 페이지(사이트)의 첫 번째 service worker와 만난 경우 설치가 시도됩니다.</p>
+
+<p>service worker가 다운로드 되면 설치가 시작되고 설치가 완료된 후 service worker가 활성화됩니다.</p>
+
+<p>사용 가능한 기존 service worker가 있는 경우 새 버전이 백그라운드에 설치되지만 아직 활성화되지 않습니다. 이 시점에서 새로운 service worker를 대기중인 작업자라고합니다. 이전 service worker를 계속 사용중인 페이지가 로드되지 않은 경우에 활성화됩니다. 로드 할 페이지가 더 이상 없으면 새로운 service worker가 활성화됩니다 (활성 작업자가 됨). {{domxref("ServiceWorkerGlobalScope.skipWaiting()")}}를 이용해 활성화가 바로 일어날 수 있게 할 수 있고, {{domxref("Clients.claim()")}}를 이용해 활성화된 워커가 현재 페이지에 적용되게 할 수 있습니다. </p>
+
+<p>{{domxref("InstallEvent")}}를 통해 감지할 수 있습니다. 기본적인 동작은 사용을 중지할 때 서비스 워커사용을 준비하는 것입니다, 예를 들어 브라우저 기본인 stroage API를 사용하여 캐시를 만들고 assets을 저장하여 오프라인에서 동작하기 원할때 같은 경우입니다. </p>
+
+<p>또한 activate 이벤트가 있습니다. 이 이벤트가 발생할 때 이전 버전의 Service worker와 관련된 이전 캐시 및 기타 항목을 정리하기 좋습니다.</p>
+
+<p>서비스워커는 {{domxref("FetchEvent")}} 이벤트를 통해 요청에 응답할 수 있습니다.  {{domxref("FetchEvent.respondWith")}} 메소드를 통해 요청을 원하는 방식으로 바꿀 수 있습니다.</p>
+
+<div class="blockIndicator note">
+<p><strong>Note</strong>: <code>oninstall</code>/<code>onactivate</code> 이 시간이 걸리기 때문에, 서비스워커는 <code>oninstall</code> 나 <code>onactivate</code> 가 호출되고 나면 <code>waitUntil</code> 를 제공합니다.<code>waitUntil은 </code>promise를 넘깁니다. promise가 성공적으로 resolved될 때까지 서비스 워커에 이벤트들이 전달되지 않습니다.</p>
+</div>
+
+<p>첫번째 기본 예제를 만드는 방법을 보여주는 완전한 튜토리얼이 있습니다.  <a href="https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorker_API/Using_Service_Workers">Using Service Workers</a>.를 읽으세요.</p>
+
+<h2 id="다른_사용성에_대한_아이디어">다른 사용성에 대한 아이디어</h2>
+
+<p>서비스워커는 또한 아래 용도로도 사용되도록 할 수 있다.</p>
+
+<ul>
+ <li>백그라운드 데이터 동기화</li>
+ <li>다른 출처의 리소스 요청에 대한 응답 </li>
+ <li>geolocation이나 gyroscope 같이 비싼 계산 비용이 드는 것들을 중앙에서 업데이트해 받는다. 그래서 여러 페이지에서 같은 데이터를 사용 할 수 있다. </li>
+ <li>Client-side compiling and dependency management of CoffeeScript, less, CJS/AMD modules, etc. for dev purposes</li>
+ <li>Hooks for background services</li>
+ <li>Custom templating based on certain URL patterns</li>
+ <li>Performance enhancements, for example pre-fetching resources that the user is likely to need in the near future, such as the next few pictures in a photo album.</li>
+</ul>
+
+<p>In the future, service workers will be able to do a number of other useful things for the web platform that will bring it closer towards native app viability. Interestingly, other specifications can and will start to make use of the service worker context, for example:</p>
+
+<ul>
+ <li><a href="https://github.com/slightlyoff/BackgroundSync">Background synchronization</a>: Start up a service worker even when no users are at the site, so caches can be updated, etc.</li>
+ <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Push_API">Reacting to push messages</a>: Start up a service worker to send users a message to tell them new content is available.</li>
+ <li>Reacting to a particular time &amp; date</li>
+ <li>Entering a geo-fence</li>
+</ul>
+
+<h2 id="Interfaces">Interfaces</h2>
+
+<dl>
+ <dt>{{domxref("Cache")}}</dt>
+ <dd>Represents the storage for {{domxref("Request")}} / {{domxref("Response")}} object pairs that are cached as part of the {{domxref("ServiceWorker")}} life cycle.</dd>
+ <dt>{{domxref("CacheStorage")}}</dt>
+ <dd>Represents the storage for {{domxref("Cache")}} objects. It provides a master directory of all the named caches that a {{domxref("ServiceWorker")}} can access, and maintains a mapping of string names to corresponding {{domxref("Cache")}} objects.</dd>
+ <dt>{{domxref("Client")}}</dt>
+ <dd>Represents the scope of a service worker client. A service worker client is either a document in a browser context or a {{domxref("SharedWorker")}}, which is controlled by an active worker.</dd>
+ <dt>{{domxref("Clients")}}</dt>
+ <dd>Represents a container for a list of {{domxref("Client")}} objects; the main way to access the active service worker clients at the current origin.</dd>
+ <dt>{{domxref("ExtendableEvent")}}</dt>
+ <dd>Extends the lifetime of the <code>install</code> and <code>activate</code> events dispatched on the {{domxref("ServiceWorkerGlobalScope")}}, as part of the service worker lifecycle. This ensures that any functional events (like {{domxref("FetchEvent")}} ) are not dispatched to the {{domxref("ServiceWorker")}}, until it upgrades database schemas, and deletes outdated cache entries, etc.</dd>
+ <dt>{{domxref("ExtendableMessageEvent")}}</dt>
+ <dd>The event object of a {{event("message_(ServiceWorker)","message")}} event fired on a service worker (when a channel message is received on the {{domxref("ServiceWorkerGlobalScope")}} from another context) — extends the lifetime of such events.</dd>
+ <dt>{{domxref("FetchEvent")}}</dt>
+ <dd>The parameter passed into the {{domxref("ServiceWorkerGlobalScope.onfetch")}} handler, <code>FetchEvent</code> represents a fetch action that is dispatched on the {{domxref("ServiceWorkerGlobalScope")}} of a {{domxref("ServiceWorker")}}. It contains information about the request and resulting response, and provides the {{domxref("FetchEvent.respondWith", "FetchEvent.respondWith()")}} method, which allows us to provide an arbitrary response back to the controlled page.</dd>
+ <dt>{{domxref("InstallEvent")}}</dt>
+ <dd>The parameter passed into the {{domxref("ServiceWorkerGlobalScope.oninstall", "oninstall")}} handler, the <code>InstallEvent</code> interface represents an install action that is dispatched on the {{domxref("ServiceWorkerGlobalScope")}} of a {{domxref("ServiceWorker")}}. As a child of {{domxref("ExtendableEvent")}}, it ensures that functional events such as {{domxref("FetchEvent")}} are not dispatched during installation.</dd>
+ <dt>{{domxref("NavigationPreloadManager")}}</dt>
+ <dd>Provides methods for managing the preloading of resources with a service worker.</dd>
+ <dt>{{domxref("Navigator.serviceWorker")}}</dt>
+ <dd>Returns a {{domxref("ServiceWorkerContainer")}} object, which provides access to registration, removal, upgrade, and communication with the {{domxref("ServiceWorker")}} objects for the <a href="https://html.spec.whatwg.org/multipage/browsers.html#concept-document-window">associated document</a>.</dd>
+ <dt>{{domxref("NotificationEvent")}}</dt>
+ <dd>The parameter passed into the {{domxref("ServiceWorkerGlobalScope.onnotificationclick", "onnotificationclick")}} handler, the <code>NotificationEvent</code> interface represents a notification click event that is dispatched on the {{domxref("ServiceWorkerGlobalScope")}} of a {{domxref("ServiceWorker")}}.</dd>
+ <dt>{{domxref("ServiceWorker")}}</dt>
+ <dd>Represents a service worker. Multiple browsing contexts (e.g. pages, workers, etc.) can be associated with the same <code>ServiceWorker</code> object.</dd>
+ <dt>{{domxref("ServiceWorkerContainer")}}</dt>
+ <dd>Provides an object representing the service worker as an overall unit in the network ecosystem, including facilities to register, unregister, and update service workers, and access the state of service workers and their registrations.</dd>
+ <dt>{{domxref("ServiceWorkerGlobalScope")}}</dt>
+ <dd>Represents the global execution context of a service worker.</dd>
+ <dt>{{domxref("ServiceWorkerMessageEvent")}} {{deprecated_inline}}</dt>
+ <dd>Represents a message sent to a {{domxref("ServiceWorkerGlobalScope")}}. <strong>Note that this interface is deprecated in modern browsers. Service worker messages will now use the {{domxref("MessageEvent")}} interface, for consistency with other web messaging features.</strong></dd>
+ <dt>{{domxref("ServiceWorkerRegistration")}}</dt>
+ <dd>Represents a service worker registration.</dd>
+ <dt>{{domxref("ServiceWorkerState")}} {{experimental_inline}}</dt>
+ <dd>Associated with its <a href="https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorker" title="The ServiceWorker interface of the ServiceWorker API provides a reference to a service worker. Multiple browsing contexts (e.g. pages, workers, etc.) can be associated with the same service worker, each through a unique ServiceWorker object."><code>ServiceWorker</code></a>'s state.</dd>
+ <dt>{{domxref("SyncEvent")}} {{non-standard_inline}}</dt>
+ <dd>
+ <p>The SyncEvent interface represents a sync action that is dispatched on the {{domxref("ServiceWorkerGlobalScope")}} of a ServiceWorker.</p>
+ </dd>
+ <dt>{{domxref("SyncManager")}} {{non-standard_inline}}</dt>
+ <dd>Provides an interface for registering and listing sync registrations.</dd>
+ <dt>{{domxref("WindowClient")}}</dt>
+ <dd>Represents the scope of a service worker client that is a document in a browser context, controlled by an active worker. This is a special type of {{domxref("Client")}} object, with some additional methods and properties available.</dd>
+</dl>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName('Service Workers')}}</td>
+   <td>{{Spec2('Service Workers')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li><a href="https://serviceworke.rs/">ServiceWorker Cookbook</a></li>
+ <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorker_API/Using_Service_Workers">Using Service Workers</a></li>
+ <li><a href="https://github.com/mdn/sw-test">Service workers basic code example</a></li>
+ <li><a href="https://jakearchibald.github.io/isserviceworkerready/">Is ServiceWorker ready?</a></li>
+ <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promises</a></li>
+ <li><a href="https://developer.mozilla.org/en-US/docs/Web/Guide/Performance/Using_web_workers">Using web workers</a></li>
+ <li><a href="https://www.fastly.com/blog/best-practices-for-using-the-vary-header">Best Practices for using the VARY header</a></li>
+</ul>

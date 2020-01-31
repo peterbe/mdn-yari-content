@@ -1,0 +1,849 @@
+<div>{{jsSidebar("JavaScript Guide")}} {{PreviousNext("Web/JavaScript/Guide/Loops_and_iteration", "Web/JavaScript/Guide/Expressions_and_Operators")}}</div>
+
+<p class="summary">Las funciones son uno de los pilares fundamentales en JavaScript. Una función es un procedimiento en JavaScript—un conjunto de sentencias que realizan una tarea o calculan un valor. Para usar una función, debe definirla en algún lugar del ámbito desde el cual desea llamarla.</p>
+
+<p>Revisa tambien el <a href="https://developer.mozilla.org/es/docs/Web/JavaScript/Referencia/Funciones">exhaustivo capitulo de referencia sobre funciones de JavaScript</a> para saber mas detalles.</p>
+
+<h2 id="Definición_de_funciones">Definición de funciones</h2>
+
+<h3 id="Declaraciones_de_función">Declaraciones de función</h3>
+
+<p>La <strong>definición de una función</strong> (también llamada <strong>declaración de función</strong> o <strong>sentencia de función</strong>) consiste de la palabra clave (reservada)  <a href="/en-US/docs/JavaScript/Reference/Statements/function" title="function"><code>function</code></a>, seguida por:</p>
+
+<ul>
+ <li>El nombre de la función (opcional).</li>
+ <li>Una lista de argumentos para la función, encerrados entre paréntesis y separados por comas (,).</li>
+ <li>Las sentencias JavaScript que definen la función, encerradas por llaves, <code>{ }</code>.</li>
+</ul>
+
+<p>Por ejemplo, el siguiente código define una función simple llamada <code>square</code>:</p>
+
+<div style="margin-right: 270px;">
+<pre class="brush: js">function square(number) {
+  return number * number;
+}
+</pre>
+</div>
+
+<p>La función <code>square</code> toma un argumento, llamado <code>number</code>. La función consiste de una sentencia que expresa el retorno del argumento de la función (el cual es, <code>number</code>) multiplicado por sí mismo. La sentencia <a href="/en-US/docs/JavaScript/Reference/Statements/return" title="return"><code>return</code></a> especifica el valor retornado por la función.</p>
+
+<pre class="brush: js">return number * number;
+</pre>
+
+<p>Los parámetros primitivos (como puede ser un número) son pasados a las funciones <strong>por valor</strong>; el valor es pasado a la función, si la función cambia el valor del parámetro, <strong>este cambio no es reflejado globalmente o en otra llamada a la función</strong>.</p>
+
+<p>Si pasa un objecto (p. ej. un <a href="/en-US/docs/JavaScript/Glossary" title="en-US/docs/JavaScript/Glossary">valor no primitivo</a>, como un <a href="/en-US/docs/JavaScript/Reference/Global_Objects/Array" title="Array"><code>Array</code></a> o un objeto definido por el usuario) como parámetro, y la función cambia las propiedades del objeto, este cambio sí es visible desde afuera de la función, como se ve en el siguiente ejemplo:</p>
+
+<pre class="brush: js">function myFunc(theObject) {
+  theObject.make = 'Toyota';
+}
+
+var mycar = {make: 'Honda', model: 'Accord', year: 1998},
+var x, y;
+
+x = mycar.make;     // x toma el valor "Honda"
+
+myFunc(mycar);
+y = mycar.make;     // y toma el valor "Toyota"
+                    // (la propiedad make fue cambida por la funcion)
+</pre>
+
+<div class="note">
+<p><strong>Nota:</strong> Tenga en cuenta que asignar un nuevo objeto al parámetro no tendrá ningún efecto fuera de la función, porque esto está cambiando el valor del parámetro en lugar de una de las propiedades del objeto:</p>
+</div>
+
+<pre class="brush: js">function myFunc(theObject) {
+  theObject = {make: 'Ford', model: 'Focus', year: 2006};
+}
+
+var mycar = {make: 'Honda', model: 'Accord', year: 1998},
+var x, y;
+
+x = mycar.make;     // x toma el valor "Honda"
+
+myFunc(mycar);
+y = mycar.make;     // y sigue con el valor "Honda" 
+</pre>
+
+<h3 id="Expresiones_de_función">Expresiones de función</h3>
+
+<p>Si bien la declaración de la función anterior es sintácticamente una sentencia, las funciones pueden también ser creadas por una <strong>expresión de función</strong>. Tal función puede ser <strong>anónima</strong>; no debe tener un nombre. Por ejemplo, la función <code style="font-size: 14px;">square</code> podría haber sido definida como:</p>
+
+<pre class="brush: js" style="font-size: 14px;">var square = function(number) {return number * number};
+var x = square(4) //x obtiene el valor 16</pre>
+
+<p>Sin embargo, se puede proporcionar un nombre a una expresión de función, y éste puede ser utilizado dentro de la función para referirse a sí misma, o en un depurador para identificar la función en el trazado de pila:</p>
+
+<pre class="brush: js" style="font-size: 14px;">var factorial = function fac(n) {return n&lt;2 ? 1 : n*fac(n-1)};
+
+print(factorial(3));
+</pre>
+
+<p>Las expresiones de función son convenientes cuando se pasa una función como argumento a otra función. El siguiente ejemplo muestra una función <code style="font-size: 14px;">map</code> siendo definida y luego llamada con una expresión de función como primer parámetro:</p>
+
+<pre class="brush: js" style="font-size: 14px;">function map(f,a) {
+  var result = [], // Crea un nuevo Array
+      i;
+  for (i = 0; i != a.length; i++)
+    result[i] = f(a[i]);
+  return result;
+}
+</pre>
+
+<p>El siguiente código:</p>
+
+<pre class="brush: js" style="font-size: 14px;">var multiplicar= function(x) { return x * x * x;} //Expresión de funcion
+map(multiplicar, [0, 1, 2, 5, 10]);
+</pre>
+
+<p>retorna [0, 1, 8, 125, 1000].</p>
+
+<p>En JavaScript, una función puede ser definida en base a una condición. Por ejemplo, la siguiente definición de función <code>myFunc</code> es definida sólo si <code>num</code> es igual a 0:</p>
+
+<pre class="brush: js">var myFunc;
+if (num == 0){
+  myFunc = function(theObject) {
+    theObject.make = "Toyota"
+  }
+}</pre>
+
+<p><span style="line-height: 1.572;">Además de definir funciones como se describe aquí, se puede utilizar el constructor </span><a href="/en-US/docs/JavaScript/Guide/Predefined_Core_Objects#Function_Object" style="line-height: 1.572;" title="en-US/docs/JavaScript/Guide/Predefined Core Objects#Function Object"><code>Function</code></a><span style="line-height: 1.572;"> para crear funciones desde una cadena en tiempo de ejecución, muy al estilo de </span><a href="/en-US/docs/JavaScript/Guide/Functions#eval_Function" style="line-height: 1.572;" title="en-US/docs/JavaScript/Guide/Functions#eval_Function"><code>eval()</code></a><span style="line-height: 1.572;">.</span></p>
+
+<p>Un <strong>método</strong>, es una función que es propiedad de un objeto. Puede leer más acerca de objetos y métodos en <a href="https://developer.mozilla.org/es/docs/Web/JavaScript/Guide/Trabajando_con_objectos">Trabajando con objetos</a>.</p>
+
+<h2 id="Llamando_funciones">Llamando funciones</h2>
+
+<p>Definir una función no la ejecuta. Definir una función simplemente la nombra y especifica que hacer cuando la función es llamada. <strong>Llamar</strong> la función es lo que realmente realiza las acciones especificadas con los parámetros indicados. Por ejemplo, si define la función  <code>square</code>, podría llamarla como sigue:</p>
+
+<pre class="brush: js">square(5);
+</pre>
+
+<p>La sentencia anterior llama a la función con el argumento 5. La función ejecuta sus sentencias y retorna el valor 25.</p>
+
+<p>Las funciones deben de estar dentro del ámbito cuando son llamadas, pero la declaración de la función puede ser izada (aparecer por debajo de la llamada en el codigo), como muestra el siguiente ejemplo:</p>
+
+<pre class="brush: js">console.log(square(5));
+/* ... */
+function square(n) { return n*n } 
+</pre>
+
+<p>El ámbito de la función es la función en la que es declarada o el programa entero si ésta es declarada en el nivel superior.  </p>
+
+<div class="note">
+<p><strong>Nota:</strong> Esto sólo funciona cuando se define la función utilizando la sintaxis anterior (p.ej. function funcName(){}). El siguiente código no funcionará. Esto quiere decir que el izado de funciones sólo funciona con una declaración de función y no con una expresión de función</p>
+</div>
+
+<pre class="brush: js">console.log(square); // square es creado con un valor inicial indefinido
+console.log(square(5)); //TypeError: square no es un funcion
+square = function (n) {
+  return n * n;
+} </pre>
+
+<p>Los argumentos de una función no están limitados a cadenas y números. Pueden enviarse objetos enteros a una función. La función <code>show_props()</code> (definida en <a href="/en-US/docs/JavaScript/Guide/Working_with_Objects#Objects_and_Properties">Trabajando con objetos</a>) es un ejemplo de una función que toma un objeto como argumento.<br>
+ <br>
+ <span style="line-height: 1.5;">Una función puede ser recursiva; es decir, que puede llamarse a sí misma. Por ejemplo, a continuación tenemos una función que calcula el factorial de forma recursiva:</span></p>
+
+<pre class="brush: js">function factorial(n){
+  if ((n == 0) || (n == 1))
+    return 1;
+  else
+    return (n * factorial(n - 1));
+}
+</pre>
+
+<p>Entonces, podría calcular los factoriales desde uno hasta cinco de la siguiente manera:</p>
+
+<pre class="brush: js">var a, b, c, d, e;
+a = factorial(1); // a obtiene el valor 1
+b = factorial(2); // b obtiene el valor 2
+c = factorial(3); // c obtiene el valor 6
+d = factorial(4); // d obtiene el valor 24
+e = factorial(5); // e obtiene el valor 120
+</pre>
+
+<p>Hay otras formas de llamar a las funciones. A menudo hay casos en donde una función necesita ser llamada de forma dinámica, o en donde el número de argumentos de la misma varía; o en la cual, el contexto de la llamada de la función necesita ser ajustada para un objeto específico determinado en el tiempo de ejecución. Resulta que las funciones en sí mismas son objetos, y estos objetos a su vez tienen métodos (ver el <a href="https://developer.mozilla.org/en-US/docs/JavaScript/Guide/Obsolete_Pages/Predefined_Core_Objects/Function_Object">objeto Function</a>). Uno de éstos, el método <a href="https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Function/apply">apply()</a>, se puede utilizar para lograr este objetivo.</p>
+
+<h2 class="deki-transform" id="Ámbito_de_una_Función"> Ámbito de una Función</h2>
+
+<p>Las variables definidas dentro de una función no pueden ser accedidas desde ningún lugar fuera de la función, ya que la variable está definida sólo en el ámbito de la función. Sin embargo, una función puede acceder a todas las variables y funciones definidas dentro del ámbito en el cual está definida. En otras palabras, una función definida en el ámbito global puede acceder a todas las variables definidas en el ámbito global. Una función definida dentro de otra función, también puede acceder a todas las variables definidas en su función padre y a cualquier otra variable a la que la función padre tenga acceso.</p>
+
+<pre class="brush: js">// Las siguientes variables están  definidas en el ámbito global
+var num1 = 20,
+    num2 = 3,
+    nombre = "Messi";
+
+// Esta función se define en el ámbito global
+function multiplicar() {
+  return num1 * num2;
+}
+
+multiplicar(); // Retorna 60
+
+// Un ejemplo de función anidada
+function obtenerPuntaje () {
+  var num1 = 2,
+      num2 = 3;
+  
+  function agregar() {
+    return nombre + " puntaje " + (num1 + num2);
+  }
+  
+  return agregar();
+}
+
+obtenerPuntaje(); // Retorna "Messi puntaje 5"
+</pre>
+
+<h2 id="Scope_and_the_function_stack" name="Scope_and_the_function_stack" style="margin-bottom: 20px; line-height: 30px; font-size: 2.14285714285714rem;">Ámbito y la pila de la función</h2>
+
+<h3 id="Recursion" name="Recursion" style="line-height: 24px; font-size: 1.71428571428571rem;">La recursividad</h3>
+
+<p>Una función puede referirse y llamarse a sí misma. Hay tres formas de una función para referirse a sí misma:</p>
+
+<ol>
+ <li>El nombre de la función</li>
+ <li><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments/callee">arguments.callee</a></code></li>
+ <li>Una variable en el ámbito en el que se refiere a la función</li>
+</ol>
+
+<p>Por ejemplo, considere la siguiente definición de función:</p>
+
+<pre class="brush: js  language-js" style="padding: 1em 0px 1em 30px; font-size: 14px; white-space: normal;"><code class="language-js" style="direction: ltr; white-space: pre;"><span class="keyword token" style="color: #0077aa;">var</span> foo <span class="operator token" style="background: rgba(255, 255, 255, 0.498039); color: #a67f59;">=</span> <span class="keyword token" style="color: #0077aa;">function</span> <span class="function token" style="color: #dd4a68;">bar<span class="punctuation token" style="color: #999999;">(</span></span><span class="punctuation token" style="color: #999999;">)</span> <span class="punctuation token" style="color: #999999;">{</span>
+  <span class="comment token" style="color: #708090;"> // las sentencias van aqui
+</span><span class="punctuation token" style="color: #999999;">}</span><span class="punctuation token" style="color: #999999;">;</span></code></pre>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 0px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 19px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 38px; background: 0px 0px;"></div>
+
+<p>Dentro del cuerpo de la función, todo lo siguiente es equivalente:</p>
+
+<ol>
+ <li><code>bar()</code></li>
+ <li><code>arguments.callee()</code></li>
+ <li><code>foo()</code></li>
+</ol>
+
+<p>Una función que se llama a sí misma se denomina una <em>función recursiva</em>. En cierto modo, la recursividad es análoga a un bucle. Ambos ejecutan el mismo código varias veces, y ambos requieren una condición (para evitar un bucle infinito, o más bien, la recursividad infinita en este caso). Por ejemplo, el siguiente bucle:</p>
+
+<pre class="brush: js  language-js" style="padding: 1em 0px 1em 30px; font-size: 14px; white-space: normal;"><code class="language-js" style="direction: ltr; white-space: pre;"><span class="keyword token" style="color: #0077aa;">var</span> x <span class="operator token" style="background: rgba(255, 255, 255, 0.498039); color: #a67f59;">=</span> <span class="number token" style="color: #990055;">0</span><span class="punctuation token" style="color: #999999;">;</span>
+<span class="keyword token" style="color: #0077aa;">while</span> <span class="punctuation token" style="color: #999999;">(</span>x <span class="operator token" style="background: rgba(255, 255, 255, 0.498039); color: #a67f59;">&lt;</span> <span class="number token" style="color: #990055;">10</span><span class="punctuation token" style="color: #999999;">)</span> <span class="punctuation token" style="color: #999999;">{</span><span class="comment token" style="color: #708090;"> // "x &lt; 10" es la condicion del bucle
+</span>  <span class="comment token" style="color: #708090;"> // hacer cosas
+</span>   x<span class="operator token" style="background: rgba(255, 255, 255, 0.498039); color: #a67f59;">++</span><span class="punctuation token" style="color: #999999;">;</span>
+<span class="punctuation token" style="color: #999999;">}</span></code></pre>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 0px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 19px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 38px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 57px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 76px; background: 0px 0px;"></div>
+
+<p>se puede convertir en una función recursiva y una llamada a esa función:</p>
+
+<pre class="brush: js  language-js" style="padding: 1em 0px 1em 30px; font-size: 14px; white-space: normal;"><code class="language-js" style="direction: ltr; white-space: pre;"><span class="keyword token" style="color: #0077aa;">function</span> <span class="function token" style="color: #dd4a68;">loop<span class="punctuation token" style="color: #999999;">(</span></span>x<span class="punctuation token" style="color: #999999;">)</span> <span class="punctuation token" style="color: #999999;">{</span>
+  <span class="keyword token" style="color: #0077aa;">if</span> <span class="punctuation token" style="color: #999999;">(</span>x <span class="operator token" style="background: rgba(255, 255, 255, 0.498039); color: #a67f59;">&gt;=</span> <span class="number token" style="color: #990055;">10</span><span class="punctuation token" style="color: #999999;">)</span><span class="comment token" style="color: #708090;"> // "x &gt;= 10" es la condicion de salida (equivalente a "!(x &lt; 10)")
+</span>    <span class="keyword token" style="color: #0077aa;">return</span><span class="punctuation token" style="color: #999999;">;</span>
+ <span class="comment token" style="color: #708090;"> // hacer cosas
+</span>  <span class="function token" style="color: #dd4a68;">loop<span class="punctuation token" style="color: #999999;">(</span></span>x <span class="operator token" style="background: rgba(255, 255, 255, 0.498039); color: #a67f59;">+</span> <span class="number token" style="color: #990055;">1</span><span class="punctuation token" style="color: #999999;">)</span><span class="punctuation token" style="color: #999999;">;</span><span class="comment token" style="color: #708090;"> // la llamada recursiva
+</span><span class="punctuation token" style="color: #999999;">}</span>
+<span class="function token" style="color: #dd4a68;">loop<span class="punctuation token" style="color: #999999;">(</span></span><span class="number token" style="color: #990055;">0</span><span class="punctuation token" style="color: #999999;">)</span><span class="punctuation token" style="color: #999999;">;</span></code></pre>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 0px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 19px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 38px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 57px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 76px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 95px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 114px; background: 0px 0px;"></div>
+
+<p>Sin embargo, algunos algoritmos no pueden ser bucles iterativos simples. Por ejemplo, obtener todos los nodos de una estructura de árbol (p. ej. el <a href="https://developer.mozilla.org/en-US/docs/DOM">DOM</a>) es más fácil utilizando recursividad:</p>
+
+<pre class="brush: js  language-js" style="padding: 1em 0px 1em 30px; font-size: 14px; white-space: normal;"><code class="language-js" style="direction: ltr; white-space: pre;"><span class="keyword token" style="color: #0077aa;">function</span> <span class="function token" style="color: #dd4a68;">walkTree<span class="punctuation token" style="color: #999999;">(</span></span>node<span class="punctuation token" style="color: #999999;">)</span> <span class="punctuation token" style="color: #999999;">{</span>
+  <span class="keyword token" style="color: #0077aa;">if</span> <span class="punctuation token" style="color: #999999;">(</span>node <span class="operator token" style="background: rgba(255, 255, 255, 0.498039); color: #a67f59;">==</span> <span class="keyword token" style="color: #0077aa;">null</span><span class="punctuation token" style="color: #999999;">)</span><span class="comment token" style="color: #708090;"> // 
+</span>    <span class="keyword token" style="color: #0077aa;">return</span><span class="punctuation token" style="color: #999999;">;</span>
+ <span class="comment token" style="color: #708090;"> // hacer alguna cosa con el nodo
+</span>  <span class="keyword token" style="color: #0077aa;">for</span> <span class="punctuation token" style="color: #999999;">(</span><span class="keyword token" style="color: #0077aa;">var</span> i <span class="operator token" style="background: rgba(255, 255, 255, 0.498039); color: #a67f59;">=</span> <span class="number token" style="color: #990055;">0</span><span class="punctuation token" style="color: #999999;">;</span> i <span class="operator token" style="background: rgba(255, 255, 255, 0.498039); color: #a67f59;">&lt;</span> node<span class="punctuation token" style="color: #999999;">.</span>childNodes<span class="punctuation token" style="color: #999999;">.</span>length<span class="punctuation token" style="color: #999999;">;</span> i<span class="operator token" style="background: rgba(255, 255, 255, 0.498039); color: #a67f59;">++</span><span class="punctuation token" style="color: #999999;">)</span> <span class="punctuation token" style="color: #999999;">{</span>
+    <span class="function token" style="color: #dd4a68;">walkTree<span class="punctuation token" style="color: #999999;">(</span></span>node<span class="punctuation token" style="color: #999999;">.</span>childNodes<span class="punctuation token" style="color: #999999;">[</span>i<span class="punctuation token" style="color: #999999;">]</span><span class="punctuation token" style="color: #999999;">)</span><span class="punctuation token" style="color: #999999;">;</span>
+  <span class="punctuation token" style="color: #999999;">}</span>
+<span class="punctuation token" style="color: #999999;">}</span></code></pre>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 0px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 19px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 38px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 57px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 76px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 95px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 114px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 133px; background: 0px 0px;"></div>
+
+<p>En comparación con la función <code>loop</code> (definida anteriomente), aquí (en el ejemplo <code>walkTree</code>) cada llamada recursiva a sí misma, hace muchas llamadas recursivas.</p>
+
+<p>Es posible convertir cualquier algoritmo recursivo a uno no-recursivo, pero a menudo la lógica es mucho más compleja y hacerlo requiere el uso de una pila. De hecho, la recursividad en sí misma utiliza una pila: la pila de la función.</p>
+
+<p>El comportamiento tipo-pila puede ser visto en el siguiente ejemplo:</p>
+
+<pre class="brush: js  language-js" style="padding: 1em 0px 1em 30px; font-size: 14px; white-space: normal;"><code class="language-js" style="direction: ltr; white-space: pre;"><span class="keyword token" style="color: #0077aa;">function</span> <span class="function token" style="color: #dd4a68;">foo<span class="punctuation token" style="color: #999999;">(</span></span>i<span class="punctuation token" style="color: #999999;">)</span> <span class="punctuation token" style="color: #999999;">{</span>
+  <span class="keyword token" style="color: #0077aa;">if</span> <span class="punctuation token" style="color: #999999;">(</span>i <span class="operator token" style="background: rgba(255, 255, 255, 0.498039); color: #a67f59;">&lt;</span> <span class="number token" style="color: #990055;">0</span><span class="punctuation token" style="color: #999999;">)</span>
+    <span class="keyword token" style="color: #0077aa;">return</span><span class="punctuation token" style="color: #999999;">;</span>
+  console<span class="punctuation token" style="color: #999999;">.</span><span class="function token" style="color: #dd4a68;">log<span class="punctuation token" style="color: #999999;">(</span></span><span class="string token" style="color: #669900;">'inicio:'</span> <span class="operator token" style="background: rgba(255, 255, 255, 0.498039); color: #a67f59;">+</span> i<span class="punctuation token" style="color: #999999;">)</span><span class="punctuation token" style="color: #999999;">;</span>
+  <span class="function token" style="color: #dd4a68;">foo<span class="punctuation token" style="color: #999999;">(</span></span>i <span class="operator token" style="background: rgba(255, 255, 255, 0.498039); color: #a67f59;">-</span> <span class="number token" style="color: #990055;">1</span><span class="punctuation token" style="color: #999999;">)</span><span class="punctuation token" style="color: #999999;">;</span>
+  console<span class="punctuation token" style="color: #999999;">.</span><span class="function token" style="color: #dd4a68;">log<span class="punctuation token" style="color: #999999;">(</span></span><span class="string token" style="color: #669900;">'final:'</span> <span class="operator token" style="background: rgba(255, 255, 255, 0.498039); color: #a67f59;">+</span> i<span class="punctuation token" style="color: #999999;">)</span><span class="punctuation token" style="color: #999999;">;</span>
+<span class="punctuation token" style="color: #999999;">}</span>
+<span class="function token" style="color: #dd4a68;">foo<span class="punctuation token" style="color: #999999;">(</span></span><span class="number token" style="color: #990055;">3</span><span class="punctuation token" style="color: #999999;">)</span><span class="punctuation token" style="color: #999999;">;</span>
+<span class="comment token" style="color: #708090;">
+// Salida:
+
+// inicio:3
+// inicio:2
+// inicio:1
+// inicio:0
+// final</span><span class="comment token" style="color: #708090;">:0
+// </span><span class="comment token" style="color: #708090;">final</span><span class="comment token" style="color: #708090;">:1
+// </span><span class="comment token" style="color: #708090;">final</span><span class="comment token" style="color: #708090;">:2
+// </span><span class="comment token" style="color: #708090;">final</span><span class="comment token" style="color: #708090;">:3</span></code></pre>
+
+<h3 id="Funciones_anidadas_y_cierres" style="line-height: 24px; font-size: 1.71428571428571rem;">Funciones anidadas y cierres</h3>
+
+<p>Se puede anidar una función dentro de una función. La función anidada (interna) es privada a su función contenedora (externa). También forma <em>un cierre</em>. Un cierre, es una expresión (típicamente una función) que puede tener variables libres junto con un entorno que ata esas variables (que "cierra" la expresión).</p>
+
+<p>Dado que una función anidada es un cierre, esto significa que una función anidada puede "heredar" los argumentos y variables de su función contenedora. En otras palabras, la función interna contiene el ámbito de la función externa.</p>
+
+<p>En resumen:</p>
+
+<ul>
+ <li>La función interna sólo se puede acceder a partir de sentencias dentro de la función externa.</li>
+ <li>La función interna forma un cierre: la función interna puede utilizar los argumentos y variables de la función externa, mientras que la función externa no puede utilizar los argumentos y las variables de la función interna.</li>
+</ul>
+
+<p>El siguiente ejemplo muestra funciones anidadas:</p>
+
+<pre class="brush: js  language-js" style="padding: 1em 0px 1em 30px; font-size: 14px; white-space: normal;"><code class="language-js" style="direction: ltr; white-space: pre;"><span class="keyword token" style="color: #0077aa;">function</span> <span class="function token" style="color: #dd4a68;">addSquares<span class="punctuation token" style="color: #999999;">(</span></span>a<span class="punctuation token" style="color: #999999;">,</span>b<span class="punctuation token" style="color: #999999;">)</span> <span class="punctuation token" style="color: #999999;">{</span>
+  <span class="keyword token" style="color: #0077aa;">function</span> <span class="function token" style="color: #dd4a68;">square<span class="punctuation token" style="color: #999999;">(</span></span>x<span class="punctuation token" style="color: #999999;">)</span> <span class="punctuation token" style="color: #999999;">{</span>
+    <span class="keyword token" style="color: #0077aa;">return</span> x <span class="operator token" style="background: rgba(255, 255, 255, 0.498039); color: #a67f59;">*</span> x<span class="punctuation token" style="color: #999999;">;</span>
+  <span class="punctuation token" style="color: #999999;">}</span>
+  <span class="keyword token" style="color: #0077aa;">return</span> <span class="function token" style="color: #dd4a68;">square<span class="punctuation token" style="color: #999999;">(</span></span>a<span class="punctuation token" style="color: #999999;">)</span> <span class="operator token" style="background: rgba(255, 255, 255, 0.498039); color: #a67f59;">+</span> <span class="function token" style="color: #dd4a68;">square<span class="punctuation token" style="color: #999999;">(</span></span>b<span class="punctuation token" style="color: #999999;">)</span><span class="punctuation token" style="color: #999999;">;</span>
+<span class="punctuation token" style="color: #999999;">}</span>
+a <span class="operator token" style="background: rgba(255, 255, 255, 0.498039); color: #a67f59;">=</span> <span class="function token" style="color: #dd4a68;">addSquares<span class="punctuation token" style="color: #999999;">(</span></span><span class="number token" style="color: #990055;">2</span><span class="punctuation token" style="color: #999999;">,</span><span class="number token" style="color: #990055;">3</span><span class="punctuation token" style="color: #999999;">)</span><span class="punctuation token" style="color: #999999;">;</span><span class="comment token" style="color: #708090;"> // retorna 13
+</span>b <span class="operator token" style="background: rgba(255, 255, 255, 0.498039); color: #a67f59;">=</span> <span class="function token" style="color: #dd4a68;">addSquares<span class="punctuation token" style="color: #999999;">(</span></span><span class="number token" style="color: #990055;">3</span><span class="punctuation token" style="color: #999999;">,</span><span class="number token" style="color: #990055;">4</span><span class="punctuation token" style="color: #999999;">)</span><span class="punctuation token" style="color: #999999;">;</span><span class="comment token" style="color: #708090;"> // retorna 25
+</span>c <span class="operator token" style="background: rgba(255, 255, 255, 0.498039); color: #a67f59;">=</span> <span class="function token" style="color: #dd4a68;">addSquares<span class="punctuation token" style="color: #999999;">(</span></span><span class="number token" style="color: #990055;">4</span><span class="punctuation token" style="color: #999999;">,</span><span class="number token" style="color: #990055;">5</span><span class="punctuation token" style="color: #999999;">)</span><span class="punctuation token" style="color: #999999;">;</span><span class="comment token" style="color: #708090;"> // retorna 41</span></code></pre>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 0px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 19px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 38px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 57px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 76px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 95px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 114px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 133px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 152px; background: 0px 0px;"></div>
+
+<p>Dado que la función interna forma un cierre, se puede llamar a la función externa y especificar argumentos para ambas, tanto para la función externa como para la interna:</p>
+
+<pre class="brush: js  language-js" style="padding: 1em 0px 1em 30px; font-size: 14px; white-space: normal;"><code class="language-js" style="direction: ltr; white-space: pre;"><span class="keyword token" style="color: #0077aa;">function</span> <span class="function token" style="color: #dd4a68;">outside<span class="punctuation token" style="color: #999999;">(</span></span>x<span class="punctuation token" style="color: #999999;">)</span> <span class="punctuation token" style="color: #999999;">{</span>
+  <span class="keyword token" style="color: #0077aa;">function</span> <span class="function token" style="color: #dd4a68;">inside<span class="punctuation token" style="color: #999999;">(</span></span>y<span class="punctuation token" style="color: #999999;">)</span> <span class="punctuation token" style="color: #999999;">{</span>
+    <span class="keyword token" style="color: #0077aa;">return</span> x <span class="operator token" style="background: rgba(255, 255, 255, 0.498039); color: #a67f59;">+</span> y<span class="punctuation token" style="color: #999999;">;</span>
+  <span class="punctuation token" style="color: #999999;">}</span>
+  <span class="keyword token" style="color: #0077aa;">return</span> inside<span class="punctuation token" style="color: #999999;">;</span>
+<span class="punctuation token" style="color: #999999;">}</span>
+fn_inside <span class="operator token" style="background: rgba(255, 255, 255, 0.498039); color: #a67f59;">=</span> <span class="function token" style="color: #dd4a68;">outside<span class="punctuation token" style="color: #999999;">(</span></span><span class="number token" style="color: #990055;">3</span><span class="punctuation token" style="color: #999999;">)</span><span class="punctuation token" style="color: #999999;">;</span><span class="comment token" style="color: #708090;"> // Pensar en esto como: dar una funcion que suma 3 a lo que sea que des
+</span>result <span class="operator token" style="background: rgba(255, 255, 255, 0.498039); color: #a67f59;">=</span> <span class="function token" style="color: #dd4a68;">fn_inside<span class="punctuation token" style="color: #999999;">(</span></span><span class="number token" style="color: #990055;">5</span><span class="punctuation token" style="color: #999999;">)</span><span class="punctuation token" style="color: #999999;">;</span><span class="comment token" style="color: #708090;"> // retorna 8
+</span>
+result1 <span class="operator token" style="background: rgba(255, 255, 255, 0.498039); color: #a67f59;">=</span> <span class="function token" style="color: #dd4a68;">outside<span class="punctuation token" style="color: #999999;">(</span></span><span class="number token" style="color: #990055;">3</span><span class="punctuation token" style="color: #999999;">)</span><span class="punctuation token" style="color: #999999;">(</span><span class="number token" style="color: #990055;">5</span><span class="punctuation token" style="color: #999999;">)</span><span class="punctuation token" style="color: #999999;">;</span><span class="comment token" style="color: #708090;"> // retorna 8</span></code></pre>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 0px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 19px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 38px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 57px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 76px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 95px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 114px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 133px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 152px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 171px; background: 0px 0px;"></div>
+
+<h3 id="Efficiency_considerations" name="Efficiency_considerations" style="line-height: 24px; font-size: 1.71428571428571rem;">Preservación de variables</h3>
+
+<p>Observa cómo <code>x</code> se conserva cuando <code>inside</code> es retornada. Un cierre debe preservar los argumentos y variables dentro de todos los ámbitos que referencía. Dado que cada llamada proporciona potencialmente diferentes argumentos, un nuevo cierre es creado para cada llamada a <code>outside</code>. La memoria puede ser liberada sólo cuando la (función)  <code>inside</code> retornada ya no es accesible.</p>
+
+<p>Esto no es diferente de almacenar referencias en otros objetos, pero a menudo es menos evidente porque uno no establece las referencias directamente y no puede inspeccionarlas.</p>
+
+<h3 id="Multiply-nested_functions" name="Multiply-nested_functions" style="line-height: 24px; font-size: 1.71428571428571rem;">Funciones Multi-anidadas</h3>
+
+<p>Las funciones pueden ser multi-anidadas, p. ej una función (A) que contiene una función (B) que contiene una función (C). Aqui ambas funciones B y C forman cierres, así que B puede acceder A, y C puede acceder B. Además, dado que C puede acceder B, la cual puede acceder A, entonces C puede también acceder A. En consecuencia, los cierres pueden contener múltiples ámbitos; que contienen de forma recursiva el ámbito de las funciones que los contienen. Esto se conoce como <em>encadenamiento de ámbito</em>. (¿Por qué se le llama "encadenamiento" se explicará más adelante.)</p>
+
+<p>Considere el siguiente ejemplo:</p>
+
+<pre class="brush: js  language-js" style="padding: 1em 0px 1em 30px; font-size: 14px; white-space: normal;"><code class="language-js" style="direction: ltr; white-space: pre;"><span class="keyword token" style="color: #0077aa;">function</span> <span class="function token" style="color: #dd4a68;">A<span class="punctuation token" style="color: #999999;">(</span></span>x<span class="punctuation token" style="color: #999999;">)</span> <span class="punctuation token" style="color: #999999;">{</span>
+  <span class="keyword token" style="color: #0077aa;">function</span> <span class="function token" style="color: #dd4a68;">B<span class="punctuation token" style="color: #999999;">(</span></span>y<span class="punctuation token" style="color: #999999;">)</span> <span class="punctuation token" style="color: #999999;">{</span>
+    <span class="keyword token" style="color: #0077aa;">function</span> <span class="function token" style="color: #dd4a68;">C<span class="punctuation token" style="color: #999999;">(</span></span>z<span class="punctuation token" style="color: #999999;">)</span> <span class="punctuation token" style="color: #999999;">{</span>
+      console<span class="punctuation token" style="color: #999999;">.</span><span class="function token" style="color: #dd4a68;">log<span class="punctuation token" style="color: #999999;">(</span></span>x <span class="operator token" style="background: rgba(255, 255, 255, 0.498039); color: #a67f59;">+</span> y <span class="operator token" style="background: rgba(255, 255, 255, 0.498039); color: #a67f59;">+</span> z<span class="punctuation token" style="color: #999999;">)</span><span class="punctuation token" style="color: #999999;">;</span>
+    <span class="punctuation token" style="color: #999999;">}</span>
+    <span class="function token" style="color: #dd4a68;">C<span class="punctuation token" style="color: #999999;">(</span></span><span class="number token" style="color: #990055;">3</span><span class="punctuation token" style="color: #999999;">)</span><span class="punctuation token" style="color: #999999;">;</span>
+  <span class="punctuation token" style="color: #999999;">}</span>
+  <span class="function token" style="color: #dd4a68;">B<span class="punctuation token" style="color: #999999;">(</span></span><span class="number token" style="color: #990055;">2</span><span class="punctuation token" style="color: #999999;">)</span><span class="punctuation token" style="color: #999999;">;</span>
+<span class="punctuation token" style="color: #999999;">}</span>
+<span class="function token" style="color: #dd4a68;">A<span class="punctuation token" style="color: #999999;">(</span></span><span class="number token" style="color: #990055;">1</span><span class="punctuation token" style="color: #999999;">)</span><span class="punctuation token" style="color: #999999;">;</span><span class="comment token" style="color: #708090;"> // registra 6 (1 + 2 + 3)</span></code></pre>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 0px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 19px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 38px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 57px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 76px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 95px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 114px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 133px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 152px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 171px; background: 0px 0px;"></div>
+
+<p>En este ejemplo, C accede a <code>y</code> de B y a <code>x</code> de A. Esto se puede hacer porque:</p>
+
+<ol>
+ <li>B forma un cierre que incluye A, es decir B puede acceder a los argumentos y variables de A.</li>
+ <li>C forma un cierre que incluye B.</li>
+ <li>Debido a que el cierre de B incluye a A, y el cierre de C incluye a A, esto permite que C puede acceder a los  argumentos y variables de B y A . En otras palabras, C <em>encadena</em> los ámbitos de B y A en ese orden.</li>
+</ol>
+
+<p>Lo contrario, sin embargo, no es cierto. A no puede acceder a C, ya que A no puede acceder a ningun argumento o variable de B, del que C es una variable. Así, que C permance privado sólo para B.</p>
+
+<h3 id="Name_conflicts" name="Name_conflicts" style="line-height: 24px; font-size: 1.71428571428571rem;">Conflictos de nombres</h3>
+
+<p>Cuando dos argumentos o variables en los ámbitos de un cierre tienen el mismo nombre, ocurre un <em>conflicto de nombre</em>. Los ámbitos más internos toman precedencia, asi que el ambito más interno de todos toma la precedencia más alta, mientras que el ámbito más externo toma la más baja. Esta es la cadena de ámbito. El primero en la cadena es el ámbito más interno de todos, y el último, es el ámbito más externo. Considere lo siguiente:</p>
+
+<pre class="brush: js  language-js" style="padding: 1em 0px 1em 30px; font-size: 14px; white-space: normal;"><code class="language-js" style="direction: ltr; white-space: pre;"><span class="keyword token" style="color: #0077aa;">function</span> <span class="function token" style="color: #dd4a68;">outside<span class="punctuation token" style="color: #999999;">(</span></span><span class="punctuation token" style="color: #999999;">)</span> <span class="punctuation token" style="color: #999999;">{</span>
+  <span class="keyword token" style="color: #0077aa;">var</span> x <span class="operator token" style="background: rgba(255, 255, 255, 0.498039); color: #a67f59;">=</span> <span class="number token" style="color: #990055;">10</span><span class="punctuation token" style="color: #999999;">;</span>
+  <span class="keyword token" style="color: #0077aa;">function</span> <span class="function token" style="color: #dd4a68;">inside<span class="punctuation token" style="color: #999999;">(</span></span>x<span class="punctuation token" style="color: #999999;">)</span> <span class="punctuation token" style="color: #999999;">{</span>
+    <span class="keyword token" style="color: #0077aa;">return</span> x<span class="punctuation token" style="color: #999999;">;</span>
+  <span class="punctuation token" style="color: #999999;">}</span>
+  <span class="keyword token" style="color: #0077aa;">return</span> inside<span class="punctuation token" style="color: #999999;">;</span>
+<span class="punctuation token" style="color: #999999;">}</span>
+result <span class="operator token" style="background: rgba(255, 255, 255, 0.498039); color: #a67f59;">=</span> <span class="function token" style="color: #dd4a68;">outside<span class="punctuation token" style="color: #999999;">(</span></span><span class="punctuation token" style="color: #999999;">)</span><span class="punctuation token" style="color: #999999;">(</span><span class="number token" style="color: #990055;">20</span><span class="punctuation token" style="color: #999999;">)</span><span class="punctuation token" style="color: #999999;">;</span><span class="comment token" style="color: #708090;"> // retorna 20 en lugar de 10</span></code></pre>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 0px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 19px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 38px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 57px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 76px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 95px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 114px; background: 0px 0px;"></div>
+
+<div class="line-number" style="margin-top: 1em; position: absolute; left: 0px; right: 0px; line-height: inherit; top: 133px; background: 0px 0px;"></div>
+
+<p>El conflicto de nombres sucede en la sentencia <code>return x</code> y es entre el parámetro <code>x</code> de <code>inside</code> y la variable <code>x</code> de <code>outside</code>. Aquí la cadena de ámbito es {<code>inside, outside</code>, objeto global}. Por lo tanto, <code>x</code> de <code>inside</code> toma precedencia sobre <code>x</code> de <code>outside</code>, y 20 (la<code> x</code> de <code>inside) </code>se devuelve en lugar de 10 (la <code>x</code> de <code>outside)</code>.</p>
+
+<h2 id="Clausuras_(o_cierres)">Clausuras (o cierres)</h2>
+
+<p>Las clausuras (informalmente llamadas cierres) son una de las características más poderosas de JavaScript. JavaScript permite debido al anidamiento de funciones y concesiones a la función interna, el acceso total a todas las variables y funciones definidas dentro de la función externa (y a todas las variables y funciones a las cuales la función externa tiene acceso). Sin embargo, la función externa no tiene acceso a las variables y funciones definidas dentro de la función interna. Esto provee una especie de seguridad a las variables de la función interna. Además, ya que la función interna tiene acceso al ámbito de la función externa, las variables y funciones definidas en la función externa vivirán más tiempo que la función externa en sí misma si la función interna las administra para sobrevivir más allá del ciclo de vida de la función externa. Una clausura es creada cuando la función interna es, de alguna manera, hecha disponible a cualquier  ámbito fuera de la función externa.</p>
+
+<pre class="brush: js">var pet = function(name) {          // La funcion externa define una variable llamada "name"
+      var getName = function() {
+        return name;                // La funcion interna tiene aceso a la variable "name" de la funcion externa
+      }
+
+      return getName;               // Devolver la funcion interna, por lo tanto exponiendola a un ambito exterior
+    },
+    myPet = pet("Vivie");
+    
+myPet();                            // Devuelve "Vivie"
+</pre>
+
+<p>Esto puede ser mucho más complejo que el código anterior. Puede ser retornado un objeto que contiene métodos para manipular las variables internas de la función externa.</p>
+
+<pre class="brush: js">var createPet = function(name) {
+  var sex;
+  
+  return {
+    setName: function(newName) {
+      name = newName;
+    },
+    
+    getName: function() {
+      return name;
+    },
+    
+    getSex: function() {
+      return sex;
+    },
+    
+    setSex: function(newSex) {
+      if(typeof newSex == "string" &amp;&amp; (newSex.toLowerCase() == "male" || newSex.toLowerCase() == "female")) {
+        sex = newSex;
+      }
+    }
+  }
+}
+
+var pet = createPet("Vivie");
+pet.getName();                  // Vivie
+
+pet.setName("Oliver");
+pet.setSex("male");
+pet.getSex();                   // male
+pet.getName();                  // Oliver
+</pre>
+
+<p>En el código anterior, la variable <code>name</code> de la función externa es accesible desde las funciones internas, y no hay otra forma de acceder a las variables internas excepto a través<span style="font-family: lucida sans unicode,sans-serif; font-size: 10.5pt; line-height: 107%;"> </span>de las funciones internas. Las variables internas de las funciones internas actúan como almacenamientos seguros para las variables y argumentos externos. Mantienen "persistente", y aún segura, la información con la que necesitan trabajar las funciones internas. Las funciones incluso no tienen por que ser asignadas a una variable, o tener un nombre.</p>
+
+<pre class="brush: js">var getCode = (function(){
+  var secureCode = "0]Eal(eh&amp;2";    // Un codigo que no queremos que externos sean capaces de modificar...
+  
+  return function () {
+    return secureCode;
+  };
+})();
+
+getCode();    // Retorna el codigo secreto
+</pre>
+
+<p>Hay, sin embargo, una serie obstáculos a vigilar cuando se usan clausuras. Si una función encerrada define una variable con el mismo nombre que una variable dentro del ámbito exterior, no hay forma referirse de nuevo a la variable del ámbito exterior.</p>
+
+<pre class="brush: js">var createPet = function(name) {  // la funcion externa define una variable llamada "name"
+  return {
+    setName: function(name) {    // la funcion encerrada tambien define una variable llamada "name"
+      name = name;               // ¿¿¿ Como accedemos la "name" definida por la funcion externa ???
+    }
+  }
+}
+</pre>
+
+<p>La variable mágica <code>this</code> es muy tramposa en las clausuras. Deben de ser usadas cuidadosamente (las clausuras que usan <code>this</code>), el modo en que <code>this</code> se refiere depende completamente de en donde la función fue llamada, en lugar de en donde fue definida.</p>
+
+<p>Un excelente y elaborado artículo sobre closures puede encontrarse <a class="external" href="http://jibbering.com/faq/notes/closures/">aqui</a>.</p>
+
+<h2 id="Usando_el_objeto_arguments">Usando el objeto <em>arguments</em></h2>
+
+<p>Los argumentos de una función son mantenidos en un objeto similar a un array. Dentro de una función, los argumentos pasados a la misma pueden ser direccionados de la siguiente forma:</p>
+
+<pre class="brush: js">arguments[i]
+</pre>
+
+<p>donde i es el número ordinal del argumento, comenzando desde cero. Entonces, el primer argumento pasado a una función sería <code>arguments[0]</code>. El número total de argumentos es mostrado por <code>arguments.length</code>.</p>
+
+<p>Usando el objeto <code>arguments</code>, se puede llamar una función con más argumentos de los que formalmente fueron declarados que puede aceptar. Esto es a menudo muy útil cuando no se sabe con antelación cuantos argumentos serán pasados a la función. Se puede usar <code>arguments.length</code> para determinar el número de argumentos realmente pasados a la función, y luego acceder a cada argumento usando el objeto <code>arguments</code>.</p>
+
+<p>Por ejemplo, consideremos una función que concatena varias cadenas de caracteres (strings). El único argumento formal para la función es una string que especifica los caracteres que separan los elementos a concatenar. La función es definida de la siguiente forma:</p>
+
+<pre class="brush: js">function myConcat(separator) {
+   var result = "", // initialize list
+       i;
+   // iterate through arguments
+   for (i = 1; i &lt; arguments.length; i++) {
+      result += arguments[i] + separator;
+   }
+   return result;
+}
+</pre>
+
+<p>Se pueden pasar cualquier número de argumentos a esta función, y la misma concatenará cada argumento en una "lista" de strings:</p>
+
+<pre class="brush: js">// returns "red, orange, blue, "
+myConcat(", ", "red", "orange", "blue");
+
+// returns "elephant; giraffe; lion; cheetah; "
+myConcat("; ", "elephant", "giraffe", "lion", "cheetah");
+
+// returns "sage. basil. oregano. pepper. parsley. "
+myConcat(". ", "sage", "basil", "oregano", "pepper", "parsley");
+</pre>
+
+<div class="note">
+<p><strong>Nota:</strong> La variable arguments es de "estilo array", pero no es un array. Es similar a un array por poseer un índice numérico (index) y una propiedad <code>length</code>. Sin embargo, no posee todos los métodos de manipulación propios de un array.</p>
+</div>
+
+<p>Véase el objeto <a href="/en-US/docs/JavaScript/Reference/Global_Objects/Function" title="en-US/docs/JavaScript/Reference/Global Objects/Function"><code>Function</code></a> en la referencia JavaScript para más información.</p>
+
+<h2 id="Parámetros_de_funcion">Parámetros de funcion</h2>
+
+<p>A partir de ECMAScript 6, hay dos nuevos tipos de parámetros: Parámetros por defecto y  los parámetros REST.</p>
+
+<h3 id="Parámetro_por_defecto">Parámetro por defecto</h3>
+
+<p>En JavaScript, los parámetros de funciones están establecidos por defecto a <code>undefined</code>. Sin embargo, en ciertas situaciones puede ser útil establecerlos a un valor suministrado por defecto diferente.  Es entonces cuando los parámetros por defecto pueden ayudar.</p>
+
+<p>En el pasado, la estrategia general para establecer los parámetros por defecto era comprobar los valores de éstos en el cuerpo de la función y asignar un valor si estos eran <code>undefined</code>. Si en el siguiente ejemplo ningún valor es suministrado para <code>b</code> durante el llamado, su valor sería <code>undefined</code> cuando se evalúe <code>a*b;</code> y la llamda de  <code>multiply</code>  retornaría <code>NaN</code>. Sin embargo, esto se evita con la segunda línea en este ejemplo:</p>
+
+<pre class="brush: js">function multiply(a, b) {
+  b = typeof b !== 'undefined' ?  b : 1;
+  
+  return a*b;
+}
+
+multiply(5); // 5
+</pre>
+
+<p>Con los parámetros por defecto, la comprobación en el cuerpo de la función ya no es necesaria. Ahora, puede simplemente poner 1 como valor por defecto para <code>b</code> en la cabeza de la función.</p>
+
+<pre class="brush: js">function multiply(a, b = 1) {
+  return a*b;
+}
+
+multiply(5); // 5</pre>
+
+<p>Para más detalles, puede consultar <a href="/es/docs/Web/JavaScript/Referencia/Funciones/Parametros_por_defecto">parámetros por defecto</a> en la referencia.</p>
+
+<h3 id="Parámetros_rest">Parámetros rest</h3>
+
+<p>La syntaxis de <a href="/en-US/docs/Web/JavaScript/Reference/Functions/rest_parameters">parámetros rest (en inglés)</a> nos permite respresentar un número indefinido de argumentos en forma de array. En el ejemplo, usamos los parámetros rest para recolectar los argumentos a partir del segundo y hasta el final. Entonces los multiplicamos por el primero. Este ejemplo está usando una función flecha, la cual es introducida en la siguiente sección.</p>
+
+<pre class="brush: js">function multiply(multiplier, ...theArgs) {
+  return theArgs.map(x =&gt; multiplier * x);
+}
+
+var arr = multiply(2, 1, 2, 3);
+console.log(arr); // [2, 4, 6]</pre>
+
+<h2 id="Funciones_flecha">Funciones flecha</h2>
+
+<p>Una <a href="/es/docs/Web/JavaScript/Referencia/Funciones/Arrow_functions">expresión de función flecha</a> (también conocida como <strong>función flecha gruesa</strong> o <strong>fat arrow function</strong> en inglés) tiene una sintaxis más corta comparada con las expresiones de función y not tiene su propio <code><a href="/es/docs/Web/JavaScript/Referencia/Operadores/this">this</a></code>, <a href="/es/docs/Web/JavaScript/Referencia/Funciones/arguments">arguments</a>, <a href="/es/docs/Web/JavaScript/Referencia/Operadores/super">super</a> o <a href="/es/docs/Web/JavaScript/Referencia/Operadores/new.target">new.target</a>. Las funciones flecha son siempre funciones anónimas. Véase también esta entrada en el blog hacks.mozilla.org : "<a href="https://hacks.mozilla.org/2015/06/es6-in-depth-arrow-functions/">ES6 In Depth: Arrow functions</a>" (en inglés).</p>
+
+<p>Dos factores influenciaron la introdución de las funciones flecha: funciones más cortas y el léxico <code>this</code>.</p>
+
+<h3 id="Funciones_más_cortas">Funciones más cortas</h3>
+
+<p>En algunos patrones funcionales, las funciones más cortas son bienvenidas. Compare:</p>
+
+<pre class="brush: js">var a = [
+  "Hydrogen",
+  "Helium",
+  "Lithium",
+  "Beryl­lium"
+];
+
+var a2 = a.map(function(s){ return s.length });
+
+var a3 = a.map( s =&gt; s.length );</pre>
+
+<h3 id="Sin_propio_this">Sin propio <code>this</code></h3>
+
+<p>Hasta antes de las funciones flecha, cada nueva función definía su propio valor <code><a href="/es/docs/Web/JavaScript/Referencia/Operadores/this">this</a></code> (un nuevo objecto en el caso de un constructor, no definido en llamada a funciones en <a href="/es/docs/Web/JavaScript/Referencia/Modo_estricto">modo estricto</a>, el objeto de contexto si la funcion es llamada como un "metodo de objeto", etc.). Esto probó ser molesto en un estilo de programación orientada a objetos.</p>
+
+<pre class="brush: js">function Person() {
+  // El constructor Person() define `<code>this`</code> como el mismo.
+  this.age = 0;
+
+  setInterval(function growUp() {
+    // En modo no estricto, la funcion growUp() define `this` 
+    // como el objeto global, el cual es diferente de el `this`
+    // definido por el constructor Person().
+    this.age++;
+  }, 1000);
+}
+
+var p = new Person();</pre>
+
+<p>En ECMAScript 3/5, esto fue solucionado asignado el valor contenido por<code> this</code> a  una variable sobre la que se podía cerrar (o clausurar).</p>
+
+<pre class="brush: js">function Person() {
+  var self = this; // Algunos eligen `that` en lugar de `self`. 
+                   // Elija uno y sea consistente.
+  self.age = 0;
+
+  setInterval(function growUp() {
+    // La retrollamada se refiere a la variable `self` de la cual
+    // el valor es el objeto esperado.
+    self.age++;
+  }, 1000);
+}</pre>
+
+<p>Alternativamente, una <a href="/es/docs/Web/JavaScript/Referencia/Objetos_globales/Function/bind">función ligada </a>podría ser creada de modo que el propio valor de  <code>this</code> sería pasado a la función <code>growUp()</code>.</p>
+
+<p>Las funciones flecha capturan el valor de <code>this </code>del contexto circundante<code>,</code> por lo que el siguiente código funciona como se espera.</p>
+
+<pre class="brush: js">function Person(){
+  this.age = 0;
+
+  setInterval(() =&gt; {
+    this.age++; // |this| se refiere apropiadamente al objeto instancia de Person.
+  }, 1000);
+}
+
+var p = new Person();</pre>
+
+<h2 id="Funciones_predefinidas">Funciones predefinidas</h2>
+
+<p>JavaScript tiene varias funciones predefinidas de nivel superior:</p>
+
+<ul>
+ <li>{{ web.link("#eval_function", "eval") }}</li>
+ <li>{{ web.link("#isFinite_function", "isFinite") }}</li>
+ <li>{{ web.link("#isNaN_function", "isNaN") }}</li>
+ <li>{{ web.link("#parseInt_and_parseFloat_functions", "parseInt and parseFloat") }}</li>
+ <li>{{ web.link("#Number_and_String_functions", "Number and String") }}</li>
+ <li>{{ web.link("#escape_and_unescape_functions", "encodeURI, decodeURI, encodeURIComponent, and decodeURIComponent") }} (all available with Javascript 1.5 and later).</li>
+</ul>
+
+<p>Las siguientes secciones presentan estas funciones. Vea la <a href="/es/docs/Web/JavaScript/Referencia" title="en-US/docs/JavaScript/Reference">Refencia JavaScript </a>para obtener información detallada sobre todas estas funciones.</p>
+
+<h3 id="Método_eval">Método <code><a href="/es/docs/Web/JavaScript/Referencia/Objetos_globales/eval">eval</a></code></h3>
+
+<p>El método <code>eval()</code> evalúa el código JavaScript representado como una cadena de caracteres (string). La sintaxis de <code>eval</code> es:</p>
+
+<pre class="brush: js">eval(<em>cadena de caracteres o string</em>);
+</pre>
+
+<p>donde <code>string</code> es la cadena de caracteres a ser evaluada. que puede representar una expresión, sentencia o secuencia de sentencias de JavaScript. La expresión puede incluir variables y propiedades de un objeto existente.</p>
+
+<p>Si la cadena representa una expresión, <code>eval()</code> la evalúa como una expresión. Si el argumento representa una o más sentencias de JavaScript, <code>eval()</code> ejecuta las sentencias. El ámbito de aplicación de código eval es idéntico al alcance del código de llamada. No llame a eval para evaluar una expresión aritmética; JavaScript evalúa las expresiones aritméticas automáticamente.</p>
+
+<h3 id="Funcion_global_isFinite">Funcion global <code>isFinite</code></h3>
+
+<p>La función global <code>isFinite</code> determina si el valor pasado es un número finito, si se necesita el parámetro primero es convertido a número. La sintaxis de <code>isFinite</code> es:</p>
+
+<pre class="brush: js">isFinite(number);
+</pre>
+
+<p>donde <code>number</code> es el valor a evaluar.</p>
+
+<p>Si el argumento es <code>NaN</code>, el infinito positivo <code>Infinity</code> o infinito negativo <code>-Infinity</code>, este método devuelve<code> false</code>, de lo contrario, devuelve <code>true</code>.</p>
+
+<p>El siguiente Codigo de control  deternima si la entrada del cliente se trata de un número finito.</p>
+
+<pre class="brush: js">if(isFinite(ClientInput)){
+   /* tomar pasos espeficos */
+}
+</pre>
+
+<h3 id="Funcion_isNaN">Funcion <code>isNaN</code></h3>
+
+<p>La función <code>isNaN</code> evalúa un argumento para determinar si es "<code>NaN</code>" (no es un número). La sintaxis de <code>isNaN</code> es:</p>
+
+<pre class="brush: js">isNaN(testValue);
+</pre>
+
+<p>donde <code>testValue</code> es el valor que desea evaluar.</p>
+
+<p>Las funciones <code>parseFloat</code> y <code>parseInt</code> regresan "<code>NaN</code>" cuando evalúan un valor que no es un número. <code>isNaN</code> devuelve <code>true</code> si se aprueba "<code>NaN</code>", y false en caso contrario.</p>
+
+<p>El código siguiente evalúa <code>floatValue</code> para determinar si es un número y luego llama a un procedimiento en consecuencia:</p>
+
+<pre class="brush: js">var floatValue = parseFloat(toFloat);
+
+if (isNaN(floatValue)) {
+   notFloat();
+} else {
+   isFloat();
+}
+</pre>
+
+<h3 id="Funciones_parseInt_and_parseFloat"><code>Funciones parseInt</code> and <code>parseFloat</code></h3>
+
+<p>Las dos funciones "parse", <code>parseInt</code> y <code>parseFloat</code>, devuelven un valor numérico cuando se les da una cadena como argumento.</p>
+
+<p>La sintaxis de <code>parseFloat</code> es:</p>
+
+<pre class="brush: js">parseFloat(str);
+</pre>
+
+<p>donde <code>parseFloat</code> analiza su argumento, la cadena <code>str</code>, e intenta devolver un número de coma flotante. Si se encuentra un carácter que no sea un signo (+ o -), un número (0-9), un punto decimal o un exponente, a continuación, devuelve el valor hasta ese punto e ignora ese carácter y todos los caracteres siguientes. Si el primer carácter no puede ser convertido a un número, devuelve "<code>NaN</code>" (no un número).</p>
+
+<p>La sintaxis de <code>parseInt</code> es:</p>
+
+<pre class="brush: js">parseInt(str [, radix]);
+</pre>
+
+<p><code>parseInt</code> analiza su primer argumento, la cadena <code>str</code>, e intenta devolver un entero de la base especificada, indicada por el segundo, el argumento opcional, <code>radix</code>. Por ejemplo, un <code>radix</code> de diez indica a convertir en un número decimal, ocho octal, hexadecimal dieciséis, y así sucesivamente. Para bases superiores a diez, las letras del alfabeto indican numerales mayores de nueve. Por ejemplo, para los números hexadecimales (base 16),de  A a F se utilizan.</p>
+
+<p>Si <code>parseInt</code> encuentra un carácter que no es un número en la base especificada, lo ignora y todos los carácteres sucesivos y devuelve el valor entero analizado hasta ese momento. Si el primer carácter no puede ser convertido a un número en la base especificada, devuelve "<code>NaN</code>". La función <code>parseInt</code> trunca la cadena a valores enteros.</p>
+
+<h3 id="Funciones_Number_y_String">Funciones Number y String</h3>
+
+<p>Las funciones <code>Number</code> y <code>String</code>  le permiten convertir un objeto a un número o una cadena. La sintaxis de estas funciones es:</p>
+
+<pre class="brush: js">var objRef;
+objRef = Number(objRef);
+objRef = String(objRef);
+</pre>
+
+<p>donde <code>objRef</code> es una referencia de objeto. <code>Number</code> utiliza el método <code>valueOf ()</code> del objeto; <code>String</code> utiliza el método <code>toString () </code>del objeto.</p>
+
+<p>El ejemplo siguiente convierte el objeto <code><a href="/es/docs/Web/JavaScript/Referencia/Objetos_globales/Date" title="en-US/docs/JavaScript/Reference/Global Objects/Date">Date</a></code>  a una cadena legible.</p>
+
+<pre class="brush: js">var D = new Date(430054663215),
+    x;
+x = String(D); // x equivale a "Thu Aug 18 04:37:43 GMT-0700 (Pacific Daylight Time) 1983"
+</pre>
+
+<p>El ejemplo siguiente convierte el objeto <code><a class="internal" href="/es/docs/Web/JavaScript/Referencia/Objetos_globales/String" title="en-US/docs/JavaScript/Reference/Global Objects/String">String</a></code> a un objeto <code><a class="internal" href="/es/docs/Web/JavaScript/Referencia/Objetos_globales/Number" title="en-US/docs/JavaScript/Reference/Global Objects/Number">Number</a></code>.</p>
+
+<pre class="brush: js">var str = "12",
+    num;
+num = Number(str);
+</pre>
+
+<p>Puede comprobarlo. Utilice el método DOM<code> write ()</code> y el operador <code>typeof</code> JavaScript.</p>
+
+<pre class="brush: js">var str = "12",
+    num;
+document.write(typeof str);
+document.write("&lt;br/&gt;");
+num = Number(str);
+document.write(typeof num);
+</pre>
+
+<h3 id="Funciones_escape_y_unescape_(Obsoletas._En_versiones_antes_de_JavaScript_1.5)">Funciones <code>escape</code> y <code>unescape</code> (Obsoletas. En versiones antes de JavaScript 1.5)</h3>
+
+<p>Las funciones <code>escape</code> y <code>unescape</code> no funcionan apropiadamente para caracteres no ASCII  y se encuentra en desuso. En versiones de JavaScript 1.5 y posteriores, use <code><a href="https://developer.mozilla.org/es/docs/Web/JavaScript/Referencia/Objetos_globales/encodeURI" title="en-US/docs/JavaScript/Reference/Global_Functions/encodeURI">encodeURI</a></code>, <code><a href="https://developer.mozilla.org/es/docs/Web/JavaScript/Referencia/Objetos_globales/decodeURI" title="en-US/docs/JavaScript/Reference/Global_Functions/decodeURI">decodeURI</a></code>, <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent" title="en-US/docs/JavaScript/Reference/Global_Functions/encodeURIComponent">encodeURIComponent</a></code>, y <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/decodeURIComponent" title="en-US/docs/JavaScript/Reference/Global_Functions/decodeURIComponent">decodeURIComponent</a></code>.</p>
+
+<p>Las funciones <code>escape</code> y <code>unescape</code>  te permiten codificar y decodificar cadenas. La función <code>escape</code> retorna la codificación hexadecimal de un argumento que se encuentra en los caracteres ISO Latin. La función <code>unescape</code> retorna el string ASCII para la codificación especifica hexadecimal de un valor.</p>
+
+<ol>
+ <li>La sintaxis es la siguiente:</li>
+</ol>
+
+<pre class="brush: js">escape(string);
+unescape(string);
+</pre>
+
+<p>Estas funciones son usadas principalmente en javascript del  lado del servidor para codificar y decodificar pares nombres/valores en URLs.</p>
+
+<div>{{PreviousNext("Web/JavaScript/Guide/Loops_and_iteration", "Web/JavaScript/Guide/Expressions_and_Operators")}}</div>

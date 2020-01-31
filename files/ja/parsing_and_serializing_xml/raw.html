@@ -1,0 +1,88 @@
+<p>場合によっては、{{Glossary("XML")}} のコンテンツを解析して {{Glossary("DOM")}} ツリーに変換する必要があります。逆に、既存の DOM ツリーを XML にシリアル化することもあります。この記事では、Web プラットフォームで提供されるオブジェクトを見て、XML のシリアライズと解析の一般的な作業を容易にします。</p>
+
+<dl>
+ <dt>{{domxref("XMLSerializer")}}</dt>
+ <dd>DOM ツリーをシリアライズし、XML を含む文字列に変換します。</dd>
+ <dt>{{domxref("DOMParser")}}</dt>
+ <dd>XML を含む文字列を解析し、入力データに基づいて {{domxref("XMLDocument")}} または {{domxref("Document")}} を返すことによって DOM ツリーを構築します。</dd>
+ <dt>{{domxref("XMLHttpRequest")}}</dt>
+ <dd>URL からコンテンツを読み込みます。XML コンテンツは、XML 自体から構築された DOM ツリーを持つ XML {{domxref("Document")}} オブジェクトとして返されます。</dd>
+ <dt><a href="/ja/docs/XPath">XPath</a></dt>
+ <dd>XML 文書の特定の部分のアドレスを含む文字列を作成し、それらのアドレスに基づいて XML ノードを特定する技術。</dd>
+</dl>
+
+<h2 id="DOM_.E3.83.84.E3.83.AA.E3.83.BC.E3.82.92.E6.96.87.E5.AD.97.E5.88.97.E3.81.AB.E3.82.B7.E3.83.AA.E3.82.A2.E3.83.A9.E3.82.A4.E3.82.BA.E3.81.99.E3.82.8B" name="DOM_.E3.83.84.E3.83.AA.E3.83.BC.E3.82.92.E6.96.87.E5.AD.97.E5.88.97.E3.81.AB.E3.82.B7.E3.83.AA.E3.82.A2.E3.83.A9.E3.82.A4.E3.82.BA.E3.81.99.E3.82.8B">XML 文書を作成する</h2>
+
+<p>次のいずれかの方法を使用して XML 文書を作成します(これは {{domxref("Document")}} のインスタンスです)。</p>
+
+<h3 id="文字列を_DOM_ツリーにパースする">文字列を DOM ツリーにパースする</h3>
+
+<p>この例では {{domxref("DOMParser")}} を使用して文字列の XML フラグメントを DOM ツリーに変換します。</p>
+
+<div style="overflow: hidden;">
+<pre class="brush: js line-numbers  language-js"><code class="language-js"><span class="keyword token">var</span> sMyString <span class="operator token">=</span> <span class="string token">'&lt;a id="a"&gt;&lt;b id="b"&gt;hey!&lt;/b&gt;&lt;/a&gt;'</span><span class="punctuation token">;</span>
+<span class="keyword token">var</span> oParser <span class="operator token">=</span> <span class="keyword token">new</span> <span class="class-name token">DOMParser</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+<span class="keyword token">var</span> oDOM <span class="operator token">=</span> oParser<span class="punctuation token">.</span><span class="function token">parseFromString</span><span class="punctuation token">(</span>sMyString<span class="punctuation token">,</span> <span class="string token">"application/xml"</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+<span class="comment token">// print the name of the root element or error message</span>
+console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(</span>oDOM<span class="punctuation token">.</span>documentElement<span class="punctuation token">.</span>nodeName <span class="operator token">==</span> <span class="string token">"parsererror"</span> <span class="operator token">?</span> <span class="string token">"error while parsing"</span> <span class="punctuation token">:</span> oDOM<span class="punctuation token">.</span>documentElement<span class="punctuation token">.</span>nodeName<span class="punctuation token">)</span><span class="punctuation token">;</span></code></pre>
+</div>
+
+<h3 id="URL_にできるリソースを_DOM_ツリーにパースする">URL にできるリソースを DOM ツリーにパースする</h3>
+
+<h4 id="XMLHttpRequest_を使用する">XMLHttpRequest を使用する</h4>
+
+<p>URL アドレス指定可能な XML ファイルを読み込んで解析して DOM ツリーにするサンプルコードを次に示します。</p>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js"><span class="keyword token">var</span> xhr <span class="operator token">=</span> <span class="keyword token">new</span> <span class="class-name token">XMLHttpRequest</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+xhr<span class="punctuation token">.</span>onload <span class="operator token">=</span> <span class="keyword token">function</span><span class="punctuation token">(</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+  <span class="function token">dump</span><span class="punctuation token">(</span>xhr<span class="punctuation token">.</span>responseXML<span class="punctuation token">.</span>documentElement<span class="punctuation token">.</span>nodeName<span class="punctuation token">)</span><span class="punctuation token">;</span>
+<span class="punctuation token">}</span>
+xhr<span class="punctuation token">.</span>onerror <span class="operator token">=</span> <span class="keyword token">function</span><span class="punctuation token">(</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+  <span class="function token">dump</span><span class="punctuation token">(</span><span class="string token">"Error while getting XML."</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+<span class="punctuation token">}</span>
+xhr<span class="punctuation token">.</span><span class="function token">open</span><span class="punctuation token">(</span><span class="string token">"GET"</span><span class="punctuation token">,</span> <span class="string token">"example.xml"</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+xhr<span class="punctuation token">.</span>responseType <span class="operator token">=</span> <span class="string token">"document"</span><span class="punctuation token">;</span>
+xhr<span class="punctuation token">.</span><span class="function token">send</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">;</span></code></pre>
+
+<p>The value returned in the <code>xhr</code> object's {{domxref("XMLHttpRequest.responseXML", "responseXML")}} field is a {{domxref("Document")}} constructed by parsing the XML.</p>
+
+<p>If the document is {{Glossary("HTML")}}, the code shown above will return a {{domxref("Document")}}. If the document is XML, the resulting object is actually a {{domxref("XMLDocument")}}. The two types are essentially the same; the difference is largely historical, although differentiating has some practical benefits as well.</p>
+
+<div class="note">
+<p><strong>Note:</strong> There is in fact an {{domxref("HTMLDocument")}} interface as well, but it is not necessarily an independent type. In some browsers it is, while in others it is simply an alias for the <code>Document</code> interface.</p>
+</div>
+
+<h2 id="XML_文書のシリアライズ">XML 文書のシリアライズ</h2>
+
+<p>Given a {{domxref("Document")}}, you can serialize the document's DOM tree back into XML using the {{domxref("XMLSerializer.serializeToString()")}} method.</p>
+
+<p>Use the following approaches to serialize the contents of the XML document you created in the previous section.</p>
+
+<h3 id="DOM_ツリーを文字列にシリアライズ">DOM ツリーを文字列にシリアライズ</h3>
+
+<p>First, create a DOM tree as described in <a href="https://developer.mozilla.org/en/How_to_create_a_DOM_tree" title="en/How_to_create_a_DOM_tree">How to Create a DOM tree</a>. Alternatively, use a DOM tree obtained from {{ domxref("XMLHttpRequest") }}.</p>
+
+<p>To serialize the DOM tree <code>doc</code> into XML text, call {{domxref("XMLSerializer.serializeToString()")}}:</p>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js"><span class="keyword token">var</span> oSerializer <span class="operator token">=</span> <span class="keyword token">new</span> <span class="class-name token">XMLSerializer</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+<span class="keyword token">var</span> sXML <span class="operator token">=</span> oSerializer<span class="punctuation token">.</span><span class="function token">serializeToString</span><span class="punctuation token">(</span>doc<span class="punctuation token">)</span><span class="punctuation token">;</span></code></pre>
+
+<h3 id="HTML_文書のシリアライズ">HTML 文書のシリアライズ</h3>
+
+<p>If the DOM you have is an HTML document, you can serialize using <code>serializeToString()</code>, but there is a simpler option: just use the {{domxref("Element.innerHTML")}} property (if you want just the descendants of the specified node) or the {{domxref("Element.outerHTML")}} property if you want the node and all its descendants.</p>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js"><span class="keyword token">var</span> docHTML <span class="operator token">=</span> document<span class="punctuation token">.</span>documentElement<span class="punctuation token">.</span>innerHTML<span class="punctuation token">;</span></code></pre>
+
+<p>As a result, <code>docHTML</code> is a {{domxref("DOMString")}} containing the HTML of the contents of the document; that is, the {{HTMLElement("body")}} element's contents.</p>
+
+<p>You can get HTML corresponding to the <code>&lt;body&gt;</code> <em>and</em> its descendants with this code:</p>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js"><span class="keyword token">var</span> docHTML <span class="operator token">=</span> document<span class="punctuation token">.</span>documentElement<span class="punctuation token">.</span>outerHTML<span class="punctuation token">;</span></code></pre>
+
+<h2 id="関連情報">関連情報</h2>
+
+<ul>
+ <li><a class="internal" href="https://developer.mozilla.org/en/XPath" title="en/XPath">XPath</a></li>
+ <li>{{domxref("XMLHttpRequest")}}</li>
+ <li>{{domxref("Document")}}, {{domxref("XMLDocument")}}, and {{domxref("HTMLDocument")}}</li>
+</ul>

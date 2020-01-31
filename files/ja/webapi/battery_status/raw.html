@@ -1,0 +1,137 @@
+<div>{{obsolete_header}}</div>
+
+<div>{{DefaultAPISidebar("Battery API")}}</div>
+
+<p><strong>Battery API</strong> と呼ばれることも多い <strong>Battery Status API</strong> は、システムのバッテリー充電レベルに関する情報の提供、およびバッテリーレベルや充電状態が変化したときに発生するイベントによる通知を可能にします。これは、バッテリーが消耗したときにバッテリー消費を減らすためアプリのリソース使用状況を調整したり、データを失わないためバッテリーが切れる前に変更点を保存したりするために使用できます。</p>
+
+<p>Battery Status API は {{domxref("window.navigator")}} を、battery promise を返す {{domxref("navigator.getBattery()")}} メソッドで拡張します。Promise は、バッテリーの状態監視を制御できる新たなイベントも提供する、{{domxref("BatteryManager")}} オブジェクトで解決します。</p>
+
+<h2 id="Example" name="Example">例</h2>
+
+<p>以下の例では、充電状況 (電源に接続して充電中であるか) の変化およびバッテリーレベルの変化およびタイミングを監視します。これは、それぞれ {{event("chargingchange")}} イベント、 {{event("levelchange")}} イベント、{{event("chargingtimechange")}}イベント、{{event("dischargingtimechange")}} イベントのリッスンによって実行します。</p>
+
+<pre class="brush: js">navigator.getBattery().then(function(battery) {
+
+  console.log("Battery charging? " + (battery.charging ? "Yes" : "No"));
+  console.log("Battery level: " + battery.level * 100 + "%");
+  console.log("Battery charging time: " + battery.chargingTime + " seconds");
+  console.log("Battery discharging time: " + battery.dischargingTime + " seconds");
+
+  battery.addEventListener('chargingchange', function() {
+    console.log("Battery charging? " + (battery.charging ? "Yes" : "No"));
+  });
+
+  battery.addEventListener('levelchange', function() {
+    console.log("Battery level: " + battery.level * 100 + "%");
+  });
+
+  battery.addEventListener('chargingtimechange', function() {
+    console.log("Battery charging time: " + battery.chargingTime + " seconds");
+  });
+
+  battery.addEventListener('dischargingtimechange', function() {
+    console.log("Battery discharging time: " + battery.dischargingTime + " seconds");
+  });
+
+});
+</pre>
+
+<p><a href="http://www.w3.org/TR/battery-status/#examples">仕様書に記載されているサンプル</a>もご覧ください。</p>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">策定状況</th>
+   <th scope="col">コメント</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName("Battery API")}}</td>
+   <td>{{Spec2("Battery API")}}</td>
+   <td>最初の定義</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザ実装状況</h2>
+
+<div>{{CompatibilityTable}}</div>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>機能</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>基本サポート</td>
+   <td>{{CompatChrome(39.0)}}</td>
+   <td>
+    <p>{{CompatGeckoDesktop("10")}} {{property_prefix("moz")}}<br>
+     {{CompatGeckoDesktop("16")}}<sup>[1]</sup><br>
+     {{CompatGeckoDesktop("43")}}<sup>[3]</sup><br>
+     {{CompatGeckoDesktop("52")}}<sup>[4]</sup></p>
+   </td>
+   <td>{{CompatNo}}</td>
+   <td>25</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>機能</th>
+   <th>Android</th>
+   <th>Android Webview</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+   <th>Android 版 Chrome</th>
+  </tr>
+  <tr>
+   <td>基本サポート</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatChrome(40.0)}}</td>
+   <td>
+    <p>{{CompatGeckoMobile("10")}} {{property_prefix("moz")}}<br>
+     {{CompatGeckoMobile("16")}}<sup>[1]</sup><br>
+     {{CompatGeckoMobile("43")}}<sup>[3]</sup><br>
+     {{CompatGeckoMobile("52")}}<sup>[4]</sup></p>
+   </td>
+   <td>{{CompatNo}}</td>
+   <td>25<sup>[2]</sup></td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatChrome(42.0)}}<sup>[2]</sup></td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<p>[1] Firefox 10.0 ではデフォルトで無効ですが、設定項目 <code>dom.battery.enabled</code> を <code>true</code> に設定して有効化できます。Firefox 11.0 より、<code>mozBattery</code> がデフォルトで有効になりました。Battery API は現在 Android、Windows、UPower をインストールした Linux でサポートしています。Gecko 18.0 {{geckoRelease("18.0")}} より、Mac OS をサポートしました。Firefox は、非推奨である {{domxref("navigator.battery")}} もサポートしています。</p>
+
+<p>[2] {{domxref("BatteryManager.chargingTime")}} および {{domxref("BatteryManager.dischargingTime")}} の値は、常に <code>Infinity</code> です。</p>
+
+<p>[3] {{domxref("Navigator.getBattery()")}} の新しい promise ベースの構文は、Firefox 43 からサポートしています。</p>
+
+<p>[4] Firefox 52 以降では、 Battery Status API は chrome/特権コード 以外からは利用できません。</p>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li><a href="/ja/Apps/Build/gather_and_modify_data/retrieving_battery_status_information">Retrieving battery status information - demo &amp; article</a></li>
+ <li><a href="http://hacks.mozilla.org/2012/02/using-the-battery-api-part-of-webapi/">Hacks blog post - Using the Battery API</a></li>
+</ul>

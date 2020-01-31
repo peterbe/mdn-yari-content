@@ -1,0 +1,273 @@
+<div>{{jsSidebar("JavaScript Guide")}}{{PreviousNext("Web/JavaScript/Guide/Details_of_the_Object_Model", "Web/JavaScript/Guide/Iterators_and_Generators")}}</div>
+
+<p class="summary">Ein {{jsxref("Promise")}} ist ein Objekt, dass die eventuelle erfolgreiche Beendigung oder den Fehlerfall einer asynchronen Operation repräsentiert. Da die meisten Leute "Verbraucher" von bereits erstellten Promises sind, wird diese Anleitung den "Verbrauch" von zurückgegebenen Promises erklären, ohne vorher zu erklären, wie man einen Promise erzeugt. </p>
+
+<p>Essentially, a promise is a returned object to which you attach callbacks, instead of passing callbacks into a function.</p>
+
+<p>E.g., instead of an old-style function that expects two callbacks, and calls one of them on eventual completion or failure:</p>
+
+<pre class="brush: js line-numbers  language-js">function doSomethingOldStyle(successCallback, failureCallback) {
+  console.log("It is done.");
+  // Succeed half of the time.
+  if (Math.random() &gt; .5) {
+    successCallback("SUCCESS")
+  } else {
+    failureCallback("FAILURE")
+  }
+}
+
+function successCallback(result) {
+  console.log("It succeeded with " + result);
+}
+
+function failureCallback(error) {
+  console.log("It failed with " + error);
+}
+
+doSomethingOldStyle(successCallback, failureCallback);
+</pre>
+
+<p>…modern functions return a promise you can attach your callbacks to instead:</p>
+
+<pre class="brush: js line-numbers  language-js">function doSomething() {
+  return new Promise((resolve, reject) =&gt; {
+    console.log("It is done.");
+    // Succeed half of the time.
+    if (Math.random() &gt; .5) {
+      resolve("SUCCESS")
+    } else {
+      reject("FAILURE")
+    }
+  })
+}
+
+const promise = doSomething(); 
+promise.then(successCallback, failureCallback);</pre>
+
+<p>…or simply:</p>
+
+<pre class="brush: js line-numbers  language-js">doSomething().then(successCallback, failureCallback);</pre>
+
+<p>We call this an <em>asynchronous function call</em>. This convention has several advantages. We will explore each one.</p>
+
+<h2 id="Guarantees">Guarantees</h2>
+
+<p>Unlike old-style passed-in callbacks, a promise comes with some guarantees:</p>
+
+<ul>
+ <li>Callbacks will never be called before the <a href="/en-US/docs/Web/JavaScript/EventLoop#Run-to-completion">completion of the current run</a> of the JavaScript event loop.</li>
+ <li>Callbacks added with .then even <em>after</em> the success or failure of the asynchronous operation, will be called, as above.</li>
+ <li>Multiple callbacks may be added by calling .then several times, to be executed independently in insertion order.</li>
+</ul>
+
+<p>But the most immediate benefit of promises is chaining.</p>
+
+<h2 id="Chaining">Chaining</h2>
+
+<p>A common need is to execute two or more asynchronous operations back to back, where each subsequent operation starts when the previous operation succeeds, with the result from the previous step. We accomplish this by creating a <em>promise chain</em>.</p>
+
+<p>Here's the magic: the <code>then</code> function returns a new promise, different from the original:</p>
+
+<pre class="brush: js">const promise = doSomething();
+const promise2 = promise.then(successCallback, failureCallback);
+</pre>
+
+<p>or</p>
+
+<pre class="brush: js">const promise2 = doSomething().then(successCallback, failureCallback);
+</pre>
+
+<p>This second promise represents the completion not just of <code>doSomething()</code>, but also of the <code>successCallback</code> or <code>failureCallback</code> you passed in, which can be other asynchronous functions returning a promise. When that's the case, any callbacks added to <code>promise2</code> get queued behind the promise returned by either <code>successCallback</code> or <code>failureCallback</code>.</p>
+
+<p>Basically, each promise represents the completion of another asynchronous step in the chain.</p>
+
+<p>In the old days, doing several asynchronous operations in a row would lead to the classic callback pyramid of doom:</p>
+
+<pre class="brush: js">doSomething(function(result) {
+  doSomethingElse(result, function(newResult) {
+    doThirdThing(newResult, function(finalResult) {
+      console.log('Got the final result: ' + finalResult);
+    }, failureCallback);
+  }, failureCallback);
+}, failureCallback);
+</pre>
+
+<p>With modern functions, we attach our callbacks to the returned promises instead, forming a <em>promise chain</em>:</p>
+
+<pre class="brush: js">doSomething().then(function(result) {
+  return doSomethingElse(result);
+})
+.then(function(newResult) {
+  return doThirdThing(newResult);
+})
+.then(function(finalResult) {
+  console.log('Got the final result: ' + finalResult);
+})
+.catch(failureCallback);
+</pre>
+
+<p>The arguments to <code>then</code> are optional, and <code>catch(failureCallback)</code> is short for <code>then(null, failureCallback)</code>. You might see this expressed with <a href="/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions">arrow functions</a> instead:</p>
+
+<pre class="brush: js">doSomething()
+.then(result =&gt; doSomethingElse(result))
+.then(newResult =&gt; doThirdThing(newResult))
+.then(finalResult =&gt; {
+  console.log(`Got the final result: ${finalResult}`);
+})
+.catch(failureCallback);
+</pre>
+
+<p><strong>Important:</strong> Always return results, otherwise callbacks won't catch the result of a previous promise.</p>
+
+<h3 id="Chaining_after_a_catch">Chaining after a catch</h3>
+
+<p>It's possible to chain <em>after</em> a failure, i.e. a <code>catch</code>, which is useful to accomplish new actions even after an action failed in the chain. Read the following example:</p>
+
+<pre class="brush: js">new Promise((resolve, reject) =&gt; {
+    console.log('Initial');
+
+    resolve();
+})
+.then(() =&gt; {
+    throw new Error('Something failed');
+        
+    console.log('Do this');
+})
+.catch(() =&gt; {
+    console.log('Do that');
+})
+.then(() =&gt; {
+    console.log('Do this, no matter what happened before');
+});
+</pre>
+
+<p>This will output the following text:</p>
+
+<pre>Initial
+Do that
+Do this, no matter what happened before
+</pre>
+
+<p>Note that the text <q>Do this</q> is not outputted because the <q>Something failed</q> error caused a rejection.</p>
+
+<h2 id="Error_propagation">Error propagation</h2>
+
+<p>You might recall seeing <code>failureCallback</code> three times in the pyramid of doom earlier, compared to only once at the end of the promise chain:</p>
+
+<pre class="brush: js">doSomething()
+.then(result =&gt; doSomethingElse(result))
+.then(newResult =&gt; doThirdThing(newResult))
+.then(finalResult =&gt; console.log(`Got the final result: ${finalResult}`))
+.catch(failureCallback);
+</pre>
+
+<p>Basically, a promise chain stops if there's an exception, looking down the chain for catch handlers instead. This is very much modeled after how synchronous code works:</p>
+
+<pre class="brush: js">try {
+  const result = syncDoSomething();
+  const newResult = syncDoSomethingElse(result);
+  const finalResult = syncDoThirdThing(newResult);
+  console.log(`Got the final result: ${finalResult}`);
+} catch(error) {
+  failureCallback(error);
+}
+</pre>
+
+<p>This symmetry with synchronous code culminates in the <a href="/en-US/docs/Web/JavaScript/Reference/Statements/async_function"><code>async</code>/<code>await</code></a> syntactic sugar in ECMAScript 2017:</p>
+
+<pre class="brush: js">async function foo() {
+  try {
+    const result = await doSomething();
+    const newResult = await doSomethingElse(result);
+    const finalResult = await doThirdThing(newResult);
+    console.log(`Got the final result: ${finalResult}`);
+  } catch(error) {
+    failureCallback(error);
+  }
+}
+</pre>
+
+<p>It builds on promises, e.g. <code>doSomething()</code> is the same function as before. You can read more about the syntax <a href="https://developers.google.com/web/fundamentals/getting-started/primers/async-functions">here</a>.</p>
+
+<p>Promises solve a fundamental flaw with the callback pyramid of doom, by catching all errors, even thrown exceptions and programming errors. This is essential for functional composition of asynchronous operations.</p>
+
+<h2 id="Creating_a_Promise_around_an_old_callback_API">Creating a Promise around an old callback API</h2>
+
+<p>A {{jsxref("Promise")}} can be created from scratch using its constructor. This should be needed only to wrap old APIs.</p>
+
+<p>In an ideal world, all asynchronous functions would already return promises. Alas, some APIs still expect success and/or failure callbacks to be passed in the old way. The quintessential example is the {{domxref("WindowTimers.setTimeout", "setTimeout()")}} function:</p>
+
+<pre class="brush: js">setTimeout(() =&gt; saySomething("10 seconds passed"), 10000);
+</pre>
+
+<p>Mixing old-style callbacks and promises is problematic. If <code>saySomething</code> fails or contains a programming error, nothing catches it.</p>
+
+<p>Luckily we can wrap it in a promise. Best practice is to wrap problematic functions at the lowest possible level, and then never call them directly again:</p>
+
+<pre class="brush: js">const wait = ms =&gt; new Promise(resolve =&gt; setTimeout(resolve, ms));
+
+wait(10000).then(() =&gt; saySomething("10 seconds")).catch(failureCallback);
+</pre>
+
+<p>Basically, the promise constructor takes an executor function that lets us resolve or reject a promise manually. Since <code>setTimeout</code> doesn't really fail, we left out reject in this case.</p>
+
+<h2 id="Composition">Composition</h2>
+
+<p>{{jsxref("Promise.resolve()")}} and {{jsxref("Promise.reject()")}} are shortcuts to manually create an already resolved or rejected promise respectively. This can be useful at times.</p>
+
+<p>{{jsxref("Promise.all()")}} and {{jsxref("Promise.race()")}} are two composition tools for running asynchronous operations in parallel.</p>
+
+<p>Sequential composition is possible using some clever JavaScript:</p>
+
+<pre class="brush: js">[func1, func2].reduce((p, f) =&gt; p.then(f), Promise.resolve());
+</pre>
+
+<p>Basically, we reduce an array of asynchronous functions down to a promise chain equivalent to: <code>Promise.resolve().then(func1).then(func2);</code></p>
+
+<p>This can also be done with a reusable compose function, which is common in functional programming:</p>
+
+<pre class="brush: js">const applyAsync = (acc,val) =&gt; acc.then(val);
+const composeAsync = (...funcs) =&gt; x =&gt; funcs.reduce(applyAsync, Promise.resolve(x));</pre>
+
+<p>The <code>composeAsync</code> function will accept any number of functions as arguments, and will return a new function that accepts an initial value to be passed through the composition pipeline. This is beneficial because any or all of the functions may be either asynchronous or synchronous, and they are guaranteed to be executed in the correct order:</p>
+
+<pre class="brush: js">const transformData = composeAsync(func1, asyncFunc1, asyncFunc2, func2);
+transformData(data);
+</pre>
+
+<p>In ECMAScript 2017, sequential composition can be done more simply with async/await:</p>
+
+<pre class="brush: js">for (const f of [func1, func2]) {
+  await f();
+}
+</pre>
+
+<h2 id="Timing">Timing</h2>
+
+<p>To avoid surprise, functions passed to <code>then</code> will never be called synchronously, even with an already-resolved promise:</p>
+
+<pre class="brush: js">Promise.resolve().then(() =&gt; console.log(2));
+console.log(1); // 1, 2
+</pre>
+
+<p>Instead of running immediately, the passed-in function is put on a microtask queue, which means it runs later when the queue is emptied at the end of the current run of the JavaScript event loop, i.e. pretty soon:</p>
+
+<pre class="brush: js">const wait = ms =&gt; new Promise(resolve =&gt; setTimeout(resolve, ms));
+
+wait().then(() =&gt; console.log(4));
+Promise.resolve().then(() =&gt; console.log(2)).then(() =&gt; console.log(3));
+console.log(1); // 1, 2, 3, 4
+</pre>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li>{{jsxref("Promise.then()")}}</li>
+ <li><a href="http://promisesaplus.com/">Promises/A+ specification</a></li>
+ <li><a href="https://medium.com/@ramsunvtech/promises-of-promise-part-1-53f769245a53">Venkatraman.R - JS Promise (Part 1, Basics)</a></li>
+ <li><a href="https://medium.com/@ramsunvtech/js-promise-part-2-q-js-when-js-and-rsvp-js-af596232525c#.dzlqh6ski">Venkatraman.R - JS Promise (Part 2 - Using Q.js, When.js and RSVP.js)</a></li>
+ <li><a href="https://tech.io/playgrounds/11107/tools-for-promises-unittesting/introduction">Venkatraman.R - Tools for Promises Unit Testing</a></li>
+ <li><a href="http://pouchdb.com/2015/05/18/we-have-a-problem-with-promises.html">Nolan Lawson: We have a problem with promises — Common mistakes with promises</a></li>
+</ul>
+
+<p>{{PreviousNext("Web/JavaScript/Guide/Details_of_the_Object_Model", "Web/JavaScript/Guide/Iterators_and_Generators")}}</p>

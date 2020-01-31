@@ -1,0 +1,351 @@
+<div>{{HTMLRef}}</div>
+
+<p>{{HTMLElement("input")}} type 类型为 file 的 input 元素使得用户可以选择一个或多个元素以提交表单的方式上传到服务器上，或者通过 Javascript 的 File API 对文件进行操作 .</p>
+
+<p>{{EmbedInteractiveExample("pages/tabbed/input-file.html", "tabbed-shorter")}}</p>
+
+<table class="properties">
+ <tbody>
+  <tr>
+   <td><strong>{{anch("Value")}}</strong></td>
+   <td>{{domxref("DOMString")}} 选择文件的路径</td>
+  </tr>
+  <tr>
+   <td><strong>事件</strong></td>
+   <td>{{event("change")}} 事件 {{event("input")}}</td>
+  </tr>
+  <tr>
+   <td><strong>支持的常用属性</strong></td>
+   <td>{{htmlattrxref("accept", "input")}}, {{htmlattrxref("multiple", "input")}}, {{htmlattrxref("required", "input")}}</td>
+  </tr>
+  <tr>
+   <td><strong>IDL 属性</strong></td>
+   <td><font face="consolas, Liberation Mono, courier, monospace">文件 和 值</font></td>
+  </tr>
+  <tr>
+   <td><strong>方法</strong></td>
+   <td>{{domxref("HTMLInputElement.select", "select()")}}</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="值">值</h2>
+
+<p>文件输入的 {{htmlattrxref("value", "input")}} 属性包括了一个 value 表示选择文件的路径{{domxref("DOMString")}}。如果用户选择了多个文件，则该值表示他们选择的文件列表中的第一个文件。 可以使用输入的<code>HTMLInputElement.files</code>属性标识其他文件。</p>
+
+<div class="note"><strong>Note:</strong>
+
+<ol>
+ <li>如果选择了多个文件, 这个值表示第一个被选择的文件路径。JavaScript 可以通过 Input 的 FileList 属性获取到其他的文件路径。</li>
+ <li>没有选择文件该值为空字符串。</li>
+ <li>为了阻止恶意软件猜测文件路径, 该值 <a href="https://html.spec.whatwg.org/multipage/input.html#fakepath-srsly">以 <code>C:\fakepath\</code></a>为前缀。</li>
+</ol>
+</div>
+
+<h2 id="如何使用">如何使用</h2>
+
+<h3 id="A_basic_example">A basic example</h3>
+
+<pre class="brush: html">&lt;form&gt;
+ &lt;div&gt;
+   &lt;label for="file"&gt;Choose file to upload&lt;/label&gt;
+   &lt;input type="file" id="file" name="file" multiple&gt;
+ &lt;/div&gt;
+ &lt;div&gt;
+   &lt;button&gt;Submit&lt;/button&gt;
+ &lt;/div&gt;
+&lt;/form&gt;</pre>
+
+<div class="hidden">
+<pre class="brush: css">div {
+  margin-bottom: 10px;
+}</pre>
+</div>
+
+<p>上述代码会产生如下结果: </p>
+
+<p>{{EmbedLiveSample('A_simple_example', 650, 60)}}</p>
+
+<div class="note">
+<p><strong>Note</strong>: 通过 Github / 在线运行 -- <a href="https://github.com/mdn/learning-area/blob/master/html/forms/file-examples/simple-file.html">source code</a> / <a href="https://mdn.github.io/learning-area/html/forms/file-examples/simple-file.html">see it running live</a>.</p>
+</div>
+
+<p>忽略用户操作系统/设备的影响, 文件 input 提供了一个按钮去打开文件选择窗口. </p>
+
+<p>包括上面所说的 {{htmlattrxref("multiple", "input")}} 属性, 多个文件可以被同时选中. 只要用户所在的平台允许 (e.g. 摁住 <kbd>Shift</kbd> 或者 <kbd>Control</kbd>), 用户可以选择多个文件. 如果不希望多选, 忽略 `multiple` 属性.</p>
+
+<p>在上面的例子中, 当表单被提交, 每个选中的文件名将被添加到 URL 参数中`<code>?file=file1.txt&amp;file=file2.txt`</code></p>
+
+<h3 id="获取选中文件的信息">获取选中文件的信息</h3>
+
+<p>选中文件通过 {{domxref("HTMLInputElement.files")}} 属性返回 — 返回值是一个 {{domxref("FileList")}} 对象,这个对象是一个包含了许多 {{domxref("File")}} 文件的列表(你也可以像列表一样操作它).</p>
+
+<p>每个 File 对象包含了下列信息: </p>
+
+<ul>
+ <li><code>name</code>: 文件名.</li>
+ <li><code>lastModified</code>: UNIX timestamp 形式的最后修改时间.</li>
+ <li><code>lastModifiedDate</code>:  {{domxref("Date")}} 形式的最后修改时间.</li>
+ <li><code>size</code>: 文件的字节大小.</li>
+ <li><code>type</code>: {{domxref("DOMString")}} 文件的 <a href="/en-US/docs/Glossary/MIME_type">MIME </a>类型.</li>
+</ul>
+
+<h3 id="限制允许的文件类型">限制允许的文件类型</h3>
+
+<p>如果你不希望用户上传任何类型的文件, 你可以使用 input 的 accept 属性.</p>
+
+<p>accept 属性接受一个逗号分隔的 MIME 类型字符串, 如:</p>
+
+<ul>
+ <li><code>accept="image/png"</code> 或 <code>accept=".png"</code> — 只接受 png 图片.</li>
+ <li><code>accept="image/png, image/jpeg"</code> 或 <code>accept=".png, .jpg, .jpeg"</code> — PNG/JPEG 文件.</li>
+ <li><code>accept="image/*"</code> — 接受任何图片文件类型. </li>
+ <li><code>accept=".doc,.docx,.xml,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"</code> — 接受任何 MS Doc 文件类型.</li>
+</ul>
+
+<p>下面是一个更完整的例子:</p>
+
+<pre class="brush: html">&lt;form&gt;
+  &lt;div&gt;
+    &lt;label for="profile_pic"&gt;Choose file to upload&lt;/label&gt;
+    &lt;input type="file" id="profile_pic" name="profile_pic"
+          accept=".jpg, .jpeg, .png"&gt;
+  &lt;/div&gt;
+  &lt;div&gt;
+    &lt;button&gt;Submit&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/form&gt;</pre>
+
+<div class="hidden">
+<pre class="brush: css">div {
+  margin-bottom: 10px;
+}</pre>
+</div>
+
+<p>这个例子的结果和上面的例子相似. </p>
+
+<p>{{EmbedLiveSample('Limiting_accepted_file_types', 650, 60)}}</p>
+
+<div class="note">
+<p><strong>Note</strong>: 在 Github 上查看源码 / 在运行 --  <a href="https://github.com/mdn/learning-area/blob/master/html/forms/file-examples/file-with-accept.html">source code</a> / <a href="https://mdn.github.io/learning-area/html/forms/file-examples/file-with-accept.html">running live</a>.</p>
+</div>
+
+<p>这个例子和上面例子的不同在于你可以选择的文件类型是固定的, 在文件选择其中你只能看到被允许选中的类型.</p>
+
+<p><img alt="Screenshot of a macOS file picker dialog. Files other than JPEG are grayed-out and unselectable." src="https://mdn.mozillademos.org/files/15183/file-chooser.png" style="margin: 0 auto;"></p>
+
+<p>accept 属性并不会验证选中文件的类型. 他只是为开发这提供了一种引导用户做出期望行为的方式而已, 用户还是有办法绕过浏览器的限制.</p>
+
+<p>因此, 在服务器端进行文件类型验证是必不可少的.</p>
+
+<h2 id="更多例子">更多例子</h2>
+
+<p>在这个例子中, 我们将展示利用 {{domxref("HTMLInputElement.files")}} 进行文件选择的更高级用法.</p>
+
+<div class="note">
+<p><strong>Note</strong>: 查看更完整的例子 <a href="https://github.com/mdn/learning-area/blob/master/html/forms/file-examples/file-example.html">file-example.html</a> / <a href="https://mdn.github.io/learning-area/html/forms/file-examples/file-example.html">see it live also</a></p>
+</div>
+
+<p>HTML 代码</p>
+
+<pre class="brush: html">&lt;form&gt;
+  &lt;div&gt;
+    &lt;label for="image_uploads"&gt;Choose images to upload (PNG, JPG)&lt;/label&gt;
+    &lt;input type="file" id="image_uploads" name="image_uploads" accept=".jpg, .jpeg, .png" multiple&gt;
+  &lt;/div&gt;
+  &lt;div class="preview"&gt;
+    &lt;p&gt;No files currently selected for upload&lt;/p&gt;
+  &lt;/div&gt;
+  &lt;div&gt;
+    &lt;button&gt;Submit&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/form&gt;</pre>
+
+<div class="hidden">
+<pre class="brush: css">      form {
+        width: 95%;
+        background: #ccc;
+        margin: 0 auto;
+        padding: 2.5%;
+      }
+
+      form ol {
+        padding-left: 0;
+      }
+
+      form li {
+        background: #eee;
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        list-style-type: none;
+      }
+
+      form img {
+        height: 64px;
+        order: 1;
+      }
+
+      form p {
+        line-height: 32px;
+        padding-left: 10px;
+      }
+
+      form label, form button {
+        background-color: black;
+        background-image: linear-gradient(to bottom, rgba(255, 0, 0, 0), rgba(255, 0, 0, 0.4) 40%, rgba(255, 0, 0, 0.4) 60%, rgba(255, 0, 0, 0));
+        color: #ccc;
+        padding: 5px 10px;
+        border-radius: 5px;
+        border: 1px ridge gray;
+      }
+
+      form label:hover, form button:hover {
+        background-color: #222;
+      }
+
+      form label:active, form button:active {
+        background-color: #333;
+      }</pre>
+</div>
+
+<p>就像我们之前做的那样. </p>
+
+<p>接下来, 看一下 JavaScript 代码.</p>
+
+<pre class="brush: js">// 获取 input 元素
+var input = document.querySelector('input');
+// 获取 preview 元素
+var preview = document.querySelector('.preview');
+// 将 input 变成透明的
+input.style.opacity = 0;</pre>
+
+<div class="note">
+<p><strong>Note:</strong> 使用 <a href="/en-US/docs/Web/CSS/opacity"><code>opacity</code></a> 而不是 <a href="/en-US/docs/Web/CSS/visibility"><code>visibility: hidden</code></a> / <code><a href="/en-US/docs/Web/CSS/display">display: none</a>的原因是因为visibility和display会让input不可选择</code></p>
+</div>
+
+<p>接下来, 我们监听 input 的 change 事件, 并且在事件发生的时候调用 updateImageDisplay 方法. </p>
+
+<pre class="brush: js">input.addEventListener('change', updateImageDisplay);</pre>
+
+<p>当 <code>updateImageDisplay 方法被调用, 我们</code>:</p>
+
+<ul>
+ <li>使用 while 循环清空 preview 中的内容. </li>
+ <li>获取 the {{domxref("FileList")}} 对象并且将选中文件保存到 <code>curFiles 变量中</code>.</li>
+ <li>检查是否没有选中文件.</li>
+ <li>在 preview 中打印所有选中文件的信息:
+  <ul>
+   <li>使用自定义的 <code>validFileType()</code> 检查文件类型是否正确.</li>
+   <li>正确:
+    <ul>
+     <li>在 div 中打印文件名称和 size.</li>
+     <li>通过 <code>window.<a href="/en-US/docs/Web/API/URL/createObjectURL">URL.createObjectURL</a>(curFiles[i])</code> 以及 css 产生预览图.</li>
+    </ul>
+   </li>
+   <li>不正确: 告诉用户.</li>
+  </ul>
+ </li>
+</ul>
+
+<pre class="brush: js">function updateImageDisplay() {
+  while(preview.firstChild) {
+    preview.removeChild(preview.firstChild);
+  }
+
+  var curFiles = input.files;
+  if(curFiles.length === 0) {
+    var para = document.createElement('p');
+    para.textContent = 'No files currently selected for upload';
+    preview.appendChild(para);
+  } else {
+    var list = document.createElement('ol');
+    preview.appendChild(list);
+    for(var i = 0; i &lt; curFiles.length; i++) {
+      var listItem = document.createElement('li');
+      var para = document.createElement('p');
+      if(validFileType(curFiles[i])) {
+        para.textContent = 'File name ' + curFiles[i].name + ', file size ' + returnFileSize(curFiles[i].size) + '.';
+        var image = document.createElement('img');
+        image.src = window.URL.createObjectURL(curFiles[i]);
+
+        listItem.appendChild(image);
+        listItem.appendChild(para);
+
+      } else {
+        para.textContent = 'File name ' + curFiles[i].name + ': Not a valid file type. Update your selection.';
+        listItem.appendChild(para);
+      }
+
+      list.appendChild(listItem);
+    }
+  }
+}</pre>
+
+<p>自定义的 <code>validFileType()</code> 接受一个 {{domxref("File")}} 对象作为参数, 然后检查文件类型是否在 accept 列表中.</p>
+
+<pre class="brush: js">var fileTypes = [
+  'image/jpeg',
+  'image/pjpeg',
+  'image/png'
+]
+
+function validFileType(file) {
+  for(var i = 0; i &lt; fileTypes.length; i++) {
+    if(file.type === fileTypes[i]) {
+      return true;
+    }
+  }
+
+  return false;
+}</pre>
+
+<p><code>returnFileSize()方法接受一个数字作为参数以 KB/MB 的形式返回结果</code>.</p>
+
+<pre class="brush: js">function returnFileSize(number) {
+  if(number &lt; 1024) {
+    return number + 'bytes';
+  } else if(number &gt; 1024 &amp;&amp; number &lt; 1048576) {
+    return (number/1024).toFixed(1) + 'KB';
+  } else if(number &gt; 1048576) {
+    return (number/1048576).toFixed(1) + 'MB';
+  }
+}</pre>
+
+<p>运行一下:</p>
+
+<p>{{EmbedLiveSample('Examples', '100%', 200)}}</p>
+
+<h2 id="规范">规范</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName('HTML WHATWG', 'input.html#file-upload-state-(type=file)', '&lt;input type="file"&gt;')}}</td>
+   <td>{{Spec2('HTML WHATWG')}}</td>
+   <td>Initial definition</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('HTML5.1', 'sec-forms.html#file-upload-state-typefile', '&lt;input type="file"&gt;')}}</td>
+   <td>{{Spec2('HTML5.1')}}</td>
+   <td>Initial definition</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="浏览器兼容性">浏览器兼容性</h2>
+
+<p>{{Compat("html.elements.input.input-file")}}</p>
+
+<h2 id="另见">另见</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Using_files_from_web_applications">在 Web 应用中使用文件</a> — 包含大量的其它实用示例，和 <code>&lt;input type="file"&gt;</code> 以及 <a href="/en-US/docs/Web/API/File">文件 API</a> 相关。</li>
+</ul>

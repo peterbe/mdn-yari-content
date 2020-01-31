@@ -1,0 +1,49 @@
+
+<p>最好的开发oepn <a href="/en-US/docs/Apps">Web Apps</a> 小建议、把戏、技能资源之一 —— 尤其是那些目标是开发Firefox OS的人 —— 是我们出色的<a href="/en-US/docs/Mozilla/Firefox_OS">Firefox OS</a> 和 <a href="/en-US/docs/Mozilla/Firefox_OS/Gaia">Gaia开发者团队</a>。这篇文章参考了一些他们的建议。请享受它！</p>
+<h2 id="安装和更新">安装和更新</h2>
+<p>这是一些关于app安装、更新过程、应用程序标识（manifests）的建议。</p>
+<h3 id="即使我有一个appache标识（manifest）我的应用仍然不能更新。">即使我有一个appache标识（manifest）我的应用仍然不能更新。</h3>
+<p>请检查你是否向appcache 标识（manifest）发送了Cache Headers。如果你没有，Gecko会使用启发式的缓存</p>
+<p>Please check if you send Cache Headers for your <code>appcache</code> manifest. If you don't, Gecko will use heuristic caching and will serve it from its cache for a few hours. We recommend that you configure an immediate expiration for your <code>appcache</code> manifest. The following Apache config will do just that:</p>
+<pre>AddType text/cache-manifest .appcache
+ExpiresByType text/cache-manifest "access"</pre>
+<p>This might be a good idea for your <code>webapp</code> manifest too:</p>
+<pre>AddType application/x-web-app-manifest+json .webapp
+ExpiresByType application/x-web-app-manifest+json "access"</pre>
+<h2 id="性能">性能</h2>
+<p>Here, we assemble advice that will help you create Web apps that perform well, without bogging down the device hardware.</p>
+<h3 id="Use_CSS_animations_and_transitions">Use CSS animations and transitions</h3>
+<p>Instead of using some library’s <code>animate()</code> function, which probably currently uses many badly performing technologies (<a href="/zh-CN/docs/Web/API/Window/setTimeout" title="WindowOrWorkerGlobalScope 混合的 setTimeout()方法设置一个定时器，该定时器在定时器到期后执行一个函数或指定的一段代码。"><code>window.setTimeout()</code></a> or <code>top</code>/<code>left</code> positioning, for example) use <a href="/en-US/docs/CSS/Using_CSS_animations">CSS animations</a>. In many cases, you can actually use <a href="/en-US/docs/CSS/CSS_transitions">CSS Transitions</a> to get the job done. This works well because the browser is designed to optimize these effects and use the GPU to handle them smoothly with minimal impact on processor performance. Another benefit is that you can define these effects in CSS along with the rest of your app's look-and-feel, using a standardized syntax.</p>
+<p>CSS animations give you very granular control over your effects using <a href="/en-US/docs/CSS/@keyframes">keyframes</a>, and you can even watch events fired during the animation process in order to handle other tasks that need to be performed at set points in the animation process. You can easily trigger these animations with the <a href="/zh-CN/docs/Web/CSS/:hover" title=":hover CSS伪类适用于用户使用指示设备虚指一个元素（没有激活它）的情况。这个样式会被任何与链接相关的伪类重写，像:link, :visited, 和 :active等。为了确保生效，:hover规则需要放在:link和:visited规则之后，但是在:active规则之前，按照LVHA的循顺序声明:link－:visited－:hover－:active。"><code>:hover</code></a>, <a href="/zh-CN/docs/Web/CSS/:focus" title="CSS伪类 :focus表示获得焦点的元素（如表单输入）。当用户点击或触摸元素或通过键盘的 “tab” 键选择它时会被触发。"><code>:focus</code></a>, or <a href="/zh-CN/docs/Web/CSS/:target" title=":target CSS 伪类 代表一个唯一的页面元素(目标元素)，其ID与当前URL片段匹配 ."><code>:target</code></a>, or by dynamically adding and removing classes on parent elements.</p>
+<p>If you want to create animations on the fly or modify them in <a href="/en-US/docs/JavaScript">JavaScript</a>, James Long has written a simple library for that called <a href="https://github.com/jlongster/css-animations.js/">CSS-animations.js</a>.</p>
+<h3 id="Use_CSS_transforms">Use CSS transforms</h3>
+<p>Instead of tweaking absolute positioning and fiddling with all that math yourself, use the <a href="/zh-CN/docs/Web/CSS/transform" title="The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone https://github.com/mdn/interactive-examples and send us a pull request."><code>transform</code></a> CSS property to adjust the position, scale, and so forth of your content. The reason is, once again, hardware acceleration. The browser can do these tasks on your GPU, letting the CPU handle other things.</p>
+<p>In addition, transforms give you capabilities you might not otherwise have. Not only can you translate elements in 2D space, but you can transform in three dimensions, skew and rotate, and so forth. Paul Irish has an <a href="http://paulirish.com/2012/why-moving-elements-with-translate-is-better-than-posabs-topleft/">in-depth analysis of the benefits of <code>translate()</code></a> from a performance point of view. In general, however, you have the same benefits you get from using CSS animations: you use the right tool for the job and leave the optimization to the browser. You also use an easily extensible way of positioning elements — something that needs a lot of extra code if you simulate translation with <code>top</code> and <code>left</code> positioning. Another bonus is that this is just like working in an <a href="/zh-CN/docs/Web/HTML/Element/canvas" title="&lt;canvas>元素可被用来通过脚本（通常是JavaScript）绘制图形。比如,它可以被用来绘制图形,制作图片集合,甚至用来实现动画效果。你可以(也应该)在元素标签内写入可提供替代的的代码内容，这些内容将会在在旧的、不支持&lt;canvas>元素的浏览器或是禁用了JavaScript的浏览器内渲染并展现。"><code>&lt;canvas&gt;</code></a>.</p>
+<aside>
+ <div class="note">
+  <p><strong>Note:</strong> You might, for now, need to also do a <code>translateZ(0)</code> in some environments to get hardware acceleration, which can have memory consumption issues in others. This hack will be not needed for long though.</p>
+ </div>
+</aside>
+<h3 id="Use_requestAnimationFrame_instead_of_setInterval">Use <code>requestAnimationFrame()</code> instead of <code>setInterval()</code></h3>
+<p>Calls to <a href="/zh-CN/docs/Web/API/Window/setInterval" title="WindowOrWorkerGlobalScope 的 setInterval() 方法重复调用一个函数或执行一个代码段，在每次调用之间具有固定的时间延迟。"><code>window.setInterval()</code></a> run code at a presumed frame rate that may or may not be possible under current circumstances. It tells the browser to render results even while the browser isn't actually drawing; that is, while the video hardware hasn't reached the next display cycle. This wastes processor time (and can even lead to reduced battery life on the user's device).</p>
+<p>Instead, you should try to use <a href="/zh-CN/docs/Web/API/Window/requestAnimationFrame" title="window.requestAnimationFrame() 方法告诉浏览器您希望执行动画并请求浏览器在下一次重绘之前调用指定的函数来更新动画。该方法使用一个回调函数作为参数，这个回调函数会在浏览器重绘之前调用。"><code>window.requestAnimationFrame()</code></a>. This waits until the browser is actually ready to start building the next frame of your animation, and won't bother if the hardware isn't going to actually draw anything. Another benefit to this API is that animations won't run while your app isn't visible on the screen (such as if it's in the background and some other task is operating). This will save battery life and prevent users from cursing your name into the night sky.</p>
+<h3 id="Make_events_immediate">Make events immediate</h3>
+<p>As old-school, accessibility aware web developers we love click events as they also come with the added benefit of supporting keyboard input. On mobile devices, these are too slow. You should use <code><a href="/zh-CN/docs/Web/Reference/Events/touchstart" title="/zh-CN/docs/Web/Reference/Events/touchstart">touchstart</a></code> and <code><a href="/zh-CN/docs/Web/Reference/Events/touchend" title="/zh-CN/docs/Web/Reference/Events/touchend">touchend</a></code> instead. The reason is that these don’t have a delay that makes the interaction with the app appear sluggish. If you test for touch support first, you don’t sacrifice accessibility either. For example, the Financial Times uses a library called <a href="https://github.com/ftlabs/fastclick">fastclick</a> for that purpose, which is available for you to use.</p>
+<h3 id="Keep_your_interface_simple">Keep your interface simple</h3>
+<p>One big performance issue we found in HTML5 apps was that moving lots of <a href="/en-US/docs/DOM">DOM</a> elements around makes everything sluggish — especially when they feature lots of gradients and drop shadows. Simplyfying your look-and-feel and moving a proxy element around when you drag and drop helps a lot.</p>
+<p>When, for example, you have a long list of elements (let’s say tweets), don’t move them all. Instead, keep in your DOM tree only the ones that are visible and a few on either side of the currently visible set of tweets. Hide or remove the rest. Keeping the data in a JavaScript object instead of accessing the DOM can vastly improve your app's performance. Think of the display as a presentation of your data rather than the data itself. That doesn’t mean you can't use straight HTML as the source; just read it once and then scroll 10 elements, changing the content of the first and last accordingly to your position in the results list, instead of moving 100 elements that aren’t visible. The same trick applies in games to sprites: if they aren’t currently on the screen, there is no need to poll them. Instead re-use elements that scroll off screen as new ones coming in.</p>
+<h2 id="Media_presentation">Media presentation</h2>
+<p>Currently, for security reasons, the h.264 decoder on Firefox OS devices is only available to privileged code. Because of that, you can't use the <a href="/zh-CN/docs/Web/HTML/Element/video" title="HTML &lt;video> 元素 用于在HTML或者XHTML文档中嵌入视频内容。"><code>&lt;video&gt;</code></a> element to present h.264 content at this time. You can, however, use a <a href="/en-US/docs/WebAPI/Web_Activities" title="/en-US/docs/WebAPI/Web_Activities">Web Activity</a>. Here's a code snippet that can help:</p>
+<pre class="brush: html">var activity = new MozActivity({
+  name: "view",
+  data: {
+    type: [
+      "video/webm",
+      "video/mp4",
+      "video/3gpp",
+      "video/youtube"
+    ]
+    url: "http://example.com/myvideo.mp4"
+  }
+});</pre>
+<p>This asks Firefox OS to present the MP4 video at the specified URL. You can include one or more video format types in the <code>type</code> list to permit.</p>

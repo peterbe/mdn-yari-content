@@ -1,0 +1,70 @@
+<div>{{AddonSidebar}}</div>
+
+<div class="summary">
+<p>Firefox アドオンは、他の Firefox アドオンと区別するために使われるユニーク ID を持っています。</p>
+
+<p>この記事は、アドオン ID が Web 拡張 API で作る拡張機能によってどのように処理されているか述べています。</p>
+</div>
+
+<p>Firefox アドオンには、Firefox内と <a href="https://addons.mozilla.org/">addons.mozilla.org</a> (AMO) ウェブサイト両方で使われるユニークな識別子があります。例えば、Firefox でインストールされたアドオンを更新確認したり、アドオンによって制御されているオブジェクト (データストアのようなもの) を識別したりするために使われています。</p>
+
+<p>Firefox アドオンの古いタイプでは、アドオン開発者はアドオン ID を明示的にセットしなければなりません。XUL/XPCOM アドオンは <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/Install_Manifests">install manifest</a> で ID をセットし、SDK アドオンは<a href="/en-US/docs/Mozilla/Add-ons/SDK/Tools/package_json">package.json</a> で ID をセットします。<a href="/en-US/docs/Mozilla/Add-ons/SDK/Tools/package_json"> </a></p>
+
+<p>しかし、Firefox 48 からすべて明示的に ID をセットしなくても、開発、デバッグ、公開そして拡張機能をアップデートすることができます。</p>
+
+<div class="note">
+<p>ID を持たずにWeb 拡張を開発やデバッグできるようになったのはFirefox 48 が初めてであるということに注意してください。Firefox の前のバージョンを使う必要があれば、ID を明示的にセットするために<a href="/ja/docs/Mozilla/Add-ons/WebExtensions/manifest.json/applications">applications </a>キーを使わなければなりません．</p>
+</div>
+
+<h2 id="アドオンIDなしの基本的なワークフロー">アドオンIDなしの基本的なワークフロー</h2>
+
+<p>拡張機能は manifest.json の <code><a href="/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/applications">applications</a></code> キーを使って明示的にアドオンIDをセットできます。しかし、このキーは通常オプションです。セットしなかった場合、IDを介さなくてもふつうに拡張機能を開発、デバッグ、公開、更新できます。ひとつのメリットは Google Chrome は <code>applications</code> キーを認識せず、入れていると警告を出します。</p>
+
+<p>しかし、WebExtension API にはアドオン ID を使ってブラウザーセッションと同様に扱うものもあります。こうした API をFirefox で使う場合、<code><a href="/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/applications">applications</a></code> キーで明示的に ID をセットしなれけばなりません。<a href="#どんなときアドオンIDが必要になる">どんなときにアドオン ID が必要になる？</a> を見てください。</p>
+
+<h3 id="開発及びデバッグ">開発及びデバッグ</h3>
+
+<p>Firefox 48 からは、manifest.json に ID が入っていない場合、about:debugging で<a href="/en-US/Add-ons/WebExtensions/Temporary_Installation_in_Firefox">Firefox にインストール</a>した時、拡張機能にはランダムに生成される仮の ID を代入されます。「再読み込み」ボタンを使って拡張機能を読み込むと、同じ ID が使われます。Firefox を再起動してアドオンを読み込むと、新しい ID になっています。</p>
+
+<p>拡張機能を.xpi や .zip の形で about:addons からインストールしようとしても、機能しません。この場合、manifest.json に <code><a href="/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/applications">applications</a></code> キーを追加する必要があります。</p>
+
+<h3 id="公開">公開</h3>
+
+<p>Once you have finished developing the extension, you can <a href="/en-US/Add-ons/WebExtensions/Publishing_your_WebExtension">package it and submit it to AMO for review and signing</a>. If the packaged extension you upload does not contain an ID, AMO will generate one for you. It's only at this point that the add-on will be assigned a permanent ID, which will be embedded in the signed packaged extension.</p>
+
+<p>Note that once an extension has been given a permanent ID, you can't then update it to use the Add-on SDK or legacy XUL/XPCOM techniques. If you do switch to one of these platforms, you must submit it as a distinct new add-on, with a new ID.</p>
+
+<h3 id="アップデート">アップデート</h3>
+
+<p>Even after this point, though, you don't generally have to deal with the ID at all. You can continue to develop the add-on without an ID, and when you want to update, upload the new version by visiting the add-on's AMO page. Because you are uploading the add-on through that page, AMO knows that this is an update to this particular add-on, even though it doesn't contain an ID.</p>
+
+<div class="note">
+<p>It's essential with this workflow that you update the add-on <em>manually using its page on AMO</em>, otherwise AMO will not understand that the submission is an update to an existing add-on, and will treat the update as a brand-new add-on.</p>
+</div>
+
+<p>You can do the same thing if you are updating from an older add-on type, such as a XUL/XPCOM add-on, to use WebExtensions APIs. Just visit the old add-on's page on AMO, upload the new extension there, and it will be treated as an update to the old version.</p>
+
+<h2 id="どんなときアドオンIDが必要になる">どんなときアドオンIDが必要になる?</h2>
+
+<ul>
+ <li>If you are loading the add-on from it's XPI file, are not loading it temporarily using about:debugging and it is not signed.</li>
+ <li>If you use <a href="https://addons-server.readthedocs.io/en/latest/topics/api/signing.html">AMO's API</a> for uploading your add-on, rather than uploading it manually on its page, then you need to include the add-on's ID in the request.</li>
+ <li>Some WebExtension APIs use the add-on ID and expect it to be the same from one browser session to the next. もしあなたのアドオンで以下に示すAPIを使う場合は、明示的に <code><a href="/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/applications">applications</a></code> キーでアドオンIDを指定する必要があります:
+  <ul>
+   <li>{{WebExtAPIRef("storage.managed")}}</li>
+   <li>{{WebExtAPIRef("storage.sync")}}</li>
+   <li>{{WebExtAPIRef("identity.getRedirectURL")}}</li>
+   <li><a href="https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Native_messaging">Native messaging</a></li>
+   <li>{{WebExtAPIRef("pkcs11")}}</li>
+   <li>{{WebExtAPIRef("runtime.onMessageExternal")}}</li>
+   <li>{{WebExtAPIRef("runtime.onConnectExternal")}}</li>
+  </ul>
+ </li>
+ <li>Using Firefox for Android. See <a href="/en-US/Add-ons/WebExtensions/manifest.json/applications">applications in manifest.json</a>.</li>
+</ul>
+
+<p> </p>
+
+<p> </p>
+
+<p> </p>

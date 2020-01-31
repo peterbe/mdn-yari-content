@@ -1,0 +1,136 @@
+<div>{{JSRef}}</div>
+
+<p><code><strong>toString()</strong></code> メソッドは、オブジェクトを表す文字列を返します。</p>
+
+<div>{{EmbedInteractiveExample("pages/js/object-prototype-tostring.html")}}</div>
+
+<div class="hidden">このデモのソースファイルは GitHub リポジトリに格納されています。デモプロジェクトに協力していただける場合は、 <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> をクローンしてプルリクエストを送信してください。</div>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox"><code><var>obj</var>.toString()</code></pre>
+
+<h3 id="Return_value" name="Return_value">返値</h3>
+
+<p>オブジェクトを表す文字列です。</p>
+
+<h2 id="Description" name="Description">解説</h2>
+
+<p>すべてのオブジェクトは <code>toString</code> メソッドを持ち、オブジェクトが文字列値として表される場面や、文字列が期待される構文で参照されたときに自動的に呼び出されます。既定で、 <code>toString()</code> メソッドは <code>Object</code> の子孫にあたるあらゆるオブジェクトに継承されています。このメソッドがカスタムオブジェクト中で上書きされていない場合、 <code>toString()</code> は "<code>[object <var>type</var>]</code>" という文字列を返します (<code><var>type</var></code> は そのオブジェクトの型)。以下のコードがこれを例示しています。</p>
+
+<pre class="brush: js">var o = new Object();
+o.toString(); // [object Object] を返す
+</pre>
+
+<div class="note">
+<p><strong>メモ:</strong> JavaScript 1.8.5 から、 <code>toString()</code> を {{jsxref("null")}} に対して呼び出した場合には <code>[object <em>Null</em>]</code> を、 {{jsxref("undefined")}} に対して呼び出した場合には <code>[object <em>Undefined</em>]</code> を返すようになり、これは ECMAScript 5th Edition とその後のエラッタによって定義されました。 {{anch("Using_toString()_to_detect_object_class", "toString() を使用したオブジェクトクラスの検出")}}を参照してください。</p>
+</div>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<h3 id="Overriding_the_default_toString_method" name="Overriding_the_default_toString_method">既定の <code>toString</code> メソッドの上書き</h3>
+
+<p>既定の <code>toString()</code> メソッドに代わって呼び出される関数を作ることができます。 <code>toString()</code> メソッドは引数を取らず、文字列を返す必要があります。 <code>toString</code> メソッドを作成した場合は好きな文字列を返すことができますが、オブジェクトに関する情報を伝えるのが一番役に立つでしょう。</p>
+
+<p>以下のコードは <code>Dog</code> オブジェクト型を定義し、 <code>Dog</code> 型のオブジェクト <code>theDog</code> を生成しています。</p>
+
+<pre class="brush: js">function Dog(name, breed, color, sex) {
+  this.name = name;
+  this.breed = breed;
+  this.color = color;
+  this.sex = sex;
+}
+
+theDog = new Dog('Gabby', 'Lab', 'chocolate', 'female');
+</pre>
+
+<p>このカスタムオブジェクト上で <code>toString()</code> メソッドを呼び出した場合、メソッドは <code>Object</code> から継承された既定値を返します。</p>
+
+<pre class="brush: js">theDog.toString(); // [object Object] を返す
+</pre>
+
+<p>以下のコードでは、 <code>dogToString</code> を生成および割り当てし、既定の <code>toString</code> メソッドを上書きします。この関数はオブジェクトの名前、品種、毛色、性別を "<code>property = value;</code>" の書式で含む文字列を生成します。</p>
+
+<pre class="brush: js">Dog.prototype.toString = function dogToString() {
+  var ret = 'Dog ' + this.name + ' is a ' + this.sex + ' ' + this.color + ' ' + this.breed;
+  return ret;
+}
+</pre>
+
+<p>または</p>
+
+<pre class="brush: js">Dog.prototype.toString = function dogToString() {
+  return `Dog ${this.name} is a ${this.sex} ${this.color} ${this.breed}`;
+}
+</pre>
+
+<p>前者のコードの中で、 <code>theDog</code> が文字列の文脈で使用されるたびに、 JavaScript は自動的に <code>dogToString()</code> 関数を呼び出し、以下の文字列を返します。</p>
+
+<pre class="brush: js">"Dog Gabby is a female chocolate Lab"
+</pre>
+
+<h3 id="Using_toString()_to_detect_object_class" name="Using_toString()_to_detect_object_class">toString() を使用したオブジェクトクラスの判別</h3>
+
+<p><code>toString()</code> はすべてのオブジェクトに対し、そのクラスを得るために使用することができます。すべてのオブジェクトで <code>Object.prototype.toString()</code> を使うためには、 {{jsxref("Function.prototype.call()")}} または {{jsxref("Function.prototype.apply()")}} を、 第1引数 <code>thisArg</code> に調べたいオブジェクトを渡して呼び出す必要があります。</p>
+
+<pre class="brush: js">var toString = Object.prototype.toString;
+
+toString.call(new Date);    // [object Date]
+toString.call(new String);  // [object String]
+toString.call(Math);        // [object Math]
+
+// Since JavaScript 1.8.5
+toString.call(undefined);   // [object Undefined]
+toString.call(null);        // [object Null]
+</pre>
+
+<h2 id="Specifications" name="Specifications">仕様書</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">状態</th>
+   <th scope="col">備考</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-object.prototype.tostring', 'Object.prototype.toString')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td></td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-object.prototype.tostring', 'Object.prototype.toString')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td></td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-15.2.4.2', 'Object.prototype.toString')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td>{{jsxref("null")}} で呼び出された場合は <code>[object <em>Null</em>]</code> を、 {{jsxref("undefined")}} で呼び出された場合は <code>[object <em>Undefined</em>]</code> を返すようになった。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES1')}}</td>
+   <td>{{Spec2('ES1')}}</td>
+   <td>初回定義。 JavaScript 1.0 で実装された。</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザーの互換性</h2>
+
+<div>
+<div class="hidden">このページの互換性一覧表は構造化データから生成されています。データに協力していただけるのであれば、 <a class="external" href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> をチェックアウトしてプルリクエストを送信してください。</div>
+
+<p>{{Compat("javascript.builtins.Object.toString")}}</p>
+</div>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li>{{jsxref("Object.prototype.toSource()")}}</li>
+ <li>{{jsxref("Object.prototype.valueOf()")}}</li>
+ <li>{{jsxref("Number.prototype.toString()")}}</li>
+ <li>{{jsxref("Symbol.toPrimitive")}}</li>
+</ul>

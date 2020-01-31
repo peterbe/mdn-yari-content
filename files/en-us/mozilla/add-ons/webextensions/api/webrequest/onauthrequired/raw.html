@@ -1,0 +1,351 @@
+<div>{{AddonSidebar()}}</div>
+
+<p>Fired when the server sends a 401 or 407 status code: that is, when the server is asking the client to provide authentication credentials such as a username and password.</p>
+
+<p>The listener can respond in one of four different ways:</p>
+
+<p><strong>Take no action</strong>: the listener can do nothing, just observing the request. If this happens, it will have no effect on the handling of the request, and the browser will probably just ask the user to log in.</p>
+
+<p><strong>Cancel the request</strong>: the listener can cancel the request. If they do this, then authentication will fail, and the user will not be asked to log in. Extensions can cancel requests as follows:</p>
+
+<ul>
+ <li>in addListener, pass <code>"blocking"</code> in the <code>extraInfoSpec</code> parameter</li>
+ <li>in the listener itself, return an object with a <code>cancel</code> property set to <code>true</code></li>
+</ul>
+
+<p><strong>Provide credentials synchronously</strong>: if credentials are available synchronously, the extension can supply them synchronously. If the extension does this, then the browser will attempt to log in with the given credentials. The listener can provide credentials synchronously as follows:</p>
+
+<ul>
+ <li>in addListener, pass <code>"blocking"</code> in the <code>extraInfoSpec</code> parameter</li>
+ <li>in the listener, return an object with an <code>authCredentials</code> property set to the credentials to supply</li>
+</ul>
+
+<p><strong>Provide credentials asynchronously</strong>: the extension might need to fetch credentials asynchronously. For example, the extension might need to fetch credentials from storage, or ask the user. In this case, the listener can supply credentials asynchronously as follows:</p>
+
+<ul>
+ <li>in addListener, pass <code>"blocking"</code> in the <code>extraInfoSpec</code> parameter</li>
+ <li>in the listener, return a <code>Promise</code> that is resolved with an object containing an <code>authCredentials</code> property, set to the credentials to supply</li>
+</ul>
+
+<p>See <a href="/en-US/Add-ons/WebExtensions/API/webRequest/onAuthRequired#Examples">Examples</a>.</p>
+
+<p>If you use <code>"blocking"</code> you must have the <a href="/en-US/Add-ons/WebExtensions/manifest.json/permissions#API_permissions">"webRequestBlocking" API permission</a> in your manifest.json.</p>
+
+<p>If your extension provides bad credentials, then the listener will be called again. For this reason, take care not to enter an infinite loop by repeatedly providing bad credentials.</p>
+
+<h2 id="Proxy_authorization">Proxy authorization</h2>
+
+<p>In general, Firefox does not fire <code>webRequest</code> events for system requests, such as browser or extension upgrades, or search engine queries. To enable proxy authorization to work smoothly for system requests, from version 57 Firefox implements an exception to this.</p>
+
+<p>If an extension has the "webRequest", "webRequestBlocking", "proxy", and "&lt;all_urls&gt;" permissions, then it will be able to use <code>onAuthRequired</code> to supply credentials for proxy authorization (but not for normal web authorization).  The listener will not be able to cancel system requests or make any other modifications to any system requests.</p>
+
+<h2 id="Syntax">Syntax</h2>
+
+<pre class="syntaxbox brush:js">browser.webRequest.onAuthRequired.addListener(
+  listener,                    // function
+  filter,                      //  object
+  extraInfoSpec                //  optional array of strings
+)
+browser.webRequest.onAuthRequired.removeListener(listener)
+browser.webRequest.onAuthRequired.hasListener(listener)
+</pre>
+
+<p>Events have three functions:</p>
+
+<dl>
+ <dt><code>addListener(callback, filter, extraInfoSpec)</code></dt>
+ <dd>Adds a listener to this event.</dd>
+ <dt><code>removeListener(listener)</code></dt>
+ <dd>Stop listening to this event. The <code>listener</code> argument is the listener to remove.</dd>
+ <dt><code>hasListener(listener)</code></dt>
+ <dd>Check whether <code>listener</code> is registered for this event. Returns <code>true</code> if it is listening, <code>false</code> otherwise.</dd>
+</dl>
+
+<h2 id="addListener_syntax">addListener syntax</h2>
+
+<h3 id="Parameters">Parameters</h3>
+
+<dl>
+ <dt><code>callback</code></dt>
+ <dd>
+ <p>A function that will be called when this event occurs. The function will be passed the following arguments:</p>
+
+ <dl class="reference-values">
+  <dt><code>details</code></dt>
+  <dd><a href="#details"><code>object</code></a>. Details about the request. See <code><a href="#details">details</a></code> below.</dd>
+ </dl>
+
+ <p>Returns: {{WebExtAPIRef('webRequest.BlockingResponse')}} or a <code><a href="/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a></code>.</p>
+
+ <ul>
+  <li>To handle the request synchronously, include <code>"blocking"</code> in the <code>extraInfoSpec</code> parameter and return a <code>BlockingResponse</code> object, with its <code>cancel</code> or its <code>authCredentials</code> properties set.</li>
+  <li>To handle the request asynchronously, include <code>"blocking"</code> in the <code>extraInfoSpec</code> parameter and return a <code>Promise</code> that is resolved with a  <code>BlockingResponse</code> object, with its <code>cancel</code> or its <code>authCredentials</code> properties set.</li>
+ </ul>
+ </dd>
+ <dt><code>filter</code></dt>
+ <dd>{{WebExtAPIRef('webRequest.RequestFilter')}}. A filter that restricts the events that will be sent to this listener.</dd>
+ <dt><code>extraInfoSpec</code>{{optional_inline}}</dt>
+ <dd><code>array</code> of <code>string</code>. <span class="im">Extra options for the event. You can pass any of the following values:</span></dd>
+ <dd>
+ <ul>
+  <li><code>"blocking"</code>: make the request block, so you can cancel the request or supply authentication credentials</li>
+  <li><span class="im"><code>"</code></span><code>responseHeaders</code><span class="im"><code>"</code>: include <code>responseHeaders</code> in the <code>details</code> object passed to the listener</span></li>
+ </ul>
+ </dd>
+</dl>
+
+<h2 id="Additional_objects">Additional objects</h2>
+
+<h3 id="details">details</h3>
+
+<dl class="reference-values">
+ <dt><code>challenger</code></dt>
+ <dd><code>object</code>. The server requesting authentication. This is an object with the following properties:</dd>
+ <dd>
+ <dl class="reference-values">
+  <dt><code>host</code></dt>
+  <dd><code>string</code>. The server's <a href="https://en.wikipedia.org/wiki/Hostname#Internet_hostnames">hostname</a>.<br>
+  <strong>Warning</strong>: Unlike chrome, Firefox will return the requested host instead of the proxy requesting the authentication, even if <code>isProxy</code> is <code>true</code>.</dd>
+  <dt><code>port</code></dt>
+  <dd><code>integer</code>. The server's port number.</dd>
+ </dl>
+ </dd>
+ <dt><code>frameId</code></dt>
+ <dd><code>integer</code>. Zero if the request happens in the main frame; a positive value is the ID of a subframe in which the request happens. If the document of a (sub-)frame is loaded (<code>type</code> is <code>main_frame</code> or <code>sub_frame</code>), <code>frameId</code> indicates the ID of this frame, not the ID of the outer frame. Frame IDs are unique within a tab.</dd>
+ <dt><code>isProxy</code></dt>
+ <dd><code>boolean</code>. <code>true</code> for Proxy-Authenticate, <code>false</code> for WWW-Authenticate. <strong>Note</strong>: <code>webRequest.onAuthRequired</code> is only called for HTTP and HTTPS/SSL proxy servers requiring authentication, and not for SOCKS proxy servers requiring authentication.</dd>
+ <dt><code>method</code></dt>
+ <dd><code>string</code>. Standard HTTP method: for example, "GET" or "POST".</dd>
+ <dt><code>parentFrameId</code></dt>
+ <dd><code>integer</code>. ID of the frame that contains the frame which sent the request. Set to -1 if no parent frame exists.</dd>
+ <dt><code>proxyInfo</code></dt>
+ <dd>
+ <p><code>object</code>. This property is present only if the request is being proxied. It contains the following properties:</p>
+
+ <dl>
+  <dt><code>host</code></dt>
+  <dd><code>string</code>. The hostname of the proxy server.</dd>
+  <dt><code>port</code></dt>
+  <dd><code>integer</code>. The port number of the proxy server.</dd>
+  <dt><code>type</code></dt>
+  <dd>
+  <p><code>string</code>. The type of proxy server. One of:</p>
+
+  <ul>
+   <li>"http": HTTP proxy (or SSL CONNECT for HTTPS)</li>
+   <li>"https": HTTP proxying over TLS connection to proxy</li>
+   <li>"socks": SOCKS v5 proxy</li>
+   <li>"socks4": SOCKS v4 proxy</li>
+   <li>"direct": no proxy</li>
+   <li>"unknown": unknown proxy</li>
+  </ul>
+  </dd>
+  <dt><code>username</code></dt>
+  <dd><code>string</code>. Username for the proxy service.</dd>
+  <dt><code>proxyDNS</code></dt>
+  <dd><code>boolean</code>. True if the proxy will perform domain name resolution based on the hostname supplied, meaning that the client should not do its own DNS lookup.</dd>
+  <dt><code>failoverTimeout</code></dt>
+  <dd><code>integer</code>. Failover timeout in seconds. If the connection fails to connect the proxy server after this number of seconds, the next proxy server in the array returned from <a href="/en-US/docs/Add-ons/WebExtensions/API/proxy#FindProxyForURL()_return_value">FindProxyForURL()</a> will be used.</dd>
+ </dl>
+ </dd>
+ <dt><code>realm</code>{{optional_inline}}</dt>
+ <dd><code>string</code>. The authentication <a href="https://tools.ietf.org/html/rfc1945#section-11">realm</a> provided by the server, if there is one.</dd>
+ <dt><code>requestId</code></dt>
+ <dd><code>string</code>. The ID of the request. Request IDs are unique within a browser session, so you can use them to relate different events associated with the same request.</dd>
+ <dd>
+ <dl class="reference-values">
+ </dl>
+ </dd>
+ <dt><code>responseHeaders</code>{{optional_inline}}</dt>
+ <dd>{{WebExtAPIRef('webRequest.HttpHeaders')}}. The HTTP response headers that were received along with this response.</dd>
+ <dt><code>scheme</code></dt>
+ <dd><code>string</code>. The authentication scheme: <code>"basic"</code> or <code>"digest</code>".</dd>
+ <dt><code>statusCode</code></dt>
+ <dd><code>integer</code>. Standard HTTP status code returned by the server.</dd>
+ <dt><code>statusLine</code></dt>
+ <dd><code>string</code>. HTTP status line of the response or the 'HTTP/0.9 200 OK' string for HTTP/0.9 responses (i.e., responses that lack a status line) or an empty string if there are no headers.</dd>
+ <dt><code>tabId</code></dt>
+ <dd><code>integer</code>. ID of the tab in which the request takes place. Set to -1 if the request isn't related to a tab.</dd>
+ <dt><code>timeStamp</code></dt>
+ <dd><code>number</code>. The time when this event fired, in <a class="external external-icon" href="https://en.wikipedia.org/wiki/Unix_time">milliseconds since the epoch</a>.</dd>
+ <dt><code>type</code></dt>
+ <dd>{{WebExtAPIRef('webRequest.ResourceType')}}. The type of resource being requested: for example, "image", "script", "stylesheet".</dd>
+ <dt><code>url</code></dt>
+ <dd><code>string</code>. Target of the request.</dd>
+</dl>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<p class="hidden">The compatibility table in this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</p>
+
+<p>{{Compat("webextensions.api.webRequest.onAuthRequired", 10)}}</p>
+
+<h2 id="Examples">Examples</h2>
+
+<p>This code just observes authentication requests for the target URL:</p>
+
+<pre class="brush: js">var target = "https://intranet.company.com/";
+
+function observe(requestDetails) {
+  console.log("observing: " + requestDetails.requestId);
+}
+
+browser.webRequest.onAuthRequired.addListener(
+  observe,
+  {urls: [target]}
+);</pre>
+
+<p>This code cancels authentication requests for the target URL:</p>
+
+<pre class="brush: js">var target = "https://intranet.company.com/";
+
+function cancel(requestDetails) {
+  console.log("canceling: " + requestDetails.requestId);
+  return {cancel: true};
+}
+
+browser.webRequest.onAuthRequired.addListener(
+  cancel,
+  {urls: [target]},
+  ["blocking"]
+);</pre>
+
+<p>This code supplies credentials synchronously. It has to keep track of outstanding requests, to ensure that it doesn't repeatedly try to submit bad credentials:</p>
+
+<pre class="brush: js">var target = "https://intranet.company.com/";
+
+var myCredentials = {
+  username: "me@company.com",
+  password: "zDR$ERHGDFy"
+}
+
+var pendingRequests = [];
+
+// A request has completed.
+// We can stop worrying about it.
+function completed(requestDetails) {
+  console.log("completed: " + requestDetails.requestId);
+  var index = pendingRequests.indexOf(requestDetails.requestId);
+  if (index &gt; -1) {
+    pendingRequests.splice(index, 1);
+  }
+}
+
+function provideCredentialsSync(requestDetails) {
+  // If we have seen this request before, then
+  // assume our credentials were bad, and give up.
+  if (pendingRequests.indexOf(requestDetails.requestId) != -1) {
+    console.log("bad credentials for: " + requestDetails.requestId);
+    return {cancel:true};
+  }
+  pendingRequests.push(requestDetails.requestId);
+  console.log("providing credentials for: " + requestDetails.requestId);
+  return {authCredentials: myCredentials};
+}
+
+browser.webRequest.onAuthRequired.addListener(
+    provideCredentialsSync,
+    {urls: [target]},
+    ["blocking"]
+  );
+
+browser.webRequest.onCompleted.addListener(
+  completed,
+  {urls: [target]}
+);
+
+browser.webRequest.onErrorOccurred.addListener(
+  completed,
+  {urls: [target]}
+);</pre>
+
+<p>This code supplies credentials asynchronously, fetching them from storage. It also has to keep track of outstanding requests, to ensure that it doesn't repeatedly try to submit bad credentials:</p>
+
+<pre class="brush: js">var target = "https://httpbin.org/basic-auth/*";
+
+var pendingRequests = [];
+
+/*
+A request has completed. We can stop worrying about it.
+*/
+function completed(requestDetails) {
+  console.log("completed: " + requestDetails.requestId);
+  var index = pendingRequests.indexOf(requestDetails.requestId);
+  if (index &gt; -1) {
+    pendingRequests.splice(index, 1);
+  }
+}
+
+function provideCredentialsAsync(requestDetails) {
+  // If we have seen this request before,
+  // then assume our credentials were bad,
+  // and give up.
+  if (pendingRequests.indexOf(requestDetails.requestId) != -1) {
+    console.log("bad credentials for: " + requestDetails.requestId);
+    return {cancel: true};
+    
+  } else {
+    pendingRequests.push(requestDetails.requestId);
+    console.log("providing credentials for: " + requestDetails.requestId);
+    // we can return a promise that will be resolved
+    // with the stored credentials
+    return browser.storage.local.get(null);
+  }
+}
+
+browser.webRequest.onAuthRequired.addListener(
+    provideCredentialsAsync,
+    {urls: [target]},
+    ["blocking"]
+  );
+
+browser.webRequest.onCompleted.addListener(
+  completed,
+  {urls: [target]}
+);
+
+browser.webRequest.onErrorOccurred.addListener(
+  completed,
+  {urls: [target]}
+);
+</pre>
+
+<p>{{WebExtExamples}}</p>
+
+<div class="note"><strong>Acknowledgements</strong>
+
+<p>This API is based on Chromium's <a href="https://developer.chrome.com/extensions/webRequest#event-onAuthRequired"><code>chrome.webRequest</code></a> API. This documentation is derived from <a href="https://chromium.googlesource.com/chromium/src/+/master/extensions/common/api/web_request.json"><code>web_request.json</code></a> in the Chromium code.</p>
+
+<p>Microsoft Edge compatibility data is supplied by Microsoft Corporation and is included here under the Creative Commons Attribution 3.0 United States License.</p>
+</div>
+
+<div class="hidden">
+<pre>// Copyright 2015 The Chromium Authors. All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met:
+//
+//    * Redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above
+// copyright notice, this list of conditions and the following disclaimer
+// in the documentation and/or other materials provided with the
+// distribution.
+//    * Neither the name of Google Inc. nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+</pre>
+</div>

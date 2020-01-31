@@ -1,0 +1,202 @@
+<div>{{jsSidebar("Statements")}}</div>
+
+<p><span class="seoSummary"><strong><code>export</code></strong> 文は、モジュールから関数、オブジェクト、プリミティブ値をエクスポートするための JavaScript モジュールを作成するときに使用し、これらは別のプログラムから {{jsxref("Statements/import", "import")}} 文で利用することができます。</span></p>
+
+<p>エクスポートされたモジュールは、宣言のあるなしにかかわらず {{jsxref("Strict_mode","strict モード")}}で動作します。エクスポート文は、埋め込みスクリプトでは使えません。</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<p>3種類のエクスポート方法があります。</p>
+
+<ol>
+ <li>名前付きエクスポート (モジュール当たり0個以上のエクスポート)</li>
+ <li>デフォルトエクスポート (モジュール当たり1個のエクスポート)</li>
+ <li>混合エクスポート</li>
+</ol>
+
+<pre class="syntaxbox">// 個々の機能のエクスポート
+export let <var>name1</var>, <var>name2</var>, …, <var>nameN</var>; // var, const も
+export let <var>name1</var> = …, <var>name2</var> = …, …, <var>nameN</var>; // var, const も
+export function functionName(){...}
+export class ClassName {...}
+
+// エクスポートリスト
+export { <var>name1</var>, <var>name2</var>, …, <var>nameN</var> };
+
+// エクスポート時の名前変更
+export { <var>variable1</var> as <var>name1</var>, <var>variable2</var> as <var>name2</var>, …, <var>nameN</var> };
+
+// Exporting destructured assignments with renaming
+export const { <var>name1</var>, <var>name2: bar</var> } = o;
+
+// 既定のエクスポート
+export default <em>expression</em>;
+export default function (…) { … } // class, function* も使用可
+export default function name1(…) { … } // class, function* も使用可
+export { <var>name1</var> as default, … };
+
+// モジュールのアグリゲート
+export * from …;
+export { <var>name1</var>, <var>name2</var>, …, <var>nameN</var> } from …;
+export { <var>import1</var> as <var>name1</var>, <var>import2</var> as <var>name2</var>, …, <var>nameN</var> } from …;
+export { default } from …;</pre>
+
+<dl>
+ <dt><code><var>nameN</var></code></dt>
+ <dd>(別のスクリプトで {{jsxref("Statements/import", "import")}} を使用してインポートできるようにするため) エクスポートする識別子です。</dd>
+</dl>
+
+<h2 id="Description" name="Description">解説</h2>
+
+<p>エクスポート方法は、<strong>名前付き</strong>と<strong>デフォルト</strong>の 2 種類あります。名前付きエクスポートはモジュールごとに複数持てますが、デフォルトエクスポートは 1 つに限ります。それぞれのエクスポート方法は、上記の構文のひとつに対応します。</p>
+
+<p>名前付きエクスポート:</p>
+
+<pre class="brush: js">// 事前に宣言された機能のエクスポート
+export { myFunction, myVariable }; 
+
+// 個別の機能のエクスポート (var, let,
+// const, function, class がエクスポート可能)
+export let myVariable = Math.sqrt(2);
+export function myFunction() { ... };
+</pre>
+
+<p>デフォルトエクスポート:</p>
+
+<pre class="brush: js">// デフォルトとして事前に定義された機能のエクスポート
+export { myFunction as default };
+
+// 個別の機能をデフォルトとしてエクスポート
+export default myFunction() { ... } 
+export default class { .. }</pre>
+
+<p>名前付きエクスポートは、さまざまな値をエクスポートするのに役立ちます。インポートするときは、対応するオブジェクトと同じ名前を使用しなければなりません。</p>
+
+<p>一方、デフォルトエクスポートは以下のように任意の名前を使用できます。</p>
+
+<pre class="brush: js">// ファイル test.js
+let k; export default k = 12;
+</pre>
+
+<pre class="brush: js">// 他のファイル
+import m from './test'; // k がデフォルトエクスポートなので、インポートする k の代わりに m を使用することができる点に注意してください
+console.log(m);        // log 12 になる
+</pre>
+
+<p>名前の競合を防ぐために、名前付きエクスポートの名前を変更することもできます。</p>
+
+<pre class="brush: js">export { <var>myFunction</var> as <var>function1</var>,<var>
+         myVariable</var> as variable };</pre>
+
+<p>親モジュールでサブモジュールをまとめれば、そのモジュールからインポートすることができるようになります。</p>
+
+<pre class="brush: js">// In parentModule.js
+export { myFunction, myVariable } from 'childModule1.js';
+export { myClass } from 'childModule2.js';
+
+// 最上位モジュールで
+import { myFunction, myVariable, myClass } from 'parentModule.js'
+</pre>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<h3 id="Using_named_exports" name="Using_named_exports">名前付きエクスポートの使用</h3>
+
+<p><code>module.js</code> モジュールの中で、以下のコードをインクルードすることができます。</p>
+
+<pre class="brush: js">// "my-module.js" モジュール
+function cube(x) {
+  return x * x * x;
+}
+
+const foo = Math.PI + Math.SQRT2;
+
+var graph = {
+  options: {
+      color:'white',
+      thickness:'2px'
+  },
+  draw: function() {
+      console.log('From graph draw function');
+  }
+}
+
+export { cube, foo, graph };
+</pre>
+
+<p>HTML ページの中に含まれる最上位モジュールの中では、次のようにすることができます。</p>
+
+<pre class="brush: js">import { cube, foo, graph } from 'my-module.js';
+
+graph.options = {
+    color:'blue',
+    thickness:'3px'
+};
+ 
+graph.draw();
+console.log(cube(3)); // 27
+console.log(foo);    // 4.555806215962888</pre>
+
+<p>以下の点に注意することが重要です。</p>
+
+<ul>
+ <li>このスクリプトを HTML の {{htmlelement("script")}} 要素で type="module" を指定したものに入れる必要があり、そうすれば適切にモジュールとして認識され、扱われます。</li>
+ <li><code>file://</code> の URL で JavaScript モジュールを実行することはできません。 — <a href="/ja/docs/Web/HTTP/CORS">CORS</a> エラーになります。 HTTP サーバーを通して実行する必要があります。</li>
+</ul>
+
+<h3 id="Using_the_default_export" name="Using_the_default_export">デフォルトエクスポートの使用</h3>
+
+<p>値をひとつエクスポートしたい、あるいはモジュールでフォールバック先の値を持ちたい場合は、デフォルトエクスポートを使用するとよいでしょう。</p>
+
+<pre class="brush: js">// module "my-module.js"
+
+export default function cube(x) {
+  return x * x * x;
+}
+</pre>
+
+<p>別のスクリプトからの、デフォルトエクスポートのインポートは簡単です。</p>
+
+<pre class="brush: js">import cube from './my-module.js';
+console.log(cube(3)); // 27
+</pre>
+
+<h2 id="Specifications" name="Specifications">仕様書</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">状態</th>
+   <th scope="col">備考</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-exports', 'Exports')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td></td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-exports', 'Exports')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td>初回定義</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザーの互換性</h2>
+
+<div class="hidden">このページの互換性一覧表は構造化データから生成されています。データに協力していただけるのであれば、 <a class="external" href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> をチェックアウトしてプルリクエストを送信してください。</div>
+
+<p>{{Compat("javascript.statements.export")}}</p>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li>{{jsxref("Statements/import", "import")}}</li>
+ <li><a href="/ja/docs/Web/JavaScript/Guide/Modules">JavaScript modules</a> guide</li>
+ <li><a href="https://hacks.mozilla.org/2015/08/es6-in-depth-modules/">ES6 in Depth: Modules</a>, Hacks blog post by Jason Orendorff</li>
+ <li><a href="https://hacks.mozilla.org/2018/03/es-modules-a-cartoon-deep-dive/">ES modules: A cartoon deep-dive</a>, Hacks blog post by Lin Clark</li>
+ <li><a href="http://exploringjs.com/es6/ch_modules.html">Axel Rauschmayer's book: "Exploring JS: Modules"</a></li>
+</ul>

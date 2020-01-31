@@ -1,0 +1,77 @@
+<p><a href="pl/Mercurial">Mercurial</a> jest narzędziem do zarządzania kodem źródłowym, który pozwala użytkownikom zarządzać lokalnie zmianami w kodzie źródłowym i współdzielić te zmiany z innymi. Jest używany do rozwijania Firefoksa 3.1/Mozilli 1.9.1 i późniejszych wydań.</p>
+<p>{{ Note("Jeśli chcesz dodać poprawki do Firefoksa 3.0.x, użyj <a href='\"pl/Mozilla_Source_Code_(CVS)\"'>CVS</a>.") }}</p>
+<h3 id="Ustawienia_klienta" name="Ustawienia_klienta">Ustawienia klienta</h3>
+<h4 id="Instalacja_i_konfiguracja_pakietu_Mercurial" name="Instalacja_i_konfiguracja_pakietu_Mercurial">Instalacja i konfiguracja pakietu Mercurial</h4>
+<p>Zobacz <a href="pl/Instalacja_pakietu_Mercurial">Instalacja pakietu_Mercurial</a>.</p>
+<h4 id="Autoconf_2.13" name="Autoconf_2.13">Autoconf 2.13</h4>
+<p>Źródła Mozilli 2 nie są dystrybuowane z gotowym skryptem konfiguracyjnym. Konieczne jest posiadanie programu autoconf 2.13.</p>
+<p> </p>
+<dl>
+ <dt>
+  W systemie Mac:</dt>
+ <dd>
+  &lt;tt&gt;sudo port install autoconf213&lt;/tt&gt;
+  <p> </p>
+ </dd>
+ <dt>
+  W systemie Fedora/RedHat Linux:</dt>
+ <dd>
+  &lt;tt&gt;sudo yum install autoconf213&lt;/tt&gt;
+  <p> </p>
+ </dd>
+ <dt>
+  W systemie Ubuntu Linux:</dt>
+ <dd>
+  &lt;tt&gt;sudo apt-get install autoconf2.13&lt;/tt&gt;
+  <p> </p>
+ </dd>
+ <dt>
+  W innych dystrybucjach Linuksa (jak n.p. openSUSE):</dt>
+ <dd>
+  zobacz czy istnieje pakiet dla Twojego systemu albo zainstaluj autoconf ręcznie (druga metoda może wymagać uprawnień konta root):
+  <pre class="eval">wget <a class="external" href="http://ftp.gnu.org/gnu/autoconf/autoconf-2.13.tar.gz" rel="freelink">http://ftp.gnu.org/gnu/autoconf/autoconf-2.13.tar.gz</a>
+tar -xvzf autoconf-2.13.tar.gz
+cd autoconf-2.13/
+./configure --program-suffix=-2.13
+make
+make install
+</pre>
+  <p> </p>
+ </dd>
+ <dt>
+  W systemie Windows:</dt>
+ <dd>
+  autoconf 2.13 jest dołączony do <a href="pl/Windows_Build_Prerequisites#MozillaBuild">MozillaBuild</a></dd>
+</dl>
+<p>Uwaga: Możesz też potrzebować zmiennej "AUTOCONF" w swoim pliku &lt;tt&gt;.mozconfig&lt;/tt&gt;, tak jak zostało to przedstawione w <a href="#Kompilacja">sekcji "Kompilacja"</a> poniżej.</p>
+<h3 id="Pobieranie_.C5.BAr.C3.B3de.C5.82" name="Pobieranie_.C5.BAr.C3.B3de.C5.82">Pobieranie źródeł</h3>
+<p>Istnieje wiele repozytoriów hostowanych na mozilla.org, zajrzyj na <a class="external" href="http://hg.mozilla.org" rel="freelink">http://hg.mozilla.org</a> aby zobaczyć całą listę.</p>
+<p>Zbiorczym repozytorium rozwojowym dla Mozilli 2 jest <a href="pl/Mozilla-central">mozilla-central</a>. Zawiera kod potrzebny dla Firefoksa i XULRunnera, który będzie w przyszłości wydany jako Mozilla 2.</p>
+<p>Aby pobrać źródła z mozilla-central ("sklonować" repozytorium, używając terminologii Mercuriala):</p>
+<pre class="eval"># Pobierz źródła Mozilli do katalogu src/ - to może zając chwile
+# ponieważ setki megabajtów historii są pobierane do .hg
+hg clone <a class="external" href="http://hg.mozilla.org/mozilla-central/" rel="freelink">http://hg.mozilla.org/mozilla-central/</a> src
+
+cd src
+</pre>
+<p><span class="comment">python client.py checkout is deprecated - see bug 417635. If you get the error message "No module named subprocess", that's because you didn't install Python 2.4 or later. If you don't run client.py, it won't build. client.py does three things: * Pulls the correct version (by tag) of NSS and NSPR and places them in right locations in your source tree. This is required to build. * Pulls Tamarin code. This is not required (and it's only a pull, so it's harmless). Pass --no-tamarin to client.py to skip this. * Runs a 'hg pull' to pull changes. This is also not required (in fact, you may prefer to pull manually). Pass --hg=echo to client.py to skip this.</span></p>
+<h3 id="Kompilacja" name="Kompilacja">Kompilacja</h3>
+<p><a href="pl/Konfiguracja_opcji_kompilacji">Skonfiguruj</a> i skompiluj jak zwykle używając pliku &lt;tt&gt;.mozconfig&lt;/tt&gt; i komendy &lt;tt&gt;make -f client.mk&lt;/tt&gt;.</p>
+<pre class="eval"># Wygeneruj swój plik mozconfig, lub użyj domyślnego
+echo '. $topsrcdir/browser/config/mozconfig' &gt; .mozconfig
+
+# configure will be automatically generated using the 'autoconf-2.13'
+# command, except on OS X where autoconf213 will be used.
+# If autoconf-2.13 isn't the right name for your system, as
+# is the case on Ubuntu Linux, use the real command name as
+# demonstrated below.
+echo 'mk_add_options AUTOCONF=autoconf2.13' &gt;&gt; .mozconfig
+
+# Now do the build; configure will be run automatically
+make -f client.mk build
+</pre>
+<h3 id="Zobacz_tak.C5.BCe" name="Zobacz_tak.C5.BCe">Zobacz także</h3>
+<ul>
+ <li>Strona <a href="pl/Mercurial">Mercurial</a> zawiera informacje na temat tworzenia diffów, zatwierdzania zmian i publikowania repozytoriów.</li>
+ <li>Jeżeli wolisz pracować z repozytorium git <a href="/pl/docs/Git">to sprawdź ten link</a>.</li>
+</ul>

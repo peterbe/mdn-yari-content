@@ -1,0 +1,160 @@
+<p> </p>
+<div style="border: 2px solid red; color: red; font-weight: bold; text-align: center;">
+ Cette page est relativement obsolète. Le développement de Gecko 1.9.1/Firefox 3.1 et au-delà utilise le système de contrôle de code source <a href="fr/Mercurial">Mercurial</a>. Si vous cherchez à accéder au code source de Gecko 1.9.0 ou plus ancien, poursuivez votre lecture.</div>
+<p>Ceux qui font du développement actif peuvent récupérer les dernières sources à l'aide de CVS. Il s'agit de la méthode idéale si vous envisagez de fournir des
+ <i>
+  patches</i>
+ et de résoudre des bogues, étant donné qu'elle vous permet d'obtenir les derniers changements à la minute près et de les fusionner avec les vôtres.</p>
+<p>Si vous désirez compiler un produit en vue de le distribuer, il est généralement plus facile de <a href="fr/T%c3%a9l%c3%a9chargement_du_code_source_de_Mozilla">télécharger des archives du code source</a>.</p>
+<h3 id="Premiers_pas" name="Premiers_pas">Premiers pas</h3>
+<p>CVS signifie « système de versions simultanées » (
+ <i>
+  Concurrent Versioning System</i>
+ ). Pour en savoir plus sur CVS en général, visitez <a class="external" href="http://ximbiot.com/cvs/manual/">ximbiot.com</a>, ou lisez le <a class="external" href="http://ximbiot.com/cvs/cvshome/docs/blandy.html">tutoriel CVS</a> (en anglais).</p>
+<p>Tout le monde peut récupérer (
+ <i>
+  check out</i>
+ ) les sources via CVS, mais seules certaines personnes ont la possibilité de les modifier (
+ <i>
+  check in</i>
+ ou
+ <i>
+  commit</i>
+ ). Ces personnes sont les <a class="external" href="http://www.mozilla.org/owners.html">responsables de modules</a> et leurs délégués. Lisez notre document <a class="external" href="http://www.mozilla.org/hacking/">hacking mozilla</a> pour découvrir comment obtenir la possibilité de modifier les fichiers. Vous aurez également besoin de consulter [{{ mediawiki.external('Utilisation de SSH pour se connecter à CVS') }}.</p>
+<h4 id="Pr.C3.A9alables" name="Pr.C3.A9alables">Préalables</h4>
+<p>Pour récupérer les sources, vous aurez besoin de <a class="external" href="http://www.nongnu.org/cvs/">CVS</a> 1.11 ou d'une version plus récente. La version 1.12.13 ne fonctionne pas avec le serveur CVS et provoque des blocages, cependant la version 1.12.9 est connue pour fonctionner. De plus, vous devrez utiliser <a class="external" href="http://www.gnu.org/software/make/">GNU make</a> pour récupérer l'ensemble et compiler Mozilla. Aucun autre programme « make » ne fonctionnera. Sous Windows, Mac OS et les systèmes GNU (comme GNU/Linux), utilisez la commande « <code>make</code> » pour lancer GNU make ; sur la plupart des systèmes Unix non GNU (comme Solaris, etc.), utilisez « <code>gmake</code> ».</p>
+<h3 id="Param.C3.A8tres_du_client_CVS" name="Param.C3.A8tres_du_client_CVS">Paramètres du client CVS</h3>
+<p>Le « cvsroot » (chaîne d'identification du dépôt) utilisé pour l'accès anonyme au CVS de Mozilla CVS est :</p>
+<pre class="eval"><span class="nowiki">:pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot</span>
+</pre>
+<p>Si vous utilisez un environnement de développement intégré s'interfaçant avec CVS, utilisez les données de serveur suivantes :</p>
+<ul>
+ <li><b>hôte</b> : « cvs-mirror.mozilla.org »</li>
+ <li><b>chemin du dépôt</b> : « /cvsroot »</li>
+ <li><b>utilisateur</b> : « anonymous »</li>
+ <li><b>mot de passe</b> : « anonymous »</li>
+ <li><b>type de connexion</b> : pserver</li>
+ <li><b>port</b> : par défaut (2401)</li>
+</ul>
+<h3 id="S.C3.A9lection_d.27un_projet_.C3.A0_r.C3.A9cup.C3.A9rer" name="S.C3.A9lection_d.27un_projet_.C3.A0_r.C3.A9cup.C3.A9rer">Sélection d'un projet à récupérer</h3>
+<p>Étant donné que plusieurs applications différentes sont générées depuis le même code source de base, vous devez choisir quelle application récupérer sur la ligne de commande à l'aide de la variable <code>MOZ_CO_PROJECT</code>. Cette information doit être fournie au moment de la récupération du code source lui-même (consultez la <a href="#La_r.C3.A9cup.C3.A9ration">section</a> <a href="#La_r.C3.A9cup.C3.A9ration_2">récupération</a> appropriée ci-dessous, suivant la branche à récupérer). Parmi les options possibles figurent les suivantes :</p>
+<dl>
+ <dt>
+  browser </dt>
+ <dd>
+  Le navigateur « Firefox » seul.</dd>
+ <dt>
+  mail </dt>
+ <dd>
+  Le client de courrier électronique/nouvelles « Thunderbird » seul.</dd>
+ <dt>
+  suite </dt>
+ <dd>
+  La suite "Mozilla" SeaMonkey traditionnelle composée d'un navigateur, d'un client de courrier électronique, du composeur HTML et d'autres applications.</dd>
+ <dt>
+  minimo </dt>
+ <dd>
+  Le navigateur pour périphériques légers.</dd>
+ <dt>
+  composer </dt>
+ <dd>
+  Le composeur HTML seul.</dd>
+ <dt>
+  calendar </dt>
+ <dd>
+  L'application d'agenda « Sunbird » seule.</dd>
+ <dt>
+  xulrunner </dt>
+ <dd>
+  Le lanceur d'applications XUL de nouvelle génération.</dd>
+ <dt>
+  camino </dt>
+ <dd>
+  Le navigateur natif « Camino » pour Macintosh.</dd>
+ <dt>
+  tamarin </dt>
+ <dd>
+  La machine virtuelle EcmaScript d'Adobe</dd>
+ <dt>
+  all </dt>
+ <dd>
+  Récupérer les sources de tous les projets ci-dessus, plus certains outils utilitaires.</dd>
+</dl>
+<p>Plusieurs projets peuvent être spécifiés à l'aide de virgules : <code>MOZ_CO_PROJECT=suite,browser,xulrunner</code>. <b>Notez</b> que si vous utilisez un fichier &lt;tt&gt;<a href="fr/Configuration_des_options_de_compilation#Utilisation_d.27un_fichier_de_configuration_.mozconfig">.mozconfig</a>&lt;/tt&gt; personnalisé, vous pouvez également y spécifier <code>MOZ_CO_PROJECT</code> au lieu de l'ajouter à la ligne de commande.</p>
+<h3 id="R.C3.A9cup.C3.A9ration_d.27un_nouvel_arbre_de_sources" name="R.C3.A9cup.C3.A9ration_d.27un_nouvel_arbre_de_sources">Récupération d'un nouvel arbre de sources</h3>
+<h4 id="V.C3.A9rifier_les_tinderbox" name="V.C3.A9rifier_les_tinderbox">Vérifier les tinderbox</h4>
+<p>Avant de récupérer un arbre, il vaut toujours mieux vérifier la <a href="fr/Tinderbox">Tinderbox</a> liée pour s'assurer que la compilation ne sera pas impossible. Si des tinderbox sont rouges, il est en général préférable d'attendre qu'elles repassent au vert avant de tenter une récupération des sources.</p>
+<h4 id="La_branche_HEAD" name="La_branche_HEAD">La branche HEAD</h4>
+<p>Pour obtenir un nouvel arbre de sources à partir de rien, commencez par récupérer le fichier &lt;tt&gt;client.mk&lt;/tt&gt; qui contient les instructions de makefile utilisées pour récupérer le reste de l'arbre :</p>
+<pre class="eval">$ cvs -d <a class="link-mailto" href="mailto::pserver:anonymous@cvs-mirror.mozilla.org" rel="freelink">:pserver:anonymous@cvs-mirror.mozilla.org</a>:/cvsroot co mozilla/client.mk
+</pre>
+<p>Note : si vous avez déjà mis en place un fichier &lt;tt&gt;<a href="fr/Configuration_des_options_de_compilation#Utilisation_d.27un_fichier_de_configuration_.mozconfig">.mozconfig</a>&lt;/tt&gt;, il peut également être nécessaire de récupérer les fichiers suivants :</p>
+<dl>
+ <dt>
+  Firefox </dt>
+ <dd>
+  <pre>cvs -d :pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot co mozilla/browser/config/mozconfig</pre>
+ </dd>
+ <dt>
+  Thunderbird </dt>
+ <dd>
+  <pre>cvs -d :pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot co mozilla/mail/config/mozconfig</pre>
+ </dd>
+</dl>
+<p>{{ Note("La dernière version de Thunderbird sur HEAD était une compilation nocturne post-3.0a2. La dernière version de SeaMonkey sur HEAD était une compilation nocturne 2.0a1pre. Plus aucun développement de Thunderbird ou SeaMonkey ne se déroule sur la branche HEAD de CVS") }}</p>
+<h4 id="Une_branche_sp.C3.A9cifique" name="Une_branche_sp.C3.A9cifique">Une branche spécifique</h4>
+<p>Si vous voulez obtenir le code source d'une <a class="external" href="http://ximbiot.com/cvs/wiki/index.php?title=CVS--Concurrent_Versions_System_v1.12.12.1:_Branching_and_merging">branche CVS</a> particulière, utilisez plutôt :</p>
+<pre class="eval">$ cvs -d <a class="link-mailto" href="mailto::pserver:anonymous@cvs-mirror.mozilla.org" rel="freelink">:pserver:anonymous@cvs-mirror.mozilla.org</a>:/cvsroot co -r BRANCH mozilla/client.mk
+</pre>
+<p>Par exemple, pour obtenir la branche de développement de Firefox 2.0/Thunderbird 2.0/SeaMonkey 1.1, remplacez <code>BRANCH</code> dans la ligne ci-dessus par <code>MOZILLA_1_8_BRANCH</code>. Pour la liste des branches de Mozilla disponibles, consultez <a href="fr/Balises_CVS">les balises CVS</a>.</p>
+<p>Les informations sur la récupération de fichiers <code>.mozconfig</code> spécifiques à certains projets tels que listés dans la <a href="#La_branche_HEAD">section précédente</a> s'appliquent évidemment de même aux autres branches que HEAD.</p>
+<h4 id="La_r.C3.A9cup.C3.A9ration" name="La_r.C3.A9cup.C3.A9ration">La récupération</h4>
+<p>Après avoir choisi la branche correcte, exécutez :</p>
+<pre class="eval">$ cd mozilla
+$ make -f client.mk checkout MOZ_CO_PROJECT=<i>option,option</i>
+</pre>
+<p>Comme mentionné plus haut, si vous utilisez un fichier <code>.mozconfig</code> personnalisé où vous avez déjà spécifié la variable <code>MOZ_CO_PROJECT</code>, il n'est pas nécessaire de la répéter dans la ligne de commande.</p>
+<div class="note">
+ Utilisez toujours &lt;tt&gt;client.mk&lt;/tt&gt; pour récupérer les sources de Mozilla : ne récupérez pas le module &lt;tt&gt;mozilla/&lt;/tt&gt; directement. Divers sous-projets comme NSS, NSPR et le SDK LDAP C sont récupérés depuis des balises de versions stables, même lorsque le développement normal de mozilla se poursuit sur le tronc.</div>
+<h4 id="Un_moment_pr.C3.A9cis" name="Un_moment_pr.C3.A9cis">Un moment précis</h4>
+<p>Si vous désirez obtenir le code source tel qu'il était à un moment donné, vous pouvez utiliser la variable <code>MOZ_CO_DATE</code>. Par exemple &lt;tt&gt;MOZ_CO_DATE="20 Oct 2006 17:00 PDT"&lt;/tt&gt;.</p>
+<p>Ceci peut soit être ajouté à votre fichier &lt;tt&gt;<a href="fr/Configuration_des_options_de_compilation#Utilisation_d.27un_fichier_de_configuration_.mozconfig">.mozconfig</a>&lt;/tt&gt;, ou spécifié sur la ligne de commande, comme ceci :</p>
+<pre class="eval">$ cd mozilla
+$ make -f client.mk checkout MOZ_CO_DATE="20 Oct 2006 17:00 PDT"
+</pre>
+<h3 id="Passage_.C3.A0_une_branche_diff.C3.A9rente_d.27un_arbre_de_sources" name="Passage_.C3.A0_une_branche_diff.C3.A9rente_d.27un_arbre_de_sources">Passage à une branche différente d'un arbre de sources</h3>
+<h4 id="La_branche_HEAD_2" name="La_branche_HEAD_2">La branche HEAD</h4>
+<p>Pour mettre à jour un arbre de sources (qu'il soit de la branche HEAD ou d'une branche spécifique) vers la dernière version de la branche HEAD, exécutez d'abord :</p>
+<pre class="eval">$ cd mozilla
+$ cvs up -A client.mk
+</pre>
+<p>L'option -A enlève toute information de type « sticky branch », ce qui aura pour effet de mettre à jour l'arbre vers HEAD.</p>
+<h4 id="Une_branche_sp.C3.A9cifique_2" name="Une_branche_sp.C3.A9cifique_2">Une branche spécifique</h4>
+<p>Pour mettre à jour un arbre de sources provenant d'une branche spécifique, commencez par :</p>
+<pre class="eval">$ cd mozilla
+$ cvs up -r BRANCH client.mk
+</pre>
+<p>Remplacez BRANCH par la balise de la branche que vous désirez mettre à jour.</p>
+<h3 id="Mise_.C3.A0_jour_d.27un_arbre_de_sources" name="Mise_.C3.A0_jour_d.27un_arbre_de_sources">Mise à jour d'un arbre de sources</h3>
+<p>Pour mettre à jour votre arbre de sources, faites simplement ce qui suit :</p>
+<pre class="eval">$ make -f client.mk checkout MOZ_CO_PROJECT=<i>option,option</i>
+</pre>
+<p>Comme toujours, si vous utilisez un fichier <code>.mozconfig</code> personnalisé où <code>MOZ_CO_PROJECT</code> est déjà défini, il n'est pas nécessaire de le répéter sur la ligne de commande.</p>
+<h3 id="Cr.C3.A9ation_d.27un_fichier_diff" name="Cr.C3.A9ation_d.27un_fichier_diff">Création d'un fichier diff</h3>
+<p>Pour créer un diff (un fichier reprenant les différences entre deux fichiers, servant également à présenter un
+ <i>
+  patch</i>
+ à appliquer) entre un fichier localement modifié et le fichier courant sur le dépôt, utilisez :</p>
+<pre class="eval">$ cvs diff -u8p NOMFICHIER
+</pre>
+<p>Consultez <a href="fr/Cr%c3%a9ation_d'un_patch">Création d'un patch</a> pour plus d'informations.</p>
+<h3 id="Conversion_d.27un_arbre_de_sources_t.C3.A9l.C3.A9charg.C3.A9" name="Conversion_d.27un_arbre_de_sources_t.C3.A9l.C3.A9charg.C3.A9">Conversion d'un arbre de sources téléchargé</h3>
+<p>Les arbres de source téléchargés depuis mozilla.org (les <a href="fr/T%c3%a9l%c3%a9chargement_du_code_source_de_Mozilla">
+ <i>
+  tarballs</i>
+ de source</a>) contiennent déjà les informations CVS nécessaires, comme s'il s'agissait de fichiers récupérés normalement via CVS. Vous pouvez mettre à jour ces arbres normalement vers le code le plus récent, sans aucune action spéciale. Consultez la section précédente pour la manière de mettre à jour un arbre de sources.</p>
+<p><span class="comment">interwiki link</span></p>
+<p> </p>
+<div class="noinclude">
+  </div>
+<p>{{ languages( { "en": "en/Mozilla_Source_Code_(CVS)", "es": "es/C\u00f3digo_fuente_de_Mozilla_(CVS)", "ja": "ja/Mozilla_Source_Code_(CVS)", "zh-cn": "cn/\u901a\u8fc7CVS\u83b7\u53d6\u6e90\u7801" } ) }}</p>

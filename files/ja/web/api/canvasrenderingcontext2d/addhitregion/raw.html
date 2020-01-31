@@ -1,0 +1,302 @@
+<div>{{APIRef}} {{SeeCompatTable}}</div>
+
+<p>Canvas 2D APIの<code><strong>CanvasRenderingContext2D</strong></code><strong><code>.addHitRegion()</code></strong>メソッドはビットマップにヒット領域を追加します。これにより、ヒット検出が容易になり、イベントをDOM要素にルートでき、ユーザーはcanvasを見なくても操作できるようになります。</p>
+
+<h2 id="構文">構文</h2>
+
+<pre class="syntaxbox">void <var><em>ctx</em>.addHitRegion(<em>options</em>);</var>
+</pre>
+
+<h3 id="Options">Options</h3>
+
+<p><code>options</code>引数は任意です。設定する場合は、次のプロパティを含む{{jsxref("Object")}}を指定します。</p>
+
+<dl>
+ <dt><code>path</code></dt>
+ <dd>ヒット領域をあらわす{{domxref("Path2D")}}オブジェクト。指定されない場合は現在のパスが使われます。</dd>
+ <dt><code>fillRule</code></dt>
+ <dd>利用する塗りの規則（パスの「内側」を定義するルール）（初期値は"<code>nonzero</code>")。</dd>
+ <dt><code>id</code></dt>
+ <dd>ヒット領域を後で参照するためのID。IDはイベントなどで使われます。</dd>
+ <dt><code>parentID</code></dt>
+ <dd>親ヒット領域のID。cursorの継承やアクセシビリティツールによるナビゲーションで利用されます。</dd>
+ <dt><code>cursor</code></dt>
+ <dd>この領域にマウスが重なったときに使う{{cssxref("cursor")}}（初期値は"<code>inherit</code>"）。親ヒット領域があればそこから継承し、なければ、canvas要素のcursorから継承します。</dd>
+ <dt><code>control</code></dt>
+ <dd>イベントがルートされる要素（canvasの子孫）。初期値は<code>null</code>。</dd>
+ <dt><code>label</code></dt>
+ <dd>controlがない場合にヒット領域の説明として使われるテキストラベル（アクセシビリティツール向け）。初期値は<code>null</code>。</dd>
+ <dt><code>role</code></dt>
+ <dd>controlがない場合にヒット領域の挙動を説明する<a href="/ja/docs/Web/Accessibility/ARIA">ARIA role</a>（アクセシビリティツール向け）。初期値は<code>null</code>。</dd>
+</dl>
+
+<h2 id="例">例</h2>
+
+<h3 id="addHitRegionメソッドを使う"><code>addHitRegion</code>メソッドを使う</h3>
+
+<p>これは、<code>addHitRegion</code>メソッドを使った簡単な例です。</p>
+
+<h4 id="HTML">HTML</h4>
+
+<pre class="brush: html">&lt;canvas id="canvas"&gt;&lt;/canvas&gt;
+</pre>
+
+<h4 id="JavaScript">JavaScript</h4>
+
+<pre class="brush: js;">var canvas = document.getElementById("canvas");
+var ctx = canvas.getContext("2d");
+
+canvas.addEventListener("mousemove", function(event){
+  if(event.region) {
+    alert("痛っ、僕の目だよ");
+  }
+});
+
+ctx.beginPath();
+ctx.arc(100, 100, 75, 0, 2 * Math.PI, false);
+ctx.lineWidth = 5;
+ctx.stroke();
+
+// 目
+ctx.beginPath();
+ctx.arc(70, 80, 10, 0, 2 * Math.PI, false);
+ctx.arc(130, 80, 10, 0, 2 * Math.PI, false);
+ctx.fill();
+ctx.addHitRegion({id: "eyes"});
+
+// mouth
+ctx.beginPath();
+ctx.arc(100, 110, 50, 0, Math.PI, false);
+ctx.stroke();
+</pre>
+
+<p>下のコードを編集すると変更がリアルタイムにcanvasに反映されます（もし、スマイリーが不完全な状態で表示されている場合には、ブラウザー互換性表を確認してください。あなたのブラウザーがヒット領域をサポートしていても、設定で有効化する必要があるかもしれません）。</p>
+
+<div style="display: none;">
+<h6 id="Playable_code">Playable code</h6>
+
+<pre class="brush: html">&lt;canvas id="canvas" width="400" height="200" class="playable-canvas"&gt;&lt;/canvas&gt;
+&lt;div class="playable-buttons"&gt;
+  &lt;input id="edit" type="button" value="Edit" /&gt;
+  &lt;input id="reset" type="button" value="Reset" /&gt;
+&lt;/div&gt;
+&lt;textarea id="code" class="playable-code" style="height:250px"&gt;
+ctx.beginPath();
+ctx.arc(100, 100, 75, 0, 2 * Math.PI, false);
+ctx.lineWidth = 5;
+ctx.stroke();
+
+// 目
+ctx.beginPath();
+ctx.arc(70, 80, 10, 0, 2 * Math.PI, false);
+ctx.arc(130, 80, 10, 0, 2 * Math.PI, false);
+ctx.fill();
+ctx.addHitRegion({id: "eyes"});
+
+// 口
+ctx.beginPath();
+ctx.arc(100, 110, 50, 0, Math.PI, false);
+ctx.stroke();&lt;/textarea&gt;
+</pre>
+
+<pre class="brush: js">var canvas = document.getElementById("canvas");
+var ctx = canvas.getContext("2d");
+var textarea = document.getElementById("code");
+var reset = document.getElementById("reset");
+var edit = document.getElementById("edit");
+var code = textarea.value;
+
+function drawCanvas() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  eval(textarea.value);
+}
+
+reset.addEventListener("click", function() {
+  textarea.value = code;
+  drawCanvas();
+});
+
+edit.addEventListener("click", function() {
+  textarea.focus();
+});
+
+canvas.addEventListener("mousemove", function(event){
+  if(event.region) {
+    alert("痛っ、僕の目だよ");
+  }
+});
+
+textarea.addEventListener("input", drawCanvas);
+window.addEventListener("load", drawCanvas);
+</pre>
+</div>
+
+<p>{{EmbedLiveSample('Playable_code', 700, 520)}}</p>
+
+<h2 id="仕様">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">策定状況</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('HTML WHATWG', "scripting.html#dom-context-2d-addhitregion", "CanvasRenderingContext2D.addHitRegion")}}</td>
+   <td>{{Spec2('HTML WHATWG')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="ブラウザー実装状況">ブラウザー実装状況</h2>
+
+<p>{{CompatibilityTable}}</p>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>機能</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td><code>基本サポート</code></td>
+   <td>{{CompatVersionUnknown}}[1]</td>
+   <td>{{CompatGeckoDesktop(30)}} [2]</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+  <tr>
+   <td><code>id</code></td>
+   <td>{{CompatVersionUnknown}}[1]</td>
+   <td>{{CompatGeckoDesktop(30)}} [2]</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+  <tr>
+   <td><code>control</code></td>
+   <td>{{CompatVersionUnknown}}[1]</td>
+   <td>{{CompatGeckoDesktop(30)}} [2]</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+  <tr>
+   <td><code>path</code></td>
+   <td>{{CompatVersionUnknown}}[1]</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+  <tr>
+   <td><code>fillRule</code></td>
+   <td>{{CompatVersionUnknown}}[1]</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+  <tr>
+   <td>その他のヒット領域のオプション</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>機能</th>
+   <th>Android</th>
+   <th>Chrome for Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>基本サポート</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatGeckoMobile(30)}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+  <tr>
+   <td><code>id</code></td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatGeckoMobile(30)}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+  <tr>
+   <td><code>control</code></td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatGeckoMobile(30)}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+  <tr>
+   <td><code>path</code></td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+  <tr>
+   <td><code>fillRule</code></td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+  <tr>
+   <td>その他のヒット領域のオプション</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h3 id="注記">注記</h3>
+
+<ul>
+ <li>[1] この機能はフラグを変更しないと動作しません。有効にするには<code>ExperimentalCanvasFeatures</code>フラグを<code>true</code>に設定してください。</li>
+ <li>[2] この機能は設定を変更しないと動作しません。about:configで<code>canvas.hitregions.enabled</code>を<code>true</code>に設定してください。</li>
+</ul>
+
+<h2 id="関連情報">関連情報</h2>
+
+<ul>
+ <li>{{domxref("CanvasRenderingContext2D.removeHitRegion()")}} {{experimental_inline}}</li>
+ <li>{{domxref("CanvasRenderingContext2D.clearHitRegions()")}} {{experimental_inline}}</li>
+</ul>

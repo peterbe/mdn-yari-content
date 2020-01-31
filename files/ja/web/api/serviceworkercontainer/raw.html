@@ -1,0 +1,159 @@
+<p>{{SeeCompatTable}}{{APIRef("Service Workers API")}}</p>
+
+<p><span class="seoSummary"><a href="https://developer.mozilla.org/ja/docs/Web/API/ServiceWorker_API">ServiceWorker API</a>の<code>ServiceWorkerContainer</code>インターフェースは、 ネットワークエコシステム内の全体を包むユニットとして、サービスワーカーを表すオブジェクトを提供します。このユニットは、サービスワーカーの登録、登録の解除、更新のための機能や、サービスワーカーの状態とそれらの登録状況にアクセスするための機能を持っています。</span></p>
+
+<p>ここで最も重要なことは、それが{{domxref("ServiceWorkerContainer.register", "ServiceWorkerContainer.register()")}}メソッドと{{domxref("ServiceWorkerContainer.controller")}}プロパティを持っていることです。{{domxref("ServiceWorkerContainer.register", "ServiceWorkerContainer.register()")}}メソッドはサービスワーカーの登録に使用され、{{domxref("ServiceWorkerContainer.controller")}}プロパティは、現在のページが動的にコントロールされるかどうかを決定するために使用されます。</p>
+
+<h2 id="プロパティ">プロパティ</h2>
+
+<dl>
+ <dt>{{domxref("ServiceWorkerContainer.controller")}} {{readonlyinline}}</dt>
+ <dd>アクティブな状態の（{{domxref("ServiceWorker.state")}}が<code>activated</code>を返す状態の）{{domxref("ServiceWorker")}}オブジェクトが存在する場合、その{{domxref("ServiceWorker")}}オブジェクトを返します（{{domxref("ServiceWorkerRegistration.active")}}が返すものと同じオブジェクトです。）。 このプロパティは、ページの再読み込み(<em>Shift</em> + refresh)の間や、アクティブなワーカーが存在しない場合に<code>null</code>を返します。</dd>
+</dl>
+
+<dl>
+ <dt>{{domxref("ServiceWorkerContainer.ready")}} {{readonlyinline}}</dt>
+ <dd>サービスワーカーがアクティブになるまでコードの実行を遅らせる方法を提供します。 このプロパティは{{jsxref("Promise")}}を返します。 返される{{jsxref("Promise")}}は<code>reject</code>せず、現在のページにひもづいている{{domxref("ServiceWorkerRegistration")}}が{{domxref("ServiceWorkerRegistration.active")}}なワーカーを持つまで無期限に待ち続けます。 条件が満たされると、{{domxref("ServiceWorkerRegistration")}}とともに<code>resolve</code>します。</dd>
+</dl>
+
+<h3 id="イベントハンドラ">イベントハンドラ</h3>
+
+<dl>
+ <dt>{{domxref("ServiceWorkerContainer.oncontrollerchange")}}</dt>
+ <dd>{{Event("controllerchange")}}イベントによって（ドキュメントにひもづいている{{domxref("ServiceWorkerRegistration")}}が新しいアクティブ（{{domxref("ServiceWorkerRegistration.active","active")}}）なワーカーを手に入れたときに）発火します。</dd>
+ <dt>{{domxref("ServiceWorkerContainer.onerror")}}</dt>
+ <dd>ひもづいているサービスワーカー内で{{Event("error")}}イベントが発生したときに発火します。</dd>
+ <dt>{{domxref("ServiceWorkerContainer.onmessage")}}</dt>
+ <dd>{{Event("message")}}イベントが発生したときに（{{domxref("MessagePort.postMessage()")}}の呼び出しなどによって{{domxref("ServiceWorkerContainer")}}オブジェクトにメッセージが渡ったときに）発火します。</dd>
+</dl>
+
+<h2 id="メソッド">メソッド</h2>
+
+<dl>
+ <dt>{{domxref("ServiceWorkerContainer.register", "ServiceWorkerContainer.register()")}} </dt>
+ <dd>渡されたスクリプトURLをもとに{{domxref("ServiceWorkerRegistration")}}を作成、または更新します。</dd>
+ <dt>{{domxref("ServiceWorkerContainer.getRegistration()")}}</dt>
+ <dd>提供されたドキュメントURLと一致するスコープを持った{{domxref("ServiceWorkerRegistration")}}オブジェクトを取得します。
+もしこのメソッドが{{domxref("ServiceWorkerRegistration")}}を返せない場合、<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise" title="The Promise object is used for deferred and asynchronous computations. A Promise is in one of the three states:"><code>Promise</code></a>を返します。</dd>
+ <dt>{{domxref("ServiceWorkerContainer.getRegistrations()")}}</dt>
+ <dd>Returns all {{domxref("ServiceWorkerRegistration")}} objects associated with a <code>ServiceWorkerContainer</code> in an array.  If the method can't return {{domxref("ServiceWorkerRegistration")}} objects, it returns a <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise" title="The Promise object is used for deferred and asynchronous computations. A Promise is in one of the three states:"><code>Promise</code></a>. </dd>
+</dl>
+
+<h2 id="Examples">Examples</h2>
+
+<p>The example below first checks to see if the browser supports service workers. If supported, the code registers the service worker and determines if the page is actively controlled by the service worker. If it isn't, it prompts the user to reload the page so the service worker can take control. The code also reports any registration failures.</p>
+
+<pre class="brush: js">if ('serviceWorker' in navigator) {
+  // Register a service worker hosted at the root of the
+  // site using the default scope.
+  navigator.serviceWorker.register('/sw.js').then(function(registration) {
+    console.log('Service worker registration succeeded:', registration);
+
+    // At this point, you can optionally do something 
+    // with registration. See https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerRegistration
+  }).catch(function(error) {
+    console.log('Service worker registration failed:', error);
+  });
+
+  // Independent of the registration, let's also display
+  // information about whether the current page is controlled
+  // by an existing service worker, and when that
+  // controller changes.
+
+  // First, do a one-off check if there's currently a
+  // service worker in control.
+  if (navigator.serviceWorker.controller) {
+    console.log('This page is currently controlled by:', navigator.serviceWorker.controller);
+  }
+
+  // Then, register a handler to detect when a new or
+  // updated service worker takes control.
+  navigation.serviceWorker.oncontrollerchange = function() {
+    console.log('This page is now controlled by:', navigator.serviceWorker.controller);
+  };
+} else {
+  console.log('Service workers are not supported.');
+}</pre>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('Service Workers', '#service-worker-container', 'ServiceWorkerContainer')}}</td>
+   <td>{{Spec2('Service Workers')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<div>{{CompatibilityTable}}</div>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari (WebKit)</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatChrome(40)}}</td>
+   <td>{{ CompatGeckoDesktop("44.0") }}<sup>[1]</sup></td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatOpera(27)}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android Webview</th>
+   <th>Chrome for Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>Firefox OS</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatChrome(40)}}</td>
+   <td>{{CompatChrome(40)}}</td>
+   <td>{{ CompatGeckoMobile("44.0") }}</td>
+   <td>{{ CompatVersionUnknown }}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatOperaMobile(27)}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<p>[1] Service workers (and <a href="/en-US/docs/Web/API/Push_API">Push</a>) have been disabled in the <a href="https://www.mozilla.org/en-US/firefox/organizations/">Firefox 45 and 52 Extended Support Releases</a> (ESR.)</p>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorker_API/Using_Service_Workers">Using Service Workers</a></li>
+ <li><a class="external external-icon" href="https://github.com/mdn/sw-test">Service workers basic code example</a></li>
+ <li><a class="external external-icon" href="https://jakearchibald.github.io/isserviceworkerready/">Is ServiceWorker ready?</a></li>
+ <li>{{jsxref("Promise")}}</li>
+ <li><a href="https://developer.mozilla.org/en-US/docs/Web/Guide/Performance/Using_web_workers">Using web workers</a></li>
+</ul>

@@ -1,0 +1,178 @@
+<div>{{ApiRef("HTML DOM")}}</div>
+
+<p><strong><code>window.postMessage()</code></strong> は、 {{domxref("Window")}} オブジェクト間で安全にクロスドメイン通信を可能にするためのメソッドです。例えば、ポップアップとそれを表示したページの間や、iframe とそれが埋め込まれたページの間での通信に使うことができます。</p>
+
+<p>通常、異なった複数のページでのスクリプトはそれらが実行されたページが同じプロトコル、ポート番号、ホストである場合に限りお互いにアクセスすることが可能です ("<a href="/ja/docs/Web/Security/Same-origin_policy">同一オリジンポリシー</a>" とも呼ばれます)。正しく使用した <code>window.postMessage</code> はこの制限を安全に回避するための制御された仕組みを提供します。</p>
+
+<p>大まかには、ウィンドウが他のウィンドウへの参照を取得できる場合 ( <code>targetWindow = window.opener</code> など)、<code>targetWindow.postMessage()</code> を使って {{domxref("MessageEvent")}} をそのウィンドウ上でディスパッチすることができます。受け取ったウィンドウでは必要に応じて自由に<a href="/ja/docs/Web/Guide/Events">イベントを処理</a>することができます。<code>window.postMessage()</code> に渡された引数 (“message”) は<a href="#The_dispatched_event">イベントオブジェクトを通して対象のウィンドウに公開されます</a>。</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox"><em>targetWindow</em>.postMessage(<em>message</em>, <em>targetOrigin</em>, [<em>transfer</em>]);</pre>
+
+<dl>
+ <dt><code><em>targetWindow</em></code></dt>
+ <dd>メッセージを受信するウィンドウへの参照。参照を取得する方法には以下のようなものがあります:
+ <ul>
+  <li>{{domxref("window.open")}} (新しいウィンドウを開き、それを参照する場合)</li>
+  <li>{{domxref("window.opener")}} (現在のウィンドウを開いたウィンドウを参照する場合)</li>
+  <li>{{domxref("HTMLIFrameElement.contentWindow")}} (埋め込んだ  {{HTMLElement("iframe")}} を親ウィンドウから参照する場合)</li>
+  <li>{{domxref("window.parent")}} (埋め込まれた {{HTMLElement("iframe")}} の中から親ウィンドウを参照する場合)</li>
+  <li>{{domxref("window.frames")}} + 添字 (名前または数値)</li>
+ </ul>
+ </dd>
+ <dt><code>message</code></dt>
+ <dd>他のウィンドウに送られるデータ。データは <a href="https://developer.mozilla.org/ja/docs/DOM/The_structured_clone_algorithm">the structured clone algorithm</a> に従ってシリアル化されます。つまり、手動でシリアル化することなく様々なデータオブジェクトを渡すことができます。</dd>
+ <dt><code>targetOrigin</code></dt>
+ <dd>イベントをディスパッチする <code>otherWindow</code> のオリジンを <code>"*"</code> というリテラル文字列（制限しないことを示します）か URI のいずれかで指定します。もしイベントのディスパッチが予約される時点で、<code>targetWindow</code> のドキュメントのスキーマ、ホスト名、あるいはポートが  <code>targetOrigin</code> で指定されたものにマッチしない場合、そのイベントはディスパッチされません。3 つすべてがマッチした場合にだけイベントがディスパッチされます。この仕組みはメッセージがどこに送られるかを制御できるようにしています。例えば <code>postMessage</code> をパスワードを送るために利用する場合、悪意のある第三者によるパスワードの傍受を防ぐため、そのメッセージを受け取るべき受信者のオリジンと一致する URI をこの引数に指定しておくことが非常に重要になります。 <strong>送信先ウィンドウのドキュメントがどこに配置されるのかを知っている場合、<code>*</code> ではなく具体的な <code>targetOrigin</code> を指定してください。具体的なターゲットを指定しない場合、送信したデータは任意の悪意を持ったサイトに公開されることになります。</strong></dd>
+ <dt><code><em><strong>transfer</strong></em></code> {{optional_Inline}}</dt>
+ <dd>メッセージと一緒に転送される {{domxref("Transferable")}} オブジェクトのシーケンス。これらのオブジェクトの所有権は送信先に移動され、送信元では使えなくなります。</dd>
+</dl>
+
+<h2 id="The_dispatched_event" name="The_dispatched_event">ディスパッチされるイベント</h2>
+
+<p><font face="Courier New, Andale Mono, monospace">以下の JavaScript を実行することで、otherWindow に伝達されたメッセージを受け取ることができます。</font></p>
+
+<p><code>otherWindow</code> で以下の JavaScript を実行することで、ディスパッチされたメッセージを受け取ることができます。</p>
+
+<pre class="brush:js">window.addEventListener("message", receiveMessage, false);
+
+function receiveMessage(event) {
+  if (event.origin !== "http://example.org:8080")
+    return;
+
+  // ...
+}
+</pre>
+
+<p>ディスパッチされたメッセージは以下のプロパティを持ちます。</p>
+
+<dl>
+ <dt><code>data</code></dt>
+ <dd>他のウィンドウから渡されるメッセージを保持しているオブジェクト。</dd>
+ <dt><code>origin</code></dt>
+ <dd><code>postMessage</code> が呼び出されたときにメッセージを送るウィンドウの <a href="/ja/docs/Origin" title="Origin">origin</a>。この文字列は、プロトコルと "://"、ホスト名（存在する場合）、そして、":" の後に続くポート番号（デフォルトポートと指定するポートが異なる場合）が連結されたものです。典型的な生成元の例は <code>https://example.org</code> (この場合のポートは <code>443</code>)、<code>http://example.net</code> (この場合のポートは <code>80</code>)、そして <code>http://example.com:8080</code>。この生成元はそのウィンドウの現在もしくは将来の生成元であることを保証<em>していない</em>ことに注意してください。<code>postMessage</code> が呼び出されてから異なる場所に移動するかもしれません。</dd>
+ <dt><code>source</code></dt>
+ <dd>メッセージを送った <code><a href="/ja/docs/DOM/window" title="DOM/window">window</a></code> オブジェクトへの参照。これを使うことで異なった生成元である二つのウィンドウ間で双方向の通信を確立することができます。</dd>
+</dl>
+
+<h2 id="Security_concerns" name="Security_concerns">セキュリティに関すること</h2>
+
+<p>他のサイトからメッセージを受け取りたくない場合、<code>message</code> イベントのための一切のイベントリスナーを追加する<em>べきではありません</em>。これはセキュリティ的な問題を避けるための完全にフールプルーフな方法です。</p>
+
+<p>他のサイトからメッセージを受け取りたい場合、<code>origin</code> あるいは <code>source</code> プロパティを用いて<strong>常に送信者の識別情報を確かめてください</strong>。任意のウィンドウ（例えば、<code>http://evil.example.com</code> も含む）は任意の他のウィンドウにメッセージを送ることができ、見知らぬ送信者が悪意あるメッセージを送らない保証はありません。識別情報を確かめても、<strong>常に受け取ったメッセージの構文を確かめる</strong>べきです。さもなければ、信頼されたメッセージだけを送ることが信頼されているサイトにおけるセキュリティホールがクロスサイトスクリプティングセキュリティホールをあなたのサイトに開けることになり得ます。</p>
+
+<h2 id="Example" name="Example">例</h2>
+
+<pre class="brush:js">/*
+ * &lt;http://example.com:8080&gt; にある、window A のスクリプト:
+ */
+
+var popup = window.open(...ポップアップの詳細...);
+
+// ポップアップブロッカーでブロックされず、ポップアップが完全にロードされたとき
+
+// ウィンドウがその場所を変更していない場合、これは何もしません。
+popup.postMessage("ユーザー名は 'bob' 、パスワードは 'secret' です",
+                  "https://secure.example.net");
+
+// ウィンドウがその場所を変更していない場合、
+//これはポップアップに送るメッセージのキューに追加します。
+popup.postMessage("hello there!", "http://example.org");
+
+function receiveMessage(event) {
+  // このメッセージの送信者は信頼している者か？（例えば、最初開いたものと違
+  // うかもしれません）。
+  if (event.origin !== "http://example.org")
+    return;
+
+  // event.source は popup
+  // event.data は "hi there yourself!  the secret response is: rheeeeet!"
+}
+
+window.addEventListener("message", receiveMessage, false);
+</pre>
+
+<pre class="brush:js">/*
+ * &lt;http://example.org&gt; で実行される popup のスクリプト:
+ */
+
+// postMessage が呼び出された後に呼び出されます。
+function receiveMessage(event) {
+  // このメッセージの送信者は信頼している者か？
+  if (event.origin !== "http://example.com:8080") {
+    return;
+  }
+
+  // event.source は window.opener
+  // event.data は "hello there!"
+
+  // 受け取ったメッセージのオリジンを確かめたい場合（どんな場合でもそうするべ
+  // きです）、メッセージに返答するための便利なイディオムは event.source 上
+  // の postMessage を呼び出し、targetOrigin に event.origin を指定すること
+  // です。
+  event.source.postMessage(
+    "hi there yourself!  the secret response " +
+    "is: rheeeeet!",
+    event.origin
+  );
+}
+
+window.addEventListener("message", receiveMessage, false);
+</pre>
+
+<h2 id="Notes" name="Notes">注記</h2>
+
+<p>任意のウィンドウが、いつでも、ウィンドウの文書の場所にかかわらず、メッセージを送るために、任意の他のウィンドウ上でこのメソッドにアクセスするかもしれません。従って、任意のイベントリスナーはメッセージを受け取る際に、<code>origin</code> あるいは <code>source</code> プロパティを用いて、まず最初にメッセージの送信者の識別情報をチェック<strong>しなければなりません</strong>。これを軽視することはできません。なぜなら、<strong><code>origin</code> あるいは <code>source</code> プロパティのチェックの失敗はクロスサイトスクリプティング攻撃を可能にする</strong>からです。</p>
+
+<p>非同期で伝達されるスクリプト（タイムアウト、ユーザーが生成したイベント）のために <code>postMessage</code> の呼び出し元の判別が不可能であるとき、<code>postMessage</code> によって送られるイベントを待ち受けているイベントハンドラは例外を投げます。</p>
+
+<p>伝達されるイベントの <code>origin</code> プロパティは呼び出すウィンドウの <code>document.domain</code> の現在の値に影響されません。</p>
+
+<p>IDN ホスト名に限った話ですが、<code>origin</code> プロパティの値は一貫して Unicode もしくは Punycode ではありません。ですから、IDN サイトからのメッセージを期待する場合にこのプロパティを用いるときは、最も素晴らしい互換性チェックにするために、IDN と Punycode の値の両方をチェックしてください。この値は最終的には 一貫して IDN になるはずですが、現在は IDN と Punycode 両方の形式を扱うべきです。</p>
+
+<p><code>javascript:</code> や <code>data:</code> を含む送信ウィンドウの <code>origin</code> プロパティの値は URL を読み込んだスクリプトの生成元になります。</p>
+
+<h3 id="Using_window.postMessage_in_extensions_Non-standard_inline" name="Using_window.postMessage_in_extensions_Non-standard_inline">window.postMessage を拡張機能で使う {{Non-standard_inline}}</h3>
+
+<p><code>window.postMessage</code> は chrome コードで実行される JavaScript で利用可能です（例：拡張内および特権コード）。しかし、伝達されるイベントの <code>source</code> プロパティはセキュリティ上の制限から常に <code>null</code> です（他のプロパティは期待された値です）。</p>
+
+<p>It is not possible for content or web context scripts to specify a <code>targetOrigin</code> to communicate directly with an extension (either the background script or a content script).  Web or content scripts <em>can</em> use <code>window.postMessage</code> with a <code>targetOrigin</code> of <code>"*"</code> to broadcast to every listener, but this is discouraged, since an extension cannot be certain the origin of such messages, and other listeners (including those you do not control) can listen in.</p>
+
+<p>Content scripts should use <a href="/ja/Add-ons/WebExtensions/API/runtime">runtime.sendMessage</a> to communicate with the background script.  Web context scripts can use custom events to communicate with content scripts (with randomly generated event names, if needed, to prevent snooping from the guest page).</p>
+
+<p>最後に、<code>file:</code> URL のページへのメッセージを送るには <code>targetOrigin</code> 引数を <code>"*"</code> にする必要があります。<code>file://</code> はセキュリティ上の制限のために用いることはできません、この制限は将来修正されるかもしれません。</p>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th><strong>Specification</strong></th>
+   <th><strong>Status</strong></th>
+   <th><strong>Comment</strong></th>
+  </tr>
+  <tr>
+   <td>{{SpecName('HTML WHATWG', "web-messaging.html#dom-window-postmessage", "postMessage()")}}</td>
+   <td>{{Spec2('HTML WHATWG')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザー実装状況</h2>
+
+<p> </p>
+
+<div class="hidden">The compatibility table in this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("api.Window.postMessage")}}</p>
+
+<p> </p>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li>{{domxref("Document.domain")}}</li>
+ <li>{{domxref("CustomEvent")}}</li>
+</ul>

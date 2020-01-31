@@ -1,0 +1,135 @@
+<p> </p>
+<p><span class="comment">NOTE: substantive changes to this page (non-editorial) should be reviewed by one of the build-config peers</span></p>
+<p>このドキュメントは Mac OS X が動作する PowerPC と Intel の両方の CPU でネイティブに動作する <a class="external" href="http://developer.apple.com/transition/">universal binary</a> として Mozilla アプリケーションをビルドする事を可能にします。Universal binary は以下を含みます:</p>
+<ul>
+ <li>それぞれアークテクチャに向けたコンパイルされた実行コード。例えば次のもの:
+  <ul>
+   <li>主な実行ファイル (例えば、 <code>firefox-bin</code>)</li>
+   <li>共有ライブラリとプラグインのバイナリ (例えば、 <code>libxpcom.dylib</code>)</li>
+  </ul>
+ </li>
+ <li>実行ファイル以外の全ての一つのコピー。 次のものを含みます:
+  <ul>
+   <li>アプリケーションのリソース (例えば、 <code>browser.jar</code>)</li>
+   <li>言語パッケージ (例えば、 <code>en-US.jar</code>)</li>
+  </ul>
+ </li>
+</ul>
+<p>Universal binary の Mozilla アプリケーションは PowerPC と Intel ベースの Mac の両方でビルドする事ができます。</p>
+<p> </p>
+<h3 id=".E5.89.8D.E6.8F.90.E6.9D.A1.E4.BB.B6" name=".E5.89.8D.E6.8F.90.E6.9D.A1.E4.BB.B6">前提条件</h3>
+<p>Universal binary の Mozilla 製品のビルドを試みる前に、 <a href="ja/Mac_OS_X_Build_Prerequisites">Mac OS X build prerequisites</a> の内容に詳しくなっているべきでしょう。標準的な Mac の要件に加えて、 Universal なビルドには以下の要求があります:</p>
+<ul>
+ <li><b>Mozilla Source:</b> Universal なビルドシステムは trunk と、 <code>MOZILLA_1_8_BRANCH</code> 、 そして 2006 年 2 月以降の<code>MOZILLA_1_8_0_BRANCH</code> をサポートしています。それ以前のブランチに移植される計画は今のところありません。</li>
+ <li><b>Operating System:</b> Mac OS X 10.4 (“Tiger”) またはそれ以降。 これは Mozilla をビルドするのに必要であって、実行するのに必要というわけではありません。 Mozilla は PowerPC プロセッサの 10.2 のような以前の Mac OS X のバージョンでも動作し続けるでしょう。</li>
+ <li><b>開発環境:</b> <a class="external" href="http://developer.apple.com/tools/xcode/">Xcode Tools</a> 2.2.1 またはそれ以降。 Apple は <a class="external" href="http://developer.apple.com/tools/download/">Xcode のアップデート</a> のダウンロードを提供しています。</li>
+ <li><b><a class="external" href="http://andrewtv.org/libIDL/">libIDL</a></b> と <b><a class="external" href="http://www.gtk.org/">GLib.</a></b> 現在のところ、これらを Universal binary としてインストールする必要はありません。 libIDL と GLib をインストールするのはビルドをするシステムだけで十分で、 通常の <a href="ja/Mac_OS_X_Build_Prerequisites#_.E5.BF.85.E8.A6.81.E3.81.AA.E3.82.BD.E3.83.95.E3.83.88.E3.82.A6.E3.82.A7.E3.82.A2">ビルド要求</a> に従ってください。これは libIDL と GLib の Universal binary がビルドに適しているとされるまで有効な一時的な回避策です。</li>
+ <li><b>Shared Menus Cocoa Framework</b> は <a class="external" href="http://www.caminobrowser.org/">Camino</a> のビルドにだけ要求されます。 Universal binary の Camino をビルドする時は、 Universal binary のこの framework をインストールしてください。 解説は <a href="#SharedMenusCocoa_.E3.81.AEUniversal_binary_.E3.82.92.E3.83.93.E3.83.AB.E3.83.89">SharedMenusCocoa のUniversal binary をビルド</a> にあります。</li>
+</ul>
+<h3 id=".E8.A8.AD.E5.AE.9A" name=".E8.A8.AD.E5.AE.9A">設定</h3>
+<p>このセクションではどのように必要なファイルをチェックアウトし、Mozilla を Universal Binary としてビルドをする設定を行うかについて解説します。</p>
+<h4 id=".E6.BA.96.E5.82.99" name=".E6.BA.96.E5.82.99">準備</h4>
+<p>Mozilla のソースツリー上に提供されているとある <code>mozconfig</code> ファイルが Universal Binary のビルドに適した設定を行ないます。これは <code>mozilla/build/macosx/universal/mozconfig</code> に配置されています。もし <a href="ja/Mozilla_Source_Code_Via_CVS">CVS</a> を使っているのであれば、ビルドを試みる前に必ずこのファイルを <code>client.mk</code> と 他のビルドに要求される <code>mozconfig</code> ファイルと共にチェックアウトをしなくてはなりません。</p>
+<p>このコマンドは Mozilla の trunk から Universal Binary の Firefox を作る準備を行なう十分なコマンドです:</p>
+<pre class="eval">cvs -d <a class="link-mailto" href="mailto::pserver:anonymous@cvs-mirror.mozilla.org" rel="freelink">:pserver:anonymous@cvs-mirror.mozilla.org</a>:/cvsroot co mozilla/client.mk mozilla/browser/config/mozconfig mozilla/build/macosx/universal/mozconfig
+</pre>
+<h4 id="Your_.mozconfig_File" name="Your_.mozconfig_File">Your .mozconfig File</h4>
+<p>事前に <code><a href="ja/Configuring_Build_Options">.mozconfig</a></code> ファイルを用意しているのであれば、必ず <code>$topsrcdir/build/macosx/universal/mozconfig</code> を source {{ 訳注("source コマンド、指定したファイルを実行する。\" . \" で代用可能") }}してください。これは他のどのプロダクト固有の <code>mozconfig</code> よりも後に source されるべきで、これは万が一に備えて他のオプションを上書きします。</p>
+<p>Universal Binary は <a href="ja/Configuring_Build_Options#.23.E3.82.AA.E3.83.96.E3.82.B8.E3.82.A7.E3.82.AF.E3.83.88.E3.83.87.E3.82.A3.E3.83.AC.E3.82.AF.E3.83.88.E3.83.AA.E3.82.92.E7.94.A8.E3.81.84.E3.81.A6.E3.83.93.E3.83.AB.E3.83.89.E3.81.99.E3.82.8B">オブジェクトディレクトリ</a>としてビルドすべきなので、 <code>MOZ_OBJDIR</code> は必ずセットしてください。 オブジェクトディレクトリの場所は重要ではなく、一箇所設定すればよいです。</p>
+<p>次はUniversal Binary の Firefox をリリース向け設定でビルドをするのに適した <code>.mozconfig</code> のサンプルです:</p>
+<pre class="eval">. $topsrcdir/browser/config/mozconfig
+. $topsrcdir/build/macosx/universal/mozconfig
+ac_add_options --enable-optimize=-O2
+ac_add_options --disable-shared
+ac_add_options --enable-static
+ac_add_options --disable-tests
+ac_add_app_options ppc --enable-prebinding
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/../build
+</pre>
+<p>このサンプルでは、オブジェクトディレクトリは <code>mozilla</code> ディレクトリの近くに、 <code>build</code> というディレクトリで配置しています。</p>
+<p><code>ac_add_options</code> で指定しているオプションは PowerPC と Intel のビルドの両方で設定するのに使われています。 <code>ac_add_app_options</code> で指定しているオプションは CPU を指定するのにのみ使われるでしょう。 <code>ppc</code> か <code>i386</code> を <code>ac_add_app_options</code> の後に置きます。このサンプルの設定では、 事前結合 (prebinding) は PowerPC のみで有効となります。この設定は推奨されます。なぜなら事前結合は Mozilla をサポートしている PowerPC での古いバージョンの Mac OS X で起動時間を短くなるからです。 全ての Intel プロセッサを含む Mac OS X の最近のバージョンでは、事前結合はメリットはなく、 Intel ビルドでは事前結合は有効になりません。</p>
+<h4 id=".E8.A8.AD.E5.AE.9A.E3.81.AB.E3.81.A4.E3.81.84.E3.81.A6" name=".E8.A8.AD.E5.AE.9A.E3.81.AB.E3.81.A4.E3.81.84.E3.81.A6">設定について</h4>
+<p>Universal binary の設定では、PowerPCとIntel ビルドにわけてそれぞれのオプションを調整したものをセットします。主なものとしては：</p>
+<ul>
+ <li><b>コンパイラ:</b> PowerPC ビルドは GCC 3.3 から生成され、 Intel ビルドは GCC 4.0 から生成されるでしょう。これは常に自動的に起こり、<code>gcc_select</code> を用いてシステムの標準のコンパイラの選択を完全に上書きするでしょう。
+  <ul>
+   <li>GCC 4.0 は C++ のソースコードから Mac OS X 10.3.9 かそれ以降に動作する実行コードを唯一作り出します。 Mozilla は PowerPC 上の前のリリースの Mac OS X をサポートするため、 GCC 3.3 は PowerPC で必ず使わます。</li>
+   <li>GCC 4.0 は Intel 上 Mac OS X でアプリケーションをビルドできる唯一のコンパイラです。</li>
+  </ul>
+ </li>
+ <li><b>Mac OS X SDK:</b> PowerPC ビルドは Mac OS X 10.2.8 SDK から生成され、 10.2 のような前の Mac OS X のリリースでも動作するでしょう。 Intel ビルドは Mac OS X 10.4u (“Universal”) SDK から生成され、このSDK は Intel 上の Mac OS X のみをサポートするでしょう。</li>
+</ul>
+<h3 id=".E3.83.93.E3.83.AB.E3.83.89" name=".E3.83.93.E3.83.AB.E3.83.89">ビルド</h3>
+<p>一旦適切な場所に設定を置けば、Mozilla を Universal Binary としてビルドするのは通常のビルドを実行するのと同じぐらい簡単です。次のようにタイプします:</p>
+<pre class="eval">make -w -f client.mk
+</pre>
+<p>ビルドに必要なソースコードはチェックアウトされ、コンパイルされるでしょう。 二つのビルド手順が作られます: 一つは PowerPC 用の Mozilla のコンパイル、もう一つは Intel プロセッサ用です。当然のことながら、このプロセスでは一つのプロセッサ用のコンパイルの倍ぐらいの時間がかかります。この二つの作業が終わったら、自動的にマージされた一つのUniversal BInaryが得られます。</p>
+<h4 id=".E3.83.93.E3.83.AB.E3.83.89.E3.81.AE.E7.B5.90.E6.9E.9C" name=".E3.83.93.E3.83.AB.E3.83.89.E3.81.AE.E7.B5.90.E6.9E.9C">ビルドの結果</h4>
+<p>objdir の中に二つのサブディレクトリ、<code>ppc</code> と <code>i386</code> が作られます。それぞれのディレクトリにはプロセッサ固有の完全ビルドが含まれます。Universal Binary のマージは objdir の <code>ppc/dist/universal</code> へ <code>i386/dist/universal</code> へのシンボリックリンクと共に配置されます。</p>
+<h4 id=".E3.83.91.E3.83.83.E3.82.B1.E3.83.BC.E3.82.B8.E3.83.B3.E3.82.B0" name=".E3.83.91.E3.83.83.E3.82.B1.E3.83.BC.E3.82.B8.E3.83.B3.E3.82.B0">パッケージング</h4>
+<p>Universal Binary として設定されているもっと他のプロダクトでは、パッケージを行う段階でマージされた Universal Binary を含んだディスクイメージを生成します。パッケージングする段階になるためには、新しい objdir の構造について頭に入れておく必要があります。もし、さきほどの <a href="#Your_.mozconfig_File">サンプルの <code>.mozconfig</code></a> を使うのであれば、Firefox のUniversal ディスクイメージをビルドするには次のようにタイプします:</p>
+<pre class="eval">make -C ../build/ppc/browser/installer
+</pre>
+<p>ディスクイメージは <code>../build/ppc/dist</code> に生成されるでしょう。また、簡単に<code>i386</code> を</p>
+<pre class="eval"><code>ppc</code> の代わりにする事ができ、単にディスクイメージが生成される場所に影響するだけです。
+</pre>
+<p>Universal パッケージ化を無視して、単独のプロセッサ向けのアプリケーションを含むディスクイメージを作るのなら、<code>UNIVERSAL_BINARY</code> 変数を上書きして設定を空にします。次のは Intel プロセッサ向けの Firefox をディスクイメージとしてパッケージして、結果として全ての PowerPC 上では起動できないでしょう。</p>
+<pre class="eval">make -C ../build/i386/browser/installer UNIVERSAL_BINARY=
+</pre>
+<h3 id=".E8.A3.9C.E8.B6.B3" name=".E8.A3.9C.E8.B6.B3">補足</h3>
+<h4 id=".E3.82.AF.E3.83.AD.E3.82.B9.E3.82.B3.E3.83.B3.E3.83.91.E3.82.A4.E3.83.AB" name=".E3.82.AF.E3.83.AD.E3.82.B9.E3.82.B3.E3.83.B3.E3.83.91.E3.82.A4.E3.83.AB">クロスコンパイル</h4>
+<p>Universal ビルドプロセスは PowerPC 向けのビルドをした後に続いて Intel 向けのビルドをします。 いずれかのビルドはクロスコンパイルとして動作するためネイティブではありません。必要ならば<a class="external" href="http://www.mozilla.org/build/cross-compiling.html">Mozillaのクロスコンパイルサポート</a> をMac OS X 上で使って、完全な Univarsal ビルドを行なわない事も可能です。<a href="#.E5.89.8D.E6.8F.90.E6.9D.A1.E4.BB.B6">前提条件</a> はUniversal ビルドと同じですが、Universal binary の設定をする代わりに次の設定を<code>.mozconfig</code> に追加します:</p>
+<pre class="eval"># もし PowerPC 上から Intel 向けにクロスコンパイルをするなら、次の四行を使います:
+CC="gcc-4.0 -arch i386"
+CXX="g++-4.0 -arch i386"
+ac_add_options --target=i386-apple-darwin8.0.0
+ac_add_options --enable-macos-sdk=/Developer/SDKs/MacOSX10.4u.sdk
+
+# もし Intel 上から PowerPC 向けにクロスコンパイルをするなら、次の四行を使います:
+# CC="gcc-3.3 -arch ppc"
+# CXX="g++-3.3 -arch ppc"
+# ac_add_options --target=powerpc-apple-darwin8.0.0
+# ac_add_options --enable-macos-sdk=/Developer/SDKs/MacOSX10.2.8.sdk
+
+# この箇所はどちらのクロスコンパイル環境でも同じ記述となります。
+HOST_CC="gcc-4.0"
+HOST_CXX="g++-4.0"
+RANLIB=ranlib
+AR=ar
+AS=$CC
+LD=ld
+STRIP="strip -x -S"
+CROSS_COMPILE=1
+</pre>
+<h4 id="SharedMenusCocoa_.E3.81.AEUniversal_binary_.E3.82.92.E3.83.93.E3.83.AB.E3.83.89" name="SharedMenusCocoa_.E3.81.AEUniversal_binary_.E3.82.92.E3.83.93.E3.83.AB.E3.83.89">SharedMenusCocoa のUniversal binary をビルド</h4>
+<p><a class="external" href="http://www.caminobrowser.org/">Camino</a> は現在の所追加の必須条件として Shared Menus Cocoa framework が要求されます。提供されているこの framework のバイナリは PowerPC のみで、そのため (Universal binary ビルドを含む) Intel ビルドは失敗するでしょう。Shared Menus Cocoa framework のパッケージはソースコードを含んでいます。この項目では framework のソースコードから Universal binary をビルドする方法について述べます。</p>
+<ul>
+ <li>SharedMenusCocoa を <a class="link-ftp" href="ftp://ftp.url-manager.com/pub/SharedMenusCocoa.dmg.bin">ダウンロード</a>して、ディスクイメージをマウントし、 <code>SharedMenusCocoa</code> フォルダをあなたのハードディスクにコピーします。これでディスクイメージをイジェクトして捨てる事ができます。</li>
+ <li><code>SharedMenusCocoa</code> フォルダを開いて、 中にある <code>SharedMenusCocoa.pbproj</code> プロジェクトファイルをダブルクリックします。これで Xcode が起動するでしょう。</li>
+ <li>現れたダイアログの上で、プロジェクトファイルを Xcode 2.1 のフォーマットへアップグレードするための “コピーをアップグレード” をクリックします。 アップグレードされたコピーに <code>SharedMenusCocoa.xcodeproj</code> という名前をつけます。</li>
+ <li>“プロジェクト” メニューから “すべてのターゲットをネイティブにアップグレード” を選択し、現れたシートの中の “アップグレード” をクリックします。</li>
+ <li>“ネイティブ・ターゲット・アップグレード・ログ” ウィンドウが現れます。これは閉じるでしょう。</li>
+ <li>“プロジェクト” メニューから “プロジェクト設定を編集” を選択し、設定ウィンドウで “ビルド” タブを選択します。</li>
+ <li>アークテクチャ をダブルクリックして “ppc i386” と入力してリターンを押して “アークテクチャ” を <code>ppc i386</code> にセットします。</li>
+ <li>次の四つの設定を追加します。設定は設定リストの下の “+” ボタンをクリックする事で追加できます。これらの設定を追加しましょう:
+  <ul>
+   <li><code>GCC_VERSION_i386 = 4.0</code></li>
+   <li><code>GCC_VERSION_ppc = 3.3</code></li>
+   <li><code>SDKROOT_i386 = /Developer/SDKs/MacOSX10.4u.sdk</code></li>
+   <li><code>SDKROOT_ppc = /Developer/SDKs/MacOSX10.2.8.sdk</code></li>
+  </ul>
+ </li>
+ <li>設定ウィンドウを閉じます。</li>
+ <li>“プロジェクト” メニューから “アクティブなビルド構成を設定” を選んで “Default” にセットします。</li>
+ <li>プロジェクトウィンドウのツールバーにある “ビルド” をクリックして、ビルド処理が完了するのを待ちます。エラーもなくうまく完了するか、いくつか警告が出る程度でしょう。</li>
+ <li>これで Universal binary の SharedMenusCocoa が得られました。Xcode を終了します。</li>
+ <li><code>build/Default/SharedMenusCocoa.framework</code> から <code>SharedMenusCocoa.framework</code> を <code>/Library/Frameworks</code> へコピーします。</li>
+</ul>
+<p>SDK から framework へシンボリックリンクを張るのを忘れないでください。shell からでは次のように打ちます:</p>
+<pre class="eval">sudo mkdir -p /Developer/SDKs/MacOSX10.2.8.sdk/Library/Frameworks
+sudo ln -s /Library/Frameworks/SharedMenusCocoa.framework /Developer/SDKs/MacOSX10.2.8.sdk/Library/Frameworks
+sudo mkdir -p /Developer/SDKs/MacOSX10.4u.sdk/Library/Frameworks
+sudo ln -s /Library/Frameworks/SharedMenusCocoa.framework /Developer/SDKs/MacOSX10.4u.sdk/Library/Frameworks
+</pre>
+<p>さらなる情報は <a class="external" href="http://www.caminobrowser.org/development/build/">Camino build instructions</a> にあります。</p>
+<p>{{ languages( { "en": "en/Mac_OS_X_Universal_Binaries" } ) }}</p>

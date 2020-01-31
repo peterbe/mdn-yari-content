@@ -1,0 +1,168 @@
+<div>{{APIRef("WebRTC")}}{{SeeCompatTable}}</div>
+
+<p><span class="seoSummary"><strong><code>MediaDevices</code> </strong>接口提供访问连接媒体输入的设备，如照相机和麦克风，以及屏幕共享等。</span></p>
+
+<p><em>从父类{{domxref("EventTarget")}}中继承的属性.</em></p>
+
+<h3 id="Handlers" name="Handlers">事件处理</h3>
+
+<dl>
+ <dt>{{ domxref("MediaDevices.ondevicechange") }}</dt>
+ <dd>返回 {{event("devicechange")}} 事件类型的事件处理程序。</dd>
+</dl>
+
+<h2 id="方法">方法</h2>
+
+<p><em>从其父项继承方法 {{domxref("EventTarget")}}.</em></p>
+
+<dl>
+ <dt>{{ domxref("EventTarget.addEventListener()") }}</dt>
+ <dd>将事件处理程序注册到特定的事件类型。</dd>
+ <dt>{{ domxref("MediaDevices.enumerateDevices()") }}</dt>
+ <dd>获取有关系统中可用的媒体输入和输出设备的一系列信息。</dd>
+ <dt>{{ domxref("MediaDevices.getUserMedia()") }}</dt>
+ <dd>在用户通过提示允许的情况下，打开系统上的相机或屏幕共享和/或麦克风，并提供 {{domxref("MediaStream")}} 包含视频轨道和/或音频轨道的输入。</dd>
+ <dt>{{ domxref("EventTarget.removeEventListener()") }}</dt>
+ <dd>删除一个事件监听器。</dd>
+</dl>
+
+<h2 id="示例">示例</h2>
+
+<pre class="brush:js">'use strict';
+
+// Put variables in global scope to make them available to the browser console.
+var video = document.querySelector('video');
+var constraints = window.constraints = {
+  audio: false,
+  video: true
+};
+var errorElement = document.querySelector('#errorMsg');
+
+navigator.mediaDevices.getUserMedia(constraints)
+.then(function(stream) {
+  var videoTracks = stream.getVideoTracks();
+  console.log('Got stream with constraints:', constraints);
+  console.log('Using video device: ' + videoTracks[0].label);
+  stream.onended = function() {
+    console.log('Stream ended');
+  };
+  window.stream = stream; // make variable available to browser console
+  video.srcObject = stream;
+})
+.catch(function(error) {
+  if (error.name === 'ConstraintNotSatisfiedError') {
+    errorMsg('The resolution ' + constraints.video.width.exact + 'x' +
+        constraints.video.width.exact + ' px is not supported by your device.');
+  } else if (error.name === 'PermissionDeniedError') {
+    errorMsg('Permissions have not been granted to use your camera and ' +
+      'microphone, you need to allow the page access to your devices in ' +
+      'order for the demo to work.');
+  }
+  errorMsg('getUserMedia error: ' + error.name, error);
+});
+
+function errorMsg(msg, error) {
+  errorElement.innerHTML += '&lt;p&gt;' + msg + '&lt;/p&gt;';
+  if (typeof error !== 'undefined') {
+    console.error(error);
+  }
+}</pre>
+
+<h2 id="说明">说明</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">规范</th>
+   <th scope="col"> 状态</th>
+   <th scope="col"> 评论</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('Media Capture', '#mediadevices', 'MediaDevices')}}</td>
+   <td>{{Spec2('Media Capture')}}</td>
+   <td> 初始定义</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="浏览器兼容性">浏览器兼容性</h2>
+
+<div>{{CompatibilityTable}}</div>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari (WebKit)</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatGeckoDesktop("36.0")}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+  <tr>
+   <td><code>enumerateDevices()</code></td>
+   <td>{{CompatChrome(51.0)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Android Webview</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>Firefox OS</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+   <th>Chrome for Android</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatGeckoMobile("36.0")}}</td>
+   <td>2.2</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+  <tr>
+   <td><code>enumerateDevices()</code></td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="可以看看这里">可以看看这里</h2>
+
+<ul>
+ <li><a href="/en-US/docs/WebRTC" title="/en-US/docs/WebRTC">WebRTC</a> - API的介绍性页面</li>
+ <li><a href="/en-US/docs/WebRTC/navigator.getUserMedia" title="/en-US/docs/WebRTC/navigator.getUserMedia">Navigator.getUserMedia()</a></li>
+</ul>

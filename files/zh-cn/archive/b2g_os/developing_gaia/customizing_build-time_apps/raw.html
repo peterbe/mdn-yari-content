@@ -1,0 +1,75 @@
+<div class="summary">
+ <p><span class="seoSummary">作为一个开发者或设备厂商，您可能由于各种原因想要对 Friefox OS 首次启动时的 app 进行定制。本文则说明了完成该需求的不同机制。</span></p>
+</div>
+<h2 id="Gaia_中的_App_存放位置">Gaia 中的 App 存放位置</h2>
+<p>运行在 Firefox OS 中的 app 都位于 Gaia 源码树下，共有两个存储位置：</p>
+<ul>
+ <li><a href="https://github.com/mozilla-b2g/gaia/tree/master/apps">gaia/apps/</a>: 系统默认的 app 存放在此处， 如 calendar, email, settings, 等。</li>
+ <li><a href="https://github.com/mozilla-b2g/gaia/tree/master/dev_apps">gaia/dev-apps</a>: 其他 app 的存放在此，如在自定义过程中包含的 app。</li>
+</ul>
+<p>如果您想要在编译 Gaia/B2G 时忽略或添加这些 app， 有下面几种方式可以实现：</p>
+<h2 id="野蛮的定制方法">野蛮的定制方法</h2>
+<p>所谓“野蛮”的方法是指在编译前， 将不想要参与编译的 app 直接删除即可。</p>
+<h2 id="编辑配置列表">编辑配置列表</h2>
+<p>相比而言，更优雅的方法则是编辑 <code>apps-*.list</code> 文件 (位于不同的设备目录下，在  <a href="https://github.com/mozilla-b2g/gaia/tree/master/build/config">gaia/build/config/</a> 内部，如 <code>phone/</code> 和 <code>tablet/</code>) ，将需要编译的 app 路径包括进去。例如，   <a href="https://github.com/mozilla-b2g/gaia/blob/master/build/config/phone/apps-production.list">gaia/build/config/phone/apps-production.list</a> 格式如下所示：</p>
+<pre class="brush: bash">apps/bluetooth
+apps/bookmark
+apps/browser
+apps/calendar
+apps/callscreen
+etc.</pre>
+<p>注意，您也可以使用如下代码指定目录下的所有 app:</p>
+<pre class="brush: bash">apps/*</pre>
+<p>至于在编译时，具体选择哪个  <code>apps-*.list</code> 文件的代码在 <a href="https://github.com/mozilla-b2g/gaia/blob/master/Makefile">gaia/Makefile</a> 文件中指定来，其形式如下所示：</p>
+<pre class="brush: cpp"><span class="nv">GAIA_DEVICE_TYPE</span><span class="o">?=</span>phone
+  ...
+GAIA_APP_TARGET?=engineering
+  ...
+ifeq ($(MAKECMDGOALS), demo)
+GAIA_DOMAIN=thisdomaindoesnotexist.org
+GAIA_APP_TARGET=demo
+else ifeq ($(MAKECMDGOALS), dogfood)
+DOGFOOD=1
+else ifeq ($(MAKECMDGOALS), production)
+PRODUCTION=1
+endif
+  ...
+ifeq ($(PRODUCTION), 1)
+GAIA_OPTIMIZE=1
+GAIA_APP_TARGET=production
+endif
+
+ifeq ($(DOGFOOD), 1)
+GAIA_APP_TARGET=dogfood
+endif
+  ...
+ifndef GAIA_APP_CONFIG
+GAIA_APP_CONFIG=build$(SEP)config$(SEP)apps-$(GAIA_APP_TARGET).list
+endif</pre>
+<p>最初， <code>GAIA_APP_TARGET</code> 变量被设置为 <code>engineering</code> ，<code><span class="nv">GAIA_DEVICE_TYPE</span></code> 变量被设置成  <code>phone</code>, 因此默认情况下编译 Gaia 时会使用 <a href="https://github.com/mozilla-b2g/gaia/blob/master/build/config/phone/apps-engineering.list">gaia/config/phone/app-engineering.list</a> (其中包括所有的测试，deomo 等）。</p>
+<p>To specify usage of a different apps list you specify different options when running the <code>make</code> command. To build with <a href="https://github.com/mozilla-b2g/gaia/blob/master/build/config/phone/apps-production.list">gaia/build/config/phone/apps-production.list</a>, for example, you'd use</p>
+<pre class="brush: bash">PRODUCTION=1 make</pre>
+<p>If you specifically build with <code>DEMO=1</code> specified, then it will use <a href="https://github.com/mozilla-b2g/gaia/blob/master/build/config/phone/apps-demo.list">apps-demo.list</a>. If you specifically build with <code>DOGFOOD=1</code> specified, then it will use <a href="https://github.com/mozilla-b2g/gaia/blob/master/build/config/phone/apps-dogfood.list">apps-dogfood.list</a>.</p>
+<p>You can completely override the decision by editing <code>GAIA_APP_CONFIG</code> in the <a href="https://github.com/mozilla-b2g/gaia/blob/master/Makefile">gaia/Makefile</a>, and providing your own <code>apps-*.list</code> file.</p>
+<p><a href="https://github.com/mozilla-b2g/gaia/blob/master/Android.mk#L24-L28">gaia/Android.mk</a> 包括下面命令：</p>
+<pre class="brush: cpp">ifneq ($(filter user userdebug, $(TARGET_BUILD_VARIANT)),)
+GAIA_MAKE_FLAGS += PRODUCTION=1
+B2G_SYSTEM_APPS := 1
+endif</pre>
+<p>When you build, if <code>VARIANT=user</code> or <code>VARIANT=userdebug</code> are set (these wind up getting reflected in the <code>TARGET_BUILD_VARIANT</code> variable), <code>PRODUCTION=1</code> is automatically set when building Gaia.</p>
+<div class="note">
+ <p><strong>注意</strong>: 要了解其他有效的 make 选项，请参考 <a href="/en-US/Firefox_OS/Developing_Gaia/make_options_reference">make options 参考文档</a>。</p>
+</div>
+<h2 id="使用市场化定制">使用市场化定制</h2>
+<p>The third, and most refined (but most complex) method is to use customizations. These allow you to specify build-time customization instructions in separate difrectories, without modifying the core Gaia repo. You can include your own customizations in distinct directories, or use the preexisting directories that come with the source.</p>
+<p>For example, specifying the location of the customization sample with the <code>GAIA_DISTRIBUTION_DIR</code> environment variable, like this:</p>
+<pre class="brush: bash"><code class="language-html">GAIA_DISTRIBUTION_DIR=<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>DISTRIBUTION_PATH</span><span class="token punctuation">&gt;</span></span> make production</code></pre>
+<p>More customizations sample for distribution mechanism, please refer to <a href="https://github.com/mozilla-b2g/gaia/tree/master/customization">https://github.com/mozilla-b2g/gaia/tree/master/customization</a></p>
+<p>Customizations is its own separate topic entirely. To learn more about it, read our <a href="/en-US/Firefox_OS/Developing_Firefox_OS/Market_customizations_guide">Market Customizations guide</a>.</p>
+<div class="note">
+ <p><strong>注意</strong>: 如果您希望在 Gaia 编译时包含一些自定义的外部 app， 则需要以指定的方式编译它们，并且将它们放在  <code>gaia/dev-apps/</code> 文件夹中。请参考 <a href="https://developer.mozilla.org/en-US/Firefox_OS/Developing_Firefox_OS/Market_customizations_guide#Building_Prebundled_web_apps">Building Prebundled web apps</a>  获取更多内容。</p>
+</div>
+<div class="warning">
+ <p><strong>重要</strong>: If you are a device vendor creating a custom B2G/Gaia build for distribution, you need to satisfy certain criteria before you are allowed to include the Firefox Marketplace app on your phones/tablets/etc. Contact Mozilla for more details.</p>
+</div>
+<p> </p>

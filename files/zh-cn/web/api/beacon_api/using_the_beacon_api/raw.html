@@ -1,0 +1,96 @@
+<div>{{DefaultAPISidebar("Beacon")}}{{SeeCompatTable}}</div>
+
+<p><strong><code>Beacon</code></strong> 接口为Web服务器调度异步和非阻塞请求。</p>
+
+<ul>
+ <li>Beacon 请求使用HTTP的POST方法，并且不需要有响应。</li>
+ <li>Beacon 请求能确保在页面触发unload之前，就已经初始化。</li>
+</ul>
+
+<p>这篇文档包含了Beacon接口的一些例子，可以在 {{domxref("Beacon_API","Beacon API")}} 查阅对应的API。</p>
+
+<h2 id="Navigator.sendBeacon()">Navigator.sendBeacon()</h2>
+
+<p>Beacon API 的 {{domxref("Navigator.sendBeacon()")}} ，将会从当前的全局的浏览器上下文中，向服务器发起一个 beacon 请求。这个方法需要两个参数:  <code>URL</code> 以及要发送的数据 <code>data</code> 。其中 <code>data</code> 参数是可选的，它的类型可以为 {{domxref("ArrayBufferView")}}, {{domxref("Blob")}}, {{domxref("DOMString")}}, 或者 {{domxref("FormData")}}.</p>
+
+<p>如果浏览器成功地将 beacon 请求加入到待发送的队列里，这个方法将会返回 <code>true</code> ，否则将会返回 <code>false</code> 。</p>
+
+<p>下面的例子在window上注册了 {{event("load")}} 事件和  {{event("beforeunload")}} 事件的回调函数， 并且在回调函数里面调用了 <code>sendBeacon()</code> 方法。</p>
+
+<pre class="brush: js">window.onload = window.onunload = function analytics(event) {
+  if (!navigator.sendBeacon) return;
+
+  var url = "https://example.com/analytics";
+  // 创建待发送数据
+  var data = "state=" + event.type + "&amp;location=" + location.href;
+
+  // 发送beacon请求
+  var status = navigator.sendBeacon(url, data);
+
+  // 打印数据以及结果
+  console.log("sendBeacon: URL = ", url, "; data = ", data, "; status = ", status);
+};
+</pre>
+
+<p>接下来的列子在 window 上创建了一个 {{event("submit")}} 事件的回调函数，并且当submit事件触发时，调用 <code>sendBeacon()</code>方法。</p>
+
+<pre class="brush: js">window.onsubmit = function send_analytics() {
+  var data = JSON.stringify({
+    location: location.href,
+    time: Date()
+  });
+
+  navigator.sendBeacon('/analytics', data);
+};
+</pre>
+
+<h2 id="WorkerNavigator.sendBeacon()">WorkerNavigator.sendBeacon()</h2>
+
+<p>Beacon API 的 {{domxref("WorkerNavigator.sendBeacon()")}} 的使用方法，跟平常的使用方法完全相同。在worker环境中，这个方法存在于 <em>{{domxref("WorkerGlobalScope","worker global scope")}} </em>中</p>
+
+<p>在接下来的例子中展示了，使用  {{domxref("Worker")}} 发送了一个beacon请求，其中，请求数据来源于主页面。</p>
+
+<p>这是主页面的代码片段:</p>
+
+<pre class="brush: js">function worker_send(url, data) {
+  // 创建worker对象
+  var myWorker = new Worker("worker-using.js");
+
+  // 发送URL以及data给worker
+  myWorker.postMessage([url, data]);
+
+  // 注册回调函数来接收来自worker的成功或失败的信息
+  myWorker.onmessage = function(event) {
+    var msg = event.data;
+    // 打印worker的发送状态
+    console.log("Worker reply: sendBeacon() status = " + msg);
+  };  
+}
+</pre>
+
+<p>这是worker中的代码片段 (<code>worker-using.js</code>):</p>
+
+<pre class="brush: js">onmessage = function(event) {
+  var msg = event.data;
+  // 从msg中获取URL和data
+  var url = msg[0];
+  var data = msg[1];
+
+  // 如果浏览器支持在worker里面调用sendBeacon()， 那就发送beacon请求。否则
+  // 返回失败信息给主页面
+  if (self.navigator.sendBeacon) {
+    var status = self.navigator.sendBeacon(url, data); 
+    postMessage(status ? "success" : "fail");
+  } else {
+    postMessage("Worker: self.navigator.sendBeacon is unsupported");
+  }
+}
+</pre>
+
+<h2 id="查看更多">查看更多</h2>
+
+<ul>
+ <li>{{domxref("Beacon_API","Beacon API")}} (Overview)</li>
+ <li><a href="https://w3c.github.io/beacon/">Beacon standard</a></li>
+ <li><a href="http://caniuse.com/#search=beacon">Beacon CanIUse data</a></li>
+</ul>

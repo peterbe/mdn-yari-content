@@ -1,0 +1,211 @@
+<div>{{jsSidebar("Funciones")}}</div>
+
+<p>La sintaxis  <strong><code>set</code></strong>  enlaza  la propiedad de un objeto con una función que será llamada cada vez que se le asigne un valor.</p>
+
+<h2 id="Sintaxis">Sintaxis</h2>
+
+<pre class="syntaxbox">{set <em>prop</em>(<em>val</em>) { . . . }} {set [expression](<em>val</em>) { . . . }}</pre>
+
+<h3 id="Parámetros">Parámetros</h3>
+
+<dl>
+ <dt><code>prop</code></dt>
+ <dd>El nombre de la propiedad a unir con la función dada.</dd>
+</dl>
+
+<dl>
+ <dt><code>val</code></dt>
+ <dd>Variable que contiene el nuevo valor a asignar a la propiedad.</dd>
+ <dt>expression</dt>
+ <dd>En ECMAScript 6, se puede usar expresiones para propiedades computadas.</dd>
+</dl>
+
+<h2 id="Descripción">Descripción</h2>
+
+<p>En JavaScript, un setter puede ser usado para ejecutar una función para una propiedad especifica que será ejecutada al cambiar el valor. Los setters se suelen usar con getters para crear un tipo de pseudo-propiedad. No es posible tener un setter para una propiedad que tiene un valor real.</p>
+
+<p>Tenga en cuenta lo siguiente al trabajar con setters:</p>
+
+<div>
+<ul>
+ <li>Puede tener un String o Number como identificador;</li>
+ <li>Debe de tener exactamente un parámentro (ver <a class="external" href="http://whereswalden.com/2010/08/22/incompatible-es5-change-literal-getter-and-setter-functions-must-now-have-exactly-zero-or-one-arguments/" rel="external nofollow">Incompatible <abbr title="ECMAScript 5th edition">ES5</abbr> change: literal getter and setter functions must now have exactly zero or one arguments</a> para más información);</li>
+ <li>No debe haber múltiples setters para una misma propiedad.<br>
+  ( <code>{ set x(v) { }, set x(v) { } }</code> y <code>{ x: ..., set x(v) { } }</code> está prohibido )</li>
+</ul>
+</div>
+
+<p>Un setter puede ser eliminado usando el operador <a href="/es/docs/Web/JavaScript/Referencia/Operadores/delete" title="en-US/docs/JavaScript/Reference/Operators/Special/delete"><code>delete</code></a>.</p>
+
+<h2 id="Ejemplos">Ejemplos</h2>
+
+<h3 id="Definiendo_un_setter_en_un_nuevo_objecto_en_la_inialización">Definiendo un setter en un nuevo objecto en la inialización</h3>
+
+<p>Definimos una pseudo-propiedad  <code>current </code>al objeto <code>historial </code>que cuando se le asigne un valor, se añadirá al <code>log</code>:</p>
+
+<pre class="brush: js">var historial = {
+  set actual(mensaje) {
+    this.log.push(mensaje);
+  },
+  log: []
+}
+historial.actual='mensaje 1';
+console.log(historial.log) //['mensaje 1']
+
+historial.actual='mensaje 2';
+console.log(historial.log)//['mensaje 1', 'mensaje 2']
+</pre>
+
+<p> </p>
+
+<p>Tenga en cuenta que <code>actual </code>no está definido y cualquier intento de acceder devolverá <strong><code>undefined</code></strong>.</p>
+
+<h3 id="Eliminando_setters_con_el_operador_delete">Eliminando setters con el operador <code>delete</code> </h3>
+
+<p>Podemos utilizar el operador <a href="/es/docs/Web/JavaScript/Referencia/Operadores/delete" title="en-US/docs/JavaScript/Reference/Operators/Special/delete"><code>delete</code></a> para eliminar un setter:</p>
+
+<pre class="brush: js">delete historial.actual;
+</pre>
+
+<h3 id="Definiendo_un_setter_en_un_objecto_existente_usando_defineProperty">Definiendo un setter en un objecto existente usando <code>defineProperty</code></h3>
+
+<p>Para añadir un setter a un objeto existente usaremos {{jsxref("Object.defineProperty()")}}.</p>
+
+<pre class="brush: js">var o = { a:0 };
+
+Object.defineProperty(o, "b", { set: function (x) { this.a = x / 2; } });
+
+o.b = 10; // Dispara el setter, cual asigna 10 / 2 (5) a la propiedad 'a'
+console.log(o.a) // 5</pre>
+
+<h3 id="Usando_una_propiedad_computada">Usando una propiedad computada</h3>
+
+<div class="note">
+<p><strong>Nota:</strong> Propiedades computadas son 'experimental technology'<em>,</em> parte de la propuesta para ECMAScript 6, y no está soportado en todos los navegadores. Dará error de sintaxis en entornos no soportados.</p>
+</div>
+
+<pre class="brush: js">var expr = "foo";
+
+var obj = {
+  baz: "bar",
+  set [expr](v) { this.baz = v; }
+};
+
+console.log(obj.baz); // "bar"
+obj.foo = "baz";      // dispara el setter
+console.log(obj.baz); // "baz"
+</pre>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-11.1.5', 'Object Initializer')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td>Definición inicial.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-method-definitions', 'Method definitions')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td>Añadidas las propiedades computadas.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-method-definitions', 'Method definitions')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Compatibilidad_con_navegadores">Compatibilidad con navegadores</h2>
+
+<p>{{CompatibilityTable}}</p>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatChrome(1)}}</td>
+   <td>{{ CompatGeckoDesktop("1.8.1") }}</td>
+   <td>{{ CompatIE(9) }}</td>
+   <td>9.5</td>
+   <td>3</td>
+  </tr>
+  <tr>
+   <td>Computed property names</td>
+   <td>{{CompatNo}}</td>
+   <td>{{ CompatGeckoDesktop("34") }}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Chrome for Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{ CompatGeckoMobile("1.8.1") }}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+  <tr>
+   <td>Computed property names</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{ CompatGeckoMobile("34.0") }}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="SpiderMonkey-specific_notes">SpiderMonkey-specific notes</h2>
+
+<ul>
+ <li>Starting with<a href="/en-US/docs/Web/JavaScript/New_in_JavaScript/1.8.1"> JavaScript 1.8.1</a>, setters are no longer called when setting properties in object and array initializers.</li>
+ <li>From SpiderMonkey 38 on, a setter with a {{jsxref("Functions/rest_parameters", "rest parameter", "", 1)}} is a {{jsxref("SyntaxError")}} as per the ES6 specification.</li>
+</ul>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Web/JavaScript/Reference/Functions/get">getter</a></li>
+ <li>{{jsxref("Operators/delete", "delete")}}</li>
+ <li>{{jsxref("Object.defineProperty()")}}</li>
+ <li>{{jsxref("Object.defineGetter", "__defineGetter__")}}</li>
+ <li>{{jsxref("Object.defineSetter", "__defineSetter__")}}</li>
+ <li><a href="/en-US/docs/Web/JavaScript/Guide/Working_with_Objects#Defining_getters_and_setters">Defining Getters and Setters</a> in JavaScript Guide</li>
+</ul>

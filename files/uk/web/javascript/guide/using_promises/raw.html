@@ -1,0 +1,250 @@
+<div>{{jsSidebar("JavaScript Guide")}}</div>
+
+<p>{{jsxref("Promise")}}   ( з англ. - "обіцянка", далі - "проміс" )   це об'єкт,   що являє собою можливе завершення або невдачі асинхронної операції.  Проміс може бути створенний за допогою <a href="/uk/docs/Web/JavaScript/Reference/Global_Objects/Promise#Examples">конструктора</a>. Однак, більшість людей є споживачами раніше створенних промісів, що повертаються функціями. Саме тому цей путівник,  в першу чергу, дослідить  споживання промісів, що повертаються.</p>
+
+<p>По суті, проміс це об'єкт, що повертається, до якого ви прикріпляєте колбеки, замість передавання колбеків у функцію.</p>
+
+<p>Напр., У випадку  завершення або невдачі ви викликаєте лише один з  колбеків, замість використання old-style функції , що очікує два колбеки:</p>
+
+<pre class="brush: js line-numbers  language-js">function successCallback(result) {
+  console.log("It succeeded with " + result);
+}
+
+function failureCallback(error) {
+  console.log("It failed with " + error);
+}
+
+doSomething(successCallback, failureCallback);
+</pre>
+
+<p>… замість цього, сучасні функції повертають проміс, до якого ви можете приєднати ваші колбеки:</p>
+
+<pre class="brush: js line-numbers  language-js">let promise = doSomething(); 
+promise.then(successCallback, failureCallback);</pre>
+
+<p>…чи простіше:</p>
+
+<pre class="brush: js line-numbers  language-js">doSomething().then(successCallback, failureCallback);</pre>
+
+<p>Ми називаємо це <em>асинхронним викликом функції</em>.  Ця конвенція має декілька переваг. Ми дослідимо кожну з них.</p>
+
+<h2 id="Гарантії">Гарантії</h2>
+
+<p>На відміну від застарілих  колбеків, проміс постачається з деякими гарантіями:</p>
+
+<ul>
+ <li>Колбеки ніколи не будуть викликані до <a href="/uk/docs/Web/JavaScript/EventLoop">завершення поточного перебігу</a> циклу подій JavaScript.</li>
+ <li>Колбеки, що додані за допомогою .then будуть викликані, як зазначено вище, навіть <em>після</em> завершення або невдачі асинхронної операції.</li>
+ <li> Кілька колбеків можуть бути додані за домопогою виклику метода .then декілька разів і викликані незалжено в порядку вставки.</li>
+</ul>
+
+<p>Але безпосередньою перевагою промісів є ланцюгові зв'язки.</p>
+
+<h2 id="Ланцюжок">Ланцюжок</h2>
+
+<p>Загальною потребою є виклик двох або більше асинхронних операцій впритул, коли кожна послідовна операція починається, коли попередня завершується, з результатом із попереднього кроку. Ми досягаємо цього за допомогою створення <em>ланцюжка промісів</em>.</p>
+
+<p>Ось вам магія:  функція <code>then</code> повертає новий проміс, що відрізняється від оригінала:</p>
+
+<pre class="brush: js">let promise = doSomething();
+let promise2 = promise.then(successCallback, failureCallback);
+</pre>
+
+<p>чи</p>
+
+<pre class="brush: js">let promise2 = doSomething().then(successCallback, failureCallback);
+</pre>
+
+<p>Цей другий проміс представляє собою завершення не тільки  <code>doSomething()</code> , але й <code>successCallback</code> або <code>failureCallback</code> , що ви передаєте, що в свою чергу можуть бути асинхронними операціями , що повертають проміс. В цьому випадку, будь-який колбек, що додається до  <code>promise2</code> стає в чергу за промісом, що повертається з <code>successCallback</code> чи <code>failureCallback</code>. .</p>
+
+<p>This second promise represents the completion not just of <code>doSomething()</code>, but also of the <code>successCallback</code> or <code>failureCallback</code> you passed in, which can be other asynchronous functions returning a promise. When that's the case, any callbacks added to <code>promise2</code> get queued behind the promise returned by either <code>successCallback</code> or <code>failureCallback</code>.</p>
+
+<p>По суті, кожен проміс являє собою заврешення  іншого асинхроннго кроку в ланцюжку.</p>
+
+<p>В старі часи, виконання декількох асинхронних операцій підряд призвело б до класичної піраміди смерті з колбеків:</p>
+
+<pre class="brush: js">doSomething(function(result) {
+  doSomethingElse(result, function(newResult) {
+    doThirdThing(newResult, function(finalResult) {
+      console.log('Got the final result: ' + finalResult);
+    }, failureCallback);
+  }, failureCallback);
+}, failureCallback);
+</pre>
+
+<p>Замість цього, з сучасними функціями , ми приєднуємо наші колбеки до промісів, що повертаються, формуючи <em>ланцюжок промісів</em>.</p>
+
+<pre class="brush: js">doSomething().then(function(result) {
+  return doSomethingElse(result);
+})
+.then(function(newResult) {
+  return doThirdThing(newResult);
+})
+.then(function(finalResult) {
+  console.log('Got the final result: ' + finalResult);
+})
+.catch(failureCallback);
+</pre>
+
+<p>Аргументи до  <code>then</code> є необов'язковими, а <code>catch(failureCallback)</code>   це короткий запис для  <code>then(null, failureCallback)</code> . Натомість ви можете побачити це, виражене за допомгою <a href="/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions">стрілочних функцій</a>:</p>
+
+<pre class="brush: js">doSomething()
+.then(result =&gt; doSomethingElse(result))
+.then(newResult =&gt; doThirdThing(newResult))
+.then(finalResult =&gt; {
+  console.log(`Got the final result: ${finalResult}`);
+})
+.catch(failureCallback);
+</pre>
+
+<p><strong>Важливо</strong>: Завжди повертайте проміси , інакше колбеки не сформують ланцюг і помилки не будуть спіймані ( коли  {} опущені, стрілочні функції повертають неявно ).<br>
+ Ланцюгування після catch</p>
+
+<h3 id="Chaining_after_a_catch">Chaining after a catch</h3>
+
+<p>Ланцюгувати <em>після </em>невдачі можливо, напр.  <code>catch</code> є корисним у разі виконання нових операцій навіть після того, як операція у ланцюжку провалилась. Прочитайте наступний приклад:</p>
+
+<pre class="brush: js">new Promise((resolve, reject) =&gt; {
+    console.log('Initial');
+
+    resolve();
+})
+.then(() =&gt; {
+    throw new Error('Something failed');
+        
+    console.log('Do this');
+})
+.catch(() =&gt; {
+    console.log('Do that');
+})
+.then(() =&gt; {
+    console.log('Do this whatever happened before');
+});
+
+</pre>
+
+<p>Це виведе  наступний текст:</p>
+
+<pre>Initial
+Do that
+Do this whatever happened before
+</pre>
+
+<p>Зауважте, що текст  "Do this"  не був виведений , тому що  помилка "Something failed" викликала відмову.</p>
+
+<h2 id="Розмноження_помилок">Розмноження помилок</h2>
+
+<p>Ви, можливо, згадали, як тричи бачили failureCallback  раніше, в піраміді смерті, і тепер порівняйте це лише з одним викликом наприкінці ланцюжку промісів.</p>
+
+<pre class="brush: js">doSomething()
+.then(result =&gt; doSomethingElse(value))
+.then(newResult =&gt; doThirdThing(newResult))
+.then(finalResult =&gt; console.log(`Got the final result: ${finalResult}`))
+.catch(failureCallback);
+</pre>
+
+<p>По суті, ланцюжок промісів зупиняється , якщо є виключення, натомість видивляючись далі по ланцюжку обробювачі catch.  Це дуже добре моделюється дивлячись на те, як працює синхронний код:</p>
+
+<pre class="brush: js">try {
+  let result = syncDoSomething();
+  let newResult = syncDoSomethingElse(result);
+  let finalResult = syncDoThirdThing(newResult);
+  console.log(`Got the final result: ${finalResult}`);
+} catch(error) {
+  failureCallback(error);
+}
+</pre>
+
+<p>Ця симметрія з синхронним кодом кульмінує в синтаксичному цукрі <a href="/en-US/docs/Web/JavaScript/Reference/Statements/async_function"><code>async</code>/<code>await</code></a> в ECMAScript 2017:</p>
+
+<pre class="brush: js">async function foo() {
+  try {
+    let result = await doSomething();
+    let newResult = await doSomethingElse(result);
+    let finalResult = await doThirdThing(newResult);
+    console.log(`Got the final result: ${finalResult}`);
+  } catch(error) {
+    failureCallback(error);
+  }
+}
+</pre>
+
+<p>Це побудовано на промісах , напр.  <code>doSomething()</code>   це та сама функція, що й до цього. Ви можете прочитати більше про синтаксис <a href="/web/fundamentals/getting-started/primers/async-functions">тут</a>.</p>
+
+<p>Проміси вирішують фундаментальний недолік піраміди смерті, ловлячи всі помилки, навіть прокинуті виключення та помилки программування. Це необхідно для функціональної композиції асинхронних операцій.</p>
+
+<h2 id="Створення_промісу_на_основі_старого_callback_API">Створення промісу на основі старого  callback API</h2>
+
+<p>{{jsxref("Promise")}} може бути створенний з нуля за допогою його конструктора. Це необхідно лише для обгортки старих API.</p>
+
+<p>В ідеальному світі , всі асинхронні функції повертали б проміси. На жаль, деякі API досі очікують передачу колбеків успіху та/або невдачі в старому стилі. Прикладом-квінтесенцією є функція  {{domxref("WindowTimers.setTimeout", "setTimeout()")}} :</p>
+
+<pre class="brush: js">setTimeout(() =&gt; saySomething("10 seconds passed"), 10000);
+</pre>
+
+<p>Змішування застарілих коллбеків і промісів є проблематичним. Якщо  <code>saySomething</code> провалиться або буде мати помилку программування, нічого не спіймає це.</p>
+
+<p>На щастя, ми можемо обгорнути це у проміс. Кращою практикою є обгортання проблематичної функції на якомога нижчому рівні, і потім ніколи не звертатись безпосередньо до неї.</p>
+
+<pre class="brush: js">const wait = ms =&gt; new Promise(resolve =&gt; setTimeout(resolve, ms));
+
+wait(10000).then(() =&gt; saySomething("10 seconds")).catch(failureCallback);
+</pre>
+
+<p>По суті,  конструктор промісу приймає функцію виконання, що дозволяє вирішити або відхилити  проміс вручну. Так як <code>setTimeout</code> реально ніколи не проваляються, ми опускаємо нашу функцію відмови в цьому випадку.</p>
+
+<h2 id="Композиція">Композиція</h2>
+
+<p>{{jsxref("Promise.resolve()")}} та {{jsxref("Promise.reject()")}} є короткими записами для створення вручну вже вирішених або відхилених промісів відповідно. Інколи це може бути корисно.</p>
+
+<p>{{jsxref("Promise.all()")}} та {{jsxref("Promise.race()")}} є двома інтсрументами композиції для виконання асинхронних операції паралельно.</p>
+
+<p>Послідовна композиція можлива з використанням деякого розумного JavaScript:</p>
+
+<pre class="brush: js">[func1, func2].reduce((p, f) =&gt; p.then(f), Promise.resolve());
+</pre>
+
+<p>По суті, ми зменшуємо масив асинхронних функцій до  ланцюжка промісів, що еквівалентний : <code>Promise.resolve().then(func1).then(func2);</code></p>
+
+<p>Це також може бути виконано за допомогою здатної до повторного використання функції компонування, що є звичною  у функціональному програмуванні:</p>
+
+<pre class="brush: js">let applyAsync = (acc,val) =&gt; acc.then(val);
+let composeAsync = (...funcs) =&gt; x =&gt; funcs.reduce(applyAsync, Promise.resolve(x));</pre>
+
+<p>Функція composeAsync прийме будь-яку кількість функцій в якості аргументів, а також поверне нову функцію, що приймає  початкове значення, що має пройти крізь трубопровід композиції. Це є перевагою, так як, незважаючи на те, що  функції можуть бути як синхронними так і асинхронними, вони гарантовано виконуються у правильній послідовності:</p>
+
+<pre class="brush: js">let transformData = composeAsync(func1, asyncFunc1, asyncFunc2, func2);
+transformData(data);
+</pre>
+
+<p>В ECMAScript 2017, послідовна композиція може бути створена просто за допомогою async/await:</p>
+
+<pre class="brush: js">for (let f of [func1, func2]) {
+  await f();
+}
+</pre>
+
+<h2 id="Хронометраж">Хронометраж</h2>
+
+<p>Задля того, щоб уникнути сюрпризів, функції, що передані до  <code>then</code> ніколи не будуть викликані синхронно, навіть якщо присутній вже вирішенний проміс:</p>
+
+<pre class="brush: js">Promise.resolve().then(() =&gt; console.log(2));
+console.log(1); // 1, 2
+</pre>
+
+<p>Функції, що передаються, замість того, щоб бути виконанними негайно,  стають у чергу мікрозадач, що означає, що вони виконуються пізніше, коли черга спустошується в кінці поточного виконання циклу подій JavaScript , тобто досить скоро:</p>
+
+<pre class="brush: js">const wait = ms =&gt; new Promise(resolve =&gt; setTimeout(resolve, ms));
+
+wait().then(() =&gt; console.log(4));
+Promise.resolve().then(() =&gt; console.log(2)).then(() =&gt; console.log(3));
+console.log(1); // 1, 2, 3, 4
+</pre>
+
+<h2 id="Дивіться_також">Дивіться також</h2>
+
+<ul>
+ <li>{{jsxref("Promise.then()")}}</li>
+ <li><a href="http://promisesaplus.com/">Promises/A+ specification</a></li>
+ <li><a href="http://pouchdb.com/2015/05/18/we-have-a-problem-with-promises.html">Nolan Lawson: We have a problem with promises — Common mistakes with promises</a></li>
+</ul>

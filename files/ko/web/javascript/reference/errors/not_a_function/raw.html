@@ -1,0 +1,133 @@
+<div>{{jsSidebar("Errors")}}</div>
+
+<h2 id="메시지">메시지</h2>
+
+<pre class="syntaxbox">타입 에러: Object doesn't support property or method {x} (Edge)
+타입 에러: "x" 는 function이 아닙니다.
+</pre>
+
+<h2 id="에러_종류">에러 종류</h2>
+
+<p>{{jsxref("TypeError")}}.</p>
+
+<h2 id="무엇이_잘못되었는가">무엇이 잘못되었는가?</h2>
+
+<p>이것은 함수로부터 값을 불러오려 시도했지만, 실제로는 해당 값이 함수가 아닐 때 발생합니다. 몇몇 코드는 당신이 함수를 반환할 것이라 예상해도, 실제로는 아닌 것들이 존재합니다.</p>
+
+<p>혹시 함수 이름에 오타가 있나요? 혹시 당신이 호출한 object가 이 함수를 가지고 있는게 맞나요? 예를 들어, 자바스크립트는 <code>map</code> 함수를 가지고 있지 않습니다. 하지만 자바스크립트 Array object 는 이걸 가지고 있죠.</p>
+
+<p>콜백 함수를 필요로 하는 내장 함수들이 많이 존재합니다. 당신은 이 함수들을 정확히 동작하도록 하기 위해 함수 형식을 인자로 넣어야 합니다:</p>
+
+<ul>
+ <li>When working with {{jsxref("Array")}} or {{jsxref("TypedArray")}} objects:
+  <ul>
+   <li>{{jsxref("Array.prototype.every()")}}, {{jsxref("Array.prototype.some()")}}, {{jsxref("Array.prototype.forEach()")}}, {{jsxref("Array.prototype.map()")}}, {{jsxref("Array.prototype.filter()")}},  {{jsxref("Array.prototype.reduce()")}}, {{jsxref("Array.prototype.reduceRight()")}}, {{jsxref("Array.prototype.find()")}}</li>
+  </ul>
+ </li>
+ <li>When working with {{jsxref("Map")}} and {{jsxref("Set")}} objects:
+  <ul>
+   <li>{{jsxref("Map.prototype.forEach()")}} and {{jsxref("Set.prototype.forEach()")}}</li>
+  </ul>
+ </li>
+</ul>
+
+<h2 id="예시">예시</h2>
+
+<h3 id="함수_이름의_오타">함수 이름의 오타</h3>
+
+<p>이 경우는 함수 이름에 오타가 있는 상황에서 자주 일어납니다 :</p>
+
+<pre class="brush: js example-bad">var x = document.getElementByID('foo');
+// 타입 에러: document.getElementByID 는 function이 아닙니다.
+</pre>
+
+<p>올바른 함수의 이름은 <code>getElementByI<strong>d</strong></code> 입니다:</p>
+
+<pre class="brush: js example-good">var x = document.getElementById('foo');
+</pre>
+
+<h3 id="잘못된_object에서_함수를_호출">잘못된 object에서 함수를 호출</h3>
+
+<p>For certain methods, you have to provide a (callback) function and it will work on specific objects only. In this example, {{jsxref("Array.prototype.map()")}} is used, which will work with {{jsxref("Array")}} objects only.</p>
+
+<pre class="brush: js example-bad">var obj = {a: 13, b: 37, c: 42};
+
+obj.map(function(num) {
+  return num * 2;
+});
+
+// TypeError: obj.map is not a function</pre>
+
+<p>Object대신 Array를 사용:</p>
+
+<pre class="brush: js example-good">var numbers = [1, 4, 9];
+
+numbers.map(function(num) { 
+  return num * 2; 
+}); 
+
+// Array [2, 8, 18]
+</pre>
+
+<h3 id="Function_shares_a_name_with_a_pre-existing_property">Function shares a name with a pre-existing property</h3>
+
+<p>Sometimes when making a class, you may have a property and a function with the same name. Upon calling the function, the compiler thinks that the function ceases to exist.</p>
+
+<pre class="brush: js example-bad">var Dog = function () {
+ this.age = 11;
+ this.color = "black";
+ this.name = "Ralph";
+ return this;
+} 
+
+Dog.prototype.name = function(name) {
+ this.name = name;
+ return this;
+}
+
+
+var myNewDog = new Dog();
+myNewDog.name("Cassidy"); //Uncaught TypeError: myNewDog.name is not a function
+</pre>
+
+<p>Use a different property name instead:</p>
+
+<pre class="brush: js example-good">var Dog = function () {
+ this.age = 11;
+ this.color = "black";
+ this.dogName = "Ralph"; //Using this.dogName instead of .name
+ return this;
+} 
+
+Dog.prototype.name = function(name) {
+ this.dogName = name;
+ return this;
+}
+
+
+var myNewDog = new Dog();
+myNewDog.name("Cassidy"); //Dog { age: 11, color: 'black', dogName: 'Cassidy' }
+</pre>
+
+<h3 id="Using_brackets_for_multiplication">Using brackets for multiplication</h3>
+
+<p>In math, you can write 2 x (3 + 5) as 2*(3 + 5) or just 2(3 + 5). Using the latter will throw an error:</p>
+
+<pre class="js example-bad">var sixteen = 2(3 + 5);
+alert('2 x (3 + 5) is ' + String(sixteen));
+//Uncaught TypeError: 2 is not a function</pre>
+
+<p>You can correct the code by adding a * operator:</p>
+
+<pre class="js example-good">var sixteen = 2 * (3 + 5);
+alert('2 x (3 + 5) is ' + String(sixteen));
+//2 x (3 + 5) is 16
+</pre>
+
+<p> </p>
+
+<h2 id="같이보기">같이보기</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Web/JavaScript/Reference/Functions">Functions</a></li>
+</ul>

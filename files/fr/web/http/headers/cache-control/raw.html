@@ -1,0 +1,171 @@
+<p>{{HTTPSidebar}}</p>
+
+<p>L'en-tête (<em>header</em>) HTTP <strong><code>Cache-Control</code></strong> est un en-tête standard utilisé pour définir la politique de cache des contenus, aussi bien dans les requêtes que les réponses. Les règles (ou directives) de gestion du cache ne s'appliquent que dans un sens, donc une règle dans une requête ne signifie aucunement que la même règle sera présente dans la réponse.</p>
+
+<table class="properties">
+ <tbody>
+  <tr>
+   <th scope="row">Type d'en-tête</th>
+   <td>{{Glossary("General header")}}</td>
+  </tr>
+  <tr>
+   <th scope="row">{{Glossary("Forbidden header name")}}</th>
+   <td>non</td>
+  </tr>
+  <tr>
+   <th scope="row">{{Glossary("Simple response header", "CORS-safelisted response-header")}}</th>
+   <td>oui</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Syntaxe">Syntaxe</h2>
+
+<p>Les règles ne sont pas sensibles à la casse et ont une valeur optionnelle qui peut être une chaîne de caractères entre guillemets ou des mots clefs. Plusieurs règles peuvent être séparées par une virgule.</p>
+
+<h3 id="Règles_de_cache_des_requêtes">Règles de cache des requêtes</h3>
+
+<p>Les règles standard <code>Cache-Control</code> suivantes peuvent être utilisées par un client HTTP dans une requête :</p>
+
+<pre class="syntaxbox">Cache-Control: max-age=&lt;seconds&gt;
+Cache-Control: max-stale[=&lt;seconds&gt;]
+Cache-Control: min-fresh=&lt;seconds&gt;
+Cache-Control: no-cache 
+Cache-Control: no-store
+Cache-Control: no-transform
+Cache-Control: only-if-cached
+</pre>
+
+<h3 id="Règles_de_cache_des_réponses">Règles de cache des réponses</h3>
+
+<p>Les règles standard <code>Cache-Control</code> suivantes peuvent être utilisées par un serveur HTTP dans une réponse :</p>
+
+<pre class="syntaxbox">Cache-Control: must-revalidate
+Cache-Control: no-cache
+Cache-Control: no-store
+Cache-Control: no-transform
+Cache-Control: public
+Cache-Control: private
+Cache-Control: proxy-revalidate
+Cache-Control: max-age=&lt;seconds&gt;
+Cache-Control: s-maxage=&lt;seconds&gt;
+</pre>
+
+<h3 id="Extensions_de_Cache-Control">Extensions de <code>Cache-Control</code></h3>
+
+<p>Les règles suivantes ne font pas partie des règles standard de gestion du cache. Pour savoir quels navigateurs supportent ces règles, on pourra se référer à la <a href="#Browser_compatibility">matrice de compatibilité</a>.</p>
+
+<pre class="syntaxbox">Cache-Control: immutable 
+Cache-Control: stale-while-revalidate=&lt;seconds&gt;
+Cache-Control: stale-if-error=&lt;seconds&gt;
+</pre>
+
+<h2 id="Directives">Directives</h2>
+
+<h3 id="Possibilité_de_mise_en_cache">Possibilité de mise en cache</h3>
+
+<p>Différents composants peuvent gérer un cache. Un cache peut être géré par un navigateur, un serveur mandataire (proxy), un serveur web (en reverse proxy ou utilisé normalement).</p>
+
+<dl>
+ <dt><code>public</code></dt>
+ <dd>Indique que la réponse peut être mise en cache par n'importe quel cache.</dd>
+ <dt><code>private</code></dt>
+ <dd>Indique que la réponse ne doit être mise en cache que pour un utilisateur donné et ne doit donc pas être mise en cache par un cache partagé.</dd>
+ <dt><code>no-cache</code></dt>
+ <dd>Indique de renvoyer systématiquement la requête au serveur et ne servir une éventuelle version en cache que dans le cas où le serveur le demande.</dd>
+ <dt><code>only-if-cached</code></dt>
+ <dd>Indique de se limiter au contenu en cache. Dans ce cas, le client ne veut pas que sa réponse soit envoyée au serveur.</dd>
+</dl>
+
+<h3 id="Expiration">Expiration</h3>
+
+<dl>
+ <dt><code>max-age=&lt;secondes&gt;</code></dt>
+ <dd>Indique la durée pendant laquelle la ressource doit être considérée comme valide (non expirée). Contrairement à <code>expires</code>, la durée indiquée dans cette directive commence à la date de la requête.</dd>
+ <dt><code>s-maxage=&lt;secondes&gt;</code></dt>
+ <dd>Indique une valeur pour écraser les valeurs définies par <code>max-age</code> ou <code>Expires</code> pour les caches partagés (comme les proxies). Il est donc ignoré par les caches privés (dont les navigateurs).</dd>
+ <dt><code>max-stale[=&lt;secondes&gt;]</code></dt>
+ <dd>Indique que le client accepte une réponse expirée. Une valeur optionnelle permet d'indiquer la durée maximale depuis laquelle la réponse peut être expirée mais acceptée quand même.</dd>
+ <dt><code>min-fresh=&lt;secondes&gt;</code></dt>
+ <dd>Indique que le client demande une réponse qui soit valide pour au moins la durée demandée (dont la date d'expiration est supérieure à la date actuelle plus la durée spécifiée).</dd>
+ <dt><code>stale-while-revalidate=&lt;secondes&gt;</code> {{experimental_inline}}</dt>
+ <dd>Indique au cache de renvoyer les données en cache même si elles sont expirée depuis une durée inférieure à la durée spécifiée dans l'en-tête. Dans ce cas, le cache doit renvoyer la requête au serveur pour rafraîchir les données.</dd>
+ <dt><code>stale-if-error=&lt;secondes&gt;</code> {{experimental_inline}}</dt>
+ <dd>Indique au cache de renvoyer les données en cache s'il y a une erreur pendant la récupération des données auprès du serveur et que la version en cache est expirée depuis une durée inférieure à celle spécifiée dans l'en-tête.</dd>
+</dl>
+
+<h3 id="Revalidation_et_rechargement">Revalidation et rechargement</h3>
+
+<dl>
+ <dt><code>must-revalidate</code></dt>
+ <dd>Le cache doit refaire une requête dans le cas où les données sont expirées afin de les mettre à jour s'il y a lieu (il reste parfaitement possible que le serveur réponde avec les mêmes données).</dd>
+ <dt><code>proxy-revalidate</code></dt>
+ <dd>Comme pour <code>must-revalidate</code>, mais force la valeur pour les caches partagés. Cette valeur est ignorée par les caches locaux.</dd>
+ <dt><code>immutable</code></dt>
+ <dd>Indique que les données renvoyées peuvent être servies même si elles sont expirées sans aucune validation et même si le client fait une demande explicite de rafraîchissement. Cette option est a priori uniquement adaptée si les contenus ne sont jamais modifiés mais toujours stockés à une URI différente (par exemple en utilisant un hash du contenu). Les clients qui ne gèrent pas cette directive l'ignorent. Dans le cas de Firefox, cette option est aussi ignorée pour les contenus qui ne sont pas servis en HTTPS. Pour plus d'informations, on pourra se référer à <a href="http://bitsup.blogspot.de/2016/05/cache-control-immutable.html">un blog en anglais</a>.</dd>
+</dl>
+
+<h3 id="Autres">Autres</h3>
+
+<dl>
+ <dt><code>no-store</code></dt>
+ <dd>La requête ou les données ne devraient jamais être mises en cache.</dd>
+ <dt><code>no-transform</code></dt>
+ <dd>Aucune conversion ou transformation ne devraient être réalisée sur la ressource. Ainsi, les en-tête <code>Content-Encoding</code>, <code>Content-Range</code> et <code>Content-Type</code> ne devraient jamais être modifiés par un proxy (serveur mandataire). Un proxy non-transparent pourrait, en l'absence de cet en-tête, convertir ou compresser (avec pertes) des images pour réduire la place occupée en cache ou diminuer le volume de données à transférer sur un lien lent.</dd>
+</dl>
+
+<h2 id="Exemples">Exemples</h2>
+
+<h3 id="Empêcher_la_mise_en_cache">Empêcher la mise en cache</h3>
+
+<p>Pour désactiver la mise en cache, il est possible d'envoyer l'en-tête suivant :</p>
+
+<pre class="brush: bash">Cache-Control: no-cache, no-store, must-revalidate
+</pre>
+
+<p>Il est aussi pertinent de renvoyer des en-tête <code>Expires</code> et <code>Pragma</code> adaptés.</p>
+
+<h3 id="Mise_en_cache_des_fichiers_statiques">Mise en cache des fichiers statiques</h3>
+
+<p>Pour les fichiers de l'application qui ne seront pas modifiés, il est en général possible de définir une politique de cache pendant une longue période. Ceci s'applique particulièrement aux images, feuilles de style CSS et scripts JavaScript. Vous pouvez aussi regarder l'en-tête code&gt;Expires.</p>
+
+<pre class="brush: bash">Cache-Control: public, max-age=31536000
+</pre>
+
+<h2 id="Spécifications">Spécifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Spécification</th>
+   <th scope="col">Titre</th>
+  </tr>
+  <tr>
+   <td>{{RFC("7234")}}</td>
+   <td>Hypertext Transfer Protocol (HTTP/1.1): Caching</td>
+  </tr>
+  <tr>
+   <td>{{RFC("5861")}}</td>
+   <td>HTTP Cache-Control Extensions for Stale Content</td>
+  </tr>
+  <tr>
+   <td>{{RFC("8246")}}</td>
+   <td>HTTP Immutable Responses</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Compatibilité_avec_les_navigateurs">Compatibilité avec les navigateurs</h2>
+
+<p class="hidden">La matrice de compatibilité de cette page est générée depuis le dépôt Git https://github.com/mdn/browser-compat-data. Si vous voulez contribuer en modifiant ces données, merci de faire une <em>pull request</em> sur Github.</p>
+
+<p>{{Compat("http/headers/cache-control", "Cache-Control")}}</p>
+
+<h2 id="Voir_aussi">Voir aussi</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Web/HTTP/Caching_FAQ">HTTP Caching FAQ</a></li>
+ <li>{{HTTPHeader("Age")}}</li>
+ <li>{{HTTPHeader("Expires")}}</li>
+ <li>{{HTTPHeader("Pragma")}}</li>
+</ul>

@@ -1,0 +1,154 @@
+<div>{{jsSidebar("Operators")}}</div>
+
+<p><strong><code>instanceof</code></strong> 演算子は、オブジェクトが自身のプロトタイプにコンストラクタの <code>prototype</code> プロパティを持っているかを確認します。</p>
+
+<div>{{EmbedInteractiveExample("pages/js/expressions-instanceof.html")}}</div>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<h2 id="構文">構文</h2>
+
+<pre class="syntaxbox"><em>object</em> instanceof <em>constructor</em></pre>
+
+<h3 id="引数">引数</h3>
+
+<dl>
+ <dt><code>object</code></dt>
+ <dd>確認するオブジェクト</dd>
+</dl>
+
+<dl>
+ <dt><code>constructor</code></dt>
+ <dd>オブジェクトに対して確認を行う関数</dd>
+</dl>
+
+<h2 id="説明">説明</h2>
+
+<p><code>instanceof</code> 演算子は、<code>object</code> のプロトタイプチェインで <code>constructor.prototype</code> の存在を確認します。</p>
+
+<pre class="brush: js">// コンストラクタを定義
+function C() {}
+function D() {}
+
+var o = new C();
+
+// true。なぜなら: Object.getPrototypeOf(o) === C.prototype
+o instanceof C;
+
+// false。D.prototype は o のプロトタイプチェーンのどこにも存在しない
+o instanceof D;
+
+o instanceof Object; // true。なぜなら...
+C.prototype instanceof Object // true だから。
+
+C.prototype = {};
+var o2 = new C();
+
+o2 instanceof C; // true
+
+// false。C.prototype は o のプロトタイプチェーンの
+// どこにも存在しない
+o instanceof C; 
+
+D.prototype = new C(); // 継承を使用
+var o3 = new D();
+o3 instanceof D; // true
+o3 instanceof C; // true。o3のプロトタイプチェーンに C.prototype があるため。
+</pre>
+
+<p>注意事項: <code>instanceof</code> による確認結果はコンストラクタの <code>prototype</code> プロパティの変化に従って変わることがあります。また、オブジェクトのプロトタイプを <code>Object.setPrototypeOf</code> を用いて変更した場合や、非標準の <code>__proto__</code> 疑似プロパティを用いた場合も変わりえます。</p>
+
+<h3 id="instanceof_と複数のコンテキスト_(例_frame_や_window)"><code>instanceof</code> と複数のコンテキスト (例: frame や window)</h3>
+
+<p>異なるスコープは、別々の実行環境を持ちます。つまり、それらは別々の組み込み物 (別々のグローバルオブジェクト、別々のコンストラクタ 等々) を持ちます。これにより予期せぬ結果になる場合があります。例えば、<code>[] instanceof window.frames[0].Array</code> は、<code>Array.prototype !== window.frames[0].Array</code> であることおよび配列が以前から継承していることから <code>false</code> を返すでしょう。これは、始めはわかりにくいかもしれませんが、スクリプトで複数のフレームやウィンドウを扱い始め、オブジェクトをあるコンテキストから別のコンテキストへ関数を経由して渡すようになると、正当かつ重要な事項になるでしょう。</p>
+
+<div class="note"><strong>Mozilla 開発者への注意点:</strong><br>
+XPCOM を用いるコードでは <code>instanceof</code> に特別な効果があります: <code>obj instanceof <em>xpcomInterface</em></code> (例えば <code>Components.interfaces.nsIFile</code>) は <code>obj.QueryInterface(<em>xpcomInterface</em>)</code> を呼び出し、QueryInterface が成功した場合に <code>true</code> を返します。このような呼び出しの副作用として、<code>instanceof</code> による確認の成功後に <code>obj</code> の <em><code>xpcomInterface</code></em> のプロパティを利用できることがあります。標準 JavaScript の環境と異なり、<code>obj</code> が異なるスコープ由来であっても <code>obj instanceof xpcomInterface</code> での確認は期待どおりに動作します。</div>
+
+<h2 id="例">例</h2>
+
+<h3 id="例_String_や_Date_が_Object_タイプであることの実証">例: <code>String</code> や <code>Date</code> が <code>Object</code> タイプであることの実証</h3>
+
+<p>以下のコードは、<code>String</code> や <code>Date</code> オブジェクトが <code>Object</code> タイプでもある (<code>Object</code> から派生している) ことの実証に <code>instanceof</code> を用いています。</p>
+
+<p>また、オブジェクトリテラルを用いて作成されたオブジェクトに対する例外、つまり、prototypeがundefinedであるにも関わらず <code>instanceof Object</code> が <code>true</code> を報告する例を示します。</p>
+
+<pre class="brush: js">var simpleStr = 'This is a simple string'; 
+var myString  = new String();
+var newStr    = new String('String created with constructor');
+var myDate    = new Date();
+var myObj     = {};
+
+simpleStr instanceof String; // prototypeチェーンをチェックして undefined が見つかるため、false を返す
+myString  instanceof String; // true を返す
+newStr    instanceof String; // true を返す
+myString  instanceof Object; // true を返す
+
+myObj instanceof Object;    // prototype が undefined であるにもかかわらず true を返す
+({})  instanceof Object;    // true を返す。上記と同じ
+
+myString instanceof Date;   // false を返す
+
+myDate instanceof Date;     // true を返す
+myDate instanceof Object;   // true を返す
+myDate instanceof String;   // false を返す
+</pre>
+
+<h3 id="例_mycar_が_Car_タイプおよび_Object_タイプであることの実証">例: <code>mycar</code> が <code>Car</code> タイプおよび <code>Object</code> タイプであることの実証</h3>
+
+<p>以下のコードは、<code>Car</code> オブジェクトタイプとそのインスタンスである <code>mycar</code> を生成しています。<code>instanceof</code> 演算子で、<code>mycar</code> は <code>Car</code> タイプおよび <code>Object</code> タイプであることを実証します。</p>
+
+<pre class="brush: js">function Car(make, model, year) {
+  this.make = make;
+  this.model = model;
+  this.year = year;
+}
+var mycar = new Car("Honda", "Accord", 1998);
+var a = mycar instanceof Car;    // true を返す
+var b = mycar instanceof Object; // true を返す
+</pre>
+
+<h2 id="仕様">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">ステータス</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-relational-operators', 'Relational Operators')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-relational-operators', 'Relational Operators')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-11.8.6', 'The instanceof operator')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES3', '#sec-11.8.6', 'The instanceof operator')}}</td>
+   <td>{{Spec2('ES3')}}</td>
+   <td>初期定義。JavaScript 1.4 で実装。</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="ブラウザーの対応">ブラウザーの対応</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.operators.instanceof")}}</p>
+
+<h2 id="関連項目">関連項目</h2>
+
+<ul>
+ <li><code><a href="/ja/docs/Web/JavaScript/Reference/Operators/typeof" title="/ja/docs/JavaScript/Reference/Operators/typeof">typeof</a></code></li>
+ <li>{{jsxref("Symbol.hasInstance")}}</li>
+</ul>

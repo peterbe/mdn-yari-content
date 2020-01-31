@@ -1,0 +1,187 @@
+<div>{{LearnSidebar}}</div>
+
+<div>{{PreviousMenuNext("Learn/Server-side/Django/Generic_views", "Learn/Server-side/Django/authentication_and_sessions", "Learn/Server-side/Django")}}</div>
+
+<div>Esse tutorial estende nosso site <a href="https://developer.mozilla.org/en-US/docs/Learn/Server-side/Django/Tutorial_local_library_website">LocalLibrary</a>, adicionando um contador de visitas baseado em sessões à página inicial. Esse é um exemplo relativamente simples, mas, capaz de mostrar como você pode usar a estrutura de sessão do framework para providenciar um comportamento persistente para usuários anônimos em seu próprio site.</div>
+
+<div></div>
+
+<table class="learn-box standard-table">
+ <tbody>
+  <tr>
+   <th scope="row">Pré-requisitos:</th>
+   <td>Completar todos os tópicos anteriores do tutorial, incluindo <a href="/en-US/docs/Learn/Server-side/Django/Generic_views">Django Tutorial Part 6: Generic list and detail views</a></td>
+  </tr>
+  <tr>
+   <th scope="row">Objetivo:</th>
+   <td>Entender como as sessões são usadas.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Visão_Geral">Visão Geral</h2>
+
+<p>O site <a href="https://developer.mozilla.org/en-US/docs/Learn/Server-side/Django/Tutorial_local_library_website">LocalLibrary</a> que criamos nos tutoriais anteriores permite que os usuarios busquem por livros e autores no catálogo. Enquanto o conteúdo é dinamicamente gerado a partir da base de dados, todos os usuários terão acessos às mesmas páginas e às mesmas informações quando acessarem o site.</p>
+
+<p><span class="tlid-translation translation"><span title="">Em uma biblioteca "real", você pode querer fornecer uma experiência personalizada para cada usuário, com base no uso anterior do site, nas preferências, etc. Por exemplo, você pode ocultar mensagens de aviso que o usuário reconheceu anteriormente na próxima visita deles ao</span> <span title="">site ou armazenar e respeitar suas preferências (por exemplo, o número de resultados de pesquisa que eles querem exibir em cada página).</span></span></p>
+
+<div class="text-wrap tlid-copy-target">
+<div class="result-shield-container tlid-copy-target"><span class="tlid-translation translation"><span title="">A estrutura da sessão permite implementar esse tipo de comportamento, permitindo que você armazene e recupere dados arbitrários baseados em cada visitante do site.</span></span></div>
+</div>
+
+<h2 id="O_que_são_sessões">O que são sessões?</h2>
+
+<p>Toda a comunicação entre os navegadores web e os servidores é feita via protocolo HTTP, qual é <em>stateless</em> (sem estados). O fato do protocolo ser stateless significa que as mensagenns entre o cliente e o servidor são completamente independentes uma da outra — não há uma noção de "sequência" ou comportamento diferente baseado nas mensagens anteriores. <span class="tlid-translation translation"><span title="">Como resultado, se você quiser ter um site que monitore os relacionamentos contínuos com um cliente, é necessário implementá-lo por conta própria.</span></span></p>
+
+<p>Sessões são o mecanismo usado pelo Django (e muitos outros na Internet) para monitorar o "estado" entre o site e um navegador web em particular. Sessões permitem que você armazene dados arbitrários por navegador web, e têm esse dado disponível no site sempre que o navegador conectar. Dados de itens individuais associados com a sessão são referenciados por uma "chave", que é usada para armazenar e recuperar os dados.</p>
+
+<p>O Django usa um cookie contendo um <em>identificador</em> especial de sessão para identificar cada navegador e associar com o site. Os dados da sessão atual são armazenados na base de dados do site por padrão (é mais seguro do que armazenar os dados em cookie, onde é mais vulnerável aos usuários perigisos). Você pode configurar o Django para armazenar os dados da sessão em outros lugares (cache, arquivos, cookies "seguros"), mas o local padrão é uma opção boa e relativamente "segura".</p>
+
+<h2 id="Habilitando_as_Sessões">Habilitando as Sessões</h2>
+
+<p>As sessões foram ativadas automaticamente quando <a href="/en-US/docs/Learn/Server-side/Django/skeleton_website">criamos o esqueleto do site</a> (no tutorial 2).</p>
+
+<p>A configuração e feita nas seções <code>INSTALLED_APPS</code> e <code>MIDDLEWARE</code> do arquivo (<strong>locallibrary/locallibrary/settings.py</strong>), exibidas a seguir:</p>
+
+<pre class="brush: python">INSTALLED_APPS = [
+    ...
+<strong>    'django.contrib.sessions',</strong>
+    ....
+
+MIDDLEWARE = [
+    ...
+<strong>    'django.contrib.sessions.middleware.SessionMiddleware',</strong>
+    ....</pre>
+
+<h2 id="Usando_Sessões">Usando Sessões</h2>
+
+<p>Você pode acessar o atributo <code>session</code> na view a partir do parâmetro <code>request</code> (um <code>HttpRequest</code> passado como primeiro argumento na view). Esse atributo de sessão representa a conexão atual específica com um usuário<span class="tlid-translation translation"><span title=""> (ou, para ser mais preciso, a conexão com o navegador atual, conforme identificado pelo id da sessão no cookie do navegador para este site)</span></span>.</p>
+
+<p>O atributo <code>session</code> é como um objeto dicionário que você pode ler e escrever quantas vezes você quiser na sua view, modificando-o como desejar. Você pode fazer todas as operações normais de um dicionário, incluindo limpar todos os dados, testar se uma chave está presente, loop em torno dos dados, etc. Na maior parte do tempo, você usará apenas a API padrão "dictionary" para obter e setar valores.</p>
+
+<p>O fragmento de código abaixo mostra como você pode obter, setar e deletar qualquer dado com com a chave "<code>my_car</code>", associada com a sessão atual (navegador).</p>
+
+<div class="note">
+<p><strong>Nota</strong>: Uma das coisas boas sobre o Django é que você não precisa pensar sobre os mecanismos que vinculam a sessão atual à requisição em sua view. Se nós usarmos os fragmentos abaixo em nossa view, saberemos que as informações sobre <code>my_car</code> estão associadas apenas com o navegador que enviou a requisição atual.</p>
+</div>
+
+<pre class="brush: python"># Pega um valor de sessão baseado na sua chave (ex.:'my_car'), disparando um KeyError se a chave não for encontrada.
+my_car = request.session['my_car']
+
+# Pega o valor da sessão, seta o valor padrão ('mini') se a chave não estiver presente.
+my_car = request.session.get('my_car', 'mini')
+
+# Seta o valor da sessão
+request.session['my_car'] = 'mini'
+
+# Deleta o valor da sessão
+del request.session['my_car']
+</pre>
+
+<p>A API também oferece um número de outros métodos que são muito usados para gerenciar a os cookies da sessão associada. Por exemplo, há metodos para testar se cookies são suportados no navegador do cliente, para setar e checar a data de validade do cookie, e para limpar sessões expiradas do armazenamento de dados. Você pode encontrar sobre a API completa em <a href="https://docs.djangoproject.com/en/2.1/topics/http/sessions/">How to use sessions</a> (documentação do Django).</p>
+
+<h2 id="Salvando_os_dados_da_sessão">Salvando os dados da sessão</h2>
+
+<p>Por padrão, o Django só salva na base de dados da sessão e envia o cookie da sessão para o cliente quando a sessão é <em>modificada </em>(atribuida) ou <em>deletada</em>. Se você está atualizando alguns dados utilizando sua chave de sessão, como mostrado na seção anterior, então você não precisa se preocupar com isso! Por exemplo:</p>
+
+<pre class="brush: python"># This is detected as an update to the session, so session data is saved.
+request.session['my_car'] = 'mini'</pre>
+
+<p>Se você está atualizando algumas informações <em>dentro </em>dos dados da sessão, então o Django não reconhecerá que você fez uma alteração nos dados da sessão e não salvará os dados (por exemplo, se você alterasse os dados de  "<code>wheels</code>"  dentro dos dados do seu "<code>my_car</code>", como mostrado abaixo). Nesse caso você precisará marcar explicitamente a sessão como tendo sido modificada.</p>
+
+<pre class="brush: python"># Session object not directly modified, only data within the session. Session changes not saved!
+request.session['my_car']['wheels'] = 'alloy'
+
+# Set session as modified to force data updates/cookie to be saved.
+<code>request.session.modified = True</code>
+</pre>
+
+<div class="note">
+<p><strong>Nota</strong>: Você pode mudar o comportamento do site para atualizar a base de dados/enviar cookie em qualquer requisição adicionando <code>SESSION_SAVE_EVERY_REQUEST = True</code> nas configurações (<strong>locallibrary/locallibrary/settings.py</strong>) do seu projeto.</p>
+</div>
+
+<h2 id="Exemplo_simples_-_obtendo_a_contagem_de_visitas">Exemplo simples - obtendo a contagem de visitas</h2>
+
+<p>Como um exemplo simples do mundo real, atualizaremos nossa biblioteca para informar ao usuário atual quantas vezes ele visitou o site <em>LocalLibrary</em>. </p>
+
+<p>Abra <strong>/locallibrary/catalog/views.py</strong>, e faça as alterações mostradas em negrito abaixo.</p>
+
+<pre class="brush: python">def index(request):
+    ...
+
+    num_authors = Author.objects.count()  # The 'all()' is implied by default.
+    
+<strong>    # Number of visits to this view, as counted in the session variable.
+    num_visits = request.session.get('num_visits', 0)
+    request.session['num_visits'] = num_visits + 1</strong>
+
+<strong>    context = {
+        'num_books': num_books,
+        'num_instances': num_instances,
+        'num_instances_available': num_instances_available,
+        'num_authors': num_authors,
+        'num_visits': num_visits,
+    }</strong>
+    
+    # Render the HTML template index.html with the data in the context variable.
+    return render(request, 'index.html', context=context)</pre>
+
+<p>Aqui primeiro obtemos o valor do <code>'num_visits'</code> session key, setting the value to 0 if it has not previously been set. Each time a request is received, we then increment the value and store it back in the session (for the next time the user visits the page). The <code>num_visits</code> variable is then passed to the template in our context variable.</p>
+
+<div class="note">
+<p><strong>Note</strong>: We might also test whether cookies are even supported in the browser here (see <a href="https://docs.djangoproject.com/en/2.1/topics/http/sessions/">How to use sessions</a> for examples) or design our UI so that it doesn't matter whether or not cookies are supported.</p>
+</div>
+
+<p>Add the line seen at the bottom of the following block to your main HTML template (<strong>/locallibrary/catalog/templates/index.html</strong>) at the bottom of the "Dynamic content" section to display the context variable:</p>
+
+<pre class="brush: html">&lt;h2&gt;Dynamic content&lt;/h2&gt;
+
+&lt;p&gt;The library has the following record counts:&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Books:&lt;/strong&gt; \{{ num_books }}&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Copies:&lt;/strong&gt; \{{ num_instances }}&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Copies available:&lt;/strong&gt; \{{ num_instances_available }}&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Authors:&lt;/strong&gt; \{{ num_authors }}&lt;/li&gt;
+&lt;/ul&gt;
+
+<strong>&lt;p&gt;You have visited this page \{{ num_visits }}{% if num_visits == 1 %} time{% else %} times{% endif %}.&lt;/p&gt;</strong>
+</pre>
+
+<p>Save your changes and restart the test server. Every time you refresh the page, the number should update.</p>
+
+<ul>
+</ul>
+
+<h2 id="Summary">Summary</h2>
+
+<p>You now know how easy it is to use sessions to improve your interaction with <em>anonymous</em> users. </p>
+
+<p>In our next articles we'll explain the authentication and authorization (permission) framework, and show you how to support user accounts.</p>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li><a href="https://docs.djangoproject.com/en/2.1/topics/http/sessions/">How to use sessions</a> (Django docs)</li>
+</ul>
+
+<p>{{PreviousMenuNext("Learn/Server-side/Django/Generic_views", "Learn/Server-side/Django/Authentication", "Learn/Server-side/Django")}}</p>
+
+<h2 id="In_this_module">In this module</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Learn/Server-side/Django/Introduction">Django introduction</a></li>
+ <li><a href="/en-US/docs/Learn/Server-side/Django/development_environment">Setting up a Django development environment</a></li>
+ <li><a href="/en-US/docs/Learn/Server-side/Django/Tutorial_local_library_website">Django Tutorial: The Local Library website</a></li>
+ <li><a href="/en-US/docs/Learn/Server-side/Django/skeleton_website">Django Tutorial Part 2: Creating a skeleton website</a></li>
+ <li><a href="/en-US/docs/Learn/Server-side/Django/Models">Django Tutorial Part 3: Using models</a></li>
+ <li><a href="/en-US/docs/Learn/Server-side/Django/Admin_site">Django Tutorial Part 4: Django admin site</a></li>
+ <li><a href="/en-US/docs/Learn/Server-side/Django/Home_page">Django Tutorial Part 5: Creating our home page</a></li>
+ <li><a href="/en-US/docs/Learn/Server-side/Django/Generic_views">Django Tutorial Part 6: Generic list and detail views</a></li>
+ <li><a href="/en-US/docs/Learn/Server-side/Django/Sessions">Django Tutorial Part 7: Sessions framework</a></li>
+ <li><a href="/en-US/docs/Learn/Server-side/Django/Authentication">Django Tutorial Part 8: User authentication and permissions</a></li>
+ <li><a href="/en-US/docs/Learn/Server-side/Django/Forms">Django Tutorial Part 9: Working with forms</a></li>
+ <li><a href="/en-US/docs/Learn/Server-side/Django/Testing">Django Tutorial Part 10: Testing a Django web application</a></li>
+ <li><a href="/en-US/docs/Learn/Server-side/Django/Deployment">Django Tutorial Part 11: Deploying Django to production</a></li>
+ <li><a href="/en-US/docs/Learn/Server-side/Django/web_application_security">Django web application security</a></li>
+ <li><a href="/en-US/docs/Learn/Server-side/Django/django_assessment_blog">DIY Django mini blog</a></li>
+</ul>

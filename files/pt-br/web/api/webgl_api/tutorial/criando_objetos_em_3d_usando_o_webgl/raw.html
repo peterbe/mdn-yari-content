@@ -1,0 +1,119 @@
+<p>{{WebGLSidebar("Tutorial")}} {{PreviousNext("Web/API/WebGL_API/Tutorial/Animating_objects_with_WebGL", "Web/API/WebGL_API/Tutorial/Using_textures_in_WebGL")}}</p>
+
+<p>Let's take our square into three dimensions by adding five more faces to create a cube. To do this efficiently, we're going to switch from drawing using the vertices directly by calling the <code>gl.drawArray()</code> method to using the vertex array as a table, and referencing individual vertices in that table to define the positions of each face's vertices, by calling <code>gl.drawElements()</code>.</p>
+
+<p>Consider: each face requires four vertices to define it, but each vertex is shared by three faces. We can pass a lot less data around by building a list of all 24 vertices, then referring to each vertex by its index into that list instead of passing entire sets of coordinates around. If you wonder why we need 24 vertices, and not just 8, it is because each corner belongs to three faces of different colours, and a single vertex needs to have a single specific color - therefore we will create 3 copies of each vertex in three different colors, one for each face.</p>
+
+<h2 id="Define_the_positions_of_the_cube's_vertices">Define the positions of the cube's vertices</h2>
+
+<p>First, let's build the cube's vertex position buffer by updating the code in <code>initBuffers()</code>. This is pretty much the same as it was for the square, but rather longer since there are 24 vertices (4 per side):</p>
+
+<pre class="brush: js">  var vertices = [
+    // Front face
+    -1.0, -1.0,  1.0,
+     1.0, -1.0,  1.0,
+     1.0,  1.0,  1.0,
+    -1.0,  1.0,  1.0,
+    
+    // Back face
+    -1.0, -1.0, -1.0,
+    -1.0,  1.0, -1.0,
+     1.0,  1.0, -1.0,
+     1.0, -1.0, -1.0,
+    
+    // Top face
+    -1.0,  1.0, -1.0,
+    -1.0,  1.0,  1.0,
+     1.0,  1.0,  1.0,
+     1.0,  1.0, -1.0,
+    
+    // Bottom face
+    -1.0, -1.0, -1.0,
+     1.0, -1.0, -1.0,
+     1.0, -1.0,  1.0,
+    -1.0, -1.0,  1.0,
+    
+    // Right face
+     1.0, -1.0, -1.0,
+     1.0,  1.0, -1.0,
+     1.0,  1.0,  1.0,
+     1.0, -1.0,  1.0,
+    
+    // Left face
+    -1.0, -1.0, -1.0,
+    -1.0, -1.0,  1.0,
+    -1.0,  1.0,  1.0,
+    -1.0,  1.0, -1.0
+  ];
+</pre>
+
+<h2 id="Define_the_vertices'_colors">Define the vertices' colors</h2>
+
+<p>We also need to build an array of colors for each of the 24 vertices. This code starts by defining a color for each face, then uses a loop to assemble an array of all the colors for each of the vertices.</p>
+
+<pre class="brush: js">  var colors = [
+    [1.0,  1.0,  1.0,  1.0],    // Front face: white
+    [1.0,  0.0,  0.0,  1.0],    // Back face: red
+    [0.0,  1.0,  0.0,  1.0],    // Top face: green
+    [0.0,  0.0,  1.0,  1.0],    // Bottom face: blue
+    [1.0,  1.0,  0.0,  1.0],    // Right face: yellow
+    [1.0,  0.0,  1.0,  1.0]     // Left face: purple
+  ];
+  
+  var generatedColors = [];
+  
+  for (j=0; j&lt;6; j++) {
+    var c = colors[j];
+    
+    for (var i=0; i&lt;4; i++) {
+      generatedColors = generatedColors.concat(c);
+    }
+  }
+  
+  cubeVerticesColorBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, cubeVerticesColorBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(generatedColors), gl.STATIC_DRAW);
+</pre>
+
+<h2 id="Define_the_element_array">Define the element array</h2>
+
+<p>Once the vertex arrays are generated, we need to build the element array.</p>
+
+<pre class="brush: js">  cubeVerticesIndexBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cubeVerticesIndexBuffer);
+  
+  // This array defines each face as two triangles, using the
+  // indices into the vertex array to specify each triangle's
+  // position.
+  
+  var cubeVertexIndices = [
+    0,  1,  2,      0,  2,  3,    // front
+    4,  5,  6,      4,  6,  7,    // back
+    8,  9,  10,     8,  10, 11,   // top
+    12, 13, 14,     12, 14, 15,   // bottom
+    16, 17, 18,     16, 18, 19,   // right
+    20, 21, 22,     20, 22, 23    // left
+  ]
+  
+  // Now send the element array to GL
+  
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,
+      new Uint16Array(cubeVertexIndices), gl.STATIC_DRAW);
+</pre>
+
+<p>The <code>cubeVertexIndices</code> array defines each face as a pair of triangles, specifying each triangle's vertices as an index into the cube's vertex array. Thus the cube is described as a collection of 12 triangles.</p>
+
+<h2 id="Drawing_the_cube">Drawing the cube</h2>
+
+<p>Next we need to add code to our <code>drawScene()</code> function to draw using the cube's index buffer, adding new <code>bindBuffer()</code> and <code>drawElements()</code> calls:</p>
+
+<pre class="brush: js">  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cubeVerticesIndexBuffer);
+  setMatrixUniforms();
+  gl.drawElements(gl.TRIANGLES, 36, gl.UNSIGNED_SHORT, 0);
+</pre>
+
+<p>Since each face of our cube is comprised of two triangles, there are 6 vertices per side, or 36 total vertices in the cube, even though many of them are duplicates. However, since our index array is comprised of simple integers, this isn't an inordinate amount of data to pass for each frame of animation.</p>
+
+<p>At this point, we now have an animated cube bouncing around and rotating, its six faces rather vividly colored. If your browser supports WebGL, <a href="/samples/webgl/sample5/index.html" title="https://developer.mozilla.org/samples/webgl/sample5/index.html">take a look at the demo in action</a>.</p>
+
+<p>{{ PreviousNext("WebGL/Animating_objects_with_WebGL", "WebGL/Using_textures_in_WebGL") }}</p>

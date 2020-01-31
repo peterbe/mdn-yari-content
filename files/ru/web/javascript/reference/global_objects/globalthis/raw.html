@@ -1,0 +1,75 @@
+<div>{{jsSidebar("Objects")}}</div>
+
+<p>Глобальное свойство <code><strong>globalThis</strong></code> содержит значение глобального <code>this</code>, который является глобальным объектом.</p>
+
+<div>{{EmbedInteractiveExample("pages/js/globalprops-globalthis.html")}}</div>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<h2 id="Синтаксис">Синтаксис</h2>
+
+<pre class="syntaxbox">globalThis
+</pre>
+
+<h2 id="Описание">Описание</h2>
+
+<p>Исторически, для доступа к глобальному объекту использовался разный синтаксис в разных средах JavaScript. В вебе вы могли использовать {{domxref("Window.window", "window")}}, {{domxref("Window.self", "self")}} или {{domxref("Window.frames", "frames")}}, но в <a href="/ru/docs/Web/API/Worker">Worker </a>можно использовать только <code>self</code>. В Node.js ничего из этого не работает, поэтому вы должны использовать <code>global</code>.</p>
+
+<p>Ключевое слово <code>this</code> можно использовать внутри функций в нестрогом режиме. Но в строгом режиме внутри функций и в Модулях <code>this</code> равняется <code>undefined</code>. Вы можете использовать <code>Function('return this')()</code>, но среды, которые отключают {{jsxref("eval", "eval()")}}, такие как <a href="/en-US/docs/Glossary/CSP">CSP</a> в браузерах, препятствуют использованию {{jsxref("Function")}} в таком виде.</p>
+
+<p>Свойство <code>globalThis</code> даёт возможность стандарного доступа к глобльному значению <code>this</code> (и как следствие, к глобальному объекту) вне зависимости от окружения. В отличии от похожих свойств, таких как <code>window</code> и <code>self</code>, оно гарантирует работу как в среде, где есть <code>window</code>, так и в среде, где его нет. Таким образом вы можете получить доступ к глобальному объекту даже не зная в какой среде будет запущен код. Чтобы помочь запомнить название, просто запомните, что глобальное значение <code>this</code> равно <code>globalThis</code>.</p>
+
+<h3 id="HTML_and_WindowProxy">HTML and WindowProxy</h3>
+
+<p>In many engines <code>globalThis</code> will be a reference to the actual global object, but in web browsers, due to iframe and cross-window security considerations, it references a {{jsxref("Proxy")}} around the actual global object (which you can't directly access). This distinction is rarely relevant in common usage, but important to be aware of.</p>
+
+<h3 id="Название">Название</h3>
+
+<p>Некоторые популярные названия, такие как <code>self</code> и <code>global</code> были сняты с рассмотрения из-за того, что они могли сломать уже существующий код. Смотрите <a href="https://github.com/tc39/proposal-global/blob/master/NAMING.md">документ с планированием названия</a> для большей информации.</p>
+
+<h2 id="Примеры">Примеры</h2>
+
+<p>До <code>globalThis</code> единственным кросс-платформенным путём получения глобального объекта в любой среде было <code>Function('return this')()</code>. Однако, это нарушает <a href="/en-US/docs/Web/HTTP/CSP">CSP</a> в некоторых случаях. Например, <a href="https://github.com/paulmillr/es6-shim">es6-shim</a> делает такую проверку:</p>
+
+<pre class="brush: js">var getGlobal = function () { 
+  if (typeof self !== 'undefined') { return self; } 
+  if (typeof window !== 'undefined') { return window; } 
+  if (typeof global !== 'undefined') { return global; } 
+  throw new Error('unable to locate global object'); 
+}; 
+
+var globals = getGlobal(); 
+
+if (typeof globals.setTimeout !== 'function') { 
+  // в данном окружении не существует setTimeout! 
+}
+</pre>
+
+<p>С <code>globalThis</code> дополнительный поиск глобального объекта в разных средах больше не нужен:</p>
+
+<pre class="brush: js">if (typeof globalThis.setTimeout !== 'function') { 
+// в данном окружении не существует setTimeout! 
+}</pre>
+
+<h2 id="Спецификации">Спецификации</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Спецификация</th>
+   <th scope="col">Статус</th>
+   <th scope="col">Комментарий</th>
+  </tr>
+  <tr>
+   <td><a href="https://tc39.github.io/proposal-global/#sec-other-properties-of-the-global-object-global">globalThis proposal</a></td>
+   <td>Stage 3</td>
+   <td></td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Совместмость_с_браузерами">Совместмость с браузерами</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.builtins.globalThis")}}</p>

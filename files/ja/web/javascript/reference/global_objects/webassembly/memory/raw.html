@@ -1,0 +1,102 @@
+<div>{{JSRef}}{{ SeeCompatTable}}</div>
+
+<p><code><strong>WebAssembly.Memory()</strong></code> コンストラクタは  <code>Memory</code> オブジェクトを生成します。これは、WebAssembly <code>Instance</code> からアクセスされるメモリで使用される生のバイト列を持つリサイズ可能な <a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer">ArrayBuffer</a> です。</p>
+
+<p>JavaScript か WebAssembly コードから生成されたメモリは JavaScript と WebAssembly のどちらからもアクセス、変更が可能になります。</p>
+
+<h2 id="構文">構文</h2>
+
+<pre class="syntaxbox">var myMemory = new WebAssembly.Memory(memoryDescriptor);</pre>
+
+<h3 id="パラメータ">パラメータ</h3>
+
+<dl>
+ <dt><em>memoryDescriptor</em></dt>
+ <dd>以下のメンバーを含むことができるオブジェクト:
+ <dl>
+  <dt><em>initial</em></dt>
+  <dd>WebAssembly Memory の初期サイズを WebAssembly ページ単位で設定します。</dd>
+  <dt><em>maximum {{optional_inline}}</em></dt>
+  <dd>WebAssembly Memory の拡張できる最大サイズを WebAssembly ページ単位で設定します。 存在する場合、 <code>maximum</code> パラメータはメモリーを前面に確保するためのエンジンのヒントとして機能します。一般的に、ほとんどの WebAssembly モジュールは <code>maximum</code> を設定する必要はありません。</dd>
+ </dl>
+ </dd>
+</dl>
+
+<div class="note">
+<p><strong>注</strong>: WebAssembly ページは65536バイト、すなわち64KiBのサイズを1単位とします。</p>
+</div>
+
+<h3 id="例外">例外</h3>
+
+<ul>
+ <li>もし <code>memoryDescriptor</code> がオブジェクト型でない場合、{{jsxref("TypeError")}} がスローされます。</li>
+ <li>もし <code>maximum</code> が定義されていて、 <code>initial</code> よりも小さい場合、 {{jsxref("RangeError")}} がスローされます。</li>
+</ul>
+
+<h2 id="Memory_インスタンス"><code>Memory</code> インスタンス</h2>
+
+<p>全ての <code>Memory</code> インスタンスは <code>Memory()</code> コンストラクタの <a href="/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Memory/prototype">プロトタイプオブジェクト</a> を継承します。これは全ての <code>Memory</code> インスタンスに影響するように変更可能です。</p>
+
+<h3 id="インスタンスプロパティ">インスタンスプロパティ</h3>
+
+<dl>
+ <dt><code>Memory.prototype.constructor</code></dt>
+ <dd>このオブジェクトのインスタンスを生成した関数を返します。デフォルトでは {{jsxref("WebAssembly.Memory()")}} コンストラクタです。</dd>
+ <dt>{{jsxref("Global_Objects/WebAssembly/Memory/buffer","Memory.prototype.buffer")}}</dt>
+ <dd>メモリーに格納されているバッファを返すアクセサプロパティ。</dd>
+</dl>
+
+<h3 id="インスタンスメソッド">インスタンスメソッド</h3>
+
+<dl>
+ <dt>{{jsxref("Global_Objects/WebAssembly/Memory/grow","Memory.prototype.grow()")}}</dt>
+ <dd>指定した WebAssembly ページの数 (64KBを1単位とする) で <code>Memory</code> インスタンスのサイズを増やします。</dd>
+</dl>
+
+<h2 id="例">例</h2>
+
+<p><code>WebAssembly.Memory</code> オブジェクトを取得する方法は2つあります。1つ目は JavaScript から生成する方法です。以下の例では、初期サイズが10ページ (640KiB) 、最大サイズが100ページ (6.4MiB) で新しい WebAssembly Memory インスタンスを生成しています。</p>
+
+<pre class="brush: js">var memory = new WebAssembly.Memory({initial:10, maximum:100});</pre>
+
+<p>2つ目は WebAssembly モジュールからエクスポートされた <code>WebAssembly.Memory</code> オブジェクトを使用する方法です。以下の例 (Github <a href="https://github.com/mdn/webassembly-examples/blob/master/js-api-examples/memory.html">memory.html</a> と <a href="https://mdn.github.io/webassembly-examples/js-api-examples/memory.html">動作例</a> を参照) では <code><a href="https://github.com/mdn/webassembly-examples/blob/master/wasm-utils.js">fetchAndInstantiate()</a></code> ユーティリティ関数を使用して memory.wasm バイトコードをフェッチし、インスタンス化しています。次にモジュールからメモリーをエクスポートして、何個かの値を格納し、エクスポートされた関数を使用して数を合計しています。</p>
+
+<pre class="brush: js">fetchAndInstantiate('memory.wasm').then(function(instance) {
+  var i32 = new Uint32Array(instance.exports.mem.buffer);
+  for (var i = 0; i &lt; 10; i++) {
+    i32[i] = i;
+  }
+  var sum = instance.exports.accumulate(0, 10);
+  console.log(sum);
+});</pre>
+
+<h2 id="仕様">仕様</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">策定状況</th>
+   <th scope="col">コメント</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName('WebAssembly JS', '#webassemblymemory-objects', 'Memory')}}</td>
+   <td>{{Spec2('WebAssembly JS')}}</td>
+   <td>初回ドラフト定義。</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザ実装状況</h2>
+
+<div>{{Compat("javascript.builtins.WebAssembly.Memory")}}</div>
+
+<h2 id="関連情報">関連情報</h2>
+
+<ul>
+ <li><a href="/ja/docs/WebAssembly">WebAssembly</a> overview page</li>
+ <li><a href="https://developer.mozilla.org/ja/docs/WebAssembly/Concepts">WebAssembly のコンセプト</a></li>
+ <li><a href="https://developer.mozilla.org/ja/docs/WebAssembly/Using_the_JavaScript_API">WebAssembly JavaScript API を使用する</a></li>
+</ul>

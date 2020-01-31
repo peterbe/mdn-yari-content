@@ -1,0 +1,172 @@
+<div>{{AddonSidebar}}</div>
+
+<p class="summary">web-ext是一个命令行工具，旨在加速 WebExtension 开发的流程，使开发更快更简单。这篇文章解释了如何安装和使用 web-ext。</p>
+
+<h2 id="安装">安装</h2>
+
+<p>web-ext 是一个基于node的应用，你可以安装 <a href="https://nodejs.org/">nodejs/npm</a> 工具. 安装 web-ext 使用以下命令:</p>
+
+<pre class="brush: bash"><code>npm install --global web-ext</code></pre>
+
+<p>你可以测试你的安装通过以下命令，列出 web-ext 的版本号：</p>
+
+<pre class="brush: bash"><code>web-ext --version</code></pre>
+
+<h2 id="使用_web-ext">使用 web-ext</h2>
+
+<p>当您安装完成，您就能立即测试您的扩展功能。如果您没有自己的扩展,可以立刻试试我们的示例,您可以从我们的<a href="https://github.com/mdn/webextensions-examples">示例库</a>中复制一份。</p>
+
+<h3 id="测试一个扩展">测试一个扩展</h3>
+
+<p>在命令行 cd 进入 您下载(或您自己开发)的扩展目录 ,然后输入以下命令:</p>
+
+<pre class="brush: bash"><code>web-ext run</code></pre>
+
+<p>这将启动火狐浏览器并且把扩展临时载入浏览器中, 就相当于您打开了 <a href="/en-US/docs/Tools/about:debugging#Add-ons">about:debugging 页面</a>.</p>
+
+<p>进一步学习了解具体用法请跳转到 <a href="/en-US/Add-ons/WebExtensions/web-ext_command_reference#web-ext_run">run reference guide</a> .</p>
+
+<h3 id="自动重新载入扩展">自动重新载入扩展</h3>
+
+<p>此命令将会实时的监控您的代码文件是否有修改,当您修改保存了您的源代码,它会让浏览器重载入最新的代码。例如，如果你修改了<code> manifest.json</code> 文件的 name 属性，Firefox 将会展示修改后的 name。这样可以很容易的尝试新的功能并立即看到效果。默认情况下，当你运行下面的命令时，自动重新载入扩展功能是开启的：</p>
+
+<pre class="brush: bash"><code>web-ext run</code></pre>
+
+<p>你也可以在需要的时候在web-ext命令行界面下使用 r 键以手动触发重新加载的功能。</p>
+
+<p>如果你在使用重新加载时运行了什么问题，请<a href="https://github.com/mozilla/web-ext/issues">提交这个 bug</a>.。你可以使用下面的命令关闭重新载入功能：</p>
+
+<pre class="brush: bash"><code>web-ext run --no-reload</code></pre>
+
+<div class="note">
+<p>重新载入扩展只支持版本 49 或更高的Firefox浏览器。</p>
+</div>
+
+<h3 id="在不同版本的_Firefox_浏览器中调试">在不同版本的 Firefox 浏览器中调试</h3>
+
+<p>在默认版本以外版本的 Firefox 浏览器调试你的扩展，请使用<code>--firefox</code> 选项并指定 Firefox 浏览器二进制文件的完整路径。这是 Mac OS系统的示例：</p>
+
+<pre class="brush: bash">web-ext run --firefox=/Applications/FirefoxNightly.app/Contents/MacOS/firefox-bin</pre>
+
+<p>在 Windows系统下，完整路径需要包含 <code>firefox.exe</code>，像这样：</p>
+
+<pre class="brush: bash">web-ext run --firefox="C:\Program Files\Mozilla Firefox\firefox.exe"</pre>
+
+<h3 id="在_Firefox_48_中调试">在 Firefox 48 中调试</h3>
+
+<p>Firefox 48 是第一个使用 WebExtension 的稳定版本但它并不允许 <code>web-ext 工具</code>直接安装扩展。为了让你的扩展在 Firefox 48 中运行，你需要使用一个不同的安装选项：</p>
+
+<pre class="brush: bash">web-ext run --pre-install</pre>
+
+<h3 id="调试未签名的扩展">调试未签名的扩展</h3>
+
+<p>当你执行 <a href="/en-US/Add-ons/WebExtensions/web-ext_command_reference#web-ext_run">web-ext run</a> 时，扩展会被临时安装到你的Firefox浏览器中。这样做不会触发任何签名限制。如果直接使用 <a href="/en-US/Add-ons/WebExtensions/web-ext_command_reference#web-ext_build">web-ext build</a> 命令创建一个 zip 文件然后手动将它安装到 Firefox 浏览器中，你会看到一个  that the add-on is not signed 的错误提示。为此你需要使用 <a href="https://wiki.mozilla.org/Addons/Extension_Signing#Unbranded_Builds">unbranded build</a> 或者使用<a href="https://www.mozilla.org/en-US/firefox/developer/">development build</a> 以安装这个未签名的扩展。</p>
+
+<h3 id="使用自定义的配置文件">使用自定义的配置文件</h3>
+
+<p>默认情况下，这个命令行工具会创建一个 Firefox 的临时配置文件。你可以使用 <code>--firefox-profile</code> 选项指定一个特殊的配置文件用以运行你的扩展程序，就像这样：</p>
+
+<pre class="brush: bash">web-ext run --firefox-profile=chris-work-profile</pre>
+
+<p>这条命令接收一个包含配置文件名称的字符串或者这个配置文件所在目录的绝对路径。如果你想配置一些始终可用于运行命令的设置，这可能会有所帮助。</p>
+
+<h3 id="保存配置文件的修改">保存配置文件的修改</h3>
+
+<p>web-ext 不会保存任何自定义配置文件的修改，除非你使用了 <code>--firefox-profile</code> 选项：</p>
+
+<pre class="brush: bash line-numbers  language-bash"><code class="language-bash">web-ext run --keep-profile-changes --firefox-profile=your-custom-profile</code></pre>
+
+<p>如果你的扩展拥有不同的运行状态的话，这将会对你有帮助。</p>
+
+<div class="warning">
+<p>使用 <code>--firefox-profile</code> 选项会对配置文件进行破坏性的更改，包括添加一些 web-ext 需求的偏好。</p>
+</div>
+
+<h3 id="打包你的扩展">打包你的扩展</h3>
+
+<p>当你测试完你的扩展并且看到了它能正常工作，你可以使用下面的命令将它打包并提交到 <a href="https://addons.mozilla.org">addons.mozilla.org</a> ：</p>
+
+<pre class="brush: bash"><code>web-ext build</code></pre>
+
+<p>这会输出一个可以加载到浏览器中的 zip 文件的完整路径。</p>
+
+<div class="warning">
+<p>这个生成的 .zip 文件在没有签名时不能在 Firefox 中正常使用，你也可以添加在 <code><a href="https://developer.mozilla.org/en-US/Add-ons/WebExtensions/manifest.json">manifest.json文件中添加</a></code> <code><a href="https://developer.mozilla.org/en-US/Add-ons/WebExtensions/manifest.json/applications">applications</a>.gecko.id</code> 。更多信息请参考 <a href="https://developer.mozilla.org/en-US/Add-ons/WebExtensions/WebExtensions_and_the_Add-on_ID">WebExtensions and the Add-on ID</a> 。</p>
+</div>
+
+<p><code>web-ext build</code> 被设计为自动忽略一些在文件夹中不被监控的文件例如 <code>.git</code>, <code>node_modules</code>和其他的文件。</p>
+
+<p>查看 <a href="/en-US/Add-ons/WebExtensions/web-ext_command_reference#web-ext_build">build reference guide</a> 了解更多。</p>
+
+<h3 id="为你扩展添加签名以便发布">为你扩展添加签名以便发布</h3>
+
+<p>你可以自行管理你打包的文件用以替代在 <a href="https://addons.mozilla.org/">addons.mozilla.org </a>上发布你的扩展，但这样做首先需要 <a href="https://developer.mozilla.org/Add-ons/Distribution">signed by Mozilla</a> 。下面的命令会打包你的文件并为生成的 ZIP 文件添加签名，然后返回一个已签名的 XPI 文件以分发：</p>
+
+<pre class="brush: bash"><code>web-ext sign --api-key=$AMO_JWT_ISSUER --api-secret=$AMO_JWT_SECRET </code></pre>
+
+<p>这个 API 选项需要的数据可在 <a href="https://addons.mozilla.org/en-US/developers/addon/api/key/">addons.mozilla.org credentials</a> 获得：</p>
+
+<ul>
+ <li><code>--api-key</code>: the API key (JWT issuer) from <code>addons.mozilla.org</code> needed to sign the extension. 这总是一个字符串。</li>
+ <li><code>--api-secret</code>: the API secret (JWT secret) from <code>addons.mozilla.org</code> needed to sign the extension. 这总是一个字符串。</li>
+</ul>
+
+<p>查看 <a href="https://developer.mozilla.org/en-US/Add-ons/WebExtensions/web-ext_command_reference#web-ext_sign">sign reference guide</a> 了解这个选项下所有的值。</p>
+
+<h3 id="没有_ID_情况下为扩展签名">没有 ID 情况下为扩展签名</h3>
+
+<p><code>web-ext</code> 支持签名时不在manifest中声明 <a href="/en-US/Add-ons/WebExtensions/manifest.json/applications">applications.gecko.id</a> 属性。第一次进行不含 ID 签名时，<a href="https://addons.mozilla.org/">addons.mozilla.org</a> 会自动生成一个 ID ，并由 <code>web-ext</code> 自动保存至当前工作目录的 <code>.web-extension-id</code> 文件中。你应该保存这个 ID 文件，以此来保证这个扩展的新版本的签名。如果丢失了这个 ID 文件，给扩展的新版本进行签名的时候，则必须添加 <code>applications.gecko.id</code> 属性或者使用 <code>--id</code> 选项，例如：</p>
+
+<pre class="brush: bash"><code>web-ext sign --api-key=... --api-secret=... --id="</code>{c23c69a7-f889-447c-9d6b-7694be8035bc}<code>"</code></pre>
+
+<h3 id="Checking_for_code_lint">Checking for code "lint"</h3>
+
+<p>Before trying out your extension with the <a href="/en-US/Add-ons/WebExtensions/web-ext_command_reference#web-ext_run">run</a> command or submitting your package to <a href="https://addons.mozilla.org/en-US/firefox/">addons.mozilla.org</a>, you can use the <code>lint</code> command to make sure your <a href="/en-US/Add-ons/WebExtensions/manifest.json">manifest</a> and other source files do not contain any errors. Example:</p>
+
+<pre class="brush: bash">web-ext lint</pre>
+
+<p>This uses the <a href="https://github.com/mozilla/addons-linter">addons-linter</a> library to walk through your source code directory and report any errors, such as the declaration of an unknown permission.</p>
+
+<p>See the <a href="/en-US/Add-ons/WebExtensions/web-ext_command_reference#web-ext_lint">lint reference guide</a> to learn about all available options.</p>
+
+<h3 id="Specifying_different_source_and_destination_directories">Specifying different source and destination directories</h3>
+
+<p>The above commands all use default directories for the extension source and artifact creation (e.g. built <code>.zip</code> files). The defaults are:</p>
+
+<ul>
+ <li>Source: The directory you are currently inside.</li>
+ <li>Artifacts: A directory called <code>./web-ext-artifacts</code>, created inside the current directory.</li>
+</ul>
+
+<p>You can specify different source and destination directories using the <code>--source-dir</code> (or <code>-s</code> alias) and <code>--artifacts-dir</code> (or <code>-a</code> alias) options when running your commands. Their values can be relative or absolute paths, but must always be specified as strings. Here is an example of specifying both options at the same time when  building an extension:</p>
+
+<pre class="brush: bash"><code>web-ext build --source-dir=webextension-examples/notify-link-clicks-i18n --artifacts-dir=zips</code></pre>
+
+<h3 id="Outputting_verbose_messages">Outputting verbose messages</h3>
+
+<p>If you want to see exactly what web-ext is doing when you run a command, you can include the <code>--verbose</code> option (or the <code>-v</code> alias). For example:</p>
+
+<pre class="brush: bash"><code>web-ext build --verbose</code></pre>
+
+<h3 id="Viewing_all_commands_and_options">Viewing all commands and options</h3>
+
+<p>You can list all commands and options like this:</p>
+
+<pre class="brush: bash"><code>web-ext --help</code></pre>
+
+<div class="note">
+<p><strong>Note</strong>: You can also use the <code>-h</code> alias.</p>
+</div>
+
+<p>You can list options for a specific command by adding it as an argument:</p>
+
+<pre class="brush: bash"><code>web-ext --help run</code></pre>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li><a class="external external-icon" href="https://github.com/mozilla/web-ext">web-ext repo</a></li>
+ <li>
+  <p><a href="/en-US/docs/Mozilla/Add-ons/WebExtensions/web-ext_command_reference">web-ext command reference</a></p>
+ </li>
+</ul>

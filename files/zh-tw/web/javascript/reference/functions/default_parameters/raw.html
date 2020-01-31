@@ -1,0 +1,288 @@
+<div>{{jsSidebar("Functions")}}</div>
+
+<p><strong>函式預設參數 </strong>允許沒有值傳入或是傳入值為 <code>undefined 的情況下，參數能以指定的預設值初始化。</code></p>
+
+<h2 id="語法">語法</h2>
+
+<pre class="syntaxbox">function [<em>name</em>]([<em>param1</em>[ = defaultValue1 ][, ..., <em>paramN</em>[ = defaultValueN ]]]) {
+   <em>statements</em>
+}
+</pre>
+
+<h2 id="說明">說明</h2>
+
+<p>在 JavaScript 中，函式的參數預設值都為 <code>{{jsxref("undefined")}} 。然而，指定不同的預設值可能在一些場景很有用。這也是函式參數預設值可以幫上忙的地方。</code></p>
+
+<p>在過去，設定預設值的普遍方法為：在函式的內容裡檢查傳入參數是否為 <code>undefined ，如果是的話，爲他指定一個值。如下列範例，若函式被呼叫時，並沒有提供 b 的值，它的值就會是 undefined，在計算 a*b 時，以及呼叫 multiply 時，就會回傳 NaN。然而這在範例的第二行被阻止了：</code>:</p>
+
+<pre class="brush: js">function multiply(a, b) {
+  b = (typeof b !== 'undefined') ?  b : 1;
+  return a * b;
+}
+
+multiply(5, 2); // 10
+multiply(5, 1); // 5
+multiply(5);    // 5
+</pre>
+
+<p>有了 ES2015 的預設參數，再也不用於函式進行檢查了，現在只要簡單的在函式的起始處為 b 指定 1 的值：</p>
+
+<pre class="brush: js">function multiply(a, b = 1) {
+  return a * b;
+}
+
+multiply(5, 2); // 10
+multiply(5, 1); // 5
+multiply(5);    // 5
+</pre>
+
+<h2 id="範例">範例</h2>
+
+<h3 id="傳入_undefined">傳入 <code>undefined</code></h3>
+
+<p>這邊第二段函式呼叫中，僅管第二個傳入參數在呼叫時明確地指定為undefined（雖不是null），其顏色參數的值是預設值（rosybrown）。</p>
+
+<pre class="brush: js">function setBackgroundColor(element, color = 'rosybrown') {
+  element.style.backgroundColor = color;
+}
+
+setBackgroundColor(someDiv);            // color set to 'rosybrown'
+setBackgroundColor(someDiv, undefined); // color set to 'rosybrown' too
+setBackgroundColor(someDiv, 'blue');    // color set to 'blue' 
+</pre>
+
+<h3 id="呼叫時賦予值">呼叫時賦予值</h3>
+
+<p>The default argument gets evaluated at call time, so unlike e.g. in Python, a new object is created each time the function is called.</p>
+
+<pre class="brush: js">function append(value, array = []) {
+  array.push(value);
+  return array;
+}
+
+append(1); //[1]
+append(2); //[2], not [1, 2]
+
+</pre>
+
+<p>This even applies to functions and variables:</p>
+
+<pre class="brush: js">function callSomething(thing = something()) {
+ return thing;
+}
+
+function something() {
+  return 'sth';
+}
+
+callSomething();  //sth</pre>
+
+<h3 id="Default_parameters_are_available_to_later_default_parameters">Default parameters are available to later default parameters</h3>
+
+<p>Parameters already encountered are available to later default parameters:</p>
+
+<pre class="brush: js">function singularAutoPlural(singular, plural = singular + 's', 
+                            rallyingCry = plural + ' ATTACK!!!') {
+  return [singular, plural, rallyingCry]; 
+}
+
+//["Gecko","Geckos", "Geckos ATTACK!!!"]
+singularAutoPlural('Gecko');
+
+//["Fox","Foxes", "Foxes ATTACK!!!"]
+singularAutoPlural('Fox', 'Foxes');
+
+//["Deer", "Deer", "Deer ... change."]
+singularAutoPlural('Deer', 'Deer', 'Deer peaceably and respectfully \
+   petition the government for positive change.')
+</pre>
+
+<p>This functionality is approximated in a straight forward fashion and demonstrates how many edge cases are handled.</p>
+
+<pre class="brush: js">function go() {
+  return ':P';
+}
+
+function withDefaults(a, b = 5, c = b, d = go(), e = this, 
+                      f = arguments, g = this.value) {
+  return [a, b, c, d, e, f, g];
+}
+
+function withoutDefaults(a, b, c, d, e, f, g) {
+  switch (arguments.length) {
+    case 0:
+      a;
+    case 1:
+      b = 5;
+    case 2:
+      c = b;
+    case 3:
+      d = go();
+    case 4:
+      e = this;
+    case 5:
+      f = arguments;
+    case 6:
+      g = this.value;
+    default:
+  }
+  return [a, b, c, d, e, f, g];
+}
+
+withDefaults.call({value: '=^_^='});
+// [undefined, 5, 5, ":P", {value:"=^_^="}, arguments, "=^_^="]
+
+
+withoutDefaults.call({value: '=^_^='});
+// [undefined, 5, 5, ":P", {value:"=^_^="}, arguments, "=^_^="]
+</pre>
+
+<h3 id="Functions_defined_inside_function_body">Functions defined inside function body</h3>
+
+<p>Introduced in Gecko 33 {{geckoRelease(33)}}. Functions declared in the function body cannot be referred inside default parameters and throw a {{jsxref("ReferenceError")}} (currently a {{jsxref("TypeError")}} in SpiderMonkey, see {{bug(1022967)}}). Default parameters are always executed first, function declarations inside the function body evaluate afterwards.</p>
+
+<pre class="brush: js">// Doesn't work! Throws ReferenceError.
+function f(a = go()) {
+  function go() { return ':P'; }
+}
+</pre>
+
+<h3 id="Parameters_without_defaults_after_default_parameters">Parameters without defaults after default parameters</h3>
+
+<p>Prior to Gecko 26 {{geckoRelease(26)}}, the following code resulted in a {{jsxref("SyntaxError")}}. This has been fixed in {{bug(777060)}} and works as expected in later versions. Parameters are still set left-to-right, overwriting default parameters even if there are later parameters without defaults.</p>
+
+<pre class="brush: js">function f(x = 1, y) { 
+  return [x, y]; 
+}
+
+f(); // [1, undefined]
+f(2); // [2, undefined]
+</pre>
+
+<h3 id="Destructured_parameter_with_default_value_assignment">Destructured parameter with default value assignment</h3>
+
+<p>You can use default value assignment with the <a href="/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment">destructuring assignment</a> notation:</p>
+
+<pre class="brush: js">function f([x, y] = [1, 2], {z: z} = {z: 3}) { 
+  return x + y + z; 
+}
+
+f(); // 6</pre>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-function-definitions', 'Function Definitions')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-function-definitions', 'Function Definitions')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<div>{{CompatibilityTable}}</div>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatChrome(49)}}</td>
+   <td>{{CompatGeckoDesktop("15.0")}}</td>
+   <td>Edge</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatSafari(10)}}</td>
+  </tr>
+  <tr>
+   <td>Parameters without defaults after default parameters</td>
+   <td>{{CompatChrome(49)}}</td>
+   <td>{{CompatGeckoDesktop("26.0")}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatSafari(10)}}</td>
+  </tr>
+  <tr>
+   <td>Destructured parameter with default value assignment</td>
+   <td>{{CompatChrome(49)}}</td>
+   <td>{{CompatGeckoDesktop("41.0")}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Android Webview</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+   <th>Chrome for Android</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatChrome(49)}}</td>
+   <td>{{CompatGeckoMobile("15.0")}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatChrome(49)}}</td>
+  </tr>
+  <tr>
+   <td>Parameters without defaults after default parameters</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatChrome(49)}}</td>
+   <td>{{CompatGeckoMobile("26.0")}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatChrome(49)}}</td>
+  </tr>
+  <tr>
+   <td>Destructured parameter with default value assignment</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatGeckoMobile("41.0")}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="參閱相關">參閱相關</h2>
+
+<ul>
+ <li><a class="external" href="http://wiki.ecmascript.org/doku.php?id=harmony:parameter_default_values" rel="external" title="http://wiki.ecmascript.org/doku.php?id=harmony:parameter_default_values">Original proposal at ecmascript.org</a></li>
+</ul>

@@ -1,0 +1,113 @@
+<p>{{APIRef("WebXR Device API")}}{{draft}}</p>
+
+<p>The WebXR model for implementing augmented and virtual reality is designed specifically to support the immersive experience of inserting a human's virtual form into a virtual environment. To accomplish this, software needs the ability to not only track the locations, orientation, and movements of objects in the virtual world, but the user's location, orientation, and movement as well. But WebXR goes beyond that by adding the ability to track the location, orientation, and motion of the individual device components which represent parts of the user's body.</p>
+
+<p>The location and movement of the user's headset represent their head's position and orientation in the virtual environment. Hand controllers represent their hands in the same manner. Other hardware elements can be used similarly to represent other parts of the body, providing additional data to use when simulating the user's actions in their environment.</p>
+
+<p>In this guide, we'll explore how WebXR tracks the positions, orientations, and movements of objects and of the user's body in the virtual world.</p>
+
+<h2 id="Introducing_spaces">Introducing spaces</h2>
+
+<p>Creating a sense of space is what VR is all about. From a VR developer perspective, designing the stage is the most important part to your users. Like an architect or a set designer, you have the power to create moods and experiences through a physical environment. How you structure that space will depend entirely on how users can interact and explore it.</p>
+
+<p>Space will typically have foreground, middleground, and background elements. The right balance can create a unique presence and guide your user. The foreground includes objects and interfaces that you can interact with directly. </p>
+
+<p>A variety of hardware form factors make it impractical and unscalable to expect developers to reason directly about their experience tracking technology will run on. Instead, <strong>WebXR</strong> Device API is designed to have developers think in advance about the mobility needs of their experiences are building submitted to the User Agent to explicitly ask for a proper <strong>XRReferenceSpace. XRReferenceSpace</strong> object acts as a substrate for XR experience is being built by establishing a guarantee of motion is supported and provides a space where developers can take <strong>XRViewerPose </strong>and see its matrix. The important aspect to note is that the User Agent (or the underlying platform) is responsible for providing a consistent behavior of lower-ability<strong> XRReferenceSpace</strong> objects even when running on a tracking system of higher ability.</p>
+
+<p>There are several types of the reference room: viewer, local, local-floor, the floor is limited, and infinite, each mapping to the type of experience XR an application might want to build. The experience is limited (bounded-floor) is one in which the user will move around in their physical environment to fully interact, but do not need to travel out of the fixed limit is determined by the hardware XR. Experience the infinite (unlimited) is one in which the user can freely move around their physical environment and traveling significant distances. Local experience is one that does not require the user to move around the room, and may be either "sit" (local) or "stand" (local-floor) experience. Finally, the space can be used for reference viewer experience without tracking functions (as control the use of click-and-drag to look around) or in conjunction with other references to track space objects-locked head. Examples of each type of experience can be found in the detailed section below.</p>
+
+<p>It should be noted that not all experiences will work on all hardware XR and XR are not all hardware will support all experience (see Appendix A:<strong> XRReferenceSpace </strong>availability). For example, it is not possible to build experience that requires a user to walk around on a device like GearVR. In the spirit of progressive enhancement, it is strongly recommended that developers choose <strong>XRReferenceSpace</strong> afford at least it was enough for the experience they are building. Request more capable reference room would artificially limit set XR device if the experience they will not be visible from.</p>
+
+<p><u><strong>Bounded reference space</strong></u></p>
+
+<p>A bounded experience is one in which users move around their physical environment to fully interact, but do not need to travel beyond the limits set earlier. Bounded experience similar to the experience of the infinite in both rely on hardware XR is capable of tracking the motion of a user. However, experience is limited explicitly to focus on nearby content that allows them to target hardware requiring XR play area pre-configured hardware and XR is able to track the location of the free.</p>
+
+<p>Bounded reference spaces use an<strong> XRReferenceSpaceType</strong> of<strong> bounded-floor</strong></p>
+
+<p>Some examples:</p>
+
+<ul>
+ <li>VR painting</li>
+ <li>Training simulators</li>
+ <li>Preview of 3D object in real world.</li>
+</ul>
+
+<p><u><strong>Unbounded reference Space</strong></u></p>
+
+<p>Bounded reference space is limited whereas unbonded reference is unlimited. This is the difference between the bounded and unbounded reference.</p>
+
+<p>A unbounded experience is one in which the user can freely move around in their physical environment. This experience is explicitly requires that the user be limited in their ability to walk, and space is limited reference will adjust the origin necessary to maintain optimum stability for the user, even if the user runs many meters away from the origin. In doing so, as long as you drift from its original physical location. origin will be initialized at a position near the head of the user at the time of creation. Exact<strong> x, y, z</strong>, and the values ​​of the orientation will be initialized based on the conventions of the underlying platform to experience the infinite.</p>
+
+<p>Unbounded experiences use an<strong> XRReferenceSpaceType</strong> of unbounded.</p>
+
+<p>Some example:</p>
+
+<ul>
+ <li>Campus tour</li>
+ <li>Renovation preview</li>
+</ul>
+
+<h2 id="Relating_between_spaces">Relating between spaces</h2>
+
+<p>There are several circumstances in which developers may choose to relate content in different reference spaces.</p>
+
+<h4 id="Inline_to_Immersive">Inline to Immersive</h4>
+
+<p>It is expected that developers will often choose to view in-depth experience with the experience of similar inline. In this situation, users often expect to see scenes from the same perspective as they make the transition from inline to immersive. To achieve this, the developers have to take the transformation of the last <strong>XRViewerPose</strong> taken using this inline <strong>XRReferenceSpace </strong>session and pass it to <strong>getOffsetReferenceSpace ()</strong> at this depth session<strong> XRReferenceSpace </strong>to generate the appropriate offset reference room. The same logic applies in reverse when exiting depth.</p>
+
+<h4 id="Unbounded_to_Bounded">Unbounded to Bounded</h4>
+
+<p>When building an experience that is mainly based on the reference space is limited, developers may sometimes choose to switch to a restricted floor reference room. For example, whole home remodeling experience may choose to switch to the reference room floor is limited to reviewing library furniture selection. If it is necessary to continue to display the content belongs to the previous reference space, developers can call this <strong>XRFrame getPose () </strong>method to re-parent nearby virtual content to a new reference space.</p>
+
+<h2 id="Spatial_relationships">Spatial relationships</h2>
+
+<p>One of the core features XR platform is its ability to track the spatial relationships. Tracking the position and orientation, known together as the "pose", viewers probably is the simplest example, but many other XR platform features, such as testing a hit or anchor, is rooted in the understanding of space XR system operates. in WebXR every feature that tracks the spatial relationships built on <strong>XRSpace </strong>interface. Each XRSpace represent something that is being tracked by the system XR, like <strong>XRReferenceSpace</strong>, and each has a "native origin" which represents the position and orientation of the tracking system XR. It is only possible to know the location of one of the relatively <strong>XRSpace XRSpace</strong> other frame-by-frame.</p>
+
+<h2 id="Poses">Poses</h2>
+
+<p>In frame-by-frame, developers can query any <strong>XRSpace</strong> locations in other<strong> XRSpace </strong>through <strong>XRFrame.getPose function ().</strong> This function takes a parameter space that is <strong>XRSpace</strong> to search and baseSpace parameters that define the coordinate system in which <strong>XRPose </strong>generated should be returned. Transformation<strong> XRPose</strong> attribute is<strong> XRRigidTransform</strong> represent baseSpace indoor locations.</p>
+
+<p>While baseSpace parameters may each<strong> XRSpace</strong>, developers often will choose to supply their main <strong>XRReferenceSpace</strong> as baseSpace parameter so that the coordinates will be consistent with those used for rendering. For more information about rendering, see the main WebXR explainer.</p>
+
+<p>Example code:</p>
+
+<pre>  let pose = xrFrame.getPose(xrSpace, xrReferenceSpace);
+  if (pose) {
+    // Do a thing
+  }</pre>
+
+<h2 id="Support_in_Firefox">Support in Firefox</h2>
+
+<p>Firefox supports WebVR, so that people can use today's technology while Firefox is currently implement next-generation specifications. They have started working to add support for Firefox WebXR. An initial implementation will be available in Firefox Nightly soon, so developers and early adopters can turn it on and give it a test-drive.</p>
+
+<p>Some parts of the specification WebXR still moving. Instead of waiting for the final version of the spec,  Roadmap for the upcoming Reality Firefox browser will be similar to the desktop version of Firefox, with initial support for in-depth browsing using WebVR, and support WebXR to follow.</p>
+
+<p>In time, Firefox will support WebXR everywhere that include WebVR today, including Windows, Linux, MacOS and Android platforms / GeckoView. </p>
+
+<h2 id="Skybox">Skybox</h2>
+
+<p>The WebXR community is working on draft specifications that target some of the constraints of today’s wireless devices. For instance, creating a skybox setting you can use to can change the background image of a web page. We’re also working on a way to expose the world-sensing capabilities of early AR platforms to the web, so developers can determine where surfaces are without needing to run complex computer vision code on a battery-powered device.<br>
+ <br>
+ The current draft for WebXR covers light estimation, eye tracking, skyboxes, static 3D favicons, controller support, computer vision, and more. Web pages will be able to detect and query VR/AR capabilities, poll device orientation and position, and produce graphical frames at the required frame rate during an immersive AR session. Although the specification is not yet stable, Mozilla is planning to move forward based on its current state and then make all required adjustments as they become necessary.</p>
+
+<p>Code sample:</p>
+
+<pre>import {SkyboxNode} from './js/render/nodes/skybox.js';
+
+      // WebGL scene globals.
+      let gl = null;
+      let renderer = null;
+      let scene = new Scene();
+      scene.addNode(new SkyboxNode({
+        url: 'media/textures/chess-pano-4k.jpg',
+        displayMode: 'stereoTopBottom'
+      }));</pre>
+
+<p>For more code sample: <a href="https://immersive-web.github.io/webxr-samples/">https://immersive-web.github.io/webxr-samples/</a></p>
+
+<p>Referencs: </p>
+
+<p><a href="https://research.mozilla.org/webvr-compatibility/">https://research.mozilla.org/webvr-compatibility/</a></p>
+
+<p><a href="https://mixedreality.mozilla.org/">https://mixedreality.mozilla.org/</a></p>
+

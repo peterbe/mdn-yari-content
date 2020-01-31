@@ -1,0 +1,208 @@
+<h3 id="Ce_document_est_.C3.A0_usage_historique_uniquement" name="Ce_document_est_.C3.A0_usage_historique_uniquement">Ce document est à usage historique uniquement</h3>
+<p>Ce document est un guide présentant les préalables à la compilation du code source de Mozilla 1.9 avant l'introduction du système MozillaBuild en mars 2007. Si vous compilez Firefox 1.5.0.10 ou supérieur, Firefox 2.0.0.2 ou supérieur, ou Firefox 3, veuillez consultez les <a href="fr/Pr%c3%a9alables_%c3%a0_la_compilation_sous_Windows">Préalables à la compilation sous Windows</a> standards.</p>
+<p><b>Pour la compilation de Firefox 2, Firefox 1.5 et les autres produits Mozilla basés sur une branche antérieure à la 1.9, consultez <a href="fr/Pr%c3%a9alables_%c3%a0_la_compilation_sous_Windows_des_branches_1.7_et_1.8">Préalables à la compilation sous Windows des branches 1.7 et 1.8</a>.</b></p>
+<p>Si vous compilez de très anciennes versions du code source Mozilla, depuis la branche 1.0 ou plus anciennes, lisez et suivez les anciennes <a class="external" href="http://www.mozilla.org/build/win32-nmake.html">instructions de compilation avec nmake</a>.</p>
+<h3 id="Mat.C3.A9riel_n.C3.A9cessaire" name="Mat.C3.A9riel_n.C3.A9cessaire">Matériel nécessaire</h3>
+<p>Mozilla prend du temps à compiler. Vous aurez besoin d'un système suffisant pour faire du développement :</p>
+<ul>
+ <li>Processeur Pentium III ou équivalent, 1 GHz ou plus, 1,5 GHz+ recommandés</li>
+ <li>512 Mo de RAM, 1 Go recommandé</li>
+ <li>1,5 Go d'espace disque en NTFS ou 3 Go d'espace disque en FAT, ou plus</li>
+ <li>Un système d'exploitation Windows de classe NT (NT4.0, Windows 2000 SP4, Windows XP et Windows Vista)</li>
+</ul>
+<h3 id="Logiciels_n.C3.A9cessaires" name="Logiciels_n.C3.A9cessaires">Logiciels nécessaires</h3>
+<p>Les logiciels suivants doivent être installés pour une compilation Windows standard.</p>
+<p>Mozilla peut ne pas compiler si certains outils sont installés à un emplacement dont le chemin d'accès contient des espaces ou d'autres caractères spéciaux comme des plus ou des guillemets. Les outils Visual C++ peuvent toutefois être installés dans un répertoire contenant des espaces (le répertoire d'installation est recommandé).</p>
+<h4 id="Outils_GNU_pour_Microsoft_Windows_.28Cygwin.29" name="Outils_GNU_pour_Microsoft_Windows_.28Cygwin.29">Outils GNU pour Microsoft Windows (Cygwin)</h4>
+<p>Cygwin est un environnement semblable à Linux avec les outils GNU pour Windows. Mozilla utilise un certains nombre de packages de développement GNU, qui doivent être installés. Par mi ceux-ci, &lt;tt&gt;gawk&lt;/tt&gt;, &lt;tt&gt;make&lt;/tt&gt; et les utilitaires zip. GCC n'est pas utilisé et ne doit pas nécessairement être installé. Vous devez disposer de Cygwin 1.1.6 ou supérieur. Vous ne pouvez avoir qu'une seule version de cygwin installée sur votre système ; des installations concurrentes peuvent interférer l'une avec l'autre et causer des erreurs.</p>
+<p>Rendez-vous sur <a class="external" href="http://www.cygwin.com/" rel="freelink">http://www.cygwin.com/</a> et suivez les instructions d'installation. L'assistant d'installation de Cygwin fonctionne comme un programme Windows. Une page de cet assistant présente un résumé des catégories et packages. Vous devrez en installer certains ne faisant pas partie de la sélection par défaut.</p>
+<p>Si vous pensez utiliser Cygwin seulement pour compiler Mozilla, installez uniquement les packages par défaut et ceux qui sont nécessaires pour Mozilla. Dans la version actuelle de l'installeur au moment de la rédaction de ce document (version 2.510.2.2), les packages supplémentaires nécessaires sont :</p>
+<ul>
+ <li>zip, unzip (dans Archive)</li>
+ <li>cvs (dans Devel, uniquement si vous récupérez le code via CVS, sans utiliser de tarballs)</li>
+ <li>libiconv (dans Devel, uniquement si vous compilez l'installeur)</li>
+ <li>patchutils (dans Devel)</li>
+ <li>perl (dans Interpreters)</li>
+ <li>make 3.80 n'est plus disponible, voir plus bas…</li>
+</ul>
+<p>Si vous envisagez d'utiliser les outils GNU de Cygwin pour d'autres développements, installez également les éditeurs, outils de développement et interpréteurs, ainsi que tout ce qui vous semble intéressant. Vérifiez que vous sélectionnez aussi tous les packages dont Mozilla a besoin, comme unzip et zip !</p>
+<p>Voici la liste <b>complète</b> des packages nécessaires pour compiler Mozilla. Vous pouvez l'utiliser pour vérifier une seconde fois votre installation, ou pour comprendre et personnaliser le processus de compilation :</p>
+<ul>
+ <li>ash — shell UNIX-like d'interprétation en ligne de commande (catégorie Base)</li>
+ <li>coreutils — utilitaires de base GNU (dont fileutils, install, sh-utils, et textutils) (catégorie Base)</li>
+ <li>cvs — concurrent versions system (catégorie Devel)</li>
+ <li>diffutils — utilitaire de comparaison de fichiers (catégorie Base)</li>
+ <li>findutils (catégorie Base)</li>
+ <li>gawk — langage de pattern matching (catégories Base et Interpretors)</li>
+ <li>grep — outil de recherche de texte (catégorie Base)</li>
+ <li>libiconv — conversion de jeux de caractères (catégorie Devel) ; libiconv2 ne contient pas le programme iconv nécessaire pour l'installeur</li>
+ <li>make 3.80 (pas 3.81, voir plus bas) — analyseur de dépendances pour la compilation de logiciels (catégorie Devel)</li>
+ <li>patchutils — une petite série de programmes opérant sur les fichiers patch (catégorie Devel)</li>
+ <li>perl — un langage de script utilisé pour contrôler certaines parties de la compilation (catégorie Interpreters)</li>
+ <li>sed — un langage de recherche et remplacement (catégorie Base)</li>
+ <li>unzip — outil d'extraction de fichiers zip (catégorie Archive)</li>
+ <li>zip — outil de création de fichiers zip (catégorie Archive)</li>
+</ul>
+<p>Si vous envisagez de modifier les fichiers &lt;tt&gt;configure.in&lt;/tt&gt; du système de configuration, vous aurez également besoin d'installer le package &lt;tt&gt;autoconf-2.13&lt;/tt&gt; (autoconf-2.5x et 2.60 ne fonctionneront pas).</p>
+<p>Pour les compilations ne servant pas au débogage, il est recommandé d'installer le package &lt;tt&gt;binutils&lt;/tt&gt; pour disposer de &lt;tt&gt;strip.exe&lt;/tt&gt;.</p>
+<p>Vous pouvez utiliser <a class="external" href="http://activestate.com/Products/ActivePerl/">ActivePerl d'ActiveState</a> au lieu du package perl de Cygwin si vous préférez.</p>
+<h4 id="make" name="make">make</h4>
+<p>La version 3.80 de make n'est plus disponible dans l'installation de cygwin (et la version 3.81 ne fonctionnera <b>pas</b>), téléchargez-la donc depuis <a class="external" href="http://cygwin.paracoda.com/release/make/make-3.80-1.tar.bz2">paracoda</a> et placez le fichier &lt;tt&gt;make.exe&lt;/tt&gt; inclus dans votre répertoier &lt;tt&gt;%cygwin%\bin\&lt;/tt&gt;, par exemple en lançant un shell cygwin bash et en exécutant :</p>
+<pre class="eval">cd /
+tar xjf /cygdrive/c/where-your-download-is/make-3.80-1.tar.bz2
+bin/make.exe --version
+</pre>
+<h4 id="Les_outils_moztools" name="Les_outils_moztools">Les outils moztools</h4>
+<p>Le package moztools contient des exécutables et des bibliothèques nécessaires pour compiler Mozilla. Un fichier zip unique contenant tous ces outils fonctionnant avec toutes les versions de MSVC est disponible : <a class="external" href="http://ftp.mozilla.org/pub/mozilla.org/mozilla/libraries/win32/moztools-static.zip">moztools-static.zip</a>.</p>
+<p>Ce fichier zip contient un seul dossier appelé
+ <i>
+  moztools</i>
+ que vous devez conserver. Décompressez le fichier zip à l'emplacement où vous désirez que les outils soient installés ; cependant, Mozilla peut ne pas compiler si vous installez le répertoire &lt;tt&gt;moztools&lt;/tt&gt; à l'intérieur du répertoire de Cygwin. La variable d'environnement <code>MOZ_TOOLS</code> doit pointer vers ce répertoire &lt;tt&gt;moztools&lt;/tt&gt;. (Vous pouvez renommer le dossier, tant que la variable <code>MOZ_TOOLS</code> est modifiée également.)</p>
+<p>Note : la branche 1.8.1 (Firefox 2) est compatible avec le package moztools-static. Les branches plus anciennes (dont la branche 1.8.0) ne le sont pas ; consultez <a href="fr/Pr%c3%a9alables_%c3%a0_la_compilation_sous_Windows_des_branches_1.7_et_1.8">les anciens préalables à la compilation</a> pour plus de détails.</p>
+<p>Le fichier zip moztools ne contient pas le code source des composants ; si leur compilation vous intéresse, vous pouvez en obtenir <a class="link-ftp" href="ftp://ftp.mozilla.org/pub/mozilla.org/mozilla/libraries/win32/historic/src/">le code source</a>. Le système de compilation d'OpenOffice.org <a class="external" href="http://www.go-oo.org/">ooo-build</a> compile les outils utilisant ce code et contient certains <a class="external" href="http://go-oo.org/ooo-build/patches/src680/">patches</a> appropriés pour ceux qui ne désirent pas utiliser les exécutables fournis.</p>
+<h4 id="cvs" name="cvs">cvs</h4>
+<p>CVS est le système de contrôle de sources utilisé par Mozilla. Vous n'avez pas besoin de cvs si vous désirez uniquement compiler depuis les tarballs de source téléchargés via FTP. Dans ce cas, vous pouvez passer cette étape.</p>
+<p>Pour <a href="fr/Obtenir_le_code_source_de_Mozilla_via_CVS">récupérer les sources de Mozilla</a>, la version 1.11 de cvs ou supérieure est nécessaire. Cygwin CVS est recommandé ; WinCVS est également compatible. Lors de l'installation de cygwin CVS, vous devez également installer un éditeur comme emacs ou Xemacs.</p>
+<h4 id="Compilateur_et_.C3.A9diteur_de_liens" name="Compilateur_et_.C3.A9diteur_de_liens">Compilateur et éditeur de liens</h4>
+<p>Pour le développement sur le tronc CVS (Mozilla 1.9 ou supérieur), le compilateur standard est Microsoft Visual C++, version 8. L'édition Express gratuite de Microsoft Visual C++ 8 (appelée Visual C++ 2005 Express Edition) pourra fonctionner avec certains <a href="fr/Compilation_avec_VC8_Express">outils et options de configuration supplémentaires</a>. Visual C++ 7.1 fonctionnera également. VC++ 7 n'est pas recommandé, et VC6 n'est pas supporté et produira des compilations inutilisables.</p>
+<p>La compilation peut se faire soit à partir d'une ligne de commande du shell de Windows, ou depuis un shell Cygwin. Si vous utilisez le shell de Windows, vous devrez définir les variables d'environnement du compilateur à l'aide du script &lt;tt&gt;vcvars32.bat&lt;/tt&gt; qui est installé avec Visual Studio (en choisissant « Visual C++ Command Prompt » depuis les entrées de Visual Studio du menu Démarrer, ce script s'exécutera pour vous dans un nouveau shell).</p>
+<p>Il est également possible (bien que non recommandé) de compiler Mozilla à l'aide du compilateur MinGW gcc : consultez <a class="external" href="http://gemal.dk/mozilla/build.html">Compiling Mozilla with MinGW</a>.</p>
+<h5 id="Tableau_des_compilateurs_Visual_Studio_support.C3.A9s" name="Tableau_des_compilateurs_Visual_Studio_support.C3.A9s">Tableau des compilateurs Visual Studio supportés</h5>
+<table>
+ <tbody>
+  <tr>
+   <th>Branche</th>
+   <th>HEAD<br>
+    Gecko 1.9<br>
+    Firefox 3</th>
+   <th>MOZILLA_1_8_BRANCH<br>
+    Gecko 1.8.1<br>
+    Firefox 2</th>
+   <th>MOZILLA_1_8_0_BRANCH<br>
+    Gecko 1.8<br>
+    Firefox 1.5.0.x</th>
+  </tr>
+  <tr>
+   <th>VC6</th>
+   <td style="background: #ff0000; color: #fff;">Non</td>
+   <td>Oui (Officiellement)</td>
+   <td>Oui (Officiellement)</td>
+  </tr>
+  <tr>
+   <th>VC7 (Visual Studio 2002)</th>
+   <td>Pas vraiment</td>
+   <td>Oui</td>
+   <td>Oui</td>
+  </tr>
+  <tr>
+   <th>VC7.1 (Visual Studio 2003)</th>
+   <td>Oui</td>
+   <td>Oui</td>
+   <td>Oui</td>
+  </tr>
+  <tr>
+   <th>VC8 (Visual Studio 2005)</th>
+   <td>Oui (Officiellement)</td>
+   <td style="background: #ff0000; color: #fff;">Non</td>
+   <td style="background: #ff0000; color: #fff;">Non</td>
+  </tr>
+ </tbody>
+</table>
+<p><b>Note 1</b> : les <a href="fr/Pr%c3%a9alables_%c3%a0_la_compilation_sous_Windows_des_branches_1.7_et_1.8">instructions de compilation pour Firefox 1.5/2.0 / Gecko 1.8.x</a> ne sont pas couvertes dans ce document.</p>
+<p><b>Note 2</b> : Toutes les informations concernant VC9/"Orcas" se réfèrent au CTP de janvier 2007. Elles peuvent ne pas être correctes pour les versions précédentes ou suivantes.</p>
+<h4 id="SDK_de_la_plateforme" name="SDK_de_la_plateforme">SDK de la plateforme</h4>
+<p>Passez cette étape si vous utilisez au moins Visual Studio .NET 2003, car vous disposez déjà de tous les SDK nécessaires. Pour les compilateurs plus anciens, ainsi que pour les éditions gratuites Visual Studio Express, vous devrez télécharger ces SDK chez Microsoft pour obtenir les en-têtes et bibliothèques GDI+.</p>
+<p>Vous pouvez télécharger le <a class="external" href="http://www.microsoft.com/downloads/details.aspx?FamilyId=A55B6B43-E24F-4EA3-A93E-40C0EC4F68E5&amp;displaylang=en">Windows Server 2003 SP1 Platform SDK</a>, ou le <a class="external" href="http://www.microsoft.com/downloads/details.aspx?FamilyID=0baf2b35-c656-4969-ace8-e4c0c0716adb&amp;DisplayLang=en">Windows Server 2003 R2 Platform SDK</a>. Vous devez installer le « Windows Core SDK » (outils, environnement de développement et composants redistribuables) et le « Web Workshop SDK » (environnement de développement).</p>
+<p>Afin que l'environnement de compilation reconnaisse les SDK, ceux-ci doivent être ajoutés à l'environnement (voir plus bas).</p>
+<h4 id="NSIS" name="NSIS">NSIS</h4>
+<p>Certaines applications compilées depuis le code source de Mozilla utilisent à présent NSIS pour leur programme d'installation, en particulier les applications du toolkit Firefox, Thunderbird et Sunbird. NSIS est déjà nécessaire au cours du processus de compilation normal étant donné que le programme de désinstallation est compilé à l'aide de NSIS. Si vous ne désactivez pas la compilation de l'installeur avec &lt;tt&gt;ac_add_options --disable-installer&lt;/tt&gt; dans votre <code>.mozconfig</code>, installez <a class="external" href="http://nsis.sourceforge.net/Download">NSIS</a> et assurez-vous que son répertoire d'installation (pas le répertoire « Bin » du répertoire d'installation) figure dans votre PATH. La version 2.17 ou supérieure est recommandée.</p>
+<h3 id="Configuration_de_l.27environnement" name="Configuration_de_l.27environnement">Configuration de l'environnement</h3>
+<p>L'environnement de compilation doit être configuré de manière à ce que le système de compilation puisse trouver le compilateur et les bibliothèques nécessaires. Le plus facile est d'utiliser un script batch DOS. Votre compilation peut échouer si vos chemins contiennent des espaces ou d'autres caractères spéciaux. Assurez-vous de ne pas avoir installé de logiciels nécessaires à de tels emplacements, à l'exception de Visual C++.</p>
+<p>Ce qui suit est un script batch (à exécuter avec &lt;tt&gt;cmd.exe&lt;/tt&gt; ou en éditant le fichier &lt;tt&gt;cygwin.bat&lt;/tt&gt;) qui doit être utilisé pour configurer les variables d'environnement :</p>
+<pre class="eval">rem --- Positionne HOME afin que cvs et ssh fonctionnent correctement
+rem --- cvs utilise HOME pour localiser le fichier .cvspass, et ssh pour le fichier .ssh
+rem --- si vous utilisez ssh, votre HOME doit être identique au répertoire spécifié dans /etc/passwd. Consultez <a class="external" href="http://www.cygwin.com/faq/faq0.html" rel="freelink">http://www.cygwin.com/faq/faq0.html</a>.
+set HOME=C:\home
+
+rem --- Positionne VCVARS vers l'endroit où se trouve le fichier vcvars.bat de Visual C++
+set VCVARS=<var>C:\Program Files\Microsoft Visual Studio 8\VC\bin\vcvars32.bat</var>
+
+rem --- Positionne MSSDK vers l'emplacement d'installation du SDK MS
+rem --- <strong>Uniquement nécessaire pour MSVC7 ou les éditions gratuites de MSVC qui ne sont pas fournies avec un SDK</strong>
+set MSSDK=<var>C:\Program Files\Microsoft Platform SDK</var>
+
+rem --- Positionne MOZ_TOOLS vers l'endroit où ont été installés les outils moztools
+set MOZ_TOOLS=<var>C:\moztools</var>
+
+rem --- Positionne CYGWINBASE vers le répertoire d'installation de cygwin
+rem --- N'utilisez pas "CYGWIN", sinon cygserver, cygrunsrv et d'autres services cygwin ne fonctionneront pas bien.
+rem --- La variable CYGWIN est également utilisée pour modifier le comportement de Cygwin.
+set CYGWINBASE=<var>C:\cygwin</var>
+rem --- S'assure que Cygwin n'affiche pas l'avertissement de chemin d'accès DOS
+set CYGWIN=<var>nodosfilewarning</var>
+
+rem --- Ajoute le chemin de Cygwin en début de path
+rem --- Ceci est nécessaire afin que l'outil &lt;tt&gt;find&lt;/tt&gt; de cygwin soit avant le &lt;tt&gt;find.exe&lt;/tt&gt; de Windows dans le PATH, mais que l'outil &lt;tt&gt;link&lt;/tt&gt; de cygwin soit après le &lt;tt&gt;link.exe&lt;/tt&gt; de Visual C++.
+set PATH=%CYGWINBASE%\bin;%PATH%
+
+rem --- Positionne les variables d'environnement de MSVC
+call "%VCVARS%"
+ 
+rem --- Ajoute les chemins du SDK en début de path
+rem --- <strong>Uniquement nécessaire pour MSVC7 ou les éditions gratuites de MSVC qui ne fournissent pas un SDK</strong>
+set PATH=%MSSDK%\bin;%PATH%
+set INCLUDE=%MSSDK%\include;%MSSDK%\include\atl;%INCLUDE%
+set LIB=%MSSDK%\lib;%LIB%
+
+rem -- moztools vient en dernier
+set PATH=%PATH%;%MOZ_TOOLS%\bin
+
+rem --- À présent, la variable PATH contient :
+rem MS-SDK; MSVC; Cygwin; Windows; glib/libIDL; Moztools
+
+rem --- Typiquement, la dernière chose que le script fait est de lancer un shell cygwin
+rem --- attention à vos ~/.profile et /etc/profile qui peuvent écraser votre PATH !
+bash --login -i
+</pre>
+<p>Pour un meilleur terminal, installez <a class="external" href="http://web.gccaz.edu/~medgar/puttycyg/">PuTTYcyg</a>, une version du client SSH PuTTY qui peut servir de terminal pour Cygwin. Vous pouvez utiliser le même fichier batch, installez simplement PuTTYcyg quelque part dans votre PATH, puis remplacez la dernière commande du fichier batch par celle-ci, qui lancera Cygwin dans un shell PuTTY :</p>
+<pre class="eval">start putty -cygterm -
+</pre>
+<h4 id="Correction_du_chemin_de_cygwin" name="Correction_du_chemin_de_cygwin">Correction du chemin de cygwin</h4>
+<p>Par défaut, cygwin se place au début de la variable PATH, ce qui détruit l'ordre patiemment construit de notre variable PATH. Vous pouvez soit :</p>
+<ul>
+ <li>éditer /etc/profile/ = %CYGWINBASE%\etc\profile (utilisez un éditeur préservant les fins de ligne Unix - &lt;tt&gt;nano&lt;/tt&gt; du package cygwin en cas de doute), changez la ligne</li>
+</ul>
+<pre class="eval">PATH=/usr/local/bin:/usr/bin:/bin:/usr/X11R6/bin:$PATH
+</pre>
+<p>en</p>
+<pre class="eval">PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/usr/X11R6/bin
+</pre>
+<ul>
+ <li>ou ajouter un .profile ou .bash_profile à votre répertoire home.</li>
+</ul>
+<p>Ceci est nécessaire pour permettre à Make de sélectionner la bonne instance du fichier &lt;tt&gt;link.exe&lt;/tt&gt;. Si vous préférez ne pas toucher au &lt;tt&gt;PATH&lt;/tt&gt; de Cygwin, renommez simplement &lt;tt&gt;link.exe&lt;/tt&gt; en quelque chose d'autre. Vous pouvez également modifier le fichier batch pour le faire automatiquement au lancement et rétablir la situation initiale en quittant. Pour ce faire, remplacez la ligne suivante de votre fichier batch :</p>
+<pre class="eval">bash --login -i
+</pre>
+<p>par ceci :</p>
+<pre class="eval">rename link.exe cyglink.exe
+bash --login -i
+rename cyglink.exe link.exe
+</pre>
+<p>Si vous utilisez cette méthode, n'oubliez pas de quitter le shell de Cygwin en entrant &lt;tt&gt;exit&lt;/tt&gt; au lieu de simplement fermer la fenêtre.</p>
+<h3 id="Probl.C3.A8mes_courants.2C_astuces_et_limitations" name="Probl.C3.A8mes_courants.2C_astuces_et_limitations">Problèmes courants, astuces et limitations</h3>
+<ul>
+ <li>Consultez la <a href="fr/FAQ_sur_la_compilation_de_Mozilla#Questions_sp.C3.A9cifiques_.C3.A0_Win32">FAQ sur la compilation de Mozilla#Questions spécifiques à Win32</a>, elle contient une liste de problèmes très fréquents</li>
+ <li>Si vous avez choisi les fins de ligne DOS à l'installation de Cygwin, votre arbre de sources doit se trouver sous le point de montage &lt;tt&gt;/cygdrive/&lt;c&gt;&lt;/tt&gt;. Il ne doit pas se trouver à l'intérieur de votre &lt;tt&gt;/home&lt;/tt&gt;.</li>
+ <li>Mozilla peut ne pas compiler si vous installez le répertoire wintools à l'intérieur du répertoire cygwin.</li>
+ <li>La compilation peut échouer si votre variable d'environnement PATH contient des guillemets ("). Ceux-ci ne sont pas transférés proprement lorsqu'ils sont passés aux sous-shells de cygwin. La plupart du temps, les guillemets ne sont pas nécessaires, ils peuvent donc être enlevés.</li>
+ <li>Vérifiez bien que vous disposez de la liste complète des packages cygwin nécessaires. Sinon, relancez l'installeur de cygwin et ajoutez les packages manquants.
+  <ul>
+   <li>Selon les listes de discussion de Cygwin, le changement de comportement dans make 3.81 était causé par le retrait d'un patche traitant les chemins d'accès DOS.</li>
+  </ul>
+ </li>
+ <li><a href="fr/FAQ_sur_le_d%c3%a9bogage_de_Mozilla_sous_Windows">FAQ sur le débogage de Mozilla sous Windows</a> : astuces sur le débogage de Mozilla sous Windows.</li>
+ <li><a href="fr/Mise_%c3%a0_jour_vers_VC7">Mettre à jour un système de compilation Windows de VC6 à VC7</a></li>
+</ul>
+<div class="noinclude">
+  </div>
+<p>{{ languages( { "en": "en/Windows_build_prerequisites_using_cygwin", "ja": "ja/Windows_build_prerequisites_using_cygwin" } ) }}</p>

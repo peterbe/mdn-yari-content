@@ -1,0 +1,38 @@
+<h2 id="JavaScript.2FXSLT_Bindings" name="JavaScript.2FXSLT_Bindings">JavaScript/XSLT Bindings</h2>
+<p>JavaScript can run XSLT transformations through the <code>XSLTProcessor</code> object. Once instantiated, a <code>XSLTProcessor</code> has an <code>importStylesheet</code> method that takes as an argument the XSLT stylesheet to be used in the transformation. The stylesheet has to be passed in as an XML document, which means that the .xsl file has to be loaded by the page before calling <code>importStylesheet</code>. This can be done via <code>XMLHttpRequest</code> or <code>XMLDocument.load</code>.</p>
+<p><small><b>그림 1 : Instantiating an XSLTProcessor</b></small></p>
+<pre>  var xsltProcessor = new XSLTProcessor();
+
+  // Load the xsl file using synchronous (third param is set to false) XMLHttpRequest
+  var myXMLHTTPRequest = new XMLHttpRequest();
+  myXMLHTTPRequest.open("GET", "example.xsl", false);
+  myXMLHTTPRequest.send(null);
+
+  var xslRef = myXMLHTTPRequest.responseXML;
+
+  // Finally import the .xsl
+  xsltProcessor.importStylesheet(xslRef);
+</pre>
+<p>For the actual transformation, <code>XSLTProcessor</code> requires an XML document, which is used in conjunction with the imported XSL file to produce the final result. The XML document can be a separate XML file loaded as shown in figure 1, or it can be part of the existing page. To process part of a page's DOM, it is necessary to first create an XML document in memory. Assuming that the DOM to be processed is contained by an element with the id <code>example</code>, that DOM can be "cloned" using the in-memory XML document's <code>importNode</code> method. <code>importNode</code> allows transferring a DOM fragment between documents, in this case from an HTML document to an XML document. The first parameter references the DOM node to clone. By making the second parameter "true", it will clone all descendants as well (a deep clone). The cloned DOM can then be easily inserted into the XML document using <code>appendChild</code>, as shown in figure 2.</p>
+<p><small><b>Figure 2 : 문서의 DOM 부분에 기반한 XML문서 생성</b></small></p>
+<pre>  // create a new XML document in memory
+  var xmlRef = document.implementation.createDocument("", "", null);
+
+  // we want to move a part of the DOM from an HTML document to an XML document.
+  // importNode is used to clone the nodes we want to process via XSLT - true makes it do a deep clone
+  var myNode = document.getElementById("example");
+  var clonedNode = xmlRef.importNode(myNode, true);
+
+  // add the cloned DOM into the XML document
+  xmlRef.appendChild(clonedNode);
+</pre>
+<p>Once the stylesheet has been imported, <code>XSLTProcessor</code> has to perform two methods for the actual transformation, namely <code>transformToDocument()</code> and <code>transformToFragment()</code>. <code>transformToDocument()</code> returns a full XML document while <code>transformToFragment()</code> returns a document fragment that can be easily added to an existing document. Both take in the XML document as the first parameter that will be transformed. <code> transformToFragment()</code> requires a second parameter, namely the document object that will own the generated fragment. If the generated fragment will be inserted into the current HTML document, passing in document is enough.</p>
+<p><small><b>그림 2.1 : 문자열 'XML Soup'에서 XML문서 생성</b></small></p>
+<p>While you can use IE loadXML method to load a string containing XML you have to perform some tweaking and tuning to do the same in Mozilla. You must use the DomParser.no to create any document, as this is handled by the DomParser.</p>
+<pre>var parser = new DOMParser();
+var doc = parser.parseFromString(aStr, "text/xml");
+</pre>
+<p><small><b>그림 3 : 변환 수행</b></small></p>
+<pre>  var fragment = xsltProcessor.transformToFragment(xmlRef, document);
+</pre>
+<p>{{ languages( { "en": "en/The_XSLT//JavaScript_Interface_in_Gecko/JavaScript//XSLT_Bindings" } ) }}</p>

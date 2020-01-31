@@ -1,0 +1,221 @@
+<div>{{APIRef("DOM")}}</div>
+
+<p>The presence of whitespace in the <a href="/en-US/docs/DOM">DOM</a> can cause layout problems and make manipulation of the content tree difficult in unforeseen ways. Any whitespace characters that are outside of tags in the original document are represented in the DOM. This is needed internally so that the editor can preserve formatting of documents and so that <code>white-space: pre</code> in <a href="/en-US/docs/CSS">CSS</a> will work. This means that:</p>
+
+<ul>
+ <li>There will be some text nodes that contain only whitespace, and</li>
+ <li>Some text nodes will have whitespace at the beginning or end.</li>
+</ul>
+
+<p>In other words, the DOM tree for the following document will look like the image below (using "\n" to represent newlines):</p>
+
+<pre class="brush: html">&lt;!-- My document --&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;title&gt;My Document&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;Header&lt;/h1&gt;
+  &lt;p&gt;
+    Paragraph
+  &lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+
+<p><img src="https://mdn.mozillademos.org/files/854/whitespace_tree.png" style="height: 306px; width: 618px;"></p>
+
+<p>This can make things a bit harder for any users of the DOM who want to iterate through content, excluding the whitespace.</p>
+
+<p>For a deep-dive into how this can affect web layouts, read <a href="https://patrickbrosset.com/articles/2016-10-21-when-does-white-space-matter-in-HTML.html">When does white space matter in HTML?</a></p>
+
+<h2 id="Making_things_easier">Making things easier</h2>
+
+<p>One may format their code as shown below to work around the problem:</p>
+
+<pre class="brush: html">&lt;!-- Conventional pretty-print
+     with white spaces between tags:
+ --&gt;
+&lt;div&gt;
+ &lt;ul&gt;
+  &lt;li&gt;Position 1&lt;/li&gt;
+  &lt;li&gt;Position 2&lt;/li&gt;
+  &lt;li&gt;Position 3&lt;/li&gt;
+ &lt;/ul&gt;
+&lt;/div&gt;
+
+&lt;!-- Pretty-print adjusted to the issue:
+ --&gt;
+&lt;div
+ &gt;&lt;ul
+  &gt;&lt;li&gt;Position 1&lt;/li
+  &gt;&lt;li&gt;Position 2&lt;/li
+  &gt;&lt;li&gt;Position 3&lt;/li
+ &gt;&lt;/ul
+&gt;&lt;/div&gt;
+</pre>
+
+<p><br>
+ The Javascript code below defines several functions that make it easier to deal with whitespace in the DOM:</p>
+
+<pre class="brush: js">/**
+ * Throughout, whitespace is defined as one of the characters
+ *  "\t" TAB \u0009
+ *  "\n" LF  \u000A
+ *  "\r" CR  \u000D
+ *  " "  SPC \u0020
+ *
+ * This does not use Javascript's "\s" because that includes non-breaking
+ * spaces (and also some other characters).
+ */
+
+
+/**
+ * Determine whether a node's text content is entirely whitespace.
+ *
+ * @param nod  A node implementing the |CharacterData| interface (i.e.,
+ *             a |Text|, |Comment|, or |CDATASection| node
+ * @return     True if all of the text content of |nod| is whitespace,
+ *             otherwise false.
+ */
+function is_all_ws( nod )
+{
+  // Use ECMA-262 Edition 3 String and RegExp features
+  return !(/[^\t\n\r ]/.test(nod.textContent));
+}
+
+
+/**
+ * Determine if a node should be ignored by the iterator functions.
+ *
+ * @param nod  An object implementing the DOM1 |Node| interface.
+ * @return     true if the node is:
+ *                1) A |Text| node that is all whitespace
+ *                2) A |Comment| node
+ *             and otherwise false.
+ */
+
+function is_ignorable( nod )
+{
+  return ( nod.nodeType == 8) || // A comment node
+         ( (nod.nodeType == 3) &amp;&amp; is_all_ws(nod) ); // a text node, all ws
+}
+
+/**
+ * Version of |previousSibling| that skips nodes that are entirely
+ * whitespace or comments.  (Normally |previousSibling| is a property
+ * of all DOM nodes that gives the sibling node, the node that is
+ * a child of the same parent, that occurs immediately before the
+ * reference node.)
+ *
+ * @param sib  The reference node.
+ * @return     Either:
+ *               1) The closest previous sibling to |sib| that is not
+ *                  ignorable according to |is_ignorable|, or
+ *               2) null if no such node exists.
+ */
+function node_before( sib )
+{
+  while ((sib = sib.previousSibling)) {
+    if (!is_ignorable(sib)) return sib;
+  }
+  return null;
+}
+
+/**
+ * Version of |nextSibling| that skips nodes that are entirely
+ * whitespace or comments.
+ *
+ * @param sib  The reference node.
+ * @return     Either:
+ *               1) The closest next sibling to |sib| that is not
+ *                  ignorable according to |is_ignorable|, or
+ *               2) null if no such node exists.
+ */
+function node_after( sib )
+{
+  while ((sib = sib.nextSibling)) {
+    if (!is_ignorable(sib)) return sib;
+  }
+  return null;
+}
+
+/**
+ * Version of |lastChild| that skips nodes that are entirely
+ * whitespace or comments.  (Normally |lastChild| is a property
+ * of all DOM nodes that gives the last of the nodes contained
+ * directly in the reference node.)
+ *
+ * @param sib  The reference node.
+ * @return     Either:
+ *               1) The last child of |sib| that is not
+ *                  ignorable according to |is_ignorable|, or
+ *               2) null if no such node exists.
+ */
+function last_child( par )
+{
+  var res=par.lastChild;
+  while (res) {
+    if (!is_ignorable(res)) return res;
+    res = res.previousSibling;
+  }
+  return null;
+}
+
+/**
+ * Version of |firstChild| that skips nodes that are entirely
+ * whitespace and comments.
+ *
+ * @param sib  The reference node.
+ * @return     Either:
+ *               1) The first child of |sib| that is not
+ *                  ignorable according to |is_ignorable|, or
+ *               2) null if no such node exists.
+ */
+function first_child( par )
+{
+  var res=par.firstChild;
+  while (res) {
+    if (!is_ignorable(res)) return res;
+    res = res.nextSibling;
+  }
+  return null;
+}
+
+/**
+ * Version of |data| that doesn't include whitespace at the beginning
+ * and end and normalizes all whitespace to a single space.  (Normally
+ * |data| is a property of text nodes that gives the text of the node.)
+ *
+ * @param txt  The text node whose data should be returned
+ * @return     A string giving the contents of the text node with
+ *             whitespace collapsed.
+ */
+function data_of( txt )
+{
+  var data = txt.textContent;
+  // Use ECMA-262 Edition 3 String and RegExp features
+  data = data.replace(/[\t\n\r ]+/g, " ");
+  if (data.charAt(0) == " ")
+    data = data.substring(1, data.length);
+  if (data.charAt(data.length - 1) == " ")
+    data = data.substring(0, data.length - 1);
+  return data;
+}
+</pre>
+
+<h2 id="Example">Example</h2>
+
+<p>The following code demonstrates the use of the functions above. It iterates over the children of an element (whose children are all elements) to find the one whose text is <code>"This is the third paragraph"</code>, and then changes the class attribute and the contents of that paragraph.</p>
+
+<pre class="brush: js">var cur = first_child(document.getElementById("test"));
+while (cur)
+{
+  if (data_of(cur.firstChild) == "This is the third paragraph.")
+  {
+    cur.className = "magic";
+    cur.firstChild.textContent = "This is the magic paragraph.";
+  }
+  cur = node_after(cur);
+}
+</pre>

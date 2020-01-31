@@ -1,0 +1,190 @@
+<div>{{jsSidebar("Statements")}}</div>
+
+<p><strong>for 文</strong>はループを作ります。丸括弧で囲まれセミコロンで分けられた、3 つの省略可能な式と、その後にループ内で実行される文が構成されます。</p>
+
+<h2 id=".E6.A7.8B.E6.96.87" name=".E6.A7.8B.E6.96.87">構文</h2>
+
+<pre class="syntaxbox">for ([<em>initialization</em>]; [<em>condition</em>]; [<em>final-expression</em>]) <em>statement</em>
+</pre>
+
+<dl>
+ <dt><code>initialization</code></dt>
+ <dd>(代入式を含む) 式または変数宣言。たいていは、カウンタ変数を初期化するために使われます。この式では、<code>var</code> キーワードを用いて新しい変数を任意で宣言してもかまいません。これらの変数はループにローカルなものではありません。すなわち、これらは <code>for</code> ループが属するスコープと同じスコープ内にあります。この式の結果は捨て去られます。</dd>
+ <dt><code>condition</code></dt>
+ <dd>ループの各反復の前に評価される式。もしこの式が true に評価されるなら、<code>statement</code> が実行されます。この条件テストは省略可能です。もし省略されたなら、条件は常に true に評価されます。もしこの式が false に評価されるなら、実行は <code>for</code> の構成子に続く最初の式に飛びます。</dd>
+ <dt><code>final-expression</code></dt>
+ <dd>ループの各反復の終わりに評価される式。これは、<code>condition</code> の次の評価の前に発生します。一般的には、カウンタ変数を更新または増加するために使われます。</dd>
+ <dt><code>statement</code></dt>
+ <dd>条件が true に評価される限り実行される文。ループ内で複数の文を実行するには、それらの文をグループ化するために<a href="/ja/JavaScript/Reference/Statements/block" title="ja/JavaScript/Reference/Statements/block">ブロック</a>文 (<code>{ ... }</code>) を使ってください。ループ内で実行する文をなくすには、<a href="/ja/docs/Web/JavaScript/Reference/Statements/Empty">空文</a>  (<code>;</code>) を使います。</dd>
+</dl>
+
+<h2 id=".E4.BE.8B" name=".E4.BE.8B">例</h2>
+
+<h3 id=".E4.BE.8B:_for_.E3.82.92.E4.BD.BF.E3.81.86" name=".E4.BE.8B:_for_.E3.82.92.E4.BD.BF.E3.81.86">例: <code>for</code> を使う</h3>
+
+<p>次の <code>for</code> 文は、変数 <code>i</code> を宣言し、それを <code>0</code> に初期化することから始まります。<code>i</code> が 9 より小さいことをチェックし、続く 2 つの文を実行し、ループを通過した後ごとに <code>i</code> を 1 増加します。</p>
+
+<pre class="brush: js">for (var i = 0; i &lt; 9; i++) {
+   console.log(i);
+   // more statements
+}
+</pre>
+
+<h3 id="Optional_for_expressions" name="Optional_for_expressions">省略可能な <code>for</code> の式</h3>
+
+<p><code>for</code> ループの先頭にある 3 つの式は、省略可能です。</p>
+
+<p>例えば、<em>initialization</em> ブロックで変数を初期化する必要はありません:</p>
+
+<pre class="brush: js">var i = 0;
+for (; i &lt; 9; i++) {
+    console.log(i);
+    // more statements
+}
+</pre>
+
+<p><em>initialization</em> ブロックと同様に、<em>condition</em> ブロックも省略可能です。この式を省略すると、無限ループを作成しないようにするため、break 文を置くようにしなければなりません。</p>
+
+<pre class="brush: js">for (var i = 0;; i++) {
+   console.log(i);
+   if (i &gt; 3) break;
+   // more statements
+}</pre>
+
+<p>3 つのブロックをすべて省略することもできます。繰り返しますが、ループを終了するための <code><a href="/ja/docs/Web/JavaScript/Reference/Statements/break">break</a></code> 文や変数を変更 (増加) する処理を使うようにしてください。その結果、ある時点で break 文の条件が true になります。</p>
+
+<pre class="brush: js">var i = 0;
+
+for (;;) {
+  if (i &gt; 3) break;
+  console.log(i);
+  i++;
+}
+</pre>
+
+<h3 id="Using_for_with_an_empty_statement" name="Using_for_with_an_empty_statement">空文を伴う <code>for</code> を使う</h3>
+
+<p>以下の <code>for</code> ループは <em>[final-expression]</em> セクションでノードのオフセット位置を計算しており、<code>statement</code> や <code><a href="/ja/docs/JavaScript/Reference/Statements/block" title="JavaScript/Reference/Statements/block">block</a> 文</code>を使う必要はありません。代わりに <a href="/ja/docs/Web/JavaScript/Reference/Statements/Empty">空文</a> を使っています。</p>
+
+<pre class="brush: js">function showOffsetPos (sId) {
+  var nLeft = 0, nTop = 0;
+
+  for (var oItNode = document.getElementById(sId); // initialization
+       oItNode; // condition
+       nLeft += oItNode.offsetLeft, nTop += oItNode.offsetTop, oItNode = oItNode.offsetParent) // final-expression
+       /* empty statement */ ;
+  
+  console.log("Offset position of \"" + sId + "\" element:\n left: " + nLeft + "px;\n top: " + nTop + "px;");
+}
+
+// Example call:
+
+showOffsetPos("content");
+
+// Output:
+// "Offset position of "content" element:
+// left: 0px;
+// top: 153px;"</pre>
+
+<div class="note"><strong>注記:</strong> この例では <code>statement</code> セクションを使わないとき、<strong>セミコロンをループの宣言の直後に置きます</strong>。</div>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">策定状況</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-for-statement', 'for statement')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-for-statement', 'for statement')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-12.6.3', 'for statement')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES3', '#sec-12.6.3', 'for statement')}}</td>
+   <td>{{Spec2('ES3')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES1', '#sec-12.6.2', 'for statement')}}</td>
+   <td>{{Spec2('ES1')}}</td>
+   <td>最初期の定義</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザ実装状況</h2>
+
+<div>{{CompatibilityTable}}</div>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>機能</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>基本サポート</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>機能</th>
+   <th>Android</th>
+   <th>Chrome for Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>基本サポート</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id=".E5.8F.82.E7.85.A7" name=".E5.8F.82.E7.85.A7">参照</h2>
+
+<ul>
+ <li>{{jsxref("Statements/break", "break")}}</li>
+ <li>{{jsxref("Statements/continue", "continue")}}</li>
+ <li>{{jsxref("Statements/empty", "empty")}}</li>
+ <li>{{jsxref("Statements/while", "while")}}</li>
+ <li><a href="/ja/docs/Web/JavaScript/Reference/Statements/do...while"><code>do...while</code></a></li>
+ <li><a href="/ja/docs/Web/JavaScript/Reference/Statements/for...in"><code>for...in</code></a></li>
+ <li><a href="/ja/docs/Web/JavaScript/Reference/Statements/for...of"><code>for...of</code></a></li>
+</ul>

@@ -1,0 +1,97 @@
+<p>{{APIRef("Encoding API")}}{{seecompattable}}</p>
+
+<p>The <strong><code>TextEncoder.prototype.encodeInto()</code></strong> method takes a {{domxref("USVString")}} to encode and a destination <a href="/en-US/docs/Web/JavaScript/Typed_arrays/Uint8Array" title="/en-US/docs/Web/JavaScript/Typed_arrays/Uint8Array"><code>Uint8Array</code></a> to put resulting UTF-8 encoded text into, and returns a dictionary object indicating the progress of the encoding. This is potentially more performant than the older <code>encode()</code> method especially when the target buffer is a view into a Wasm heap.</p>
+
+<h2 id="Syntax">Syntax</h2>
+
+<pre class="syntaxbox"><em>b1</em> = <em>encoder</em>.encodeInto(<em>string</em>, <em>uint8Array</em>);
+</pre>
+
+<h3 id="Parameters">Parameters</h3>
+
+<dl>
+ <dt><code>string</code></dt>
+ <dd>Is a {{DOMxRef("USVString")}} containing the text to encode.</dd>
+ <dt><code>uint8Array</code></dt>
+ <dd>Is a {{DOMxRef("Uint8Array")}} object instance to place the resulting UTF-8 encoded text into.</dd>
+</dl>
+
+<h3 id="Return_value">Return value</h3>
+
+<p>A <code>TextEncoderEncodeIntoResult</code> dictionary, which contains two members:</p>
+
+<dl>
+ <dt><code>read</code></dt>
+ <dd>The number of UTF-16 units of code from the source that has been converted over to UTF-8. This may be less than <code>string.length</code> if <code>uint8Array</code> did not have enough space.</dd>
+ <dt><code>written</code></dt>
+ <dd>The number of bytes modified in the destination <code>Uint8Array</code>. The bytes written are guaranteed to form complete UTF-8 byte sequences.</dd>
+</dl>
+
+<h2 id="Buffer_Sizing">Buffer Sizing</h2>
+
+<p>To convert a JavaScript string <code>s</code>, the output space needed for full conversion is never less than <code>s.length</code> bytes and never greater than <code>s.length * 3</code> bytes. If the output allocation (typically within Wasm heap) is expected to be short-lived, it makes sense to simply allocate <code>s.length * 3</code> bytes for the output, in which case the first conversion attempt is guaranteed to convert the whole string.</p>
+
+<p>If the output is expected to be long-lived, it makes sense to compute minimum allocation <code>roundUpToBucketSize(s.length)</code>, the maximum allocation size <code>s.length * 3</code>, and to have a chosen (as a tradeoff between memory usage and speed) threshold <code>t</code> such that if <code>roundUpToBucketSize(s.length) + t &gt;= s.length * 3</code>, you simply allocate for <code>s.length * 3</code>. Otherwise, first allocate for <code>roundUpToBucketSize(s.length)</code> and convert. If the <code>read</code> item it the return dictionary is <code>s.length</code>, the conversion is done. If not, reallocate the target buffer to <code>written + (s.length - read) * 3</code> and then convert the rest by taking a substring of <code>s</code> starting from index <code>read</code> and a subbuffer of the target buffer starting from index <code>written</code>.</p>
+
+<p>Above <code>roundUpToBucketSize()</code> is a function that rounds up to the allocator bucket size. For example, if your Wasm allocator is known to use power-of-two buckets, <code>roundUpToBucketSize()</code> should return the argument if it is a power-of-two or the next power-of-two otherwise. If the behavior of the Wasm allocator is unknown, <code>roundUpToBucketSize()</code> should be an identity function.</p>
+
+<p>If the behavior of your allocator is unknown, you might want to have up to two reallocation steps and make the the first reallocation step multiply the <em>remaining unconverted</em> length by two instead of three. However, in that case, it makes sense not to implement the usual multiplying by two of the <em>already written</em> buffer length, because in such a case if a second reallocation happened, it would always overallocate compared to the original length times three.</p>
+
+<p>The above advice assumes that you don't need to allocate space for a zero terminator. That is, on the Wasm side you are working with Rust strings or a non-zero-terminating C++ class. If you are working with C++ <code>std::string</code>, even though the logical length is shown to you, you need to take the extra terminator byte into account when computing rounding up to allocator bucket size. See the next section about C strings.</p>
+
+<h2 id="No_Zero-Termination">No Zero-Termination</h2>
+
+<p>If the input string contains the character U+0000 in the input, <code>encodeInto()</code> will write a 0x00 byte in the output. <code>encodeInto()</code> <em>does not</em> write a C-style 0x00 sentinel byte after the logical output.</p>
+
+<p>If your Wasm program uses C strings, it's your responsibility to write the 0x00 sentinel and you can't prevent your Wasm program from seeing a logically truncated string if the JavaScript string contained U+0000.</p>
+
+<h2 id="Examples">Examples</h2>
+
+<pre class="brush: html">&lt;p class="source"&gt;This is a sample paragraph.&lt;/p&gt;
+&lt;p class="result"&gt;&lt;/p&gt;</pre>
+
+<pre class="brush: js">const sourcePara = document.querySelector('.source');
+const resultPara = document.querySelector('.result');
+const string = sourcePara.textContent;
+
+const textEncoder = new TextEncoder();
+const utf8 = new Uint8Array(string.length);
+
+let encodedResults = textEncoder.encodeInto(string, utf8);
+resultPara.textContent += 'Bytes read: ' + encodedResults.read +
+                          ' | Bytes written: ' + encodedResults.written +
+                          ' | Encoded result: ' + utf8;</pre>
+
+<p>{{EmbedLiveSample('Examples')}}</p>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName("Encoding", "#dom-textencoder-encodeinto", "TextEncoder.encode()")}}</td>
+   <td>{{Spec2("Encoding")}}</td>
+   <td>Initial definition.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<div>
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("api.TextEncoder.encodeInto")}}</p>
+</div>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li>The {{DOMxRef("TextEncoder")}} interface it belongs to.</li>
+ <li>{{DOMxRef("TextEncoder.encode()")}}</li>
+</ul>

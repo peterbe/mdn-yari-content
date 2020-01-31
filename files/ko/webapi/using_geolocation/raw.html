@@ -1,0 +1,237 @@
+<p>{{securecontext_header}}{{APIRef("Geolocation API")}}<br>
+ <strong>Geolocation API</strong>는 사용자가 원할 경우, 웹 어플리케이션으로 그들의 위치를 제공할 수 있게 해줍니다. 사생활 보호의 이유로 사용자는 위치 정보 제공을 위한 권한 요청을 받습니다.</p>
+
+<h2 id="geolocation_객체">geolocation 객체</h2>
+
+<p><a href="https://developer.mozilla.org/ko/docs/Web/API/Geolocation">Geolocation</a> API는 {{domxref("navigator.geolocation")}} 객체를 통해 공개되었습니다.</p>
+
+<p>해당 객체가 존재하는 경우 지오로케이션 서비스가 가능합니다. 지오로케이션 사용 가능 여부는 다음과 같이 테스트 할 수 있습니다.</p>
+
+<pre class="brush: js">if ("geolocation" in navigator) {
+  /* 지오로케이션 사용 가능 */
+} else {
+  /* 지오로케이션 사용 불가능 */
+}
+</pre>
+
+<div class="note"><strong>노트:</strong> Firefox 24 이하 버전에서, <code>navaigator의 "geolocation"</code> 객체는  API를 사용할 수 없더라도 언제나 <code>true</code>값을 반환합니다. 이 부분은 <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Releases/25/Site_Compatibility">Firefox 25</a>에서 표준에 맞게 수정되었습니다. <em>({{ bug(884921) }}).</em></div>
+
+<h3 id="현재_위치_가져오기">현재 위치 가져오기</h3>
+
+<p>{{domxref("window.navigator.geolocation.getCurrentPosition()","getCurrentPosition()")}} 메서드를 호출해 사용자의 현재 위치를 얻을 수 있습니다. 사용자 위치를 탐지하는 비동기 요청을 초기화하고, 하드웨어에 사용자의 최신 위치 정보를 요청합니다. 위치가 확인되면 정의된 콜백 함수가 실행됩니다. 선택적으로 에러가 발생할 때 실행될 두번째 콜백함수를 지정할 수 있습니다. 세번째 선택적인 파라미터는 옵션 객체인데, 위치값이 반환된 최대 시간과 요청을 대기할 시간, 그리고 높은 정확도를 사용할 지 여부를 지정합니다.</p>
+
+<div class="note">
+<p><strong>노트:</strong> 기본적으로, {{domxref("window.navigator.geolocation.getCurrentPosition()","getCurrentPosition()")}}은 낮은 정확도의 결과를 가능한 빠르게 응답하려합니다. 정확도에 개의치 않고 빠른 응답을 필요로 하는 경우 유용합니다. GPS가 있는 장치를 예로들면, GPS 수정값을 얻는데 1분 이상의 시간이 필요하기 때문에 덜 정확한 데이터(IP 주소 또는 wifi)가 {{domxref("window.navigator.geolocation.getCurrentPosition()","getCurrentPosition()")}}으로 반환될수도 있습니다.</p>
+</div>
+
+<pre class="brush: js">navigator.geolocation.getCurrentPosition(function(position) {
+  do_something(position.coords.latitude, position.coords.longitude);
+});</pre>
+
+<p>위의 예제는 사용자 위치가 확인되면 <code>do_something()</code> 함수를 실행합니다.</p>
+
+<h3 id="현재_위치_추적하기">현재 위치 추적하기</h3>
+
+<p>만약 위치 정보가 변경(장치가 움직였거나 좀 더 정확한 위치 정보가 도착했을때)되었다면 갱신된 위치 정보로 호출되는 콜백 함수를 지정할 수 있습니다.<br>
+ 이는 {{domxref("window.navigator.geolocation.getCurrentPosition()","getCurrentPosition()")}}과 동일한 입력 파라미터를 갖는 {{domxref("window.navigator.geolocation.watchPosition()","watchPosition()")}} 함수를 사용하면됩니다. 콜백 함수는 여러 번 호출되어, 브라우저가 사용자의 움직인 위치를 업데이트하거나 사용자의 위치를 얻는데 사용되는 다른 기술을 사용해 더 정확한 위치를 얻을 수 있도록합니다. {{domxref("Geolocation.getCurrentPosition()","getCurrentPosition()")}} 함수에서와 마찬가지로 옵션인 에러 콜백 함수도 반복적으로 호출될 수 있습니다.</p>
+
+<div class="note">
+<p><strong>노트:</strong>  초기 {{domxref("window.navigator.geolocation.getCurrentPosition()","getCurrentPosition()")}} 함수 호출이 없이도 {{domxref("window.navigator.geolocation.watchPosition()","watchPosition()")}} 함수를 사용할 수 있습니다.</p>
+</div>
+
+<pre class="brush: js">var watchID = navigator.geolocation.watchPosition(function(position) {
+  do_something(position.coords.latitude, position.coords.longitude);
+});</pre>
+
+<p>{{domxref("window.navigator.geolocation.watchPosition()","watchPosition()")}} 메서드는 숫자로 된 ID를 반환하며, watcher를 식별하는데 사용합니다. {{domxref("window.navigator.geolocation.clearWatch()","clearPosition()")}} 메서드에 이 값을 사용하여 사용자 위치 추적을 중단합니다.</p>
+
+<pre class="brush: js">navigator.geolocation.clearWatch(watchID);
+</pre>
+
+<h3 id="미세_조정_응답">미세 조정 응답</h3>
+
+<p>{{domxref("window.navigator.geolocation.getCurrentPosition()","getCurrentPosition()")}}과 {{domxref("window.navigator.geolocation.watchPosition()","watchPosition()")}} 모두는 success 콜백, 옵션인 에러 콜백과 <a href="https://developer.mozilla.org/ko/docs/Web/API/PositionOptions">PositionOptions</a> 객체를 받습니다.</p>
+
+<p>{{page("/ko/docs/DOM/window.navigator.geolocation.getCurrentPosition","PositionOptions")}}</p>
+
+<p>{{domxref("window.navigator.geolocation.watchPosition()","watchPosition")}} 함수의 사용은 아래와 같습니다.:</p>
+
+<pre class="brush: js">function geo_success(position) {
+  do_something(position.coords.latitude, position.coords.longitude);
+}
+
+function geo_error() {
+  alert("위치 정보를 사용할 수 없습니다.");
+}
+
+var geo_options = {
+  enableHighAccuracy: true, 
+  maximumAge        : 30000, 
+  timeout           : 27000
+};
+
+var wpid = navigator.geolocation.watchPosition(geo_success, geo_error, geo_options);
+<a id="fck_paste_padding">﻿</a></pre>
+
+<h2 id="위치_설명">위치 설명</h2>
+
+<p>사용자의 위치는 {{domxref("Coordinates")}} 객체를 참조하는 {{domxref("Position")}} 객체를 사용하여 나타냅니다.</p>
+
+<p>{{page("/ko/docs/DOM/window.navigator.geolocation.getCurrentPosition","Position")}}</p>
+
+<p>{{page("/ko/docs/DOM/window.navigator.geolocation.getCurrentPosition","Coordinates")}}</p>
+
+<h2 id="에러_처리">에러 처리</h2>
+
+<p><code>getCurrentPosition()</code> 또는 <code>watchPosition()</code>를 호출할 때 에러 콜백 함수를 전달한 경우, 첫 번째 파라미터로 <a href="https://developer.mozilla.org/ko/docs/Web/API/PositionError">PositionError</a> 객체가 옵니다.</p>
+
+<pre class="brush: js">function errorCallback(error) {
+  alert('ERROR(' + error.code + '): ' + error.message);
+};
+</pre>
+
+<p>{{page("/ko/docs/DOM/window.navigator.geolocation.getCurrentPosition","PositionError")}}</p>
+
+<h2 id="Geolocation_라이브_예제">Geolocation 라이브 예제</h2>
+
+<div class="hidden">
+<pre class="brush: js">body {
+  padding: 20px;
+  background-color:#ffffc9
+}
+
+button {
+  margin: .5rem 0;
+}</pre>
+</div>
+
+<h3 id="HTML_컨텐츠">HTML 컨텐츠</h3>
+
+<pre class="brush: html"><code>&lt;button id = "find-me"&gt;Show my location&lt;/button&gt;&lt;br/&gt;
+&lt;p id = "status"&gt;&lt;/p&gt;
+&lt;a id = "map-link" target="_blank"&gt;&lt;/a&gt;</code></pre>
+
+<h3 id="JavaScript_컨텐츠">JavaScript 컨텐츠</h3>
+
+<pre class="brush: js">function geoFindMe() {
+
+  const status = document.querySelector('#status');
+  const mapLink = document.querySelector('#map-link');
+
+  mapLink.href = '';
+  mapLink.textContent = '';
+
+  function success(position) {
+    const latitude  = position.coords.latitude;
+    const longitude = position.coords.longitude;
+
+    status.textContent = '';
+    mapLink.href = `https://www.openstreetmap.org/#map=18/${latitude}/${longitude}`;
+    mapLink.textContent = `Latitude: ${latitude} °, Longitude: ${longitude} °`;
+  }
+
+  function error() {
+    status.textContent = 'Unable to retrieve your location';
+  }
+
+  if (!navigator.geolocation) {
+    status.textContent = 'Geolocation is not supported by your browser';
+  } else {
+    status.textContent = 'Locating…';
+    navigator.geolocation.getCurrentPosition(success, error);
+  }
+
+}
+
+document.querySelector('#find-me').addEventListener('click', geoFindMe);</pre>
+
+<h3 id="라이브_결과">라이브 결과</h3>
+
+<p>{{EmbedLiveSample('Geolocation_Live_Example', 350, 150, "", "", "", "geolocation")}}</p>
+
+<h2 id="권한_프롬프트">권한 프롬프트</h2>
+
+<p><a href="https://addons.mozilla.org/">addons.mozilla.org</a>에 호스팅된 지오로케이션 데이터를 사용하는 모든 부가 기능은 동작하기전에 반드시 명시적으로 권한 요청을 해야합니다. 아래의 함수는 웹페이지에 자동으로 표시되는 프롬프트 방식으로 권한을 요청할것입니다. 사용자의 응답은 가능한 경우, <code>pref</code> 파라미터에의해 지정된 설정에 저장될것입니다. <code>callback</code> 파라미터로 제공된 함수는 사용자의 응답이 나타내는 불리언 값으로 호출됩니다. <code>true</code>인 경우, 부가 기능은 지오로케이션 데이터에 접근할 수 있습니다.</p>
+
+<pre class="brush: js">function prompt(window, pref, message, callback) {
+    let branch = Components.classes["@mozilla.org/preferences-service;1"]
+                           .getService(Components.interfaces.nsIPrefBranch);
+
+    if (branch.getPrefType(pref) === branch.PREF_STRING) {
+        switch (branch.getCharPref(pref)) {
+        case "always":
+            return callback(true);
+        case "never":
+            return callback(false);
+        }
+    }
+
+    let done = false;
+
+    function remember(value, result) {
+        return function() {
+            done = true;
+            branch.setCharPref(pref, value);
+            callback(result);
+        }
+    }
+
+    let self = window.PopupNotifications.show(
+        window.gBrowser.selectedBrowser,
+        "geolocation",
+        message,
+        "geo-notification-icon",
+        {
+            label: "Share Location",
+            accessKey: "S",
+            callback: function(notification) {
+                done = true;
+                callback(true);
+            }
+        }, [
+            {
+                label: "Always Share",
+                accessKey: "A",
+                callback: remember("always", true)
+            },
+            {
+                label: "Never Share",
+                accessKey: "N",
+                callback: remember("never", false)
+            }
+        ], {
+            eventCallback: function(event) {
+                if (event === "dismissed") {
+                    if (!done) callback(false);
+                    done = true;
+                    window.PopupNotifications.remove(self);
+                }
+            },
+            persistWhileVisible: true
+        });
+}
+
+prompt(window,
+       "extensions.foo-addon.allowGeolocation",
+       "Foo Add-on wants to know your location.",
+       function callback(allowed) { alert(allowed); });
+</pre>
+
+<h2 id="브라우저_호환성">브라우저 호환성</h2>
+
+<p>{{Compat("api.Geolocation")}}</p>
+
+<div id="compat-desktop">
+<h3 id="유효성">유효성</h3>
+
+<p>WiFi 기반 로케이셔닝이 종종 Google에 의해 제공됨에따라, 순수 Geolocation API는 중국에서 사용이 불가할 수 있습니다. <a href="http://lbsyun.baidu.com/index.php?title=jspopular/guide/geolocation">Baidu</a>, <a href="https://lbs.amap.com/api/javascript-api/guide/services/geolocation#geolocation">Autonavi</a>, <a href="http://lbs.qq.com/tool/component-geolocation.html">Tencent</a>와 같은 로컬 제3자 제공자를 사용해야할 수도 있습니다. 이러한 서비스들은 향상된 포지셔닝을 제공하기 위해 사용자의 IP 주소 및/또는 로컬 앱을 사용합니다.</p>
+</div>
+
+<h2 id="함께_보기">함께 보기</h2>
+
+<ul>
+ <li>{{domxref("navigator.geolocation")}}</li>
+ <li><a href="https://developer.mozilla.org/en-US/Apps/Build/gather_and_modify_data/Plotting_yourself_on_the_map">Plotting yourself on the map</a></li>
+ <li><a href="https://www.w3.org/TR/geolocation-API/" rel="external">Geolocation API on w3.org</a></li>
+ <li><a href="https://hacks.mozilla.org/2013/10/who-moved-my-geolocation/">Who moved my geolocation?</a> (Hacks blog)</li>
+</ul>

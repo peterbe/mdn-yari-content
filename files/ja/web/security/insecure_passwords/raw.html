@@ -1,0 +1,62 @@
+<p class="summary">HTTP を通じてログインフォームを提供することは、ユーザーのパスワードを暴くための広範にわたる攻撃に対して特に危険です。ネットワークの盗聴者は、ネットワークを覗き見たり、転送によって提供されたページを変更したりしてユーザーのパスワードを盗むことができます。<span class="seoSummary">このページでは、安全でないパスワードやパスワード窃盗にまつわるリスクをユーザーや開発者に警告するために、 Firefox が講じているセキュリティメカニズムについて詳しく説明しています。</span></p>
+
+<p><a href="https://mdn.mozillademos.org/files/5951/insecure_page2_with_arrows_cropped.jpeg">HTTPS</a> プロトコルは、ネットワーク上での盗聴 (機密性) や改ざん (完全性) といった脅威から、ユーザーのデータを保護できるように設計されています。ユーザーのデータを扱うウェブサイトは、ユーザーを攻撃者から守るために HTTPS を使用してください。 HTTPS を使わなければ、ユーザーの情報 (ログインの資格情報など) が盗まれるのは当たり前になってしまいます。このことを <a href="https://codebutler.github.io/firesheep/">Firesheep</a> が証明したのは有名です。</p>
+
+<p>この問題を修正するためには、 SSL/TLS 証明書をサーバーにインストールし構成してください。様々なベンダーが無料または有料の証明書を提供しています。クラウドプラットフォームを使用しているのであれば、 HTTPS を有効にする方法を独自に持っているかもしれません。</p>
+
+<h2 id="Firefox_password_security_indicators" name="Firefox_password_security_indicators">Firefox のパスワードセキュリティ表示</h2>
+
+<p>上記の脅威を知らせるため、 Firefox は数多くの警告の仕組みを実装しています。</p>
+
+<ol>
+ <li>
+  <p>Firefox 51 以降は以下のように、ログインページが安全な接続で提供されていない場合は、赤い斜線が入った錠アイコンを表示します。</p>
+
+  <p style="text-align: center;"><img alt="錠アイコン" src="https://support.cdn.mozilla.net/media/uploads/gallery/images/2015-11-17-12-13-18-2faa61.png" style="height: 25px; width: 25px;"></p>
+ </li>
+ <li>
+  <p>Firefox 52 以降は、安全ではないフォームの URL バーとフォーカスが与えられたパスワード入力欄の下側に、明確な警告を表示します。</p>
+
+  <p style="text-align: center;"><img alt="警告" src="https://support.cdn.mozilla.net/media/uploads/gallery/images/2017-04-21-23-52-53-ba340d.png" style="height: 133px; width: 328px;"></p>
+ </li>
+ <li>
+  <p>Firefox 52 以降は、安全ではないログインフォームでオートフィルを無効にもしました。ユーザーは保存されたログイン情報をドロップダウンから手動で自動補完させることができます。</p>
+ </li>
+ <li>
+  <p>安全でないログインフォームについての警告は、次の説で説明するように、すべての Firefox リリースの開発者コンソールのセキュリティパネルでも見ることができます。</p>
+ </li>
+</ol>
+
+<h2 id="Web_Console_Messages" name="Web_Console_Messages">ウェブコンソールのメッセージ</h2>
+
+<p>この節では、安全ではないパスワードのレスポンスとして、 Firefox 開発者ツールの開発者コンソールに表示されるセキュリティメッセージを説明します。</p>
+
+<h3 id="Serving_the_login_form_over_HTTP" name="Serving_the_login_form_over_HTTP">HTTP によるログインフォームの提供</h3>
+
+<p>たとえ form 要素の action 属性に指定された URL が HTTPS であったとしても、ユーザーのログインフォームは保護されません。なぜなら、これからユーザーが受信するページを攻撃者が書き換えることができるからです (例えば、ユーザーの入力を記録するスクリプトを挿入できたり、機微なデータの送信先を攻撃者の管理するサーバに変更できたりします)。ウェブコンソールのセキュリティ通知欄には、この問題に対する警告が以下のように表示されます。</p>
+
+<p style="text-align: center;"><img alt="ウェブコンソールに見られる安全ではないログインフォームと、パスワード入力欄における警告" src="https://mdn.mozillademos.org/files/14783/Insecure_Password_Console_Contextual_sm.png" style="height: 566px; width: 790px;"></p>
+
+<div class="note">
+<p><strong>メモ</strong>: HTTP 文書に埋め込まれた HTTPS のログインページも安全ではありません。 — 攻撃者はフォームの URL を、悪意のあるサイトを指すように変更することができるからです。</p>
+</div>
+
+<h3 id="Using_an_HTTP_URL_in_the_form_action" name="Using_an_HTTP_URL_in_the_form_action">form の action 属性で HTTP の URL を使用する場合</h3>
+
+<p>この場合、ユーザーが入力したあらゆるデータはネットワーク上を平文で流れます。ユーザーが入力したそのパスワードは、ユーザーのコンピューターを離れてウェブサーバに届くまでの間、ネットワークを盗み見している全員がはっきりと読み取ることができます。</p>
+
+<p style="text-align: center;"><img alt="ウェブコンソールに見られる安全ではないログインフォームと、パスワード入力欄における警告" src="https://mdn.mozillademos.org/files/14785/Insecure_Action_Password_Console_Contextual_sm.png" style="height: 566px; width: 790px;"></p>
+
+<h2 id="Note_on_password_reuse" name="Note_on_password_reuse">パスワードの使いまわしに関するメモ</h2>
+
+<p>ウェブサイトがユーザー名とパスワードを求めても、実際には微妙なデータを保存しないことがあります。例えば、あるニュースサイトがユーザーが読み返したい記事を保存しても、ユーザーに関する他のデータを保存しない場合などです。ニュースサイトのウェブ開発者は、サイトやユーザーの認証情報を安全にする必要があるとはあまり考えないかもしれません。</p>
+
+<p>残念ながら、<a href="https://www.lightbluetouchpaper.org/2011/02/09/measuring-password-re-use-empirically/">パスワードの使い回しは大きな問題</a>です。ユーザーは複数のサイト (ニュースサイト、SNS、メールサービス、銀行) で同じパスワードを使用します。つまり、サイトが管理するユーザー名とパスワードに何者かがアクセスしたところで、自分たちに大きなリスクがあると思えなくとも、銀行のウェブサイトでも同じパスワードでログインしているユーザーーにとっては非常に大きなリスクなのです。攻撃者はより賢くなっており、一つのサイトでユーザ名とパスワードの組を盗んだ後には、より金目のあるサイトに同じ組でログインできないか試しているのです。</p>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li class="entry-title"><a href="https://blog.mozilla.org/tanvi/2016/01/28/no-more-passwords-over-http-please/">No More Passwords over HTTP, Please!</a> — detailed blog post with more information, and FAQ.</li>
+</ul>
+
+<div>{{QuickLinksWithSubpages("/ja/docs/Web/Security")}}</div>

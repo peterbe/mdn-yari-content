@@ -1,0 +1,108 @@
+<div>{{JSRef}}</div>
+
+<p><strong><code>[@@split]()</code></strong> メソッドは、文字列を部分文字列に区切ることによって、{{jsxref("String")}} オブジェクトを文字列の配列に分割します。</p>
+
+<div>{{EmbedInteractiveExample("pages/js/regexp-prototype-@@split.html")}}</div>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox"><var>regexp</var>[Symbol.split](str[, <var>limit</var>])</pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<dl>
+ <dt><code>str</code></dt>
+ <dd>分割操作の対象。</dd>
+ <dt><code>limit</code></dt>
+ <dd>
+ <p>オプション。分割数の上限を指定する整数を渡す。<code>[@@split]()</code> メソッドは、分割項目の数が <code>limit</code> に一致するか、文字列が <code>this</code> パターンを満たさなくなるまで、<code>this</code> RegExp パターンに一致するすべてを分割します。</p>
+ </dd>
+</dl>
+
+<h3 id="Return_value" name="Return_value">戻り値</h3>
+
+<p>要素として部分文字列を含む {{jsxref("Array")}}。</p>
+
+<h2 id="Description" name="Description">説明</h2>
+
+<p><code>separator</code> 引数が {{jsxref("RegExp")}} オブジェクトだった場合、このメソッドは {{jsxref("String.prototype.split()")}} の内部で呼び出されます。たとえば、次の 2 つの例は同じ結果を返します。</p>
+
+<pre class="brush: js">'a-b-c'.split(/-/);
+
+/-/[Symbol.split]('a-b-c');</pre>
+
+<p>このメソッドは、<code>RegExp</code> のサブクラスで分割の振る舞いをカスタマイズするために存在します。</p>
+
+<p><code>str</code> 引数が {{jsxref("RegExp")}} オブジェクトでは<strong>ない</strong>場合、{{jsxref("String.prototype.split()")}} は、このメソッドを呼び出すことも {{jsxref("RegExp")}} オブジェクトを生成することもありません。</p>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<h3 id="Direct_call" name="Direct_call">直接呼出し</h3>
+
+<p><code>this</code> の扱いと引数の並び順を除いて、このメソッドは {{jsxref("String.prototype.split()")}} とほとんど同じように使用できます。</p>
+
+<pre class="brush: js">var re = /-/g;
+var str = '2016-01-02';
+var result = re[Symbol.split](str);
+console.log(result);  // ["2016", "01", "02"]
+</pre>
+
+<h3 id="Using_split_in_subclasses" name="Using_split_in_subclasses">サブクラスで <code>@@split</code> を使用する</h3>
+
+<p>既定の動作を修正するために、{{jsxref("RegExp")}} のサブクラスで <code>[@@split]()</code> メソッドをオーバーライドできます。</p>
+
+<pre class="brush: js">class MyRegExp extends RegExp {
+  [Symbol.split](str, limit) {
+    var result = RegExp.prototype[Symbol.split].call(this, str, limit);
+    return result.map(x =&gt; "(" + x + ")");
+  }
+}
+
+var re = new MyRegExp('-');
+var str = '2016-01-02';
+var result = str.split(re); // String.prototype.split calls re[@@split].
+console.log(result); // ["(2016)", "(01)", "(02)"]
+</pre>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">状態</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-regexp.prototype-@@split', 'RegExp.prototype[@@split]')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td>初期定義。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-regexp.prototype-@@split', 'RegExp.prototype[@@split]')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザー実装状況</h2>
+
+<div>
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.builtins.RegExp.@@split")}}</p>
+</div>
+
+<h2 id="See_also" name="See_also">関連項目</h2>
+
+<ul>
+ <li>{{jsxref("String.prototype.split()")}}</li>
+ <li>{{jsxref("RegExp.prototype.@@match()", "RegExp.prototype[@@match]()")}}</li>
+ <li>{{jsxref("RegExp.prototype.@@replace()", "RegExp.prototype[@@replace]()")}}</li>
+ <li>{{jsxref("RegExp.prototype.@@search()", "RegExp.prototype[@@search]()")}}</li>
+ <li>{{jsxref("RegExp.prototype.exec()")}}</li>
+ <li>{{jsxref("RegExp.prototype.test()")}}</li>
+</ul>

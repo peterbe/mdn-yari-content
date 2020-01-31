@@ -1,0 +1,109 @@
+<div>{{APIRef("DOM")}}</div>
+
+<p><code><strong>Node.textContent</strong></code> プロパティは、ノードおよびその子孫のテキスト内容を表します。</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox">var <em>text</em> = element.textContent;
+element.textContent = "this is some sample text";
+</pre>
+
+<h2 id="Description" name="Description">説明</h2>
+
+<ul>
+ <li>要素が <a href="/ja/docs/DOM/document">document</a>、document type、または notation の場合、<code>textContent</code> は <code>null</code> を返します。文書全体のテキストと CDATA データを取得するためには、以下のように書けます：<code><a href="/ja/docs/DOM/document.documentElement">document.documentElement</a>.textContent</code>。</li>
+ <li>ノードが CDATA セクション、コメント、処理命令ノード、またはテキストノードの場合、<code>textContent</code> はこのノードの内側のテキスト（<a href="/ja/docs/DOM/Node.nodeValue">nodeValue</a>）を返します。</li>
+ <li>他のノードタイプの場合、<code>textContent</code> は、コメントと処理命令ノードを除く、すべての子ノードの <code>textContent</code> 属性値を連結したものを返します。ノードが子を持たない場合、これは空文字列になります。</li>
+ <li>ノードにこのプロパティに値を設定すると、そのノードのすべての子供が取り除かれて、指定された値をもつ単一のテキストノードに置き換わります。</li>
+</ul>
+
+<h3 id="Differences_from_innerText" name="Differences_from_innerText"><code>innerText</code> との違い</h3>
+
+<p>Internet Explorer は <code>element.innerText</code> を導入しました。これは同じものを意図しますが、次の違いがあります：</p>
+
+<ul>
+ <li><code>textContent</code> は、{{HTMLElement("script")}} と {{HTMLElement("style")}} 要素を含む、すべての要素の内容を取得する一方で、IE 特有のプロパティ <code>innerText</code> はそうではありません。</li>
+ <li><code>innerText</code> は要素のスタイルに対して知覚的で、非表示の要素のテキストを返さない一方で、<code>textContent</code> は返します。</li>
+ <li><code>innerText</code> は CSS スタイリングに知覚的なためリフローを起こし、一方 <code>textContent</code> はそうなりません。</li>
+ <li><code>textContent</code> とは異なり、Internet Explorer（バージョン 11 まで）の <code>innerText</code> を変更することは、要素から子ノードを削除するだけでなく、子孫のテキストノードを<em>完全に破棄します</em>（よって、他の要素または同じ要素にノードをもう一度挿入することは不可能です）。</li>
+</ul>
+
+<h3 id="Differences_from_innerHTML" name="Differences_from_innerHTML"><code>innerHTML</code> との違い</h3>
+
+<p><code>innerHTML</code> は、その名が示すとおり HTML を返します。 多くの場合、要素内のテキストを取得または書き込むために、<code>innerHTML</code> を使用します。しかしながら、 <code>textContent</code> はパフォーマンスを向上させる場合があります。テキストが HTML として解析されないためです。さらに、<code>textContent</code> を使用することで <abbr title="cross-site scripting">XSS</abbr> 攻撃を防ぐことができます。</p>
+
+<h2 id="Example" name="Example">例</h2>
+
+<pre class="brush: js">// 以下のような HTML の断片があります:
+//   &lt;div id="divA"&gt;This is &lt;span&gt;some&lt;/span&gt; text&lt;/div&gt;
+
+// テキスト内容を取得する:
+var text = document.getElementById("divA").textContent;
+// 変数 text には "This is some text" が入ります。
+
+// テキスト内容を設定する:
+document.getElementById("divA").textContent = "This is some text";
+// HTML の divA はこのようになります：
+//   &lt;div id="divA"&gt;This is some text&lt;/div&gt;
+</pre>
+
+<h2 id="Polyfill_for_IE8" name="Polyfill_for_IE8">Polyfill for IE8</h2>
+
+<pre class="brush: js">if (Object.defineProperty 
+  &amp;&amp; Object.getOwnPropertyDescriptor 
+  &amp;&amp; Object.getOwnPropertyDescriptor(Element.prototype, "textContent") 
+  &amp;&amp; !Object.getOwnPropertyDescriptor(Element.prototype, "textContent").get) {
+  (function() {
+    var innerText = Object.getOwnPropertyDescriptor(Element.prototype, "innerText");
+    Object.defineProperty(Element.prototype, "textContent",
+     {
+       get: function() {
+         return innerText.get.call(this);
+       },
+       set: function(s) {
+         return innerText.set.call(this, s);
+       }
+     }
+   );
+  })();
+}
+</pre>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザ実装状況</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("api.Node.textContent")}}</p>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="spectable standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">状態</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('DOM WHATWG','#dom-node-textcontent','Node.textContent')}}</td>
+   <td>{{Spec2('DOM WHATWG')}}</td>
+   <td>DOM4 からの変更なし</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('DOM4','#dom-node-textcontent','Node.textContent')}}</td>
+   <td>{{Spec2('DOM4')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('DOM3 Core','core.html#Node3-textContent','Node.textContent')}}</td>
+   <td>{{Spec2('DOM3 Core')}}</td>
+   <td>導入</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="See_also" name="See_also">関連項目</h2>
+
+<ul>
+ <li><a href="http://perfectionkills.com/the-poor-misunderstood-innerText/">More on differences between <code>innerText</code> and <code>textContent</code></a> (ブログの投稿)</li>
+</ul>

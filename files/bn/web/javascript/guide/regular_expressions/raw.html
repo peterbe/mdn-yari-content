@@ -1,0 +1,635 @@
+<p>আপনি কোন স্ট্রিং এর মধ্য থেকে বিশেষ প্যাটার্ন খুঁজে বের করতে রেগুলার এক্সপ্রেশন ব্যবহার করতে পারেন। জাভাস্ক্রিপ্টে, রেগুলার এক্সপ্রেশন ও অবজেক্ট। রেগুলার এক্সপ্রেশন গুলোর প্রটোটাইপ হচ্ছে  <a href="/bn-BD/docs/JavaScript/Reference/Global_Objects/RegExp" title="RegExp"><code>RegExp</code></a>, এই অবজেক্টের <a href="/bn-BD/docs/JavaScript/Reference/Global_Objects/RegExp/exec" title="exec"><code>exec</code></a> আর <a href="/bn-BD/docs/JavaScript/Reference/Global_Objects/RegExp/test" title="test"><code>test</code></a> আর মেথড ব্যবহার করা হয় রেগুলার এক্সপ্রেশন মিলানোর জন্য। এছাড়াও, <a href="/en-US/docs/JavaScript/Reference/Global_Objects/String" title="String"><code>String</code></a> অবজেক্টের <a href="/en-US/docs/JavaScript/Reference/Global_Objects/String/match" title="match"><code>match</code></a>, <a href="/en-US/docs/JavaScript/Reference/Global_Objects/String/replace" title="en-US/docs/JavaScript/Reference/Global_Objects/String/replace"><code>replace</code></a>,<a href="/en-US/docs/JavaScript/Reference/Global_Objects/String/search" title="search"> <code>search</code></a>, এবং <a href="/en-US/docs/JavaScript/Reference/Global_Objects/String/split" title="split"><code>split</code></a> মেথড গুলোর সাথেও রেগুলার এক্সপ্রেশন ব্যবহার করা যায়। এই চ্যাপ্টারে রেগুলার এক্সপ্রেশন নিয়েই আলোচনা করা হয়েছে।</p>
+
+<h2 id="যেভাবে_রেগুলার_এক্সপ্রেশন_তৈরি_করবেন">যেভাবে রেগুলার এক্সপ্রেশন তৈরি করবেন</h2>
+
+<p>নিচের দুটি পদ্ধতির যেকোন একটি ব্যবহার করে রেগুলার এক্সপ্রেশন তৈরি করতে পারেনঃ</p>
+
+<ul>
+ <li>রেগুলার এক্সপ্রেশন লিটারেল ব্যবহার করেঃ
+  <div style="margin-right: 270px;">
+  <pre class="brush: js">var re = /ab+c/;
+</pre>
+  </div>
+
+  <p>লিটারেল ব্যবহার করলে স্ক্রিপ্ট লোড হইয়ার সময়ই রেগুলার এক্সপ্রেশনটি কম্পাইল হয়ে যাবে। যদি আপনার রেগুলার এক্সপ্রেশন কখনো পরিবর্তন না করা লাগে, তাহলে এই পদ্ধতি ব্যবহার করুন।</p>
+ </li>
+ <li><a href="/bn-BD/docs/JavaScript/Reference/Global_Objects/RegExp" title="RegExp"><code>RegExp</code></a> অবজেক্টের কন্সট্রাক্টর ফাংশন কল করুনঃ
+  <div style="margin-right: 270px;">
+  <pre class="brush: js">var re = new RegExp("ab+c");
+</pre>
+  </div>
+
+  <p>কন্সট্রাক্টর ফাংশন ব্যবহার করলে রানটাইমে কম্পাইল করা হবে। যখন আপনার রেগুলার এক্সপ্রেশনটি পরিবর্তিত হওয়ার সম্ভাবনা থাকে (যেমন অন্য কোন স্ক্রিপ্ট থেকে আসতে পারে বা ইউজার এর ইনপুট থেকে আসতে পারে) তখন এ পদ্ধতিতে রেগুলার এক্সপ্রেশন তৈরি করুন।</p>
+ </li>
+</ul>
+
+<h2 id="রেগুলার_এক্সপ্রেশন_প্যাটার্ন_লিখা">রেগুলার এক্সপ্রেশন প্যাটার্ন লিখা</h2>
+
+<p>রেগুলার এক্সপ্রেশন প্যাটার্ন সাধারণ অক্ষর দিয়েই লেখা হয়, যেমন <code>/abc/</code>, অথবা সাধারণ আর বিশেষ বিশেষ ক্যারেক্টার মিলিয়ে তৈরি করা যায়, যেমনঃ <code>/ab*c/</code> অথবা <code>/Chapter (\d+)\.\d*/</code>। শেষের উদাহরণটিতে প্রথম বন্ধনী ব্যবহার করা হয়েছে, এটা আসলে আপনার দেওয়া স্ট্রিং এর বিশেষ বিশেষ অংশ মনে রাখতে সাহায্য করে। মানে হল, আপনি কোন স্টিং এর ওপর যে রেগুলার এক্সপ্রেশন প্রয়োগ করছেন, সেই রেগুলার এক্সপ্রেশনের বন্ধনীর ভেতর থাকা অংশটুকু আপনার দেওয়া স্টিং এর সাথে ম্যাচ করলে তা মনে রাখা হবে আর আপনি পরে এই মানটি ব্যবহার করতে পারবেন। এ নিয়ে আলোচনা করা হয়েছে {{ web.link("#Using_Parenthesized_Substring_Matches", "বন্ধনী ব্যবহার করে সাব-স্ট্রিং ম্যাচ করা") }} অংশে।</p>
+
+<h3 id="প্যাটার্নের_সাধারণ_ব্যবহার">প্যাটার্নের সাধারণ ব্যবহার</h3>
+
+<p>যদি সরাসরি এক/একাধিক ক্যারেক্টার বা স্টিং এর সাথে ম্যাচ করতে চান, তাহলে খুব সহজেই প্যাটার্ন লিখা যায়। যেমন, <code>/abc/</code> প্যাটার্নটি আপনার স্ট্রিং এ যদি শুধুমাত্র 'abc' অক্ষরগুলো একই ক্রমে থাকে, তাহলে ম্যাচ করবে। যেমন "Hi, do you know your abc's?" আর "The latest airplane designs evolved from slabcraft." স্ট্রিংগুলোতে এই প্যাটার্নটি ম্যাচ করবে, কারণ স্ট্রিংদুটি'তেই 'abc' সাবস্ট্রিংটি রয়েছে। কিন্তু "Grab crab" স্ট্রিংটি ম্যাচ করবে না কারণ এতে 'abc' সাবস্ট্রিং নেই।</p>
+
+<h3 id="বিশেষ_অক্ষরের_ব্যবহার">বিশেষ অক্ষরের ব্যবহার</h3>
+
+<p>যখন সরাসরি সাবস্ট্রিং ম্যাচের বদলে জটিল, বিশেষ কোন কিছু ম্যাচ করা দরকার, যেমন কোন স্ট্রিং এ এক বা একাধিক b অক্ষরটি আছে কিনা, অথবা আপনার স্ট্রিং এ white space আছে কিনা, তখন রেগুলার এক্সপ্রেশনে বিশেষ কিছু অক্ষর ব্যবহার করতে হবে। যেমন, <code>/ab*c/</code> প্যাটার্নটি আপনার দেওয়া স্ট্রিং এ যদি একটিমাত্র 'a' এবং তার পর শূণ্য/এক/একাধিক 'b' অক্ষর থাকে (কোন অক্ষরের পর * দিলে ঐ অক্ষর টি যদি শূণ্য/এক/একাধিকবার থাকলে তাদের ম্যাচ করবে) আর তার পরেই একটিমাত্র 'c' অক্ষর থাকে, তাহলে ম্যাচ করবে। যেমন, "cbbabbbbcdebc," স্ট্রিং এর ওপর প্যাটার্নটি প্রয়োগ করলে কেবলমাত্র 'abbbbc' সাবস্ট্রিংটুকু ম্যাচ করতে পারবে। </p>
+
+<p>রেগুলার এক্সপ্রেশন-এ যেসব বিশেষ অক্ষর ব্যবহার করা হয় তার একটি সম্পূর্ণ তালিকা বর্ণনাসহ নিচের ছকে দেওয়া হলো । </p>
+
+<table class="fullwidth-table">
+ <caption>ছক ৪.১  রেগুলার এক্সপ্রেশন-এ বিশেষ অক্ষর সমূহ </caption>
+ <thead>
+  <tr>
+   <th scope="col">অক্ষর</th>
+   <th scope="col">অর্থ</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td><a href="#special-backslash" id="special-backslash" name="special-backslash"><code>\</code></a></td>
+   <td>
+    <p>নিচের নিয়মে অনুসরন করে:<br>
+     <br>
+     যদি কোন ব্যাকস্লাশ বিশেষ নয় এমন কোন  অক্ষরের পূর্বে থাকে তবে তা আর স্বাভাবিক হিসেবে বিবেচিত হবে না। যেমন, ব্যাকস্লাশ ছাড়া 'b' সাধারনভাবে ছোট হাতের<br>
+     b কে নির্দেশ করে কিন্তু ব্যাকস্লাশসহ '\b'  <a href="#special-word-boundary" title="#special-word-boundary">শব্দ সীমানা নির্দেশকারি</a> একটি বিশেষ অক্ষর গঠন করে। <br>
+     <br>
+     যদি কোন ব্যাকস্লাশ বিশেষ কোন অক্ষরের পূর্বে থাকে তবে তা আর বিশেষভাবে বিবেচিত না হয়ে স্বাভাবিক হিসেবে বিবেচিত হবে। যেমন, প্যাটার্ন /a*/ এ '*' একটি <br>
+     বিশেষ অক্ষর যা কিনা বুঝায় 'a' শূন্য থেকে ততোধিক বার থাকতে পারে। কিন্তু /a\*/ '*' এর বিশেষ ক্ষমতাকে নষ্ট করে দেয় এবং এর অর্থ দাড়ায়  'a*' অর্থাৎ a এর পর একটি তারকা অক্ষর। <br>
+     <br>
+     উলেখ্য যে, RegExp("pattern") ব্যবহারের ক্ষেত্রে ব্যাকস্লাশ \ কেও ব্যাকস্লাশ দিয়ে escape করা লাগবে কারণ স্ট্রিং এর ক্ষেত্রে ব্যাকস্লাশ নিজেও একটি বিশেষ অক্ষর। </p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-caret" id="special-caret" name="special-caret"><code>^</code></a></td>
+   <td>এটি ইনপুটের শুরু নির্দেশ করে। যদি  multiline flag সক্রিয় থাকে তবে line break অক্ষরের পরবর্তী অবস্থানকে নির্দেশ করে। <br>
+    <br>
+    উদাহরণস্বরুপ,  "an A" স্ট্রিং-এ,  <code>/^A/ দিয়ে </code> 'A'  এর মিল পাওয়া যাবে না কিন্তু  "An E" স্ট্রিং-এ <code>/^A/ দিয়ে </code> 'A'  এর মিল পাওয়া যাবে<br>
+    <br>
+    অক্ষর সেটের ক্ষেত্রে '<code>^</code>'  এর আলাদা অর্থ রয়েছে । বিস্তারিত জানার জন্যে  <a href="#special-negated-character-set" title="#special-negated-character-set">complemented character sets</a> দেখা যেতে পারে। </td>
+  </tr>
+  <tr>
+   <td><a href="#special-dollar" id="special-dollar" name="special-dollar"><code>$</code></a></td>
+   <td>
+    <p>এটি ইনপুটের শেষ নির্দেশ করে। যদি  multiline flag সক্রিয় থাকে তবে line break অক্ষরের পূর্ববর্তি অবস্থানকে নির্দেশ করে।  </p>
+
+    <p>উদাহরণস্বরুপ,  "eater" স্ট্রিং-এ,  <code>/t$/ দিয়ে </code> 't'  এর মিল পাওয়া যাবে না কিন্তু  "eat" স্ট্রিং-এ <code>/t$/ দিয়ে </code> 't '  এর মিল পাওয়া যাবে। </p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-asterisk" id="special-asterisk" name="special-asterisk"><code>*</code></a></td>
+   <td>
+    <p>শূন্য থেকে ততোধিক অক্ষর নির্দেশ করে। যা  {0,} এর অনুরুপ। </p>
+
+    <p>উদাহরণস্বরুপ <code>/bo*/ মানে b একবার এবং ?o </code>শূন্য থেকে ততোধিক বার থাকতে পারবে।  সুতরাং <code>/bo*/ দিয়ে</code> "A ghost booooed" স্ট্রিং-এ  'boooo' এর মিল খুঁজে পাওয়া যাবে। আবার "A bird warbled"  স্ট্রিং-এ শুধু 'b' মিল পাওয়া যাবে। কিন্তু <code> </code>"A goat grunted" স্ট্রিং-এ কোন মিল পাওয়া যাবে না। </p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-plus" id="special-plus" name="special-plus"><code>+</code></a></td>
+   <td>
+    <p>এক থেকে ততোধিক অক্ষর নির্দেশ করে। যা  {1,} এর অনুরুপ। </p>
+
+    <p>উদাহরণস্বরুপ <code>/a+/ মানে ?a এক </code>থেকে ততোধিক বার থাকতে পারবে।  সুতরাং <code>/a+/ দিয়ে</code> "candy" স্ট্রিং-এ  'a' এর মিল খুঁজে পাওয়া যাবে। আবার "caaaaaaandy"  স্ট্রিং-এ 'aaaaaaa' মিল পাওয়া যাবে।</p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-questionmark" id="special-questionmark" name="special-questionmark"><code>?</code></a></td>
+   <td>এর মানে অক্ষরটি থাকতে পারে আবার নাও থাকতে পারে। যা  {0,1} এর অনুরুপ।  <br>
+    <br>
+    উদাহরণস্বরুপ <code>/e?le?/ দিয়ে </code>"angel" এ  'el' আবার  "angle"  এ 'el' এবং "oslo" তে   'l'<code> মিল পাওয়া যাবে। </code><br>
+    <br>
+    If used immediately after any of the quantifiers *, +, ?, or {}, makes the quantifier non-greedy (matching the fewest possible characters), as opposed to the default, which is greedy (matching as many characters as possible). For example, applying <code>/\d+/</code> to "123abc" matches "123". But applying <code>/\d+?/</code> to that same string matches only the "1".<br>
+    <br>
+    Also used in lookahead assertions, as described in the <code>x(?=y)</code> and <code>x(?!y)</code> entries of this table.<br>
+     </td>
+  </tr>
+  <tr>
+   <td><a href="#special-dot" id="special-dot" name="special-dot"><code>.</code></a></td>
+   <td>
+    <p>(The decimal point) matches any single character except the newline character.</p>
+
+    <p>For example, <code>/.n/</code> matches 'an' and 'on' in "nay, an apple is on the tree", but not 'nay'.</p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-capturing-parentheses" id="special-capturing-parentheses" name="special-capturing-parentheses"><code>(x)</code></a></td>
+   <td>
+    <p>Matches 'x' and remembers the match, as the following example shows. The parentheses are called <em>capturing parentheses</em>.<br>
+     <br>
+     The '<code>(foo)</code>' and '<code>(bar)</code>' in the pattern <code>/(foo) (bar) \1 \2/</code> match and remember the first two words in the string "foo bar foo bar". The <code>\1 </code>and <code>\2</code> in the pattern match the string's last two words. Note that <code>\1, \2, \n</code> are is used in the matching part of the regex. In the replacement part of a regex the syntax <code>$1, $2, $n</code> must be used, e.g.: <code>'bar foo'.replace( /(...) (...)/, '$2 $1' )</code>.</p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-non-capturing-parentheses" id="special-non-capturing-parentheses" name="special-non-capturing-parentheses"><code>(?:x)</code></a></td>
+   <td>Matches 'x' but does not remember the match. The parentheses are called <em>non-capturing parentheses</em>, and let you define subexpressions for regular expression operators to work with. Consider the sample expression <code>/(?:foo){1,2}/</code>. Without the non-capturing parentheses, the <code>{1,2}</code> characters would apply only to the last 'o' in 'foo'. With the capturing parentheses, the <code>{1,2}</code> applies to the entire word 'foo'.</td>
+  </tr>
+  <tr>
+   <td><a href="#special-lookahead" id="special-lookahead" name="special-lookahead"><code>x(?=y)</code></a></td>
+   <td>
+    <p>Matches 'x' only if 'x' is followed by 'y'. This is called a lookahead.</p>
+
+    <p>For example, <code>/Jack(?=Sprat)/</code> matches 'Jack' only if it is followed by 'Sprat'. <code>/Jack(?=Sprat|Frost)/</code> matches 'Jack' only if it is followed by 'Sprat' or 'Frost'. However, neither 'Sprat' nor 'Frost' is part of the match results.</p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-negated-look-ahead" id="special-negated-look-ahead" name="special-negated-look-ahead"><code>x(?!y)</code></a></td>
+   <td>
+    <p>Matches 'x' only if 'x' is not followed by 'y'. This is called a negated lookahead.</p>
+
+    <p>For example, <code>/\d+(?!\.)/</code> matches a number only if it is not followed by a decimal point. The regular expression <code>/\d+(?!\.)/.exec("3.141")</code> matches '141' but not '3.141'.</p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-or" id="special-or" name="special-or"><code>x|y</code></a></td>
+   <td>
+    <p>Matches either 'x' or 'y'.</p>
+
+    <p>For example, <code>/green|red/</code> matches 'green' in "green apple" and 'red' in "red apple."</p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-quantifier" id="special-quantifier" name="special-quantifier"><code>{n}</code></a></td>
+   <td>Matches exactly n occurrences of the preceding character. N must be a positive integer.<br>
+    <br>
+    For example, <code>/a{2}/</code> doesn't match the 'a' in "candy," but it does match all of the a's in "caandy," and the first two a's in "caaandy."</td>
+  </tr>
+  <tr>
+   <td><a href="#special-quantifier-range" id="special-quantifier-range" name="special-quantifier-range"><code>{n,m}</code></a></td>
+   <td>
+    <p>Where <code>n</code> and <code>m</code> are positive integers. Matches at least <code>n</code> and at most <code>m</code> occurrences of the preceding character. When <code>m</code> is zero, it can be omitted.</p>
+
+    <p>For example, <code>/a{1,3}/</code> matches nothing in "cndy", the 'a' in "candy," the first two a's in "caandy," and the first three a's in "caaaaaaandy" Notice that when matching "caaaaaaandy", the match is "aaa", even though the original string had more a's in it.</p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-character-set" id="special-character-set" name="special-character-set"><code>[xyz]</code></a></td>
+   <td>Character set. This pattern type matches any one of the characters in the brackets, including <a href="https://developer.mozilla.org/en-US/docs/JavaScript/Guide/Values,_variables,_and_literals#Unicode_escape_sequences" title="https://developer.mozilla.org/en-US/docs/JavaScript/Guide/Values,_variables,_and_literals#Unicode_escape_sequences">escape sequences</a>. Special characters like the dot(<code>.</code>) and asterisk (<code>*</code>) are not special inside a character set, so they don't need to be escaped. You can specify a range of characters by using a hyphen, as the following examples illustrate.<br>
+    <br>
+    The pattern<code> [a-d]</code>, which performs the same match as <code>[abcd]</code>, matches the 'b' in "brisket" and the 'c' in "city". The patterns <code>/[a-z.]+/ </code>and <code>/[\w.]+/</code> match the entire string "test.i.ng".</td>
+  </tr>
+  <tr>
+   <td><a href="#special-negated-character-set" id="special-negated-character-set" name="special-negated-character-set"><code>[^xyz]</code></a></td>
+   <td>
+    <p>A negated or complemented character set. That is, it matches anything that is not enclosed in the brackets. You can specify a range of characters by using a hyphen. Everything that works in the normal character set also works here.</p>
+
+    <p>For example, <code>[^abc]</code> is the same as <code>[^a-c]</code>. They initially match 'r' in "brisket" and 'h' in "chop."</p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-backspace" id="special-backspace" name="special-backspace"><code>[\b]</code></a></td>
+   <td>Matches a backspace (U+0008). You need to use square brackets if you want to match a literal backspace character. (Not to be confused with <code>\b</code>.)</td>
+  </tr>
+  <tr>
+   <td><a href="#special-word-boundary" id="special-word-boundary" name="special-word-boundary"><code>\b</code></a></td>
+   <td>
+    <p>Matches a word boundary. A word boundary matches the position where a word character is not followed or preceeded by another word-character. Note that a matched word boundary is not included in the match. In other words, the length of a matched word boundary is zero. (Not to be confused with <code>[\b]</code>.)</p>
+
+    <p>Examples:<br>
+     <code>/\bm/</code> matches the 'm' in "moon" ;<br>
+     <code>/oo\b/</code> does not match the 'oo' in "moon", because 'oo' is followed by 'n' which is a word character;<br>
+     <code>/oon\b/</code> matches the 'oon' in "moon", because 'oon' is the end of the string, thus not followed by a word character;<br>
+     <code>/\w\b\w/</code> will never match anything, because a word character can never be followed by both a non-word and a word character.</p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-non-word-boundary" id="special-non-word-boundary" name="special-non-word-boundary"><code>\B</code></a></td>
+   <td>
+    <p>Matches a non-word boundary. This matches a position where the previous and next character are of the same type: Either both must be words, or both must be non-words. The beginning and end of a string are considered non-words.</p>
+
+    <p>For example, <code>/\B../</code> matches 'oo' in "noonday" (, and <code>/y\B./</code> matches 'ye' in "possibly yesterday."</p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-control" id="special-control" name="special-control"><code>\c<em>X</em></code></a></td>
+   <td>
+    <p>Where <em>X</em> is a character ranging from A to Z. Matches a control character in a string.</p>
+
+    <p>For example, <code>/\cM/</code> matches control-M (U+000D) in a string.</p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-digit" id="special-digit" name="special-digit"><code>\d</code></a></td>
+   <td>
+    <p>Matches a digit character. Equivalent to <code>[0-9]</code>.</p>
+
+    <p>For example, <code>/\d/</code> or <code>/[0-9]/</code> matches '2' in "B2 is the suite number."</p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-non-digit" id="special-non-digit" name="special-non-digit"><code>\D</code></a></td>
+   <td>
+    <p>Matches any non-digit character. Equivalent to <code>[^0-9]</code>.</p>
+
+    <p>For example, <code>/\D/</code> or <code>/[^0-9]/</code> matches 'B' in "B2 is the suite number."</p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-form-feed" id="special-form-feed" name="special-form-feed"><code>\f</code></a></td>
+   <td>Matches a form feed (U+000C).</td>
+  </tr>
+  <tr>
+   <td><a href="#special-line-feed" id="special-line-feed" name="special-line-feed"><code>\n</code></a></td>
+   <td>Matches a line feed (U+000A).</td>
+  </tr>
+  <tr>
+   <td><a href="#special-carriage-return" id="special-carriage-return" name="special-carriage-return"><code>\r</code></a></td>
+   <td>Matches a carriage return (U+000D).</td>
+  </tr>
+  <tr>
+   <td><a href="#special-white-space" id="special-white-space" name="special-white-space"><code>\s</code></a></td>
+   <td>
+    <p>Matches a single white space character, including space, tab, form feed, line feed. Equivalent to <code>[ \f\n\r\t\v​\u00a0\u1680​\u180e\u2000​\u2001\u2002​\u2003\u2004​\u2005\u2006​\u2007\u2008​\u2009\u200a​\u2028\u2029​​\u202f\u205f​\u3000]</code>.</p>
+
+    <p>For example, <code>/\s\w*/</code> matches ' bar' in "foo bar."</p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-non-white-space" id="special-non-white-space" name="special-non-white-space"><code>\S</code></a></td>
+   <td>
+    <p>Matches a single character other than white space. Equivalent to <code>[^ \f\n\r\t\v​\u00a0\u1680​\u180e\u2000​\u2001\u2002​\u2003\u2004​\u2005\u2006​\u2007\u2008​\u2009\u200a​\u2028\u2029​\u202f\u205f​\u3000]</code>.</p>
+
+    <p>For example, <code>/\S\w*/</code> matches 'foo' in "foo bar."</p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-tab" id="special-tab" name="special-tab"><code>\t</code></a></td>
+   <td>Matches a tab (U+0009).</td>
+  </tr>
+  <tr>
+   <td><a href="#special-vertical-tab" id="special-vertical-tab" name="special-vertical-tab"><code>\v</code></a></td>
+   <td>Matches a vertical tab (U+000B).</td>
+  </tr>
+  <tr>
+   <td><a href="#special-word" id="special-word" name="special-word"><code>\w</code></a></td>
+   <td>
+    <p>Matches any alphanumeric character including the underscore. Equivalent to <code>[A-Za-z0-9_]</code>.</p>
+
+    <p>For example, <code>/\w/</code> matches 'a' in "apple," '5' in "$5.28," and '3' in "3D."</p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-non-word" id="special-non-word" name="special-non-word"><code>\W</code></a></td>
+   <td>
+    <p>Matches any non-word character. Equivalent to <code>[^A-Za-z0-9_]</code>.</p>
+
+    <p>For example, <code>/\W/</code> or <code>/[^A-Za-z0-9_]/</code> matches '%' in "50%."</p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-backreference" id="special-backreference" name="special-backreference"><code>\<em>n</em></code></a></td>
+   <td>
+    <p>Where <em>n</em> is a positive integer, a back reference to the last substring matching the <em>n</em> parenthetical in the regular expression (counting left parentheses).</p>
+
+    <p>For example, <code>/apple(,)\sorange\1/</code> matches 'apple, orange,' in "apple, orange, cherry, peach."</p>
+   </td>
+  </tr>
+  <tr>
+   <td><a href="#special-null" id="special-null" name="special-null"><code>\0</code></a></td>
+   <td>Matches a NULL (U+0000) character. Do not follow this with another digit, because <code>\0&lt;digits&gt;</code> is an octal <a href="https://developer.mozilla.org/en-US/docs/JavaScript/Guide/Values,_variables,_and_literals#Unicode_escape_sequences" title="https://developer.mozilla.org/en-US/docs/JavaScript/Guide/Values,_variables,_and_literals#Unicode_escape_sequences">escape sequence</a>.</td>
+  </tr>
+  <tr>
+   <td><a href="#special-hex-escape" id="special-hex-escape" name="special-hex-escape"><code>\xhh</code></a></td>
+   <td>Matches the character with the code hh (two hexadecimal digits)</td>
+  </tr>
+  <tr>
+   <td><a href="#special-unicode-escape" id="special-unicode-escape" name="special-unicode-escape"><code>\uhhhh</code></a></td>
+   <td>Matches the character with the code hhhh (four hexadecimal digits).</td>
+  </tr>
+ </tbody>
+</table>
+
+<p>Escaping user input to be treated as a literal string within a regular expression can be accomplished by simple replacement:</p>
+
+<pre class="brush: js">function escapeRegExp(string){
+  return string.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
+}</pre>
+
+<h3 id="Using_Parentheses">Using Parentheses</h3>
+
+<p>Parentheses around any part of the regular expression pattern cause that part of the matched substring to be remembered. Once remembered, the substring can be recalled for other use, as described in {{ web.link("#Using_Parenthesized_Substring_Matches", "Using Parenthesized Substring Matches") }}.</p>
+
+<p>For example, the pattern <code>/Chapter (\d+)\.\d*/</code> illustrates additional escaped and special characters and indicates that part of the pattern should be remembered. It matches precisely the characters 'Chapter ' followed by one or more numeric characters (<code>\d</code> means any numeric character and <code>+</code> means 1 or more times), followed by a decimal point (which in itself is a special character; preceding the decimal point with \ means the pattern must look for the literal character '.'), followed by any numeric character 0 or more times (<code>\d</code> means numeric character, <code>*</code> means 0 or more times). In addition, parentheses are used to remember the first matched numeric characters.</p>
+
+<p>This pattern is found in "Open Chapter 4.3, paragraph 6" and '4' is remembered. The pattern is not found in "Chapter 3 and 4", because that string does not have a period after the '3'.</p>
+
+<p>To match a substring without causing the matched part to be remembered, within the parentheses preface the pattern with <code>?:</code>. For example, <code>(?:\d+)</code> matches one or more numeric characters but does not remember the matched characters.</p>
+
+<h2 id="Working_with_Regular_Expressions">Working with Regular Expressions</h2>
+
+<p>Regular expressions are used with the <code>RegExp</code> methods <code>test</code> and <code>exec</code> and with the <code>String</code> methods <code>match</code>, <code>replace</code>, <code>search</code>, and <code>split</code>. These methods are explained in detail in the <a href="/en-US/docs/JavaScript/Reference" title="en-US/docs/JavaScript/Reference">JavaScript Reference</a>.</p>
+
+<table class="standard-table">
+ <caption>Table 4.2 Methods that use regular expressions</caption>
+ <thead>
+  <tr>
+   <th scope="col">Method</th>
+   <th scope="col">Description</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td><code><a href="/en-US/docs/JavaScript/Reference/Global_Objects/RegExp/exec" title="en-US/docs/JavaScript/Reference/Global_Objects/RegExp/exec">exec</a></code></td>
+   <td>A <code>RegExp</code> method that executes a search for a match in a string. It returns an array of information.</td>
+  </tr>
+  <tr>
+   <td><code><a href="/en-US/docs/JavaScript/Reference/Global_Objects/RegExp/test" title="en-US/docs/JavaScript/Reference/Global_Objects/RegExp/test">test</a></code></td>
+   <td>A <code>RegExp</code> method that tests for a match in a string. It returns true or false.</td>
+  </tr>
+  <tr>
+   <td><code><a href="/en-US/docs/JavaScript/Reference/Global_Objects/String/match" title="en-US/docs/JavaScript/Reference/Global_Objects/String/match">match</a></code></td>
+   <td>A <code>String</code> method that executes a search for a match in a string. It returns an array of information or null on a mismatch.</td>
+  </tr>
+  <tr>
+   <td><code><a href="/en-US/docs/JavaScript/Reference/Global_Objects/String/search" title="en-US/docs/JavaScript/Reference/Global_Objects/String/search">search</a></code></td>
+   <td>A <code>String</code> method that tests for a match in a string. It returns the index of the match, or -1 if the search fails.</td>
+  </tr>
+  <tr>
+   <td><code><a href="/en-US/docs/JavaScript/Reference/Global_Objects/String/replace" title="en-US/docs/JavaScript/Reference/Global_Objects/String/replace">replace</a></code></td>
+   <td>A <code>String</code> method that executes a search for a match in a string, and replaces the matched substring with a replacement substring.</td>
+  </tr>
+  <tr>
+   <td><code><a href="/en-US/docs/JavaScript/Reference/Global_Objects/String/split" title="en-US/docs/JavaScript/Reference/Global_Objects/String/split">split</a></code></td>
+   <td>A <code>String</code> method that uses a regular expression or a fixed string to break a string into an array of substrings.</td>
+  </tr>
+ </tbody>
+</table>
+
+<p>When you want to know whether a pattern is found in a string, use the <code>test</code> or <code>search</code> method; for more information (but slower execution) use the <code>exec</code> or <code>match</code> methods. If you use <code>exec</code> or <code>match</code> and if the match succeeds, these methods return an array and update properties of the associated regular expression object and also of the predefined regular expression object, <code>RegExp</code>. If the match fails, the <code>exec</code> method returns <code>null</code> (which coerces to <code>false</code>).</p>
+
+<p>In the following example, the script uses the <code>exec</code> method to find a match in a string.</p>
+
+<pre class="brush: js">var myRe = /d(b+)d/g;
+var myArray = myRe.exec("cdbbdbsbz");
+</pre>
+
+<p>If you do not need to access the properties of the regular expression, an alternative way of creating <code>myArray</code> is with this script:</p>
+
+<pre class="brush: js">var myArray = /d(b+)d/g.exec("cdbbdbsbz");
+</pre>
+
+<p>If you want to construct the regular expression from a string, yet another alternative is this script:</p>
+
+<pre class="brush: js">var myRe = new RegExp("d(b+)d", "g");
+var myArray = myRe.exec("cdbbdbsbz");
+</pre>
+
+<p>With these scripts, the match succeeds and returns the array and updates the properties shown in the following table.</p>
+
+<table class="fullwidth-table">
+ <caption>Table 4.3 Results of regular expression execution.</caption>
+ <thead>
+  <tr>
+   <th scope="col">Object</th>
+   <th scope="col">Property or index</th>
+   <th scope="col">Description</th>
+   <th scope="col">In this example</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td rowspan="4"><code>myArray</code></td>
+   <td> </td>
+   <td>The matched string and all remembered substrings.</td>
+   <td><code>["dbbd", "bb"]</code></td>
+  </tr>
+  <tr>
+   <td><code>index</code></td>
+   <td>The 0-based index of the match in the input string.</td>
+   <td><code>1</code></td>
+  </tr>
+  <tr>
+   <td><code>input</code></td>
+   <td>The original string.</td>
+   <td><code>"cdbbdbsbz"</code></td>
+  </tr>
+  <tr>
+   <td><code>[0]</code></td>
+   <td>The last matched characters.</td>
+   <td><code>"dbbd"</code></td>
+  </tr>
+  <tr>
+   <td rowspan="2"><code>myRe</code></td>
+   <td><code>lastIndex</code></td>
+   <td>The index at which to start the next match. (This property is set only if the regular expression uses the g option, described in {{ web.link("#Advanced_Searching_With_Flags", "Advanced Searching With Flags") }}.)</td>
+   <td><code>5</code></td>
+  </tr>
+  <tr>
+   <td><code>source</code></td>
+   <td>The text of the pattern. Updated at the time that the regular expression is created, not executed.</td>
+   <td><code>"d(b+)d"</code></td>
+  </tr>
+ </tbody>
+</table>
+
+<p>As shown in the second form of this example, you can use a regular expression created with an object initializer without assigning it to a variable. If you do, however, every occurrence is a new regular expression. For this reason, if you use this form without assigning it to a variable, you cannot subsequently access the properties of that regular expression. For example, assume you have this script:</p>
+
+<pre class="brush: js">var myRe = /d(b+)d/g;
+var myArray = myRe.exec("cdbbdbsbz");
+console.log("The value of lastIndex is " + myRe.lastIndex);
+</pre>
+
+<p>This script displays:</p>
+
+<pre>The value of lastIndex is 5
+</pre>
+
+<p>However, if you have this script:</p>
+
+<pre class="brush: js">var myArray = /d(b+)d/g.exec("cdbbdbsbz");
+console.log("The value of lastIndex is " + /d(b+)d/g.lastIndex);
+</pre>
+
+<p>It displays:</p>
+
+<pre>The value of lastIndex is 0
+</pre>
+
+<p>The occurrences of <code>/d(b+)d/g</code> in the two statements are different regular expression objects and hence have different values for their <code>lastIndex</code> property. If you need to access the properties of a regular expression created with an object initializer, you should first assign it to a variable.</p>
+
+<h3 id="Using_Parenthesized_Substring_Matches">Using Parenthesized Substring Matches</h3>
+
+<p>Including parentheses in a regular expression pattern causes the corresponding submatch to be remembered. For example, <code>/a(b)c/</code> matches the characters 'abc' and remembers 'b'. To recall these parenthesized substring matches, use the <code>Array</code> elements <code>[1]</code>, ..., <code>[n]</code>.</p>
+
+<p>The number of possible parenthesized substrings is unlimited. The returned array holds all that were found. The following examples illustrate how to use parenthesized substring matches.</p>
+
+<h4 id="Example_1">Example 1</h4>
+
+<p>The following script uses the <a href="/en-US/docs/JavaScript/Reference/Global_Objects/String/replace" title="en-US/docs/JavaScript/Reference/Global Objects/String/replace"><code>replace()</code></a> method to switch the words in the string. For the replacement text, the script uses the <code>$1</code> and <code>$2</code> in the replacement to denote the first and second parenthesized substring matches.</p>
+
+<pre class="brush: js">var re = /(\w+)\s(\w+)/;
+var str = "John Smith";
+var newstr = str.replace(re, "$2, $1");
+console.log(newstr);
+</pre>
+
+<p>This prints "Smith, John".</p>
+
+<h3 id="Advanced_Searching_With_Flags">Advanced Searching With Flags</h3>
+
+<p>Regular expressions have four optional flags that allow for global and case insensitive searching. These flags can be used separately or together in any order, and are included as part of the regular expression.</p>
+
+<table class="standard-table">
+ <caption>Table 4.4 Regular expression flags.</caption>
+ <thead>
+  <tr>
+   <th scope="col">Flag</th>
+   <th scope="col">Description</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td><code>g</code></td>
+   <td>Global search.</td>
+  </tr>
+  <tr>
+   <td>i</td>
+   <td>Case-insensitive search.</td>
+  </tr>
+  <tr>
+   <td>m</td>
+   <td>Multi-line search.</td>
+  </tr>
+  <tr>
+   <td>y</td>
+   <td>Perform a "sticky" search that matches starting at the current position in the target string.</td>
+  </tr>
+ </tbody>
+</table>
+
+<p>{{ Fx_minversion_note(3, "Support for the <code>y</code> flag was added in Firefox 3. The <code>y</code> flag fails if the match doesn\'t succeed at the current position in the target string.") }}</p>
+
+<p>To include a flag with the regular expression, use this syntax:</p>
+
+<pre class="brush: js">var re = /pattern/flags;
+</pre>
+
+<p>or</p>
+
+<pre class="brush: js">var re = new RegExp("pattern", "flags");
+</pre>
+
+<p>Note that the flags are an integral part of a regular expression. They cannot be added or removed later.</p>
+
+<p>For example, <code>re = /\w+\s/g</code> creates a regular expression that looks for one or more characters followed by a space, and it looks for this combination throughout the string.</p>
+
+<pre class="brush: js">var re = /\w+\s/g;
+var str = "fee fi fo fum";
+var myArray = str.match(re);
+console.log(myArray);
+</pre>
+
+<p>This displays ["fee ", "fi ", "fo "]. In this example, you could replace the line:</p>
+
+<pre class="brush: js">var re = /\w+\s/g;
+</pre>
+
+<p>with:</p>
+
+<pre class="brush: js">var re = new RegExp("\\w+\\s", "g");
+</pre>
+
+<p>and get the same result.</p>
+
+<p>The <code>m</code> flag is used to specify that a multiline input string should be treated as multiple lines. If the <code>m</code> flag is used, <code>^</code> and <code>$</code> match at the start or end of any line within the input string instead of the start or end of the entire string.</p>
+
+<h2 id="Examples">Examples</h2>
+
+<p>The following examples show some uses of regular expressions.</p>
+
+<h3 id="Changing_the_Order_in_an_Input_String">Changing the Order in an Input String</h3>
+
+<p>The following example illustrates the formation of regular expressions and the use of <code>string.split()</code> and <code>string.replace()</code>. It cleans a roughly formatted input string containing names (first name first) separated by blanks, tabs and exactly one semicolon. Finally, it reverses the name order (last name first) and sorts the list.</p>
+
+<pre class="brush: js">// The name string contains multiple spaces and tabs,
+// and may have multiple spaces between first and last names.
+var names = "Harry Trump ;Fred Barney; Helen Rigby ; Bill Abel ; Chris Hand ";
+
+var output = ["---------- Original String\n", names + "\n"];
+
+// Prepare two regular expression patterns and array storage.
+// Split the string into array elements.
+
+// pattern: possible white space then semicolon then possible white space
+var pattern = /\s*;\s*/;
+
+// Break the string into pieces separated by the pattern above and
+// store the pieces in an array called nameList
+var nameList = names.split(pattern);
+
+// new pattern: one or more characters then spaces then characters.
+// Use parentheses to "memorize" portions of the pattern.
+// The memorized portions are referred to later.
+pattern = /(\w+)\s+(\w+)/;
+
+// New array for holding names being processed.
+var bySurnameList = [];
+
+// Display the name array and populate the new array
+// with comma-separated names, last first.
+//
+// The replace method removes anything matching the pattern
+// and replaces it with the memorized string—second memorized portion
+// followed by comma space followed by first memorized portion.
+//
+// The variables $1 and $2 refer to the portions
+// memorized while matching the pattern.
+
+output.push("---------- After Split by Regular Expression");
+
+var i, len;
+for (i = 0, len = nameList.length; i &lt; len; i++){
+  output.push(nameList[i]);
+  bySurnameList[i] = nameList[i].replace(pattern, "$2, $1");
+}
+
+// Display the new array.
+output.push("---------- Names Reversed");
+for (i = 0, len = bySurnameList.length; i &lt; len; i++){
+  output.push(bySurnameList[i]);
+}
+
+// Sort by last name, then display the sorted array.
+bySurnameList.sort();
+output.push("---------- Sorted");
+for (i = 0, len = bySurnameList.length; i &lt; len; i++){
+  output.push(bySurnameList[i]);
+}
+
+output.push("---------- End");
+
+console.log(output.join("\n"));
+</pre>
+
+<h3 id="Using_Special_Characters_to_Verify_Input">Using Special Characters to Verify Input</h3>
+
+<p>In the following example, the user is expected to enter a phone number. When the user presses the "Check" button, the script checks the validity of the number. If the number is valid (matches the character sequence specified by the regular expression), the script shows a message thanking the user and confirming the number. If the number is invalid, the script informs the user that the phone number is not valid.</p>
+
+<p>Within non-capturing parentheses <code>(?:</code> , the regular expression looks for three numeric characters <code>\d{3}</code> OR <code>|</code> a left parenthesis <code>\(</code> followed by three digits<code> \d{3}</code>, followed by a close parenthesis <code>\)</code>, (end non-capturing parenthesis <code>)</code>), followed by one dash, forward slash, or decimal point and when found, remember the character <code>([-\/\.])</code>, followed by three digits <code>\d{3}</code>, followed by the remembered match of a dash, forward slash, or decimal point <code>\1</code>, followed by four digits <code>\d{4}</code>.</p>
+
+<p>The <code>Change</code> event activated when the user presses Enter sets the value of <code>RegExp.input</code>.</p>
+
+<pre class="brush: html">&lt;!DOCTYPE html&gt;
+&lt;html&gt;  
+  &lt;head&gt;  
+    &lt;meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"&gt;  
+    &lt;meta http-equiv="Content-Script-Type" content="text/javascript"&gt;  
+    &lt;script type="text/javascript"&gt;  
+      var re = /(?:\d{3}|\(\d{3}\))([-\/\.])\d{3}\1\d{4}/;  
+      function testInfo(phoneInput){  
+        var OK = re.exec(phoneInput.value);  
+        if (!OK)  
+          window.alert(RegExp.input + " isn't a phone number with area code!");  
+        else
+          window.alert("Thanks, your phone number is " + OK[0]);  
+      }  
+    &lt;/script&gt;  
+  &lt;/head&gt;  
+  &lt;body&gt;  
+    &lt;p&gt;Enter your phone number (with area code) and then click "Check".
+        &lt;br&gt;The expected format is like ###-###-####.&lt;/p&gt;
+    &lt;form action="#"&gt;  
+      &lt;input id="phone"&gt;&lt;button onclick="testInfo(document.getElementById('phone'));"&gt;Check&lt;/button&gt;
+    &lt;/form&gt;  
+  &lt;/body&gt;  
+&lt;/html&gt;
+</pre>

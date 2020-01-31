@@ -1,0 +1,108 @@
+<p>{{ApiRef}}</p>
+
+<p>The <strong>ASan Nightly Project</strong> involves building a Firefox Nightly browser with the popular <a href="https://github.com/google/sanitizers/wiki/AddressSanitizer">AddressSanitizer</a> tool and enhancing it with remote crash reporting capabilities for any errors detected.</p>
+
+<p>The purpose of the project is to find subtle memory corruptions occurring during regular browsing that would either not crash at all or crash in a way that we cannot figure out what the exact problem is just from the crash dump. We have a lot of inactionable crash reports and AddressSanitizer traces are usually a lot more actionable on their own (especially use-after-free traces). Part of this project is to figure out if and how many actionable crash reports ASan can give us just by surfing around. The success of the project of course also depends on the number of participants.</p>
+
+<p>You can download the latest build using one of the links below. The builds are self-updating daily like regular nightly builds (like with regular builds, you can go to <em>"Help"</em> → <em>"About Nightly"</em> to force an update check or confirm that you run the latest version).</p>
+
+<div class="note">
+<p>If you came here looking for regular ASan builds (e.g. for fuzzing or as a developer to reproduce a crash), you should probably go <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Testing/Firefox_and_Address_Sanitizer">here</a> instead.</p>
+</div>
+
+<h3 id="Requirements">Requirements</h3>
+
+<p>Current requirements are:</p>
+
+<ul>
+ <li>Windows or Linux-based Operating System</li>
+ <li>16 GB of RAM recommended</li>
+ <li>Special ASan Nightly Firefox Build
+  <ul>
+   <li><a href="https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/gecko.v2.mozilla-central.nightly.latest.firefox.linux64-asan-reporter-opt/artifacts/public/build/target.tar.bz2">Linux Download</a></li>
+   <li><a href="https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/gecko.v2.mozilla-central.nightly.latest.firefox.win64-asan-reporter-nightly-repackage-signing/artifacts/public/build/target.installer.exe">Windows Download</a></li>
+  </ul>
+ </li>
+</ul>
+
+<p>If you are already using regular Nightly, it should be safe to share the profile with the regular Nightly instance. If you normally use a beta or release build (and you would like to be able to switch back to these), you should consider using a second profile.</p>
+
+<div class="warning">
+<p><strong>Windows Users:</strong> Please note that the Windows builds currently show an error during setup (see "<em>Known Issues</em>" section below), but installation works nonetheless. We are working on the problem.</p>
+</div>
+
+<div class="note">
+<p>If you run in an environment with any sorts of additional security restrictions (e.g. custom process sandboxing), please make sure that your /tmp directory is writable and the shipped <code>llvm-symbolizer</code> binary is executable from within the Firefox process.</p>
+</div>
+
+<h3 id="Preferences">Preferences</h3>
+
+<p>If you wish for your crash report to be identifiable, you can go to <code>about:config</code> and set the <strong><code>asanreporter.clientid</code></strong> to your <strong>valid email address</strong>. This isn't mandatory, you can of course report crash traces anonymously. If you decide to send reports with your email address and you have a Bugzilla account, consider using the same email as your Bugzilla account uses. We will then Cc you on any bugs filed from your crash reports. If your email does not belong to a Bugzilla account, then we will not publish it but only use it to resolve questions about your crash reports.</p>
+
+<div class="note">
+<p>Setting this preference helps us to get back to you in case we have questions about your setup/OS. Please consider using it so we can get back to you if necessary.</p>
+</div>
+
+<h3 id="Bug_Bounty_Program">Bug Bounty Program</h3>
+
+<p>As a special reward for participating in the program, we decided to treat all submitted reports as if they were filed directly in Bugzilla. This means that reports that</p>
+
+<ul>
+ <li>indicate a security issue of critical or high rating</li>
+ <li><strong>and</strong> that can be fixed by our developers</li>
+</ul>
+
+<p>are eligible for a bug bounty according to our <a href="https://www.mozilla.org/en-US/security/client-bug-bounty/">client bug bounty program rules</a>. As the report will usually not include any steps to reproduce or a test case, it will most likely receive a lower-end bounty. Like with regular bug reports, we would typically reward the first (identifable) report of an issue.</p>
+
+<div class="warning">
+<p>If you would like to participate in the bounty program, make sure you set your <strong><code>asanreporter.clientid</code></strong> preference as specified above. We cannot reward any reports that are submitted with no email address.</p>
+</div>
+
+<h3 id="Known_Issues">Known Issues</h3>
+
+<p>This section lists all currently known limitations of the ASan Nightly builds that are considered bugs.</p>
+
+<ul>
+ <li><s>Flash is currently not working</s></li>
+ <li><s><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1477490">Bug 1477490</a> - <strong>Windows:</strong> Stack instrumentation disabled due to false positives</s></li>
+ <li><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1478096">Bug 1478096</a> - <strong>Windows:</strong> Error during install with maintenanceservice_tmp.exe</li>
+ <li>It has been reported that ASan Nightly performance is particularly bad if you run on a screen with 120hz refresh rate. Switching to 60hz should improve performance drastically.</li>
+</ul>
+
+<p>Note that these bugs are <strong>specific</strong> to ASan Nightly as listed in the <a href="https://bugzilla.mozilla.org/showdependencytree.cgi?id=1386297&amp;hide_resolved=0">tracking bug dependency list</a>. For the full list of bugs found by this project, see <a href="https://bugzilla.mozilla.org/showdependencytree.cgi?id=1479399&amp;hide_resolved=0">this list</a> instead and note that some bugs might not be shown because they are security bugs.</p>
+
+<p>If you encounter a bug not listed here, please file a bug at <a href="https://bugzilla.mozilla.org/">bugzilla.mozilla.org</a> or send an email to <a href="mailto:choller@mozilla.com?subject=%5BASan%20Nightly%20Project%5D%5BBug%20Report%5D">choller@mozilla.com</a>. When filing a bug, it greatly helps if you Cc that email address and make the bug block <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1386297">bug 1386297</a>.</p>
+
+<h3 id="FAQ">FAQ</h3>
+
+<h4 id="What_additional_data_is_collected">What additional data is collected?</h4>
+
+<p>The project only collects ASan traces and (if you set it in the preferences) your email address. We don't collect any other browser data, in particular not the sites you were visiting or page contents. It is really just crash traces submitted to a remote location.</p>
+
+<div class="note">
+<p>The ASan Nightly browser also still has all the data collection capabilities of a regular Nightly browser. The answer above only refers to what this project collects <strong>in addition</strong> to what the regular Nightly browser can collect.</p>
+</div>
+
+<h4 id="Whats_the_performance_impact">What's the performance impact?</h4>
+
+<p>The ASan Nightly build only comes with a slight slowdown at startup and browsing, sometimes it is not even noticeable. The RAM consumption however is much higher than with a regular build. Be prepared to restart your browser sometimes, especially if you use a lot of tabs at once. Also, the updates are larger than the regular ones, so download times for updates will be higher, especially if you have a slower internet connection.</p>
+
+<div class="warning">
+<p>If you experience performance issues, see also the <em>"Known Issues"</em> section above, in particular the problem about screen refresh rate slowing down Firefox.</p>
+</div>
+
+<h4 id="What_about_stability">What about stability?</h4>
+
+<p>The browser is as stable as a regular Nightly build. Various people have been surfing around with it for their daily work for weeks now and we have barely received any crash reports.</p>
+
+<h4 id="How_do_I_confirm_that_Im_running_the_correct_build">How do I confirm that I'm running the correct build?</h4>
+
+<p>If you open <code>about:config</code> and type <em>"asanreporter"</em> into the search field, you should see an entry called <code><strong>asanreporter.apiurl</strong></code> associated with a URL. Do not modify this value.</p>
+
+<div class="warning">
+<p>Since Firefox 64, the <em>"ASan Crash Reporter"</em>  feature is no longer listed in <code>about:support</code></p>
+</div>
+
+<h4 id="Will_there_be_support_for_Mac">Will there be support for Mac?</h4>
+
+<p>We are working on support for Mac, but it might take longer because we have no ASan CI coverage on Mac due to hardware constraints. If you work on Release Engineering and would like to help make e.g. Mac happen earlier, feel free to <a href="mailto:choller@mozilla.com?subject=%5BASan%20Nightly%20Project%5D%20">contact me</a>.</p>

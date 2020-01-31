@@ -1,0 +1,172 @@
+<div>
+<p><span style="line-height: 1.5;">WebSocket クライアントアプリケーションは <a href="/ja/docs/Web/API/Websockets_API">WebSocket API</a> を使用して、WebSocket プロトコルを経由して <a href="/ja/docs/WebSockets-840092-dup/Writing_WebSocket_servers">WebSocket サーバー</a>と通信します。</span></p>
+
+<p>{{AvailableInWorkers}}</p>
+
+<div class="warning">
+<p>この記事のサンプルスニペットは WebSocket チャットクライアント/サーバーサンプルから取得したものです。 <a href="https://github.com/mdn/samples-server/tree/master/s/websocket-chat">コードを見て</a>から、<a href="http://mdn-samples.mozilla.org/s/websocket-chat/">自分で例を試してみてください</a>。この例には現在バグがあります。安全でない WebSocket を使用しようとしていますが、安全な WebSocket を使用するように更新する必要があります。すぐにこれを修正します！</p>
+</div>
+
+<h2 id="WebSocket_オブジェクトの作成">WebSocket オブジェクトの作成</h2>
+
+<p>WebSocket プロトコルを使用して通信するには、<a href="/ja/docs/Web/API/WebSocket" title="en/WebSockets/WebSockets reference/WebSocket"><code>WebSocket</code></a> オブジェクトを作成する必要があります。これにより自動的にサーバーへの接続が開かれます。</p>
+
+<p>WebSocket コンストラクタは、1つの必須パラメータと1つのオプションパラメータを受け取ります。</p>
+
+<pre class="line-numbers  language-html"><code class="language-html">WebSocket WebSocket(
+  in DOMString url,
+  in optional DOMString protocols
+);</code></pre>
+
+<dl>
+ <dt><code>url</code></dt>
+ <dd>接続先 URL。これは、WebSocket サーバーが応答する URL である必要があります。</dd>
+ <dt><code>protocols</code> {{ optional_inline() }}</dt>
+ <dd>単一のプロトコル文字列または一連のプロトコル文字列。これらの文字列はサブプロトコルを示すのに使用されるため、単一のサーバーで複数の WebSocket サブプロトコルを実装できます (たとえば、特定の <code>protocol</code> に応じて1つのサーバーで異なるタイプのインタラクションを処理できるようにする)。プロトコル文字列を指定しない場合、空文字列が仮定されます。</dd>
+</dl>
+
+<p>コンストラクタは例外をスローすることができます：</p>
+
+<dl>
+ <dt><code>SECURITY_ERR</code></dt>
+ <dd>接続が試行されているポートがブロックされています。</dd>
+</dl>
+
+<dl>
+</dl>
+
+<h3 id="コネクションエラー">コネクションエラー</h3>
+
+<p>接続中にエラーが発生した場合、最初に "error" という名前の単純なイベントが <a href="/ja/docs/Web/API/WebSocket" title="WebSocket"><code>WebSocket</code></a> オブジェクトに送信され (その結果、その <code>onerror</code> ハンドラが呼び出されます)、次に <a href="/ja/docs/Web/API/CloseEvent" title="CloseEvent"><code>CloseEvent</code></a> が <a href="/ja/docs/Web/API/WebSocket" title="WebSocket"><code>WebSocket</code></a> オブジェクトに送信され (<code>onclose</code> ハンドラが呼び出されます) 接続の終了の理由を示します。</p>
+
+<p>しかし Firefox 11 では、Mozilla プラットフォームからのコンソールに記述的なエラーメッセージが表示され、<a href="http://tools.ietf.org/html/rfc6455#section-7.4">RFC 6455 の 7.4 節</a>で定義されている Close コードが <a href="/ja/docs/Web/API/CloseEvent" title="CloseEvent"><code>CloseEvent</code></a> を通じて受信されるのが一般的です。</p>
+
+<h3 id="例">例</h3>
+
+<p>この簡単な例では新しい WebSocket を作成し、<code><span class="nowiki">ws://www.example.com/socketserver</span></code> のサーバーに接続します。この例では、ソケットの要求で "protocolOne" のカスタムプロトコルが指定されていますが、省略することもできます。</p>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js"><span class="keyword token">var</span> exampleSocket <span class="operator token">=</span> <span class="keyword token">new</span> <span class="class-name token">WebSocket</span><span class="punctuation token">(</span><span class="string token">"ws://www.example.com/socketserver"</span><span class="punctuation token">,</span> <span class="string token">"protocolOne"</span><span class="punctuation token">)</span><span class="punctuation token">;</span></code></pre>
+
+<p>返されると、<code>exampleSocket.readyState</code> は <code>CONNECTING</code> です。接続がデータを転送する準備ができたら、<code>readyState</code> は <code>OPEN</code> になります。</p>
+
+<p>接続を開き、サポートしているプロトコルについて柔軟に対応したい場合は、プロトコルの配列を指定できます。</p>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js"><span class="keyword token">var</span> exampleSocket <span class="operator token">=</span> <span class="keyword token">new</span> <span class="class-name token">WebSocket</span><span class="punctuation token">(</span><span class="string token">"ws://www.example.com/socketserver"</span><span class="punctuation token">,</span> <span class="punctuation token">[</span><span class="string token">"protocolOne"</span><span class="punctuation token">,</span> <span class="string token">"protocolTwo"</span><span class="punctuation token">]</span><span class="punctuation token">)</span><span class="punctuation token">;</span></code></pre>
+
+<p>接続が確立されると (つまり、<code>readyState</code> が <code>OPEN</code>)、<code>exampleSocket.protocol</code> は、サーバーが選択したプロトコルを通知します。</p>
+
+<p>上の例では、<code>ws</code> が <code>http</code> に置き換えられ、同様に <code>wss</code> が <code>https</code> に置き換わります。WebSocket を確立するには、<a href="/ja/docs/Web/HTTP/Protocol_upgrade_mechanism">HTTP アップグレードメカニズム</a>が必要です。したがって、HTTP サーバーを <code><span class="nowiki">ws://www.example.com</span></code> または <code><span class="nowiki">wss://www.example.com</span></code> としてアドレス指定すると、プロトコルのアップグレード要求が暗黙的に行われます。</p>
+
+<h2 id="サーバーにデータを送信する">サーバーにデータを送信する</h2>
+
+<p>接続を開くと、サーバーにデータを送信することができます。 これを行うには、送信するメッセージごとに <code>WebSocket</code> オブジェクトの <a href="/ja/docs/Web/API/WebSocket#send()" title="en/WebSockets/WebSockets reference/WebSocket#send()"><code>send()</code></a> メソッドを呼び出します。</p>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js">exampleSocket<span class="punctuation token">.</span><span class="function token">send</span><span class="punctuation token">(</span><span class="string token">"Here's some text that the server is urgently awaiting!"</span><span class="punctuation token">)</span><span class="punctuation token">;</span></code></pre>
+
+<p>データを文字列、{{ domxref("Blob") }}、または <a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer" title="en/JavaScript typed arrays/ArrayBuffer"><code>ArrayBuffer</code></a> として送信することができます。</p>
+
+<div class="note"><strong>メモ:</strong> バージョン 11より前では、Firefox は文字列としてデータを送信することのみをサポートしていました。</div>
+
+<p>接続の確立は非同期で失敗しやすいため、WebSocket オブジェクトを作成した直後に <code>send()</code> メソッドを呼び出すことは成功するという保証はありません。一度接続が確立されると、データを送信しようとするのは、作業を行うための <code>onopen</code> ハンドラを定義することによって行われます。</p>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js">exampleSocket<span class="punctuation token">.</span>onopen <span class="operator token">=</span> <span class="keyword token">function</span> <span class="punctuation token">(</span>event<span class="punctuation token">)</span> <span class="punctuation token">{</span>
+  exampleSocket<span class="punctuation token">.</span><span class="function token">send</span><span class="punctuation token">(</span><span class="string token">"Here's some text that the server is urgently awaiting!"</span><span class="punctuation token">)</span><span class="punctuation token">;</span> 
+<span class="punctuation token">}</span><span class="punctuation token">;</span></code></pre>
+
+<h3 id="JSON_を使用したオブジェクトの送信">JSON を使用したオブジェクトの送信</h3>
+
+<p><a href="/ja/docs/Glossary/JSON">JSON</a> を使用して、合理的に複雑なデータをサーバーに送信するのが便利です。 たとえば、チャットプログラムは JSON でカプセル化されたデータのパケットを使用して実装されたプロトコルを使用して、サーバーとやりとりできます。</p>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js"><span class="comment token">// Send text to all users through the server</span>
+<span class="keyword token">function</span> <span class="function token">sendText</span><span class="punctuation token">(</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+  <span class="comment token">// Construct a msg object containing the data the server needs to process the message from the chat client.</span>
+  <span class="keyword token">var</span> msg <span class="operator token">=</span> <span class="punctuation token">{</span>
+    type<span class="punctuation token">:</span> <span class="string token">"message"</span><span class="punctuation token">,</span>
+    text<span class="punctuation token">:</span> document<span class="punctuation token">.</span><span class="function token">getElementById</span><span class="punctuation token">(</span><span class="string token">"text"</span><span class="punctuation token">)</span><span class="punctuation token">.</span>value<span class="punctuation token">,</span>
+    id<span class="punctuation token">:</span>   clientID<span class="punctuation token">,</span>
+    date<span class="punctuation token">:</span> Date<span class="punctuation token">.</span><span class="function token">now</span><span class="punctuation token">(</span><span class="punctuation token">)</span>
+  <span class="punctuation token">}</span><span class="punctuation token">;</span>
+
+  <span class="comment token">// Send the msg object as a JSON-formatted string.</span>
+  exampleSocket<span class="punctuation token">.</span><span class="function token">send</span><span class="punctuation token">(</span>JSON<span class="punctuation token">.</span><span class="function token">stringify</span><span class="punctuation token">(</span>msg<span class="punctuation token">)</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+  
+  <span class="comment token">// Blank the text input element, ready to receive the next line of text from the user.</span>
+  document<span class="punctuation token">.</span><span class="function token">getElementById</span><span class="punctuation token">(</span><span class="string token">"text"</span><span class="punctuation token">)</span><span class="punctuation token">.</span>value <span class="operator token">=</span> <span class="string token">""</span><span class="punctuation token">;</span>
+<span class="punctuation token">}</span></code></pre>
+
+<h2 id="サーバーからメッセージを受信する">サーバーからメッセージを受信する</h2>
+
+<p>WebSockets はイベント駆動型 API です。メッセージを受信すると、"message" イベントが <code>onmessage</code> 関数に配信されます。受信データの確認を開始するには、次のようにします。</p>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js">exampleSocket<span class="punctuation token">.</span>onmessage <span class="operator token">=</span> <span class="keyword token">function</span> <span class="punctuation token">(</span>event<span class="punctuation token">)</span> <span class="punctuation token">{</span>
+  console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(</span>event<span class="punctuation token">.</span>data<span class="punctuation token">)</span><span class="punctuation token">;</span>
+<span class="punctuation token">}</span></code></pre>
+
+<h3 id="JSON_オブジェクトの受信と解釈">JSON オブジェクトの受信と解釈</h3>
+
+<p>まず {{ anch("Using JSON to transmit objects") }} で述べられているチャットクライアントアプリケーションを考えてみましょう。クライアントが受信するデータパケットの種類は次のとおりです。</p>
+
+<ul>
+ <li>ログインハンドシェイク</li>
+ <li>メッセージテキスト</li>
+ <li>ユーザーリストの更新</li>
+</ul>
+
+<p>これらの受信メッセージを解釈するコードは、次のようになります。</p>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js">exampleSocket<span class="punctuation token">.</span>onmessage <span class="operator token">=</span> <span class="keyword token">function</span><span class="punctuation token">(</span>event<span class="punctuation token">)</span> <span class="punctuation token">{</span>
+  <span class="keyword token">var</span> f <span class="operator token">=</span> document<span class="punctuation token">.</span><span class="function token">getElementById</span><span class="punctuation token">(</span><span class="string token">"chatbox"</span><span class="punctuation token">)</span><span class="punctuation token">.</span>contentDocument<span class="punctuation token">;</span>
+  <span class="keyword token">var</span> text <span class="operator token">=</span> <span class="string token">""</span><span class="punctuation token">;</span>
+  <span class="keyword token">var</span> msg <span class="operator token">=</span> JSON<span class="punctuation token">.</span><span class="function token">parse</span><span class="punctuation token">(</span>event<span class="punctuation token">.</span>data<span class="punctuation token">)</span><span class="punctuation token">;</span>
+  <span class="keyword token">var</span> time <span class="operator token">=</span> <span class="keyword token">new</span> <span class="class-name token">Date</span><span class="punctuation token">(</span>msg<span class="punctuation token">.</span>date<span class="punctuation token">)</span><span class="punctuation token">;</span>
+  <span class="keyword token">var</span> timeStr <span class="operator token">=</span> time<span class="punctuation token">.</span><span class="function token">toLocaleTimeString</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+  
+  <span class="keyword token">switch</span><span class="punctuation token">(</span>msg<span class="punctuation token">.</span>type<span class="punctuation token">)</span> <span class="punctuation token">{</span>
+    <span class="keyword token">case</span> <span class="string token">"id"</span><span class="punctuation token">:</span>
+      clientID <span class="operator token">=</span> msg<span class="punctuation token">.</span>id<span class="punctuation token">;</span>
+      <span class="function token">setUsername</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+      <span class="keyword token">break</span><span class="punctuation token">;</span>
+    <span class="keyword token">case</span> <span class="string token">"username"</span><span class="punctuation token">:</span>
+      text <span class="operator token">=</span> <span class="string token">"&lt;b&gt;User &lt;em&gt;"</span> <span class="operator token">+</span> msg<span class="punctuation token">.</span>name <span class="operator token">+</span> <span class="string token">"&lt;/em&gt; signed in at "</span> <span class="operator token">+</span> timeStr <span class="operator token">+</span> <span class="string token">"&lt;/b&gt;&lt;br&gt;"</span><span class="punctuation token">;</span>
+      <span class="keyword token">break</span><span class="punctuation token">;</span>
+    <span class="keyword token">case</span> <span class="string token">"message"</span><span class="punctuation token">:</span>
+      text <span class="operator token">=</span> <span class="string token">"("</span> <span class="operator token">+</span> timeStr <span class="operator token">+</span> <span class="string token">") &lt;b&gt;"</span> <span class="operator token">+</span> msg<span class="punctuation token">.</span>name <span class="operator token">+</span> <span class="string token">"&lt;/b&gt;: "</span> <span class="operator token">+</span> msg<span class="punctuation token">.</span>text <span class="operator token">+</span> <span class="string token">"&lt;br&gt;"</span><span class="punctuation token">;</span>
+      <span class="keyword token">break</span><span class="punctuation token">;</span>
+    <span class="keyword token">case</span> <span class="string token">"rejectusername"</span><span class="punctuation token">:</span>
+      text <span class="operator token">=</span> <span class="string token">"&lt;b&gt;Your username has been set to &lt;em&gt;"</span> <span class="operator token">+</span> msg<span class="punctuation token">.</span>name <span class="operator token">+</span> <span class="string token">"&lt;/em&gt; because the name you chose is in use.&lt;/b&gt;&lt;br&gt;"</span>
+      <span class="keyword token">break</span><span class="punctuation token">;</span>
+    <span class="keyword token">case</span> <span class="string token">"userlist"</span><span class="punctuation token">:</span>
+      <span class="keyword token">var</span> ul <span class="operator token">=</span> <span class="string token">""</span><span class="punctuation token">;</span>
+      <span class="keyword token">for</span> <span class="punctuation token">(</span>i<span class="operator token">=</span><span class="number token">0</span><span class="punctuation token">;</span> i <span class="operator token">&lt;</span> msg<span class="punctuation token">.</span>users<span class="punctuation token">.</span>length<span class="punctuation token">;</span> i<span class="operator token">++</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+        ul <span class="operator token">+</span><span class="operator token">=</span> msg<span class="punctuation token">.</span>users<span class="punctuation token">[</span>i<span class="punctuation token">]</span> <span class="operator token">+</span> <span class="string token">"&lt;br&gt;"</span><span class="punctuation token">;</span>
+      <span class="punctuation token">}</span>
+      document<span class="punctuation token">.</span><span class="function token">getElementById</span><span class="punctuation token">(</span><span class="string token">"userlistbox"</span><span class="punctuation token">)</span><span class="punctuation token">.</span>innerHTML <span class="operator token">=</span> ul<span class="punctuation token">;</span>
+      <span class="keyword token">break</span><span class="punctuation token">;</span>
+  <span class="punctuation token">}</span>
+  
+  <span class="keyword token">if</span> <span class="punctuation token">(</span>text<span class="punctuation token">.</span>length<span class="punctuation token">)</span> <span class="punctuation token">{</span>
+    f<span class="punctuation token">.</span><span class="function token">write</span><span class="punctuation token">(</span>text<span class="punctuation token">)</span><span class="punctuation token">;</span>
+    document<span class="punctuation token">.</span><span class="function token">getElementById</span><span class="punctuation token">(</span><span class="string token">"chatbox"</span><span class="punctuation token">)</span><span class="punctuation token">.</span>contentWindow<span class="punctuation token">.</span><span class="function token">scrollByPages</span><span class="punctuation token">(</span><span class="number token">1</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+  <span class="punctuation token">}</span>
+<span class="punctuation token">}</span><span class="punctuation token">;</span></code></pre>
+
+<p>ここで <a href="/ja/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse" title="en/JavaScript/Reference/Global Objects/JSON/parse"><code>JSON.parse()</code></a> を使用して JSON オブジェクトを元のオブジェクトに変換し、その内容を調べて処理します。</p>
+
+<h3 id="テキストデータフォーマット">テキストデータフォーマット</h3>
+
+<p>WebSocket 接続を介して受信されるテキストは、UTF-8 形式です。</p>
+
+<p>Gecko 9.0 {{ geckoRelease("9.0") }} より前のバージョンでは、有効ではない UTF-8 テキストの一部の文字は、接続を終了させるでしょう。 現在、Gecko はこれらの値を許可しています。</p>
+
+<h2 id="コネクションを閉じる">コネクションを閉じる</h2>
+
+<p>WebSocket 接続の使用を終了したら、WebSocket メソッド <a href="/ja/docs/Web/API/WebSocket" title="en/WebSockets/WebSockets reference/WebSocket#close()"><code>close()</code></a> を呼び出します。</p>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js">exampleSocket<span class="punctuation token">.</span><span class="function token">close</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">;</span></code></pre>
+
+<p>接続を閉じて、データがネットワーク上でまだ送信されていないかどうかを判断する前に、ソケットの <code>bufferedAmount</code> 属性を調べると便利です。</p>
+
+<h2 id="セキュリティの考慮事項">セキュリティの考慮事項</h2>
+
+<p>混合コンテンツ環境では WebSocket を使用しないでください。つまり、HTTPS を使用もしくはそうでない方法でもロードされたページからセキュアでない WebSocket 接続を開くべきではありません。実際には、Firefox 8 以降を含むいくつかのブラウザでこれを明示的に禁止しています。</p>
+</div>

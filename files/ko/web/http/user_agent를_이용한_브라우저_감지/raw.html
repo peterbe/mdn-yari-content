@@ -1,0 +1,253 @@
+<div>{{HTTPSidebar}}</div>
+
+<p>보통 브라우저마다 다른 웹 페이지 또는 서비스를 제공하는 것은 나쁜 생각입니다. 웹은 사용자가 어떤 브라우저나 디바이스를 사용하고 있는지 개의치 않고 모두에게 접근성이 용이해야 하기 때문입니다. 따라서 특정 브라우저를 타겟으로 개발하는 것보다 가용적인 기능들 (예를 들어 Web API 등)을 이용하여 당신의 웹 사이트를 개선하는 것을 추천합니다.</p>
+
+<p>하지만 브라우저와 웹 표준은 완벽하지 않고 그 간극은 여전히 브라우저 감지 기능을 필요로 합니다. <a href="/ko/docs/Web/HTTP/Headers/User-Agent">User-Agent</a>를 사용하여 브라우저를 감지하는 것은 간단해 보이지만, 사실 그것을 잘 이용하는 것은 무척 힘든 일입니다. 이 문서는 사용자 에이전트를 이용하여 브라우저를 바르게 감지하도록 안내합니다.</p>
+
+<div class="note">
+<p>주의하세요! user agent 정보를 가로채는 것은 좋은 아이디어가 아닙니다. 대부분의 경우 호환성이 뛰어난 좋은 다른 해결방안을 찾을 수 있을 것입니다.</p>
+</div>
+
+<h2 id="브라우저_감지를_하기_전_고려할_것">브라우저 감지를 하기 전 고려할 것</h2>
+
+<p>사용자 에이전트 문자열을 이용해 브라우저를 감지하기 전에 가능하다면 이것을 사용하지 않는 것이 첫 번째입니다. 내가 <strong>왜</strong> 이 기능을 원하는지 다시 한 번 스스로 확인하길 바랍니다.</p>
+
+<dl>
+ <dt>특정 브라우저 버전의 버그를 고치려고 하나요?</dt>
+ <dd>포럼에서 찾아보십시오. 만약 이 버그를 당신이 처음 발견했다면 포럼에 질문을 하십시오. 또한 전문가나 다른 견해를 가진 이들이 이 버그를 해결하는데 도움을 줄 것입니다. 만약 버그가 좀처럼 없는 문제라면 브라우저 제공자의 버그 추적 시스템(<a href="https://bugzilla.mozilla.org/">Mozilla</a>, <a href="http://bugs.webkit.org/">WebKit</a>, <a href="https://www.chromium.org/issue-tracking">Blink</a>, <a href="https://bugs.opera.com/">Opera</a>)에 보고된 버그인지 확인하세요.</dd>
+ <dt>특정 기능의 존재를 확인하려고 하나요?</dt>
+ <dd>Your site needs to use a specific Web feature that some browsers don't yet support, and you want to send those users to an older Web site with fewer features but that you know will work. This is the worst reason to use user agent detection, because odds are eventually all the other browsers will catch up. You should do your best to avoid using user agent sniffing in this scenario, and do feature detection instead.</dd>
+ <dt>사용하는 브라우저에 따라 다른 HTML을 제공해야 하나요?</dt>
+ <dd>This is usually a bad practice, but there are some cases in which this is necessary. In these cases, you should first analyze your situation to be sure it's really necessary. Can you prevent it by adding some non-semantic {{ HTMLElement("div") }} or {{ HTMLElement("span") }} elements? The difficulty of successfully using user agent detection is worth a few disruptions to the purity of your HTML. Also, rethink your design: can you use progressive enhancement or fluid layouts to help remove the need to do this?</dd>
+</dl>
+
+<h2 id="사용자_에이전트를_대신할_방법">사용자 에이전트를 대신할 방법</h2>
+
+<p>user agent 감지를 피하는 몇 가지 방법이 있습니다!</p>
+
+<dl>
+ <dt>기능 탐지</dt>
+ <dd>Feature detection is where you don't try to figure out which browser is rendering your page, but instead, you check to see if the specific feature you need is available. If it's not, you use a fallback. In those rare cases where behavior differs between browsers, instead of checking the user agent string, you should instead implement a test to detect how the browser implements the API and determine how to use it from that. A good current example of feature detection is as follows. Recently, Chrome <a href="https://www.chromestatus.com/feature/5668726032564224">added experimental lookbehind support to regular expressions</a>, but no other browser currently supports this. So, you might incorrectly assume you should do this:</dd>
+ <dd>
+ <pre class="syntaxbox"><code>if (navigator.userAgent.indexOf("Chrome") !== -1){
+    // YES, the user is suspected to support look-behind regexps 
+} else { /*put your old fall back code here*/ }</code></pre>
+
+ <p>However, the above code is absolutely terrible and ill-conceived. What if Chrome removes this lookbehind feature? What if another browser implements lookbehind regular expressions? What if another browser uses <em>Chrome </em>in their user agent string? The list goes on and on of things that could go terribly wrong. Therefore you should instead use feature detection like the following.</p>
+
+ <pre><code>var isLookBehindSupported = false;
+try { isLookBehindSupported = !!new RegExp("(?&lt;=)"); } catch (e) {
+/*In unsupported browsers, trying to create a lookbehind expression will simply error, which is caught here*/
+}
+if (isLookBehindSupported) {
+    // Yay, lookbehind expressions are supported
+} else {
+    // Booo! Lookbehind not supported
+}</code></pre>
+
+ <p>As the above code demonstrates, there is <strong>always </strong>a way to test browser support without user agent sniffing. There is <strong>never </strong>any reason to check the user agent string for this.</p>
+
+ <p>Lastly, the above code snippets bring about a critical issue with cross-browser coding that must always be taken into account. Don't unintentionally use the API you are testing for in unsupported browsers. This may sound obvious and simple, but sometimes it is not. For example, in the above code snippets, using lookbehind in short-regexp notation (e.g. /reg/igm) will cause a parser error in unsupported browsers. Thus, in the above example, you would use <em>new RegExp("(?&lt;=look_behind_stuff)");</em> instead of  <em>/(?&lt;=look_behind_stuff)/</em>, even in the lookbehind supported section of your code.</p>
+ </dd>
+ <dt>점진적 향상</dt>
+ <dd>This design technique involves developing your Web site in 'layers', using a bottom-up approach, starting with a simpler layer and improving the capabilities of the site in successive layers, each using more features.</dd>
+ <dt>부드러운 하향</dt>
+ <dd>This is a top-down approach in which you build the best possible site using all the features you want, then tweak it to make it work on older browsers. This can be harder to do, and less effective, than progressive enhancement, but may be useful in some cases.</dd>
+ <dt>모바일 장치 감지</dt>
+ <dd>Arguably the most common use and misuse of user agent sniffing is to detect if the device is a mobile device. However, what is failed to be accountable is what they're really after. People use user agent sniffing to detect if the users' device is touch-friendly and has a small screen so they can optimize their website accordingly. While user agent sniffing can sometimes detect these, not all devices are the same. Some mobile devices have big screen sizes, some desktops have a small touchscreen, some people use smart TV's which are an entirely different ballgame altogether, some people can dynamically change the width and height of their screen by flipping their tablet on its side! So, user agent sniffing is definitely not the way to go. But, there are much better alternatives. Use <em>Navigator.maxTouchPoints</em> to detect if the user's device has a touchscreen. Then, default back to checking the user agent screen only <em>if (!("maxTouchPoints" in Navigator)) { /*Code here*/}</em>. Using this information of whether the device has a touchscreen, do not change the entire layout of the website just for touch devices: you will only create more work and maintenance for yourself. Rather, add in touch conveniences such as bigger, more easily clickable buttons (you can do this using CSS by simply increasing the font size). As for the screen size, simply use <em>window.innerWidth</em> and <em>window.addEventListener("resize", function(){ /*refresh screen size dependent things*/ })</em>. What you want to do for screen size is not slash off information on smaller screens. That will only annoy people because it will force them to use the desktop version. Rather, try to have fewer columns of information in a longer page on smaller screens while having more columns with a shorter page on larger screen sizes. This effect can be easily achieved using CSS flexboxes. Next, always make your code dynamic. The user can flip their mobile device on its side, changing the width and height of the page. Never be satisfied with your webpage until you can open up the dev tools side panel and resize the screen while the webpage looks smooth, fluid, and dynamically resized.</dd>
+</dl>
+
+<h2 id="Which_part_of_the_user_agent_contains_the_information_you_are_looking_for">Which part of the user agent contains the information you are looking for</h2>
+
+<p>As there is no uniformity of the different part of the user agent string, this is the tricky part.</p>
+
+<h3 id="브라우저_이름">브라우저 이름</h3>
+
+<p>사람들이 "브라우저 감시(browser detection)"을 원한다고 말할 때, 실제로 대부분 그들은 "렌더링 엔진 탐지(rendering engine detection)"를 원합니다. Do you actually want to detect Firefox, as opposed to SeaMonkey, or Chrome as opposed to Chromium? Or do you actually simply want to see if the browser is using the Gecko or the WebKit rendering engine? If this is what you need, see further down the page.</p>
+
+<p>Most browser set the name and version in the format <em>BrowserName/VersionNumber</em>, with the notable exception of Internet Explorer. But as the name is not the only information in a user agent string that is in that format, you can not discover the name of the browser, you can only check if the name you are looking for. But note that some browsers are lying: Chrome for example reports both as Chrome and Safari. So to detect Safari you have to check for the Safari string and the absence of the Chrome string, Chromium often reports itself as Chrome too or Seamonkey sometimes reports itself as Firefox.</p>
+
+<p>Also pay attention not to use a simple regular expression on the BrowserName, user agents also contain strings outside the Keyword/Value syntax. Safari &amp; Chrome contain the string 'like Gecko', for instance.</p>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col"> </th>
+   <th scope="col">반드시 포함</th>
+   <th scope="col">반드시 포함하지 않음</th>
+   <th scope="col"> </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>Firefox</td>
+   <td>Firefox/xyz</td>
+   <td>Seamonkey/xyz</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>Seamonkey</td>
+   <td>Seamonkey/xyz</td>
+   <td> </td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>Chrome</td>
+   <td>Chrome/xyz</td>
+   <td>Chromium/xyz</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>Chromium</td>
+   <td>Chromium/xyz</td>
+   <td> </td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>Safari</td>
+   <td>Safari/xyz</td>
+   <td>Chrome/xyz or Chromium/xyz</td>
+   <td>Safari gives two version number, one technical in the Safari/xyz token, one user-friendly in a Version/xyz token</td>
+  </tr>
+  <tr>
+   <td>Opera</td>
+   <td>
+    <p>OPR/xyz <sup>[1]</sup></p>
+
+    <p>Opera/xyz <sup>[2]</sup></p>
+   </td>
+   <td> </td>
+   <td>
+    <p><sup>[1]</sup>  Opera 15+ (Blink-based engine) </p>
+
+    <p><sup>[2]</sup> Opera 12- (Presto-based engine)</p>
+   </td>
+  </tr>
+  <tr>
+   <td>Internet Explorer</td>
+   <td>; MSIE xyz;</td>
+   <td> </td>
+   <td>Internet Explorer doesn't put its name in the <em>BrowserName/VersionNumber</em> format</td>
+  </tr>
+ </tbody>
+</table>
+
+<p>Of course, there is absolutely no guarantee that another browser will not hijack some of these things (like Chrome hijacked the Safari string in the past). That's why browser detection using the user agent string is unreliable and should be done only with the check of version number (hijacking of past versions is less likely).</p>
+
+<h3 id="브라우저_버전">브라우저 버전</h3>
+
+<p>The browser version is often, but not always, put in the value part of the <em>BrowserName/VersionNumber</em> token in the User Agent String. This is of course not the case for Internet Explorer (which puts the version number right after the MSIE token), and for Opera after version 10, which has added a Version/<em>VersionNumber</em> token.</p>
+
+<p>Here again, be sure to take the right token for the browser you are looking for, as there is no guarantee that others will contain a valid number.</p>
+
+<h3 id="렌더링_엔진">렌더링 엔진</h3>
+
+<p>As seen earlier, in most cases, looking for the rendering engine is a better way to go. This will help to not exclude lesser known browsers. Browsers sharing a common rendering engine will display a page in the same way: it is often a fair assumption that what will work in one will work in the other.</p>
+
+<p>There are five major rendering engines: Trident, Gecko, Presto, Blink and WebKit. As sniffing the rendering engines names is common, a lot of user agents added other rendering names to trigger detection. It is therefore important to pay attention not to trigger false-positives when detecting the rendering engine.</p>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col"> </th>
+   <th scope="col">반드시 포함</th>
+   <th scope="col"> </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>Gecko</td>
+   <td>Gecko/xyz</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>WebKit</td>
+   <td>AppleWebKit/xyz</td>
+   <td>Pay attention, WebKit browsers add a 'like Gecko' string that may trigger false positive for Gecko if the detection is not careful.</td>
+  </tr>
+  <tr>
+   <td>Presto</td>
+   <td>Opera/xyz</td>
+   <td><strong>Note:</strong> Presto is no longer used in Opera browser builds &gt;= version 15 (see 'Blink')</td>
+  </tr>
+  <tr>
+   <td>Trident</td>
+   <td>Trident/xyz</td>
+   <td>Internet Explorer put this token in the <em>comment</em> part of the User Agent String</td>
+  </tr>
+  <tr>
+   <td>Blink</td>
+   <td>Chrome/xyz</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="렌더링_엔진_버전">렌더링 엔진 버전</h2>
+
+<p>Most rendering engine put the version number in the <em>RenderingEngine/VersionNumber</em> token, with the notable exception of Gecko. Gecko puts the Gecko version number in the comment part of the User Agent after the <code>rv:</code> string. From Gecko 14 for the mobile version and Gecko 17 for the desktop version, it also puts this value in the <code>Gecko/version</code> token (previous version put there the build date, then a fixed date called the GeckoTrail).</p>
+
+<h2 id="운영체제">운영체제</h2>
+
+<p>The Operating System is given in most User Agent strings (although not web-focussed platforms like Firefox OS), but the format varies a lot. It is a fixed string between two semi-colons, in the comment part of the User Agent. These strings are specific for each browsers. They indicates the OS, but also often its version and information on the relying hardware (32 or 64 bits, or Intel/PPC for Mac).</p>
+
+<p>Like in all cases, these strings may change in the future, one should use them only in conjunction for the detection of already released browsers. A technological survey must be in place to adapt the script when new browser versions are coming out.</p>
+
+<h3 id="모바일_태블릿_데스크톱">모바일, 태블릿, 데스크톱</h3>
+
+<p>The most common reason to perform user agent sniffing is to determine which type of device the browser runs on. The goal is to serve different HTML to different device types.</p>
+
+<ul>
+ <li>Never assume that a browser or a rendering engine only runs on one type of device. Especially don't make different defaults for different browsers or rendering engines.</li>
+ <li>Never use the OS token to define if a browser is on mobile, tablet or desktop. The OS may run on more than one type of (for example, Android runs on tablets as well as phones).</li>
+</ul>
+
+<p>The following table summarizes the way major browser vendors indicate that their browsers are running on a mobile device:</p>
+
+<table>
+ <caption>Common browsers User Agent strings</caption>
+ <thead>
+  <tr>
+   <th scope="col">브라우저</th>
+   <th scope="col">규칙</th>
+   <th scope="col">예제</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>Mozilla (Gecko, Firefox)</td>
+   <td><a href="/en-US/docs/Gecko_user_agent_string_reference"><strong>Mobile</strong> or <strong>Tablet</strong> token</a> in the comment.</td>
+   <td>Mozilla/5.0 (Android; Mobile; rv:13.0) Gecko/13.0 Firefox/13.0</td>
+  </tr>
+  <tr>
+   <td>WebKit-based (Android, Safari)</td>
+   <td><a href="https://developer.apple.com/library/safari/documentation/AppleApplications/Reference/SafariWebContent/OptimizingforSafarioniPhone/OptimizingforSafarioniPhone.html#//apple_ref/doc/uid/TP40006517-SW3"><strong>Mobile Safari</strong> token</a> outside the comment.</td>
+   <td>Mozilla/5.0 (Linux; U; Android 4.0.3; de-ch; HTC Sensation Build/IML74K) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30</td>
+  </tr>
+  <tr>
+   <td>Blink-based (Chromium, Google Chrome, Opera 15+)</td>
+   <td><a href="https://developers.google.com/chrome/mobile/docs/user-agent"><strong>Mobile Safari</strong> token</a> outside the comment</td>
+   <td>Mozilla/5.0 (Linux; Android 4.4.2); Nexus 5 Build/KOT49H) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/33.0.1750.117 Mobile Safari/537.36 OPR/20.0.1396.72047</td>
+  </tr>
+  <tr>
+   <td>Presto-based (Opera 12-)</td>
+   <td>
+    <p><a href="http://my.opera.com/community/openweb/idopera/"><strong>Opera Mobi/xyz</strong> token</a> in the comment (Opera 12-)</p>
+   </td>
+   <td>
+    <p>Opera/9.80 (Android 2.3.3; Linux; Opera Mobi/ADR-1111101157; U; es-ES) Presto/2.9.201 Version/11.50</p>
+   </td>
+  </tr>
+  <tr>
+   <td>Internet Explorer</td>
+   <td><strong>IEMobile/xyz</strong> token in the comment.</td>
+   <td>Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0)</td>
+  </tr>
+ </tbody>
+</table>
+
+<p>In summary, we recommend looking for the string “Mobi” anywhere in the User Agent to detect a mobile device.</p>
+
+<div class="note">
+<p>If the device is large enough that it's not marked with “Mobi”, you should serve your desktop site (which, as a best practice, should support touch input anyway, as more desktop machines are appearing with touchscreens).</p>
+</div>

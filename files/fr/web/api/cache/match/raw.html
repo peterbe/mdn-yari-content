@@ -1,0 +1,146 @@
+<p>{{APIRef("Service Workers API")}}{{SeeCompatTable}}</p>
+
+<p>La méthode <strong><code>match()</code></strong> de l'interface {{domxref("Cache")}} retourne une {{jsxref("Promise")}} qui est résolue en une {{domxref("Response")}} associée à la première requête qui match dans l'objet {{domxref("Cache")}}. Si aucune requête n'est trouvée, la {{jsxref("Promise")}} est résolue en {{jsxref("undefined")}}.</p>
+
+<div class="blockIndicator warning">
+<p>La méthode <strong><code>match()</code></strong> est sensible à la casse de caractères (comme le sont les URL). Il faut donc que le paramètre respecte également la casse de caractères.</p>
+</div>
+
+<h2 id="Syntaxe">Syntaxe</h2>
+
+<pre class="brush: js">cache.match(request,{options}).then(function(response) {
+  //do something with the response
+});
+</pre>
+
+<h3 id="Retour">Retour</h3>
+
+<p>Une {{jsxref("Promise")}} qui est résolue en la première {{domxref("Response")}} qui match la requête, ou en {{jsxref("undefined")}} si aucune requête n'est trouvée.</p>
+
+<div class="note">
+<p><strong>Note</strong>: <code>Cache.match()</code> est quasiment identique à {{domxref("Cache.matchAll()")}}, si ce n'est qu'elle est résolue en <code>response[0]</code> (la première réponse qui matche) plutôt que <code>response[]</code> (un tableau de toutes les réponses qui matchent).</p>
+</div>
+
+<h3 id="Paramètres">Paramètres</h3>
+
+<dl>
+ <dt>request</dt>
+ <dd>La {{domxref("Request")}} à trouver dans le {{domxref("Cache")}}.</dd>
+ <dt>options {{optional_inline}}</dt>
+ <dd>Un objet dont les paramètres contrôlent comment le matching est effectué lors de l'opération de <code>delete</code>. Les options disponibles sont :
+ <ul>
+  <li><code>ignoreSearch</code>: Un {{domxref("Boolean")}} qui spécifie si le matching doit ignorer ou non la query string dans l'url.  Si mis à <code>true</code>, la partie <code>?value=bar</code> de l'url <code>http://foo.com/?value=bar</code> sera ignorée lors du matching. Est à <code>false</code> par défaut.</li>
+  <li><code>ignoreMethod</code>: Un {{domxref("Boolean")}} qui, quand mis à <code>true</code>, empêche les opérations de matching de valider la méthode <code>HTTP</code> de la {{domxref("Request")}} (en temps normal, seules <code>GET</code> et <code>HEAD</code> sont autorisées.) Est à  <code>false</code> par défaut.</li>
+  <li><code>ignoreVary</code>: Un {{domxref("Boolean")}} qui, quand mis à <code>true,</code> indique à l'opération de matching de ne pas effectuer le matching <code>VARY</code> des header.  En d'autres termes, si l'URL correspond, un match sera obtenu peu importe que la {{domxref("Response")}} ait un header <code>VARY</code> ou non. Est à <code>false</code> par défaut.</li>
+  <li><code>cacheName</code>: Une {{domxref("DOMString")}} qui représente un cache spécifique où effectuer la recherche. A noter que cette option est ignorée par <code>Cache.match()</code></li>
+ </ul>
+ </dd>
+ <dd> </dd>
+</dl>
+
+<h2 id="Exemples" style="line-height: 30px; font-size: 2.14285714285714rem;">Exemples</h2>
+
+<p>Cet exemple est extrait de l'exemple <a href="https://github.com/GoogleChrome/samples/blob/gh-pages/service-worker/custom-offline-page/service-worker.js">Custom offline page</a> (<a href="https://googlechrome.github.io/samples/service-worker/custom-offline-page/index.html">demo</a>).</p>
+
+<p>L'exemple suivant se sert d'un cache pour fournir les données demandées même quand une requête échoue. Une clause <code>catch()</code> est déclenchée quand l'appel à <code>fetch()</code> lève une exception. A l'intérieur de la clause <code>catch()</code>, <code>match()</code> est utilisée to pour retourner la réponse appropriée.</p>
+
+<p>Dans cet exemple, nous avons décidé que seul les documents HTML récupérés via le verbe HTTP GET seront mis en cache. <span style="line-height: 19.0909080505371px;">Si notre condition <code>if()</code> est false, le gestionnaire fetch n'intercepte pas la requête. Si d'autres gestionnaires fetch sont enregistrés, ils ont une occasion d'appeler <code>event.respondWith()</code>. Si aucun gestionnaire fetch ne décide d'appeler <code>event.respondWith()</code>, la requête sera gérée par le navigateur comme si les service workers n'avaient pas existé. Si </span><code style="font-style: normal; line-height: 19.0909080505371px;">fetch()</code><span style="line-height: 19.0909080505371px;"> retourne une réponse HTTP valide avec un code réponse dans les 4xx ou 5xx, la clause </span><code style="font-style: normal; line-height: 19.0909080505371px;">catch()</code><span style="line-height: 19.0909080505371px;"> ne sera PAS appelée. </span></p>
+
+<pre class="brush: js">self.addEventListener('fetch', function(event) {
+  // We only want to call event.respondWith() if this is a GET request for an HTML document.
+  if (event.request.method === 'GET' &amp;&amp;
+      event.request.headers.get('accept').indexOf('text/html') !== -1) {
+    console.log('Handling fetch event for', event.request.url);
+    event.respondWith(
+      fetch(event.request).catch(function(e) {
+        console.error('Fetch failed; returning offline page instead.', e);
+        return caches.open(OFFLINE_CACHE).then(function(cache) {
+          return cache.match(OFFLINE_URL);
+        });
+      })
+    );
+  }
+});</pre>
+
+<h2 id="Spécifications">Spécifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Statut</th>
+   <th scope="col">Commentaire</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('Service Workers', '#cache', 'Cache')}}</td>
+   <td>{{Spec2('Service Workers')}}</td>
+   <td>Définition initiale.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Compatibilités_des_navigateurs">Compatibilités des navigateurs</h2>
+
+<div>{{CompatibilityTable}}</div>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Fonctionnalité</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari (WebKit)</th>
+  </tr>
+  <tr>
+   <td>Support de base</td>
+   <td>{{CompatChrome(40.0)}} [1]</td>
+   <td>{{CompatGeckoDesktop(39)}}</td>
+   <td>{{CompatNo}}</td>
+   <td>24</td>
+   <td>{{CompatNo}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Fonctionnalité</th>
+   <th>Android</th>
+   <th>Android Webview</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>Firefox OS</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+   <th>Chrome for Android</th>
+  </tr>
+  <tr>
+   <td>Support de base</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatGeckoMobile(39)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatChrome(40.0)}} [1]</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<p>[1] Le paramètre options ne supporte que <code>cacheName</code>. </p>
+
+<h2 id="Voir_aussi">Voir aussi</h2>
+
+<ul>
+ <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorker_API/Using_Service_Workers">Utilisation des Service Workers</a></li>
+ <li>{{domxref("Cache")}}</li>
+ <li>{{domxref("WorkerGlobalScope.caches")}}</li>
+</ul>

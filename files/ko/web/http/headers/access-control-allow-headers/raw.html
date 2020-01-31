@@ -1,0 +1,125 @@
+<div>{{HTTPSidebar}}</div>
+
+<p>응답헤더 <strong><code>Access-Control-Allow-Headers</code></strong> 는  사전요청({{glossary("preflight request")}}){{HTTPHeader("Access-Control-Request-Headers")}} 가 포함 되어있을 때 사용됩니다.</p>
+
+<p>실제 요청시 어떤 HTTP header들이 사용 가능한지에 대해서 알려줍니다.</p>
+
+<p> {{glossary("simple header", "simple headers")}}, {{HTTPHeader("Accept")}}, {{HTTPHeader("Accept-Language")}}, {{HTTPHeader("Content-Language")}}, {{HTTPHeader("Content-Type")}} (파싱된  MIME type(매개변수 무시)의 값이 <code>application/x-www-form-urlencoded</code>, <code>multipart/form-data</code>, <code>text/plain</code>중 하나일 경우에만), 이 헤더들은 항상 사용이 가능하여 리스트 할 필요가 없습니다. </p>
+
+<p>요청에 {{HTTPHeader("Access-Control-Request-Headers")}} 헤더가 포함 되어 있으면 필수 적으로 추가해서 응답해 주어야 합니다.</p>
+
+<table class="properties">
+ <tbody>
+  <tr>
+   <th scope="row">Header type</th>
+   <td>{{Glossary("Response header")}}</td>
+  </tr>
+  <tr>
+   <th scope="row">{{Glossary("Forbidden header name")}}</th>
+   <td>no</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Syntax(구문)">Syntax(구문)</h2>
+
+<pre class="syntaxbox">Access-Control-Allow-Headers: <em>&lt;header-name&gt;</em>[, <em>&lt;header-name&gt;</em>]*
+</pre>
+
+<h2 id="Directives(지시자)">Directives(지시자)</h2>
+
+<dl>
+ <dt><code>&lt;header-name&gt;</code></dt>
+ <dd>지원되는 해더 이름. 헤더 이름은 ','로 구분하여 복수로 나열 할 수 있습니다.</dd>
+</dl>
+
+<p>항상 허용 되는 해더 : {{HTTPHeader("Accept")}}, {{HTTPHeader("Accept-Language")}}, {{HTTPHeader("Content-Language")}}, {{HTTPHeader("Content-Type")}} (파싱된  MIME type(매개변수 무시)의 값이 <code>application/x-www-form-urlencoded</code>, <code>multipart/form-data</code>, <code>text/plain</code>중 하나일 경우에만 ). 이 헤더들은 {{Glossary("simple headers")}}(심플해더) 로 불리고, 나열할 필요 없습니다.</p>
+
+<h2 id="Examples(예제)">Examples(예제)</h2>
+
+<h3 id="A_custom_header_(사용자_정의_헤더)">A custom header (사용자 정의 헤더)</h3>
+
+<p>Here's an example of what an <code>Access-Control-Allow-Headers</code> header might look like. It indicates that in addition to the "simple" headers, a custom header named <code>X-Custom-Header</code> is supported by CORS requests to the server.</p>
+
+<pre>Access-Control-Allow-Headers: X-Custom-Header</pre>
+
+<h3 id="Multiple_headers_(복수개의_헤더)">Multiple headers (복수개의 헤더)</h3>
+
+<p>This example shows <code>Access-Control-Allow-Headers</code> when it specifies support for multiple headers.</p>
+
+<pre>Access-Control-Allow-Headers: X-Custom-Header, Upgrade-Insecure-Requests</pre>
+
+<h3 id="Example_preflight_request_(사전요청_예)">Example preflight request (사전요청 예)</h3>
+
+<p>사전 요청에서  <code>Access-Control-Allow-Headers</code> 이 사용된 경우의 예제를 보도록 합시다.</p>
+
+<h4 id="요청">요청</h4>
+
+<p>첫째, 요청.  사전 요청은 {{HTTPMethod("OPTIONS")}} 메소드와 세개의 사전 요청 헤더가 가 필요하다 :  {{HTTPHeader("Access-Control-Request-Method")}}, {{HTTPHeader("Access-Control-Request-Headers")}}, and {{HTTPHeader("Origin")}}</p>
+
+<p>아래는 사전 요청의 예</p>
+
+<pre>OPTIONS /resource/foo
+Access-Control-Request-Method: DELETE
+Access-Control-Request-Headers: origin, x-requested-with
+Origin: https://foo.bar.org</pre>
+
+<h4 id="응답">응답</h4>
+
+<p>만약 서버가 {{HTTPMethod("DELETE")}} 메소드에 대한 CORS 요청과 을 허락한다면,  {{HTTPHeader("Access-Control-Allow-Methods")}} 에 DELETE와 지원되는 다른 메소드가 같이 나열되어 응답합니다.</p>
+
+<pre>HTTP/1.1 200 OK
+Content-Length: 0
+Connection: keep-alive
+Access-Control-Allow-Origin: https://foo.bar.org
+Access-Control-Allow-Methods: POST, GET, OPTIONS, DELETE
+Access-Control-Max-Age: 86400</pre>
+
+<p>만약 응답을 </p>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName('Fetch','#http-access-control-allow-headers', 'Access-Control-Allow-Headers')}}</td>
+   <td>{{Spec2("Fetch")}}</td>
+   <td>Initial definition.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<p class="hidden">The compatibility table in this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</p>
+
+<p>{{Compat("http.headers.Access-Control-Allow-Headers")}}</p>
+
+<h2 id="Compatibility_notes">Compatibility notes</h2>
+
+<ul>
+ <li>The wildcard value (*) that is mentioned in the latest specification, is not yet implemented in browsers:
+  <ul>
+   <li>Chromium: <a href="https://bugs.chromium.org/p/chromium/issues/detail?id=615313">Issue 615313</a></li>
+   <li>Firefox: {{bug(1309358)}}</li>
+   <li>Servo: <a href="https://github.com/servo/servo/issues/13283">Issue 13283</a></li>
+   <li>WebKit: <a href="https://bugs.webkit.org/show_bug.cgi?id=165508">Issue 165508</a></li>
+  </ul>
+ </li>
+</ul>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li>{{HTTPHeader("Access-Control-Allow-Origin")}}</li>
+ <li>{{HTTPHeader("Access-Control-Expose-Headers")}}</li>
+ <li>{{HTTPHeader("Access-Control-Allow-Methods")}}</li>
+ <li>{{HTTPHeader("Access-Control-Request-Headers")}}</li>
+</ul>

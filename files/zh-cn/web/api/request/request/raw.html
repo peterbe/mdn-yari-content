@@ -1,0 +1,259 @@
+<p>{{APIRef("Fetch")}}{{ SeeCompatTable() }}</p>
+
+<p><code><strong>Request()</strong></code> 构造器创建一个新的{{domxref("Request")}} 对象。</p>
+
+<h2 id="语法">语法</h2>
+
+<pre class="syntaxbox">var myRequest = new Request(input, init);</pre>
+
+<h3 id="参数">参数</h3>
+
+<dl>
+ <dt><em>input</em></dt>
+ <dd>定义你想要fetch的资源。可以是下面两者之一:
+ <ul>
+  <li>一个直接包含你希望fetch的资源的URL的 {{domxref("USVString")}}</li>
+  <li>一个 {{domxref("Request")}} 对象.</li>
+ </ul>
+ </dd>
+ <dt><em>init</em> {{optional_inline}}</dt>
+ <dd>一个可选对象，包含希望被包括到请求中的各种自定义选项。可用的选项如下：
+ <ul>
+  <li><code>method</code>: 请求的方法，例如：<code>GET</code>, <code>POST。</code></li>
+  <li><code>headers</code>: 任何你想加到请求中的头，其被放在{{domxref("Headers")}}对象或内部值为{{domxref("ByteString")}} 的对象字面量中。</li>
+  <li><code>body</code>: 任何你想加到请求中的body，可以是{{domxref("Blob")}}, {{domxref("BufferSource")}}, {{domxref("FormData")}}, {{domxref("URLSearchParams")}}, 或 {{domxref("USVString")}}对象。注意<code>GET</code> 和 <code>HEAD请求没有body。</code></li>
+  <li><code>mode</code>: 请求的模式, 比如 <code>cors</code>, <code>no-cors</code>, <code>same-origin</code>, 或 <code>navigate</code>。默认值应该为 <code>cors。</code>但在Chrome中，Chrome 47 之前的版本默认值为 <code>no-cors</code> ，自Chrome 47起，默认值为<code>same-origin。</code></li>
+  <li><code>credentials</code>: 想要在请求中使用的credentials：: <code>omit</code>, <code>same-origin</code>, 或 <code>include</code>。默认值应该为<code>omit</code>。但在Chrome中，Chrome 47 之前的版本默认值为 <code>same-origin</code> ，自Chrome 47起，默认值为<code>include。</code></li>
+  <li><code>cache</code>: 请求中想要使用的<a href="/en-US/docs/Web/API/Request/cache">cache mode</a> </li>
+  <li><code>redirect</code>: 对重定向处理的模式： <code>follow</code>, <code>error</code>, or <code>manual</code>。在Chrome中，Chrome 47 之前的版本默认值为 <code>manual</code> ，自Chrome 47起，默认值为<code>follow。</code></li>
+  <li><code>referrer</code>: 一个指定了<code>no-referrer</code>, <code>client</code>, 或一个 URL的 {{domxref("USVString")}} 。默认值是<code>client</code>.</li>
+  <li><code>integrity</code>: 包括请求的 <a href="/en-US/docs/Web/Security/Subresource_Integrity">subresource integrity</a> 值 (e.g., <code>sha256-BpfBw7ivV8q2jLiT13fxDYAe2tJllusRSZ273h2nFSE=</code>).</li>
+ </ul>
+ </dd>
+</dl>
+
+<h2 id="Errors">Errors</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col"><strong>Type</strong></th>
+   <th scope="col"><strong>Description</strong></th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>TypeError</td>
+   <td>自 <a href="/en-US/docs/Mozilla/Firefox/Releases/43">Firefox 43</a>后, 若URL有credentials，<code>Request()</code> 会抛出TypeError , 例如http://user:password@example.com。</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Example">Example</h2>
+
+<p>In our <a href="https://github.com/mdn/fetch-examples/tree/gh-pages/fetch-request">Fetch Request example</a> (see <a href="http://mdn.github.io/fetch-examples/fetch-request/">Fetch Request live</a>) we create a new <code>Request</code> object using the constructor, then fetch it using a {{domxref("GlobalFetch.fetch")}} call. Since we are fetching an image, we run {{domxref("Body.blob")}} on the response to give it the proper MIME type so it will be handled properly, then create an Object URL of it and display it in an {{htmlelement("img")}} element.在我们的<a href="https://github.com/mdn/fetch-examples/tree/gh-pages/fetch-request">Fetch Request example</a> (参见 <a href="http://mdn.github.io/fetch-examples/fetch-request/">Fetch Request live</a>)中，我们使用构造器创建了一个新的<code>Request</code>对象，然后通过对{{domxref("GlobalFetch.fetch")}}的调用，fetch到了结果。</p>
+
+<pre class="brush: js">var myImage = document.querySelector('img');
+
+var myRequest = new Request('flowers.jpg');
+
+fetch(myRequest).then(function(response) {
+  return response.blob();
+}).then(function(response) {
+  var objectURL = URL.createObjectURL(response);
+  myImage.src = objectURL;
+});</pre>
+
+<p>在<a href="https://github.com/mdn/fetch-examples/tree/gh-pages/fetch-request-with-init">Fetch Request with init example</a> (参见 <a href="http://mdn.github.io/fetch-examples/fetch-request-with-init/">Fetch Request init live</a>) 我们做了同样的事情——只不过我们在调用<code>fetch()时，还</code>传递进了一个init对象：</p>
+
+<pre class="brush: js">var myImage = document.querySelector('img');
+
+var myHeaders = new Headers();
+myHeaders.append('Content-Type', 'image/jpeg');
+
+var myInit = { method: 'GET',
+               headers: myHeaders,
+               mode: 'cors',
+               cache: 'default' };
+
+var myRequest = new Request('flowers.jpg',myInit);
+
+fetch(myRequest).then(function(response) {
+  ... 
+});</pre>
+
+<p>注意你也可以把init对象作为参数传递到fetch调用中来达到同样的效果。如下：</p>
+
+<pre class="brush: js">fetch(myRequest,myInit).then(function(response) {
+  ...
+});</pre>
+
+<p>也可以使用在init中使用对象字面量作为<code>headers。</code></p>
+
+<pre class="brush: js">var myInit = { method: 'GET',
+               headers: {
+                   'Content-Type': 'image/jpeg'
+               },
+               mode: 'cors',
+               cache: 'default' };
+
+var myRequest = new Request('flowers.jpg', myInit);
+</pre>
+
+<p>也可以把 {{domxref("Request")}} 对象再作参数传递进 <code>Request()</code> 构造器来创建一个请求的副本（就像调用{{domxref("Request.clone","clone()")}}一样）。</p>
+
+<div class="codehilite" style="background: #f0f3f3;">
+<pre style="line-height: 125%;">var copy = new Request(myRequest);
+</pre>
+</div>
+
+<div class="note">
+<p><strong>Note</strong>: This last usage is probably only useful in <a href="/en-US/docs/Web/API/ServiceWorker_API">ServiceWorkers</a>.</p>
+</div>
+
+<h2 id="规范">规范</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('Fetch','#dom-request','Request()')}}</td>
+   <td>{{Spec2('Fetch')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="浏览器兼容性">浏览器兼容性</h2>
+
+<p>{{ CompatibilityTable() }}</p>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari (WebKit)</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{ CompatChrome(42.0) }} [1]<br>
+     </td>
+   <td>{{ CompatGeckoDesktop(39)}} [2]</td>
+   <td>{{ CompatNo }}</td>
+   <td>
+    <p>29 [3]</p>
+   </td>
+   <td>{{ CompatNo }}</td>
+  </tr>
+  <tr>
+   <td>Streaming response body</td>
+   <td>{{CompatChrome(43.0)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>navigate</code> mode</td>
+   <td>{{CompatChrome(49.0)}}</td>
+   <td>{{ CompatGeckoDesktop(46)}}</td>
+   <td>{{ CompatNo }}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{ CompatNo }}</td>
+  </tr>
+  <tr>
+   <td><code>referrer</code> init option</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{ CompatGeckoDesktop(47)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Android Webview</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>Firefox OS (Gecko)</th>
+   <th>IE Phone</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+   <th>Chrome for Android</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{ CompatNo }}</td>
+   <td>{{ CompatChrome(42) }} [1]</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{ CompatNo }}</td>
+   <td>{{ CompatNo }}</td>
+   <td>{{ CompatNo }}</td>
+   <td>{{ CompatNo }}</td>
+   <td>{{ CompatChrome(42.0) }} [1]</td>
+  </tr>
+  <tr>
+   <td>Streaming response body</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatChrome(43.0)}} </td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatChrome(43.0)}} </td>
+  </tr>
+  <tr>
+   <td><code>navigate</code> mode</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatChrome(49.0)}} </td>
+  </tr>
+  <tr>
+   <td><code>referrer</code> init option</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<ul>
+ <li>[1] Some default values for the init parameter changed in Chrome 47. See the Properties section for details. </li>
+ <li>[2] Behind a preference in 34.</li>
+ <li>[3] Behind a preference in 28.</li>
+</ul>
+
+<h2 id="参见">参见</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Web/API/ServiceWorker_API">ServiceWorker API</a></li>
+ <li><a href="/en-US/docs/Web/HTTP/Access_control_CORS">HTTP access control (CORS)</a></li>
+ <li><a href="/en-US/docs/Web/HTTP">HTTP</a></li>
+</ul>

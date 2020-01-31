@@ -1,0 +1,379 @@
+<p>W tym dokumencie przedstawiono interfejsy umożliwiające korzystanie z języka <a href="/pl/XPath" title="pl/XPath">XPath</a> w kodzie JavaScript, w rozszerzeniach oraz na stronach internetowych. W programach Mozilla zaimplementowano znaczną część specyfikacji <a class="external" href="http://www.w3.org/TR/DOM-Level-3-XPath/xpath.html">DOM 3 XPath</a>, co pozwala na korzystanie z wyrażeń XPath zarówno w dokumentach HTML, jak i XML.</p>
+
+<p>Głównym interfejsem języka XPath jest funkcja <a href="/pl/DOM/document.evaluate" title="pl/DOM/document.evaluate"><code>evaluate</code></a>, stanowiąca metodę obiektu <a href="/pl/DOM/document" title="pl/DOM/document"><code>document</code></a>.</p>
+
+<h2 id="document.evaluate" name="document.evaluate"><code>document.evaluate</code></h2>
+
+<p>Metoda <code>evaluate</code> przetwarza wyrażenie <a href="/pl/XPath" title="pl/XPath">XPath</a> w odniesieniu do dokumentu opartego na języku <a href="/pl/XML" title="pl/XML">XML</a> (dotyczy to także dokumentów HTML), a następnie zwraca obiekt typu <code>XPathResult</code>, który może być pojedynczym węzłem lub zestawem węzłów. Podstawowa dokumentacja tej metody znajduje się pod adresem <a href="/pl/DOM/document.evaluate" title="pl/DOM/document.evaluate">DOM:document.evaluate</a>, jednak jest niezbyt obszerna — z tego względu dokładniejsze omówienie przedstawiono poniżej w tym artykule.</p>
+
+<pre>var xpathResult = document.evaluate( xpathExpression, contextNode, namespaceResolver, resultType, result );
+</pre>
+
+<h3 id="Argumenty" name="Argumenty">Argumenty</h3>
+
+<p>Metoda <a href="/pl/DOM/document.evaluate" title="pl/DOM/document.evaluate"><code>evaluate</code></a> przyjmuje łącznie pięć argumentów:</p>
+
+<ul>
+ <li><code>xpathExpression</code>: ciąg znaków zawierający wyrażenie XPath, które ma być przetworzone.</li>
+</ul>
+
+<ul>
+ <li><code>contextNode</code>: węzeł w dokumencie, w kontekście którego ma być przetworzone wyrażenie określone w argumencie <code>xpathExpression</code>; uwzględnione będą także wszystkie węzły potomne tego węzła. Najczęściej używanym węzłem jest <a href="/pl/DOM/document" title="pl/DOM/document"><code>document</code></a>.</li>
+</ul>
+
+<ul>
+ <li><code>namespaceResolver</code>: funkcja, do której zostaną przekazane wszystkie prefiksy przestrzeni nazw zawarte w wyrażeniu <code>xpathExpression</code>; funkcja ta zwraca ciąg znaków reprezentujący przestrzeń nazw URI powiązaną z danym prefiksem. Pozwala to na konwersję prefiksów użytych w wyrażeniu XPath na prefiksy stosowane w dokumencie (które mogą się różnić). Funkcją tą może być:
+
+  <ul>
+   <li><a href="#Implementacja_funkcji_okre.C5.9Blaj.C4.85cej_domy.C5.9Bln.C4.85_przestrze.C5.84_nazw">Funkcja utworzona</a> za pomocą metody <code><a href="/pl/DOM/document.createNSResolver" title="pl/DOM/document.createNSResolver">createNSResolver</a></code> obiektu <code><a class="external" href="http://www.xulplanet.com/references/objref/XPathEvaluator.html">XPathEvaluator</a></code>. Ten sposób powinien być stosowany w zasadzie we wszystkich przypadkach.</li>
+   <li>Wartość <code>null</code>; dotyczy to dokumentów HTML lub sytuacji, w których nie są używane żadne prefiksy przestrzeni nazw. Jeżeli jednak wyrażenie <code>xpathExpression</code> zawiera prefiksy przestrzeni nazw, użycie wartości <code>null</code> spowoduje zgłoszenie wyjątku typu <code>DOMException</code> o kodzie <code>NAMESPACE_ERR</code>.</li>
+   <li>Niestandardowa funkcja zdefiniowana przez użytkownika. Szczegółowe informacje można znaleźć w sekcji <a href="#Implementacja_w.C5.82asnej_funkcji_okre.C5.9Blaj.C4.85cej_przestrze.C5.84_nazw">Implementacja własnej funkcji określającej przestrzeń nazw</a>.</li>
+  </ul>
+ </li>
+</ul>
+
+<ul>
+ <li><code>resultType</code>: <a href="#Zdefiniowane_sta.C5.82e_okre.C5.9Blaj.C4.85ce_typy_obiektu_XPathResult">stała</a> określająca typ obiektu, jaki ma być zwrócony jako wynik przetwarzania. Najczęściej stosowana jest stała <code>XPathResult.ANY_TYPE</code>, w efekcie czego zwracany jest najwłaściwszy w danym przypadku typ danych. W dodatku do tego dokumentu zamieszczono pełną listę <a href="#Zdefiniowane_sta.C5.82e_okre.C5.9Blaj.C4.85ce_typy_obiektu_XPathResult">dostępnych stałych</a>. Ich objaśnienia znajdują się w sekcji <a href="#Okre.C5.9Blanie_typu_zwracanej_warto.C5.9Bci">Określanie typu zwracanej wartości</a>.</li>
+</ul>
+
+<ul>
+ <li><code>result</code>: istniejący obiekt <code>XPathResult</code>, który ma być ponownie wykorzystany do zwrócenia wyników, lub wartość <code>null</code>, której użycie powoduje utworzenie nowego obiektu <code>XPathResult</code>.</li>
+</ul>
+
+<h3 id="Zwracana_warto.C5.9B.C4.87" name="Zwracana_warto.C5.9B.C4.87">Zwracana wartość</h3>
+
+<p>Metoda zwraca wartość <code>xpathResult</code>, którą stanowi obiekt <code>XPathResult</code> o typie <a href="#Okre.C5.9Blanie_typu_zwracanej_warto.C5.9Bci">określonym</a> przez argument <code>resultType</code>. Interfejs <code>XPathResult</code> jest zdefiniowany w <a class="external" href="http://lxr.mozilla.org/seamonkey/source/dom/public/idl/xpath/nsIDOMXPathResult.idl">tym dokumencie</a>.</p>
+
+<h3 id="Implementacja_funkcji_okre.C5.9Blaj.C4.85cej_domy.C5.9Bln.C4.85_przestrze.C5.84_nazw" name="Implementacja_funkcji_okre.C5.9Blaj.C4.85cej_domy.C5.9Bln.C4.85_przestrze.C5.84_nazw">Implementacja funkcji określającej domyślną przestrzeń nazw</h3>
+
+<p>Za pomocą metody <code>createNSResolver</code> obiektu <a href="/pl/DOM/document" title="pl/DOM/document"><code>document</code></a> utworzymy funkcję określającą przestrzeń nazw.</p>
+
+<pre>var nsResolver = document.createNSResolver( contextNode.ownerDocument == null ? contextNode.documentElement : contextNode.ownerDocument.documentElement );
+</pre>
+
+<p><span class="comment">Or alternatively by using the &lt;code&gt;createNSResolver&lt;/code&gt; method of a &lt;code&gt;XPathEvaluator&lt;/code&gt; object. &lt;pre&gt; var xpEvaluator = new XPathEvaluator(); var nsResolver = xpEvaluator.createNSResolver( contextNode.ownerDocument == null ? contextNode.documentElement : contextNode.ownerDocument.documentElement ); &lt;/pre&gt;</span> Następnie przekażemy zmienną <code>nsResolver</code> do metody <code>document.evaluate</code> jako argument <code>namespaceResolver</code>.</p>
+
+<p>Należy zwrócić uwagę, że nazwy kwalifikowane (<code>QNames</code>) są definiowane z pominięciem prefiksów, tak aby pasowały wyłącznie do elementów w przestrzeni nazw <code>null</code>. W języku XPath nie ma możliwości wskazania domyślnej przestrzeni nazw. Aby dopasować elementy lub atrybuty z przestrzeni nazw innej niż <code>null</code>, należy skorzystać z testów nazw z prefiksami, po czym utworzyć funkcję określającą przestrzeń nazw, która będzie mapować prefiks do przestrzeni nazw. Więcej informacji o <a href="#Implementacja_w.C5.82asnej_funkcji_okre.C5.9Blaj.C4.85cej_przestrze.C5.84_nazw">tworzeniu własnej funkcji określającej przestrzeń nazw</a> można znaleźć poniżej. <span class="comment">Note, XPath defines &lt;code&gt;QNames&lt;/code&gt; without prefix to match only elements in the null namespace. There is no way in XPath to pick up the default namespace. To match elements or attributes in a non-null namespace, you have to use prefixed name tests, and create namespace resolver mapping the prefix to the namespace. Read more on how to <a href="/pl/Wprowadzenie_do_korzystania_z_XPath_w_języku_JavaScript#Implementacja_funkcji_okre.c5.9blaj.c4.85cej_domy.c5.9bln.c4.85_przestrze.c5.84_nazw">create a user defined namespace resolver</a> below.</span></p>
+
+<h3 id="Okre.C5.9Blanie_typu_zwracanej_warto.C5.9Bci" name="Okre.C5.9Blanie_typu_zwracanej_warto.C5.9Bci">Określanie typu zwracanej wartości</h3>
+
+<p>Zwracana przez metodę <code>document.evaluate</code> zmienna <code>xpathResult</code> może być zarówno pojedynczym węzłem (<a href="#Typy_proste">typy proste</a>), jak i kolekcją węzłów (<a href="#Typy_zestaw.C3.B3w_w.C4.99z.C5.82.C3.B3w">typy zestawów węzłów</a>).</p>
+
+<h4 id="Typy_proste" name="Typy_proste">Typy proste</h4>
+
+<p>Jeżeli typ zwracanej wartości (określony przez argument <code>resultType</code>) przyjmuje jedną z poniższych wartości:</p>
+
+<ul>
+ <li><code>NUMBER_TYPE</code> — liczba (typ <code>double</code>),</li>
+ <li><code>STRING_TYPE</code> — ciąg znaków,</li>
+ <li><code>BOOLEAN_TYPE</code> — wartość logiczna,</li>
+</ul>
+
+<p>to zwracaną przez wyrażenie wartość można uzyskać, korzystając z własności obiektu <code>XPathResult</code>, odpowiednio:</p>
+
+<ul>
+ <li><code>numberValue</code>,</li>
+ <li><code>stringValue</code>,</li>
+ <li><code>booleanValue</code>.</li>
+</ul>
+
+<h5 id="Przyk.C5.82ad" name="Przyk.C5.82ad">Przykład</h5>
+
+<p>W poniższym kodzie wyrażenie XPath <code><a href="/pl/XPath/Funkcje/count" title="pl/XPath/Funkcje/count">count(//p)</a></code> zostało użyte w celu znalezienia liczby elementów <code><span class="nowiki">&lt;p&gt;</span></code> w dokumencie HTML:</p>
+
+<pre>var paragraphCount = document.evaluate( 'count(//p)', document, null, XPathResult.ANY_TYPE, null );
+
+alert( 'Ten dokument zawiera następującą liczbę akapitów: ' + paragraphCount.numberValue );
+</pre>
+
+<p>O ile w języku JavaScript liczby zostaną automatycznie skonwertowane na ciągi znaków, o tyle interfejs XPath nie wykona automatycznej konwersji wyniku liczbowego, jeżeli pobrana zostanie własność <code>stringValue</code> — z tego względu poniższy kod <strong>nie</strong> będzie działać:</p>
+
+<pre>var paragraphCount = document.evaluate('count(//p)', document, null, XPathResult.ANY_TYPE, null );
+
+alert( 'Ten dokument zawiera następującą liczbę akapitów: ' + paragraphCount.stringValue );
+</pre>
+
+<p>W takiej sytuacji zgłoszony zostanie wyjątek o kodzie <code>NS_DOM_TYPE_ERROR</code>.</p>
+
+<h4 id="Typy_zestaw.C3.B3w_w.C4.99z.C5.82.C3.B3w" name="Typy_zestaw.C3.B3w_w.C4.99z.C5.82.C3.B3w">Typy zestawów węzłów</h4>
+
+<p>Istnieją 3 różne typy zestawów węzłów zwracanych jako obiekt <code>XPathResult</code>:</p>
+
+<ul>
+ <li><a href="#Iteratory">iteratory</a>,</li>
+ <li><a href="#Snapshots">migawki</a>,</li>
+ <li><a href="#Pierwsze_w.C4.99z.C5.82y">pierwsze węzły</a>.</li>
+</ul>
+
+<h5 id="Iteratory" name="Iteratory">Iteratory</h5>
+
+<p>Jeżeli w parametrze <code>resultType</code> określony jest jeden z poniższych typów:</p>
+
+<ul>
+ <li><code>UNORDERED_NODE_ITERATOR_TYPE</code>,</li>
+ <li><code>ORDERED_NODE_ITERATOR_TYPE</code>,</li>
+</ul>
+
+<p>to zwracanym obiektem <code>XPathResult</code> jest zestaw pasujących węzłów, działający jak iterator — dostęp do poszczególnych węzłów można uzyskać za pomocą metody <code>iterateNext()</code> obiektu <code>XPathResult</code>.</p>
+
+<p>Po przejściu przez wszystkie pasujące węzły metoda <code>iterateNext()</code> zwraca wartość <code>null</code>.</p>
+
+<p>Jeżeli jednak w trakcie iteracji dokument zostanie zmieniony (tj. zmodyfikowane zostanie drzewo dokumentu), iteracja zostanie unieważniona. Własność <code>invalidIteratorState</code> obiektu <code>XPathResult</code> przyjmuje wówczas wartość <code>true</code> oraz zgłaszany jest wyjątek <code>NS_ERROR_DOM_INVALID_STATE_ERR</code>.</p>
+
+<h6 id="Przyk.C5.82ad_iteratora" name="Przyk.C5.82ad_iteratora">Przykład iteratora</h6>
+
+<pre>var iterator = document.evaluate('//phoneNumber', documentNode, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null );
+
+try {
+  var thisNode = iterator.iterateNext();
+  
+  while (thisNode) {
+    alert( thisNode.textContent );
+    thisNode = iterator.iterateNext();
+  }	
+}
+catch (e) {
+  dump( 'Błąd: drzewo dokumentu zostało zmodyfikowane podczas iteracji ' + e );
+}
+</pre>
+
+<h5 id="Migawka" name="Migawka">Migawka</h5>
+
+<p>Jeżeli w parametrze <code>resultType</code> określony jest jeden z poniższych typów:</p>
+
+<ul>
+ <li><code>UNORDERED_NODE_SNAPSHOT_TYPE</code>,</li>
+ <li><code>ORDERED_NODE_SNAPSHOT_TYPE</code>,</li>
+</ul>
+
+<p>to zwracanym obiektem <code>XPathResult</code> jest statyczny zestaw pasujących węzłów; dostęp do poszczególnych węzłów można uzyskać za pomocą metody <code>snapshotItem(itemNumber)</code> obiektu <code>XPathResult</code>, gdzie <code>itemNumber</code> to indeks pobieranego węzła. Liczbę wszystkich węzłów zawartych w obiekcie <code>XPathResult</code> określa własność <code>snapshotLength</code>.</p>
+
+<p>Migawki nie ulegają zmianom wraz z modyfikacjami dokumentu, więc — w przeciwieństwie do iteratorów — nie podlegają unieważnieniu, mogą jednak nie odpowiadać bieżącej postaci dokumentu. Jeżeli na przykład niektóre węzły zostaną przesunięte, migawka może zawierać węzły nieistniejące, nie będzie natomiast zawierać węzłów dodanych w nowym miejscu.</p>
+
+<h6 id="Przyk.C5.82ad_migawki" name="Przyk.C5.82ad_migawki">Przykład migawki</h6>
+
+<pre>var nodesSnapshot = document.evaluate('//phoneNumber', documentNode, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null );
+
+for ( var i=0 ; i &lt; nodesSnapshot.snapshotLength; i++ )
+{
+  dump( nodesSnapshot.snapshotItem(i).textContent );
+}
+</pre>
+
+<h5 id="Pierwsze_w.C4.99z.C5.82y" name="Pierwsze_w.C4.99z.C5.82y">Pierwsze węzły</h5>
+
+<p>Jeżeli w parametrze <code>resultType</code> określony jest jeden z poniższych typów:</p>
+
+<ul>
+ <li><code>ANY_UNORDERED_NODE_TYPE</code></li>
+ <li><code>FIRST_ORDERED_NODE_TYPE</code></li>
+</ul>
+
+<p>to zwracanym obiektem <code>XPathResult</code> jest wyłącznie pierwszy znaleziony węzeł pasujący do wyrażenia XPath. Dostęp do tego węzła można uzyskać za pomocą własności <code>singleNodeValue</code> obiektu <code>XPathResult</code>. Jeżeli zestaw węzłów jest pusty, zwracana jest wartość <code>null</code>.</p>
+
+<p>Należy zwrócić uwagę, że o ile w przypadku podtypu nieuporządkowanego zwracany pojedynczy węzeł może nie być pierwszym w kolejności węzłem dokumentu, o tyle w razie użycia podtypu uporządkowanego gwarantowane jest zwrócenie pierwszego pasującego węzła dokumentu.</p>
+
+<h6 id="Przyk.C5.82ad_pierwszego_w.C4.99z.C5.82a" name="Przyk.C5.82ad_pierwszego_w.C4.99z.C5.82a">Przykład pierwszego węzła</h6>
+
+<pre>var firstPhoneNumber = document.evaluate('//phoneNumber', documentNode, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null );
+
+dump( 'Pierwszy znaleziony numer telefonu to ' + firstPhoneNumber.singleNodeValue.textContent );
+</pre>
+
+<h4 id="Sta.C5.82a_ANY_TYPE" name="Sta.C5.82a_ANY_TYPE">Stała <code>ANY_TYPE</code></h4>
+
+<p>Jeżeli w parametrze <code>resultType</code> określony jest typ <code>ANY_TYPE</code>, zwracany obiekt <code>XPathResult</code> będzie takiego typu, jaki jest najbardziej odpowiedni dla danego wyrażenia.</p>
+
+<p>Może to być jeden z typów prostych (<code>NUMBER_TYPE, STRING_TYPE, BOOLEAN_TYPE</code>), <strong>jednak</strong>, jeżeli zwracany jest zestaw węzłów, <strong>jedynym</strong> możliwym typem jest typ <code>UNORDERED_NODE_ITERATOR_TYPE</code>.</p>
+
+<p>Aby określić typ zwracany po przetworzeniu wyrażenia, należy skorzystać z własności <code>resultType</code> obiektu <code>XPathResult</code>. <a href="#Zdefiniowane_sta.C5.82e_okre.C5.9Blaj.C4.85ce_typy_obiektu_XPathResult">Stałe</a> wartości tej własności są zdefiniowane w dodatku do tego artykułu. <span class="comment">None Yet =====Przykład zastosowania stałej &lt;code&gt;ANY_TYPE&lt;/code&gt;===== &lt;pre&gt; &lt;/pre&gt;</span></p>
+
+<h2 id="Przyk.C5.82ady" name="Przyk.C5.82ady">Przykłady</h2>
+
+<h3 id="Dokumenty_HTML" name="Dokumenty_HTML">Dokumenty HTML</h3>
+
+<p>Poniższy kod można umieścić w dowolnym miejscu kodu JavaScript, który znajduje się w tym dokumencie HTML lub jest powiązany z tym dokumentem HTML, w odniesieniu do którego przetwarzane będzie wyrażenie XPath.</p>
+
+<p>To extract all the <code><span class="nowiki">&lt;h2&gt;</span></code> heading elements in a HTML document using XPath, the <code>xpathExpression</code> is simply '<code>//h2</code>'. Where, <code>//</code> is the Recursive Descent Operator that matches elements with the nodeName <code>h2</code> anywhere in the document tree. The full code for this is: <span class="comment">link to introductory xpath doc</span></p>
+
+<pre>var headings = document.evaluate('//h2', document, null, XPathResult.ANY_TYPE, null );
+</pre>
+
+<p>Notice that, since HTML does not have namespaces, we have passed <code>null</code> for the <code>namespaceResolver</code> parameter.</p>
+
+<p>Since we wish to search over the entire document for the headings, we have used the <a href="/pl/DOM/document" title="pl/DOM/document">document</a> object itself as the <code>contextNode</code>.</p>
+
+<p>The result of this expression is an <code>XPathResult</code> object. If we wish to know the type of result returned, we may evaluate the <code>resultType</code> property of the returned object. In this case that will evaluate to <code>4</code>, a <code>UNORDERED_NODE_ITERATOR_TYPE</code>. This is the default return type when the result of the XPath expression is a node-set. It provides access to a single node at a time and may not return nodes in a particular order. To access the returned nodes, we use the <code>iterateNext()</code> method of the returned object:</p>
+
+<pre>var thisHeading = headings.iterateNext();
+
+var alertText = 'Level 2 headings in this document are:\n'
+
+while (thisHeading) {
+  alertText += thisHeading.textContent + '\n';
+  thisHeading = headings.iterateNext();
+}
+</pre>
+
+<p>Once we iterate to a node, we have access to all the standard <a href="/pl/DOM_interfaces" title="pl/DOM_interfaces">DOM interfaces</a> on that node. After iterating through all the <code>h2</code> elements returned from our expression, any further calls to <code>iterateNext()</code> will return <code>null</code>.</p>
+
+<h3 id="Przetwarzanie_wyra.C5.BCenia_w_kontek.C5.9Bcie_dokumentu_XML_w_kodzie_rozszerzenia" name="Przetwarzanie_wyra.C5.BCenia_w_kontek.C5.9Bcie_dokumentu_XML_w_kodzie_rozszerzenia">Przetwarzanie wyrażenia w kontekście dokumentu XML w kodzie rozszerzenia</h3>
+
+<p>The following uses an XML document located at <a class="external" rel="freelink">chrome://yourextension/content/peopleDB.xml</a> as an example.</p>
+
+<pre>&lt;?xml version="1.0"?&gt;
+&lt;people xmlns:xul = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" &gt;
+  &lt;person&gt;
+	&lt;name first="george" last="bush" /&gt;
+	&lt;address street="1600 pennsylvania avenue" city="washington" country="usa"/&gt;
+	&lt;phoneNumber&gt;202-456-1111&lt;/phoneNumber&gt;
+  &lt;/person&gt;
+  &lt;person&gt;
+	&lt;name first="tony" last="blair" /&gt;
+	&lt;address street="10 downing street" city="london" country="uk"/&gt;
+	&lt;phoneNumber&gt;020 7925 0918&lt;/phoneNumber&gt;
+  &lt;/person&gt;
+&lt;/people&gt;
+</pre>
+
+<p>To make the contents of the XML document available within the extension, we create a <code><a href="/pl/XMLHttpRequest" title="pl/XMLHttpRequest">XMLHttpRequest</a></code> object to load the document synchronously, the variable <code>xmlDoc</code> will contain the document as an <code><a href="/pl/XMLDocument" title="pl/XMLDocument">XMLDocument</a></code> object against which we can use the <code>evaluate</code> method</p>
+
+<p>JavaScript used in the extensions xul/js documents.</p>
+
+<pre>var req = new XMLHttpRequest();
+
+req.open("GET", "chrome://yourextension/content/peopleDB.xml", false); 
+req.send(null);
+
+var xmlDoc = req.responseXML;		
+
+var nsResolver = xmlDoc.createNSResolver( xmlDoc.ownerDocument == null ? xmlDoc.documentElement : xmlDoc.ownerDocument.documentElement);
+
+var personIterator = xmlDoc.evaluate('//person', xmlDoc, nsResolver, XPathResult.ANY_TYPE, null );
+</pre>
+
+<h2 id="Dodatek" name="Dodatek">Dodatek</h2>
+
+<h4 id="Implementacja_w.C5.82asnej_funkcji_okre.C5.9Blaj.C4.85cej_przestrze.C5.84_nazw" name="Implementacja_w.C5.82asnej_funkcji_okre.C5.9Blaj.C4.85cej_przestrze.C5.84_nazw">Implementacja własnej funkcji określającej przestrzeń nazw</h4>
+
+<p>This is an example for illustration only. This function will need to take namespace prefixes from the <code>xpathExpression</code> and return the URI that corresponds to that prefix. For example, the expression:</p>
+
+<pre>'//xhtml:td/mathml:math'
+</pre>
+
+<p>will select all <a href="/pl/MathML" title="pl/MathML">MathML</a> expressions that are the children of (X)HTML table data cell elements.</p>
+
+<p>In order to associate the '<code>mathml:</code>' prefix with the namespace URI '<code><span class="nowiki">http://www.w3.org/1998/Math/MathML</span></code>' and '<code>xhtml:</code>' with the URI '<code><span class="nowiki">http://www.w3.org/1999/xhtml</span></code>' we provide a function:</p>
+
+<pre>function nsResolver(prefix) {
+  var ns = {
+    'xhtml' : 'http://www.w3.org/1999/xhtml',
+    'mathml': 'http://www.w3.org/1998/Math/MathML'
+  };
+  return ns[prefix] || null;
+}
+</pre>
+
+<p>Our call to <code>document.evaluate</code> would then looks like:</p>
+
+<pre>document.evaluate( '//xhtml:td/mathml:math', document, nsResolver, XPathResult.ANY_TYPE, null );
+</pre>
+
+<h4 id="Implementacja_domy.C5.9Blnej_przestrzeni_nazw_dla_dokument.C3.B3w_XML" name="Implementacja_domy.C5.9Blnej_przestrzeni_nazw_dla_dokument.C3.B3w_XML">Implementacja domyślnej przestrzeni nazw dla dokumentów XML</h4>
+
+<p>As noted in the <a href="#Implementing_a_Default_Namespace_Resolver">#Implementing a Default Namespace Resolver</a> previously, the default resolver does not handle the default namespace for XML documents. For example with this document:</p>
+
+<pre>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;feed xmlns="http://www.w3.org/2005/Atom"&gt;
+    &lt;entry /&gt;
+    &lt;entry /&gt;
+    &lt;entry /&gt;
+&lt;/feed&gt;
+</pre>
+
+<p><code>doc.evaluate('//entry', doc, nsResolver, XPathResult.ANY_TYPE, null)</code> will return an empty set, where <code>nsResolver</code> is the resolver returned by <code>createNSResolver</code>. Passing a <code>null</code> resolver doesn't work any better, either.</p>
+
+<p>One possible workaround is to create a custom resolver that returns the correct default namespace (the Atom namespace in this case). Note that you still have to use some namespace prefix in your XPath expression, so that the resolver function will be able to change it to your required namespace. E.g.:</p>
+
+<pre>function resolver() {
+    return 'http://www.w3.org/2005/Atom';
+}
+doc.evaluate('//myns:entry', doc, resolver, XPathResult.ANY_TYPE, null)
+</pre>
+
+<p>Note that a more complex resolver will be required if the document uses multiple namespaces.</p>
+
+<h4 id="Zdefiniowane_sta.C5.82e_okre.C5.9Blaj.C4.85ce_typy_obiektu_XPathResult" name="Zdefiniowane_sta.C5.82e_okre.C5.9Blaj.C4.85ce_typy_obiektu_XPathResult">Zdefiniowane stałe określające typy obiektu XPathResult</h4>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <td class="header">Result Type Defined Constant</td>
+   <td class="header">Value</td>
+   <td class="header">Description</td>
+  </tr>
+  <tr>
+   <td>ANY_TYPE</td>
+   <td>0</td>
+   <td>A result set containing whatever type naturally results from evaluation of the expression. Note that if the result is a node-set then UNORDERED_NODE_ITERATOR_TYPE is always the resulting type.</td>
+  </tr>
+  <tr>
+   <td>NUMBER_TYPE</td>
+   <td>1</td>
+   <td>A result containing a single number. This is useful for example, in an XPath expression using the <code>count()</code> function.</td>
+  </tr>
+  <tr>
+   <td>STRING_TYPE</td>
+   <td>2</td>
+   <td>A result containing a single string.</td>
+  </tr>
+  <tr>
+   <td>BOOLEAN_TYPE</td>
+   <td>3</td>
+   <td>A result containing a single boolean value. This is useful for example, in an XPath expression using the <code>not()</code> function.</td>
+  </tr>
+  <tr>
+   <td>UNORDERED_NODE_ITERATOR_TYPE</td>
+   <td>4</td>
+   <td>A result node-set containing all the nodes matching the expression. The nodes may not necessarily be in the same order that they appear in the document.</td>
+  </tr>
+  <tr>
+   <td>ORDERED_NODE_ITERATOR_TYPE</td>
+   <td>5</td>
+   <td>A result node-set containing all the nodes matching the expression. The nodes in the result set are in the same order that they appear in the document.</td>
+  </tr>
+  <tr>
+   <td>UNORDERED_NODE_SNAPSHOT_TYPE</td>
+   <td>6</td>
+   <td>A result node-set containing snapshots of all the nodes matching the expression. The nodes may not necessarily be in the same order that they appear in the document.</td>
+  </tr>
+  <tr>
+   <td>ORDERED_NODE_SNAPSHOT_TYPE</td>
+   <td>7</td>
+   <td>A result node-set containing snapshots of all the nodes matching the expression. The nodes in the result set are in the same order that they appear in the document.</td>
+  </tr>
+  <tr>
+   <td>ANY_UNORDERED_NODE_TYPE</td>
+   <td>8</td>
+   <td>A result node-set containing any single node that matches the expression. The node is not necessarily the first node in the document that matches the expression.</td>
+  </tr>
+  <tr>
+   <td>FIRST_ORDERED_NODE_TYPE</td>
+   <td>9</td>
+   <td>A result node-set containing the first node in the document that matches the expression.</td>
+  </tr>
+ </tbody>
+</table>
+
+<div class="originaldocinfo">
+<h2 id="Informacje_o_oryginalnym_dokumencie" name="Informacje_o_oryginalnym_dokumencie">Informacje o oryginalnym dokumencie</h2>
+
+<ul>
+ <li>Treść została oparta na dokumencie <a class="external" href="http://www-xray.ast.cam.ac.uk/~jgraham/mozilla/xpath-tutorial.html">Kurs Mozilla XPath</a>.</li>
+ <li>Autor oryginału: James Graham.</li>
+ <li>Współautor: James Thompson.</li>
+ <li>Data ostatniej aktualizacji: 25 marca 2006 r.</li>
+</ul>
+</div>
+
+<p> </p>

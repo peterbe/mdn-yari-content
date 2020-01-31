@@ -1,0 +1,443 @@
+<div>{{JSRef("Objetos_globales", "RegExp")}}</div>
+
+<h2 id="Summary" name="Summary">Sumario</h2>
+
+<p>Crea un objeto 'expresión regular' para encontrar texto de acuerdo a un patrón.</p>
+
+<h2 id="Syntax" name="Syntax">Sintaxis</h2>
+
+<p>Es posible la declaración mediante literal y mediante constructor.</p>
+
+<p><code>RegExp(<em>patrón</em> <em>[, flags]</em>)</code><br>
+ <code>/<em>patrón</em>/<em>flags</em></code></p>
+
+<h2 id="Parameters" name="Parameters">Parámetros</h2>
+
+<dl>
+ <dt><code>patrón</code></dt>
+ <dd>El texto de la expresión regular, una literal, o puede ser otro objeto RegExp en formato ES5 (este ultimo usa el segundo constructor mencionado arriba), los patrones pueden incluir caracteres especiales, lo cual permite un mayor rango de coincidencias, en comparación con una literal simple.</dd>
+</dl>
+
+<dl>
+ <dt><code>flags</code></dt>
+</dl>
+
+<p>Si se especifica, indica las flags a utilizar, si el valor de pattern es un objeto RexExp, este parámetro reescribe las anteriores flags y lastIndex se inicia a cero como en ES2015, si flags no es especificado se usan las flags y el lastIndex anteriores. El valor de flags es una cadena que puede contener uno o varios de los siguientes valores.</p>
+
+<dl>
+ <dt><code>g</code></dt>
+ <dd>búsqueda global (global match); encuentra todos los resultados en vez de parar después de la primer búsqueda exitosa</dd>
+ <dt><code>i</code></dt>
+ <dd>ignorar mayúsculas o minúsculas</dd>
+ <dt><code>m</code></dt>
+ <dd>Tratar caracteres de inicio y fin (^ y $) como multiples líneas de texto(por ejemplo: encontrar el inicio o fin de cada línea delimitada por \n o \r, no sólo al inicio o fin de toda la entrada de texto)</dd>
+</dl>
+
+<dl>
+ <dt><code>y</code></dt>
+ <dd>{{ Fx_minversion_inline(3) }} {{ non-standard_inline() }}<br>
+ sticky; matches only from the index indicated by the <code>lastIndex</code> property of this regular expression in the target string (and does not attempt to match from any later indexes). This allows the match-only-at-start capabilities of the character "^" to effectively be used at any location in a string by changing the value of the <code>lastIndex</code> property.</dd>
+</dl>
+
+<h2 id="Description" name="Description">Descripción</h2>
+
+<p>Existen dos manera de crear una RegExp. La notacion como literal y como constructor. Para declararla como literal la expresión debe estar encerrada entre slashes y no se utilizan comillas. Por el contrario para declaración con el constructor, la expresión se encierra entre comilla y no entre slashes.</p>
+
+<pre class="brush: js">/ab+c/i;
+new RegExp(/ab+c/,'i'); // notacion literal
+new RegExp('ab+c','i'); //constructor
+</pre>
+
+<p>La notación literal compila la RegExp en el lugar en que es evaluada, por lo que se debe usar esta forma cuando el objeto se use varias veces, por ejemplo en un bucle la expresión se evalua solo una vez y no en cada iteración.</p>
+
+<p>El objeto devuelto por el constructor de la RegExp permite una compilación en tiempo de ejecución. Esta forma debe ser usada cuando sepa que el valor de esta va a cambiar mientras se ejecuta el código, por ejemplo cuando se obtiene información de un objeto input.</p>
+
+<p>Cuando se usa el constructor, es necesario aplicarle las reglas de escape para los caracteres especiales (como preceder los caracteres especiales con un \ antislash).. Por ejemplo, las siguientes notaciones son equivalentes.</p>
+
+<pre class="brush: js">var re = new RegExp("\\w+");
+var re = /\w+/;
+</pre>
+
+<p>Hay que remarcar que los parámetros en formato literal no usan comillas para indicar strings, mientras que los parámetros para la funcion constructor usan comillas. Así la siguiente expresión crea la misma expresión regular:</p>
+
+<pre class="brush: js">/ab+c/i;
+new RegExp("ab+c", "i");
+</pre>
+
+<h3 id="Special_characters_in_regular_expressions" name="Special_characters_in_regular_expressions">Caracteres especiales en expresiones regulares</h3>
+
+<table class="fullwidth-table">
+ <tbody>
+  <tr>
+   <td class="header">Carácter</td>
+   <td class="header">Significado</td>
+  </tr>
+  <tr>
+   <td><code>\</code></td>
+   <td>
+    <p>Para los caracteres que generalmente son tratados literalmente, indica que el siguiente carácter es especial y no debe interpretarse literalmente.</p>
+
+    <p>Por ejemplo, <code>/b/</code> encuentra el carácter 'b'. Al colocar una barra invertida delante de b, de la forma <code>/\b/</code>, el carácter se convierte en especial al significar la busqueda de un límite de palabra(word boundary).</p>
+
+    <p><em>o</em></p>
+
+    <p>Para los caracteres que normalmente se tratan de forma especial, indica que el siguiente carácter no es especial y debe ser interpretado literalmente.</p>
+
+    <p>Por ejemplo, * es un carácter especial que significa que 0 o más ocurrencias del carácter precedente deberían ser encontradas; por ejemplo, <code>/a*/</code> significa 0 o mas "aes". Para encontrar <code>*</code> literalmente, debe precederle la barra invertida; por ejemplo, <code>/a\*/</code> encuentra 'a*'.</p>
+   </td>
+  </tr>
+  <tr>
+   <td><code>^</code></td>
+   <td>
+    <p>Encuentra el principio de la entrada. Si el flag multilínea aparece como verdadero, también coincide con el carácter inmediatamente después de un carácter de salto de línea.</p>
+
+    <p>Por ejemplo, <code>/^A/</code> no encuentra la 'A' en "an A", pero si encuentra la primera 'A' en "An A."</p>
+   </td>
+  </tr>
+  <tr>
+   <td><code>$</code></td>
+   <td>
+    <p>Encuentra el final de la entrada. Si el flag multilínea es puesto a verdadero, también encuentra el carácter inmediatamente después al carácter de salto de linea.</p>
+
+    <p>Por ejemplo, <code>/t$/</code> no encuentra la 't' en "eater", pero la encuentra en "eat".</p>
+   </td>
+  </tr>
+  <tr>
+   <td><code>*</code></td>
+   <td>
+    <p>Encuentra el elemento anterior 0 o más veces.</p>
+
+    <p>Por ejemplo, <code>/bo*/</code> encuentra 'boooo' en "A ghost booooed" y 'b' en "A bird warbled", pero no encuentra nada en "A goat grunted".</p>
+   </td>
+  </tr>
+  <tr>
+   <td><code>+</code></td>
+   <td>
+    <p>Encuentra el elemento precedente 1 o mas veces. Es equivalente a <code>{1,}</code>.</p>
+
+    <p>Por ejemplo, <code>/a+/</code> encuentra la 'a' en "candy" y todas las aes en "caaaaaaandy".</p>
+   </td>
+  </tr>
+  <tr>
+   <td><code>?</code></td>
+   <td>
+    <p>Encuentra el elemento precedente 0 o una vez.</p>
+
+    <p>Por ejemplo, <code>/e?le?/</code> encuentra el 'el' en "angel" y el 'le' en "angle."</p>
+
+    <p>Si es usado inmediantamente despues de cualquier cuantificador <code>*</code>, <code>+</code>, <code>?</code>, o <code>{}</code>, hace al cuantificador no expansivo (encontrando el mínimo número de veces), en comparación con el valor por defecto, el cual es expansivo (encuentra el máximo número de veces).</p>
+
+    <p>También usado en las afirmaciones posteriores, descritas bajo <code>(?=)</code>, <code>(?!)</code>, y <code>(?:)</code> en esta tabla.</p>
+   </td>
+  </tr>
+  <tr>
+   <td><code>.</code></td>
+   <td>
+    <p>(El punto decimal) encuentra cualquier carácter excepto los caracteres de nueva linea: \n \r \u2028 o \u2029. (<code>[\s\S]</code> puede ser usado para encontrar cualquier carácter incluyendo nuevas lineas.)</p>
+
+    <p>Por ejemplo, <code>/.n/</code> encuentra 'an' y 'on' en "nay, an apple is on the tree", pero no 'nay'.</p>
+   </td>
+  </tr>
+  <tr>
+   <td><code>(<em>x</em>)</code></td>
+   <td>
+    <p>Encuentra <code><em>x</em></code> y recuerda la busqueda. Se llaman paréntesis de captura.</p>
+
+    <p>Por ejemplo, <code>/(foo)/</code> encuentra y recuerda 'foo' en "foo bar." El substring encontrado puede ser vuelto a llamar desde el array de elementos resultante <code>[1], ..., [n]</code> o desde las propiedades predefinidas del objeto <code>RegExp</code> <code>$1, ..., $9</code>.</p>
+   </td>
+  </tr>
+  <tr>
+   <td><code>(?:<em>x</em>)</code></td>
+   <td>
+    <p>Encuentra <code><em>x</em></code> pero no recuerda la búsqueda. Estos son llamados los paréntesis de no-captura. El substring encontrado no puede ser re-llamado desde el array de elementos resultante <code>[1], ..., [n]</code> o desde las propiedades predefinidas del objeto <code>RegExp</code> <code>$1, ..., $9</code>.</p>
+   </td>
+  </tr>
+  <tr>
+   <td><code><em>x</em>(?=<em>y</em>)</code></td>
+   <td>
+    <p>Encuentra <code><em>x</em></code> solo si <code><em>x</em></code> es seguido de <code><em>y</em></code>. Por ejemplo, <code>/Jack(?=Sprat)/</code> encuentra 'Jack' solo si está seguido de 'Sprat'. <code>/Jack(?=Sprat|Frost)/</code> encuentra 'Jack' solo si este es seguido de 'Sprat' o 'Frost'. Sin embargo, ni 'Sprat' ni 'Frost' forman parte del resultado encontrado.</p>
+   </td>
+  </tr>
+  <tr>
+   <td><code><em>x</em>(?!<em>y</em>)</code></td>
+   <td>
+    <p>Encuentra <code><em>x</em></code> solo si <code><em>x</em></code> no va seguido de <code><em>y</em></code>. Por ejemplo, <code>/\d+(?!\.)/</code> encuentra un numero si esto no va seguido de un punto decimal.</p>
+
+    <p><code>/\d+(?!\.)/.exec("3.141")</code> encuentra 141 pero no 3.141.</p>
+   </td>
+  </tr>
+  <tr>
+   <td><code><em>x</em>|<em>y</em></code></td>
+   <td>
+    <p>Coincide con <code><em>x</em></code> o <code><em>y</em></code>.</p>
+
+    <p>Por ejemplo, <code>/green|red/</code> encuentra 'green' en "green apple" y 'red' en "red apple."</p>
+   </td>
+  </tr>
+  <tr>
+   <td><code>{<em>n</em>}</code></td>
+   <td>
+    <p>Cuando <code><em>n</em></code> es un entero positivo. Encuentra exactamente <code><em>n</em></code> ocurrencias del elemento precedente.</p>
+
+    <p>Por ejemplo, <code>/a{2}/</code> no encuentra la 'a' en "candy," pero encuentra todas las aes en "caandy," y la primeras dos aes en "caaandy."</p>
+   </td>
+  </tr>
+  <tr>
+   <td><code>{<em>n</em>,}</code></td>
+   <td>
+    <p>Donde <code><em>n</em></code> es un entero positivo. Encuentra al menos <code><em>n</em></code> occurrencias del elemento predecesor.</p>
+
+    <p>Por ejemplo, <code>/a{2,}/</code> no encuentra la 'a' en "candy", pero encuentra todas las aes en "caandy" y en "caaaaaaandy."</p>
+   </td>
+  </tr>
+  <tr>
+   <td><code>{<em>n</em>,<em>m</em>}</code></td>
+   <td>
+    <p>Donde <code><em>n</em></code> y <code><em>m</em></code> son enteros positivos. Encuentra al menos <code><em>n</em></code> y como máximo <code><em>m</em></code> occurrencias del elemento precedente.</p>
+
+    <p>Por ejemplo, <code>/a{1,3}/</code> no encuentra nada en "cndy", la 'a' en "candy," las dos aes en "caandy," y las tres primeras aes en "caaaaaaandy". Hay que mencionar que cuando se busca en "caaaaaaandy", lo encontrado es "aaa", a pesar de que el string original tiene mas aes en el.</p>
+   </td>
+  </tr>
+  <tr>
+   <td><code>[xyz]</code></td>
+   <td>
+    <p>Un set de caracteres. Encuentra cualquiera de ellos. Puedes espedificar el rango de caracteres usando un guion (-).</p>
+
+    <p>Por ejemplo, <code>[abcd]</code> encuentra lo mismo que <code>[a-d]</code>. Los dos encuentran la 'b' en "brisket" y la 'c' en "chop".</p>
+   </td>
+  </tr>
+  <tr>
+   <td><code>[^xyz]</code></td>
+   <td>
+    <p>Un set de caracteres negado ó complementario. Esto significa que, encuentra todo aquello que no se encuentre dentro del set especificado dentro de los corchetes. Se puede especificar un rango de caracteres (continuos) por medio de un guión. Por ejemplo, <code>[^abc]</code> es idéntico a <code>[^a-c]</code>. Ambos sets encuentran la letra inicial "r" en la palabra "brisket" y la letra inicial "h" en la palabra "chop".</p>
+   </td>
+  </tr>
+  <tr>
+   <td><code>[\b]</code></td>
+   <td>
+    <p>Matches a backspace. (Not to be confused with <code>\b</code>.)</p>
+   </td>
+  </tr>
+  <tr>
+   <td><code>\b</code></td>
+   <td>
+    <p>Coincide con el inicio y final de una palabra. (Not to be confused with <code>[\b]</code>.)</p>
+
+    <p>por ejemplo, <code>/\bn\w/</code> coincide con el 'no' en "noonday"; <code>/\wy\b/</code> coincide con 'ly' en "possibly yesterday."</p>
+   </td>
+  </tr>
+  <tr>
+   <td><code>\B</code></td>
+   <td>
+    <p>coincide con un segmento que no sea inicio o final de palabra.</p>
+
+    <p>por ejemplo, <code>/\w\Bn/</code> coincide con 'on' en "noonday", y <code>/y\B\w/</code> coincide con 'ye' en "possibly yesterday."</p>
+   </td>
+  </tr>
+  <tr>
+   <td><code>\c<em>X</em></code></td>
+   <td>
+    <p>Donde <code><em>X</em></code> es una letra entre A - Z. Coindice con una letra más control, en una cadena.</p>
+
+    <p>por ejemplo, <code>/\cM/</code> coincide con control-M en una cadena.</p>
+   </td>
+  </tr>
+  <tr>
+   <td><code>\d</code></td>
+   <td>
+    <p>Coincide con un digito básico de 0-9 en el alfabeto latino, es equivalente a: <code>[0-9]</code>.</p>
+
+    <p><strong>Note</strong>: In Firefox 2 and earlier, matches a digit character from any alphabet. ({{ Bug(378738) }})</p>
+
+    <p>For example, <code>/\d/</code> or <code>/[0-9]/</code> matches '2' in "B2 is the suite number."</p>
+   </td>
+  </tr>
+  <tr>
+   <td><code>\D</code></td>
+   <td>
+    <p>Matches any non-digit character in the basic Latin alphabet. Equivalent to <code>[^0-9]</code>.</p>
+
+    <p><strong>Note</strong>: In Firefox 2 and earlier, all alphabet. ({{ Bug(378738) }})</p>
+
+    <p>For example, <code>/\D/</code> or <code>/[^0-9]/</code> matches 'B' in "B2 is the suite number."</p>
+   </td>
+  </tr>
+  <tr>
+   <td><code>\f</code></td>
+   <td>
+    <p>Matches a form-feed.</p>
+   </td>
+  </tr>
+  <tr>
+   <td><code>\n</code></td>
+   <td>
+    <p>Matches a linefeed.</p>
+   </td>
+  </tr>
+  <tr>
+   <td><code>\r</code></td>
+   <td>
+    <p>Matches a carriage return.</p>
+   </td>
+  </tr>
+  <tr>
+   <td><code>\s</code></td>
+   <td>
+    <p>Matches a single white space character, including space, tab, form feed, line feed and other unicode spaces.</p>
+
+    <p>Equivalent to:</p>
+
+    <p><code>[\t\n\v\f\r \u00a0\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u200b\u2028\u2029\u3000]</code></p>
+
+    <p>For example, <code>/\s\w*/</code> matches ' bar' in "foo bar."</p>
+   </td>
+  </tr>
+  <tr>
+   <td><code>\S</code></td>
+   <td>
+    <p>Matches a single character other than white space.</p>
+
+    <p>Equivalent to:</p>
+
+    <p><code>[^\t\n\v\f\r \u00a0\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u200b\u2028\u2029\u3000]</code></p>
+
+    <p>For example, <code>/\S\w*/</code> matches 'foo' in "foo bar."</p>
+   </td>
+  </tr>
+  <tr>
+   <td><code>\t</code></td>
+   <td>
+    <p>Matches a tab.</p>
+   </td>
+  </tr>
+  <tr>
+   <td><code>\v</code></td>
+   <td>
+    <p>Matches a vertical tab.</p>
+   </td>
+  </tr>
+  <tr>
+   <td><code>\w</code></td>
+   <td>
+    <p>Matches any alphanumeric character from the basic Latin alphabet, including the underscore. Equivalent to <code>[A-Za-z0-9_]</code>.</p>
+
+    <p>For example, <code>/\w/</code> matches 'a' in "apple," '5' in "$5.28," and '3' in "3D."</p>
+   </td>
+  </tr>
+  <tr>
+   <td><code>\W</code></td>
+   <td>
+    <p>Matches any character that is not a word character from the basic Latin alphabet. Equivalent to <code>[^A-Za-z0-9_]</code>.</p>
+
+    <p>For example, <code>/\W/</code> or <code>/[^A-Za-z0-9_]/</code> matches '%' in "50%."</p>
+   </td>
+  </tr>
+  <tr>
+   <td><code>\<em>n</em></code></td>
+   <td>
+    <p>Where <code><em>n</em></code> is a positive integer. A back reference to the last substring matching the n parenthetical in the regular expression (counting left parentheses).</p>
+
+    <p>For example, <code>/apple(,)\sorange\1/</code> matches 'apple, orange,' in "apple, orange, cherry, peach." A more complete example follows this table.</p>
+   </td>
+  </tr>
+  <tr>
+   <td><code>\0</code></td>
+   <td>
+    <p>Matches a NUL character. Do not follow this with another digit.</p>
+   </td>
+  </tr>
+  <tr>
+   <td><code>\x<em>hh</em></code></td>
+   <td>
+    <p>Matches the character with the code <code><em>hh</em></code> (two hexadecimal digits)</p>
+   </td>
+  </tr>
+  <tr>
+   <td><code>\u<em>hhhh</em></code></td>
+   <td>
+    <p>Matches the character with the Unicode value <code><em>hhhh</em></code> (four hexadecimal digits).</p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+<p>The literal notation provides compilation of the regular expression when the expression is evaluated. Use literal notation when the regular expression will remain constant. For example, if you use literal notation to construct a regular expression used in a loop, the regular expression won't be recompiled on each iteration.</p>
+
+<p>The constructor of the regular expression object, for example, <code>new RegExp("ab+c")</code>, provides runtime compilation of the regular expression. Use the constructor function when you know the regular expression pattern will be changing, or you don't know the pattern and are getting it from another source, such as user input.</p>
+
+<h2 id="Properties" name="Properties">Properties</h2>
+
+<dl>
+ <dt><a href="/en/JavaScript/Reference/Global_Objects/RegExp/prototype" title="en/JavaScript/Reference/Global_Objects/RegExp/prototype">prototype</a></dt>
+ <dd>Allows the addition of properties to all objects.</dd>
+</dl>
+
+<p>{{ jsOverrides("Function", "Properties", "prototype") }}</p>
+
+<h2 id="Methods" name="Methods">Methods</h2>
+
+<p>The global <code>RegExp</code> object has no methods of its own, however, it does inherit some methods through the prototype chain.</p>
+
+<p>{{ jsOverrides("Function", "Methods") }}</p>
+
+<h3 id="Properties_2">Properties</h3>
+
+<p>{{ page('en/JavaScript/Reference/Global_Objects/RegExp/prototype','Properties') }}</p>
+
+<h3 id="Methods_2">Methods</h3>
+
+<p>{{ page('en/JavaScript/Reference/Global_Objects/RegExp/prototype','Methods') }}</p>
+
+<h3 id="Properties_3">Properties</h3>
+
+<p>{{ page('en/JavaScript/Reference/Global_Objects/RegExp/prototype','Properties') }}</p>
+
+<h3 id="Methods_3">Methods</h3>
+
+<p>{{ page('en/JavaScript/Reference/Global_Objects/RegExp/prototype','Methods') }}</p>
+
+<h2 id="Examples" name="Examples">Examples</h2>
+
+<h3 id="Example_Using_a_regular_expression_to_change_data_format" name="Example:_Using_a_regular_expression_to_change_data_format">Example: Using a regular expression to change data format</h3>
+
+<p>The following script uses the <a href="/en/JavaScript/Reference/Global_Objects/String/replace" title="en/JavaScript/Reference/Global_Objects/String/replace">replace</a> method inherited by the <a href="/en/JavaScript/Reference/Global_Objects/String" title="en/JavaScript/Reference/Global_Objects/String">String</a> instance to match a name in the format <em>first last</em> and output it in the format <em>last</em>, <em>first</em>. In the replacement text, the script uses <code>$1</code> and <code>$2</code> to indicate the results of the corresponding matching parentheses in the regular expression pattern.</p>
+
+<pre class="brush: js">var re = /(\w+)\s(\w+)/;
+var str = "John Smith";
+var newstr = str.replace(re, "$2, $1");
+print(newstr);
+</pre>
+
+<p>This displays "Smith, John".</p>
+
+<h3 id="Example_Using_a_regular_expression_with_the_.22sticky.22_flag" name="Example:_Using_a_regular_expression_with_the_.22sticky.22_flag">Example: Using a regular expression with the "sticky" flag</h3>
+
+<p>This example demonstrates how one could use the sticky flag on regular expressions to match individual lines of multiline input.</p>
+
+<pre class="brush: js">var text = "First line\nsecond line";
+var regex = /(\S+) line\n?/y;
+
+var match = regex.exec(text);
+print(match[1]);  // prints "First"
+print(regex.lastIndex); // prints 11
+
+var match2 = regex.exec(text);
+print(match2[1]); // prints "Second"
+print(regex.lastIndex); // prints "22"
+
+var match3 = regex.exec(text);
+print(match3 === null); // prints "true"
+</pre>
+
+<p>One can test at run-time whether the sticky flag is supported, using <code>try { … } catch { … }</code>. For this, either an <code>eval(…)</code> expression or the <code>RegExp(<var>regex-string</var>, <var>flags-string</var>)</code> syntax must be used (since the <code>/<var>regex</var>/<var>flags</var></code> notation is processed at compile-time, so throws an exception before the <code>catch</code> block is encountered). For example:</p>
+
+<pre class="brush: js">var supports_sticky;
+try { RegExp('','y'); supports_sticky = true; }
+catch(e) { supports_sticky = false; }
+alert(supports_sticky); // alerts "false" in Firefox 2, "true" in Firefox 3+</pre>
+
+<h2 id="See_also" name="See_also">See also</h2>
+
+<ul>
+ <li><a href="/es/Web/JavaScript/Guide/Regular_Expressions" title="en/Core_JavaScript_1.5_Guide/Regular_Expressions">Regular Expressions</a> chapter in the <a href="/es/Web/JavaScript/Guide" title="en/Core_JavaScript_1.5_Guide">JavaScript Guide</a></li>
+</ul>

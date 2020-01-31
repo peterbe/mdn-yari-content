@@ -1,0 +1,84 @@
+<p>{{AddonSidebar()}}{{Outdated("Cette page a été mise à jour pour la dernière fois avant Firefox 54.")}}</p>
+
+<p>Certaines de ces différences sont dues à la nature de l'environnement Android et donc aux fonctionnalités que Firefox peut implémenter, d'autres sont là où Firefox pour Android n'offre pas encore toutes les fonctionnalités de bureau. Cet article décrit et explique ces différences et examine l'impact qu'elles peuvent avoir sur votre développement d'extensions.</p>
+
+<div class="blockIndicator note">Ce résumé est basé sur les fonctionnalités prévues pour Firefox version 54.</div>
+
+<p>Une liste détaillée des APIs WebExtensions prises en cahrge dans Friefox pour Android est fournie sur la page de <a href="/fr/Add-ons/WebExtensions/Browser_support_for_JavaScript_APIs">support du navigateur pour les API Javascript</a> et les détails des clés manifest.json prises en charge sont fournis sur la page de la <a href="/fr/Add-ons/WebExtensions/manifest.json">section manifest.json</a>.</p>
+
+<h2 id="Interface_utilisateur">Interface utilisateur</h2>
+
+<p>Firefox pour Android offre une version simplifiée de l'interface utilisateur trouvée sur le bureau de Firefox, ce qui permet à Firefox de proposer une expérience agréable et attrayante sur mobile. Certaines des différences concernent la façon dont l'interface utilisateur d'Android diffère des interfaces utilisateur de bureau trouvées dans Linux, Mac OS et Windows. Par exemple, Android ne prend pas en charge un environnement de fenêtrage et les périphériques n'incluent généralement pas de clavier physique à partir duquel des raccourcis clavier peuvent être émis.D'autres différences concernent l'optimisation de la convivialité sur les écrans d'appareils mobiles plus petits.</p>
+
+<p>En raison des différences d'interface utilisateur, les extensions pour Firefox pour Android ne prennent pas en charge les API suivantes et les clés manifest.json: </p>
+
+<ul>
+ <li>{{WebExtAPIRef("commands")}} et les <a href="/fr/Add-ons/WebExtensions/manifest.json/commands"><code>commandes</code></a> associées à la clé du manifest.json, car les tablettes Android et les smartphones n'ont généralement pas de clavier physique à partir duquel des "commandes" peuvent être émises.</li>
+ <li>{{WebExtAPIRef("sidebarAction")}} et la clé <code><a href="/fr/Add-ons/WebExtensions/manifest.json/sidebar_action">sidebar_action</a></code> manifest.json associée, en raison de l'espace limité de l'écran sur les barres latérales des périphériques Android, telles que l'historique du navigateur, sont présentées dans les onglets du navigateur. Dans la mesure du possible, vous devez également déplacer tout contenu de barre latérale vers des onglets.</li>
+ <li>{{WebExtAPIRef("windows")}} comme il n'y a pas une seule 'fenêtre' de Firefox sur Android, il n'a donc aucune possibilité d'ouvrir ou de manipuler des fenêtres de navigateur supplémentaires.</li>
+</ul>
+
+<p>La prise en charge de {{WebExtAPIRef("browserAction")}} et la clé  <a href="/fr/Add-ons/WebExtensions/manifest.json/browser_action">browser_action</a> du manifest.json est en cours de développement. Firefox 55 prendra en charge <code>default_title</code> et <code>default_popup</code> de la clé manifest.json <code><a href="/fr/Add-ons/WebExtensions/manifest.json/browser_action">browser_action</a></code>, en utilisant <code>default_title</code> pour  ajouter un élément au menu Firefox pour Android, et l'élément  {{WebExtAPIRef("browserAction.onClicked()")}} sera disponible pour écouter pour l'élément du menu tapé. De plus, dans Firefox 57, le support des méthodes {{WebExtAPIRef("browserAction.setTitle")}} et  {{WebExtAPIRef("browserAction.getTitle")}} sera ajouté.</p>
+
+<h3 id="Effet_de_votre_interface_utilisateur_d'extension">Effet de votre interface utilisateur d'extension</h3>
+
+<p>Ces différences ont une incidence sur la façon dont vous présentez votre extension dans l'interface utilisateur de Firefox. L'option la plus courante, en ajoutant un bouton pour votre extension à la barre d'outils Firefox avec  <code><a href="/fr/docs/Mozilla/Add-ons/WebExtensions/API/browserAction">browserAction</a></code>, n'est pas disponible (au moins jusqu'à la version firefox 55). Vous ne pouvez pas non plus exposer votre extension vie une barre latérale ou un menu contextuel.  Vous utiliserez donc un bouton de barre d'adresse (via la clé <code><a href="/fr/Add-ons/WebExtensions/manifest.json/page_action">page_action</a></code> du manifest.json et l'API <code><a href="/fr/Add-ons/WebExtensions/API/pageAction">pageAction</a></code> ) en vous rappelant que ce bouton est masqué par défaut et doit être affiché par programmation.</p>
+
+<p>Les fonctionnalités de {{WebExtAPIRef("pageAction")}} sont également réduites dans Firefox pour Android. La clé du manifest.json <a href="/fr/Add-ons/WebExtensions/manifest.json/page_action">page_action</a> vous permet de définir l'icône du bouton et un popup. Vous avez alors l'utilisation de {{WebExtAPIRef("pageAction.show()")}} et  {{WebExtAPIRef("pageAction.hide()")}}, cependant une fois ‘affiché’, notez que le bouton de la barre d'adresse est visible dans tous les onglets (contrairement au comportement du bureau, où le bouton est affiché uniquement pour un onglet spécifié). Mais vous pourrez toujours cacher la pageAction en utilisant  {{WebExtAPIRef("pageAction.hide()")}}  sur un onglet spécifique par exemple, vous souhaitez cacher l'icône d'action de votre extension dans les onglets about:addons ou about:memory) et vous pouvez définir un listener à {{WebExtAPIRef("pageAction.onClicked()")}}. {{WebExtAPIRef("pageAction.setPopup()")}} et {{WebExtAPIRef("pageAction.getPopup()")}} sont également disponibles, de sorte que vous pouvez mettre à jour le popup ou créer un popup une fois que l'add-on est en cours d'exécution. </p>
+
+<p>En  outre, dans {{WebExtAPIRef("pageAction")}} et  {{WebExtAPIRef("browserAction")}} le contenu contextuel est ouvert dans un nouvel onglet et persiste  jusqu'à ce que l'utilisateur ferme manuellement l'onglet.</p>
+
+<p>Vous pouvez également manipuler des onglets sur Firefox pour Android. L'API {{WebExtAPIRef("tabs")}} vous permet d'effectuer la plupart des actions possibles sur le bureau, les principales exceptions sont les suivantes :</p>
+
+<ul>
+ <li>fonctions de zoom, Firefox pour Android a un seul niveau de zoom, que l'utilisateur peut remplacer avec un geste de pincement sur la page.</li>
+ <li>caractéristiques liées à la sélection et le déplacement des onglets, encore une fois que ces fonctionnalités ne sont pas pris en charge sur Android.</li>
+ <li>la capacité de détecter la langue d'un onglet ou son statut muet.</li>
+</ul>
+
+<h3 id="Différences_aux_autres_API_liée_à_l'interface_utilisateur_et_au_clé_du_manifest.json">Différences aux autres API liée à l'interface utilisateur et au clé du manifest.json</h3>
+
+<p>Il existe d'autres fonctionnalités de l'interface utilisateur non prises en charge, à savoir :</p>
+
+<ul>
+ <li>{{WebExtAPIRef("bookmarks")}}, ce qui signifie que vous ne pouvez pas manipuler les signets de l'utilisateur, bien que l'utilisateur puisse le faire lui-même via l'interface utilisateur</li>
+ <li>{{WebExtAPIRef("browsingData")}}, ce qui signifie que vous ne pouvez pas proposer aux utilisateurs des fonctionnalités permettant d'effacer les données du navigateur telles que l'historique, les téléchargements, les mots de passe, etc.</li>
+ <li>Les clés <a href="/fr/Add-ons/WebExtensions/manifest.json/chrome_url_overrides">chrome_url_overrides</a> et <a href="/fr/Add-ons/WebExtensions/manifest.json/chrome_settings_overrides">chrome_settings_overrides</a> du manifest.json, ce qui signifie que vous ne pouvez pas ajouter de page personnalisée et de nouvelles pages à onglet.</li>
+ <li>{{WebExtAPIRef("contextMenus")}}, ce qui signifie que vous ne pouvez pas ajouter d'options aux menus contextuels.</li>
+ <li>{{WebExtAPIRef("history")}}, ce qui signifie que vous ne pouvez pas rechercher ou manipuler l'historique des pages parcourues.</li>
+ <li>{{WebExtAPIRef("omnibox")}} et la clé <a href="/fr/Add-ons/WebExtensions/manifest.json/omnibox">omnibox</a> du manifest.json associée, ce qui signifie que vous ne pouvez pas fournir de suggestions personnalisées pour la barre d'adresse.</li>
+ <li>{{WebExtAPIRef("sessions")}}, ce qui signifie que vous ne pouvez pas lister et restaurer les onglets qui ont été fermés pendant l'exécution du navigateur.</li>
+ <li>La clé <a href="/fr/Add-ons/WebExtensions/manifest.json/options_ui">options_ui</a> du manifest.json ne peut être utilisé qu'à partir de Firefox pour Android version 57 et plus.</li>
+</ul>
+
+<p>Les outils de développement pour Firefox pour Android sont fournis par des mécanismes de débogage à distance sur <a href="https://developer.mozilla.org/en-US/docs/Tools/Remote_Debugging/Debugging_Firefox_for_Android_with_WebIDE" style="text-decoration: none;">USB</a> ou <a href="https://developer.mozilla.org/en-US/docs/Tools/Remote_Debugging/Debugging_Firefox_for_Android_over_Wifi">Wi-Fi</a> qui se connectent au WebIDE sur un bureau. Par conséquent, Firefox pour Android ne fournit pas d'outils de développement intégrés et ses extensions ne supportent pas les APIs pour étendre les outils de développement :</p>
+
+<ul>
+ <li><a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/devtools.inspectedWindow">devtools.inspectedWindow</a></li>
+ <li><a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/devtools.network">devtools.network</a></li>
+ <li><a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/devtools.panels">devtools.panels</a> et la clé <a href="https://developer.mozilla.org/en-US/Add-ons/WebExtensions/manifest.json/devtools_page">devtools_page</a> du manifest.json correspondante.</li>
+</ul>
+
+<h2 id="Outils_de_développement">Outils de développement</h2>
+
+<p>Les outils de développement pour Firefox pour Android sont fournis via des mécanismes de débogage à distance via <a href="/fr/docs/Tools/Remote_Debugging/Debugging_Firefox_for_Android_with_WebIDE" style="text-decoration: none;">USB</a> ou <a href="/fr/docs/Tools/Remote_Debugging/Debugging_Firefox_for_Android_over_Wifi">Wi-Fi</a> qui se connectent à WebIDE sur un bureau. Par conséquent, Firefox pour Android ne fournit aucun outil de développement intégré et ses extensions ne prennent pas en charge les API pour étendre les outils de développement :</p>
+
+<ul>
+ <li><a href="/fr/Add-ons/WebExtensions/API/devtools.inspectedWindow">devtools.inspectedWindow</a></li>
+ <li><a href="/fr/Add-ons/WebExtensions/API/devtools.network">devtools.network</a></li>
+ <li><a href="/fr/Add-ons/WebExtensions/API/devtools.panels">devtools.panels</a> et la clé <a href="/fr/Add-ons/WebExtensions/manifest.json/devtools_page">devtools_page</a> du manifest.json associée.</li>
+</ul>
+
+<h2 id="Interaction_de_l'application_native">Interaction de l'application native</h2>
+
+<p>Vous n'avez pas la possibilité d'intérargir avec des applications natives car  {{WebExtAPIRef("runtime.connectNative()")}} et {{WebExtAPIRef("runtime.sendNativeMessage()")}} ne sont disponibles.</p>
+
+<h2 id="Permissions">Permissions</h2>
+
+<p>Les permissions d'utilisation de certaines API WebExtension doivent être demandées dans le fichier manifest.json. On the desktop version of Firefox users are warned when an extension requests a permission and are given the option to deny the add-on that permission. Sur la version de bureau de Firefox, les utilisateurs sont avertis lorsqu'une extension demande une autorisation et ont la possibilité de refuser l'extension. Cependant, sur Firefox pour Android, les autorisations sont accordées automatiquement et l'utilisateur n'a pas la possibilité de les refuser. Il est actuellement prévu de résoudre ce problème dans Firefox 57.</p>
+
+<h2 id="Autres_notes">Autres notes</h2>
+
+<ul>
+ <li class="blockIndicator note">Au moment de la rédaction, il y a un problème avec  {{WebExtAPIRef("storage.sync()")}} et les données ne sont pas synchronisées avec le compte Firefox de l'utilisateur à partir de Firefox pour Android. Plus de détails peuvent être trouvés dans le <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1316442">bug 1316442</a>.</li>
+</ul>

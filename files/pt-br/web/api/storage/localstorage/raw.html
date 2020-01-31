@@ -1,0 +1,140 @@
+<p><code>localStorage</code> é análogo a <code><a href="/en-US/docs/Web/API/sessionStorage">sessionStorage</a></code>, com as mesmas regras de mesma-origem aplicadas, mas é persistente entre sessões. <code>localStorage</code> foi introduzido no Firefox 3.5.</p>
+
+<div class="note"><strong>Nota:</strong> Quando o browser entra em modo de navegação privada, um banco de dados novo e temporário é criado para armazenar dados de localstorage; este banco de dados é apagado e jogado fora quando o modo de navegação privada é desligado.</div>
+
+<pre class="brush:js" style="font-size: 14px;">// Salve dados ao armazenamento local atual
+localStorage.setItem("nomeDeUsuario", "João");
+
+// Acesse dados armazenados
+alert( "Nome de Usuário = " + localStorage.getItem("nomeDeUsuario"));</pre>
+
+<p class="note">A persistência de <code>localStorage</code> torna uma variedade de coisas mais fácil por vários motivos, incluindo contagem de visitas como demonstrado <a href="http://codepen.io/awesom3/pen/Hlfma">neste tutorial no Codepen</a>.</p>
+
+<h4 id="Compatibilidade" style="line-height: 18px; font-size: 1.28571428571429rem;">Compatibilidade</h4>
+
+<p>Objetos <code>Storage</code> são uma adição recente ao padrão. Como tais eles podem não estar em todos os navegadores. Você pode arrumar isto inserindo um dos dois códigos seguintes no começo dos seus scripts, permitindo o uso do objeto <code>localStorage</code> em implementações que não o suportam nativamente.</p>
+
+<p>Este algoritmo é uma imitação exata do objeto <code>localStorage</code>, mas faz uso de cookies.</p>
+
+<pre class="brush:js" style="font-size: 14px;">if (!window.localStorage) {
+  Object.defineProperty(window, "localStorage", new (function () {
+    var aKeys = [], oStorage = {};
+    Object.defineProperty(oStorage, "getItem", {
+      value: function (sKey) { return sKey ? this[sKey] : null; },
+      writable: false,
+      configurable: false,
+      enumerable: false
+    });
+    Object.defineProperty(oStorage, "key", {
+      value: function (nKeyId) { return aKeys[nKeyId]; },
+      writable: false,
+      configurable: false,
+      enumerable: false
+    });
+    Object.defineProperty(oStorage, "setItem", {
+      value: function (sKey, sValue) {
+        if(!sKey) { return; }
+        document.cookie = escape(sKey) + "=" + escape(sValue) + "; expires=Tue, 19 Jan 2038 03:14:07 GMT; path=/";
+      },
+      writable: false,
+      configurable: false,
+      enumerable: false
+    });
+    Object.defineProperty(oStorage, "length", {
+      get: function () { return aKeys.length; },
+      configurable: false,
+      enumerable: false
+    });
+    Object.defineProperty(oStorage, "removeItem", {
+      value: function (sKey) {
+        if(!sKey) { return; }
+        document.cookie = escape(sKey) + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+      },
+      writable: false,
+      configurable: false,
+      enumerable: false
+    });    
+    Object.defineProperty(oStorage, "clear", {
+      value: function () {
+        if(!aKeys.length) { return; }
+        for (var sKey in aKeys) {
+          document.cookie = escape(sKey) + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+        }
+      },
+      writable: false,
+      configurable: false,
+      enumerable: false
+    });
+    this.get = function () {
+      var iThisIndx;
+      for (var sKey in oStorage) {
+        iThisIndx = aKeys.indexOf(sKey);
+        if (iThisIndx === -1) { oStorage.setItem(sKey, oStorage[sKey]); }
+        else { aKeys.splice(iThisIndx, 1); }
+        delete oStorage[sKey];
+      }
+      for (aKeys; aKeys.length &gt; 0; aKeys.splice(0, 1)) { oStorage.removeItem(aKeys[0]); }
+      for (var aCouple, iKey, nIdx = 0, aCouples = document.cookie.split(/\s*;\s*/); nIdx &lt; aCouples.length; nIdx++) {
+        aCouple = aCouples[nIdx].split(/\s*=\s*/);
+        if (aCouple.length &gt; 1) {
+          oStorage[iKey = unescape(aCouple[0])] = unescape(aCouple[1]);
+          aKeys.push(iKey);
+        }
+      }
+      return oStorage;
+    };
+    this.configurable = false;
+    this.enumerable = true;
+  })());
+}
+</pre>
+
+<div class="note"><strong>Nota:</strong> O tamanho máximo de dados que podem ser salvos é restritamente severo com o uso de cookies. Com este algoritmo, use a função <code>localStorage.setItem()</code> e <code>localStorage.removeItem()</code> para adicionar, modificar ou remover uma chave. O uso de métodos <code>localStorage.suaChave = seuValor;</code> e <code>delete localStorage.seuValor;</code> para definir ou deletar uma chave <strong>não é a forma mais segura com este código.</strong> Você pode também mudar seu nome e usar somente para gerenciar um cookies de documento independentemente do objeto localStorage.</div>
+
+<div class="note"><strong>Note:</strong> By changing the string <code style="background: rgb(204, 204, 204);">"; expires=Tue, 19 Jan 2038 03:14:07 GMT; path=/"</code> to: <code style="background: rgb(204, 204, 204);">"; path=/"</code> (and changing the object's name), this will become a <code>sessionStorage</code> polyfill rather than a <code>localStorage</code> polyfill. However, this implementation will share stored values across browser tabs and windows (and will only be cleared when all browser windows have been closed), while a fully-compliant <span style="font-family: 'Courier New','Andale Mono',monospace; line-height: normal;">sessionStorage</span><span style="line-height: 1.5em;"> implementation restricts stored values to the current browsing context only.</span></div>
+
+<p>Here is another, less exact, imitation of the <code>localStorage</code> object. It is simpler than the previous one, but it is compatible with old browsers, like Internet Explorer &lt; 8 (<strong>tested and working even in Internet Explorer 6</strong>). It also makes use of cookies.</p>
+
+<pre class="brush:js" style="font-size: 14px;">if (!window.localStorage) {
+  window.localStorage = {
+    getItem: function (sKey) {
+      if (!sKey || !this.hasOwnProperty(sKey)) { return null; }
+      return unescape(document.cookie.replace(new RegExp("(?:^|.*;\\s*)" + escape(sKey).replace(/[\-\.\+\*]/g, "\\$&amp;") + "\\s*\\=\\s*((?:[^;](?!;))*[^;]?).*"), "$1"));
+    },
+    key: function (nKeyId) {
+      return unescape(document.cookie.replace(/\s*\=(?:.(?!;))*$/, "").split(/\s*\=(?:[^;](?!;))*[^;]?;\s*/)[nKeyId]);
+    },
+    setItem: function (sKey, sValue) {
+      if(!sKey) { return; }
+      document.cookie = escape(sKey) + "=" + escape(sValue) + "; expires=Tue, 19 Jan 2038 03:14:07 GMT; path=/";
+      this.length = document.cookie.match(/\=/g).length;
+    },
+    length: 0,
+    removeItem: function (sKey) {
+      if (!sKey || !this.hasOwnProperty(sKey)) { return; }
+      document.cookie = escape(sKey) + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+      this.length--;
+    },
+    hasOwnProperty: function (sKey) {
+      return (new RegExp("(?:^|;\\s*)" + escape(sKey).replace(/[\-\.\+\*]/g, "\\$&amp;") + "\\s*\\=")).test(document.cookie);
+    }
+  };
+  window.localStorage.length = (document.cookie.match(/\=/g) || window.localStorage).length;
+}
+</pre>
+
+<div class="note"><strong>Note:</strong> The maximum size of data that can be saved is severely restricted by the use of cookies. With this algorithm, use the functions <code>localStorage.getItem()</code>, <code>localStorage.setItem()</code>, and <code>localStorage.removeItem()</code> to get, add, change, or remove a key. The use of method <code>localStorage.yourKey</code> in order to get, set, or delete a key <strong>is not permitted with this code</strong>. You can also change its name and use it only to manage a document's cookies regardless of the localStorage object.</div>
+
+<div class="note"><strong>Note:</strong> By changing the string <code style="background: rgb(204, 204, 204);">"; expires=Tue, 19 Jan 2038 03:14:07 GMT; path=/"</code> to: <code style="background: rgb(204, 204, 204);">"; path=/"</code> (and changing the object's name), this will become a <code>sessionStorage</code> polyfill rather than a <code>localStorage</code> polyfill. However, this implementation will share stored values across browser tabs and windows (and will only be cleared when all browser windows have been closed), while a fully-compliant <span style="font-family: 'Courier New','Andale Mono',monospace; line-height: normal;">sessionStorage</span><span style="line-height: 1.5em;"> implementation restricts stored values to the current browsing context only.</span></div>
+
+<h4 id="Compatibility_and_relation_with_globalStorage" style="line-height: 18px; font-size: 1.28571428571429rem;">Compatibility and relation with globalStorage</h4>
+
+<p class="note"><code>localStorage</code> is also the same as <code>globalStorage[location.hostname]</code>, with the exception of being scoped to an HTML5 origin (scheme + hostname + non-standard port) and <code>localStorage</code> being an instance of <code>Storage</code> as opposed to <code>globalStorage[location.hostname]</code> being an instance of <code>StorageObsolete</code> which is covered below. For example, <a class="external" href="http://example.com" rel="freelink">http://example.com</a> is not able to access the same <code>localStorage</code> object as <a class="link-https" href="https://example.com" rel="freelink">https://example.com</a> but they can access the same <code>globalStorage</code> item. <code>localStorage</code> is a standard interface while <code>globalStorage</code> is non-standard so you shouldn't rely on these.</p>
+
+<p>Please note that setting a property on <code>globalStorage[location.hostname]</code> does <strong>not</strong> set it on <code>localStorage</code> and extending <code>Storage.prototype</code> does not affect <code>globalStorage</code> items; only extending <code>StorageObsolete.prototype</code> does.</p>
+
+<h4 id="Storage_format">Storage format</h4>
+
+<p><code>Storage</code> keys and values are both stored in the UTF-16 <a href="/en-US/docs/Web/API/DOMString">DOMString</a> format, which uses 2 bytes per character.</p>
+
+<p> </p>

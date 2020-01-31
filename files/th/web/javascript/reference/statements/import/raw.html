@@ -1,0 +1,169 @@
+<div>{{jsSidebar("Statements")}}</div>
+
+<p><code>import</code> ใช้ในการ binding กับโมดูลที่ได้ทำการ export</p>
+
+<div> </div>
+
+<div class="note">
+<p>ฟีเจอร์นี้ <a href="https://jakearchibald.com/2017/es-modules-in-browsers/">เพิ่งเริ่มต้นการพัฒนา</a> บนเบราว์เซอร์แบบ native ซึ่งสามารถใช้ได้กับ transpilers ที่ได้นำ import ไปใช้แล้ว เช่น TypeScript และ <a href="https://babeljs.io/">Babel</a>, หรือ bundlers ได้แก่ <a href="https://github.com/rollup/rollup">Rollup</a>, <a href="https://webpack.js.org/">Webpack</a> และ <a href="https://github.com/parcel-bundler/parcel">Parcel</a>.</p>
+</div>
+
+<h2 id="Syntax">Syntax</h2>
+
+<pre class="syntaxbox">import <em>defaultExport</em> from "<em>module-name</em>";
+import * as <em>name</em> from "<em>module-name</em>";
+import { <em>export </em>} from "<em>module-name</em>";
+import { <em>export</em> as <em>alias </em>} from "<em>module-name</em>";
+import { <em>export1 , export2</em> } from "<em>module-name</em>";
+import { <em>export1 , export2</em> as <em>alias2</em> , <em>[...]</em> } from "<em>module-name</em>";
+import <em>defaultExport</em>, { <em>export</em> [ , <em>[...]</em> ] } from "<em>module-name</em>";
+import <em>defaultExport</em>, * as <em>name</em> from "<em>module-name</em>";
+import "<em>module-name</em>";</pre>
+
+<dl>
+ <dt><code>defaultExport</code></dt>
+ <dd>ชื่อตัวแปรที่อ้างอิงถึงค่า default ที่ประกาศ export จาก module.</dd>
+ <dt><code>module-name</code></dt>
+ <dd>ชื่อของไฟล์ของโมดูลที่จะทำการ import โดยส่วนมากใช้ relative หรือ absolute path ในการอ้างอิงถึงไฟล์  <code>.js</code> ที่มีโมดูลเราต้องการ โดยที่ไม่มี <code>.js</code> ต่อท้าย แต่บางครั้ง bundlers อาจจะอนุญาตหรือต้องการ file extension ขึ้นกับ environment ที่ทำการพัฒนา สามารถใช้ single quotes หรือ double quotes Strings ในการประกาศได้เท่านั้น</dd>
+ <dt><code>name</code></dt>
+ <dd>ชื่อของออบเจกต์ที่ไว้สำหรับการอ้างอิงถึงโมดูลนั้น</dd>
+</dl>
+
+<dl>
+ <dt><code>export, exportN</code></dt>
+ <dd>ชื่อของตัวแปรของโมดูลที่ต้องการ import</dd>
+ <dt><code>alias, aliasN</code></dt>
+ <dd>ชื่อตัวแปรที่ต้องการใช้เรียกอ้างอิงสิ่งที่ imports.</dd>
+</dl>
+
+<h2 id="Description">Description</h2>
+
+<p>The <code>name</code> parameter is the name of the "module object" which will be used as a kind of namespace to refer to the exports. The <code>export</code> parameters specify individual named exports, while the <code>import * as name</code> syntax imports all of them. Below are examples to clarify the syntax.</p>
+
+<h3 id="Import_an_entire_module's_contents">Import an entire module's contents</h3>
+
+<p>This inserts <code>myModule</code> into the current scope, containing all the exports from the module in the file located in <code>/modules/my-module.js</code>.</p>
+
+<pre class="brush: js">import * as <em>myModule</em> from '/modules/my-module.js';
+</pre>
+
+<p>Here, accessing the exports means using the module name ("myModule" in this case) as a namespace. For example, if the module imported above includes an export <code>doAllTheAmazingThings()</code>, you would call it like this:</p>
+
+<pre class="brush: js">myModule.doAllTheAmazingThings();</pre>
+
+<h3 id="Import_a_single_export_from_a_module">Import a single export from a module</h3>
+
+<p>Given an object or value named <code>myExport</code> which has been exported from the module <code>my-module</code> either implicitly (because the entire module is exported) or explicitly (using the {{jsxref("Statements/export", "export")}} statement), this inserts <code>myExport</code> into the current scope.</p>
+
+<pre class="brush: js">import {myExport} from '/modules/my-module.js';</pre>
+
+<h3 id="Import_multiple_exports_from_module">Import multiple exports from module</h3>
+
+<p>This inserts both <code>foo</code> and <code>bar</code> into the current scope.</p>
+
+<pre class="brush: js">import {foo, bar} from '/modules/my-module.js';</pre>
+
+<h3 id="Import_an_export_with_a_more_convenient_alias">Import an export with a more convenient alias</h3>
+
+<p>You can rename an export when importing it. For example, this inserts <code>shortName</code> into the current scope.</p>
+
+<pre class="brush: js">import {reallyReallyLongModuleExportName as shortName}
+  from '/modules/my-module.js';</pre>
+
+<h3 id="Rename_multiple_exports_during_import">Rename multiple exports during import</h3>
+
+<p>Import multiple exports from a module with convenient aliases.</p>
+
+<pre class="brush: js">import {
+  reallyReallyLongModuleExportName as shortName,
+  anotherLongModuleName as short
+} from '/modules/my-module.js';</pre>
+
+<h3 id="Import_a_module_for_its_side_effects_only">Import a module for its side effects only</h3>
+
+<p>Import an entire module for side effects only, without importing anything. This runs the module's global code, but doesn't actually import any values.</p>
+
+<pre class="brush: js">import '/modules/my-module.js';
+</pre>
+
+<h3 id="Importing_defaults">Importing defaults</h3>
+
+<p>It is possible to have a default {{jsxref("Statements/export", "export")}} (whether it is an object, a function, a class, etc.). The <code>import</code> statement may then be used to import such defaults.</p>
+
+<p>The simplest version directly imports the default:</p>
+
+<pre class="brush: js">import myDefault from '/modules/my-module.js';</pre>
+
+<p>It is also possible to use the default syntax with the ones seen above (namespace imports or named imports). In such cases, the default import will have to be declared first. For instance:</p>
+
+<pre class="brush: js">import myDefault, * as myModule from '/modules/my-module.js';
+// myModule used as a namespace</pre>
+
+<p>or</p>
+
+<pre class="brush: js">import myDefault, {foo, bar} from '/modules/my-module.js';
+// specific, named imports
+</pre>
+
+<h2 id="ตัวอย่าง">ตัวอย่าง</h2>
+
+<p>ที่ทำการอ้างอิงจากโมดูลที่ช่วยในการประมวลผล AJAX JSON request.</p>
+
+<h3 id="โมดูล_file.js">โมดูล: file.js</h3>
+
+<pre class="brush: js; highlight: [14]">function getJSON(url, callback) {
+  let xhr = new XMLHttpRequest();
+  xhr.onload = function () { 
+    callback(this.responseText) 
+  };
+  xhr.open('GET', url, true);
+  xhr.send();
+}
+
+export function getUsefulContents(url, callback) {
+  getJSON(url, data =&gt; callback(JSON.parse(data)));
+}</pre>
+
+<h3 id="โค้ตในโปรแกรมหลัก_main.js">โค้ตในโปรแกรมหลัก : main.js</h3>
+
+<pre class="brush: js">import { getUsefulContents } from '/modules/file.js';
+
+getUsefulContents('http://www.example.com',
+    data =&gt; { doSomethingUseful(data); });</pre>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-imports', 'Imports')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-imports', 'Imports')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="ความเข้ากันได้ของเบราว์เซอร์">ความเข้ากันได้ของเบราว์เซอร์</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.statements.import")}}</p>
+
+<h2 id="อ่านเพิ่มเติม">อ่านเพิ่มเติม</h2>
+
+<ul>
+ <li>{{jsxref("Statements/export", "export")}}</li>
+ <li><a href="https://blogs.windows.com/msedgedev/2016/05/17/es6-modules-and-beyond/">Previewing ES6 Modules and more from ES2015, ES2016 and beyond</a></li>
+ <li><a href="https://hacks.mozilla.org/2015/08/es6-in-depth-modules/">ES6 in Depth: Modules</a>, Hacks blog post by Jason Orendorff</li>
+ <li><a class="external" href="http://exploringjs.com/es6/ch_modules.html">Axel Rauschmayer's book: "Exploring JS: Modules"</a></li>
+</ul>

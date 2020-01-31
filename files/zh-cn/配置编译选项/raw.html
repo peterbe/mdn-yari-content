@@ -1,0 +1,257 @@
+<div class="breadcrumbs"><a href="/cn" title="cn">首页</a>&gt; <a href="/cn/编译手册" title="cn/编译手册">编译手册</a>&gt; 配置编译选项</div>
+
+<p><span class="comment">NOTE: Do not make substantive changes to this document without consulting Benjamin Smedberg &lt;<a class="link-mailto" href="mailto:benjamin@smedbergs.us" rel="freelink">benjamin@smedbergs.us</a>&gt; or one of the build-config peers.</span></p>
+
+<p>一般来说，一份原始干净的Mozilla源代码是无法进行构建的。在开始构建Mozilla的源代码之前，你<strong>必须</strong>先指定你想要构建的应用程序，之后也许你还需要至少设置若干基本的配置项（比如是否编译为debug版本）以构建得到你想要的版本。这些配置选项一般都写在一个叫做 .mozconfig 的文件中。</p>
+
+<p>请在进行构建之前仔细阅读以下文字并依次执行。如果你略过了某些步骤，也许构建会失败，或者得到的版本不可用。源代码树之中的 confvars.sh 文件包括了在命令行不可用的选项在内的所有构建选项。</p>
+
+<h3 id=".E4.BD.BF.E7.94.A8_.mozconfig_.E9.85.8D.E7.BD.AE.E6.96.87.E4.BB.B6" name=".E4.BD.BF.E7.94.A8_.mozconfig_.E9.85.8D.E7.BD.AE.E6.96.87.E4.BB.B6">使用 .mozconfig 配置文件</h3>
+
+<p>Mozilla的构建选项应该写在 <code>mozconfig</code> 文件中（尽管可以手动的使用命令行选项来运行 <code>configure</code> 命令, 但我们并不推荐）。<code>mozconfig</code>文件应该放在Mozilla源代码的根目录中（指的是，<code>~/mozconfig</code>）。</p>
+
+<p><strong>注意：</strong>以上仅适用于Firefox或者Mozilla。对于SeaMonkey，mozconfig 文件的位置稍有不同。</p>
+
+<p>也可以通过设置环境变量 MOZCONFIG, 而不使用缺省的 .mozconfig 配置文件.</p>
+
+<pre class="eval">export MOZCONFIG=~/mozilla/mozconfig-firefox.
+</pre>
+
+<p>这个配置文件包含了两种类型的选项: 以 mk_add_options 开头的选项传递给 client.mk, 通常是控制 cvs 的checkout和更新的选项; 以 ac_add_options 开头的选项传递给 configure 命令, 它们影响着编译过程.</p>
+
+<p>.mozconfig 文件中的选项在执行 <code>./configure</code> 或 <code>make -f client.mk</code> 命令的时候, 被自动的使用.</p>
+
+<h3 id=".E9.87.87.E7.94.A8Objdir.E7.9B.AE.E5.BD.95.E7.BC.96.E8.AF.91" name=".E9.87.87.E7.94.A8Objdir.E7.9B.AE.E5.BD.95.E7.BC.96.E8.AF.91">采用Objdir目录编译</h3>
+
+<p>高度建议采用 objdir 一个目录来编译 mozilla. 这种做法把源代码和目标文件在你的目录结构中分开存放, 同时使用 objdir 可以根据一套源码同时编译多个应用, 比如 Firefox 和 Thunderbird. 下面的 mozconfig 配置选项打开这个功能:</p>
+
+<pre class="eval">mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/some_subdir
+</pre>
+
+<h3 id="Choose_an_Application" name="Choose_an_Application">Choose an Application</h3>
+
+<p> </p>
+
+<dl>
+ <dt>Mozilla Suite (SeaMonkey)</dt>
+ <dd>按照下面的选项:
+ <pre class="eval">ac_add_options --enable-application=suite
+# Use the following to checkout SeaMonkey from CVS:
+mk_add_options MOZ_CO_PROJECT=suite
+</pre>
+
+ <p> </p>
+ </dd>
+ <dt>Browser (Firefox)</dt>
+ <dd>Firefox有自己的缺省选项<a class="external" href="http://lxr.mozilla.org/mozilla/source/browser/config/mozconfig">default mozconfig file</a>, 我们可以简单的在 .mozconfig 文件中 source 它:
+ <pre class="eval">. $topsrcdir/browser/config/mozconfig
+</pre>
+
+ <p>注意不要拷贝这个文件中的内容到你的 mozconfig 文件, 因为 Firefox 的选项有可能会改变!</p>
+
+ <p> </p>
+ </dd>
+ <dt>Mail (Thunderbird)</dt>
+ <dd>在 .mozconfig 文件中 source Thunderbird 的缺省配置<a class="external" href="http://lxr.mozilla.org/mozilla/source/mail/config/mozconfig">default mozconfig file</a>即可:
+ <pre class="eval">. $topsrcdir/mail/config/mozconfig
+</pre>
+
+ <p>注意不要拷贝这个文件中的内容到你的 mozconfig 文件, 因为 Thunderbird 的选项有可能会改变!</p>
+
+ <p> </p>
+ </dd>
+ <dt>Standalone Calendar (Sunbird)</dt>
+ <dd>在 .mozconfig 文件中 source Sunbird 的缺省配置<a class="external" href="http://lxr.mozilla.org/mozilla/source/calendar/sunbird/config/mozconfig">default mozconfig file</a>即可:
+ <pre class="eval">. $topsrcdir/calendar/sunbird/config/mozconfig
+</pre>
+
+ <p>注意不要拷贝这个文件中的内容到你的 mozconfig 文件, 因为 Sunbird 的选项有可能会改变!</p>
+
+ <p> </p>
+ </dd>
+</dl>
+
+<h3 id="Selecting_Build_Options" name="Selecting_Build_Options">Selecting Build Options</h3>
+
+<p>待选择的编译选项依赖于要编译什么应用以及你使用编译来干什么. 如果想要使用常规编译, 你可能会编译一个不带调试信息的发布; 如果你是一个开发人员, 你可能会选择带调试宏而不带优化的编译选项.</p>
+
+<p>webtool 可以帮助你创建一个好的配置: <a class="external" href="http://webtools.mozilla.org/build/config.cgi">Mozilla Build Configurator</a>. 这个配置主要用于Mozilla suite; 编译 Firefox 或其它 toolkit 应用需要手动编辑生成文件.</p>
+
+<p>有许多配置脚本接受的编译选项是有特殊的目的, 比如说嵌入式或其它应用. 因此这些编译选项不能用于完整的 suite/XUL 应用. 编译选项的完整清单可以通过运行 ./configure --help 命令或者在这个网页上完整列出 <a class="external" href="http://webtools.mozilla.org/build/config.cgi">Mozilla Build Configurator</a>.</p>
+
+<p><strong>如果你不清楚一个配置选项是干什么的, 最好不要选它!</strong> 下面的编译选项是非常常用的:</p>
+
+<h4 id="Optimization" name="Optimization">Optimization</h4>
+
+<dl>
+ <dt>ac_add_options --enable-optimize </dt>
+ <dd>打开编译器缺省优化.</dd>
+ <dt>ac_add_options --enable-optimize=-O2 </dt>
+ <dd>选择编译器2级优化. 在大多数情况下, 这个选项可能不会得到预期的结果, 除非你对 Mozilla 的代码非常了解.</dd>
+ <dt>ac_add_options --disable-debug </dt>
+ <dd>关闭 verbose 调试宏.</dd>
+ <dt>ac_add_options --disable-optimize </dt>
+ <dd>关闭编译器优化, 这个选项使 debugger 更容易的单步执行源代码.</dd>
+ <dt>ac_add_options --enable-debug </dt>
+ <dd>使能调试宏和其它用于调试的代码. 这个选项会显著的拉长编译时间, 但是在写补丁程序的时候会非常有用.</dd>
+</dl>
+
+<h4 id="Graphics_Toolkit" name="Graphics_Toolkit">Graphics Toolkit</h4>
+
+<p> </p>
+
+<dl>
+ <dt>ac_add_options --enable-default-toolkit=gtk2|gtk|xlib|qt|cairo-gtk2|cairo-xlib|windows|mac|cocoa|os2|beos|photon</dt>
+ <dd>选择一个图形 toolkit. 这个选项在 Windows/OS2/BeOS/Photon 平台下没有用, 因为这些平台自动会选择正确的 toolkit. 在 Mac 平台下也没有用, 除非你打算编译 Camino (Camino uses --enable-default-toolkit=cocoa.
+ <p>在 *nix 平台下, 需要选择图形 toolkit. GTK2 和 GTK 都经过了很好的测试. xlib 在这里 <a class="external" href="http://www.mozilla.org/build/faq.html#supported">tier-3 platform</a> 有相关说明. Qt 和 cairo 都还处于试验阶段, 可能会有 bugs.</p>
+
+ <p> </p>
+ </dd>
+ <dt>ac_add_options --enable-xft</dt>
+ <dd>使能 XFT 高级字体润色. 这个选项只有在 --enable-default-toolkit=gtk2 的时候才会打开, 并且在 gtk2 下推荐打开.
+ <p> </p>
+ </dd>
+ <dt>ac_add_options --enable-freetype2</dt>
+ <dd>使能 freetype 字体润色, 该选项在 GTK toolkit 下缺省打开. 注意它与 --enable-xft 不兼容.
+ <p> </p>
+ </dd>
+</dl>
+
+<h4 id="Static_Build" name="Static_Build">Static Build</h4>
+
+<p> </p>
+
+<dl>
+ <dt>ac_add_options --enable-static --disable-shared</dt>
+ <dd>这些选项指示编译一个大的单独运行的可执行文件, 而不会使用动态连接库(共享库). 这个选项会缩短 Mozilla 的启动时间, 但是除非你的RAM够大, 否则这个选项并不划算. 选择这个选项至少要 512MB RAM, 推荐 1G RAM. 上面的选项通常在一起使用.
+ <p> </p>
+ </dd>
+ <dt>ac_add_options --disable-static --enable-shared</dt>
+ <dd>这些选项把组件编译到单独的共享库中. 它使调试和增量编译更容易, 但是编译出来的应用会慢一些.
+ <p>该选项使缺省选项.</p>
+
+ <p> </p>
+ </dd>
+</dl>
+
+<h4 id="Extensions" name="Extensions">Extensions</h4>
+
+<p> </p>
+
+<dl>
+ <dt>ac_add_options --enable-extensions=default|all|ext1,ext2,-skipext3</dt>
+ <dd>在源码树上还有许多可选的代码, 这些代码放在 目录下. 许多扩展现在被认为使浏览器的一部分. 对每一个suit有一个默认的extetions清单，并且对每一个应用细节mozconfig都会指定一个不同的设置。一些extensions不是对每一个应用都是兼容的。举例说明：
+ <ul>
+  <li>cookie 和thunderbird是不兼容的。</li>
+  <li>typeaheadfind和任何toolkit应用都不兼容。</li>
+ </ul>
+
+ <p>除非你知道哪个extensions和哪个应用相兼容，否则不要用--enable-extensions选项；build系统将会为extensions自动的选择合适的设置.</p>
+ </dd>
+</dl>
+
+<h4 id="Tests" name="Tests">Tests</h4>
+
+<p> </p>
+
+<dl>
+ <dt>ac_add_options --disable-tests</dt>
+ <dd>By default, many auxiliary test applications are built, which can help debug and patch the mozilla source. Disabling these tests can speed build time and reduce disk space considerably.</dd>
+</dl>
+
+<h4 id="Other_Options" name="Other_Options">Other Options</h4>
+
+<p> </p>
+
+<dl>
+ <dt>ac_add_options --disable-crypto</dt>
+ <dd>Cryptography 默认支持. 在某些国家，使用和出口cryptographic软件是非法的，所以你需要了解你的国家cryptography方面的法律。 在1.7和aviary分支中，cryptography是默认关闭的，如果需要使用SSL SMIME 或其他需要cryptography特性，需配置 <code>--enable-crypto</code>
+ <p> </p>
+ </dd>
+</dl>
+
+<h3 id="Example_.mozconfig_Files" name="Example_.mozconfig_Files">Example .mozconfig Files</h3>
+
+<h4 id="Firefox_Optimized_Static" name="Firefox_Optimized_Static">Firefox Optimized Static</h4>
+
+<pre class="eval">. $topsrcdir/browser/config/mozconfig
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/fb-opt-static
+ac_add_options --enable-optimize
+ac_add_options --disable-debug
+ac_add_options --enable-static
+ac_add_options --disable-shared
+ac_add_options --disable-tests
+</pre>
+
+<h4 id="Thunderbird.2C_Debugging_Build" name="Thunderbird.2C_Debugging_Build">Thunderbird, Debugging Build</h4>
+
+<pre class="eval">. $topsrcdir/mail/config/mozconfig
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/tbird-debug
+ac_add_options --disable-optimize
+ac_add_options --enable-debug
+</pre>
+
+<h4 id="SeaMonkey.2C_Optimized_.28but_not_static.29" name="SeaMonkey.2C_Optimized_.28but_not_static.29">SeaMonkey, Optimized (but not static)</h4>
+
+<pre class="eval">mk_add_options MOZ_CO_PROJECT=suite
+ac_add_options --enable-application=suite
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/suite-opt
+ac_add_options --enable-optimize
+ac_add_options --disable-debug
+</pre>
+
+<h3 id="Building_multiple_applications_from_the_same_source_tree" name="Building_multiple_applications_from_the_same_source_tree">Building multiple applications from the same source tree</h3>
+
+<p>It is possible to build multiple applications from the same source tree, as long as you have checked out all the necessary sources and you <a href="#Building_with_an_Objdir">use a different objdir</a> for each application.</p>
+
+<p>As an example, the following steps can be used to build Firefox and Thunderbird. You should first create three mozconfig files.</p>
+
+<p>mozconfig-common</p>
+
+<pre class="eval">mk_add_options MOZ_CO_PROJECT=browser,mail
+
+# add other common options here, such as making a static release build and
+# disabling tests
+ac_add_options --enable-optimize --disable-debug
+ac_add_options --disable-tests
+</pre>
+
+<p>mozconfig-firefox</p>
+
+<pre class="eval"># include the common mozconfig
+. ./mozconfig-common
+
+# Build Firefox
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/firefox-static
+ac_add_options --enable-application=browser
+</pre>
+
+<p>mozconfig-thunderbird</p>
+
+<pre class="eval"># include the common mozconfig
+. ./mozconfig-common
+
+# Build Thunderbird
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/thunderbird-static
+ac_add_options --enable-application=mail
+</pre>
+
+<p>To checkout, run the following commands:</p>
+
+<pre class="eval">export MOZCONFIG=/path/to/mozilla/mozconfig-common
+make -f client.mk checkout
+</pre>
+
+<p>To build Firefox, run the following commands:</p>
+
+<pre class="eval">export MOZCONFIG=/path/to/mozilla/mozconfig-firefox
+make -f client.mk build
+</pre>
+
+<p>To build Thunderbird, run the following commands:</p>
+
+<pre class="eval">export MOZCONFIG=/path/to/mozilla/mozconfig-thunderbird
+make -f client.mk build
+</pre>
+
+<p>{{ languages( { "en": "en/Configuring_Build_Options", "es": "es/Configurar_las_opciones_de_compilaci\u00f3n", "fr": "fr/Configuration_des_options_de_compilation", "ja": "ja/Configuring_Build_Options" } ) }}</p>

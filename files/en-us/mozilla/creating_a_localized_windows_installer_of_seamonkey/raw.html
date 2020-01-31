@@ -1,0 +1,183 @@
+<h3 id="Our_toolbox" name="Our_toolbox">Our toolbox</h3>
+
+<p>Preamble: not all of the programs listed below are necessary. Some of them are simply the ones I use because I like them, while others are scripts that I've created to speed up the work. You can in every case choose the program you prefer to do some operations, and you can also decide not to use any of my scripts and manually enter all of the commands by hand. It's your choice!</p>
+
+<p>For this howto I'll use the Italian translation as an example, since I use it for my work.</p>
+
+<ul>
+ <li><a class="external" href="http://www.mozillaitalia.org/archive/index.php#p3">SeaMonkey installer</a> in Italian (latest version)</li>
+ <li><a class="external" href="http://www.mozilla.org/projects/seamonkey/">SeaMonkey installer</a> in English (the one you want to make the translation of)</li>
+ <li><a class="external" href="http://www.mozillaitalia.org/archive/index.php#p3">Italian langpack</a> working with the English installer (it should be the same version, or at least a compatible one)</li>
+ <li><a class="external" href="http://winmerge.sourceforge.net/">WinMerge</a> (for comparison of old and new files)</li>
+ <li><a class="external" href="http://www.7-zip.org/">7-zip</a> (to manage archives and to build the installer)</li>
+ <li><a class="external" href="http://www.mozillaitalia.org/files/scripts.zip">Package</a> for installer creation (contains necessary files to build the installer and scripts to automate the whole process)</li>
+ <li><a class="external" href="http://www.iacchi.org/extra/tools.zip">Scripts</a> to automatize the translation process (contain necessary files to build the installer)</li>
+</ul>
+
+<p>For your comfort, put the mozip.exe file (you can find it in the "package") in your Windows directory, so you can use it from the command window without having to write its path every time.</p>
+
+<p>Before we can start, here are some conventions used in this howto:</p>
+
+<ul>
+ <li>{{ mediawiki.external('nv') }} - version number of SeaMonkey</li>
+ <li>{{ mediawiki.external('path') }} - replaces the string of a path</li>
+ <li>I'll write filenames in lowercase to beautify this howto, but uppercased filenames should remain as they are</li>
+ <li>When I say "console" I mean the DOS prompt. In Windows 98/Me you can find it in the Start menu; for later Windows version you just have to type "cmd" in the Run window</li>
+</ul>
+
+<h3 id="First_steps" name="First_steps">First steps</h3>
+
+<p>First of all, you have to create the folders where you'll place the installer files. Personally (and this choice is used in the batch files/scripts) I create the directory C:\sm which contains three folders:</p>
+
+<ul>
+ <li>\{{ mediawiki.external('nv') }}eng which will contain all of the English files of the version you have to translate</li>
+ <li>\{{ mediawiki.external('nv') }}ita which will contain the files of the latest Italian version</li>
+ <li>\{{ mediawiki.external('nv') }} which will contain the Italian files of the version you want to create the installer for</li>
+</ul>
+
+<p>To create the last one, you'll have to copy the folder with English files and rename it.</p>
+
+<p>To fill the English folder with the necessary files, you have to put the English installer in the {{ mediawiki.external('nv') }}eng folder, open a console and type:</p>
+
+<pre>mozip -x [path]\seamonkey-[nv].en-US.win32.installer.exe</pre>
+
+<p>After the extraction completes, you can delete the installer.</p>
+
+<p>To decompress the Italian installer, you just have to put it in its folder, right-click on it and from 7-zip options select Extract here.</p>
+
+<h3 id="Translate_text_files" name="Translate_text_files">Translate text files</h3>
+
+<p>You can start your work translating the two text files which are among the extracted files: install.ini and config.ini</p>
+
+<p>The first one is the translation of the installer interface so, since it isn't changing nowadays, you just have to copy the old file in your language. Anyway, to be sure you're doing the right thing, check at least that the number of rows between the two file (eg., using WinMerge), is the same.</p>
+
+<p>The second file contains the configuration of the installer for any given version of SeaMonkey, and you should be more careful while translating it. Open WinMerge and compare the old Italian file and the new English one: WinMerge will automatically highlight all of the differences.</p>
+
+<p>Not all the strings have to be translated: you have to concentrate just on those which have the string "localize me" on the previous line. You'll notice that some strings have not been translated, even if there's written "localize me" in the line before: I've not forgotten them, but if you translate them, the installer won't work. Apart from these lines, you'll have to change every reference of en-US and US respectively in it-IT and IT; surely you'll be able to recognize them when you'll see them. WinMerge can help you in this task: you just have to select the Italian text from one of the semi-window and paste it on the other, replacing the English text.</p>
+
+<p><strong>WARNING:</strong> at line 191 (which is one of the lines to be translated), there's written the exact version number of the build you're translating. Pay attention, during copy &amp; paste, to not overwrite the number!!!</p>
+
+<p>Once you've finished to modify the text files, you can begin with the program components, represented by all of the xpi files. For our scope some of these files can be grouped, since for every group you have to do the same operations. Because of that, instead of explaining what to do for each xpi, I'll describe what to do for each group.</p>
+
+<h3 id="The_langenus.xpi_file" name="The_langenus.xpi_file">The langenus.xpi file</h3>
+
+<p>First of all you have to unpack the file: in the context menu, among 7-zip options select Extract to "{{ mediawiki.external('path') }}", which will create a folder named langenus.</p>
+
+<p>You have to modify install.js in the "localize me" section and insert the Italian it-IT codes where necessary. You can use the old Italian file and WinMerge to see what to modify.</p>
+
+<p>Now move to the end of the file, where the langpack chrome locale is registered: in the English version the additional components (Inspector, help and so on) are usually placed in the package. The Italian translations, instead, are all placed in the same it-IT.jar, so we have to add all chrome registrations here. Even in this case, probably you only need to copy all the strings from the old Italian file and put them in the new one (in this case WinMerge can help you, too).</p>
+
+<p>To finish up your work on this file you'll have to change the jar files in the bin/chrome folder, replacing all en-*.jar files with the it-*.jar ones (you can find them in the Italian langpack).</p>
+
+<p>Once you've finished your work, go back to the folder wich contains install.js and select the file together with the bin folder, then from the context menu select "Add to archive..." and from the opening window choose Zip as archive format and None as the compression level. If you want to make your work faster, in the Archive filed type "../langitit.xpi", in this way your xpi file will be put automagically in the main folder, otherwise you have to move the file by hand in the \{{ mediawiki.external('nv') }} directory.</p>
+
+<div style="margin-left: 40px;">
+<p><strong>WARNING:</strong> when you create xpi and jar files for the installer, you absolutely have to set None as the compression level, for two good reasons:</p>
+
+<ol>
+ <li>You won't slow down SeaMonkey execution once installed.</li>
+ <li>The resulting installer will be smaller if you don't compress xpi files.</li>
+</ol>
+</div>
+
+<p>When you've done everything, you can delete the langenus.xpi file and its folder from the main directory.</p>
+
+<h3 id="The_regus.xpi_file" name="The_regus.xpi_file">The regus.xpi file</h3>
+
+<p>Even in this case, and all of the following, create the file own directory. After that, edit install.js strings under LOCALIZATION NOTE; WinMerge will help you in this case, too. In the bin/chrome folder replace US.jar with IT.jar taken from the Italian langpack. Replace the searchplugins with the ones taken from the langpack in the bin/searchplugins folder and all the files in bin/defaults with the equivalent Italian ones, renaming the folder from US to IT. Go back to the folder which contains bin and install.js and make the xpi file naming it regit.xpi. Remember to delete the regus.xpi file and its folder after finishing!</p>
+
+<h3 id="The_deflenus.xpi_file" name="The_deflenus.xpi_file">The deflenus.xpi file</h3>
+
+<p>Edit install.js strings under LOCALIZATION NOTE and replace files in bin/defaults with the Italian ones. Go back to the parent directory and make the xpi archive naming it deflitit.xpi. Again, remember to delete deflenus file and its folder.</p>
+
+<h3 id="The_first_group_of_file" name="The_first_group_of_file">The first group of file</h3>
+
+<p>You should apply the procedure explained here to these files: <em>venkman</em>, <em>chatzilla</em>, <em>inspector</em>, <em>sroaming</em>, <em>reporter</em>.</p>
+
+<p>As I said before, while in the English langpack the optional components translation is placed in every single component, in a translated langpack all these translations are put in the main jar file. This means that now we have to delete translation files from every single component.</p>
+
+<p>In the install.js file you have to delete locale registration. To do this you just have to comment the related row (adding // at the beginning) or delete it. E.g. in the venkman component:</p>
+
+<pre>// registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome","venkman.jar"), "locale/en-US/venkman/");</pre>
+
+<p>In the bin/chrome folder you have to open the jar file with 7-zip and delete the locale folder. When you've done it, you have to make the xpi again.</p>
+
+<p><strong>WARNING:</strong> Starting from here to the end, the name of the xpi file is the same before and after the operation you do. When you make the xpi file and go back to the main folder, remember to delete the file folder only and not the xpi file, or you will delete your work. Obviously, you have to pay attention only if you have used the trick of typing "../component.xpi" as the file name in 7-zip.</p>
+
+<h3 id="The_second_group_of_file" name="The_second_group_of_file">The second group of file</h3>
+
+<p>You should apply the procedure explained here to these files: <em>browser</em>, <em>mail</em>, <em>xpcom</em>, <em>spellcheck</em>, <em>talkback</em> and to the zip file <em>seamonkeyuninstall</em>.</p>
+
+<p>These files don't contain a translation, so you don't have to edit anything. Anyway, to reduce final installer size, you have to unpack and then repack them, this time without compression. You just have to unzip every single component in its folder, select all files in the folder and then create the xpi (or zip) file again, using None as the Compression level.</p>
+
+<h3 id="The_gre-win32-installer.zip_file" name="The_gre-win32-installer.zip_file">The gre-win32-installer.zip file</h3>
+
+<p>This package contains the GRE (Gecko Runtime Environment) installer, and it works as a standalone installer. This means that when you've created its folder, you have to run "mozip -x" command to extract installer files and after that you can delete the installer. Starting from SeaMonkey 1.0.2 the Italian installer is made with the procedure described below, so you just have to use 7-zip extract option in the context menu to unzip the Italian one, to make the file comparision.</p>
+
+<p>Just like for SeaMonkey installer, you have to translate both install.ini and config.ini, which follow the same rules given at the beginning of this guide. In the same way, you'll have to unzip all xpi and zip files and zip them again without compression.</p>
+
+<p>Now, we have to make the localized GRE installer. If you want to follow the faster way, you can just use the grebuild.bat script that I've created, once you've adjusted the directory paths to suit your owns (you can open .bat files even with the notepad). You just have to do a few things by hand: you have to copy in GRE folder the two files named app.tag and 7zSD.sfx, then edit the first one and in the "Title" field write "GRE".</p>
+
+<p>If you're masochist and you want to do everything by hand, I'll explain below what you've to do.</p>
+
+<p>To make the installer you have to pack its files in a single archive first. Open a console, move to the folder which contains the GRE installer files and type:</p>
+
+<pre>[path]\7z a app.7z -t7z *.* -mx0</pre>
+
+<p>In this way you'll create an app.7z file which contains all of the file in the directory, so now you can delete them. At this point you have to copy in the folder the two files named app.tag and 7zSD.sfx, edit the first one as described before and then run this command:</p>
+
+<pre>copy /b 7zSD.sfx+app.tag+app.7z gre-win32-installer.exe</pre>
+
+<p>After doing this, you've made the new installer, so you have to delete all other files in the folder.</p>
+
+<p>It doesn't matter which way you've followed, at this point you should have in the folder only the installer file. Now you have to create its xpi/zip file just like all other components and go ahead.</p>
+
+<h3 id="Let.27s_create_the_installer.21" name="Let.27s_create_the_installer.21">Let's create the installer!</h3>
+
+<p>Once you've finished packaging the GRE installer, it's time to prepare the SeaMonkey installer.</p>
+
+<p>Even in this case, you can choose to use my script or to do everything by hand. In both cases the first thing to do (and it's the last one if you decide to use the script, too) is to put in C:\sm folder the two files app.tag e 7zSD.sfx and edit the first one writing in the "Title" field the string "SeaMonkey {{ mediawiki.external('nv') }}".</p>
+
+<p>You can now run the smbuild.bat script and wait the installer to be created (remember to adjust the folder names in the script), or you can open a console and type, after moving to the \{{ mediawiki.external('nv') }} directory, the following command:</p>
+
+<pre>[path]\7z a -t7z ..\app.7z *.* -mx -m0=BCJ2 -m1=LZMA:d24 -m2=LZMA:d19 -m3=LZMA:d19 -mb0:1 -mb0s1:2 -mb0s2:3</pre>
+
+<p>Once the zip process is finished, move to the parent directory and type:</p>
+
+<pre>copy /b 7zSD.sfx+app.tag+app.7z mozilla-[nv].it-IT.win32.installer.exe</pre>
+
+<p><em>et voilà</em>, your installer is ready!</p>
+
+<h3 id="Tips.2C_tricks_&amp;_scripts" name="Tips.2C_tricks_&amp;_scripts">Tips, tricks &amp; scripts</h3>
+
+<p>In this section I'll explain the use of all the scripts I didn't mention above, and I'll try to give you some tips coming from my experience.</p>
+
+<ul>
+ <li>gremozip.bat: this script runs the mozip command to extract GRE installer files in English. I don't know what about you, but I think it's a mess having to type directory and file names every time to execute commands, and usually all the names are quite long. With this script the only thing you have to do is to write down the right path for the file, which is a simple copy &amp; paste in Windows, a thing that you can't easily do in a DOS.</li>
+ <li>smmozip.bat: it does the same things as the one before, but it's used to unpack the English SeaMonkey installer when you start your work.</li>
+ <li>When you can, you'd better use software like WinMerge to edit files: you'll do less mistakes, and you'll be able to do a simple copy &amp; paste from the Italian file to the English one in the same window; moreover the prorgam leaves white rows when a file contains more rows in the middle than an other, in this way you'll find easy the right place to paste the text.</li>
+ <li>Always leave open both the old Italian installer folder and the new one you're working in. Unpack all files in both folders: in some cases you'll just need to copy-paste some files from one folder to the other and that's it. Moreover, when you've finished to work with a component, you can delete its equivalent of the old Italian installer: when there'll be no more files to delete, you'll have finished. It even helps remembering which files you've already done.</li>
+</ul>
+
+<h3 id="Automatize_the_operations" name="Automatize_the_operations">Automatize the operations</h3>
+
+<p>This guide explains the steps to follow to create an Italian installer for SeaMonkey. Even if following these steps let you understand what you're doing, it takes a lot of time to do them.</p>
+
+<p>Once you've understood these steps, you can use scripts to speed up things. You can download the scripts you need from the toolbox list. To make them work, you have to configure the config.bat file (you can find more information inside the package).<br>
+ The scripts are based on this guide, and they assume that your work path is C:\sm and that they're put in the \tools sub-folder.</p>
+
+<p>Once run, the scripts will stop only to let the user translate the necessary .ini and .js files, opening them with WinMerge. To translate these files, you should follow what there's written in the above guide: you can just copy some of them, but you have to be very careful with others.</p>
+
+<p><strong>WARNING:</strong> these scripts speak Italian, but the readme and config.bat files have been translated to English, too, so you should understand everything you need to make them work.</p>
+
+<p> </p>
+
+<h3 id="Credits" name="Credits">Credits</h3>
+
+<p>Michele Dal Corso for having written the list of operations to do for the first time.</p>
+
+<p>Giacomo Magnini for having written the first version of the guide for Mozilla Suite, for the help he gave me during my first attempt of creating an installer and for QA.</p>
+
+<p>Francesco Lodolo for QA.</p>
+
+<p>Domenico Zanella for having created the scripts for the automatic building.</p>

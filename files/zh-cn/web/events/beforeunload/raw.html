@@ -1,0 +1,208 @@
+<p><code><span style="font-family: consolas,monaco,andale mono,monospace;">当浏览器窗口关闭或者刷新时，会触发beforeunload事件。当前页面不会直接关闭，可以点击确定按钮关闭或刷新，也可以取消关闭或刷新。</span></code></p>
+
+<p>如果处理函数为Event对象的<code>returnValue</code>属性赋值非空字符串，浏览器会弹出一个对话框，来询问用户是否确定要离开当前页面（如下示例）。有些浏览器会将返回的字符串展示在弹框里，但有些其他浏览器只展示它们自定义的信息。没有赋值时，该事件不做任何响应。</p>
+
+<div class="note">
+<p><strong>注：</strong>为了避免不必要的弹窗，如果页面并没有发生交互浏览器可能不会展示在 <code>beforeunload</code> 事件中引发的弹框，甚至可能即使发生交互了也直接不显示。</p>
+</div>
+
+<table class="properties">
+ <tbody>
+  <tr>
+   <td>冒泡</td>
+   <td>否</td>
+  </tr>
+  <tr>
+   <td>是否可取消</td>
+   <td>是</td>
+  </tr>
+  <tr>
+   <td>目标</td>
+   <td>默认视图</td>
+  </tr>
+  <tr>
+   <td>接口</td>
+   <td>{{domxref("Event")}}</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="属性">属性</h2>
+
+<table class="standard-table" dir="ltr">
+ <thead>
+  <tr>
+   <th scope="col">属性</th>
+   <th scope="col">类型</th>
+   <th scope="col">描述</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>target{{readOnlyInline}}</p>
+   </td>
+   <td>{{domxref("EventTarget")}}</td>
+   <td>事件目标（DOM 顶层目标）</td>
+  </tr>
+  <tr>
+   <td>
+    <p><code>type</code>{{readOnlyInline}}</p>
+   </td>
+   <td>{{domxref("DOMString")}}</td>
+   <td>事件类型</td>
+  </tr>
+  <tr>
+   <td>
+    <p>bubbles{{readOnlyInline}}</p>
+   </td>
+   <td>{{jsxref("Boolean")}}</td>
+   <td>事件是否正常起泡</td>
+  </tr>
+  <tr>
+   <td><code>cancelable</code>{{readOnlyInline}}</td>
+   <td>{{jsxref("Boolean")}}</td>
+   <td>是否可以取消事件</td>
+  </tr>
+  <tr>
+   <td>returnValue</td>
+   <td>{{domxref("DOMString")}}</td>
+   <td>当前事件返回值（显示给用户的消息）</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="示例">示例</h2>
+
+<pre class="brush:js;">window.addEventListener("beforeunload", function (event) {
+  event.returnValue = "\o/";
+});
+
+// 等价于
+window.addEventListener("beforeunload", function (event) {
+  event.preventDefault();
+});</pre>
+
+<p>基于WebKit内核的浏览器在弹出提示框时未遵循该规范。跨浏览器可运行的示例，代码基本如下：</p>
+
+<pre class="brush: js">window.addEventListener("beforeunload", function (e) {
+  var confirmationMessage = "\o/";
+
+  (e || window.event).returnValue = confirmationMessage;     // Gecko and Trident
+  return confirmationMessage;                                // Gecko and WebKit
+});</pre>
+
+<h2 id="注意">注意</h2>
+
+<p>从2011年5月25号开始，HTML5规范指出在此事件处理函数中，对于{{domxref("window.alert()")}}, {{domxref("window.confirm()")}}, 和 {{domxref("window.prompt()")}} 的调用会被忽略。详见<a href="http://www.w3.org/TR/html5/webappapis.html#user-prompts">HTML5规范</a>说明。</p>
+
+<p>同样需要注意的是许多手机浏览器会忽略该事件处理的返回值（亦即，它们不会要求用户确认，而是直接执行操作）Firefox在about:config中有一个隐藏的设置来做同样的事。其实就是用户确认文档总会被卸载。</p>
+
+<h2 id="规范">规范</h2>
+
+<table>
+ <thead>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName("HTML WHATWG", "indices.html#event-beforeunload", "beforeunload")}}</td>
+   <td>{{Spec2("HTML WHATWG")}}</td>
+   <td></td>
+  </tr>
+  <tr>
+   <td>{{SpecName("HTML5 W3C", "browsers.html#unloading-documents", "beforeunload")}}</td>
+   <td>{{Spec2("HTML5 W3C")}}</td>
+   <td>Initial definition</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="浏览器兼容性">浏览器兼容性</h2>
+
+<p>{{CompatibilityTable}}</p>
+
+<table>
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Edge</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari (WebKit)</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatChrome(1.0)}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>1</td>
+   <td>4</td>
+   <td>12</td>
+   <td>3</td>
+  </tr>
+  <tr>
+   <td>Custom text support removed</td>
+   <td>{{CompatChrome(51.0)}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatGeckoMobile("44.0")}}</td>
+   <td></td>
+   <td>38</td>
+   <td><a href="https://developer.apple.com/library/mac/releasenotes/General/WhatsNewInSafari/Articles/Safari_9_1.html">9.1</a></td>
+  </tr>
+ </tbody>
+</table>
+
+<table>
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Android Webview</th>
+   <th>Edge</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Phone</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+   <th>Chrome for Android</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>(no) <a href="https://bugs.webkit.org/show_bug.cgi?id=19324">defect</a></td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+  <tr>
+   <td>Custom text support removed</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatChrome(51.0)}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatGeckoMobile("44.0")}}</td>
+   <td></td>
+   <td></td>
+   <td></td>
+   <td>{{CompatChrome(51.0)}}</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li>{{Event("DOMContentLoaded")}}</li>
+ <li>{{Event("readystatechange")}}</li>
+ <li>{{Event("load")}}</li>
+ <li>{{Event("unload")}}</li>
+ <li><a href="https://html.spec.whatwg.org/#prompt-to-unload-a-document">Unloading Documents — Prompt to unload a document</a></li>
+ <li><a href="https://developers.google.com/web/updates/2016/04/chrome-51-deprecations?hl=en#remove_custom_messages_in_onbeforeunload_dialogs">Remove Custom Messages in onbeforeload Dialogs after Chrome 51</a></li>
+</ul>

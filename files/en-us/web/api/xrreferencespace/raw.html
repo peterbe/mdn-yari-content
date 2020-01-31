@@ -1,0 +1,79 @@
+<p>{{APIRef("WebXR Device API")}}{{secureContext_header}}{{draft}}</p>
+
+<p><span class="seoSummary">The WebXR Device API's <code><strong>XRReferenceSpace</strong></code> interface describes the coordinate system for a specific tracked entity or object within the virtual world using a specified tracking behavior.</span> It expands upon the base class, {{domxref("XRSpace")}}, by adding support for several different tracking behaviors as well as to request a new reference space which describes the offset transform between the tracked object and another location in the world.</p>
+
+<p>There are two situations in which you need to obtain an <code>XRReferenceSpace</code>. The first is when you set up your scene and need to obtain a reference space to represent the user's viewpoint on the world for the duration of the {{domxref("XRSession")}}. To do that, call the {{domxref("XRSession")}} method {{domxref("XRSession.requestReferenceSpace", "requestReferenceSpace()")}}, specifying the <a href="/en-US/docs/Web/API/XRReferenceSpaceType">reference space type</a> you wish to obtain.</p>
+
+<pre class="brush: js">xrSession.requestReferenceSpace("local").then((refSpace) =&gt; {
+  xrReferenceSpace = refSpace;
+  /* ... */
+});</pre>
+
+<p>The other situation in which you may need to acquire a new reference space is if you need to move the origin to a new position; this is commonly done, for example, when your project allows the user to move through the environment using input devices such as the keyboard, mouse, touchpad, or game controls that are not connected through the XR device. Since the origin will typically be the user's location in the space, you need to change the origin to reflect their movement and any orientation changes they make.</p>
+
+<p>To move or rotate the user's view of the world, you need to change the <code>XRReferenceSpace</code> used to represent that viewpoint. However, <code>XRReferenceSpace</code> is immutable, so you need to instead create a new reference space representing the changed viewpoint. This is easily done using the {{domxref("XRReferenceSpace.getOffsetReferenceSpace", "getOffsetReferenceSpace()")}} method.</p>
+
+<pre class="brush: js">let offsetTransform = new XRRigidTransform({x: 2, y: 0, z: 1},
+                                           {x: 0, y: 1, z: 0, w: 1});
+xrReferenceSpace = xrReferenceSpace.getOffsetReferenceSpace(offsetTransform);</pre>
+
+<p>This replaces the <code>XRReferenceSpace</code> with a new one whose origin and orientation are adjusted to place the new origin at (2, 0, 1) relative to the current origin and rotated given a unit {{Glossary("quarternion")}} that orients the space to put the viewer facing straight up relative to the previous world orientation.</p>
+
+<p><strong>&lt;&lt;&lt;&lt;---- NEED ADDITIONAL INFORMATION ABOUT REFERENCE SPACES ----&gt;&gt;&gt;&gt;</strong></p>
+
+<h2 id="Properties">Properties</h2>
+
+<p><em>In addition to the properties inherited from {{domxref("XRSpace")}} (of which there are none at this time), <code>XRReferenceSpace</code> also inherits the properties of {{domxref("EventTarget")}}. <code>XRReferenceSpace</code> defines no additional properties</em></p>
+
+<h2 id="Methods">Methods</h2>
+
+<p>In addition to the methods inherited from its parent interface, {{domxref("XRSpace")}} (there are none at this time), <code>XRReferenceSpace</code> inherits methods from  {{domxref("EventTarget")}}. <code>XRReferenceSpace</code> also provides the following methods.</p>
+
+<dl>
+ <dt>{{domxref("XRReferenceSpace.getOffsetReferenceSpace", "getOffsetReferenceSpace()")}}<span style="display: none;"> </span></dt>
+ <dd>Creates and returns a new reference space object as the same type as the one on which you call the method (so, either <code>XRReferenceSpace</code> or {{domxref("XRBoundedReferenceSpace")}}). The new reference space can be used to transform a coordinate from the reference space of the object on which the method is called into a different coordinate space. This is useful for positioning objects while rendering, and to perform the needed transforms when changing the viewer's position and/or orientation in 3D space.</dd>
+</dl>
+
+<h2 id="Events">Events</h2>
+
+<p><em>In addition to other events that may be sent to {{domxref("XRSpace")}} or {{domxref("EventTarget")}} objects, the following also apply to <code>XRReferenceSpace</code> objects.</em></p>
+
+<dl>
+ <dt>{{domxref("XRReferenceSpace.reset_event", "reset")}}</dt>
+ <dd>
+ <p>The <code>reset</code> event is sent to an {{domxref("XRReferenceSpace")}} object when the browser detects a discontinuity has occurred wherein the tracked object's origin  relative to the user's environment or location. This can happen, for example, after the user recalibrates their XR device, or if the device automatically adjusts its origin after losing and regaining tracking.</p>
+
+ <p>In addition to using {{domxref("EventTarget.addEventListener", "addEventListener()")}}, you can establish a <code>reset</code> event handler by setting the {{domxref("XRReferenceSpace.onreset", "onreset")}} event handler property.</p>
+ </dd>
+</dl>
+
+<h2 id="Usage_notes">Usage notes</h2>
+
+<p>The native origin of any <code>XRReferenceSpace</code> is always configured so that +X is considered to be to the right, +Y is upward, and +Z is "backward" or toward the user.</p>
+
+<p>{{page("/en-US/docs/Web/API/XRReferenceSpaceType", "Values")}}</p>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('WebXR','#xrreferencespace-interface','XRReferenceSpace')}}</td>
+   <td>{{Spec2('WebXR')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<div class="hidden">
+<p>The compatibility table in this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</p>
+</div>
+
+<p>{{Compat("api.XRReferenceSpace")}}</p>

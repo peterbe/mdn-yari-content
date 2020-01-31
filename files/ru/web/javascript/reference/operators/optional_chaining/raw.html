@@ -1,0 +1,162 @@
+<div>{{jsSidebar("Operators")}} {{SeeCompatTable}}</div>
+
+<p>Оператор <strong>опциональной последовательности</strong> <strong><code>?.</code></strong> позволяет получить значение свойства обьекта размещенного глубоко по цепочке включенных обьектов без необходимости проверять каждую ссылку в цепочке на существование. <span class="seoSummary"> <code>?.</code> оператор действует подобно до оператора <code>.</code>, в отличии от того, что не может получить ошибку в ссылке на {{jsxref("null")}} или {{jsxref("undefined")}}, в этих случаях он вернет <code>undefined</code>.</span> Когда используется для вызова функций - тоже возвращает <code>undefined</code> если функция не существует.</p>
+
+<p>Таким образом, мы получаем более короткую и упрощенную форму выражения когда пытаемся получить доступ по цепочке полей, когда одна из звеней этой цепочки может отсутствовать. Это тоже может быть полезным при работе содержимым обьекта, когда нет гарантии что свойство существует и обязательно.</p>
+
+<div class="blockIndicator warning">
+<p><strong>Warning!</strong> As of August 2019, no environment natively implements this feature. If you use Babel, you may use <a href="https://babeljs.io/docs/en/babel-plugin-proposal-optional-chaining">this plugin</a> to emulate optional chaining.</p>
+</div>
+
+<div>{{EmbedInteractiveExample("pages/js/expressions-optionalchainingoperator.html")}}</div>
+
+<div></div>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<h2 id="Синтаксис">Синтаксис</h2>
+
+<pre class="syntaxbox"><var>obj</var>?.<var>prop</var>
+<var>obj</var>?.[<var>expr</var>]
+<var>func</var>?.(<var>args</var>)
+</pre>
+
+<h2 id="Описание">Описание</h2>
+
+<p>Оператор опциональной последовательности предоставляет способ упростить доступ к значениям через цепочку обьектов когда это возможно, и когда когда ссылки или функция может быть равна <code>undefined</code> or <code>null</code>.</p>
+
+<p>Для примера, создадим обьект <code>obj</code> который имеет в своей структуре вложенность. Без оператора опциональной последовательности поиск глубоко расположенных "подсвойств" обязует нас проверить все промежуточные ссылки, как тут:</p>
+
+<pre class="brush: js">let nestedProp = obj.first &amp;&amp; obj.first.second;</pre>
+
+<p>Значение из <code>obj.first</code> проверяется на не-<code>null</code> (и не-<code>undefined</code>) перед доступом к значению <code>obj.first.second</code>. Это предупреждает ошибку которая могла случитьсяесли мы упростим выражение до <code>obj.first.second</code> непосредственно, без проверки значения <code>obj.first</code>.</p>
+
+<p>С оператором опциональной последовательности (<code>?.</code>), мы не обязаны явно проверять промежуточные звенья как <code>obj.first</code> перед попыткой доступа к <code>obj.first.second</code>:</p>
+
+<pre class="brush: js">let nestedProp = obj.first?.second;</pre>
+
+<p>Используя <code>?.</code> оператор вместо <code>.</code>, JavaScript знает об необходимости проверки <code>obj.first</code> на <code>null</code> или <code>undefined</code> значения, перед предоставлением доступа к <code>obj.first.second</code>. Если <code>obj.first</code> равно <code>null</code> или <code>undefined</code>, выполнение выражения автоматически прекращается и возвращается <code>undefined</code>.</p>
+
+<p>Это еквивалентно следующему:</p>
+
+<pre class="brush: js">let nestedProp = (obj.first == null ? undefined : obj.first.second);</pre>
+
+<h3 id="Опциональная_последовательность_с_вызовом_функции">Опциональная последовательность с вызовом функции</h3>
+
+<p>Вы можете использовать <strong>оператор опциональной последовательности </strong>когда пытаетесь вызвать метод которого может не существовать. Это может быть полезно, например, когда используете API в котором метод может быть не доступен более, ссылаясь на дату реализации или потому, что данный метод не доступен на устройстве пользователя.</p>
+
+<p>Использование <strong>оператор опциональной последовательности </strong>с вызовом функции значит, что выполнение автоматически вернет <code>undefined</code>, а не выбросит исключение если метод не найден:</p>
+
+<pre class="brush: js">let result = someInterface.customMethod?.();</pre>
+
+<div class="blockIndicator note">
+<p><strong>Note:</strong> If there is a property with such a name and which is not a function, using <code>?.</code> will still raise a {{jsxref("TypeError")}} exception (<code>x.y</code><code> is not a function</code>).</p>
+</div>
+
+<h4 id="Работа_с_опциональними_колбек_функциями_и_обработчиками_событий">Работа с опциональними колбек функциями и обработчиками событий</h4>
+
+<p>Если вы используете колбек функции или fetch методы с обьекта с <a href="/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment#Object_destructuring">a destructuring assignment</a>, Вы  можете получить не существующее значение которое Вы не сможете вызвать как функцию пока не проверите ее существование. Использовав <code>?.</code>, Вы можете избежать этих излишних проверок:</p>
+
+<pre class="brush: js">// Written as of ES2019
+function doSomething(onContent, onError) {
+  try {
+    // ... do something with the data 
+  }
+  catch (err) {
+    if (onError) { // Testing if onError really exists
+      onError(err.message);
+    }
+  }
+}
+</pre>
+
+<pre class="brush: js">// Using optional chaining with function calls
+function doSomething(onContent, onError) {
+  try {
+   // ... do something with the data
+  }
+  catch (err) {
+    onError?.(err.message); // no exception if onError is undefined
+  }
+}
+</pre>
+
+<h3 id="Опциональные_последовательности_в_выражениях">Опциональные последовательности в выражениях</h3>
+
+<p>Вы также можете использовать оператор опциональной последовательностиo когда получаете доступ к свойству используя <a href="/en-US/docs/Web/JavaScript/Reference/Operators/Property_Accessors#Bracket_notation">доступ по имени свойства обьекта</a>:</p>
+
+<pre class="brush: js">let nestedProp = obj?.['prop' + 'Name'];
+</pre>
+
+<h2 id="Примеры">Примеры</h2>
+
+<h3 id="Базовый_пример">Базовый пример</h3>
+
+<p>В этом примере найдем значения свойства "<code>name</code>" для свойства <code>bar</code> в карте, когда в ней данного свойства в ней нет. Результатом здесь будет <code>undefined</code>.</p>
+
+<pre class="brush: js">let myMap = new Map();
+myMap.set("foo", {name: "baz", desc: "inga"});
+
+let nameBar = myMap.get("bar")?.name;</pre>
+
+<h3 id="Сокращенное_выполнение">Сокращенное выполнение</h3>
+
+<p>Когда используется опциональная последовательность в выражениях, если левая часть операнда равна <code>null</code> или <code>undefined</code>, выражение не будет выполнятся. Например:</p>
+
+<pre class="brush: js">let potentiallyNullObj = null;
+let x = 0;
+let prop = potentiallyNullObj?.[x++];
+
+console.log(x); // 0 as x was not incremented
+</pre>
+
+<h3 id="Совмесное_использование_с_оператором_опциональной_последовательности">Совмесное использование с оператором опциональной последовательности</h3>
+
+<p>В вложенных структурах, возможно использование оператора опциональной последовательности несколько раз:</p>
+
+<pre class="brush: js">let customer = {
+  name: "Carl",
+  details: {
+    age: 82,
+    location: "Paradise Falls" // detailed address is unknown
+  }
+};
+let customerCity = customer.details?.address?.city;
+
+// … this also works with optional chaining function call
+let duration = vacations.trip?.getTime?.();
+</pre>
+
+<h2 id="Спецификации">Спецификации</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td><a href="https://tc39.es/proposal-optional-chaining/">Proposal for the "optional chaining" operator</a></td>
+   <td>Stage 3</td>
+   <td></td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Совместимость_с_браузерами">Совместимость с браузерами</h2>
+
+<div>
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.operators.optional_chaining")}}</p>
+</div>
+
+<h2 id="Смотрите_также">Смотрите также</h2>
+
+<ul>
+ <li><a href="https://github.com/tc39/proposal-pipeline-operator">Github - Proposal-pipeline-operator</a></li>
+ <li><a href="https://github.com/tc39/proposals">TC39 proposals</a></li>
+</ul>

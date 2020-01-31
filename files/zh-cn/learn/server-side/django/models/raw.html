@@ -1,0 +1,445 @@
+<div>{{LearnSidebar}}</div>
+
+<div>{{PreviousMenuNext("Learn/Server-side/Django/skeleton_website", "Learn/Server-side/Django/Admin_site", "Learn/Server-side/Django")}}</div>
+
+<p class="summary">本文介绍如何为 <a href="https://developer.mozilla.org/en-US/docs/Learn/Server-side/Django/Tutorial_local_library_website">LocalLibrary</a> 网站定义模型。它解释了模型是什么、声明的方式以及一些主要字段类型。它还简要展示了您可以访问模型数据的几个主要方法。</p>
+
+<table class="learn-box standard-table">
+ <tbody>
+  <tr>
+   <th scope="row">前提:</th>
+   <td><a href="/en-US/docs/Learn/Server-side/Django/skeleton_website">Django Tutorial Part 2: 创建网站的地基</a></td>
+  </tr>
+  <tr>
+   <th scope="row">目的:</th>
+   <td>能够设计和创建自己的模型，选择适当的字段。</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="概述">概述</h2>
+
+<p>Django Web应用程序通过被称为模型的Python对象访问和管理数据。模型定义存储数据的结构，包括<strong>字段类型</strong>以及可能还有<strong>最大大小</strong>，<strong>默认值</strong>，<strong>选择列表选项</strong>，<strong>帮助文档</strong>，<strong>表单的标签文本</strong>等。模型的定义与底层数据库无关—你可以选择其中一个作为项目设置的一部分。一旦你选择了要使用的数据库，你就不需要直接与之交谈—只需编写模型结构和其他代码，Django可以处理与数据库通信的所有繁琐工作。</p>
+
+<p>本教程将介绍如何定义和访问 <a href="https://developer.mozilla.org/en-US/docs/Learn/Server-side/Django/Tutorial_local_library_website">LocalLibrary 网站</a> 实例的模型。</p>
+
+<h2 id="设计LocalLibrary模型">设计LocalLibrary模型</h2>
+
+<p>在你投身开始编写模型之前，花几分钟时间考虑我们需要存储的数据以及不同对象之间的关系。</p>
+
+<p>我们知道，我们需要存储书籍的信息（标题，摘要，作者，语言，类别，ISBN），并且我们可能有多个副本（具有全球唯一的ID，可用性状态等）。我们可以存储更多关于作者的信息，而不仅仅是他的名字，或多个作者的相同或相似的名称。我们希望能根据书名，作者名，语言和类别对信息进行排序。</p>
+
+<p>在设计模型时，为每个“对象”（相关信息组）分别设置模型是有意义的。在这种情况下，明显的对象是书籍，书情况和作者。</p>
+
+<p>你可能想要使用模型来表示选择列表选项（例如：选择下拉列表），而不是硬编码编写选项进网站—这是当所有选项面临未知或改变时候的建议。在本网站，模型的明显之处包括书籍类型（例如：科幻小说，法国诗歌等）和语言（英语，法语，日语）。</p>
+
+<p>一旦我们已经决定了我们的模型和字段，我们需要考虑它们的关联性。Django允许你来定义一对一的关联（OneToOneField），一对多（ForeignKey）和多对多（ManyToManyField）。</p>
+
+<p>思考一下，在网站中，我们将定义模型展示在下面UML关联图中（下图）。以上，我们创建了书的模型（书的通用细节），书的情况（系统中特定物理副本的书籍状态—借—有），和作者。我们也决定了个类型模型，以便通过管理界面创建／选择值。我们决定没有一个模型 BookInstance：status—我们硬编码了值（LOAN_STATUS），因为我们不希望这改变。在每个框中，你可以看到模型名称，字段名称和类型，以及方法和返回类型。</p>
+
+<p>该图显示模型之间的关系，包括它们的多重性。多重性是图中的数字，显示可能存在于关系中的每个模型的数量（最大值和最小值）。例如，盒子之间的连接线显示书和类型相关。书模型中数字表明，一本书必须有一个或多个流派（尽可能多），而类型旁边的线的另一端的数字表明它可以有零个或更多的关联书。</p>
+
+<p><img alt="LocalLibrary Model UML - v3" src="https://mdn.mozillademos.org/files/14021/local_library_model_uml_v0_1.png" style="height: 660px; width: 937px;"></p>
+
+<div class="note">
+<p><strong>注意</strong>: 下一节提供一个基本解释模型的定义与使用，当你读到，考虑如何构建上图中的每个模型。</p>
+</div>
+
+<h2 id="模型入门">模型入门</h2>
+
+<p>本节简要概述了模型定义和一些重要的字段和字段参数。</p>
+
+<h3 id="模型定义">模型定义</h3>
+
+<p>模型通常在 <strong>models.py</strong> 中定义。它们是继承自 <code><strong>django.db.models.Model的子类，</strong> 可以包括字段，方法和元数据。下面的代码片段展示了一个 “<strong>typical</strong>” 模型，名为 <strong>MyModelName</strong>：</code></p>
+
+<pre>from django.db import models
+
+class MyModelName(models.Model):
+    """
+    A typical class defining a model, derived from the Model class.
+    """
+
+    # Fields
+    my_field_name = models.CharField(max_length=20, help_text="Enter field documentation")
+    ...
+
+    # Metadata
+    class Meta: 
+        ordering = ["-my_field_name"]
+
+    # Methods
+    def get_absolute_url(self):
+         """
+         Returns the url to access a particular instance of MyModelName.
+         """
+         return reverse('model-detail-view', args=[str(self.id)])
+    
+    def __str__(self):
+        """
+        String for representing the MyModelName object (in Admin site etc.)
+        """
+        return self.field_name</pre>
+
+<p>在下面章节中，我们将细致解释模型的每个功能。</p>
+
+<h4 id="字段">字段</h4>
+
+<p>模型可以有任意数量的字段，任何类型的字段—每个字段都表示我们要存储在我们的一个数据库中的一列数据。每个数据库记录（行）将由每个字段值之一组成。我们来看看例子。</p>
+
+<pre class="brush: js">my_field_name = models.CharField(max_length=20, help_text="Enter field documentation")</pre>
+
+<p>上面例子中单个字段叫 <strong>my_field_name</strong> ，类型为 <strong>models.CharField</strong>—这意味着这个字段将会包含字母数字字符串。使用特定的类分配字段类型，这些类决定了用于将数据存储在数据库中的记录的类型，以及从HTML表单接收到值（即构成有效值）时使用的验证标准。字段类型还可以获取参数，进一步指定字段如何存储或可以使用。在这种情况下，我们给出了两个论点：</p>
+
+<ul>
+ <li><code>max_length=20</code> — 表示此字段中值的最大长度为20个字符的状态。</li>
+ <li><code>help_text="Enter field documentation"</code> — 提供一个帮助用户的文本标签，让用户知道当前通过HTML表单输入时要提供什么值。</li>
+</ul>
+
+<p>字段名称用于在查询和模版中引用它。字段还有一个标签，它被指定一个参数（verbose_name）或者通过大写字段的变量名的第一个字母，并用空格 替换下划线（例如 my_field_name -&gt;My field name ，这就是默认标签）。</p>
+
+<p>如果模型在表单中呈现（例如：在管理站点中），则声明该字段的顺序将影响其默认顺序，但可能会被覆盖。</p>
+
+<h5 id="公共字段参数">公共字段参数</h5>
+
+<p>当声明很多／大多数不同的字段类型时，可以使用以下常用参数：</p>
+
+<ul>
+ <li><a href="https://docs.djangoproject.com/en/1.10/ref/models/fields/#help-text">help_text</a>: 提供HTML表单文本标签 (e.g. i在管理站点中), 如上所述。</li>
+ <li><a href="https://docs.djangoproject.com/en/1.10/ref/models/fields/#verbose-name">verbose_name</a>: 字段标签中可读性名称，如果没有指定性，Django将从字段名称推断默认的详细名称。</li>
+ <li><a href="https://docs.djangoproject.com/en/1.10/ref/models/fields/#default">default</a>: 该字段的默认值。这可以是值或可调用对象，在这种情况下，每次创建新纪录时都将调用该对象。</li>
+ <li><a href="https://docs.djangoproject.com/en/1.10/ref/models/fields/#null">null</a>: 如果是<strong>True</strong>，Django将<strong> NULL </strong>在数据库中存储适合的字段（一个<strong>CharField</strong>将代替一个空字符串）的空值。默认是<strong>False</strong>。</li>
+ <li><a href="https://docs.djangoproject.com/en/1.10/ref/models/fields/#blank">blank</a>: 如果<strong>True</strong>，表单中的字段被允许为空白。默认是False，这意味着Django的表单验证将强制你输入一个值。这通常用于 NULL=True，因为如果要允许空值，你还希望数据库能够适当地表示它们。</li>
+ <li><a href="https://docs.djangoproject.com/en/1.10/ref/models/fields/#choices">choices</a>: 这是一组字段选项。如果提供这一项，默认对应的表单部件是选择字段的盒子，而不是标准文本字段。</li>
+ <li><a href="https://docs.djangoproject.com/en/1.10/ref/models/fields/#primary-key">primary_key</a>: 如果是True，将当前字段设置为模型的主键（主键是指定唯一标识所有不同表记录的特殊数据库列）。如果没有指定字段作为主键，则Django将自动为此添加一个字段。</li>
+</ul>
+
+<p>还有许多其他选项 — 你可以在 <a href="https://docs.djangoproject.com/en/1.10/ref/models/fields/#field-options">完整的字段选项</a>。</p>
+
+<h5 id="常用字段类型">常用字段类型</h5>
+
+<p>以下列表描述了一些更常用的字段类型。</p>
+
+<ul>
+ <li><a href="https://docs.djangoproject.com/en/1.10/ref/models/fields/#django.db.models.CharField">CharField</a> 是用来定义短到中等长度的字段字符串。你必须指定max_length要存储的数据。</li>
+ <li><a href="https://docs.djangoproject.com/en/1.10/ref/models/fields/#django.db.models.TextField">TextField </a> 用于大型任意长度的字符串。你可以max_length为该字段指定一个字段，但仅当该字段以表单显示时才会使用（不会在数据库级别强制执行）。</li>
+ <li><a href="https://docs.djangoproject.com/en/1.10/ref/models/fields/#django.db.models.IntegerField" title="django.db.models.IntegerField">IntegerField</a> 是一个用于存储整数（整数）值的字段，用于在表单中验证输入的值为整数。</li>
+ <li><a href="https://docs.djangoproject.com/en/1.10/ref/models/fields/#datefield">DateField</a> 和 <a href="https://docs.djangoproject.com/en/1.10/ref/models/fields/#datetimefield">DateTimeField</a> 用于存储／表示日期和日期／时间信息（分别是Python.datetime.date和datetime.datetime对象。这些字段可以另外表明（互斥）参数auto_now=Ture （在每次保存模型时将该字段设置为当前日期），auto_now_add（仅设置模型首次创建时的日期）和default（设置默认日期，可以被用户覆盖）。</li>
+ <li><a href="https://docs.djangoproject.com/en/1.10/ref/models/fields/#emailfield">EmailField</a> 用于存储和验证电子邮件地址。</li>
+ <li><a href="https://docs.djangoproject.com/en/1.10/ref/models/fields/#filefield">FileField</a> 和 <a href="https://docs.djangoproject.com/en/1.10/ref/models/fields/#imagefield">ImageField</a> 分别用于上传文件和图像（ImageField 只需添加上传的文件是图像的附加验证）。这些参数用于定义上传文件的存储方式和位置。</li>
+ <li><a href="https://docs.djangoproject.com/en/1.10/ref/models/fields/#autofield">AutoField</a> 是一种<strong> IntegerField</strong> 自动递增的特殊类型。如果你没有明确指定一个主键，则此类型的主键将自动添加到模型中。</li>
+ <li><a href="https://docs.djangoproject.com/en/1.10/ref/models/fields/#foreignkey">ForeignKey</a> 用于指定与另一个数据库模型的一对多关系（例如，汽车有一个制造商，但制造商可以制作许多汽车）。关系的“一”侧是包含密钥的模型。</li>
+ <li><a href="https://docs.djangoproject.com/en/1.10/ref/models/fields/#manytomanyfield">ManyToManyField</a> 用于指定<a href="https://docs.djangoproject.com/en/1.10/ref/models/fields/#manytomanyfield">多对多 </a>关系（例如，一本书可以有几种类型，每种类型可以包含几本书）。在我们的图书馆应用程序中，我们将非常类似地使用它们ForeignKeys，但是可以用更复杂的方式来描述组之间的关系。这些具有参数on_delete来定义关联记录被删除时会发生什么（例如，值models.SET_NULL将简单地设置为值NULL）。</li>
+</ul>
+
+<p>还有许多其他类型的字段，包括不同类型数字的字段（大整数，小整数，浮点数），布尔值，URL，唯一Ids和其他“时间相关” 信息（持续时间，时间等）。你可以查阅<a href="https://docs.djangoproject.com/en/1.10/ref/models/fields/#field-types">完整列表</a>.</p>
+
+<h4 id="元数据">元数据</h4>
+
+<p>你可以通过声明 class Meta 声明模型级别的元数据 ，如图所示。</p>
+
+<pre class="brush: python">class Meta:
+    ordering = ["-my_field_name"]
+    ...</pre>
+
+<p>此元数据的最有用功能之一是控制在查询模型类型时返回的记录的默认排序。你可以通过在ordering 属性的字段名称列表中指定匹配顺序来执行此操作，如上所示。排序将依赖字段的类型（字符串字段按字母顺序排序，而日期字段按时间顺序排序）。如上所示，你可以使用减号（-）对字段名称进行前缀，以反转排序顺序。</p>
+
+<p>例如，如果我们选择默认排列这样的书单：</p>
+
+<pre class="brush: python">ordering = ["title", "-pubdate"]</pre>
+
+<p>书单通过标题依据-字母排序-排列，从A到Z，还有每个标题的出版日期，从最新到最旧。</p>
+
+<p>另一个常见的属性是 verbose_name ,一个verbose_name 说明单数和复数形式的类。</p>
+
+<pre class="brush: python">verbose_name = "BetterName"</pre>
+
+<p>其他有用的属性允许你为模型创建和应用新的 “访问权限”（自动应用默认权限），允许基于其他的字段排序，或声明该类是”抽象的“（你无法创建的记录基类，并将由其他型号派生）。</p>
+
+<p>许多其他元数据选项控制模型中必须使用哪些数据库以及数据的存储方式。（如果你需要模型映射一个现有数据库，这会有用）。</p>
+
+<p>完整有用的元数据选项在这里 <a href="https://docs.djangoproject.com/en/1.10/ref/models/options/">Model metadata options</a> (Django docs).</p>
+
+<h4 id="方法">方法</h4>
+
+<p>一个模型也可以有方法。</p>
+
+<p>最起码，在每个模型中，你应该定义标准的Python 类方法 __str__() 来为每个对象返回一个人类可读的字符串。此字符用于表示管理站点的各个记录（以及你需要引用模型实例的任何其他位置）。通常这将返回模型中的标题或名称字段。</p>
+
+<pre class="brush: python">def __str__(self):
+    return self.field_name</pre>
+
+<p>Django方法中另一个常用方法是 get_absolute_url()，这函数返回一个在网站上显示个人模型记录的URL（如果你定义了该方法，那么Django 将自动在“管理站点”中添加“在站点中查看“按钮在模型的记录编辑栏）。典型示例以下：</p>
+
+<pre class="brush: python">def get_absolute_url(self):
+    """
+    Returns the url to access a particular instance of the model.
+    """
+    return reverse('model-detail-view', args=[str(self.id)])
+</pre>
+
+<div class="note">
+<p><strong>注意</strong>: 假设你将使用URL/myapplication/mymodelname/2 来显示模型的单个记录（其中“2”是 id 特定 记录），则需要创建一个URL映射器来将响应和id传递给 “模型详细视图” （这将做出显示记录所需的工作）。以上示例中，reverse() 函数可以“反转”你的url映射器（在上诉命名为“model-detail-view” 的案例中，以创建正确格式的URL。</p>
+
+<p>当然要做这个工作，你还是要写URL映射，查看和模版！</p>
+</div>
+
+<p>你可以定义一些你喜欢的其他方法，并从你的代码或模版调用它们（只要它们不带任何参数）。</p>
+
+<h3 id="模型管理">模型管理</h3>
+
+<p>一旦你定义了模型类，你可以使用它们来创建，更新或删除记录，并运行查询获取所有记录或特定的记录子集。当我们定义我们的视图，我们将展示给你在这个教程如何去做。</p>
+
+<h4 id="创建和修改记录">创建和修改记录</h4>
+
+<p>要创建一个记录，你可以定义一个模型实例，然后调用save()。</p>
+
+<pre class="brush: python"># Create a new record using the model's constructor.
+a_record = MyModelName(my_field_name="Instance #1")
+
+# Save the object into the database.
+a_record.save()
+</pre>
+
+<div class="note">
+<p><strong>注意</strong>: 如果你没有将任何字段声明为一个<strong>primary_key</strong>，新记录将自动给出一个字段名称id。保存上诉记录后，你可以查询此字段，值为1。</p>
+</div>
+
+<p>你可以使用 -点-语法 访问此新记录中的字段，并更改值。你必须调用<strong> save() </strong>将修改后的值存储到数据库。</p>
+
+<pre class="brush: python"># Access model field values using Python attributes.
+print(a_record.id) #should return 1 for the first record. 
+print(a_record.my_field_name) # should print 'Instance #1'
+
+# Change record by modifying the fields, then calling save().
+a_record.my_field_name="New Instance Name"
+a_record.save()</pre>
+
+<h4 id="搜索记录">搜索记录</h4>
+
+<p>你可以使用模型的 objects（基类提供）搜索符合特定条件的记录。</p>
+
+<div class="note">
+<p><strong>注意</strong>: 使用“抽象“模型和字段名称解释如何搜寻记录可能有点混乱。在下面的讨论中，我们将引用一个Book 模型带有 <strong>title</strong> 和 <strong>genre</strong> 字段，其中 <strong>genre</strong> 也是一个带有单个字段名的模型。</p>
+</div>
+
+<p>我们通过 QuerySet 获取一个模型的所有记录，使用 <strong>object.all()</strong>。这个QuerySet是个可迭代的对象，意味着它包括一些可以迭代/循环的对象。</p>
+
+<pre class="brush: python">all_books = Book.objects.all()
+</pre>
+
+<p>Django的 <strong>filter() </strong>方法允许我们根据特定的标准过滤 返回QuerySet 的匹配指定的<strong>文本</strong>或<strong>数字</strong>字段。例如，要过滤在标题包含 “wild”（野生）和对其计数，我们可以像下面那样做。</p>
+
+<pre class="brush: python">wild_books = Book.objects.filter(title__contains='wild')
+number_wild_books = Book.objects.filter(title__contains='wild').count()
+</pre>
+
+<p>字段匹配和匹配类型都定义在 过滤器参数名称中，使用以下格式：field_name__match_type 注意之间和之上的双下划线）。<br>
+ 上面我们使用区分大小写的 匹配来过滤。这里有许多其他匹配类型，你可以这样做：（不区分大小写），（区分insenstive 精确），（区分大小写精确匹配）和（大于）等 <a href="https://docs.djangoproject.com/en/1.10/ref/models/querysets/#field-lookups">完整列表</a>。</p>
+
+<p>在某些情况下，你需要去过滤—定义了一对多关系到另一个模型的字段。在这种情况下，你可以使用附加双重下划线在相关模型中"索引"字段。例如，过滤特定类型模式的书，你将不得不索引类型字段名，如下：</p>
+
+<pre class="brush: python">books_containing_genre = Book.objects.filter(genre<strong>__</strong>name<strong>__</strong>icontains='fiction')  # Will match on: Fiction, Science fiction, non-fiction etc.
+</pre>
+
+<div class="note">
+<p><strong>注意</strong>:  你可以用下划线（_）根据你喜欢的许多层次的关系（ForeignKey／ManyToManyField）。例如：不同类型的书，定义使用一个进一步“封面”关系可能会有一个参数名称：<strong><code>type__cover__name__exact='hard'。</code></strong></p>
+</div>
+
+<p>这里有许多关于你查询的事，包括相关模型的向后搜素，链接过滤器，返回一组较小的值等等。有关详细信息，请参阅<a href="https://docs.djangoproject.com/en/1.10/topics/db/queries/">制作查询</a> (Django Docs).</p>
+
+<h2 id="定义LocalLibrary模型">定义LocalLibrary模型</h2>
+
+<p>在本节中，我们会开始定义模型库。打开 <strong>models.py (in /locallibrary/catalog/）。这 </strong>页面顶部的样板导入模型模块，其中包含models.Model模型将继承的模型基类。</p>
+
+<pre class="brush: python">from django.db import models
+
+# Create your models here.</pre>
+
+<h3 id="Genre_模型">Genre 模型</h3>
+
+<p>复制下面显示的Genre模型代码，并将其粘贴到<strong> models.py</strong> 文件的底部。这个模型用于存储关于书籍类别的信息。例如是否是小说或非小说，浪漫史或军事历史等。如上所述，我们创建了Genre作为模型，而不是免费文本或选择列表，以便可以通过数据库管理可能的值，而不是硬编码。</p>
+
+<pre class="brush: python">class Genre(models.Model):
+    """
+    Model representing a book genre (e.g. Science Fiction, Non Fiction).
+    """
+    name = models.CharField(max_length=200, help_text="Enter a book genre (e.g. Science Fiction, French Poetry etc.)")
+    
+    def __str__(self):
+        """
+        String for representing the Model object (in Admin site etc.)
+        """
+        return self.name</pre>
+
+<p>这个模型有一个<strong> CharField</strong> 字段（<strong>name</strong>），用于描述类型（最大200字符和有一些帮助文本（<strong>help_text</strong>）。在模型最后，我们声明了一个<strong> __str__() </strong>方法，简单返回特定记录的定义类型名，没有定义详细的名称，因此该字段将以<strong>Name</strong>表单形式调用。</p>
+
+<h3 id="Book_模型">Book 模型</h3>
+
+<p>复制下面的Book模型，然后再次粘贴到文件的底部。Book模型代表了一般普遍意义上的一本可用的书的所有信息，但并不是一个特定的物理“实例”或可用于借阅的“复制“。该模型采用了<strong>CharField</strong>代表书中的 <strong>title</strong> 和  <strong>isbn （注意</strong> isbn指定使用的第一个未命名的参数是 ”ISBN“的标签，因为默认的标签也就是”isbn“）该模型采用<strong>TextField</strong>的<strong>summary，</strong>因为这种文字可能需要相当长。</p>
+
+<pre class="brush: python">from django.urls import reverse #Used to generate URLs by reversing the URL patterns
+
+class Book(models.Model):
+    """
+    Model representing a book (but not a specific copy of a book).
+    """
+    title = models.CharField(max_length=200)
+    author = models.ForeignKey('Author', on_delete=models.SET_NULL, null=True)
+    # Foreign Key used because book can only have one author, but authors can have multiple books
+    # Author as a string rather than object because it hasn't been declared yet in the file.
+    summary = models.TextField(max_length=1000, help_text="Enter a brief description of the book")
+    isbn = models.CharField('ISBN',max_length=13, help_text='13 Character &lt;a href="https://www.isbn-international.org/content/what-isbn"&gt;ISBN number&lt;/a&gt;')
+    genre = models.ManyToManyField(Genre, help_text="Select a genre for this book")
+    # ManyToManyField used because genre can contain many books. Books can cover many genres.
+    # Genre class has already been defined so we can specify the object above.
+    
+    def __str__(self):
+        """
+        String for representing the Model object.
+        """
+        return self.title
+    
+    
+    def get_absolute_url(self):
+        """
+        Returns the url to access a particular book instance.
+        """
+        return reverse('book-detail', args=[str(self.id)])
+</pre>
+
+<p>这个类型是一个 ManyToManyField ，所以一个一本书可以有多个类型和一个类型可以有许多书。作者被定义ForeignKey，所以每个书将只有一个作者，但作者可能有许多书（实际上一本书可能有多个作者，但不在这个实现中）。</p>
+
+<p>在两个字段类型中，相关模型都使用模型类或包含相关模型名称的字符串来声明为第一个未命名参数。如果关联的类在引用之前尚未在此文件中定义，则必须使用模型的名称作为字符串！该 author 字段中感兴趣的其他参数是 null=True ，如果没有作者被选择，这允许数据库存储一个 Null 值，和on_delete=models.SET_NULL 将作者的值设置为 Null 如果相关的作者记录被删除。</p>
+
+<p>该模型还定义 __str__()，使用书的文本字段来表示Book记录。最终的方法，get_absolute_url() 返回一个可用于访问这些模型的详细记录的URL （为此，我们将必须定义具有该名称的URL映射 book-detail，并定义关联的视图和模版）。</p>
+
+<h3 id="BookInstance_模型">BookInstance 模型</h3>
+
+<p>接下来，在其他型号下复制 BookInstance 模型（如下）。该 BookInstance 代表一本书，有人可能借用的一个特定副本，包括有关副本是否可用在什么日期预计还，“印记“或版本的详细信息，并为这本书在图书馆给予一个唯一的ID信息。</p>
+
+<p>一些字段和方法现在会熟悉。该模型使用</p>
+
+<ul>
+ <li><code>ForeignKey 识别相关联的书（每本书可以有多个副本，但副本只能有一个Book）。</code></li>
+ <li><code>CharField</code> 表示这本书的印记 (具体 版本) 。</li>
+</ul>
+
+<pre class="brush: python">import uuid # Required for unique book instances
+
+class BookInstance(models.Model):
+    """
+    Model representing a specific copy of a book (i.e. that can be borrowed from the library).
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, help_text="Unique ID for this particular book across whole library")
+    book = models.ForeignKey('Book', on_delete=models.SET_NULL, null=True) 
+    imprint = models.CharField(max_length=200)
+    due_back = models.DateField(null=True, blank=True)
+
+    LOAN_STATUS = (
+        ('m', 'Maintenance'),
+        ('o', 'On loan'),
+        ('a', 'Available'),
+        ('r', 'Reserved'),
+    )
+
+    status = models.CharField(max_length=1, choices=LOAN_STATUS, blank=True, default='m', help_text='Book availability')
+
+    class Meta:
+        ordering = ["due_back"]
+        
+
+    def __str__(self):
+        """
+        String for representing the Model object
+        """
+        return '%s (%s)' % (self.id,self.book.title)</pre>
+
+<p>另外我们展示一些新的字段类型：</p>
+
+<ul>
+ <li><code>UUIDField</code> 用于设置 id 字段作为该模型的 primary_key 。这个类型字段为每个实例分配一个全局唯一的值（用于在library库中可以找到的每本书）。</li>
+ <li><code>DateField</code> 用于due_back日期（书籍预期在借用或维护后可用）。该值可以是（blank或者null当该书可用时需要）。元数据（Class Meta）使用此字段在查询中返回时记录。</li>
+ <li><code>status</code> 是 CharField 定义选择／选择列表。你可以看到我们定义一个包含键值对元组的元组，并将其传递给choices 参数，而键是当选择该选项时实际保存的值。我们还设置了一个默认的值 “m” （维护），因为书籍最初将在库存之前创建不可用。</li>
+</ul>
+
+<p>该模型<code>的__str__()</code> 表示  <code>BookInstance</code> 对象 使用唯一ID和关联的标题的组合 。</p>
+
+<div class="note">
+<p><strong>注意</strong>: Python小知识:</p>
+
+<ul>
+ <li><code>__str__()返回的值是一个格式化字符串。</code><br>
+  在字符串里面，我们用 <code>%s</code> 来表明 占位符。在我们指定的字符串之后 <code>% </code>，然后是一个包含要在占位符插入的值的元组，如果你只有一个占位符，那么你可以省略这个元组 <code>'My value: %s' % variable</code><br>
+   </li>
+ <li>因为Python 3 ，你应该使用格式化方法，例如 '{0} ({1})'.format(self.id,self.book.title)，完整的，在这里<a href="https://www.python.org/dev/peps/pep-3101/">here</a>.</li>
+</ul>
+</div>
+
+<h3 id="Author_模型">Author 模型</h3>
+
+<p>复制下方Author模型到 models.py 的现有代码中。</p>
+
+<p>所有的字段/方法现在应该是熟悉le。该模型将作者定义为具有名字，姓氏，出生日期和（可选）死亡日期。它指定，默认情况下，<code>__str__()</code>返回姓氏，名字顺序。该<code>get_absolute_url()</code>方法反转author-detailURL映射以获取显示单个作者的URL。</p>
+
+<pre class="brush: python">class Author(models.Model):
+    """
+    Model representing an author.
+    """
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    date_of_birth = models.DateField(null=True, blank=True)
+    date_of_death = models.DateField('Died', null=True, blank=True)
+    
+    def get_absolute_url(self):
+        """
+        Returns the url to access a particular author instance.
+        """
+        return reverse('author-detail', args=[str(self.id)])
+    
+
+    def __str__(self):
+        """
+        String for representing the Model object.
+        """
+        return '%s, %s' % (self.last_name, self.first_name)
+</pre>
+
+<h2 id="重新运行数据库迁移">重新运行数据库迁移</h2>
+
+<p>现在你的所有的模型都已经创建好了，我们重新运行数据库迁移把它们添加到你的数据库中：</p>
+
+<pre><code>python3 manage.py makemigrations
+python3 manage.py migrate</code></pre>
+
+<h2 id="语言模型_—_挑战">语言模型 — 挑战</h2>
+
+<p>想象一下当地的捐赠者捐赠了一些用另一种语言写的新书（比如说，波斯语）。面临的挑战是如何在我们的图书馆网站中最好地表现这些，然后将它们添加到模型中。</p>
+
+<p>有些事情要考虑：</p>
+
+<p>如果“语言”有关联Book，BookInstance或者一些其他的对象？<br>
+ 应该使用模型，自由文本字段还是硬编码选择列表来表示不同的语言？<br>
+ 确定后，添加该字段。你可以看到，我们决定在Github <a href="https://github.com/mdn/django-locallibrary-tutorial/blob/master/catalog/models.py">here</a>.</p>
+
+<ul>
+</ul>
+
+<ul>
+</ul>
+
+<h2 id="概要">概要</h2>
+
+<p>在本文中，我们了解了模型是如何定义的，然后使用这些信息来设计和实现LocalLibrary网站的相应模型。</p>
+
+<p>在这一点上，我们将简要地从创建网站转移，并查看Django管理站点。该网站将允许我们向库添加一些数据，然后我们可以使用我们的（尚待创建）视图和模板显示。</p>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li><a href="https://docs.djangoproject.com/en/1.10/intro/tutorial02/">编写你的第一个Django应用程序, 第二部分</a> (Django docs)</li>
+ <li><a href="https://docs.djangoproject.com/en/1.10/topics/db/queries/">进行查询</a> (Django Docs)</li>
+ <li><a href="https://docs.djangoproject.com/en/1.10/ref/models/querysets/">QuerySet API 参考</a> (Django Docs)</li>
+</ul>
+
+<p>{{PreviousMenuNext("Learn/Server-side/Django/skeleton_website", "Learn/Server-side/Django/Admin_site", "Learn/Server-side/Django")}}</p>

@@ -1,0 +1,51 @@
+<p class="summary">Il existe des risques de confidentialité et de sécurité asspciés à l'<a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referer">entête HTTP Referer.</a> This article describes them, and offers advice on mitigating those risks.</p>
+
+<h2 id="Le_problème...">Le problème...</h2>
+
+<p>The <code>{{httpheader("Referer")}} (sic)</code> header contains the address of the previous web page from which a link to the currently requested page was followed, which has lots of fairly innocent uses including analytics, logging, or optimized caching. However, there are more problematic uses such as tracking or stealing information, or even just side effects such as inadvertently leaking sensitive information.</p>
+
+<p>Par exemple, considérons que une page "réinitialiser un mot de passe" avec un lien dans un pied de page. Si le lien a été suivi, selon la façon dont l’information a été partagée, le site de peut recevoir l’URL de réinitialisation du mot de passe et peut toujours être en mesure d’utiliser l’information partagée, ce qui pourrait compromettre la sécurité de l’utilisateur.</p>
+
+<p>Selon la même logique, une image hébergée du côté d’un tiers, mais intégrée à votre page, pourrait entraîner la fuite de renseignements de nature délicate au tiers. Même si la sécurité n’est pas compromise, l’information peut ne pas être quelque chose que l’utilisateur veut partagé.</p>
+
+<h2 id="Comment_régler_ce_problème">Comment régler ce problème ?</h2>
+
+<p>Une grande partie de ce risque peut être atténuée par une conception raisonnable des applications. Une application sensée éliminerait ces risques en rendant les URL de réinitialisation de mot de passe utilisables uniquement pour une seule utilisation, ou lorsqu’elles sont combinées avec un jeton utilisateur unique, et en transmettant des données sensibles de différentes façons.</p>
+
+<p>Vous devez utiliser <code>POST</code> plutôt que <code>GET</code> dans la mesure du possible, pour éviter de transmettre des données sensibles à d’autres emplacements via des URL.</p>
+
+<p>Vous devez toujours utiliser <code>{{glossary("HTTPS")}}</code> pour vos sites. Ceci a de nombreux avantages en matière de sécurité, y compris le fait que les sites HTTPS ne transmettront jamais d’informations de référence à des sites non-HTPS. Cela devient de moins en moins utile dans ce contexte maintenant que la plupart des sites Web utilisent HTTPS, mais c’est encore une considération valable.</p>
+
+<p>De plus, vous devriez envisager de supprimer tout contenu de tiers (p. ex., les widgets de réseautage social intégrés à <code>{{htmlelement("iframe")}}</code> dans les zones sécurisées de votre site Web, comme les pages de réinitialisation des mots de passe, les formulaires de paiement, les zones de connexion, etc.</p>
+
+<p>Vous pouvez également atténuer ces risques en utilisant :</p>
+
+<ul>
+ <li>L’en-tête <code>{{httpheader("Referrer-Policy")}}</code> sur votre serveur pour contrôler quelle information est envoyée par l’en-tête <code>Referer</code>. Encore une fois, une directive de <code>no-referrer</code> omettrait entièrement l’en-tête de référence.</li>
+ <li>L’attribut <code>referrerpolicy</code> sur les éléments HTML qui sont en danger de fuite de telles informations (comme <code>&lt;img&gt;</code> et <code>&lt;a&gt;</code>). Cela peut par exemple être réglé sur <code>no-referrer </code>pour arrêter l’en-tête <code>Referer</code> envoyé tout à fait.</li>
+ <li>L’attribut <code>rel</code> défini à <code>noreferrer</code> sur les éléments HTML qui sont en danger de fuite de telles informations (comme <code>&lt;img&gt;</code> et &lt;a&gt;). Voir Types de liens et rechercher <code>noreferrer</code> pour plus d’informations.</li>
+ <li>La technique de la <a href="https://geekthis.net/post/hide-http-referer-headers/#exit-page-redirect">page de sortie</a>.</li>
+</ul>
+
+<p>Les serveurs conscients de la sécurité ont tendance à avoir intégré des mesures d’atténuation pour de tels problèmes, par exemple :</p>
+
+<ul>
+ <li>Sécurité à Django (voir notamment Cross site request forgery (CSRF) protection).</li>
+ <li>helmetjs referrer-policy — middleware for setting Referrer-Policy in Node.js/Express apps (voir aussi helmetjs for more security provisions).</li>
+</ul>
+
+<h2 id="Politique_et_exigences.">Politique et exigences.</h2>
+
+<p>Il serait logique de rédiger un ensemble d’exigences en matière de sécurité et de protection des renseignements personnels pour votre équipe de projet qui précisent l’utilisation de ces caractéristiques afin d’atténuer les risques connexes. Vous devriez demander l’aide d’un expert en sécurité Web pour rédiger ces exigences et tenir compte à la fois des besoins et du bien-être des utilisateurs, ainsi que d’autres questions comme la politique et la réglementation <a href="https://ec.europa.eu/commission/priorities/justice-and-fundamental-rights/data-protection/2018-reform-eu-data-protection-rules_en">EU General Data Protection Regulation (GDPR)</a>.</p>
+
+<h2 id="Voir_aussi...">Voir aussi...</h2>
+
+<ul>
+ <li><a href="https://infosec.mozilla.org/guidelines/web_security.html#referrer-policy">Mozilla lignes directrices de l’équipe de sécurité sur Referrer-Policy</a></li>
+</ul>
+
+
+
+<div class="blockIndicator note">
+<p>Texte traduit par <a href="https://www.youtube.com/channel/UCmdLXCyAx9pZTe066nEpyIA?view_as=subscriber">Elaxis_</a>, merci de votre lecture.</p>
+</div>

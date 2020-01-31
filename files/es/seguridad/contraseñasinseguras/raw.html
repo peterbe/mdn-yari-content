@@ -1,0 +1,60 @@
+<p class="summary">El inicio de sesión en un servidor HTTP es muy peligroso dada la amplia variedad de ataques que pueden ser efectuados en este para obtener la contraseña del usuario. Los intrusos roban credenciales de usuario directamente por la red (sniffing), o modifican la página mostrada en tránsito para permitir una gran cantidad de ataques. Este artículo detalla los mecanismos que Firefox ha puesto en práctica para advertir a los usuarios y desarrolladores de los riesgos relacionados con las contraseñas inseguras y el robo de contraseñas.</p>
+
+<p>El protocolo <a href="https://es.wikipedia.org/wiki/Protocolo_seguro_de_transferencia_de_hipertexto" title="https://es.wikipedia.org/wiki/Protocolo_seguro_de_transferencia_de_hipertexto">HTTPS</a> está diseñado para proteger los datos del usuario de interferencias (violación de confidencialidad) y de modificaciones (violación de integridad) en la red. Los sitios Web que administran datos privados de usuarios deberían usar HTTPS para protegerlos de los hackers. Sin este protocolo, es bastante fácil robar información del usuario (como las credenciales de inicio de sesión). Esto fue demostrado por <a href="http://codebutler.com/firesheep/" title="http://codebutler.com/firesheep/">Firesheep</a>.</p>
+
+<p>Para solucionar este problema, se dbe instalar y configurar un certificado SSL/TLS en el servidor. Existen diversos proveedores que ofrecen certificados tanto gratuitos como de pago. Si se usa una plataforma en la nube, debe disponer de sus propios mecanismos para habilitar el HTTPS.</p>
+
+<h2 id="Indicadores_de_seguridad_de_la_contraseña_de_Firefox">Indicadores de seguridad de la contraseña de Firefox</h2>
+
+<p>Para informar de la amenaza descrita anteriormente, Firefox implementa varios mecanismos de advertencia:</p>
+
+<ol>
+ <li>
+  <p>Firefox 51+ mostrará el icono de un candado con una línea roja atravesándolo en diagonal en la barra de direcciones cuando una página de inicio de sesión no posea una conexión segura, como se muestra a continuación.</p>
+
+  <p style="text-align: center;"><img alt="Icono de candado" src="https://support.cdn.mozilla.net/media/uploads/gallery/images/2015-11-17-12-13-18-2faa61.png" style="height: 25px; width: 25px;"></p>
+ </li>
+ <li>
+  <p>Firefox 52+ mostrará una advertencia clara en la barra de direcciones y debajo del campo de contraseña seleccionado en cualquier formulario inseguro:</p>
+
+  <p style="text-align: center;"><img alt="Advertencia" src="https://support.cdn.mozilla.net/media/uploads/gallery/images/2017-04-21-23-52-53-ba340d.png" style="height: 133px; width: 328px;"></p>
+ </li>
+ <li>
+  <p>Firefox 52+ también ha desabilitado el relleno automático en formularios de inicio de sesión inseguros. Los usuarios todavía pueden autocompletar manualmente inicios de sesión almacenados desde el desplegable.</p>
+ </li>
+ <li>
+  <p>Las advertencias acerca de los formularios de inicio de sesión inseguros también pueden verse en el panel de seguridad de la consola de desarrolo en todas las versiones, tal y como se describe en la siguiente sección.</p>
+ </li>
+</ol>
+
+<h2 id="Mensajes_de_consola_web"><strong>Mensajes de consola web</strong></h2>
+
+<p>Esta sección describe los mensajes dde seguridad mostrados en la consola de desarrollo de las Herramientas de desarrollo de Firefox, en respuesta a las contraseñas inseguras.</p>
+
+<h3 id="Proporcionar_un_formulario_de_inicio_de_sesión_a_través_de_HTTP">Proporcionar un formulario de inicio de sesión a través de HTTP</h3>
+
+<p>Aún si la acción del formulario es una URL HTTPS, el formulario de inicio de sesión no está protegido porque un atacante puede modificar la pagina recibida por el usuario (por ejemplo, los atacantes pueden modificar el destino de un formulario para enviar la información sensible a un servidor del que tengan el control, o pueden insertar un script que registre las teclas presionadas (<em>keylogging script</em>) para robar las contraseñas tecleadas). La pestaña de seguridad de la Consola Web avisará tanto a los desarrolladores como a los usuarios del problema de seguridad:</p>
+
+<p style="text-align: center;"><img alt="Formulario de inicio de sesión inseguro mostrado en la Consola Web y advertencia contextual mostrando aviso en el campo contraseña." src="https://mdn.mozillademos.org/files/14783/Insecure_Password_Console_Contextual_sm.png" style="height: 566px; width: 790px;"></p>
+
+<div class="note">
+<p><strong>Nota</strong>: Tampoco es seguro embeber una página de inicio de sesión HTTPS en un documento HTTP — un atacante podría cambiar la URL del marco de manera que apuntase a un sitio malicioso.</p>
+</div>
+
+<h3 id="Usando_una_URL_HTTP_en_la_acción_del_formulario"><strong>Usando una URL HTTP en la acción del formulario</strong></h3>
+
+<p>En este caso, cualquier información que el usuario ingresa es enviada a través de la red en formato de texto plano (sin cifrar). La contraseña del usuario es claramente visible para cualquiera que esté husmeando la red, desde el momento en que la contraseña deja el equipo del usuario hasta que llega a los servidores del sitio web.</p>
+
+<p style="text-align: center;"><img alt="Formulario de inicio de sesión inseguro mostrado en la Consola Web y advertencia contextual mostrando aviso en el campo contraseña." src="https://mdn.mozillademos.org/files/14785/Insecure_Action_Password_Console_Contextual_sm.png" style="height: 566px; width: 790px;"></p>
+
+<h2 id="Nota_acerca_de_la_reutilización_de_contraseñas">Nota acerca de la reutilización de contraseñas</h2>
+
+<p>A veces, los sitios web requieren de un nombre de usuario y contraseñas, pero normalmente no almacenan datos que son muy sensibles. Por ejemplo, un sitio de noticias puede guardar qué artículos de noticias un usuario desea volver a leer, pero no guarda ningún otro dato sobre él. Los desarrolladores Web del sitio de noticias pueden estar menos motivados para asegurar su sitio web y sus credenciales de usuario.</p>
+
+<p>Desafortunadamente, <a href="https://www.lightbluetouchpaper.org/2011/02/09/measuring-password-re-use-empirically/">la reutilización de contraseñas es un gran problema</a>. Los usuarios utilizan la misma contraseña en varios sitios (sitios de noticias, redes sociales, proveedores de correo, bancos).  Por lo tanto, incluso si el acceso al nombre de usuario y la contraseña a su sitio no le parece un gran riesgo, es un gran riesgo para los usuarios que han usado el mismo nombre de usuario y la misma contraseña para iniciar sesión en sus cuentas bancarias. Los atacantes son cada vez más astutos; roban tanto el nombre de usuario como la contraseña desde un sitio, y luego intentan usarlos en sitios más lucrativos.</p>
+
+<h2 id="Vea_también">Vea también</h2>
+
+<ul>
+ <li><a href="https://blog.mozilla.org/tanvi/2016/01/28/no-more-passwords-over-http-please/">No More Passwords over HTTP, Please!</a> — detallada publicación de blog con más información y <em>FAQ</em> (preguntas más frecuentes).</li>
+</ul>

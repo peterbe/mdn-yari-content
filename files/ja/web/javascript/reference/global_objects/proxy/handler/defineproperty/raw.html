@@ -1,0 +1,132 @@
+<div>{{JSRef}}</div>
+
+<p><strong><code>handler.defineProperty()</code></strong> は {{jsxref("Object.defineProperty()")}} に対するトラップです。</p>
+
+<div>{{EmbedInteractiveExample("pages/js/proxyhandler-defineproperty.html", "taller")}}</div>
+
+<div class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</div>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="brush: js">var p = new Proxy(target, {
+  defineProperty: function(target, property, descriptor) {
+  }
+});
+</pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<p>次の引数が <code>defineProperty</code> メソッドに渡されます。<code>this</code> はハンドラにバインドされます。</p>
+
+<dl>
+ <dt><code>target</code></dt>
+ <dd>ターゲットオブジェクトです。</dd>
+ <dt><code>property</code></dt>
+ <dd>ディスクリプタを取得されるプロパティ名です。</dd>
+ <dt><code>descriptor</code></dt>
+ <dd>定義や変更されるプロパティに対するディスクリプタです。</dd>
+</dl>
+
+<h3 id="Return_value" name="Return_value">戻り値</h3>
+
+<p><code>defineProperty</code> メソッドはプロパティが正しく定義されたかどうかを表す {{jsxref("boolean")}} を返す必要があります。</p>
+
+<h2 id="説明">説明</h2>
+
+<p><code><strong>handler.defineProperty()</strong></code> メソッドは {{jsxref("Object.defineProperty()")}} に対するトラップです。</p>
+
+<h3 id="インターセプト">インターセプト</h3>
+
+<p>このトラップは下記の操作をインターセプトできます。:</p>
+
+<ul>
+ <li>{{jsxref("Object.defineProperty()")}}</li>
+ <li>{{jsxref("Reflect.defineProperty()")}}</li>
+</ul>
+
+<h3 id="不変条件">不変条件</h3>
+
+<p>次の不変条件に違反している場合、プロキシは {{jsxref("TypeError")}} をスローします。:</p>
+
+<ul>
+ <li>ターゲットオブジェクトが拡張不可の場合、プロパティは追加できません。</li>
+ <li>ターゲットオブジェクトの設定不可の独自のプロパティとして存在しない場合、プロパティは設定不可とみなされ、追加や変更ができません。</li>
+ <li>ターゲットオブジェクトの対応する設定可能なプロパティが存在する場合、プロパティは設定不可にすることができません。</li>
+ <li>対応するターゲットオブジェクトのプロパティが存在する場合、<code>Object.defineProperty(target, prop, descriptor)</code> は例外をスローしません。</li>
+ <li>strict モードでは、<code>defineProperty</code> ハンドラから <code>false</code> が返ってきた場合、{{jsxref("TypeError")}} 例外をスローします。</li>
+</ul>
+
+<h2 id="例">例</h2>
+
+<p>次のコードは{{jsxref("Object.defineProperty()")}}をトラップします。</p>
+
+<pre class="brush: js">var p = new Proxy({}, {
+  defineProperty: function(target, prop, descriptor) {
+    console.log("called: " + prop);
+    return true;
+  }
+});
+
+var desc = { configurable: true, enumerable: true, value: 10 };
+Object.defineProperty(p, 'a', desc); // "called: a"
+</pre>
+
+<p>{{jsxref("Object.defineProperty()")}} または {{jsxref("Reflect.defineProperty()")}} を呼んだ時、 <code>defineProperty</code> トラップに渡されるディスクリプタは制約があります。下記のプロパティのみが使用可能で、標準ではないプロパティは無視されます。</p>
+
+<ul>
+ <li><code>enumerable</code></li>
+ <li><code>configurable</code></li>
+ <li><code>writable</code></li>
+ <li><code>value</code></li>
+ <li><code>get</code></li>
+ <li><code>set</code></li>
+</ul>
+
+<pre class="brush: js"><code>var p = new Proxy({}, {
+  defineProperty(target, prop, descriptor) {
+    console.log(descriptor);
+    return Reflect.defineProperty(target, prop, descriptor);
+  }
+});
+
+Object.defineProperty(p, 'name', {
+  value: 'proxy',
+  type: 'custom'
+});  // { value: 'proxy' }</code></pre>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">ステータス</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-proxy-object-internal-methods-and-internal-slots-defineownproperty-p-desc', '[[DefineOwnProperty]]')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td>初期定義</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-proxy-object-internal-methods-and-internal-slots-defineownproperty-p-desc', '[[DefineOwnProperty]]')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td></td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザ実装状況</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.builtins.Proxy.handler.defineProperty")}}</p>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li>{{jsxref("Proxy")}}</li>
+ <li>{{jsxref("Proxy.handler", "handler")}}</li>
+ <li>{{jsxref("Object.defineProperty()")}}</li>
+ <li>{{jsxref("Reflect.defineProperty()")}}</li>
+</ul>

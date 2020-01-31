@@ -1,0 +1,149 @@
+<div>{{JSRef}}</div>
+
+<p> <code><strong>Object.getOwnPropertyDescriptor()</strong></code> メソッドは、与えられたオブジェクト<dfn>自身のプロパティ</dfn> (すなわちオブジェクトが直接提供するプロパティであり、オブジェクトのプロトタイプチェインを伝って提供されるプロパティではありません) の、プロパティディスクリプターを返します。</p>
+
+<div>{{EmbedInteractiveExample("pages/js/object-getownpropertydescriptor.html")}}</div>
+
+<p class="hidden">この対話型サンプルのソースファイルは GitHub リポジトリに格納されています。対話型サンプルプロジェクトに協力したい場合は、 <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> をクローンしてプルリクエストを送信してください。</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox"><code>Object.getOwnPropertyDescriptor(<var>obj</var>, <var>prop</var>)</code></pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<dl>
+ <dt><code>obj</code></dt>
+ <dd>プロパティの確認を行うオブジェクトです。</dd>
+ <dt><code>prop</code></dt>
+ <dd>ディスクリプターを受け取るプロパティの名前または {{jsxref("Symbol")}} です。</dd>
+</dl>
+
+<h3 id="Return_value" name="Return_value">返値</h3>
+
+<p>指定されたプロパティがオブジェクトにある場合は、プロパティディスクリプターで、それ以外の場合は {{jsxref("undefined")}} です。</p>
+
+<h2 id="Description" name="Description">説明</h2>
+
+<p>このメソッドで、プロパティの正確な定義を確認することができます。 JavaScript の<dfn>プロパティ</dfn>は、文字列値の名前または {{jsxref("Symbol")}} とプロパティディスクリプターから成ります。プロパティディスクリプターおよびその属性についての詳細情報は、 {{jsxref("Object.defineProperty()")}} にあります。</p>
+
+<dfn>プロパティディスクリプター</dfn>は、以下の属性のいくつかを記録したものです。<p></p>
+
+<dl>
+ <dt><code>value</code></dt>
+ <dd>プロパティに関連づけられた値です (データディスクリプタのみ)。</dd>
+ <dt><code>writable</code></dt>
+ <dd><code>true</code> である場合、プロパティに関連づけられた値は変更することができます (データディスクリプターのみ)。</dd>
+ <dt><code>get</code></dt>
+ <dd>プロパティの getter として提供する関数、あるいは getter がない場合は <code>undefined</code> です (アクセサディスクリプターのみ)。</dd>
+ <dt><code>set</code></dt>
+ <dd>プロパティの setter として提供する関数、あるいは setter がない場合は <code>undefined</code> です (アクセサディスクリプターのみ)。</dd>
+ <dt><code>configurable</code></dt>
+ <dd><code>true</code> である場合、この種のディスクリプターを変更することや、対応するオブジェクトからプロパティを削除することができます。</dd>
+ <dt><code>enumerable</code></dt>
+ <dd><code>true</code> である場合、このプロパティは対応するオブジェクトでのプロパティ列挙に現れます。</dd>
+</dl>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<pre class="brush: js">var o, d;
+
+o = { get foo() { return 17; } };
+d = Object.getOwnPropertyDescriptor(o, 'foo');
+// d is {
+//   configurable: true,
+//   enumerable: true,
+//   get: /*the getter function*/,
+//   set: undefined
+// }
+
+o = { bar: 42 };
+d = Object.getOwnPropertyDescriptor(o, 'bar');
+// d is {
+//   configurable: true,
+//   enumerable: true,
+//   value: 42,
+//   writable: true
+// }
+
+o = { [Symbol.for('baz')]: 73 }
+d = Object.getOwnPropertyDescriptor(o, Symbol.for('baz')); 
+// d is {
+//   configurable: true,
+//   enumerable: true,
+//   value: 73,
+//   writable: true
+// }
+
+o = {};
+Object.defineProperty(o, 'qux', {
+  value: 8675309,
+  writable: false,
+  enumerable: false
+});
+d = Object.getOwnPropertyDescriptor(o, 'qux');
+// d is {
+//   value: 8675309,
+//   writable: false,
+//   enumerable: false,
+//   configurable: false
+// }
+</pre>
+
+<h2 id="Notes" name="Notes">メモ</h2>
+
+<p>ECMAScript 5 では、このメソッドへの最初の引数がオブジェクトでない (プリミティブである) 場合は、 {{jsxref("TypeError")}} が発生します。 ECMAScript 2015 では、最初の引数がオブジェクトでなくても、最初に強制的にオブジェクトに変換します。</p>
+
+<pre class="brush: js">Object.getOwnPropertyDescriptor('foo', 0);
+// TypeError: "foo" is not an object  // ES5 code
+
+Object.getOwnPropertyDescriptor('foo', 0);
+// Object returned by ES2015 code: {
+//   configurable: false,
+//   enumerable: true,
+//   value: "f",
+//   writable: false
+// }
+}</pre>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">状態</th>
+   <th scope="col">備考</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-15.2.3.3', 'Object.getOwnPropertyDescriptor')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td>初回定義。 JavaScript 1.8.5 で実装。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-object.getownpropertydescriptor', 'Object.getOwnPropertyDescriptor')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-object.getownpropertydescriptor', 'Object.getOwnPropertyDescriptor')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザーの対応</h2>
+
+<div class="hidden">このページの互換性一覧表は構造化データから生成されています。データに協力したいのであれば、 <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> をチェックアウトしてプルリクエストを送信してください。</div>
+
+<p>{{Compat("javascript.builtins.Object.getOwnPropertyDescriptor")}}</p>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li>{{jsxref("Object.defineProperty()")}}</li>
+ <li>{{jsxref("Reflect.getOwnPropertyDescriptor()")}}</li>
+</ul>

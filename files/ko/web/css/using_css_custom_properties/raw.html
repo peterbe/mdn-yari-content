@@ -1,0 +1,238 @@
+<div>{{cssref}}</div>
+
+<p><strong>사용자 지정 속성</strong>(<strong>CSS 변수</strong>, <strong>종속 변수</strong>)은 CSS 작성자가 정의하는 개체로, 문서 전반적으로 재사용할 임의의 값을 담습니다. 사용자 지정 속성 표기법(<code><strong>--main-color: black</strong>;</code>)을 사용해 정의하고, {{cssxref("var", "var()")}} 함수를 사용해 접근할 수 있습니다. (<code>color: <strong>var(--main-color)</strong>;</code>)</p>
+
+<p>복잡한 웹사이트는 어마어마한 양의 CSS를 가지고 있는데, 종종 많은 값을 반복적으로 사용합니다. 예를 들어, 수 백 곳의 서로 다른 위치에서 같은 색상을 사용한다면, 그 색을 바꾸고 싶을 때 대규모 전역 검색 바꾸기를 피할 수 없습니다. 사용자 지정 속성을 사용하면 한 영역에 값을 저장해놓고, 다른 여러 공간에서 참조해갈 수 있습니다. 추가 장점은 의미를 가진 식별자라는 점인데, <code>#00ff00</code>보다는 <code>--main-text-color</code>가 이해하기 쉽다는 것입니다. 특히 같은 색을 다른 맥락에서 사용할 때 이 장점이 도드라집니다.</p>
+
+<p>사용자 지정 속성은 종속 대상이며 부모로부터 상속합니다.</p>
+
+<h2 id="기본_사용법">기본 사용법</h2>
+
+<p>사용자 지정 속성 선언:</p>
+
+<pre class="brush:css; highlight:[2]  language-css">element {
+  --main-bg-color: brown;
+}
+</pre>
+
+<p>사용자 지정 속성 사용:</p>
+
+<pre class="brush:css; highlight:[2]  language-css">element {
+  background-color: var(--main-bg-color);
+}
+</pre>
+
+<h2 id="첫_단계">첫 단계</h2>
+
+<p>동일한 색상을 여러 클래스에 적용하는, 다음의 간단한 예제로 시작하겠습니다.</p>
+
+<pre class="brush:css; highlight:[3,20,26,32]">.one {
+  color: white;
+  background-color: brown;
+  margin: 10px;
+  width: 50px;
+  height: 50px;
+  display: inline-block;
+}
+
+.two {
+  color: white;
+  background-color: black;
+  margin: 10px;
+  width: 150px;
+  height: 70px;
+  display: inline-block;
+}
+.three {
+  color: white;
+  background-color: brown;
+  margin: 10px;
+  width: 75px;
+}
+.four {
+  color: white;
+  background-color: brown;
+  margin: 10px;
+  width: 100px;
+}
+
+.five {
+  background-color: brown;
+}
+</pre>
+
+<p>HTML에 적용해보겠습니다.</p>
+
+<pre class="brush:html">&lt;div&gt;
+  &lt;div class="one"&gt;1:&lt;/div&gt;
+  &lt;div class="two"&gt;2: Text &lt;span class="five"&gt;5 - more text&lt;/span&gt;&lt;/div&gt;
+  &lt;input class="three"&gt;
+  &lt;textarea class="four"&gt;4: Lorem Ipsum&lt;/textarea&gt;
+&lt;/div&gt;
+</pre>
+
+<p>결과는 다음과 같습니다.</p>
+
+<p>{{EmbedLiveSample("사용자_지정_속성_첫_단계",600,180)}}</p>
+
+<p>반복되는 CSS에 주목해보세요. 배경 색상은 여러 곳에서 <code>brown</code> 으로 설정되었다. 일부 CSS 선언의 경우 케스케이드에서 더 높은 곳에 선언하고, CSS 상속을 통해 이 문제를 자연스럽게 해결할 수도 있다. 하지만 중요한 프로젝트의 경우에는 이런 방식으로도 해결이 안될 수 있다. :root 가상 클래스에 변수를 선언해 놓고, CSS 작성자가 해당 변수를 사용한다면 위와 같이 반복적으로 속성값을 추가하지 않아도 된다.</p>
+
+<pre class="brush:html">:root {
+  --main-bg-color: brown;
+}
+
+.one {
+  color: white;
+  background-color: var(--main-bg-color);
+  margin: 10px;
+  width: 50px;
+  height: 50px;
+  display: inline-block;
+}
+
+.two {
+  color: white;
+  background-color: black;
+  margin: 10px;
+  width: 150px;
+  height: 70px;
+  display: inline-block;
+}
+.three {
+  color: white;
+  background-color: var(--main-bg-color);
+  margin: 10px;
+  width: 75px;
+}
+.four {
+  color: white;
+  background-color: var(--main-bg-color);
+  margin: 10px;
+  width: 100px;
+}
+
+.five {
+  background-color: var(--main-bg-color);
+}
+</pre>
+
+<p>이전 예제와 동일한 결과물을 얻게 되지만, 원하는 속성을 넣기 위해 한 개의 표준 선언이 추가되었다.</p>
+
+<h2 id="상속">상속</h2>
+
+<p>사용자 지정 속성은 상속을 받는다. 즉, 주어진 요소에 사용자 속성을 위한 값을 지정해 놓지 않으면, 해당 부모의 속성 값이 적용된다:</p>
+
+<pre class="brush: html">&lt;div class="one"&gt;
+  &lt;div class="two"&gt;
+    &lt;div class="three"&gt;&lt;/div&gt;
+    &lt;div class="four"&gt;&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</pre>
+
+<p>CSS는 다음과 같다 :</p>
+
+<pre class="brush: css">.two {
+  --test: 10px;
+}
+
+.three {
+  --test: 2em;
+}
+</pre>
+
+<p>이 경우, <code>var(--test)</code> 의 결과 값은 다음과 같다:</p>
+
+<ul>
+ <li><code>class="two"</code> 요소: <code>10px</code></li>
+ <li><code>class="three"</code> 요소: <code>2em</code></li>
+ <li><code>class="four"</code> 요소: <code>10px</code> (부모로부터 상속받음)</li>
+ <li><code>class="one"</code> 요소: 속성 값 없음, 사용자 지정 속성의 기본 값.</li>
+</ul>
+
+<p>이것들은 실제 CSS변수가 아니라 사용자 지정 속성이라는 것을 염두해 두자. 이 값들은 다른 규칙에서 사용하기 위해 따로 저장되는 것이 아니라, 필요할 때만 계산된다. 예를 들어, 요소의 속성을 설정하거나, 형제의 자손 규칙에서 이 요소를 검색할 수는 없다. 이 속성은 일반적인 CSS와 같이, 선택자가 일치하거나 해당 선택자의 하위 항목일 경우에만 설정된다.</p>
+
+<h2 id="대체값">대체값</h2>
+
+<p>주어진 변수가 아직 정의되지 않았을 때, <a href="/en-US/docs/Web/CSS/var">var()</a> 를 이용하여 여러 개의 <strong>대체 변수</strong>를 정의할 수 있다. 이는 사용자 정의 요소(Custom Element)및 섀도우 돔(Shadow DOM)으로 작업할 때 유용하게 쓸 수 있다.</p>
+
+<p>함수에 있어서의 첫번째 논쟁은 대체될 <a href="https://www.w3.org/TR/css-variables/#custom-property">사용자 속성</a>의 이름이다. 두번째는 아래와 같이 잘못된 <a href="https://www.w3.org/TR/css-variables/#custom-property">사용자 속성</a>을 참조하였을 때 대신 사용할 수 있는 대체 변수이다:</p>
+
+<pre class="brush: css">.two {
+  color: var(--my-var, red); /* --my-var가 정의되지 않았을 경우 red로 표시됨 */
+}
+
+.three {
+  background-color: var(--my-var, var(--my-background, pink)); /* my-var와 --my-background가 정의되지 않았을 경우 pink로 표시됨 */
+}
+
+.three {
+  background-color: var(--my-var, --my-background, pink); /* 유효하지 않음: "--my-background, pink" */
+}</pre>
+
+<div class="note">
+<p><a href="https://www.w3.org/TR/css-variables/#custom-property">사용자 속성</a>같은 대체 구문은 쉼표를 허용한다. 예를 들어, var(--foo, red, blue)는 빨강, 파랑의 fallback을 정의하고 있다; 즉, 첫번째 쉼표와 함수 마지막 사이에 있는 값들은 모두 대체 변수로 간주한다.</p>
+</div>
+
+<h2 id="유효성과_값">유효성과 값</h2>
+
+<p><em>각 속성과 연관된 기본 CSS 개념의 유효성은 사용자 지정 속성과 관련하여 별로 유용하지 않다. 사용자 속성 값을 분석할 때, 브라우저는 그것들이 어디서 사용되는지 모르기 때문에 거의 모든 값을 유효한 것으로 간주할 수 밖에 없다.</em></p>
+
+<p>불행히도, 이 유효한 값들은 <code>var()</code> 함수 표현을 통하여 이해할 수 없는 문맥 안에서도 사용될 수 있다. 속성 및 사용자 변수로 인해 유효하지 않은 CSS 선언문이 만들어지면 계산된 시간에 유효한 새로운 개념이 생기게 된다<em>.</em></p>
+
+<h2 id="유효하지_않은_변수를_만나면">유효하지 않은 변수를 만나면</h2>
+
+<p>When the browser encounters an invalid <code>var()</code> substitution, the initial or inherited value of the property is used.</p>
+
+<p>Consider the code snippet below.</p>
+
+<h3 id="HTML">HTML</h3>
+
+<pre class="brush: html">&lt;p&gt;This paragraph is initial black.&lt;/p&gt; </pre>
+
+<h3 id="CSS">CSS</h3>
+
+<pre class="brush: css">:root { --text-color: 16px; } 
+p { color: blue; } 
+p { color: var(--text-color); }
+</pre>
+
+<p>As expected, the browser substitutes the value of <code>--text-color</code> in place of <code>var(--text-color)</code>, but <code>16px</code> is not a valid property value for {{cssxref("color")}}. After substitution, the property doesn’t make any sense. The browser handles this situation in two steps:</p>
+
+<ol>
+ <li>Check if the property color is inheritable. Yes, but <code>&lt;p&gt;</code> doesn't have any parent with color property. So move on to the next step.</li>
+ <li>Set the value to its <strong>default initial value</strong>, i.e., black.</li>
+</ol>
+
+<h3 id="Result">Result</h3>
+
+<p>{{EmbedLiveSample('What_happens_with_invalid_variables')}}</p>
+
+<p>The paragraph color will not be blue because invalid substitution is replaced by the initial value, not by the fallback. If you had written <code>color: 16px</code> without any variable substitutes, then it was a syntax error. The previous declaration will then be used.</p>
+
+<div class="note">
+<p><strong>Note</strong>: While a syntax error in a CSS property / value pair will lead to the line being ignored, using a cascaded value, invalid substitution -- using a custom property value that is invalid -- is not ignored, leading to the value to be inherited.</p>
+</div>
+
+<h2 id="JavaScript에서의_값">JavaScript에서의 값</h2>
+
+<p>JavaScript로 사용자 속성값을 사용하는 것은 표준 속성을 사용하는 것과 같다.</p>
+
+<pre class="brush: js">// 인라인 스타일에서 변수 얻기
+element.style.getPropertyValue("--my-var");
+
+// 어느 곳에서나 변수 얻기 
+getComputedStyle(element).getPropertyValue("--my-var");
+
+// 인라인 스타일에 변수 설정하기
+element.style.setProperty("--my-var", jsVar + 4);
+</pre>
+
+<h2 id="브라우저_호환성">브라우저 호환성</h2>
+
+<p>{{Compat("css.properties.custom-property")}}</p>
+
+<h2 id="같이_보기">같이 보기</h2>
+
+<ul>
+ <li>{{cssxref("--*", "사용자 지정 속성")}}</li>
+</ul>

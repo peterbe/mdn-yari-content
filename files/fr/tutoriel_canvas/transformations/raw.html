@@ -1,0 +1,265 @@
+<div>{{CanvasSidebar}} {{PreviousNext("Tutoriel_canvas/Utilisation_d'images", " Web/API/Canvas_API/Tutorial/Compositing ")}}</div>
+
+<div class="summary">Précédemment dans ce tutoriel, nous avons étudié la <a href="https://developer.mozilla.org/fr/docs/Tutoriel_canvas/Formes_g%C3%A9om%C3%A9triques">grille du canevas</a> et le <strong>système de coordonnées</strong>. Jusqu'à maintenant, nous avons uniquement utilisé la grille par défaut et modifié la taille de la globalité du canevas afin de répondre à nos besoins. Les transformations que nous allons aborder dans la suite vont nous permettre, de manière plus puissante, d'effectuer des déplacements et des rotations sur la grille et même d'effectuer des mises à l'échelle.</div>
+
+<h2 id="Saving_and_restoring_state" name="Saving_and_restoring_state">Sauvegarde et restauration d'état</h2>
+
+<p>Avant d'étudier les méthodes de transformations, examinons deux autres méthodes qui vont être indispensables à partir du moment où l'on commence à créer des dessins complexes.</p>
+
+<dl>
+ <dt>{{domxref("CanvasRenderingContext2D.save", "save()")}}</dt>
+ <dd>Sauvegarde l'état du canevas dans sa globalité.</dd>
+ <dt>{{domxref("CanvasRenderingContext2D.restore", "restore()")}}</dt>
+ <dd>Restore le plus récent état sauvegardé du canevas.</dd>
+</dl>
+
+<p>Les états du canevas sont stockés dans une pile. Chaque invocation de la méthode <code>save() </code>ajoute une copie de l'état courant du canevas en haut de la pile. L'état du dessin est constitué de :</p>
+
+<ul>
+ <li>les transformations qui ont été appliquées (exemples : déplacement, rotation, mise à l'échelle).</li>
+ <li>Les valeurs actuelles des attributs suivants : {{domxref("CanvasRenderingContext2D.strokeStyle", "strokeStyle")}}, {{domxref("CanvasRenderingContext2D.fillStyle", "fillStyle")}}, {{domxref("CanvasRenderingContext2D.globalAlpha", "globalAlpha")}}, {{domxref("CanvasRenderingContext2D.lineWidth", "lineWidth")}}, {{domxref("CanvasRenderingContext2D.lineCap", "lineCap")}}, {{domxref("CanvasRenderingContext2D.lineJoin", "lineJoin")}}, {{domxref("CanvasRenderingContext2D.miterLimit", "miterLimit")}}, {{domxref("CanvasRenderingContext2D.lineDashOffset", "lineDashOffset")}}, {{domxref("CanvasRenderingContext2D.shadowOffsetX", "shadowOffsetX")}}, {{domxref("CanvasRenderingContext2D.shadowOffsetY", "shadowOffsetY")}}, {{domxref("CanvasRenderingContext2D.shadowBlur", "shadowBlur")}}, {{domxref("CanvasRenderingContext2D.shadowColor", "shadowColor")}}, {{domxref("CanvasRenderingContext2D.globalCompositeOperation", "globalCompositeOperation")}}, {{domxref("CanvasRenderingContext2D.font", "font")}}, {{domxref("CanvasRenderingContext2D.textAlign", "textAlign")}}, {{domxref("CanvasRenderingContext2D.textBaseline", "textBaseline")}}, {{domxref("CanvasRenderingContext2D.direction", "direction")}}, {{domxref("CanvasRenderingContext2D.imageSmoothingEnabled", "imageSmoothingEnabled")}}.</li>
+ <li>Le chemin de découpe (<a href="/en-US/docs/Web/API/Canvas_API/Tutorial/Compositing#Clipping_paths">clipping path</a>) actuel, qu'on abordera plus loin.</li>
+</ul>
+
+<p>La méthode <code>save()</code> peut être invoquée autant de fois que nécessaire. Chaque appel de <code>restore()</code> enlève le dernier état sauvegardé de la pile et tous les paramètres sauvegardés sont restaurés.</p>
+
+<h3 id="A_save_and_restore_canvas_state_example" name="A_save_and_restore_canvas_state_example">Un exemple de sauvegarde et de restauration de l état du canevas.</h3>
+
+<p>Cet exemple tente d'illustrer comment fonctionne la pile d'états de dessin en dessinant un ensemble de rectangles consécutifs.</p>
+
+<pre class="brush: js; highlight:[5,10,15,18] line-numbers  language-js"><code class="language-js"><span class="keyword token">function</span> <span class="function token">draw</span><span class="punctuation token">(</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+  <span class="keyword token">var</span> ctx <span class="operator token">=</span> document<span class="punctuation token">.</span><span class="function token">getElementById</span><span class="punctuation token">(</span><span class="string token">'canvas'</span><span class="punctuation token">)</span><span class="punctuation token">.</span><span class="function token">getContext</span><span class="punctuation token">(</span><span class="string token">'2d'</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+
+  ctx<span class="punctuation token">.</span><span class="function token">fillRect</span><span class="punctuation token">(</span><span class="number token">0</span><span class="punctuation token">,</span> <span class="number token">0</span><span class="punctuation token">,</span> <span class="number token">150</span><span class="punctuation token">,</span> <span class="number token">150</span><span class="punctuation token">)</span><span class="punctuation token">;</span>   <span class="comment token">// Dessine un rectangle avec les réglages par défaut</span>
+  ctx<span class="punctuation token">.</span><span class="function token">save</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">;</span>                  <span class="comment token">// Sauvegarde l'état par défaut</span>
+ 
+  ctx<span class="punctuation token">.</span>fillStyle <span class="operator token">=</span> <span class="string token">'#09F'</span><span class="punctuation token">;</span>      <span class="comment token">// Fait des changements de réglages</span>
+  ctx<span class="punctuation token">.</span><span class="function token">fillRect</span><span class="punctuation token">(</span><span class="number token">15</span><span class="punctuation token">,</span> <span class="number token">15</span><span class="punctuation token">,</span> <span class="number token">120</span><span class="punctuation token">,</span> <span class="number token">120</span><span class="punctuation token">)</span><span class="punctuation token">;</span> <span class="comment token">// Dessine un rectangle avec les nouveaux réglages</span>
+
+  ctx<span class="punctuation token">.</span><span class="function token">save</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">;</span>                  <span class="comment token">// Sauvegarde l'état actuel</span>
+  ctx<span class="punctuation token">.</span>fillStyle <span class="operator token">=</span> <span class="string token">'#FFF'</span><span class="punctuation token">;</span>      <span class="comment token">// Fait des changements de réglages</span>
+  ctx<span class="punctuation token">.</span>globalAlpha <span class="operator token">=</span> <span class="number token">0.5</span><span class="punctuation token">;</span> 
+  ctx<span class="punctuation token">.</span><span class="function token">fillRect</span><span class="punctuation token">(</span><span class="number token">30</span><span class="punctuation token">,</span> <span class="number token">30</span><span class="punctuation token">,</span> <span class="number token">90</span><span class="punctuation token">,</span> <span class="number token">90</span><span class="punctuation token">)</span><span class="punctuation token">;</span>   <span class="comment token">// Dessine un rectangle avec de nouveaux réglages</span>
+
+  ctx<span class="punctuation token">.</span><span class="function token">restore</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">;</span>               <span class="comment token">// Restaure l'état précédent</span>
+  ctx<span class="punctuation token">.</span><span class="function token">fillRect</span><span class="punctuation token">(</span><span class="number token">45</span><span class="punctuation token">,</span> <span class="number token">45</span><span class="punctuation token">,</span> <span class="number token">60</span><span class="punctuation token">,</span> <span class="number token">60</span><span class="punctuation token">)</span><span class="punctuation token">;</span>   <span class="comment token">// Dessine un rectangle avec les réglages restaurés</span>
+
+  ctx<span class="punctuation token">.</span><span class="function token">restore</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">;</span>               <span class="comment token">// Restaure l'état d'origine</span>
+  ctx<span class="punctuation token">.</span><span class="function token">fillRect</span><span class="punctuation token">(</span><span class="number token">60</span><span class="punctuation token">,</span> <span class="number token">60</span><span class="punctuation token">,</span> <span class="number token">30</span><span class="punctuation token">,</span> <span class="number token">30</span><span class="punctuation token">)</span><span class="punctuation token">;</span>   <span class="comment token">// Dessine un rectangle avec les réglages restaurés</span>
+<span class="punctuation token">}</span></code></pre>
+
+<div class="hidden">
+<pre class="brush: html line-numbers  language-html"><code class="language-html"><span class="tag token"><span class="tag token"><span class="punctuation token">&lt;</span>canvas</span> <span class="attr-name token">id</span><span class="attr-value token"><span class="punctuation token">=</span><span class="punctuation token">"</span>canvas<span class="punctuation token">"</span></span> <span class="attr-name token">width</span><span class="attr-value token"><span class="punctuation token">=</span><span class="punctuation token">"</span>150<span class="punctuation token">"</span></span> <span class="attr-name token">height</span><span class="attr-value token"><span class="punctuation token">=</span><span class="punctuation token">"</span>150<span class="punctuation token">"</span></span><span class="punctuation token">&gt;</span></span><span class="tag token"><span class="tag token"><span class="punctuation token">&lt;/</span>canvas</span><span class="punctuation token">&gt;</span></span></code></pre>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js"><span class="function token">draw</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">;</span></code></pre>
+</div>
+
+<p>La première étape consiste à dessiner un grand rectangle avec les paramètres par défaut. Ensuite, nous sauvegardons cet état et modifions la couleur de remplissage. Nous dessinons ensuite le deuxième rectangle bleu et mettons l'état de côté. Encore une fois, nous modifions certains paramètres de dessin et dessinons le troisième rectangle blanc semi-transparent.</p>
+
+<p>Jusqu'à présent, cela ressemble beaucoup à ce que nous avons fait dans les sections précédentes. Cependant, une fois que nous appelons la première instruction <code>restore()</code>, l'état de dessin supérieur est supprimé de la pile et les paramètres sont restaurés. Si nous n'avions pas sauvegardé l'état en utilisant <code>save ()</code>, nous devrions modifier manuellement la couleur de remplissage et la transparence afin de revenir à l'état précédent. Cela serait facile pour deux propriétés, mais si nous avons plus que cela, notre code deviendrait très long très rapidement.</p>
+
+<p>Lorsque la deuxième instruction <code>restore()</code> est appelée, l'état d'origine (celui que nous avons configuré avant le premier appel à enregistrer) est restauré et le dernier rectangle est de nouveau tracé en noir.</p>
+
+<p>{{EmbedLiveSample("A_save_and_restore_canvas_state_example", "180", "180", "https://mdn.mozillademos.org/files/249/Canvas_savestate.png")}}</p>
+
+<h2 id="Translating" name="Translating">Déplacement</h2>
+
+<p><img alt="" class="internal" src="https://mdn.mozillademos.org/files/234/Canvas_grid_translate.png" style="float: right;"> <span id="result_box" lang="fr"><span>La première des méthodes de transformation que nous examinerons est <code>translate ()</code>.</span> <span>Cette méthode est utilisée pour déplacer la toile et son origine vers un autre point de la grille.</span></span></p>
+
+<dl>
+ <dt>{{domxref("CanvasRenderingContext2D.translate", "translate(x, y)")}}</dt>
+ <dd><span id="result_box" lang="fr"><span>Déplace la toile et son origine sur la grille.</span> <span><code>x</code> indique la distance horizontale du déplacement, et <code>y</code> indique à quelle distance déplacer la grille verticalement.</span></span></dd>
+</dl>
+
+<p><span id="result_box" lang="fr"><span>C'est une bonne idée de sauvegarder l'état du canevas avant d'effectuer des transformations.</span> <span>Dans la plupart des cas, il est plus facile d'appeler la méthode </span></span> <code>restore</code> <span lang="fr"><span> que d'avoir à effectuer un déplacement inverse pour revenir à l'état d'origine.</span> <span>De même, si vous déplacez à l'intérieur d'une boucle et que vous ne sauvegardez pas et ne restaurez pas l'état du canevas, il se peut qu'une partie de votre dessin soit manquante, car elle a été dessinée en dehors du bord du canevas.</span></span></p>
+
+<h3 id="A_translate_example" name="A_translate_example">Un exemple <code>translate</code></h3>
+
+<p><span id="result_box" lang="fr"><span>Cet exemple montre certains des avantages du déplacement de l'origine du canevas.</span> <span>Sans la méthode<code> translate ()</code>, tous les rectangles seraient dessinés à la même position (0,0).</span> <span>La méthode <code>translate ()</code> nous donne également la liberté de placer le rectangle n'importe où sur le canevas sans avoir à ajuster manuellement les coordonnées dans la fonction <code>fillRect ()</code>.</span> <span>Cela le rend un peu plus facile à comprendre et à utiliser.</span></span></p>
+
+<p><span id="result_box" lang="fr"><span>Dans la fonction <code>draw ()</code>, nous appelons la fonction <code>fillRect ()</code> neuf fois en utilisant deux boucles </span></span> <code>for</code> <span lang="fr"><span>.</span> <span>Dans chaque boucle, le canevas est déplacé, le rectangle est dessiné et le canevas est retourné à son état d'origine.</span> <span>Notez comment l'appel à <code>fillRect ()</code> utilise les mêmes coordonnées à chaque fois, en s'appuyant sur <code>translate ()</code> pour ajuster la position du dessin.</span></span></p>
+
+<pre class="brush: js; highlight:[7] line-numbers  language-js"><code class="language-js"><span class="keyword token">function</span> <span class="function token">draw</span><span class="punctuation token">(</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+  <span class="keyword token">var</span> ctx <span class="operator token">=</span> document<span class="punctuation token">.</span><span class="function token">getElementById</span><span class="punctuation token">(</span><span class="string token">'canvas'</span><span class="punctuation token">)</span><span class="punctuation token">.</span><span class="function token">getContext</span><span class="punctuation token">(</span><span class="string token">'2d'</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+  <span class="keyword token">for</span> <span class="punctuation token">(</span><span class="keyword token">var</span> i <span class="operator token">=</span> <span class="number token">0</span><span class="punctuation token">;</span> i <span class="operator token">&lt;</span> <span class="number token">3</span><span class="punctuation token">;</span> i<span class="operator token">++</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+    <span class="keyword token">for</span> <span class="punctuation token">(</span><span class="keyword token">var</span> j <span class="operator token">=</span> <span class="number token">0</span><span class="punctuation token">;</span> j <span class="operator token">&lt;</span> <span class="number token">3</span><span class="punctuation token">;</span> j<span class="operator token">++</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+      ctx<span class="punctuation token">.</span><span class="function token">save</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+      ctx<span class="punctuation token">.</span>fillStyle <span class="operator token">=</span> <span class="string token">'rgb('</span> <span class="operator token">+</span> <span class="punctuation token">(</span><span class="number token">51</span> <span class="operator token">*</span> i<span class="punctuation token">)</span> <span class="operator token">+</span> <span class="string token">', '</span> <span class="operator token">+</span> <span class="punctuation token">(</span><span class="number token">255</span> <span class="operator token">-</span> <span class="number token">51</span> <span class="operator token">*</span> i<span class="punctuation token">)</span> <span class="operator token">+</span> <span class="string token">', 255)'</span><span class="punctuation token">;</span>
+      ctx<span class="punctuation token">.</span><span class="function token">translate</span><span class="punctuation token">(</span><span class="number token">10</span> <span class="operator token">+</span> j <span class="operator token">*</span> <span class="number token">50</span><span class="punctuation token">,</span> <span class="number token">10</span> <span class="operator token">+</span> i <span class="operator token">*</span> <span class="number token">50</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+      ctx<span class="punctuation token">.</span><span class="function token">fillRect</span><span class="punctuation token">(</span><span class="number token">0</span><span class="punctuation token">,</span> <span class="number token">0</span><span class="punctuation token">,</span> <span class="number token">25</span><span class="punctuation token">,</span> <span class="number token">25</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+      ctx<span class="punctuation token">.</span><span class="function token">restore</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+    <span class="punctuation token">}</span>
+  <span class="punctuation token">}</span>
+<span class="punctuation token">}</span></code></pre>
+
+<div class="hidden">
+<pre class="brush: html line-numbers  language-html"><code class="language-html"><span class="tag token"><span class="tag token"><span class="punctuation token">&lt;</span>canvas</span> <span class="attr-name token">id</span><span class="attr-value token"><span class="punctuation token">=</span><span class="punctuation token">"</span>canvas<span class="punctuation token">"</span></span> <span class="attr-name token">width</span><span class="attr-value token"><span class="punctuation token">=</span><span class="punctuation token">"</span>150<span class="punctuation token">"</span></span> <span class="attr-name token">height</span><span class="attr-value token"><span class="punctuation token">=</span><span class="punctuation token">"</span>150<span class="punctuation token">"</span></span><span class="punctuation token">&gt;</span></span><span class="tag token"><span class="tag token"><span class="punctuation token">&lt;/</span>canvas</span><span class="punctuation token">&gt;</span></span></code></pre>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js"><span class="function token">draw</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">;</span></code></pre>
+</div>
+
+<p>{{EmbedLiveSample("A_translate_example", "160", "160", "https://mdn.mozillademos.org/files/9857/translate.png")}}</p>
+
+<h2 id="Rotating" name="Rotating">Rotation</h2>
+
+<p><img alt="" class="internal" src="https://mdn.mozillademos.org/files/233/Canvas_grid_rotate.png" style="float: right;">La seconde méthode de transformation est <code>rotate()</code>. <span id="result_box" lang="fr"><span>Nous l'utilisons pour faire pivoter le canevas autour de l'origine actuelle.</span></span></p>
+
+<dl>
+ <dt>{{domxref("CanvasRenderingContext2D.rotate", "rotate(angle)")}}</dt>
+ <dd><span id="result_box" lang="fr"><span>Fait pivoter le canevas, dans le sens des aiguilles d'une montre autour de l'origine actuelle, par le nombre de radians de l'angle</span></span><span lang="fr"><span>.</span></span></dd>
+</dl>
+
+<p><span id="result_box" lang="fr"><span>Le point central de rotation est toujours l'origine de la toile.</span> <span>Pour changer le point central, nous devrons déplacer le canevas en utilisant la méthode <code>translate ()</code>.</span></span></p>
+
+<h3 id="A_rotate_example" name="A_rotate_example">Un exemple <code>rotate</code></h3>
+
+<p><span id="result_box" lang="fr"><span>Dans cet exemple, nous utiliserons la méthode <code>rotate ()</code> pour faire d'abord tourner un rectangle à partir de l'origine du canevas, puis du centre du rectangle lui-même à l'aide de <code>translate ()</code>.</span></span></p>
+
+<div class="note">
+<p><span id="result_box" lang="fr"><span><strong>Rappel :</strong> Les angles sont en radians, pas en degrés.</span> <span>Pour convertir en degrés, nous utilisons :</span></span> <code>radians = (Math.PI/180)*degrees</code>.</p>
+</div>
+
+<pre class="brush: js; highlight:[9, 23] line-numbers  language-js"><code class="language-js"><span class="keyword token">function</span> <span class="function token">draw</span><span class="punctuation token">(</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+  <span class="keyword token">var</span> ctx <span class="operator token">=</span> document<span class="punctuation token">.</span><span class="function token">getElementById</span><span class="punctuation token">(</span><span class="string token">'canvas'</span><span class="punctuation token">)</span><span class="punctuation token">.</span><span class="function token">getContext</span><span class="punctuation token">(</span><span class="string token">'2d'</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+  
+  <span class="comment token">// rectangles de gauche, rotation depuis l'origine du canevas</span>
+  ctx<span class="punctuation token">.</span><span class="function token">save</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+  <span class="comment token">// rectangle bleu</span>
+  ctx<span class="punctuation token">.</span>fillStyle <span class="operator token">=</span> <span class="string token">'#0095DD'</span><span class="punctuation token">;</span>
+  ctx<span class="punctuation token">.</span><span class="function token">fillRect</span><span class="punctuation token">(</span><span class="number token">30</span><span class="punctuation token">,</span> <span class="number token">30</span><span class="punctuation token">,</span> <span class="number token">100</span><span class="punctuation token">,</span> <span class="number token">100</span><span class="punctuation token">)</span><span class="punctuation token">;</span> 
+  ctx<span class="punctuation token">.</span><span class="function token">rotate</span><span class="punctuation token">(</span><span class="punctuation token">(</span>Math<span class="punctuation token">.</span>PI <span class="operator token">/</span> <span class="number token">180</span><span class="punctuation token">)</span> <span class="operator token">*</span> <span class="number token">25</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+  <span class="comment token">// rectangle gris</span>
+  ctx<span class="punctuation token">.</span>fillStyle <span class="operator token">=</span> <span class="string token">'#4D4E53'</span><span class="punctuation token">;</span>
+  ctx<span class="punctuation token">.</span><span class="function token">fillRect</span><span class="punctuation token">(</span><span class="number token">30</span><span class="punctuation token">,</span> <span class="number token">30</span><span class="punctuation token">,</span> <span class="number token">100</span><span class="punctuation token">,</span> <span class="number token">100</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+  ctx<span class="punctuation token">.</span><span class="function token">restore</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+
+  <span class="comment token">// rectangles de droite, rotation depuis le centre du rectangle</span>
+  <span class="comment token">// dessine le rectangle bleu</span>
+  ctx<span class="punctuation token">.</span>fillStyle <span class="operator token">=</span> <span class="string token">'#0095DD'</span><span class="punctuation token">;</span>
+  ctx<span class="punctuation token">.</span><span class="function token">fillRect</span><span class="punctuation token">(</span><span class="number token">150</span><span class="punctuation token">,</span> <span class="number token">30</span><span class="punctuation token">,</span> <span class="number token">100</span><span class="punctuation token">,</span> <span class="number token">100</span><span class="punctuation token">)</span><span class="punctuation token">;</span>  
+  
+  ctx<span class="punctuation token">.</span><span class="function token">translate</span><span class="punctuation token">(</span><span class="number token">200</span><span class="punctuation token">,</span> <span class="number token">80</span><span class="punctuation token">)</span><span class="punctuation token">;</span> <span class="comment token">// déplace au centre du rectangle </span>
+                          <span class="comment token">// x = x + 0.5 * width</span>
+                          <span class="comment token">// y = y + 0.5 * height</span>
+  ctx<span class="punctuation token">.</span><span class="function token">rotate</span><span class="punctuation token">(</span><span class="punctuation token">(</span>Math<span class="punctuation token">.</span>PI <span class="operator token">/</span> <span class="number token">180</span><span class="punctuation token">)</span> <span class="operator token">*</span> <span class="number token">25</span><span class="punctuation token">)</span><span class="punctuation token">;</span> <span class="comment token">// rotation</span>
+  ctx<span class="punctuation token">.</span><span class="function token">translate</span><span class="punctuation token">(</span><span class="operator token">-</span><span class="number token">200</span><span class="punctuation token">,</span> <span class="operator token">-</span><span class="number token">80</span><span class="punctuation token">)</span><span class="punctuation token">;</span> <span class="comment token">// déplace en arrière</span>
+  
+  <span class="comment token">// dessine le rectangle gris</span>
+  ctx<span class="punctuation token">.</span>fillStyle <span class="operator token">=</span> <span class="string token">'#4D4E53'</span><span class="punctuation token">;</span>
+  ctx<span class="punctuation token">.</span><span class="function token">fillRect</span><span class="punctuation token">(</span><span class="number token">150</span><span class="punctuation token">,</span> <span class="number token">30</span><span class="punctuation token">,</span> <span class="number token">100</span><span class="punctuation token">,</span> <span class="number token">100</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+<span class="punctuation token">}</span></code></pre>
+
+<p><span id="result_box" lang="fr"><span>Pour faire pivoter le rectangle autour de son propre centre, nous déplaçons le canevas au centre du rectangle, puis faisons pivoter le canevas, puis le déplaçons à 0,0, puis dessinons le rectangle.</span></span></p>
+
+<div class="hidden">
+<pre class="brush: html line-numbers  language-html"><code class="language-html"><span class="tag token"><span class="tag token"><span class="punctuation token">&lt;</span>canvas</span> <span class="attr-name token">id</span><span class="attr-value token"><span class="punctuation token">=</span><span class="punctuation token">"</span>canvas<span class="punctuation token">"</span></span> <span class="attr-name token">width</span><span class="attr-value token"><span class="punctuation token">=</span><span class="punctuation token">"</span>300<span class="punctuation token">"</span></span> <span class="attr-name token">height</span><span class="attr-value token"><span class="punctuation token">=</span><span class="punctuation token">"</span>200<span class="punctuation token">"</span></span><span class="punctuation token">&gt;</span></span><span class="tag token"><span class="tag token"><span class="punctuation token">&lt;/</span>canvas</span><span class="punctuation token">&gt;</span></span></code></pre>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js"><span class="function token">draw</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">;</span></code></pre>
+</div>
+
+<p>{{EmbedLiveSample("A_rotate_example", "310", "210", "https://mdn.mozillademos.org/files/9859/rotate.png")}}</p>
+
+<h2 id="Scaling" name="Scaling">Mise à l'échelle</h2>
+
+<p><span id="result_box" lang="fr"><span>La méthode de transformation suivante est la mise à l'échelle.</span> <span>Nous l'utilisons pour augmenter ou diminuer les unités de notre grille de canevas.</span> <span>Cela peut être utilisé pour dessiner des formes ou des bitmaps réduits ou agrandis.</span></span></p>
+
+<dl>
+ <dt>{{domxref("CanvasRenderingContext2D.scale", "scale(x, y)")}}</dt>
+ <dd><span id="result_box" lang="fr"><span>Met à l'échelle les unités du canevas avec x horizontalement et y verticalement.</span> <span>Les deux paramètres sont des nombres réels.</span> <span>Les valeurs inférieures à 1,0 réduisent la taille de l'unité et les valeurs supérieures à 1,0 augmentent la taille de l'unité.</span> <span>Les valeurs 1.0 laissent les unités à la même taille.</span></span></dd>
+</dl>
+
+<p><span id="result_box" lang="fr"><span>En utilisant des nombres négatifs, vous pouvez faire une mise en miroir d'axe (par exemple en utilisant <code>translate (0, canvas.height), scale (1, -1)</code>, vous aurez le système de coordonnées cartésien bien connu, avec l'origine dans le coin inférieur gauche).</span></span></p>
+
+<p><span id="result_box" lang="fr"><span>Par défaut, une unité sur la toile est exactement un pixel.</span> <span>Si nous appliquons, par exemple, un facteur d'échelle de 0,5, l'unité résultante deviendrait 0,5 pixels et ainsi les formes seraient dessinées à la moitié de la taille.</span> <span>De la même façon, si nous définissons le facteur d'échelle sur 2.0, la taille de l'unité augmentera et une unité deviendra deux pixels.</span> <span>Cela donne des formes dessinées deux fois plus grandes.</span></span></p>
+
+<h3 id="A_scale_example" name="A_scale_example">Un exemple <code>scale</code></h3>
+
+<p>Dans ce dernier exemple, nous allons dessiner des  <span class="short_text" id="result_box" lang="fr"><span>formes avec différents facteurs d'échelle.</span></span></p>
+
+<pre class="brush: js; highlight:[6,11] line-numbers  language-js"><code class="language-js"><span class="keyword token">function</span> <span class="function token">draw</span><span class="punctuation token">(</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+  <span class="keyword token">var</span> ctx <span class="operator token">=</span> document<span class="punctuation token">.</span><span class="function token">getElementById</span><span class="punctuation token">(</span><span class="string token">'canvas'</span><span class="punctuation token">)</span><span class="punctuation token">.</span><span class="function token">getContext</span><span class="punctuation token">(</span><span class="string token">'2d'</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+
+  <span class="comment token">// dessine un rectangle simple, mais le met à l'échelle.</span>
+  ctx<span class="punctuation token">.</span><span class="function token">save</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+  ctx<span class="punctuation token">.</span><span class="function token">scale</span><span class="punctuation token">(</span><span class="number token">10</span><span class="punctuation token">,</span> <span class="number token">3</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+  ctx<span class="punctuation token">.</span><span class="function token">fillRect</span><span class="punctuation token">(</span><span class="number token">1</span><span class="punctuation token">,</span> <span class="number token">10</span><span class="punctuation token">,</span> <span class="number token">10</span><span class="punctuation token">,</span> <span class="number token">10</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+  ctx<span class="punctuation token">.</span><span class="function token">restore</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+
+  <span class="comment token">// mirror horizontally</span>
+  ctx<span class="punctuation token">.</span><span class="function token">scale</span><span class="punctuation token">(</span><span class="operator token">-</span><span class="number token">1</span><span class="punctuation token">,</span> <span class="number token">1</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+  ctx<span class="punctuation token">.</span>font <span class="operator token">=</span> <span class="string token">'48px serif'</span><span class="punctuation token">;</span>
+  ctx<span class="punctuation token">.</span><span class="function token">fillText</span><span class="punctuation token">(</span><span class="string token">'MDN'</span><span class="punctuation token">,</span> <span class="operator token">-</span><span class="number token">135</span><span class="punctuation token">,</span> <span class="number token">120</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+<span class="punctuation token">}</span></code></pre>
+
+<div class="hidden">
+<pre class="brush: html line-numbers  language-html"><code class="language-html"><span class="tag token"><span class="tag token"><span class="punctuation token">&lt;</span>canvas</span> <span class="attr-name token">id</span><span class="attr-value token"><span class="punctuation token">=</span><span class="punctuation token">"</span>canvas<span class="punctuation token">"</span></span> <span class="attr-name token">width</span><span class="attr-value token"><span class="punctuation token">=</span><span class="punctuation token">"</span>150<span class="punctuation token">"</span></span> <span class="attr-name token">height</span><span class="attr-value token"><span class="punctuation token">=</span><span class="punctuation token">"</span>150<span class="punctuation token">"</span></span><span class="punctuation token">&gt;</span></span><span class="tag token"><span class="tag token"><span class="punctuation token">&lt;/</span>canvas</span><span class="punctuation token">&gt;</span></span></code></pre>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js"><span class="function token">draw</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">;</span></code></pre>
+</div>
+
+<p>{{EmbedLiveSample("A_scale_example", "160", "160", "https://mdn.mozillademos.org/files/9861/scale.png")}}</p>
+
+<h2 id="Transforms" name="Transforms">Transformation</h2>
+
+<p><span id="result_box" lang="fr"><span>Enfin, les méthodes de transformation suivantes appliquent des modifications directement à la matrice de transformation.</span></span></p>
+
+<dl>
+ <dt>{{domxref("CanvasRenderingContext2D.transform", "transform(a, b, c, d, e, f)")}}</dt>
+ <dd><span id="result_box" lang="fr"><span>Multiplie la matrice de transformation actuelle avec la matrice décrite par ses arguments.</span> <span>La matrice de transformation est décrite par</span></span> : <math><semantics><mrow><mo>[</mo><mtable columnalign="center center center" rowspacing="0.5ex"><mtr><mtd><mi>a</mi></mtd><mtd><mi>c</mi></mtd><mtd><mi>e</mi></mtd></mtr><mtr><mtd><mi>b</mi></mtd><mtd><mi>d</mi></mtd><mtd><mi>f</mi></mtd></mtr><mtr><mtd><mn>0</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>1</mn></mtd></mtr></mtable><mo>]</mo></mrow><annotation encoding="TeX">\left[ \begin{array}{ccc} a &amp; c &amp; e \\ b &amp; d &amp; f \\ 0 &amp; 0 &amp; 1 \end{array} \right]</annotation></semantics></math></dd>
+</dl>
+
+<dl>
+ <dd><span id="result_box" lang="fr"><span>Si l'un des arguments est <code>infini</code>, la matrice de transformation doit être marquée comme infinie, plutôt que d'utiliser la méthode qui lance une exception.</span></span></dd>
+</dl>
+
+<p>Les paramètres de cette fonction sont :</p>
+
+<dl>
+ <dt><code>a (m11)</code></dt>
+ <dd>Mise à l'échelle horizontale.</dd>
+ <dt><em><code>b (m12)</code></em></dt>
+ <dd><span class="short_text" id="result_box" lang="fr"><span>Inclinaison horizontale.</span></span></dd>
+ <dt><code>c (m21)</code></dt>
+ <dd><span class="short_text" id="result_box" lang="fr"><span>Inclinaison verticale.</span></span></dd>
+ <dt><code>d (m22)</code></dt>
+ <dd>Mise à l'échelle verticale.</dd>
+ <dt><code>e (dx)</code></dt>
+ <dd>Déplacement horizontal.</dd>
+ <dt><code>f (dy)</code></dt>
+ <dd>Déplacement vertical.</dd>
+ <dt>{{domxref("CanvasRenderingContext2D.setTransform", "setTransform(a, b, c, d, e, f)")}}</dt>
+ <dd><span id="result_box" lang="fr"><span>Réinitialise la transformation en cours dans la matrice d'identité, puis appelle la méthode <code>transform ()</code> avec les mêmes arguments.</span> <span>Cela défait la transformation en cours, puis définit la transformation spécifiée, le tout en une seule étape.</span></span></dd>
+ <dt>{{domxref("CanvasRenderingContext2D.resetTransform", "resetTransform()")}}</dt>
+ <dd><span id="result_box" lang="fr"><span>Réinitialise la transformation en cours à la matrice d'identité.</span> <span>C'est la même chose que d'appeler : <code>ctx.setTransform (1, 0, 0, 1, 0, 0)</code>;</span></span></dd>
+</dl>
+
+<h3 id="Exemple_pour_transform_et_setTransform">Exemple pour <code>transform</code> et <code>setTransform</code></h3>
+
+<pre class="brush: js; highlight:[12,15] line-numbers  language-js"><code class="language-js"><span class="keyword token">function</span> <span class="function token">draw</span><span class="punctuation token">(</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+  <span class="keyword token">var</span> ctx <span class="operator token">=</span> document<span class="punctuation token">.</span><span class="function token">getElementById</span><span class="punctuation token">(</span><span class="string token">'canvas'</span><span class="punctuation token">)</span><span class="punctuation token">.</span><span class="function token">getContext</span><span class="punctuation token">(</span><span class="string token">'2d'</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+
+  <span class="keyword token">var</span> sin <span class="operator token">=</span> Math<span class="punctuation token">.</span><span class="function token">sin</span><span class="punctuation token">(</span>Math<span class="punctuation token">.</span>PI <span class="operator token">/</span> <span class="number token">6</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+  <span class="keyword token">var</span> cos <span class="operator token">=</span> Math<span class="punctuation token">.</span><span class="function token">cos</span><span class="punctuation token">(</span>Math<span class="punctuation token">.</span>PI <span class="operator token">/</span> <span class="number token">6</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+  ctx<span class="punctuation token">.</span><span class="function token">translate</span><span class="punctuation token">(</span><span class="number token">100</span><span class="punctuation token">,</span> <span class="number token">100</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+  <span class="keyword token">var</span> c <span class="operator token">=</span> <span class="number token">0</span><span class="punctuation token">;</span>
+  <span class="keyword token">for</span> <span class="punctuation token">(</span><span class="keyword token">var</span> i <span class="operator token">=</span> <span class="number token">0</span><span class="punctuation token">;</span> i <span class="operator token">&lt;=</span> <span class="number token">12</span><span class="punctuation token">;</span> i<span class="operator token">++</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+    c <span class="operator token">=</span> Math<span class="punctuation token">.</span><span class="function token">floor</span><span class="punctuation token">(</span><span class="number token">255</span> <span class="operator token">/</span> <span class="number token">12</span> <span class="operator token">*</span> i<span class="punctuation token">)</span><span class="punctuation token">;</span>
+    ctx<span class="punctuation token">.</span>fillStyle <span class="operator token">=</span> <span class="string token">'rgb('</span> <span class="operator token">+</span> c <span class="operator token">+</span> <span class="string token">', '</span> <span class="operator token">+</span> c <span class="operator token">+</span> <span class="string token">', '</span> <span class="operator token">+</span> c <span class="operator token">+</span> <span class="string token">')'</span><span class="punctuation token">;</span>
+    ctx<span class="punctuation token">.</span><span class="function token">fillRect</span><span class="punctuation token">(</span><span class="number token">0</span><span class="punctuation token">,</span> <span class="number token">0</span><span class="punctuation token">,</span> <span class="number token">100</span><span class="punctuation token">,</span> <span class="number token">10</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+    ctx<span class="punctuation token">.</span><span class="function token">transform</span><span class="punctuation token">(</span>cos<span class="punctuation token">,</span> sin<span class="punctuation token">,</span> <span class="operator token">-</span>sin<span class="punctuation token">,</span> cos<span class="punctuation token">,</span> <span class="number token">0</span><span class="punctuation token">,</span> <span class="number token">0</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+  <span class="punctuation token">}</span>
+  
+  ctx<span class="punctuation token">.</span><span class="function token">setTransform</span><span class="punctuation token">(</span><span class="operator token">-</span><span class="number token">1</span><span class="punctuation token">,</span> <span class="number token">0</span><span class="punctuation token">,</span> <span class="number token">0</span><span class="punctuation token">,</span> <span class="number token">1</span><span class="punctuation token">,</span> <span class="number token">100</span><span class="punctuation token">,</span> <span class="number token">100</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+  ctx<span class="punctuation token">.</span>fillStyle <span class="operator token">=</span> <span class="string token">'rgba(255, 128, 255, 0.5)'</span><span class="punctuation token">;</span>
+  ctx<span class="punctuation token">.</span><span class="function token">fillRect</span><span class="punctuation token">(</span><span class="number token">0</span><span class="punctuation token">,</span> <span class="number token">50</span><span class="punctuation token">,</span> <span class="number token">100</span><span class="punctuation token">,</span> <span class="number token">100</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+<span class="punctuation token">}</span></code></pre>
+
+<div class="hidden">
+<pre class="brush: html line-numbers  language-html"><code class="language-html"><span class="tag token"><span class="tag token"><span class="punctuation token">&lt;</span>canvas</span> <span class="attr-name token">id</span><span class="attr-value token"><span class="punctuation token">=</span><span class="punctuation token">"</span>canvas<span class="punctuation token">"</span></span> <span class="attr-name token">width</span><span class="attr-value token"><span class="punctuation token">=</span><span class="punctuation token">"</span>200<span class="punctuation token">"</span></span> <span class="attr-name token">height</span><span class="attr-value token"><span class="punctuation token">=</span><span class="punctuation token">"</span>250<span class="punctuation token">"</span></span><span class="punctuation token">&gt;</span></span><span class="tag token"><span class="tag token"><span class="punctuation token">&lt;/</span>canvas</span><span class="punctuation token">&gt;</span></span></code></pre>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js"><span class="function token">draw</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">;</span></code></pre>
+</div>
+
+<p>{{EmbedLiveSample("Example_for_transform_and_setTransform", "230", "280", "https://mdn.mozillademos.org/files/255/Canvas_transform.png")}}</p>
+
+<p>{{PreviousNext("Tutoriel_canvas/Utilisation_d'images", " Web/API/Canvas_API/Tutorial/Compositing ")}}</p>

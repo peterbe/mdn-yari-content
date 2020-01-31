@@ -1,0 +1,149 @@
+<div>{{AddonSidebar}}</div>
+
+<div class="note">
+<p>本文描述的方法适用于Firefox 50及更高的版本。如果你需要使用早期版本的Firefox，请参考这篇文章 <a href="/en-US/Add-ons/WebExtensions/Debugging_(before_Firefox_50)">debugging WebExtensions before Firefox 50</a>.</p>
+</div>
+
+<p>这篇文章解释了如何使用Firefox开发者工具来调试 WebExtensions.</p>
+
+<p>一个 WebExtension 可以包含几个不同的部分 — background scripts，popups，options pages，content scripts — 每个部分的调试流程都略微不同。本文中，每个部分都占用了一个大的章节，每个章节都可以独立阅读.。我们先介绍附加组件调试器，你将用它调试你大多数的附加组件程序。</p>
+
+<ul>
+</ul>
+
+<h2 id="附加组件调试器">附加组件调试器</h2>
+
+<p>在这篇文章的大部分地方，我们将使用附加组件调试器。为了打开附加组件调试器：</p>
+
+<ul>
+ <li>访问 “about:debugging”</li>
+ <li>勾选复选框 “启用附加组件调试”</li>
+ <li>点击你的附加组件旁边的 “调试” 按钮</li>
+ <li>在警告窗口中点击“确认”。</li>
+</ul>
+
+<p>你将会看到一个新打开的窗口。Firefox的主窗口会切换到前台，所以你需要点击新打开的窗口，并把它拖到前面。</p>
+
+<p>{{EmbedYouTube("HMozipAjrYA")}}</p>
+
+<p>这个新窗口有时被称为 “工具箱（toolbox）”， 它包含了我们将要使用的调试工具。它有一个选项卡式的界面：顶部有一排选项卡，允许你在不同的工具间切换：</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/13861/toolbox-tabs.png" style="display: block; height: 417px; margin-left: auto; margin-right: auto; width: 876px;"></p>
+
+<p>在这篇文章中我们将使用三个调试工具：</p>
+
+<ul>
+ <li><a href="/en-US/docs/Tools/Web_Console">控制台</a>：这里显示由附加组件记录的日志以及浏览器运行附加组件时记录的错误信息。它也提供一个命令行工具，允许你在在附加组件的环境中执行javaScript脚本。</li>
+ <li><a href="/en-US/docs/Tools/Debugger">调试器</a>：它允许你在你的附加组件的javaScript脚本中设置断点和观察点，检查和修改它内部的状态。</li>
+ <li><a href="/en-US/docs/Tools/Page_Inspector">查看器</a>：它允许你检查和修改构成附加组件页面的HTML和CSS。</li>
+</ul>
+
+<h2 id="调试_background_scripts">调试 background scripts</h2>
+
+<div class="note">
+<p>本章节的例子使用了示例附加组件 “notify-link-clicks-l10n”。如果你想跟着一起做，你可以在 <a href="https://github.com/mdn/webextensions-examples">webextensions-examples</a> 中找到这个示例。</p>
+</div>
+
+<p><a href="/en-US/Add-ons/WebExtensions/Anatomy_of_a_WebExtension#Background_scripts">Background scripts</a> 在附加组件的生命周期内都保持在加载状态.。它们被加载在一个不可见的 “background page”中：默认情况下是一个空HTML文档，不过你也可以指定为你自己的HTML内容，通过使用 <a href="/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/background">“background" key in "manifest.json”</a>。</p>
+
+<p>你可以使用<a href="/en-US/Add-ons/WebExtensions/Debugging_(Firefox_50_onwards)#The_Add-on_Debugger">附加组件调试器</a>来调试 background scripts。</p>
+
+<p>在附加组件调试器的<a href="/en-US/docs/Tools/Web_Console">控制台</a>中你可以查看日志输出，包括你自己的background scripts中调用的 <code><a href="/en-US/docs/Web/API/Console/log">console.log()</a></code> 以及任何浏览器运行它们时上报的错误。注意，目前<a href="/en-US/docs/Tools/Web_Console">控制台</a>显示所有浏览器上报的错误，不只是和你的附加组件代码相关的错误。</p>
+
+<p>例如， 示例附加组件 <a href="https://github.com/mdn/webextensions-examples/tree/master/notify-link-clicks-i18n">notify-link-clicks-i18n</a> ，当 background script 收到来自 content scripts 的消息后，会记录下来：</p>
+
+<p>{{EmbedYouTube("WDQsBU-rpN0")}}</p>
+
+<p>使用<a href="/en-US/docs/Tools/Web_Console">控制台</a>工具的命令行，你可以访问和修改由你的background scripts创建的对象。</p>
+
+<p>例如，我们调用 notify() 函数，它定义在附加组件的background script中：</p>
+
+<p>{{EmbedYouTube("g-Qgf8Mc2wg")}}</p>
+
+<p>如果你切换到<a href="/en-US/docs/Tools/Debugger">调试器</a>工具，你将看到附加组件中所有的background scripts。你可以设置断点，单步执行，<a href="https://developer.mozilla.org/en-US/docs/Tools/Debugger">做一些你期望能够在</a><a href="/en-US/docs/Tools/Debugger">调试器</a>中做的事.</p>
+
+<p>{{EmbedYouTube("MNeaz2jdmzY")}}</p>
+
+<p>如果你在<a href="/en-US/docs/Tools/Debugger">调试器</a>工具内按下 Escape 键，toolbox将被拆分，底部的部分被<a href="/en-US/docs/Tools/Web_Console">控制台</a>占用。当遇到一个断点时，你可以使用<a href="/en-US/docs/Tools/Web_Console">控制台</a>修改程序的状态。更多信息查看 <a href="/en-US/docs/Tools/Web_Console/Split_console">Split console</a>。</p>
+
+<h2 id="调试_options_pages">调试 options pages</h2>
+
+<p><a href="/en-US/Add-ons/WebExtensions/Anatomy_of_a_WebExtension#Options_pages">Options pages</a> 是附加组件开发者提供的一些HTML页面，它们包含了附加组件的配置。它们通常在附加组件管理器中的 iframe 中显示。（访问“about:addons”来查看附加组件管理器）。</p>
+
+<p>为了调试 options pages：</p>
+
+<ul>
+ <li>为你的附加组件打开 <a href="/en-US/Add-ons/WebExtensions/Debugging_(Firefox_50_onwards)#The_Add-on_Debugger">附加组件调试器</a></li>
+ <li>打开你的附加组件的option page.</li>
+</ul>
+
+<p>任何它包含的JacaScript源码都会列在<a href="/en-US/docs/Tools/Debugger">调试器</a>中：</p>
+
+<p>{{EmbedYouTube("BUMG-M8tFF4")}}</p>
+
+<div class="note">
+<p>这个视频使用了名为 <a href="https://github.com/mdn/webextensions-examples/tree/master/favourite-colourbeastify">favourite-colour</a> 的示例 WebExtension.</p>
+</div>
+
+<p>你也会在附加组件调试器的<a href="/en-US/docs/Tools/Web_Console">控制台</a>里看到所有由你代码记录的消息。</p>
+
+<p>你也可以使用附加组件调试器来调试HTML和CSS。<span class="short_text" id="result_box" lang="zh-CN"><span>首先，你需要将工具指向主机配置页面的iframe。</span></span>这样做： 打开配置页面，点击下面截图中高亮的图标，并且在下拉列表中选择options page：</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/13863/toolbox-iframe.png" style="display: block; height: 417px; margin-left: auto; margin-right: auto; width: 876px;">现在切换到<a href="/en-US/docs/Tools/Page_Inspector">查看器</a>，你将被允许检查和编辑这个页面的HTML及CSS。</p>
+
+<p>{{EmbedYouTube("-2m3ubFAU94")}}</p>
+
+<h2 id="调试popups">调试popups</h2>
+
+<p><a href="/en-US/docs/Mozilla/Add-ons/WebExtensions/Popups">Popups</a> 是附加到浏览器或页面的弹出窗口。它指定一个HTML文件，可以包含CSS和JavaScript来定义样式和行为。 当popup可访问的时候， 你可以使用 <a href="/en-US/Add-ons/WebExtensions/Debugging_(Firefox_50_onwards)#The_Add-on_Debugger">附加组件调试器</a> 来调试它的源码。</p>
+
+<p>popups存在一个问题，当popup被打开后你点击了popup以外的地方，popup就会关闭并且它的代码就被卸载了。很显然，这使得它们难以被调试。为了停止这个行为，点击下图附件组件调试器中高亮的按钮：</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/13877/toolbox-popup.png" style="display: block; height: 417px; margin-left: auto; margin-right: auto; width: 876px;">现在，当你打开一个popup，它会一直保持打开状态，直到你按下了Escape键。</p>
+
+<div class="note">
+<p>注意，这个改变同样被应用在了浏览器内建的popups，比如汉堡包按钮（<img alt="" src="https://mdn.mozillademos.org/files/12712/hamburger.png" style="height: 20px; width: 22px;">），它也和附件组件的popups一样。</p>
+
+<p>同样注意，这个改变是持久的，即便是浏览器重启后依然有效。 我们正在努力的修复这个BUG <a class="external external-icon" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1251658">bug 1251658</a>，但是你也可以在关闭浏览器工具箱前再点击那个按钮来允许自动隐藏功能。</p>
+
+<p>在内部，这个按钮只是切换了 <code>ui.popup.disable_autohide</code> 的偏好设置，你可以在 about:config中手动修改它。</p>
+</div>
+
+<p>当popup被打开后，它的 JavaScript 代码会在<a href="/en-US/docs/Tools/Debugger">调试器</a>中列出。你可以设置断点并且修改程序的状态：</p>
+
+<p>{{EmbedYouTube("hzwnR8qoz2I")}}</p>
+
+<div class="note">
+<p>这个视频使用了 <a href="https://github.com/mdn/webextensions-examples/tree/master/beastify">beastify</a> 的示例 WebExtension。</p>
+</div>
+
+<p>你也可以使用附加组件调试器来调试popup's的HTML和CSS。首先，你需要将调试工具指向popup页面。为此：打开popup，然后点击下图中高亮的按钮并且在下拉列表中选择对应的popup的页面：<img alt="" src="https://mdn.mozillademos.org/files/13863/toolbox-iframe.png" style="display: block; height: 417px; margin-left: auto; margin-right: auto; width: 876px;"></p>
+
+<p>现在切换到<a href="/en-US/docs/Tools/Page_Inspector">查看器</a>，你将被允许测试和编辑popup的HTML和CSS：</p>
+
+<p>{{EmbedYouTube("6lvdm7jaq7Y")}}</p>
+
+<h2 id="调试content_scripts">调试content scripts</h2>
+
+<p>你可以使用附加组件调试器去调试background pages，options pages 和 popups。然而，你不能使用它去调试content scripts。这是因为，在<a href="/en-US/docs/Mozilla/Firefox/Multiprocess_Firefox">多进程Firefox浏览器</a>中，content scripts 运行在不同的进程中。</p>
+
+<p>为了调试附加在一个网页的 content scripts，使用这个网页的web开发者工具：</p>
+
+<ul>
+ <li>选择Firefox菜单中打开web开发者子菜单，然后选择 "Toggle Tools"（或者工具按钮，如果你有显示菜单栏或者是在Mac OS X中）</li>
+ <li>或者按下快捷键 <kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>I</kbd> (<kbd>Command</kbd><kbd>Option</kbd><kbd>I</kbd> 如果是OS X) 。</li>
+</ul>
+
+<p>{{EmbedYouTube("f46hMLELyaI")}}</p>
+
+<p>默认的，工具将显示在在浏览器tab页面的底部，用于表示它是附加在该tab页面的。你也可以看到content scripts中通过<code><a href="/en-US/docs/Web/API/Console/log">console.log()</a></code>打印的内容。你也可以在<a href="/en-US/docs/Tools/Debugger">调试器</a>中看到content scripts的列表，你可以设置断点，单步调试等等。</p>
+
+<p>{{EmbedYouTube("Hx3GU_fEPeo")}}</p>
+
+<div class="note">
+<p>这个视频使用了 <a href="https://github.com/mdn/webextensions-examples/tree/master/notify-link-clicks-i18n">notify-link-clicks-i18n</a> 的示例 WebExtension.</p>
+</div>
+
+<div class="note">
+<p>如果开发者工具还没有完全打开content scripts就被注入了，有时候content scripts不会被列在<a href="/en-US/docs/Tools/Debugger">调试器</a>中。如果遇到这个问题，在开发者工具打开的状态下重新加载这个页面应该就可以解决。</p>
+</div>

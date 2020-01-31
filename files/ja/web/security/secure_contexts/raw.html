@@ -1,0 +1,60 @@
+<p><span class="seoSummary"><strong>安全なコンテキスト (Secure Context)</strong> とは、(HTTPS / TLS を介して) コンテンツが安全に配信され、安全では<strong>ない</strong>コンテキストとの通信の可能性が限られているという合理的な確信がある <code>Window</code>、または <code>Worker</code> のことです。</span>多くのウェブ API が安全なコンテキストでのみ利用可能です。安全なコンテキストの主目的は、{{interwiki("wikipedia", "中間者攻撃", "中間者攻撃者")}}が被害者に更なる危険にさらす可能性がある強力な API にアクセスするのを防ぐことにあります。</p>
+
+<h2 id="Why_should_some_features_be_restricted" name="Why_should_some_features_be_restricted">機能をアクセス制限すべき理由</h2>
+
+<p>ウェブの API には強力なものもあり、攻撃者に対して以下のような (それよりも多くの) 能力を与えてしまう可能性があります。</p>
+
+<ul>
+ <li>ユーザーのプライバシーを侵害する</li>
+ <li>ユーザーのコンピューターに対して低水準のアクセス権限を得る</li>
+ <li>ユーザーの認証情報のようなデータへのアクセス権限を得る</li>
+</ul>
+
+<h2 id="When_is_a_context_considered_secure" name="When_is_a_context_considered_secure">コンテキストが安全とみなされる条件</h2>
+
+<p>コンテキストは、安全に (またはローカルに) 配信されたとき、およびセキュリティで保護されていないコンテキストにセキュアな API へのアクセスを提供していないときに、安全とみなされます。実際には、ページが安全なコンテキストを持つためには、ページとその親、オープナーチェーンに沿ったすべてのページが安全に配信されていなければならないことを意味します。</p>
+
+<p>たとえば、親や祖先のドキュメントが安全に提供されていない場合、TLS で提供されているページであったとしても安全とはみなされ<strong>ません</strong>。そうでなければ、ページは <a href="/ja/docs/Web/API/Window/postMessage">postMessage</a> メッセージを介して先祖に安全ではない API を先祖に公開することになるからです。同様に、TLS で提供されたドキュメントが、<a href="/ja/docs/Web/API/Window/open#noopener">noopener</a> が指定せずに安全でないコンテキストによって新しいウィンドウに開かれた場合も、安全なコンテキストとみなされ<strong>ません</strong> (オープナーと開かれたウィンドウが postMessage で通信できるからです)。</p>
+
+<p><em>http://localhost</em> や <em>file://</em> のようなパスを持つローカルファイルは安全とみなされます。</p>
+
+<p>ローカルに存在しないコンテキストが安全であるためには、<em>https://</em> や <em>wss://</em> のスキームで、かつ廃止されていないプロトコルで送信されなければなりません。</p>
+
+<h2 id="Feature_detection" name="Feature_detection">機能の判別</h2>
+
+<p>グローバルスコープで利用できる {{domxref("WindowOrWorkerGlobalScope.isSecureContext", "isSecureContext")}} の真偽値を用いることで、そのページ自身が安全なコンテキストの中にいるかどうか確かめることができます。</p>
+
+<pre class="brush: js">if (window.isSecureContext) {
+  // Service Worker が実行されているので、このページは安全なコンテキストです
+  navigator.serviceWorker.register("/offline-worker.js").then(function () {
+    ...
+  });
+}</pre>
+
+<h2 id="Specifications" name="Specifications">仕様書</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">状態</th>
+   <th scope="col">備考</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('Secure Contexts')}}</td>
+   <td>{{Spec2('Secure Contexts')}}</td>
+   <td>編集者による草稿</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li><a href="/ja/docs/Web/Security/Secure_Contexts/features_restricted_to_secure_contexts">安全なコンテキストに制限されたプラットフォーム機能</a> — 安全なコンテキストでのみ使用できる機能のリスト</li>
+ <li>{{domxref("Window.isSecureContext")}}</li>
+ <li><a href="https://permission.site">https://permission.site</a> — HTTP と HTTPS を使用して、ブラウザーが使用している API のアクセス許可チェックを確認できるサイト。</li>
+ <li><a href="https://wiki.developer.mozilla.org/ja/docs/Web/HTTP/Headers/Strict-Transport-Security">Strict-Transport-Security</a> HTTP ヘッダー</li>
+</ul>
+
+<div>{{QuickLinksWithSubpages("/ja/docs/Web/Security")}}</div>

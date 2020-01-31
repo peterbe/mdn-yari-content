@@ -1,0 +1,153 @@
+<div>{{jsSidebar("Statements")}}</div>
+
+<p><strong>for..in 文</strong>は、指定したオブジェクトの<a href="/ja/docs/Web/JavaScript/Enumerability_and_ownership_of_properties">列挙可能プロパティ</a>に対して、順不同で反復処理をします。各プロパティに対して、指定された文を実行できます。</p>
+
+<div>{{EmbedInteractiveExample("pages/js/statement-forin.html")}}</div>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<h2 id="構文">構文</h2>
+
+<pre class="syntaxbox">for (<var>variable</var> in <var>object</var>) {<em>... </em>}</pre>
+
+<dl>
+ <dt><code>variable</code></dt>
+ <dd>反復するごとに、<code>variable </code>に異なるプロパティ名が代入されます。</dd>
+ <dt><code>object</code></dt>
+ <dd>このオブジェクトの列挙可能プロパティに対して反復処理がされます。</dd>
+</dl>
+
+<h2 id="Description" name="Description">説明</h2>
+
+<p><code>for...in</code> ループは列挙可能プロパティに対してのみ反復されます。<code>Array</code> や <code>Object</code> のようなビルトインのコンストラクタから生成したオブジェクトは、<code><a href="/ja/docs/JavaScript/Reference/Global_Objects/String">String</a></code> の <code><a href="/ja/docs/JavaScript/Reference/Global_Objects/String/indexOf">indexOf</a></code> メソッドや <code><a href="/ja/docs/JavaScript/Reference/Global_Objects/Object">Object</a></code> の <code><a href="/ja/docs/JavaScript/Reference/Global_Objects/Object/toString">toString</a></code> メソッドといった、<code>Objet.prototype</code> や <code>String.prototype</code> から列挙可能でないプロパティを継承しています。このループは、対象オブジェクト自身とそのオブジェクトがプロトタイプから継承しているすべての列挙可能なプロパティを反復します (プロトタイプチェーンで対象オブジェクトに近いプロパティは、親プロトタイプのプロパティを上書きする)。</p>
+
+<h3 id="プロパティの変更や削除">プロパティの変更や削除</h3>
+
+<p><code>for...in</code> ループは、任意の順序でオブジェクトのプロパティに対して反復します (なぜ繰り返しの見かけの順序に依存できないのかについては、詳細は {{jsxref("Operators/delete", "delete")}} オペレーターを見てください} 。</p>
+
+<p>もしプロパティがある反復で修正されて、その後に訪問されたなら、ループにより公開される値は後の時点での値となります。訪問される前に削除されたプロパティは、それから後には訪問されません。オブジェクトに対する反復が起きている中でそのオブジェクトに追加されたプロパティは、訪問されるかもしれませんし反復から省略されるかもしれません。</p>
+
+<p>一般的に、現在訪問しているプロパティ以外のものに関しては、反復の間はオブジェクトにプロパティを追加、修正、または削除しないのが一番です。追加したプロパティが訪問されるか、(現在のもの以外の)修正したプロパティが修正される前または後に訪問されるか、または削除したプロパティが削除される前に訪問されるかといったことには、何の保証もありません。</p>
+
+<h3 id="Array_iteration_and_for...in" name="Array_iteration_and_for...in">配列の繰り返しと <code>for...in</code></h3>
+
+<div class="note">
+<p><strong>注:</strong> <code>for...in</code> はインデックスの順序が重要となる {{jsxref("Array", "配列")}} の繰り返しには使うべきではありません。</p>
+</div>
+
+<p>配列のインデックスは単に整数値の名前で列挙できるプロパティであり、そうでないと一般的なオブジェクトのプロパティとして一意になりません。<code>for...in</code> は特定の順序で並べられる保証はありません。<code>for...in</code> ループ文はすべての列挙できるプロパティを返し、その中には非整数型やそれを引き継いだインデックス名があります。</p>
+
+<p>繰り返しの順序が実装依存なため、配列の繰り返しは要素を一貫した順番で参照することになるとは限りません。このため、アクセスの順番が大事となる配列を繰り返す時には、数値のインデックスでの {{jsxref("Statements/for", "for")}} ループ (か {{jsxref("Array.prototype.forEach()")}} か {{jsxref("Statements/for...of", "for...of")}} ループ) を使った方が良いです。</p>
+
+<h3 id="Iterating_over_own_properties_only" name="Iterating_over_own_properties_only">独自のプロパティだけで繰り返す</h3>
+
+<p>オブジェクトに付属するプロパティだけを考えればよい場合、 {{jsxref("Object.getOwnPropertyNames", "getOwnPropertyNames()")}} を使うか、 {{jsxref("Object.prototype.hasOwnProperty", "hasOwnProperty()")}} を実行してチェックします({{jsxref("Object.prototype.propertyIsEnumerable", "propertyIsEnumerable")}} も使用できます)。または、外部のコードインターフェイスをまったく知らない場合は、チェックメソッドを備えた組み込みの prototypes を継承できます。</p>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<p>次の関数は、オブジェクトとそのオブジェクトの名前を引数として取ります。そして、そのオブジェクトの全プロパティに対して反復し、プロパティ名とその値を一覧にした文字列を返します。</p>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js"><span class="keyword token">var</span> obj <span class="operator token">=</span> <span class="punctuation token">{</span>a<span class="punctuation token">:</span> <span class="number token">1</span><span class="punctuation token">,</span> b<span class="punctuation token">:</span> <span class="number token">2</span><span class="punctuation token">,</span> c<span class="punctuation token">:</span> <span class="number token">3</span><span class="punctuation token">}</span><span class="punctuation token">;</span>
+    
+<span class="keyword token">for</span> <span class="punctuation token">(</span><span class="keyword token">const</span> prop <span class="keyword token">in</span> obj<span class="punctuation token">)</span> <span class="punctuation token">{</span>
+  console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(</span><span class="template-string token"><span class="string token">`obj.</span><span class="interpolation token"><span class="interpolation-punctuation punctuation token">${</span>prop<span class="interpolation-punctuation punctuation token">}</span></span><span class="string token"> = </span><span class="interpolation token"><span class="interpolation-punctuation punctuation token">${</span>obj<span class="punctuation token">[</span>prop<span class="punctuation token">]</span><span class="interpolation-punctuation punctuation token">}</span></span><span class="string token">`</span></span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+<span class="punctuation token">}</span>
+
+<span class="comment token">// Output:</span>
+<span class="comment token">// "obj.a = 1"</span>
+<span class="comment token">// "obj.b = 2"</span>
+<span class="comment token">// "obj.c = 3"</span></code></pre>
+
+<p>次の関数では {{jsxref("Object.prototype.hasOwnProperty", "hasOwnProperty()")}}: の使い方を例示しています。継承されたプロパティは表示されません。</p>
+
+<pre class="brush: js line-numbers  language-js"><code class="language-js"><span class="keyword token">var</span> triangle <span class="operator token">=</span> <span class="punctuation token">{</span>a<span class="punctuation token">:</span> <span class="number token">1</span><span class="punctuation token">,</span> b<span class="punctuation token">:</span> <span class="number token">2</span><span class="punctuation token">,</span> c<span class="punctuation token">:</span> <span class="number token">3</span><span class="punctuation token">}</span><span class="punctuation token">;</span>
+
+<span class="keyword token">function</span> <span class="function token">ColoredTriangle</span><span class="punctuation token">(</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+  <span class="keyword token">this</span><span class="punctuation token">.</span>color <span class="operator token">=</span> <span class="string token">'red'</span><span class="punctuation token">;</span>
+<span class="punctuation token">}</span>
+
+ColoredTriangle<span class="punctuation token">.</span>prototype <span class="operator token">=</span> triangle<span class="punctuation token">;</span>
+
+<span class="keyword token">var</span> obj <span class="operator token">=</span> <span class="keyword token">new</span> <span class="class-name token">ColoredTriangle</span><span class="punctuation token">(</span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+
+<span class="keyword token">for</span> <span class="punctuation token">(</span><span class="keyword token">const</span> prop <span class="keyword token">in</span> obj<span class="punctuation token">)</span> <span class="punctuation token">{</span>
+  <span class="keyword token">if</span> <span class="punctuation token">(</span>obj<span class="punctuation token">.</span><span class="function token">hasOwnProperty</span><span class="punctuation token">(</span>prop<span class="punctuation token">)</span><span class="punctuation token">)</span> <span class="punctuation token">{</span>
+    console<span class="punctuation token">.</span><span class="function token">log</span><span class="punctuation token">(</span><span class="template-string token"><span class="string token">`obj.</span><span class="interpolation token"><span class="interpolation-punctuation punctuation token">${</span>prop<span class="interpolation-punctuation punctuation token">}</span></span><span class="string token"> = </span><span class="interpolation token"><span class="interpolation-punctuation punctuation token">${</span>obj<span class="punctuation token">[</span>prop<span class="punctuation token">]</span><span class="interpolation-punctuation punctuation token">}</span></span><span class="string token">`</span></span><span class="punctuation token">)</span><span class="punctuation token">;</span>
+  <span class="punctuation token">}</span> 
+<span class="punctuation token">}</span>
+
+<span class="comment token">// Output:</span>
+<span class="comment token">// "obj.color = red"</span></code></pre>
+
+<h2 id="仕様">仕様</h2>
+
+<table>
+ <tbody>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">策定状況</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-for-in-and-for-of-statements', 'for...in statement')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td></td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-for-in-and-for-of-statements', 'for...in statement')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td></td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-12.6.4', 'for...in statement')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td></td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES3', '#sec-12.6.4', 'for...in statement')}}</td>
+   <td>{{Spec2('ES3')}}</td>
+   <td></td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES1', '#sec-12.6.3', 'for...in statement')}}</td>
+   <td>{{Spec2('ES1')}}</td>
+   <td>初期定義</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="ブラウザ互換性">ブラウザ互換性</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.statements.for_in")}}</p>
+
+<h2 id="Compatibility_Initializer_expressions" name="Compatibility_Initializer_expressions">互換性: 初期化式</h2>
+
+<p>SpiderMonkey 40 {{geckoRelease(40)}} より前では、<code>for...in</code> ループ内で初期化式(<code>i=0</code>) が使用可能でした:</p>
+
+<pre><code>var obj = {a:1, b:2, c:3};
+for(var i=0 in obj) {
+  console.log(obj[i]);
+}
+// 1
+// 2
+// 3</code></pre>
+
+<p>この非標準な動作はバージョン 40 以降では無視され、<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Strict_mode">strict mode</a> での {{jsxref("SyntaxError")}} ("<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Invalid_for-in_initializer">for-in loop head declarations may not have initializers</a>") エラーが防がれます  ({{bug(748550)}} と {{bug(1164741)}})。</p>
+
+<p>v8 (Chrome), Chakra (IE/Edge), JSC (WebKit/Safari) といった他のエンジンも同様に非標準のふるまいを削除するよう開発しています。</p>
+
+<h2 id="関連項目">関連項目</h2>
+
+<ul>
+ <li>{{jsxref("Statements/for...of", "for...of")}} - プロパティ値に対して繰り返す同様の文</li>
+ <li><a href="/ja/docs/JavaScript/Reference/Statements/for_each...in">for each...in</a> - <code>for...in</code> に似ていますが、プロパティ名そのものではなく、オブジェクトのプロパティの値に対して反復します。(廃止されました)</li>
+ <li>{{jsxref("Statements/for", "for")}}</li>
+ <li><a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Guide/Iterators_and_Generators">Generator expressions</a> (<code>or...in</code> を使っている)</li>
+ <li><a href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Enumerability_and_ownership_of_properties">Enumerability and ownership of properties</a></li>
+ <li>{{jsxref("Object.getOwnPropertyNames()")}}</li>
+ <li>{{jsxref("Object.prototype.hasOwnProperty()")}}</li>
+ <li>{{jsxref("Array.prototype.forEach()")}}</li>
+</ul>
+

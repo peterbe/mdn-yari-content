@@ -1,0 +1,361 @@
+<p>{{ Note("This page used to be linked from <a href='\"en/Windows_Build_Prerequisites\"'>Windows Build Prerequisites</a> and should be again.") }}</p>
+
+<p>Cet article décrit la compilation de Mozilla en utilisant Mingw sur Windows sans installer Microsoft Visual Studio en 14 étapes. Les versions compilées dans cet article ont été compilées en mode debug.</p>
+
+<h3 id="Disk_space_requirements" name="Disk_space_requirements">Espace Requis</h3>
+
+<p>Vous allez avoir besoin d'au moins 3.7 Go d'espace libre sur votre disque pour télécharger les outils et le code source, y compris une fois compilé.</p>
+
+<h3 id="Create_the_main_directory" name="Create_the_main_directory">Création du dossier principal</h3>
+
+<p>Tous les outils et le code source seront stockés dans ce dossier <code>C:\mozilla\</code>, il faut donc le créer en premier.</p>
+
+<pre class="eval">mkdir C:\mozilla\
+</pre>
+
+<h3 id="Get_the_GNU_tools_for_Microsoft_Windows_.28Cygwin.29" name="Get_the_GNU_tools_for_Microsoft_Windows_.28Cygwin.29">Télécharger les outils GNU pour Microsoft Windows (Cygwin)</h3>
+
+<p>Télécharger Cygwin. C'est une compilation d'outils fonctionnant sous Windows.</p>
+
+<ul>
+ <li><a href="https://www.cygwin.com/setup-x86.exe">32 Bits</a></li>
+ <li><a href="https://www.cygwin.com/setup-x86_64.exe">64 Bits</a></li>
+ <li><a href="www.cygwin.com">A Propos</a></li>
+</ul>
+
+<p>Installer les outils dans le dossier <code>C:\mozilla\cygwin\.</code></p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/11367/cygwin01.png" style="height: 392px; width: 530px;"></p>
+
+<p>En plus des outils de base, vous devrez installer:</p>
+
+<ul>
+ <li>cygutils (Utils)</li>
+ <li>make (Devel)</li>
+ <li>patch (Utils)</li>
+ <li>patchutils (Devel)</li>
+ <li>autoconf (Devel)</li>
+ <li>perl (Perl)</li>
+ <li>python (Python)</li>
+ <li>unzip (Archive)</li>
+ <li>zip (Archive)</li>
+ <li>m4 (interpreters)</li>
+</ul>
+
+<p>Pour installer ces outils optionnels, cliquez sur le bouton Curr puis cherchez les outils individuellement dans la zone de recherche.</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/11369/cygwin02.png" style="height: 392px; width: 533px;"></p>
+
+<p>Les outils suivants sont censés être installés de base, mais veuillez vérifier qu'ils sont tous sélectionnés.</p>
+
+<ul>
+ <li>ash</li>
+ <li>diffutils</li>
+ <li>fileutils</li>
+ <li>findutils</li>
+ <li>gawk</li>
+ <li>grep</li>
+ <li>sed</li>
+ <li>sh-utils</li>
+ <li>textutils</li>
+</ul>
+
+<h3 id="Get_the_Mozilla_wintools" name="Get_the_Mozilla_wintools">Télécharger Mozilla wintools</h3>
+
+<p>Netscape a modifié de nombreux outils GNU en ligne de commande pour résoudre certains problèmes souvent liés au makefile et à la compatibilité avec la compilation style GNU UNIX.</p>
+
+<ul>
+ <li><a href="http://ftp.mozilla.org/pub/mozilla.org/mozilla/source/wintools.zip">Télécharger</a></li>
+</ul>
+
+<p>Décompresser le fichier dans un dossier temporaire. Puis ouvrez un invité de commandes et faites :</p>
+
+<pre class="eval">set MOZ_TOOLS=c:\mozilla\moztools
+mkdir c:\mozilla\moztools
+cd buildtools\windows
+install.bat
+</pre>
+
+<h3 id="Get_MinGW" name="Get_MinGW">Récupérer MinGW</h3>
+
+<p>Télécharger les paquets <a href="http://www.mingw.org/download.shtml">MinGW </a>suivants:</p>
+
+<ul>
+ <li><a class="external" href="http://www.mingw.org/download.shtml#hdr2">dos2unix</a></li>
+ <li><a class="external" href="http://www.mingw.org/download.shtml#hdr2">gcc-core</a></li>
+ <li><a class="external" href="http://www.mingw.org/download.shtml#hdr2">gcc-g++</a></li>
+ <li><a class="external" href="http://www.mingw.org/download.shtml#hdr2">binutils</a></li>
+ <li><a class="external" href="http://www.mingw.org/download.shtml#hdr2">w32api</a></li>
+ <li><a class="external" href="http://www.mingw.org/download.shtml#hdr2">mingw-runtime</a></li>
+</ul>
+
+<p>Utiliser mingw-get est la façon la plus simple et rapide de récupérer ces paquets.  Autrement, vous pouvez décompresser tous les fichiers <code>tar.gz</code> dans le dossier <code>C:\mozilla\mingw\</code>. Vous pouvez le faire en plaçant tous les fichiers <code>tar.gz</code> dans le dossier <code>C:\mozilla\mingw\</code> puis en ouvrant un invité de commandes et en tapant les commandes suivantes:</p>
+
+<pre class="eval">cd c:\mozilla\mingw\
+c:\mozilla\cygwin\bin\gzip -d *.tar.gz
+c:\mozilla\cygwin\bin\tar -xvf binutils-*
+c:\mozilla\cygwin\bin\tar -xvf gcc-core-*
+c:\mozilla\cygwin\bin\tar -xvf gcc-g++-*
+c:\mozilla\cygwin\bin\tar -xvf mingw-runtime-*
+c:\mozilla\cygwin\bin\tar -xvf w32api-*
+del *.tar
+</pre>
+
+<h3 id="Create_the_settings_file" name="Create_the_settings_file">Créer le fichier de configuration</h3>
+
+<p>Créer un fichier nommé mozset.bat dans C:\mozilla. Ce fichier devra contenir les lignes suivantes :</p>
+
+<pre class="eval">@echo off
+set MOZ_TOOLS=c:\mozilla\moztools
+set PATH=c:\mozilla\mingw\bin;c:\mozilla\cygwin\bin;%MOZ_TOOLS%\bin;%PATH%
+set HOME=c:\mozilla
+</pre>
+
+<h3 id="Run_the_settings_file" name="Run_the_settings_file">Lancer le fichier de configuration</h3>
+
+<p>Préparez-vous a récupérer le code source Mozilla. Lancer les commandes suivantes dans un invité de commandes :</p>
+
+<pre class="eval">cd c:\mozilla\
+mozset.bat
+</pre>
+
+<p>Laisser l'invité de commande après avoir fait ceci.</p>
+
+<h3 id="Convert_the_headers_into_Unix_format" name="Convert_the_headers_into_Unix_format">Convertir les headers au format UNIX</h3>
+
+<p>Puisque nous sommes sur la plateforme Windows, nous devons convertir les headers au format UNIX.</p>
+
+<pre class="eval">cd c:\mozilla\moztools\include\
+dos2unix.exe *.h
+cd libIDL\
+dos2unix.exe *.h
+</pre>
+
+<h3 id="Get_client.mk" name="Get_client.mk">Récupérer le code</h3>
+
+<p>Pour compiler Firefox, vous avez besoin des dernières sources provenant de mozilla-central.</p>
+
+<pre class="eval">cd c:\mozilla\
+hg clone <a class="external" href="http://hg.mozilla.org/mozilla-central/" rel="freelink">http://hg.mozilla.org/mozilla-central/</a> mozilla
+</pre>
+
+<h3 id="Create_the_.mozconfig_file" name="Create_the_.mozconfig_file">Créer le fichier .mozconfig</h3>
+
+<p>Maintenant, vous devez créer un fichier appelé .mozconfig dans <code>C:\mozilla\mozilla\</code>. Il devra contenir certaines de ces lignes :</p>
+
+<p>Pour compiler Mozilla Thunderbird en mode optimisé:</p>
+
+<pre>. $topsrcdir/mail/config/mozconfig
+CC=gcc
+CXX=g++
+CPP=cpp
+AS=as
+LD=ld
+ac_add_options --disable-accessibility
+</pre>
+
+<p>Pour compiler Mozilla Thunderbird en mode debug, le mode affichant les informations de débogage:</p>
+
+<pre>. $topsrcdir/mail/config/mozconfig
+CC=gcc
+CXX=g++
+CPP=cpp
+AS=as
+LD=ld
+ac_add_options --disable-accessibility
+ac_add_options --enable-debug
+ac_add_options --disable-optimize
+</pre>
+
+<p>Pour compiler Mozilla Firefox en mode optimisé:</p>
+
+<pre>. $topsrcdir/browser/config/mozconfig
+CC=gcc
+CXX=g++
+CPP=cpp
+AS=as
+LD=ld
+ac_add_options --disable-accessibility
+</pre>
+
+<p>Pour compiler Mozilla Firefox en mode debug, le mode affichant les informations de débogage:</p>
+
+<pre>. $topsrcdir/browser/config/mozconfig
+CC=gcc
+CXX=g++
+CPP=cpp
+AS=as
+LD=ld
+ac_add_options --disable-accessibility
+ac_add_options --enable-debug
+ac_add_options --disable-optimize
+</pre>
+
+<p>Pour compiler Mozilla Sunbird en mode optimisé:</p>
+
+<pre>. $topsrcdir/calendar/sunbird/config/mozconfig
+CC=gcc
+CXX=g++
+CPP=cpp
+AS=as
+LD=ld
+ac_add_options --disable-accessibility
+</pre>
+
+<p>Pour compiler Mozilla Sunbird en mode debug, le mode affichant les informations de débogage:</p>
+
+<pre>. $topsrcdir/calendar/sunbird/config/mozconfig
+CC=gcc
+CXX=g++
+CPP=cpp
+AS=as
+LD=ld
+ac_add_options --disable-accessibility
+ac_add_options --enable-debug
+ac_add_options --disable-optimize
+</pre>
+
+<h3 id="Build" name="Build">Compiler</h3>
+
+<p>Maintenant compilons. Cela peut prendre plus de temps que de récupérer le code. La vitesse dépend en réalité de votre configuration matérielle.</p>
+
+<pre class="eval">cd c:\mozilla\mozilla\
+make -f client.mk
+</pre>
+
+<p>Vous pouvez créer un fichier contenant tous les avertissements(warnings) et les erreurs en tapant ceci:</p>
+
+<pre class="eval">cd c:\mozilla\mozilla\
+make -f client.mk &gt; c:\mozilla\build.log 2&gt;&amp;1
+</pre>
+
+<p>La prochaine fois, si vous voulez mettre à jour et compiler le code, vous devrez taper ces commandes:</p>
+
+<pre class="eval">cd c:\mozilla\mozilla\
+hg update
+make -f client.mk</pre>
+
+<h3 id="Start_it_up" name="Start_it_up">Lancer l'éxécutable</h3>
+
+<p>Pour lancer Mozilla Thunderbird:</p>
+
+<pre class="eval">cd c:\mozilla\mozilla\thunderbird\bin\
+thunderbird.exe -console
+</pre>
+
+<p>Pour lancer Mozilla Firefox:</p>
+
+<pre class="eval">cd c:\mozilla\mozilla\dist\bin\
+firefox.exe -console
+</pre>
+
+<h3 id="Troubleshooting" name="Troubleshooting">Problèmes</h3>
+
+<p>Voici quelques astuces pouvant résoudre certains problèmes.</p>
+
+<h4 id="Make_sure_your_tools_are_correct" name="Make_sure_your_tools_are_correct">Vérifier vos outils</h4>
+
+<p>Vérifiez que tous les outils que vous utilisez sont installés et fonctionnent.</p>
+
+<h5 id="Test_gcc" name="Test_gcc">Tester gcc</h5>
+
+<pre class="eval">cd c:\mozilla\
+mozset.bat
+gcc -v
+</pre>
+
+<p>Gcc devrait être en version 4.9.2. S'il ne l'est pas, alors il y a un problème.</p>
+
+<h5 id="Test_make" name="Test_make">Tester make</h5>
+
+<pre class="eval">cd c:\mozilla\
+mozset.bat
+make -v</pre>
+
+<p>Make devrait être en version 4.1. S'il ne l'est pas, alors il y a un problème.</p>
+
+<h4 id="exec:_cl:_not_found" name="exec:_cl:_not_found">exec: cl: not found</h4>
+
+<pre>make[4]: Entering directory `/cygdrive/c/mozilla/mozilla/nsprpub/config' sh /cygdrive/c/mozilla/mozilla/nsprpub/build/cygwin-wrapper cl -Fonow.obj -c -W3 -nologo -GF -Gy -MDd -Od -Z7 -UNDEBUG -DDEBUG_hege -UWINNT -DMOZILLA_CLIENT=1 -DDEBUG=1 -DXP_PC=1 -DWIN32=1 -D_DEBUG=1 -DWIN95=1 -D_PR_GLOBAL_THREADS_ONLY=1 -D_X86_=1 -DFORCE_PR_LOG /cygdrive/c/mozilla/mozilla/nsprpub/config/now.c
+exec: cl: not found
+</pre>
+
+<p>Cette erreur veut dire qu'il n'a pas trouvé <code>cl</code>. Cl est le compilateur Microsoft Visual C++. Vous voulez utiliser le compilateur gcc a la place de MinGW.</p>
+
+<p><strong>Solution:</strong> Vérifiez que le chemin vers le dossier Cygwin est bien configuré dans le fichier mozset.bat. Vérifiez aussi que le chemin vers MinGW est specifié avant le chemin vers MOZ_TOOLS.</p>
+
+<h4 id="Problems_with_cdefs.h" name="Problems_with_cdefs.h">Problème avec cdefs.h</h4>
+
+<p>Si vous avez cette erreur:</p>
+
+<pre class="eval">sys/cdefs.h: No such file or directory
+</pre>
+
+<p><strong>Solution:</strong> Vérifiez que le chemin vers MinGW est specifié avant le chemin vers Cygwin.</p>
+
+<h4 id="Problems_with_glib.h" name="Problems_with_glib.h">Problème avec glib.h</h4>
+
+<p><strong>Solution:</strong> [{{ mediawiki.external('#Convertir les headers au format UNIX|Convertir') }} les headers <code>moztools</code> avec <code>dos2unix</code>.</p>
+
+<h4 id="Parse_error" name="Parse_error">Erreur d'analyse</h4>
+
+<p>Si vous voyez une erreur comme celle-ci:</p>
+
+<pre class="eval">parse error before '*' token
+</pre>
+
+<p><strong>Solution:</strong> [{{ mediawiki.external('#Convertir les headers au format UNIX|Convertir') }} les headers <code>moztools</code> avec <code>dos2unix</code>.</p>
+
+<h4 id="Missing_midl" name="Missing_midl">midl manquant</h4>
+
+<p>Si vous avez cette erreur:</p>
+
+<pre class="eval">"midl" c:/mozilla/mozilla/accessible/public/msaa/ISimpleDOMNode.idl
+"midl" not found
+</pre>
+
+<p><strong>Solution:</strong> Les options suivantes ne fonctionnent pas encore avec gcc sur windows, vous devez donc les désactiver:</p>
+
+<pre class="eval">ac_add_options --disable-accessibility
+ac_add_options --disable-activex
+</pre>
+
+<p>Pour l'instant les headers et les librairies mingw n'émule pas encore accessibility. Peut-être qu'a un moment mingw le fera.</p>
+
+<h4 id="Problems_with_.22vtable_cant_be_auto-imported.22" name="Problems_with_.22vtable_cant_be_auto-imported.22">Problème avec "vtable cant be auto-imported"</h4>
+
+<p>Certaines personnes ont des problèmes avec "vtable" quand il compile . Voici le type de message:  "variable vtable cant be auto-imported".</p>
+
+<p><strong>Solution:</strong> La solution consiste à ajouter la ligne suivante dans votre .mozconfig:</p>
+
+<pre class="eval">LDFLAGS="-mwindows -Wl,--enable-runtime-pseudo-reloc"
+</pre>
+
+<h4 id="No_build_ID" name="No_build_ID">Pas d'ID de compilation</h4>
+
+<p>Si vous compilez Mozilla et qu'il n'a pas d'ID de compilation, vous devrez ajouter les lignes suivantes à votre fichier mozset.bat:</p>
+
+<pre class="eval">MOZILLA_OFFICIAL=1
+set BUILD_OFFICIAL=1 
+</pre>
+
+<h3 id="See_also" name="See_also">A voir aussi</h3>
+
+<ul>
+ <li><a href="/En/Developer_Guide/Build_Instructions" title="en/Build_Documentation">Build Documentation</a></li>
+ <li><a href="/En/Developer_Guide/Build_Instructions/Windows_Prerequisites" title="en/Windows_Build_Prerequisites">Windows Build Prerequisites</a></li>
+ <li><a href="/en/Developer_Guide/Mozilla_build_FAQ" title="en/Mozilla_Build_FAQ">Mozilla Build FAQ</a></li>
+ <li><a class="internal" href="/en/Cross_Compile_Mozilla_for_Mingw32" title="En/Cross Compile Mozilla for Mingw32">Cross Compile Mozilla for Mingw32</a></li>
+</ul>
+
+<div class="originaldocinfo">
+<h2 id="Original_Document_Information" name="Original_Document_Information">Original Document Information</h2>
+
+<ul>
+ <li>Author(s): Henrik Gemal</li>
+ <li>Last Updated Date: February 6, 2008</li>
+ <li>Copyright Information: 1995-2006 Henrik Gemal</li>
+</ul>
+</div>
+
+<p> </p>

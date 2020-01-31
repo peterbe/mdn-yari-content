@@ -1,0 +1,213 @@
+<div>{{JsSidebar("Advanced")}}</div>
+
+<p>Los vectores JavaScript tipados son objetos tipo Array y proveen un mecanismo para el acceso a datos binarios puros. Como sabes, los objetos del tipo {{jsxref("Array")}} crecen y decrecen dinámicamente y pueden tener cualquier valor JavaScript. Los motores JavaScript realizan optimizaciones y así estos vectores son veloces. Sin embargo, como las aplicaciones web se volvieron más y más poderosas, añadiendo funcionalidades tales como la manipulación de audio y video, acceso a datos puros usando WebSockets, etcétera, ha quedado claro que hay ocasiones en que sería beneficioso para el código JavaScript tener la posibilidad de, rápida y fácilmente, manipular datos binarios puros en vectores tipados.</p>
+
+<p>Sin embargo, los vectores tipados no deben ser confundidos con vectores normales, al llamar {{jsxref("Array.isArray()")}} en un vector tipado retorna <code>false</code>. Además, no todos los metodos disponibles para vectores normales son mantenidos por los vectores tipados (p. ej. push y pop).</p>
+
+<h2 id="Buffers_y_vistas_arquitectura_de_vectores_tipados">Buffers y vistas: arquitectura de vectores tipados</h2>
+
+<p>Para lograr una máxima flexibilidad y eficiencia, los vectores JavaScript tipados separan la impementación en <strong>buffers</strong> y <strong>vistas</strong>. Un buffer (implementedo por el objeto {{jsxref("ArrayBuffer")}}) es un objeto representando un segmento de datos; no tiene formato de referencia, y no ofrece mecanismo para acceso a su contenido. Para acceder a la memoria contenida en un buffer, necesitas usar una vista. Una vista provee un contexto — que es, un tipo de dato, despalzamiento de inicio, y numero de elementos — que vuelven los datos en un vector tipado real.</p>
+
+<p><img alt="Typed arrays in an ArrayBuffer" src="https://mdn.mozillademos.org/files/8629/typed_arrays.png" style="height: 278px; width: 666px;"></p>
+
+<h3 id="ArrayBuffer">ArrayBuffer</h3>
+
+<p>El {{jsxref("ArrayBuffer")}} es un tipo de datos que es usado para representar un buffer de datos binario de largo-fijado genérico. No puedes manipular directamente el contenido de un <code>ArrayBuffer</code>; en su lugar, creas una vista de vector tipado o una {{jsxref("DataView")}} que representa al buffer en un formato específico, y usas eso para leer y escribir los contenidos del buffer.</p>
+
+<h3 id="Vistas_de_vector_tipado">Vistas de vector tipado</h3>
+
+<p>Las vistas de vector tipado tienen nombres autodescriptivos y proveen vistas para todos los tipos numéricos usuales como <code>Int8</code>, <code>Uint32</code>, <code>Float64,</code> etcétera. Hay una vista de vector tipado especial, el <code>Uint8ClampedArray</code>. Restringe los valores entre 0 y 255. Esto es útil para <a href="/en-US/docs/Web/API/ImageData">procesamiento de datos de Canvas</a>, por ejemplo.</p>
+
+<p>{{page("/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray", "TypedArray_objects")}}</p>
+
+<h3 id="DataView">DataView</h3>
+
+<p>La {{jsxref("DataView")}} es una interface de bajo nivel que provee una API getter/setter para leer y escribir datos en el buffer arbitrariamente. Esto es útil cuando hay que lidiar con diferentes tipos de datos, por ejemplo. Las vistas de vector tipado están en el orden de bytes nativo (ver {{Glossary("Endianness")}}) de tu plataforma. Con una <code>DataView</code> puedes controlar el orden de bytes. Es big-endian por defecto y puede ser cambiado a little-endian en los métodos getter/setter.</p>
+
+<h2 id="APIs_de_Web_que_usan_vectores_tipados">APIs de Web que usan vectores tipados</h2>
+
+<dl>
+ <dt><a href="/en-US/docs/Web/API/FileReader#readAsArrayBuffer()" title="/en-US/docs/Web/API/FileReader#readAsArrayBuffer()"><code>FileReader.prototype.readAsArrayBuffer()</code></a></dt>
+ <dd>El método <code>FileReader.prototype.readAsArrayBuffer()</code> comienza leyendo los contenidos del <a href="/en-US/docs/Web/API/Blob" title="/en-US/docs/DOM/Blob"><code>Blob</code></a> o <a href="/en-US/docs/Web/API/File" title="/en-US/docs/DOM/File"><code>File</code></a> especificado.</dd>
+ <dt><a href="/en-US/docs/Web/API/XMLHttpRequest#send()" title="/en-US/docs/Web/API/XMLHttpRequest#send()"><code>XMLHttpRequest.prototype.send()</code></a></dt>
+ <dd>El metodo <code>send()</code> de las instancias <code>XMLHttpRequest</code> ahora admite vectores tipados y objetos {{jsxref("ArrayBuffer")}} como argumento.</dd>
+ <dt><code><a href="https://developer.mozilla.org/en-US/docs/Web/API/ImageData">ImageData.data</a></code></dt>
+ <dd>Es un {{jsxref("Uint8ClampedArray")}} representando una matriz unidimensional conteniendo los datos en el orden RGBA, con valores enteros entre <code>0</code> y <code>255</code> inclusive.</dd>
+</dl>
+
+<h2 id="Ejemplos">Ejemplos</h2>
+
+<h3 id="Usando_vistas_con_buffers">Usando vistas con buffers</h3>
+
+<p>Primero que todo, necesitaremos crear un buffer, aquí con un largo fijo de 16-bytes:</p>
+
+<pre class="brush:js">var buffer = new ArrayBuffer(16);
+</pre>
+
+<p>En este punto, tenemos un segmento de memoria cuyos bytes están todos preinicializados a 0. No hay mucho que podamos hacer con ello, sin embargo. Podemos confirmar que de hecho es de 16 bytes de largo, y de eso se trata:</p>
+
+<pre class="brush:js">if (buffer.byteLength === 16) {
+  console.log("Sí, son 16 bytes.");
+} else {
+  console.log("Oh no, es el tamaño equivocado!");
+} 
+</pre>
+
+<p>Antes que realmente podamos trabajar con este buffer, necesitamos crear una vista. Vamos a crear una vista que trate los datos en el buffer como un vector de enteros con signo de 32-bit:</p>
+
+<pre class="brush:js">var int32View = new Int32Array(buffer);
+</pre>
+
+<p>Ahora podemos acceder los campos en el vector como si fuera un vector normal:</p>
+
+<pre class="brush:js">for (var i = 0; i &lt; int32View.length; i++) {
+  int32View[i] = i * 2;
+}
+</pre>
+
+<p>Esto llena las 4 entradas en el vector (4 entradas a 4 bytes cada una hacen 16 bytes en total) con los valores 0, 2, 4, y 6.</p>
+
+<h3 id="Multiples_vistas_en_los_mismos_datos">Multiples vistas en los mismos datos</h3>
+
+<p>Las cosas comienzan a ponerse realmente interesante cuando consideras que puedes crear multiples vistas sobre los mismos datos. Por ejemplo, dado el código de arriba, podemos continuar como sigue:</p>
+
+<pre class="brush:js">var int16View = new Int16Array(buffer);
+
+for (var i = 0; i &lt; int16View.length; i++) {
+  console.log("Entrada " + i + ": " + int16View[i]);
+}
+</pre>
+
+<p>Aquí creamos una vista de entero de 16-bit que comparte el mismo buffer que la vista existente de 32-bit y mostramos todos los valores en el buffer como enteros de 16-bit. Ahora obtenemos la salida 0, 0, 2, 0, 4, 0, 6, 0.</p>
+
+<p>Puedes ir un paso más lejos, sin embargo. Considera esto:</p>
+
+<pre class="brush:js">int16View[0] = 32;
+console.log("Entrada 0 en el vector de 32-bit es ahora " + int32View[0]);
+</pre>
+
+<p>La salida de esto es "Entrada 0 en el vector de 32-bit es ahora 32". En otras palabras, los dos vectores son de hecho simplemente vistas sobre el mismo buffer de datos, tratándolo como formatos diferentes. Puedes hacer esto con cualquier <a href="/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray#TypedArray_objects" title="JavaScript typed arrays/ArrayBufferView#Typed array subclasses">tipo de vista</a>.</p>
+
+<h3 id="Trabajando_con_estructuras_de_datos_complejas">Trabajando con estructuras de datos complejas</h3>
+
+<p>Combinando un solo buffer con múltiples vistas de diferentes tipos, comenzando a diferentes desplazamientes dentro del buffer, puedes interactuar con objetos de datos conteniendo múltiples tipos de datos. Esto te permite, por ejemplo, interactuar con estructuras de datos complejas de <a href="/en-US/docs/Web/WebGL" title="WebGL">WebGL</a>, archivos de datos, o estructuras C que necesitas usar mientras se usa <a href="/en-US/docs/Mozilla/js-ctypes" title="js-ctypes">js-ctypes</a>.</p>
+
+<p>Considera esta estructura C:</p>
+
+<pre class="brush:cpp">struct someStruct {
+  unsigned long id;
+  char username[16];
+  float montoAdeudado;
+};</pre>
+
+<p>Puedes acceder un buffer conteniendo datos en este formato como sigue:</p>
+
+<pre class="brush:js">var buffer = new ArrayBuffer(24);
+
+// ... leer los datos en el buffer ...
+
+var idView = new Uint32Array(buffer, 0, 1);
+var usernameView = new Uint8Array(buffer, 4, 16);
+var montoAdeudadoView = new Float32Array(buffer, 20, 1);</pre>
+
+<p>Entonces puedes acceder, por ejemplo, el monto adeudado con <code>montoAdeudadoView[0]</code>.</p>
+
+<div class="note"><strong>Nota:</strong> La <a href="http://en.wikipedia.org/wiki/Data_structure_alignment" title="http://en.wikipedia.org/wiki/Data_structure_alignment">alineación de estructuras de datos</a> en una estructura C es dependiente de la plataforma. Ten precauciones y consideraciones para estas diferencias de llenado.</div>
+
+<h3 id="Conversión_a_vectores_normales">Conversión a vectores normales</h3>
+
+<p>Después de procesar un vector tipado, algunas veces es conveniente convertirlo de vuelta a un vector normal para beneficiarse del prototype de {{jsxref("Array")}}. Esto puede hacerse usando {{jsxref("Array.from")}}, o usando el siguiente código donde <code>Array.from</code> no sea admitido.</p>
+
+<pre class="brush:js">var typedArray = new Uint8Array([1, 2, 3, 4]),
+    normalArray = Array.prototype.slice.call(typedArray);
+normalArray.length === 4;
+normalArray.constructor === Array;
+</pre>
+
+<h2 id="Especificaciones">Especificaciones</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Especificación</th>
+   <th scope="col">Estado</th>
+   <th scope="col">Comentario</th>
+  </tr>
+  <tr>
+   <td><a href="https://www.khronos.org/registry/typedarray/specs/latest">Typed Array Specification</a></td>
+   <td>Obsoleta</td>
+   <td>Sustituido por ECMAScript 6.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-typedarray-objects', 'TypedArray Objects')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td>
+    <p>Definición inicial en un estándar ECMA.</p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Compatibilidad_de_navegador">Compatibilidad de navegador</h2>
+
+<p>Chrome 7 incluye soporte para <code>ArrayBuffer</code>, <code>Float32Array</code>, <code>Int16Array</code>, y <code>Uint8Array</code>. Chrome 9 y Firefox 15 añaden soporte para objetos <code>DataView</code>. Internet Explorer 10 soporta todos los tipos excepto <code>Uint8ClampedArray</code> y <code>ArrayBuffer.prototype.slice</code> que están presentes comenzando en Internet Explorer 11.</p>
+
+<p>{{CompatibilityTable}}</p>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Funcionalidad</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>Soporte básico</td>
+   <td>7.0</td>
+   <td>{{ CompatGeckoDesktop("2") }}</td>
+   <td>10</td>
+   <td>11.6</td>
+   <td>5.1</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Funcionalidad</th>
+   <th>Android</th>
+   <th>Chrome for Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>Soporte básico</td>
+   <td>4.0</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{ CompatGeckoMobile("2") }}</td>
+   <td>10</td>
+   <td>11.6</td>
+   <td>4.2</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="Véase_también">Véase también</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Web/JavaScript/Base64_encoding_and_decoding#Appendix.3A_Decode_a_Base64_string_to_Uint8Array_or_ArrayBuffer" title="/en-US/docs/Web/JavaScript/Base64_encoding_and_decoding#Appendix.3A_Decode_a_Base64_string_to_Uint8Array_or_ArrayBuffer">Getting <code>ArrayBuffer</code>s or typed arrays from <em>Base64</em>-encoded strings</a></li>
+ <li><a href="/en-US/docs/Code_snippets/StringView" title="/en-US/docs/Web/JavaScript/Typed_arrays/StringView"><code>StringView</code> – a C-like representation of strings based on typed arrays</a></li>
+ <li><a href="https://hacks.mozilla.org/2011/12/faster-canvas-pixel-manipulation-with-typed-arrays">Faster Canvas Pixel Manipulation with Typed Arrays</a></li>
+ <li><a href="http://www.html5rocks.com/en/tutorials/webgl/typed_arrays">Typed Arrays: Binary Data in the Browser</a></li>
+ <li>{{Glossary("Endianness")}}</li>
+</ul>

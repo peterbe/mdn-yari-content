@@ -1,0 +1,139 @@
+<div>{{HTTPSidebar}}</div>
+
+<p><code><strong>Access-Control-Allow-Origin</strong></code> レスポンスヘッダーは、指定された{{glossary("origin", "オリジン")}}からのリクエストを行うコードでレスポンスが共有できるかどうかを示します。</p>
+
+<table class="properties">
+ <tbody>
+  <tr>
+   <th scope="row">ヘッダー種別</th>
+   <td>{{Glossary("Response header", "レスポンスヘッダー")}}</td>
+  </tr>
+  <tr>
+   <th scope="row">{{Glossary("Forbidden header name", "禁止ヘッダー名")}}</th>
+   <td>いいえ</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox">Access-Control-Allow-Origin: *
+Access-Control-Allow-Origin: &lt;origin&gt;
+Access-Control-Allow-Origin: null
+</pre>
+
+<h2 id="Directives" name="Directives">ディレクティブ</h2>
+
+<dl>
+ <dt><code>*</code></dt>
+ <dd><em>資格情報がない</em>リクエストでは、リテラル値 "*" をワイルドカードとして指定することができます。この値はブラウザーに、すべてのオリジンからのリクエストコードにリソースへのアクセスを許可するように指示します。資格情報がある時にワイルドカードを使用すると、<a href="/ja/docs/Web/HTTP/CORS/Errors/CORSNotSupportingCredentials">エラーを返します</a>。</dd>
+ <dt><code>&lt;origin&gt;</code></dt>
+ <dd>オリジンを指定します。1つのオリジンだけを指定することができます。</dd>
+ <dt><code>null</code></dt>
+ <dd>オリジンを "null" に指定します。
+ <div class="note"><strong>メモ:</strong> <code>null</code> は<a href="https://w3c.github.io/webappsec-cors-for-developers/#avoid-returning-access-control-allow-origin-null">使用しないでください</a>。「<code>Access-Control-Allow-Origin: "null"</code> を返すと安全であるように見えますが、リソースのオリジンが階層的ではないスキーム (例えば <code>data:</code> や <code>file:</code>) を使用しており、サンドボックス化された文書はすべて "null" となるように定義されています。多くのユーザーエージェントはそのような文書に <code>Access-Control-Allow-Origin: "null"</code> ヘッダーが付いているとアクセスを許可するので、あらゆるオリジンが "null" を持つ悪意のある文書を生成することができます。したがって、 ACAO ヘッダーで "null" 値を使用することは避けるべきです。」</div>
+ </dd>
+</dl>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<p>あらゆるオリジンからのコードにリソースへのアクセスを許可するようブラウザーに指示するレスポンスには、次のような行を含めてください。</p>
+
+<pre>Access-Control-Allow-Origin: *</pre>
+
+<p><code>https://developer.mozilla.org</code> のオリジンからリクエストを行うコードに対して、リソースへのアクセスを許可するようブラウザーに指示するレスポンスには、次のような行を含めてください。</p>
+
+<pre>Access-Control-Allow-Origin: https://developer.mozilla.org</pre>
+
+<p><code>Access-Control-Allow-Origin</code> の値で複数のオリジンに許可を限定するには、サーバー側で {{HTTPHeader("Origin")}} リクエストヘッダーの値をチェックし、許可するオリジンのリストと比較して、 {{HTTPHeader("Origin")}} の値がリスト中にあれば、 <code>Access-Control-Allow-Origin</code> の値に {{HTTPHeader("Origin")}} と同じ値を設定してください。</p>
+
+<h3 id="CORS_and_caching" name="CORS_and_caching">CORS とキャッシング</h3>
+
+<p><code>Access-Control-Allow-Origin</code> の値が ("<code>*</code>" ワイルドカードではなく) 具体的なオリジンであるレスポンスをサーバーが送信する場合、レスポンスには {{HTTPHeader("Vary")}} レスポンスヘッダーに <code>Origin</code> という値を設定して、 <code>Origin</code> リクエストヘッダーの値によって値が変わることをブラウザーに対して示してください。</p>
+
+<pre>Access-Control-Allow-Origin: https://developer.mozilla.org
+Vary: Origin</pre>
+
+<h3 id="Handling_CORS_on_the_server_(Java_example)" name="Handling_CORS_on_the_server_(Java_example)">サーバー上での CORS の扱い (Java の例)</h3>
+
+<p>次の Java コードは、 CORS レスポンスヘッダーを設定します。 <code>Access-Control-Allow-Origin</code> の値が {{HTTPHeader("Origin")}} リクエストヘッダーと同じ値を設定する方法に注意してください。</p>
+
+<pre class="brush: java">import java.io.IOException;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+
+@component
+public class SimpleCORSFilter implements Filter {
+
+private final Logger log = LoggerFactory.getLogger(SimpleCORSFilter.class);
+
+public SimpleCORSFilter() {
+    log.info("SimpleCORSFilter init");
+}
+
+@override
+public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {    
+    
+    HttpServletRequest request = (HttpServletRequest) req;
+    HttpServletResponse response = (HttpServletResponse) res;
+    response.setHeader("Access-Control-Allow-Origin", request.getHeader("Origin"));
+    response.setHeader("Access-Control-Allow-Credentials", "true");
+    response.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE");
+    response.setHeader("Access-Control-Max-Age", "3600");
+    response.setHeader("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With, remember-me");
+    chain.doFilter(req, res);
+}
+
+@Override
+public void init(FilterConfig filterConfig) {
+}
+
+@Override
+public void destroy() {
+}
+
+}
+</pre>
+
+<h2 id="Specifications" name="Specifications">仕様書</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">状態</th>
+   <th scope="col">備考</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName('Fetch','#http-access-control-allow-origin', 'Access-Control-Allow-Origin')}}</td>
+   <td>{{Spec2("Fetch")}}</td>
+   <td>初回定義</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザーの対応</h2>
+
+<p class="hidden">このページの互換性一覧表は構造化データから生成されています。データに協力していただけるのであれば、 <a class="external" href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> をチェックアウトしてプルリクエストを送信してください。</p>
+
+<p>{{Compat("http.headers.Access-Control-Allow-Origin")}}</p>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li>{{HTTPHeader("Origin")}}</li>
+ <li>{{HTTPHeader("Vary")}}</li>
+ <li><a href="https://gist.github.com/wildoctopus/3730b5c60f9d5224f6c2418d07708e21">How to fix CORS issue?</a></li>
+</ul>

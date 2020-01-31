@@ -1,0 +1,318 @@
+<p>Данный документ предназначен для разработчиков, которым необходимо работать над системой сборки Mozilla. Он разъясняет базовые концепции и термины системы сборки и то, как решать с её помощью повседневные задачи наподобие компиляции компонентов и создания jar-файлов.</p>
+
+<p>Данный документ не предназначен для тех, кому надо лишь только собрать проект Mozilla. Для этой цели смотрите <a href="/en-US/docs/Developer_Guide/Build_Instructions" title="Developer_Guide/Build_Instructions">Инструкции по сборке</a>.</p>
+
+<p>Для большинства знание команды <code>mach build</code> для сборки из исходников вполне достаточно для успешной работы. Тем не менее, если вы жаждете знать больше, то сможете углубиться во все детали этого процесса.</p>
+
+<h2 id="Concepts" name="Concepts">Фазы</h2>
+
+<p>Когда вы набираете <code>mach build</code> для сборки из исходников, внутри системы сборки происходит 3 высокоуровневые фазы:</p>
+
+<ol>
+ <li>Детектирование системы и валидация.</li>
+ <li>Подготовка бэкэнда сборки.</li>
+ <li>Вызов бэкэнда сборки.</li>
+</ol>
+
+<h3 id="Фаза_1_configure">Фаза 1: configure</h3>
+
+<p>Фаза 1 сосредоточена вокруг <strong>configure </strong>скрипта. Скрипт <strong>configure</strong> является bash скриптом. Он генерирутеся из файла <strong>configure.in</strong>, который написан на <a href="http://www.seindal.dk/rene/gnu/">M4</a> и обрабатывается с помощью <a href="http://www.gnu.org/software/autoconf/">Autoconf 2.13</a> для создания конечного <strong>configure</strong> скрипта. Вам не нужно беспокоиться о том как получить <strong>configure</strong> файл: система сборки делает это за вас.</p>
+
+<p>Основная задача <strong>configure</strong> - определить зарактеристики системы и компилятора, применить переданные опции, и подтвердить что все выглядит готовым к запуску процесса компиляции.</p>
+
+<p>Наличие файла <strong>config.status</strong> может быть знакомым тем из вас, кто ранее уже работал с Autoconf. Однако, <strong>config.status</strong> в Mozilla отличается практически от любого <strong>config.status</strong>, который вы видели ранее: он написан на Python! Вместо того, чтобы сгенерировать shell скрипт, мы сгенерировали скрипт Python.</p>
+
+<p>Сейчас самое лучшее время чтобы отметить тот факт, что Python превалирует в нашей системе сборки. Если нам нужно написать код для системы сборки, мы делаем это на Python. Именно так мы и поступаем.</p>
+
+<p><strong>config.status </strong>содержит 2 части: структуры данных, представляющие вывод <strong>configure</strong> и интерфейс командной строки для подготовки/настройки/генерации подходящего <em>бэкенда сборки.</em> (<em>Бэкенд сборки - </em>это просто утилита, используемая для сборки дерева исходников - типа GNU Make или Tup). Эти структуры данных в сущности описывают текущее состояние системы и то, на что похож существующая конфигурация сборки. Например, она задает какой компилятор использовать, как его вызывать, какие фичи приложения включены и т.п. Можете сами открыть <strong>config.status</strong> и посмотреть!</p>
+
+<p>Как только мы сгенерировали файл <strong>config.status</strong>, мы передаём его в распоряжение фазы 2.</p>
+
+<h3 id="Фаза_2_Подготовка_бэкенда_сборки_и_описание_сборки">Фаза 2: Подготовка бэкенда сборки и описание сборки</h3>
+
+<p>Как только скрипт <strong>configure</strong> определил текущую конфигурацию сборки, нам нужно применить её к дереву исходников чтобы непосредственно осуществить сборку.</p>
+
+<p>Суть происходящего заключается в том, что автоматически полученный скрипт <strong>config.status</strong> исполняется сразу же как только скрипт <strong>configure</strong> сгенерировал его. Задача скрипта <strong>config.status</strong> состоит в том, чтобы <em>рассказать утилите сборки как собрать дерево исходников</em>. Для этого <strong>config.status</strong> обязан сначала просканировать описание системы сборки.</p>
+
+<p>Описание системы сборки состоит из иерархии различных файлов <strong>moz.build.</strong> Обычно один <strong>moz.build</strong> приходится на отдельный каталог или набор связанных каталогов. Каждый <strong>moz.build</strong> файл определяет, как работает та часть конфигурации сборки, за которую он отвечает. К примеру, он может говорить: <em>Скомпилировать эти файлы C++</em> или <em>Искать дополнительную информацию в этих каталогах</em>. <strong>config.status</strong> начинает с основного <strong>moz.build</strong> файла и затем рекурсивно проходится по всем упомянутым в нём каталогам и файлам. Когда все <strong>moz.build</strong> файлы прочитаны, составляются структуры данных, задающие глобальное описание системы сборки. Затем эти структуры данных считываются <strong>генератором бэкенда сборки</strong>, который затем конвертирует их в файлы, вызовы функций и т.д. В случае <em>make </em>бэкенда, генератор пишет файлы <em>Makefile.</em></p>
+
+<p>После запуска config.status вы увидите следующий вывод:</p>
+
+<pre>Reticulating splines...
+Finished reading 1096 moz.build files into 1276 descriptors in 2.40s
+Backend executed in 2.39s
+2188 total backend files. 0 created; 1 updated; 2187 unchanged
+Total wall time: 5.03s; CPU time: 3.79s; Efficiency: 75%</pre>
+
+<p>Здесь говорится, что всего было прочитано 1096 moz.build файлов. 1276 структур данных, описывающих конфигурацию сборки, получены из этих файлов. Одни чтение и обработка этих файлов заняли 2.4 сек. 1276 сгенерированных структур данных были переданы затем в бэкенд сборки, который затем сообщил, что собирается обработать 2188 файлов, полученных из тех структур данных. Большая часть из них уже существовала на диске и потому не потребовали правок. Тем не менее, 1 файл был обновлен в результате изменения конфигурации. Весь процесс занял 5.03 сек. Хотя при том процессор был загружен только 3.79 сек, что означает, что грубо 25% времени мы потратили на ожидание ввода-вывода.</p>
+
+<h3 id="Фаза_3_Вызов_бэкенда_сборки">Фаза 3: Вызов бэкенда сборки</h3>
+
+<p>Когда большинство людей слышат о системе сборки, они представляют себе именно данную фазу. Это та фаза, где мы берем все дерево исходных кодов и создаём Firefox или какое-то другое приложение, над которым работаем. Фаза 3 фактически берёт всё, что было сгенерировано фазой 2 и запускает. Начиная с самого зарождения проекта Mozilla это традиционно делалось утилитой <em>make,</em> обрабатывающей файлы <em>Makefile</em>. Тем не менее, с переходом на moz.build файлы, вы можете повстречаться и с другими бэкендами сборки, такими как Tup или Visual Studio.</p>
+
+<p>При сборке дерева, большая часть времени тратится на фазу 3. В ходе неё устанавливаются заголовочные файлы, компилируются файлы C++, файлы проходят через препроцессор и т.д.</p>
+
+<h4 id="Build_Tiers" name="Build_Tiers">Рекурсивный Make-бэкенд</h4>
+
+<p>Рекурсивный make бэкенд - проверенный годами вариант сборки дерева исходников. Именно он использовался с самого расцвета проекта Mozilla. В сущности, файлы Makefile должны находиться в каждом каталоге. Утилита make начинает обработку Makefile в корне проекта и затем рекурсивно спускается во все дочерние каталоги пока они не закончатся.</p>
+
+<p>Если бы все было так просто!</p>
+
+<p>Рекурсивный бэкенд make делит дерево исходников на <em>ярусы. </em>Ярус - это группа связанных каталогов, содержащих собственные Makefile. К примеру, в дереве есть один ярус, отвечающий за переносимую среду исполнения Netscape (Netscape Portable Runtime, nspr), другой ярус для движка JavaScript, третий - для ключевой части платформы Gecko, четвертый - для построения XUL приложений и т.д.</p>
+
+<p>Основной moz.build файл задаёт ярусы и каталоги в них. На деле, основные moz.build файлы включают в себя другие moz.build файлы, такие как <code>/toolkit/toolkit.mozbuild</code>, которые задают ярусы. Они делают за счет функции <code>add_tier_dir()</code>.</p>
+
+<p>At build time, the tiers are traversed in the order they are defined. Typically, the traversal order looks something like <em>base</em>, <code>nspr</code>, <code>nss, js</code>, <code>platform</code>, <code>app</code>.</p>
+
+<p>Each tier consists of 3 sub-tiers: <em>export</em>, <em>libs</em>, and <em>tools</em>. This roughly correspond to the actions of pre-build, main-build, and post-build. Although, that is poor naming because all 3 are really part of the build. <em>export</em> is used to do things like copy headers into place. <em>libs</em> is reserved for most of the work, like compiling C++ source files. <em>tools</em> is used to installing tests and other support tools.</p>
+
+<p>When make is invoked, it starts at the <em>export</em> sub-tier of the first tier, and traverses all the directories in that tier. Then, it does the same thing for the <em>libs</em> sub-tier. Then the <em>tools</em> sub-tier. It then moves on to the next tier. And so forth until there are no tiers remaining.</p>
+
+<p>To view information about the tiers, you can execute the following special make targets:</p>
+
+<table class="fullwidth-table">
+ <tbody>
+  <tr>
+   <th>Команда</th>
+   <th>Результат</th>
+  </tr>
+  <tr>
+   <td>make echo-tiers</td>
+   <td>Вывести окончательный список ярусов.</td>
+  </tr>
+  <tr>
+   <td>make echo-dirs</td>
+   <td>Show the list of non-static source directories to iterate over, as determined by the tier list. Вывести список</td>
+  </tr>
+  <tr>
+   <td>make echo-variable-STATIC_DIRS</td>
+   <td>Show the list of static source directories to iterate over, as determined by the tier list.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="moz.build_файлы">moz.build файлы</h2>
+
+<p><strong>moz.build</strong> файлы задают то, как каждая часть дерева исходников интегрируется в общую систему сборки. Можете считать каждый moz.build файл как структуру, сообщающую системе сборки что делать.</p>
+
+<p>Во время генерации бэкенда сборки, все <strong>moz.build</strong> файлы, относящиеся к текущей конфигурации сборки считываются и конвертируются в файлы и действия нужные для сборки (например файлы Makefile). В этой части мы поговорим о том, как они работают на самом деле.</p>
+
+<p><strong>Отдельный moz.build файл на деле является скриптом Python.</strong> Тем не менее, они не похожи на обычные питоновские скрипты. Среда исполнения жестко контролируется, потому <strong>moz.build</strong> файлы могут выполнять только ограниченный набор операций. В сущности, <strong>moz.build</strong> файлы ограничены следующим набором действий :</p>
+
+<ol>
+ <li>Вызов функций, которые явно отмечены доступными среде moz.build</li>
+ <li>Присвоение значений четко определенному набору переменных с именами в ВЕРХНЕМ РЕГИСТРЕ.</li>
+ <li>Создание новых переменных с именами не в ВЕРХНЕМ РЕГИСТРЕ (в том числе определение функций).</li>
+</ol>
+
+<p>Важно отметить, что moz.build файлы <strong>не могут</strong>:</p>
+
+<ul>
+ <li>Импортировать модули.</li>
+ <li>Открывать файлы.</li>
+ <li>Использовать функцию или оператор <em>print</em>.</li>
+ <li>Ссылаться на множество встроенных/глобальных функций Python (они сделаны недоступными для среды исполнения).</li>
+</ul>
+
+<p>Наиболее важные функции файлов <strong>moz.build</strong> - это номера 1 и 2 из списка выше. Это то, как moz.build файлы сообщают что делать системе сборки. К примеру, вы можете задать список <strong>DIRS</strong> для поиска дополнительных moz.build файлов в заданных каталогах.</p>
+
+<p>Результат исполнения каждого отдельного <strong>moz.build</strong> файла - это словарь Python. Этот словарь состоит из переменных в ВЕРХНЕМ РЕГИСТРЕ, которые были заданы явно, а также специальных переменных, получивших свои значения неявно в результате вызовов функций, экспортированных в среду исполнения. Когда мы далее будем вести речь о moz.build файлах как о структурах данных, мы будем иметь в виду эти самые словари.</p>
+
+<h3 id="moz.build_UPPERCASE_Variables_and_Functions">moz.build UPPERCASE Variables and Functions</h3>
+
+<p>The set of special symbols available to moz.build files is centrally defined and is under the purview of the build config module. To view the variables and functions available in your checkout of the tree, run the following:</p>
+
+<pre>mach mozbuild-reference</pre>
+
+<p>Or, you can view the raw file at <a href="https://hg.mozilla.org/mozilla-central/file/default/python/mozbuild/mozbuild/frontend/context.py" title="https://hg.mozilla.org/mozilla-central/file/default/python/mozbuild/mozbuild/frontend/sandbox_symbols.py">/python/mozbuild/mozbuild/frontend/context.py</a>.</p>
+
+<h3 id="How_moz.build_Processing_Works">How moz.build Processing Works</h3>
+
+<p>For most people, it is sufficient to just know that moz.build files are Python scripts that are executed and emit Python dicts describing the build config. If you insist on knowing more, this section is for you.</p>
+
+<p>All the code for reading moz.build files lives under <a href="https://hg.mozilla.org/mozilla-central/file/default/python/mozbuild/mozbuild/frontend/" title="https://hg.mozilla.org/mozilla-central/file/default/python/mozbuild/mozbuild/frontend/">/python/mozbuild/mozbuild/frontend/</a>. <strong>mozbuild</strong> is the name of our Python package that contains most of the code for defining how the build system works. Yes, it's easy to confuse with <strong>moz.build</strong> files. Sorry about that.</p>
+
+<p><a href="https://hg.mozilla.org/mozilla-central/file/default/python/mozbuild/mozbuild/frontend/sandbox.py" title="https://hg.mozilla.org/mozilla-central/file/default/python/mozbuild/mozbuild/frontend/sandbox.py">sandbox.py</a> contains code for a generic Python sandbox. This is the code used to restrict the environment <strong>moz.build</strong> files are executed under.</p>
+
+<p><a href="https://hg.mozilla.org/mozilla-central/file/default/python/mozbuild/mozbuild/frontend/reader.py" title="https://hg.mozilla.org/mozilla-central/file/default/python/mozbuild/mozbuild/frontend/reader.py">reader.py</a> contains the code that defines the actual <strong>moz.build</strong> sandbox (the <code>MozbuildSandbox</code> class) and the code for traversing a tree of moz.build files (by following <code>DIRS</code> and <code>TIERS</code> variables). The latter is the <code>BuildReader</code> class. A <code>BuildReader</code> is instantiated with a configuration and then is told to read the source tree. It emits a stream of <code>MozbuildSandbox</code> instances corresponding to the executed <strong>moz.build</strong> files.</p>
+
+<p>The stream of <code>MozbuildSandbox</code> produced by the <code>BuildReader</code> is typically fed into the <code>TreeMetadataEmitter</code> class from <a href="https://hg.mozilla.org/mozilla-central/file/default/python/mozbuild/mozbuild/frontend/emitter.py" title="https://hg.mozilla.org/mozilla-central/file/default/python/mozbuild/mozbuild/frontend/emitter.py">emitter.py</a>. The role of <code>TreeMetadataEmitter</code> is to convert the low-level <code>MozbuildSandbox</code> dictionaries into higher-level function-specific data structures. These data structures are the classes defined in <a href="https://hg.mozilla.org/mozilla-central/file/default/python/mozbuild/mozbuild/frontend/data.py" title="https://hg.mozilla.org/mozilla-central/file/default/python/mozbuild/mozbuild/frontend/data.py">data.py</a>. Each class defines a specific aspect of the build system, such as directories to traverse, C++ files to compile, etc. The output of <code>TreeMetadataEmitter</code> is a stream of instances of these classes.</p>
+
+<p>The stream of build system describing class instances emitted from <code>TreeMetadataEmitter</code> is then fed into a build backend. A build backend is simply an instance of a child class of <code>BuildBackend</code> from <a href="https://hg.mozilla.org/mozilla-central/file/default/python/mozbuild/mozbuild/backend/base.py" title="https://hg.mozilla.org/mozilla-central/file/default/python/mozbuild/mozbuild/backend/base.py">base.py</a> (in the <code>mozbuild.backend</code> package now, not <code>mozbuild.frontend</code>). The child class implements methods for processing individual class instances as well as common hook points, such as <em>processing has finished</em>. See <a href="https://hg.mozilla.org/mozilla-central/file/default/python/mozbuild/mozbuild/backend/recursivemake.py" title="https://hg.mozilla.org/mozilla-central/file/default/python/mozbuild/mozbuild/backend/recursivemake.py">recursivemake.py</a> for an implementation of a <code>BuildBackend</code>.</p>
+
+<p>While we call the base class <code>BuildBackend</code>, the class doesn't need to be focused with <em>building</em> at all. If you wanted to create a consumer that performed a line count of all C++ files or generated a Clang compilation database, for example, this would be an acceptable use of a <code>BuildBackend</code>.</p>
+
+<p>Technically, we don't need to feed <code>TreeMetadataEmitter</code>'s output into a <code>BuildBackend</code>: it's possible to create your own consumer. However, <code>BuildBackend</code> provides a common framework from which to author consumers. Along the same vein, you don't need to use <code>TreeMetadataEmitter</code> to consume <code>MozbuildSandbox</code> instances. Nor do you need to use <code>BuildReader</code> to traverse the moz.build files! This is <em>just</em> the default framework we've established for our build system.</p>
+
+<h2 id="Legacy_Content">Legacy Content</h2>
+
+<p><strong>THE CONTENT BELOW IS CONSIDERED LEGACY. IT IS PRESERVED FOR HISTORICAL REASONS UNTIL THIS ENTIRE PAGE IS REWRITTEN.</strong></p>
+
+<h3 id="Makefile_basics">Makefile basics</h3>
+
+<p>Makefiles can be quite complicated, but Mozilla provides a number of built-in rules that should enable most Makefiles to be quite simple. Complete documentation for make is beyond the scope of this document, but is available <a href="http://www.gnu.org/software/make/manual/">here</a>.</p>
+
+<p>One concept you will need be familiar with is <em>variables</em> in make. Variables are defined by the syntax <code>VARIABLE = VALUE</code>, and the value of a variable is referenced by writing <code>$(VARIABLE)</code>. All variables are strings.</p>
+
+<p>All Makefile.in files in Mozilla have the same basic format:</p>
+
+<div>{{ page("/en-US/docs/Standard_Makefile_Header")}}</div>
+
+<pre class="eval"># ... Main body of Makefile goes here ...
+
+include $(topsrcdir)/config/rules.mk
+
+# ... Additional rules go here ...
+</pre>
+
+<ul>
+ <li>The <code><a href="/en-US/docs/DEPTH" title="DEPTH">DEPTH</a></code> variable should be set to the relative path from your Makefile.in to the toplevel Mozilla directory.</li>
+ <li><code>topsrcdir</code> is substituted in by configure, and points to the toplevel mozilla directory.</li>
+ <li><code>srcdir</code> is also substituted in by configure, and points to the source directory for the current directory. In source tree builds, this will simply point to "." (the current directory).</li>
+ <li><code><a href="/en-US/docs/VPATH" title="VPATH">VPATH</a></code> is a list of directories where make will look for prerequisites (i.e. source files).</li>
+</ul>
+
+<p>One other frequently used variable not specific to a particular build target is <code><a href="/en-US/docs/DIRS" title="DIRS">DIRS</a></code>. <code>DIRS</code> is a list of subdirectories of the current directory to recursively build in. Subdirectories are traversed <em>after</em> their parent directories. For example, you could have:</p>
+
+<pre class="eval"><a href="/en-US/docs/DIRS" title="DIRS">DIRS</a> = \
+  public \
+  resources \
+  src \
+  $(NULL)
+</pre>
+
+<p>This example demonstrates another concept, <em>continuation lines</em>. A backslash as the last character on a line allows the variable definition to be continued on the next line. The extra whitespace is compressed. The terminating $(NULL) is a method for consistency; it allows you to add and remove lines without worrying about whether the last line has an ending backslash or not.</p>
+
+<h2 id="Makefile_examples" name="Makefile_examples">Makefile examples</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Standard_Makefile_Header" title="Standard_Makefile_Header">Standard Makefile Header</a></li>
+ <li><a href="/en-US/docs/Installing_headers_using_EXPORTS" title="Installing_headers_using_EXPORTS">Installing headers using EXPORTS</a></li>
+ <li><a href="/en-US/docs/Compiling_interfaces_using_XPIDLSRCS" title="Compiling_interfaces_using_XPIDLSRCS">Compiling interfaces using XPIDLSRCS</a></li>
+ <li><a href="/en-US/docs/Installing_a_JavaScript_component" title="Installing_a_JavaScript_component">Installing a JavaScript component</a></li>
+ <li><a href="/en-US/docs/Building_a_component_DLL" title="Building_a_component_DLL">Building a component DLL</a></li>
+ <li><a href="/en-US/docs/Building_a_static_library" title="Building_a_static_library">Building a static library</a></li>
+ <li><a href="/en-US/docs/Building_a_dynamic_library" title="Building_a_dynamic_library">Building a dynamic library</a></li>
+ <li><a href="/en-US/docs/How_Mozilla's_build_system_works/Makefiles_-_Best_practices_and_suggestions" title="How Mozilla's build system works/Makefiles - Best practices and suggestions">Makefiles - Best practices and suggestions</a></li>
+ <li><a href="/en-US/docs/How_Mozilla's_build_system_works/Makefile_-_targets" title="How Mozilla's build system works/Makefile - targets">Makefile - targets</a></li>
+ <li><a href="/en-US/docs/How_Mozilla's_build_system_works/Makefile_-_variables" title="How Mozilla's build system works/Makefile - variables">Makefile - variables</a>, <a href="/en-US/docs/How_Mozilla%27s_build_system_works/Makefile_-_macro_values" title="How Mozilla's build system works/Makefile - macro values">values</a></li>
+ <li><a href="/en-US/docs/Makefile_-_.mk_files" title="Makefile - .mk files">Makefile - *.mk files &amp; user config</a></li>
+</ul>
+
+<h2 id="Building_libraries" name="Building_libraries">Building libraries</h2>
+
+<p>There are three main types of libraries that are built in Mozilla:</p>
+
+<ul>
+ <li><strong>Components</strong> are shared libraries (except in static builds) which are installed to dist/bin/components. Components are not linked against by any other library.</li>
+ <li><strong>Non-component shared libraries</strong> include libraries such as libxpcom, libmozjs. These libraries are installed to dist/bin and are linked against. You will probably not need to create a new library of this type.</li>
+ <li><strong>Static libraries</strong> are often used as intermediate steps to building a shared library, if there are source files from several directories that are part of the shared library. Static libraries may also be linked into an executable.</li>
+</ul>
+
+<h3 id="Non-component_shared_libraries" name="Non-component_shared_libraries">Non-component shared libraries</h3>
+
+<p>A non-component shared library is useful when there is common code that several components need to share, and sharing it through XPCOM is not appropriate or not possible. As an example, let's look at a portion of the Makefile for libmsgbaseutil, which is linked against by all of the main news components:</p>
+
+<pre class="eval"> DEPTH           = ../../..
+ topsrcdir       = @top_srcdir@
+ srcdir          = @srcdir@
+ VPATH           = @srcdir@
+ 
+ include $(DEPTH)/config/autoconf.mk
+ 
+ <a href="/en-US/docs/MODULE" title="MODULE">MODULE</a>          = msgbaseutil
+ <a href="/en-US/docs/LIBRARY_NAME" title="LIBRARY_NAME">LIBRARY_NAME</a>    = msgbaseutil
+ <a href="/en-US/docs/EXPORT_LIBRARY" title="EXPORT_LIBRARY">EXPORT_LIBRARY</a> = 1
+ <a href="/en-US/docs/SHORT_LIBNAME" title="SHORT_LIBNAME">SHORT_LIBNAME</a>   = msgbsutl
+</pre>
+
+<p>Notice that the only real change from the component example above is that <strong>IS_COMPONENT</strong> is not set. When this is not set, a shared library will be created and installed to dist/bin.</p>
+
+<h3 id="Static_libraries" name="Static_libraries">Static libraries</h3>
+
+<p>As mentioned above, static libraries are most commonly used as intermediate steps to building a larger library (usually a component). This allows you to spread out the source files in multiple subdirectories. Static libraries may also be linked into an executable. As an example, here is a portion of the Makefile from layout/base/src:</p>
+
+<pre class="eval"> DEPTH           = ../../..
+ topsrcdir       = @top_srcdir@
+ srcdir          = @srcdir@
+ VPATH           = @srcdir@
+ 
+ include $(DEPTH)/config/autoconf.mk
+ 
+ MODULE          = layout
+ LIBRARY_NAME    = gkbase_s
+ 
+ # REQUIRES and CPPSRCS omitted here for brevity #
+ 
+ # we don't want the shared lib, but we want to force the creation of a static lib.
+ <a href="/en-US/docs/FORCE_STATIC_LIB" title="FORCE_STATIC_LIB">FORCE_STATIC_LIB</a> = 1
+ 
+ include $(topsrcdir)/config/rules.mk
+</pre>
+
+<p>The key here is setting <strong>FORCE_STATIC_LIB</strong> = 1. This creates libgkbase_s.a (on UNIX) and gkbase_s.lib on Windows, and copies it to dist/lib. Now, let's take a look at how to link several static libraries together to create a component:</p>
+
+<pre class="eval"> DEPTH           = ../..
+ topsrcdir       = @top_srcdir@
+ srcdir          = @srcdir@
+ VPATH           = @srcdir@
+ 
+ include $(DEPTH)/config/autoconf.mk
+ 
+ MODULE          = layout
+ LIBRARY_NAME    = gklayout
+ EXPORT_LIBRARY = 1
+ <a href="/en-US/docs/IS_COMPONENT" title="IS_COMPONENT">IS_COMPONENT</a>    = 1
+ <a href="/en-US/docs/MODULE_NAME" title="MODULE_NAME">MODULE_NAME</a>     = nsLayoutModule
+ 
+ <a href="/en-US/docs/CPPSRCS" title="CPPSRCS">CPPSRCS</a>         = \
+                 nsLayoutModule.cpp \
+                 $(NULL)
+ 
+ <a href="/en-US/docs/SHARED_LIBRARY_LIBS" title="SHARED_LIBRARY_LIBS">SHARED_LIBRARY_LIBS</a> = \
+                 $(DIST)/lib/$(LIB_PREFIX)gkhtmlbase_s.$(LIB_SUFFIX) \
+                 $(DIST)/lib/$(LIB_PREFIX)gkhtmldoc_s.$(LIB_SUFFIX) \
+                 $(DIST)/lib/$(LIB_PREFIX)gkhtmlforms_s.$(LIB_SUFFIX) \
+                 $(DIST)/lib/$(LIB_PREFIX)gkhtmlstyle_s.$(LIB_SUFFIX) \
+                 $(DIST)/lib/$(LIB_PREFIX)gkhtmltable_s.$(LIB_SUFFIX) \
+                 $(DIST)/lib/$(LIB_PREFIX)gkxulbase_s.$(LIB_SUFFIX) \
+                 $(DIST)/lib/$(LIB_PREFIX)gkbase_s.$(LIB_SUFFIX) \
+                 $(DIST)/lib/$(LIB_PREFIX)gkconshared_s.$(LIB_SUFFIX) \
+                 $(DIST)/lib/$(LIB_PREFIX)gkxultree_s.$(LIB_SUFFIX) \
+                 $(DIST)/lib/$(LIB_PREFIX)gkxulgrid_s.$(LIB_SUFFIX) \
+                 $(NULL)
+ 
+ include $(topsrcdir)/config/rules.mk</pre>
+
+<p><strong>SHARED_LIBRARY_LIBS</strong> is set to a list of static libraries which should be linked into this shared library. Note the use of <strong>LIB_PREFIX</strong> and <strong>LIB_SUFFIX</strong> to make this work on all platforms.</p>
+
+<h2 id="Building_jar_files" name="Building_jar_files">Building jar files</h2>
+
+<p>Jar files are used for packaging chrome files (XUL, JavaScript, and CSS). For more information on Jar packaging, you can read <a href="http://www.mozilla.org/build/jar-packaging.html">this document</a>. Here we will only cover how to set up a Makefile to package jars. Here is an example:</p>
+
+<pre class="eval"> DEPTH           = ../../../..
+ topsrcdir       = @top_srcdir@
+ srcdir          = @srcdir@
+ VPATH           = @srcdir@
+ 
+ include $(DEPTH)/config/autoconf.mk
+ 
+ include $(topsrcdir)/config/rules.mk
+</pre>
+
+<p>That's right, there are no extra variables to define. If a <strong><a href="/en-US/docs/JAR_Manifests" title="JAR_Manifests">jar.mn</a></strong> file exists in the same directory as this Makefile.in, it will automatically be processed. Although the common practice is to have a <strong>resources</strong> directory that contains the jar.mn and chrome files, you may also put a jar.mn in a directory that creates a library, and it will be processed.</p>
+
+<h2 id="Related_Links">Related Links</h2>
+
+<p>See the <a href="/en-US/docs/tag/Build%20Glossary" title="tag/Build%20Glossary">glossary of Makefile variables</a> for information about specific variables and how to use them.</p>
+
+<div class="originaldocinfo">
+<h2 id="Original_Document_Information">Original Document Information</h2>
+
+<ul>
+ <li>Author: Brian Ryner</li>
+ <li>Copyright Information: Portions of this content are © 1998–2006 by individual mozilla.org contributors; content available under a Creative Commons license</li>
+</ul>
+</div>
+
+<p> </p>

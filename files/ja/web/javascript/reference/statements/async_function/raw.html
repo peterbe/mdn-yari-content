@@ -1,0 +1,233 @@
+<div>
+<div>{{jsSidebar("Statements")}}</div>
+
+<p><code><strong>async function</strong></code> 宣言は、 {{jsxref("Global_Objects/AsyncFunction","AsyncFunction")}} オブジェクトを返す <strong><em>非同期関数</em></strong> を定義します。非同期関数は非同期でイベントループを介して実行され、暗黙的に{{jsxref("Promise")}}を返します。なおコードのシンタックス及び構造は通常の同期関数と非常に似たものになります。</p>
+
+<div class="noinclude">
+<p>{{jsxref("Operators/async_function", "async function 式", "", 1)}} を使用して async 関数を定義することもできます。</p>
+</div>
+</div>
+
+<div>{{EmbedInteractiveExample("pages/js/statement-async.html", "taller")}}</div>
+
+<p class="hidden">このインタラクティブデモのソースは GitHub のリポジトリに格納されています。インタラクティブデモプロジェクトに協力したい場合は、 <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> をクローンしてプルリクエストを送ってください。</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox">async function <em>name</em>([<em>param</em>[, <em>param</em>[, ... <em>param</em>]]]) {
+   <em>statements</em>
+}
+</pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<dl>
+ <dt><code>name</code></dt>
+ <dd>関数名。</dd>
+</dl>
+
+<dl>
+ <dt><code>param</code></dt>
+ <dd>関数に渡す引数名。</dd>
+</dl>
+
+<dl>
+ <dt><code>statements</code></dt>
+ <dd>関数の本体を構成するステートメント。</dd>
+</dl>
+
+<h3 id="Return_value" name="Return_value">戻り値</h3>
+
+<p>関数の中に含まれる、コードを実行する非同期関数を表す {{jsxref("Global_Objects/AsyncFunction","AsyncFunction")}} オブジェクトを、resolved <code><a href="https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a></code> の値と共に返します。rejectedの場合は補足されない例外を非同期関数から投げます。</p>
+
+<h2 id="Description" name="Description">説明</h2>
+
+<p><code>async</code> 関数は、 {{jsxref("Operators/await", "await")}} 式を含むことができます。 await 式は、async 関数の実行を一時停止し、 <code>Promise</code> の解決を待ちます。そして <code>async</code> 関数の実行を再開し、解決された値を返します。</p>
+
+<p>キーワード <code>await</code> は、<code>async</code> 宣言された関数の中でのみ有効です. <code>async</code> 関数の外で使用した場合は <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SyntaxError">SyntaxError</a></code>となります。</p>
+
+<div class="note">
+<p><code>async</code>/<code>await</code> 関数の目的は、 promise を同期的に使用する動作を簡素化し、 <code>Promise</code> のグループに対して何らかの動作を実行することです。 <code>Promise</code> が構造化コールバックに似ているのと同様に、 <code>async</code>/<code>await</code> はジェネレータと promise を組み合わせたものに似ています。</p>
+</div>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<h3 id="Simple_example" name="Simple_example">シンプルな例</h3>
+
+<pre class="brush: js">var resolveAfter2Seconds = function() {
+  console.log("starting slow promise");
+  return new Promise(resolve =&gt; {
+    setTimeout(function() {
+      resolve("slow");
+      console.log("slow promise is done");
+    }, 2000);
+  });
+};
+
+var resolveAfter1Second = function() {
+  console.log("starting fast promise");
+  return new Promise(resolve =&gt; {
+    setTimeout(function() {
+      resolve("fast");
+      console.log("fast promise is done");
+    }, 1000);
+  });
+};
+
+var sequentialStart = async function() {
+  console.log('==SEQUENTIAL START==');
+
+  // 1. Execution gets here almost instantly
+  const slow = await resolveAfter2Seconds();
+  console.log(slow); // 2. this runs 2 seconds after 1.
+
+  const fast = await resolveAfter1Second();
+  console.log(fast); // 3. this runs 3 seconds after 1.
+}
+
+var concurrentStart = async function() {
+  console.log('==CONCURRENT START with await==');
+  const slow = resolveAfter2Seconds(); // starts timer immediately
+  const fast = resolveAfter1Second(); // starts timer immediately
+
+  // 1. Execution gets here almost instantly
+  console.log(await slow); // 2. this runs 2 seconds after 1.
+  console.log(await fast); // 3. this runs 2 seconds after 1., immediately after 2., since fast is already resolved
+}
+
+var concurrentPromise = function() {
+  console.log('==CONCURRENT START with Promise.all==');
+  return Promise.all([resolveAfter2Seconds(), resolveAfter1Second()]).then((messages) =&gt; {
+    console.log(messages[0]); // slow
+    console.log(messages[1]); // fast
+  });
+}
+
+var parallel = async function() {
+  console.log('==PARALLEL with await Promise.all==');
+  
+  // Start 2 "jobs" in parallel and wait for both of them to complete
+  await Promise.all([
+      (async()=&gt;console.log(await resolveAfter2Seconds()))(),
+      (async()=&gt;console.log(await resolveAfter1Second()))()
+  ]);
+}
+
+// This function does not handle errors. See warning below!
+var parallelPromise = function() {
+  console.log('==PARALLEL with Promise.then==');
+  resolveAfter2Seconds().then((message)=&gt;console.log(message));
+  resolveAfter1Second().then((message)=&gt;console.log(message));
+}
+
+sequentialStart(); // after 2 seconds, logs "slow", then after 1 more second, "fast"
+
+// wait above to finish
+setTimeout(concurrentStart, 4000); // after 2 seconds, logs "slow" and then "fast"
+
+// wait again
+setTimeout(concurrentPromise, 7000); // same as concurrentStart
+
+// wait again
+setTimeout(parallel, 10000); // truly parallel: after 1 second, logs "fast", then after 1 more second, "slow"
+
+// wait again
+setTimeout(parallelPromise, 13000); // same as parallel
+</pre>
+
+<div class="blockIndicator note">
+
+
+<h4 id="await_と並列性"><code>await</code> と並列性</h4>
+
+<p><code>sequentialStart</code> では、最初の <code>await</code> のために実行が 2 秒間待機し、 2 つ目の <code>await</code>  のためにさらに 1 秒間待機します。 2 つ目のタイマーは最初のタイマーが起動している間は作成されません。コードは 3 秒後に終了します。</p>
+
+<p><code>concurrentStart</code> では、両方のタイマーが作成され、両方とも <code>await</code> される、すなわち待機させられます。タイマーは同時に実行されているため、 3 秒後ではなく 2 秒後に、すなわち最も遅いタイマーにあわせて終了します。<br>
+ しかし、 <code>await</code> の呼び出しは依然として逐次処理であり、これは 2 つ目の <code>await</code> が 1 つ目の終了まで待つことを意味します。このケースでは、最も速いタイマーが最も遅いタイマーのあとに処理されることになります。</p>
+
+<p>もし複数の処理を完全に並列に実行したい場合は、上記コード中の <code>parallel</code> のように <code>await Promise.all([job1(), job2()])</code> を使わなければなりません。</p>
+</div>
+
+<div class="warning">
+<h4 id="asyncawait_vs_Promisethen_およびエラーハンドリング"><code>async</code>/<code>await</code> vs Promise#then およびエラーハンドリング</h4>
+
+<p>多くの async 関数は Promise を用いて通常の関数として書くことができます。しかし <code>async</code> 関数はエラーハンドリングにおいてほんの僅かばかりエラーを起こしにくいです。</p>
+
+<p><code>concurrentStart</code>と<code>concurrentPromise</code>のどちらも関数としては同値です。<code>concurrentStart</code>では、<code>await</code>されたいずれかの関数呼び出しが失敗すれば、例外は自動的にキャッチされ、async 関数の実行が中断され、暗黙的にリターンされる Promise を経由してエラーが呼び出し元へ伝えられます。<br>
+ 同じことが Promise のケースでも起こり、関数は、関数の完了をとらえて戻ってくる <code>Promise</code> の面倒を見なければなりません。これは <code>concurrentPromise</code> では<code>Promise.all([]).then()</code> が返す promise を <code>return</code> することを意味します。実は、この例の前のバージョンはこれをやり忘れていました！</p>
+
+<p>しかしながら <code>async</code> 関数も誤ってエラーを飲み込んでしまうことがあります。<br>
+ 上記の <code>parallel</code> という async 関数を例にしてみましょう。もしこれが <code>Promise.all([])</code> 呼び出しの結果を <code>await</code> (もしくは <code>return</code>) しなければ、任意のエラーは伝わりません。<br>
+ <code>parallelPromise</code> の例は簡潔に見えるものの、エラーをまったくハンドルしていません！同じことをするには、やはり <code>return Promise.all[()]</code> が必要になります。</p>
+</div>
+
+<h3 id="Rewriting_a_promise_chain_with_an_async_function" name="Rewriting_a_promise_chain_with_an_async_function">promise チェーンをasync function で 書き換える</h3>
+
+<p>promise を返す API は promise チェーンで解決され、関数を複数の部品に分割できます。次のコードを想定してください。:</p>
+
+<pre class="brush: js">function getProcessedData(url) {
+  return downloadData(url) // returns a promise
+    .catch(e =&gt; {
+      return downloadFallbackData(url)  // returns a promise
+    })
+    .then(v =&gt; {
+      return processDataInWorker(v); // returns a promise
+    });
+}
+</pre>
+
+<p>次のように 1 つの <code>async</code> 関数に書き直すことができます。</p>
+
+<pre class="brush: js">async function getProcessedData(url) {
+  let v;
+  try {
+    v = await downloadData(url); 
+  } catch(e) {
+    v = await downloadFallbackData(url);
+  }
+  return processDataInWorker(v);
+}
+</pre>
+
+<p>上記の例では、 <code>return</code> ステートメント上に <code>await</code> ステートメントがないことに注目してください。なぜなら、<code>async function</code> の戻り値は暗黙的に {{jsxref("Promise.resolve")}} でラップされているからです。</p>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">ステータス</th>
+   <th scope="col">コメント</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-async-function-definitions', 'async function')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td>ES2017 における最初の定義。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES8', '#sec-async-function-definitions', 'async function')}}</td>
+   <td>{{Spec2('ES8')}}</td>
+   <td></td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザー実装状況</h2>
+
+<div>
+<div class="hidden">このページの互換性一覧表は構造化データから生成されます。データに協力したいのであれば、 <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> をチェックアウトしてプルリクエストを送信してください。</div>
+
+<p>{{Compat("javascript.statements.async_function")}}</p>
+</div>
+
+<h2 id="関連情報">関連情報</h2>
+
+<ul>
+ <li>{{jsxref("Operators/async_function", "async function expression")}}</li>
+ <li>{{jsxref("AsyncFunction")}} オブジェクト</li>
+ <li>{{jsxref("Operators/await", "await")}}</li>
+ <li><a href="http://innolitics.com/10x/javascript-decorators-for-promise-returning-functions/">"innolitics.com" の "Decorating Async Javascript Functions"</a></li>
+</ul>

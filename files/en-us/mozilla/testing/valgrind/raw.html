@@ -1,0 +1,97 @@
+<p>{{ApiRef}}</p>
+
+<p>This page describes how to use Valgrind (specifically, its Memcheck tool) to find memory errors.</p>
+
+<h2 id="Supported_platforms">Supported platforms</h2>
+
+<p>Valgrind runs desktop Firefox fine on Linux, especially on x86 and x86-64. Firefox for Android and Firefox OS on ARMv7 should also run, though perhaps not as smoothly. The other architectures supported by Valgrind on Linux (AARCH64, PPC{32,64}, MIPS{32,64}, S390X) should also work, in theory.</p>
+
+<p>MacOS X 10.10 (Yosemite), 64-bit only, works, although it can be a bit of a rough ride.</p>
+
+<ul>
+ <li>Expect lower performance and a somewhat higher false positive error rate than on Linux.</li>
+ <li>Valgrind's handling of malloc zones on Yosemite is imperfect. Regard leak reports with caution. </li>
+ <li>Valgrind has been known to cause kernel panics, for unknown reasons.</li>
+</ul>
+
+<h2 id="Where_to_get_Valgrind">Where to get Valgrind</h2>
+
+<p>Linux: Download <a class="external" href="http://valgrind.org/" title="http://valgrind.org/">Valgrind</a> directly, or use your distribution's package manager.</p>
+
+<p>MacOSX: <a class="external" href="http://valgrind.org/downloads/repository.html"><span class="external">Get Valgrind trunk from SVN</span></a> and build it. Don't use 3.10.x or any other tarball.</p>
+
+<p>Make sure you have version 3.10.1 or later of Valgrind. Newer versions tend to have better compatibility with both Firefox's JITs and newer toolchain components (compiler, libc and linker versions).</p>
+
+<h2 id="Basics">Basics</h2>
+
+<h3 id="Build">Build</h3>
+
+<p>Build Firefox with the following options, which maximize speed and accuracy.</p>
+
+<pre class="language-html"><code class="language-html">ac_add_options --disable-jemalloc
+ac_add_options --disable-strip
+ac_add_options --enable-valgrind</code><code>
+ac_add_options --enable-optimize="-g -O2"</code></pre>
+
+<h3 id="Run">Run</h3>
+
+<p>Note that programs run <em>much</em> more slowly under Valgrind than they do natively. Slow-downs of 20x or 30x aren't unexpected, and it's slower on Mac than on Linux. Don't try this on an underpowered machine.</p>
+
+<h4 id="Linux">Linux</h4>
+
+<p>On Linux, run Valgrind with the following options.</p>
+
+<pre><code>--smc-check=all-non-file</code> <code>--vex-iropt-register-updates=allregs-at-mem-access --show-mismatched-frees=no --read-inline-info=yes</code></pre>
+
+<p>The <code>--smc-check</code> and <code>--vex-iropt-register-updates</code> options are necessary to avoid crashes in JIT-generated code.</p>
+
+<p>The <code>--show-mismatched-frees</code> option is necessary due to inconsistent inlining of <code>new</code> and <code>delete</code> -- i.e. one gets inlined but the other doesn't -- which lead to false-positive mismatched-free errors.</p>
+
+<p>The <code>--read-inline-info</code> option improves stack trace readability in the presence of inlining.</p>
+
+<p>Also, run with the following environment variable set.</p>
+
+<pre><code>G_SLICE=always-malloc</code></pre>
+
+<p>This is necessary to get the Gnome system libraries to use plain <code>malloc</code> instead of pool allocators.</p>
+
+<h4 id="Mac">Mac</h4>
+
+<p>On Mac, run Valgrind with the following options.</p>
+
+<pre><code>--smc-check=all-non-file</code> <code>--vex-iropt-register-updates=allregs-at-mem-access --show-mismatched-frees=no --dsymutil=yes</code></pre>
+
+<p>The <code>--dsymutil</code> option ensures line number information is present in stack traces.</p>
+
+<h2 id="Advanced_usage">Advanced usage</h2>
+
+<h3 id="Shared_suppression_files">Shared suppression files</h3>
+
+<p><a class="external" href="http://mxr.mozilla.org/mozilla-central/source/build/valgrind/" title="http://mxr.mozilla.org/mozilla-central/source/build/valgrind/">/build/valgrind/</a> contains the suppression files used by the periodic Valgrind jobs on Tinderbox. Some of these files are platform-specific.</p>
+
+<h3 id="Running_mochitests_under_Valgrind">Running mochitests under Valgrind?</h3>
+
+<p>To run a mochitest under Valgrind, use the following command.</p>
+
+<pre>./mach mochitest-plain --debugger="valgrind" --debugger-args="$VALGRIND_OPTIONS" relative/path/to/tests
+</pre>
+
+<p>Where <code>$VALGRIND_OPTIONS</code> are the options described <a href="/en-US/docs/Mozilla/Testing/Valgrind#Run">above</a>. You might also need <code>--trace-children=yes</code> to trace into child processes.</p>
+
+<p>As of December 2014 it is possible to do a complete run of mochitests-plain on Valgrind in about 8 CPU hours on a Core i4910 (Haswell) machine.  Maximum process size is 5.4G, of which about 80% is in memory.  Runs of small subsets of mochitests take far less memory.</p>
+
+<h3 id="Bits_and_pieces">Bits and pieces</h3>
+
+<p>For un-released Linux distros (Fedora Rawhide, etc.) you'll need to use a version of Valgrind trunk build, because fixes for the latest gcc and glibc versions appear there first.  Without them you'll be flooded with false errors from Memcheck, and have debuginfo reading problems.</p>
+
+<p>On Linux, code compiled by LLVM at high optimisation levels can cause Memcheck to report false uninitialised value errors. See <a class="link-https" href="https://bugs.kde.org/show_bug.cgi?id=242137#c3" title="https://bugs.kde.org/show_bug.cgi?id=242137#c3">here</a> for an easy workaround. On Mac, Valgrind has this workaround built in.</p>
+
+<p>You can make stack traces easier to read by asking for source file names to be given relative to the root of your source tree.  Do this by using <code>--fullpath-after=</code> to specify the rightmost part of the absolute path that you don't want to see.  For example, if your source tree is rooted at <code>/home/sewardj/MC-20-12-2014</code>, use <code>--fullpath-after=2014/</code> to get path names relative to the source directory.</p>
+
+<p>The <code>--track-origins=yes</code> slows down Valgrind greatly, so don't use it unless you are hunting down a specific uninitialised value error. But if you are hunting down such an error, it's extremely helpful and worth waiting for.</p>
+
+<h2 id="Additional_help">Additional help</h2>
+
+<p>The <a class="external" href="http://www.valgrind.org/docs/manual/quick-start.html" title="http://www.valgrind.org/docs/manual/quick-start.html">Valgrind Quick Start Guide</a> is short and worth reading. The <a href="http://valgrind.org/docs/manual/manual.html">User Manual</a> is also useful.</p>
+
+<p>If Valgrind asserts, crashes, doesn't do what you expect, or otherwise acts up, first of all read this page and make sure you have both Firefox and Valgrind correctly configured.  If that's all OK, try using the <a class="external" href="http://www.valgrind.org/downloads/repository.html" title="http://www.valgrind.org/downloads/repository.html">Valgrind trunk from SVN</a>.  Oftentimes bugs are fixed in the trunk before most users fall across them.  If that doesn't help, consider <a class="external" href="http://www.valgrind.org/support/bug_reports.html" title="http://www.valgrind.org/support/bug_reports.html">filing a bug report</a>, and/or mailing Julian Seward or Nick Nethercote.</p>

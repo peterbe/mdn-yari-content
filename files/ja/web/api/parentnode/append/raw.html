@@ -1,0 +1,129 @@
+<div>{{APIRef("DOM")}}</div>
+
+<p>The <strong><code>ParentNode.append()</code></strong> メソッドは、{{domxref("Node")}} オブジェクト または {{domxref("DOMString")}} オブジェクトのセットを <code>ParentNode</code> の最後に追加します。{{domxref("DOMString")}} オブジェクトは{{domxref("Text")}} ノードと同等に挿入されます。 </p>
+
+<p>{{domxref("Node.appendChild()")}}との違い:</p>
+
+<ul>
+ <li><code>ParentNode.append()</code> は {{domxref("DOMString")}} も追加することができますが、<code>Node.appendChild()</code> は{{domxref("Node")}} オブジェクトのみを受け付けます。</li>
+ <li><code>ParentNode.append()</code> は戻り値を持っていませんが、<code>Node.appendChild()</code> は追加された{{domxref("Node")}} オブジェクトを返します。</li>
+ <li><code>ParentNode.append()</code> は複数のノードや文字列を追加することができますが、<code>Node.appendChild()</code> 一つのノードだけしか追加することができせん。</li>
+</ul>
+
+<h2 id="構文">構文</h2>
+
+<pre class="syntaxbox">[Throws, Unscopable]
+void ParentNode.append((Node or DOMString)... nodes);
+</pre>
+
+<h3 id="引数">引数</h3>
+
+<dl>
+ <dt><code>nodes</code></dt>
+ <dd>追加する {{domxref("Node")}} または {{domxref("DOMString")}} オブジェクトのセット</dd>
+</dl>
+
+<h3 id="例外">例外</h3>
+
+<ul>
+ <li>{{domxref("HierarchyRequestError")}}: ノードは階層の特定の箇所に追加させることができません。</li>
+</ul>
+
+<h2 id="例">例</h2>
+
+<h3 id="要素の追加">要素の追加</h3>
+
+<pre class="brush: js">var parent = document.createElement("div");
+var p = document.createElement("p");
+parent.append(p);
+
+console.log(parent.childNodes); // NodeList [ &lt;p&gt; ]
+</pre>
+
+<h3 id="テキストの追加">テキストの追加</h3>
+
+<pre class="brush: js">var parent = document.createElement("div");
+parent.append("Some text");
+
+console.log(parent.textContent); // "Some text"</pre>
+
+<h3 id="要素とテキストの追加">要素とテキストの追加</h3>
+
+<pre class="brush: js">var parent = document.createElement("div");
+var p = document.createElement("p");
+parent.append("Some text", p);
+
+console.log(parent.childNodes); // NodeList [ #text "Some text", &lt;p&gt; ]</pre>
+
+<h3 id="ParentNode.append_はスコープできない"><code>ParentNode.append()</code> はスコープできない</h3>
+
+<p><code>append()</code> メソッドは <code>with</code> ステートメントの中ではスコープされません。詳しくは {{jsxref("Symbol.unscopables")}} をご覧ください。</p>
+
+<pre class="brush: js">var parent = document.createElement("div");
+
+with(parent) { 
+  append("foo");
+}
+// ReferenceError: append is not defined </pre>
+
+<h2 id="Polyfill">Polyfill</h2>
+
+<p><code>append()</code> メソッドはInternet Explorer 9 以上であれば以下のコードでポリフィルを当てることができます。</p>
+
+<pre class="brush: js">// Source: https://github.com/jserz/js_piece/blob/master/DOM/ParentNode/append()/append().md
+(function (arr) {
+  arr.forEach(function (item) {
+    if (item.hasOwnProperty('append')) {
+      return;
+    }
+    Object.defineProperty(item, 'append', {
+      configurable: true,
+      enumerable: true,
+      writable: true,
+      value: function append() {
+        var argArr = Array.prototype.slice.call(arguments),
+          docFrag = document.createDocumentFragment();
+        
+        argArr.forEach(function (argItem) {
+          var isNode = argItem instanceof Node;
+          docFrag.appendChild(isNode ? argItem : document.createTextNode(String(argItem)));
+        });
+        
+        this.appendChild(docFrag);
+      }
+    });
+  });
+})([Element.prototype, Document.prototype, DocumentFragment.prototype]);</pre>
+
+<h2 id="仕様">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">状況</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('DOM WHATWG', '#dom-parentnode-append', 'ParentNode.append()')}}</td>
+   <td>{{Spec2('DOM WHATWG')}}</td>
+   <td>初期定義.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="ブラウザ互換性">ブラウザ互換性</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("api.ParentNode.append")}}</p>
+
+<h2 id="関連情報">関連情報</h2>
+
+<ul>
+ <li>{{domxref("ParentNode")}} and {{domxref("ChildNode")}}</li>
+ <li>{{domxref("ParentNode.prepend()")}}</li>
+ <li>{{domxref("Node.appendChild()")}}</li>
+ <li>{{domxref("ChildNode.after()")}}</li>
+ <li>{{domxref("NodeList")}}</li>
+</ul>

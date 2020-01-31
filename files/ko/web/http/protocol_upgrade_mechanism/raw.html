@@ -1,0 +1,143 @@
+<div>{{HTTPSidebar}}</div>
+
+<p><span class="seoSummary"><a href="/en-US/docs/Web/HTTP">HTTP/1.1 protocol</a> 은 {{HTTPHeader("Upgrade")}} 헤더 필드를 사용해 이미 설정된 연결을 다른 프로토콜로 업그레이드 할 수 있는 특별한 매커니즘을 제공합니다.</span></p>
+
+<p>이 매커니즘은 선택 사항입니다; 프로토콜 변경이 강제되는 상황에서는 사용할 수 없습니다. 구현 시, 새로운 프로토콜을 지원하더라도 사용하지 않도록 설정할 수 있으며, 실제로 이 매커니즘은 웹소켓 연결을 부트스트랩 하는 데에 사용됩니다. </p>
+
+<p>HTTP/2에서는 이 매커니즘의 사용이 명시적으로 허용되지 않음을 기억하세요; HTTP/1/1에서만 해당됩니다.</p>
+
+<h2 id="HTTP1.1_커넥션으로_업그레이드_하기">HTTP/1.1 커넥션으로 업그레이드 하기</h2>
+
+<p>클라이언트에서 기본 설정인 내림차순으로 리스트업된 프로토콜 중 하나로 전환하기 위해 서버와 연결할 때, {{HTTPHeader("Upgrade")}} 헤더 필드를 사용합니다.</p>
+
+<p><code>Upgrade</code>가 hop-by-hop 헤더이기 때문에, {{HTTPHeader("Connection")}} 헤더 필드에 리스트업 되어야 합니다. 업그레이드를 포함하고 있는 전형적 요청은 아래와 같은 형태를 가진다는 것을 의미합니다. </p>
+
+<pre class="syntaxbox">GET /index.html HTTP/1.1
+Host: www.example.com
+Connection: upgrade
+Upgrade: example/1, foo/2</pre>
+
+<p>요청되는 프로토콜에 따라 다른 헤더가 요구될 수 있습니다; 일례로, <a href="/en-US/docs/Web/API/WebSocket">웹소켓</a> 업그레이드를 통해 추가 헤더가 웹소켓 연결에서 세부 정보를 설정할 수 있을 뿐만 아니라 연결을 열 때 일정 수준 이상의 보안을 제공합니다. 좀 더 자세한 내용은 {{anch("Upgrading to a WebSocket connection")}} 에서 확인할 수 있습니다.</p>
+
+<p>서버가 연결을 업그레이드 하기로 결정했다면, 변경할 프로토콜을 지정하는 업그레이드 헤더와 함께{{HTTPStatus(101, "101 Switching Protocols")}} 응답 상태를 반환합니다. 업그레이드 헤더가 포함된 응답 코드는 변경될 프로토콜(들)을 구체화합니다. 연결을 업그레이드 하지 않거나 할 수 없다면, <code>Upgrade</code> 헤더를 무시하고 일반적인 응답을 반환합니다. ({{HTTPStatus(200, "200 OK")}}와 같이요).</p>
+
+<p>Right after sending the <code>101</code> status code, the server can begin speaking the new protocol, performing any additional protocol-specific handshakes as necessary. Effectively, the connection becomes a two-way pipe as soon as the upgraded response is complete, and the request that initiated the upgrade can be completed over the new protocol.</p>
+
+<h2 id="일반적인_사용법">일반적인 사용법</h2>
+
+<p>{{HTTPHeader("Upgrade")}} 헤더를 보통 어떻게 사용하는지 살펴보겠습니다.</p>
+
+<h3 id="웹_소켓_연결_업그레이드">웹 소켓 연결 업그레이드</h3>
+
+<p>By far, the most common use case for upgrading an HTTP connection is to use WebSockets, which are always implemented by upgrading an HTTP or HTTPS connection. Keep in mind that if you're opening a new connection using the <a href="/en-US/docs/Web/API/WebSocket">WebSocket API</a>, or any library that does WebSockets, most or all of this is done for you. For example, opening a WebSocket connection is as simple as:</p>
+
+<pre class="brush: js">webSocket = new WebSocket("ws://destination.server.ext", "optionalProtocol");</pre>
+
+<p>The {{domxref("WebSocket.WebSocket", "WebSocket()")}} constructor does all the work of creating an initial HTTP/1.1 connection then handling the handshaking and upgrade process for you.</p>
+
+<div class="note">
+<p>You can also use the <code>"wss://"</code> URL scheme to open a secure WebSocket connection.</p>
+</div>
+
+<p>처음부터 웹소켓 연결을 수행해야 하는 경우, handshaking 프로세스를 직접 만들 수 있습니다. 초기 HTTP/1.1 세션을 생성한 다음, 표준 요청에 추가하여 업그레이드를 요청해야 합니다. 아래와 같이 {{HTTPHeader("Upgrade")}} 와 {{HTTPHeader("Connection")}} 를 설정하면 됩니다:</p>
+
+<pre>Connection: Upgrade
+Upgrade: websocket</pre>
+
+<h3 id="특정_웹_소켓_헤더">특정 웹 소켓 헤더</h3>
+
+<p>The following headers are involved in the WebSocket upgrade process. Other than the {{HTTPHeader("Upgrade")}} and {{HTTPHeader("Connection")}} headers, the rest are generally optional or handled for you by the browser and server when they're talking to each other.</p>
+
+<h4 id="HTTPHeaderSec-WebSocket-Extensions">{{HTTPHeader("Sec-WebSocket-Extensions")}}</h4>
+
+<p>Specifies one or more protocol-level WebSocket extensions to ask the server to use. Using more than one <code>Sec-WebSocket-Extension</code> header in a request is permitted; the result is the same as if you included all of the listed extensions in one such header.</p>
+
+<pre class="syntaxbox">Sec-WebSocket-Extensions: <var>extensions</var></pre>
+
+<dl>
+ <dt><code><var>extensions</var></code></dt>
+ <dd>A comma-separated list of extensions to request (or agree to support). These should be selected from the <a href="https://www.iana.org/assignments/websocket/websocket.xml#extension-name">IANA WebSocket Extension Name Registry</a>. Extensions which take parameters do so by using semicolon delineation.</dd>
+</dl>
+
+<p>For example:</p>
+
+<pre>Sec-WebSocket-Extensions: superspeed, colormode; depth=16</pre>
+
+<h4 id="HTTPHeaderSec-WebSocket-Key">{{HTTPHeader("Sec-WebSocket-Key")}}</h4>
+
+<p>Provides information to the server which is needed in order to confirm that the client is entitled to request an upgrade to WebSocket. This header can be used when insecure (HTTP) clients wish to upgrade, in order to offer some degree of protection against abuse. The value of the key is computed using an algorithm defined in the WebSocket specification, so this <em>does not provide security</em>. Instead, it helps to prevent non-WebSocket clients from inadvertently, or through misuse, requesting a WebSocket connection. In essence, then, this key simply confirms that "Yes, I really mean to open a WebSocket connection."</p>
+
+<p>This header is automatically added by clients that choose to use it; it cannot be added using the {{domxref("XMLHttpRequest.setRequestHeader()")}} method.</p>
+
+<pre class="syntaxbox">Sec-WebSocket-Key: <var>key</var></pre>
+
+<dl>
+ <dt><code><var>key</var></code></dt>
+ <dd>The key for this request to upgrade. The client adds this if it wishes to do so, and the server will include in the response a key of its own, which the client will validate before delivering the upgrade response to you.</dd>
+</dl>
+
+<p>The server's response's {{HTTPHeader("Sec-WebSocket-Accept")}} header will have a value computed based upon the specified <code><var>key</var></code>.</p>
+
+<h4 id="HTTPHeaderSec-WebSocket-Protocol">{{HTTPHeader("Sec-WebSocket-Protocol")}}</h4>
+
+<p>The <code>Sec-WebSocket-Protocol</code> header specifies one or more WebSocket protocols that you wish to use, in order of preference. The first one that is supported by the server will be selected and returned by the server in a <code>Sec-WebSocket-Protocol</code> header included in the response. You can use this more than once in the header, as well; the result is the same as if you used a comma-delineated list of subprotocol identifiers in a single header.</p>
+
+<pre class="syntaxbox">Sec-WebSocket-Protocol: <var>subprotocols</var></pre>
+
+<dl>
+ <dt><code><var>subprotocols</var></code></dt>
+ <dd>A comma-separated list of subprotocol names, in the order of preference. The subprotocols may be selected from the <a href="https://www.iana.org/assignments/websocket/websocket.xml#subprotocol-name">IANA WebSocket Subprotocol Name Registry</a> or may be a custom name jointly understood by the client and the server.</dd>
+</dl>
+
+<h4 id="HTTPHeaderSec-WebSocket-Version">{{HTTPHeader("Sec-WebSocket-Version")}}</h4>
+
+<h5 id="헤더_요청">헤더 요청</h5>
+
+<p>Specifies the WebSocket protocol version the client wishes to use, so the server can confirm whether or not that version is supported on its end.</p>
+
+<pre class="syntaxbox">Sec-WebSocket-Version: <var>version</var></pre>
+
+<dl>
+ <dt><code><var>version</var></code></dt>
+ <dd>The WebSocket protocol version the client wishes to use when communicating with the server. This number should be the most recent version possible listed in the <a href="https://www.iana.org/assignments/websocket/websocket.xml#version-number">IANA WebSocket Version Number Registry</a>. The most recent final version of the WebSocket protocol is version 13.</dd>
+</dl>
+
+<h5 id="응답_헤더">응답 헤더</h5>
+
+<p>If the server can't communicate using the specified version of the WebSocket protocol, it will respond with an error (such as 426 Upgrade Required) that includes in its headers a <code>Sec-WebSocket-Version</code> header with a comma-separated list of the supported protocol versions. If the server does support the requested protocol version, no <code>Sec-WebSocket-Version</code> header is included in the response.</p>
+
+<pre class="syntaxbox">Sec-WebSocket-Version: <var>supportedVersions</var></pre>
+
+<dl>
+ <dt><code><var>supportedVersions</var></code></dt>
+ <dd>A comma-delineated list of the WebSocket protocol versions supported by the server.</dd>
+</dl>
+
+<h3 id="응답_전용_헤더">응답 전용 헤더</h3>
+
+<p>서버로부터의 응답은 아래와 같은 내용을 포함할 수 있습니다.</p>
+
+<h4 id="HTTPHeaderSec-WebSocket-Accept">{{HTTPHeader("Sec-WebSocket-Accept")}}</h4>
+
+<p>Included in the response message from the server during the opening handshake process when the server is willing to initiate a WebSocket connection. It will appear no more than once in the response headers.</p>
+
+<pre class="syntaxbox">Sec-WebSocket-Accept: <var>hash</var></pre>
+
+<dl>
+ <dt><code><var>hash</var></code></dt>
+ <dd>If a {{HTTPHeader("Sec-WebSocket-Key")}} header was provided, the value of this header is computed by taking the value of the key, concatenating the string "258EAFA5-E914-47DA-95CA-C5AB0DC85B11" to it, taking the {{interwiki("wikipedia", "SHA-1")}} hash of that concatenated string, resulting in a 20-byte value. That value is then <a href="/en-US/docs/Web/API/WindowBase64/Base64_encoding_and_decoding">base64</a> encoded to obtain the value of this property.</dd>
+</dl>
+
+<h2 id="참고">참고</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Web/API/WebSocket">WebSocket API</a></li>
+ <li><a href="/en-US/docs/Web/HTTP">HTTP</a></li>
+ <li>Specifications and RFCs:
+  <ul>
+   <li>{{RFC(7230)}}</li>
+   <li>{{RFC(6455)}}</li>
+   <li>{{RFC(7540)}}</li>
+  </ul>
+ </li>
+</ul>

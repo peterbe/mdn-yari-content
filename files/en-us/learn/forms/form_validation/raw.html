@@ -1,0 +1,818 @@
+<div>{{LearnSidebar}}</div>
+
+<div>{{PreviousMenuNext("Learn/Forms/UI_pseudo-classes", "Learn/Forms/Sending_and_retrieving_form_data", "Learn/HTML/Forms")}}</div>
+
+<p>Before submitting data to the server, it is important to ensure required form controls are filled in and that all the form controls are filled out in the correct format. This <strong>client-side form validation</strong> helps ensure data submitted matches the requirements set forth in the various form controls. This article leads you through basic concepts and examples of client-side form validation.</p>
+
+<p>Client side validation is an initial check and an important feature of good user experience; by catching and requiring corrections to invalid data before it is sent to the server to be rejected there, the delay caused by a round trip to the server for server-side validation is avoided. Server-side validation is still necessary to check data sent to the server, ensuring incorrect or malicious data is rejected. Server-side validation is beyond the scope of this guide.</p>
+
+<p>This tutorial is a brief introduction to native and scripted client-side validation; just an overview of what is possible and what is needed. For more information beyond this tutorial, see the <a href="/en-US/docs/Web/Guide/HTML/HTML5/Constraint_validation">Constraint validation guide</a>.</p>
+
+<table class="learn-box standard-table">
+ <tbody>
+  <tr>
+   <th scope="row">Prerequisites:</th>
+   <td>Computer literacy, a reasonable understanding of <a href="/en-US/docs/Learn/HTML">HTML</a>, <a href="/en-US/docs/Learn/CSS">CSS</a>, and <a href="/en-US/docs/Learn/JavaScript">JavaScript</a>.</td>
+  </tr>
+  <tr>
+   <th scope="row">Objective:</th>
+   <td>To understand what form validation is, why it's important, and to apply various techniques to implement it.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="What_is_form_validation">What is form validation?</h2>
+
+<p>Go to any popular site with a registration form, and you will notice that they provide feedback when you don't enter your data in the format they are expecting. You'll get messages such as:</p>
+
+<ul>
+ <li>"This field is <a href="/en-US/docs/Web/API/ValidityState/valueMissing">required</a>" (You can't leave this field blank.)</li>
+ <li>"Please enter your phone number in the format xxx-xxxx" (The form enforces a <a href="/en-US/docs/Web/API/ValidityState/patternMismatch">pattern</a> of three numbers followed by a dash, followed by four numbers.)</li>
+ <li>"Please enter a valid email address" (Used if your entry is not the right <a href="/en-US/docs/Web/API/ValidityState/typeMismatch">type</a>; not in the format of "somebody@example.com")</li>
+ <li>"Your password needs to be between 8 and 30 characters long and contain one uppercase letter, one symbol, and a number." (When the length is <a href="/en-US/docs/Web/API/ValidityState/tooShort">shorter than the <code>minlength</code></a> or <a href="/en-US/docs/Web/API/ValidityState/tooLong">longer than the <code>maxlength</code></a> attributes, or otherwised doesn't match an included <a href="/en-US/docs/Web/HTML/Attributes/pattern"><code>pattern</code> attribute</a> or a regular expression comparison done with JavaScript).</li>
+</ul>
+
+<p>This is called <strong>form validation</strong>. When you enter data, the browser and, optionally, the web application, check to see that the data is in the correct format and within the constraints set by the various <a href="/en-US/docs/Web/Guide/HTML/HTML5/Constraint_validation#Validation-related_attributes">validation-related attributes</a>. If the information is correctly formatted, the user agent (and application) allows the data to be submitted to the server and (usually) saved in a database; if the information isn't correctly formatted, it gives the user an error message explaining what needs to be corrected.</p>
+
+<p>We want to make filling out web forms as easy as possible. So why do we insist on validating our forms? There are three main reasons:</p>
+
+<ul>
+ <li><strong>We want to get the right data, in the right format.</strong> Our applications won't work properly if our users' data is stored in the incorrect format, if they don't enter the correct information, or if they omit information altogether.</li>
+ <li><strong>We want to protect our users' accounts</strong>. Forcing our users to enter secure passwords makes it easier to protect their account information.</li>
+ <li><strong>We want to protect ourselves</strong>. There are many ways that malicious users can misuse unprotected forms to damage the application. (See <a href="/en-US/docs/Learn/Server-side/First_steps/Website_security">Website security</a>.)<br>
+  {{warning("Never trust data passed to your server from the client. Even if your form is validating correctly and preventing malformed input on the client-side, a malicious user can still alter the network request.")}}</li>
+</ul>
+
+<h3 id="Different_types_of_form_validation">Different types of form validation</h3>
+
+<p>There are two different types of form validation that you'll encounter on the web:</p>
+
+<ul>
+ <li><strong>Client-side validation</strong> is validation that occurs in the browser before the data has been submitted to the server. Client-side validation is more user-friendly than server-side validation because it gives an instant response. Client-side validation is further subdivided into the following categories:
+
+  <ul>
+   <li><strong>JavaScript</strong> validation is coded using JavaScript. This validation is completely customizable.</li>
+   <li><strong>Built-in form validation</strong> uses HTML5 form validation features. This validation generally doesn't require JavaScript. Built-in form validation has better performance than JavaScript. But, while highly customizable, native validation is not as customizable as JavaScript.</li>
+  </ul>
+ </li>
+ <li><strong>Server-side validation</strong> is validation that occurs on the server after the data has been submitted. Server-side code is used to validate the data before the data is saved in the database or otherwise used by the application. If the data fails validation, a response is sent back to the client with corrections that the user needs to make. Server-side validation is your application's last line of defense against incorrect or malicious data. All popular <a href="/en-US/docs/Learn/Server-side/First_steps/Web_frameworks">server-side frameworks</a> have features for <strong>validating</strong> and <strong>sanitizing</strong> data, or making it safe.</li>
+</ul>
+
+<p>For good user experience and security, developers should use a combination of both client-side and server-side validation. Client-side validation is more user-friendly than server-side validation because it provides errors during form completion rather than requiring the entire form to be completed, submitted, analyzed, and returned. Server-side validation should be considered required because client-side error checking can be bypassed and network requests can be altered.</p>
+
+<h2 id="Using_built-in_form_validation">Using built-in form validation</h2>
+
+<p>One of the features of <a href="/en-US/docs/HTML/HTML5">HTML5</a> form controls is the ability to validate most user data without relying on scripts. This is done by using <a href="/en-US/docs/Web/Guide/HTML/HTML5/Constraint_validation#Validation-related_attributes">validation attributes</a> on form elements. Validation attributes allow you to specify rules for a form input, such as whether a value must be filled in (the <code><a href="/en-US/docs/Web/HTML/Attributes/required">required</a></code> attribute); the minimum and maximum length of the data (the <code><a href="/en-US/docs/Web/HTML/Attributes/minlength">minlength</a></code> and <code><a href="/en-US/docs/Web/HTML/Attributes/maxlength">maxlength</a></code> attributes); the minimum and maximum values (the <code><a href="/en-US/docs/Web/HTML/Attributes/min">min</a></code> and <code><a href="/en-US/docs/Web/HTML/Attributes/max">max</a></code> attributes); whether the data needs to be a number, an email address, or something else (the <code>type</code> attribute); and a regular expression pattern that the data must match (the <code><a href="/en-US/docs/Web/HTML/Attributes/pattern">pattern</a></code> attribute). In supporting browsers, if the entered data follows all of the specified rules, it is considered valid; if not, it is considered invalid.</p>
+
+<p>When an element is valid, the following things are true:</p>
+
+<ul>
+ <li>The element matches the {{cssxref(":valid")}} CSS pseudo-class, which lets you apply a specific style to valid elements.</li>
+ <li>If the user tries to send the data, the browser will submit the form, provided there is nothing else stopping it from doing so (e.g., JavaScript).</li>
+</ul>
+
+<p>When an element is invalid, the following things are true:</p>
+
+<ul>
+ <li>The element matches the {{cssxref(":invalid")}} CSS pseudo-class, and sometimes other UI pseudo-classes depending on the error, which lets you apply a specific style to invalid elements.</li>
+ <li>If the user tries to send the data, the browser will block the form and display an error message.</li>
+</ul>
+
+<p>There are several errors that will prevent the form from being submitted, including a {{domxref('validityState.badInput', 'badInput')}},  a {{domxref('validityState.patternMismatch','patternMismatch')}}, a {{domxref('validityState.rangeOverflow','rangeOverflow')}} or {{domxref('validityState.rangeUnderflow','rangeUnderflow')}}, a {{domxref('validityState.stepMismatch','stepMismatch')}}, a form control that is {{domxref('validityState.tooLong','tooLong')}} or {{domxref('validityState.tooShort','tooShort')}}, a {{domxref('validityState.typeMismatch','typeMismatch')}}, and {{domxref('validityState.valueMissing','valueMissing')}} that is required, and even just having a {{domxref('validityState.customError','customError')}},</p>
+
+<h3 id="Validation_constraints_on_input_elements">Validation constraints on input elements</h3>
+
+<p>In this section, we'll look at some of the different form control attributes that can be used to validate {{HTMLElement("input")}} elements.</p>
+
+<p>Let's start with a simple example: an input that allows you to choose whether you prefer a banana or a cherry. This example involves a simple text {{HTMLElement("input")}} with an associated {{htmlelement("label")}} and a submit {{htmlelement("button")}}. Find the source code on GitHub at <a href="https://github.com/mdn/learning-area/blob/master/html/forms/form-validation/fruit-start.html">fruit-start.html</a> and a live example below.</p>
+
+<pre class="brush: html">&lt;form&gt;
+  &lt;label for="choose"&gt;Would you prefer a banana or cherry?&lt;/label&gt;
+  &lt;input id="choose" name="i_like"&gt;
+  &lt;button&gt;Submit&lt;/button&gt;
+&lt;/form&gt;</pre>
+
+<pre class="brush: css">input:invalid {
+  border: 2px dashed red;
+}
+
+input:valid {
+  border: 2px solid black;
+}</pre>
+
+<p>{{EmbedLiveSample("Validation_constraints_on_input_elements", "100%", 80)}}</p>
+
+<p>To begin, make a copy of <code>fruit-start.html</code> in a new directory on your hard drive.</p>
+
+<h3 id="The_required_attribute">The required attribute</h3>
+
+<p>The simplest HTML5 validation feature is the <code><a href="/en-US/docs/Web/HTML/Attributes/required">required</a></code> attribute. To make an input mandatory, mark the element with this attribute. When this attribute is set, the element matches the {{cssxref(':required')}} UI pseudo-class and the form won't submit -- displaying an error message on submission -- when the input is empty. While empty, the input will also be considered invalid, matching the {{cssxref(':invalid')}} UI pseudo-class.</p>
+
+<p>Add a <code>required</code> attribute to your input, as shown below.</p>
+
+<pre class="brush: html">&lt;form&gt;
+  &lt;label for="choose"&gt;Would you prefer a banana or cherry? (required)&lt;/label&gt;
+  &lt;input id="choose" name="i_like" <strong>required</strong>&gt;
+  &lt;button&gt;Submit&lt;/button&gt;
+&lt;/form&gt;</pre>
+
+<p>Note the CSS that is included in the example file:</p>
+
+<pre class="brush: css">input:invalid {
+  border: 2px dashed red;
+}
+
+input:invalid:required {
+  background-image: linear-gradient(to right, pink, lightgreen);
+}
+
+input:valid {
+  border: 2px solid black;
+}</pre>
+
+<p>This CSS causes the input to have a red dashed border when it is invalid and a more subtle solid black border when valid. We also added a background gradient when required and invalid to demonstrate the <code>:required</code> pseudo-class. Try out the new behavior in the example below.</p>
+
+<p>The presence of the <code>required</code> attribute on any element that supports this attribute means the element matches the {{cssxref(':required')}} pseudoclass whether it has a value or not. If the {{HTMLElement("input")}} has no value, the <code>input</code> will match the {{cssxref(':invalid')}} pseudoclass, and the {{domxref('validityState.valueMissing','element.validity.valueMissing')}} will return <code>true</code> during <a href="/en-US/docs/Web/Guide/HTML/HTML5/Constraint_validation">constraint validation</a>.</p>
+
+<p>Note: For good user experience, indicate to the user when form fields are required. It isn't only good user experience, it is required by WCAG <a href="/en-US/docs/Learn/Accessibility">accessibility</a> guidelines. Also, only require users to input data you actually need: For example, why do you really need to know someone's gender or title?</p>
+
+<p>{{EmbedLiveSample("The_required_attribute", "100%", 80)}}</p>
+
+<p>Try submitting the form without a value. Note how the invalid input gets focus, a default error message ("Please fill out this field") appears, and the form is prevented from being sent.</p>
+
+<h3 id="Validating_against_a_regular_expression">Validating against a regular expression</h3>
+
+<p>Another useful validation feature is the <a href="/en-US/docs/Web/HTML/Attributes/pattern"><code>pattern</code></a> attribute, which expects a <a href="/en-US/docs/JavaScript/Guide/Regular_Expressions">Regular Expression</a> as its value. A regular expression (regex) is a pattern that can be used to match character combinations in text strings, so regexs are ideal for form validation and serve a variety of other uses in JavaScript.</p>
+
+<p>Regexs are quite complex, and we don't intend to teach you them exhaustively in this article. Below are some examples to give you a basic idea of how they work.</p>
+
+<ul>
+ <li><code>a</code> — Matches one character that is <code>a</code> (not <code>b</code>, not <code>aa</code>, and so on).</li>
+ <li><code>abc</code> — Matches <code>a</code>, followed by <code>b</code>, followed by <code>c</code>.</li>
+ <li><code>ab?c</code>—Matches <code>a</code>, optionally followed by a single <code>b</code>, followed by <code>c</code>. ( <code>ac</code> or <code>abc</code>)</li>
+ <li><code>ab*c</code>—Matches <code>a</code>, optionally followed by any number of <code>b</code>s, followed by <code>c</code>. ( <code>ac</code> , <code>abc</code>, <code>abbbbbc</code>, and so on).</li>
+ <li><code>a|b</code> — Matches one character that is <code>a</code> or <code>b</code>.</li>
+ <li><code>abc|xyz</code> — Matches exactly <code>abc</code> or exactly <code>xyz</code> (but not <code>abcxyz</code> or <code>a</code> or <code>y</code>, and so on).</li>
+ <li>There are many more possibilities that we don't need to cover here.</li>
+</ul>
+
+<p>Let's implement an example. Update your HTML to add a <a href="/en-US/docs/Web/HTML/Attributes/pattern"><code>pattern</code></a> attribute like this:</p>
+
+<pre class="brush: html">&lt;form&gt;
+  &lt;label for="choose"&gt;Would you prefer a banana or a cherry?&lt;/label&gt;
+  &lt;input id="choose" name="i_like" required pattern="banana|cherry"&gt;
+  &lt;button&gt;Submit&lt;/button&gt;
+&lt;/form&gt;</pre>
+
+<pre class="brush: css">input:invalid {
+  border: 2px dashed red;
+}
+
+input:valid {
+  border: 2px solid black;
+}</pre>
+
+<p>{{EmbedLiveSample("Validating_against_a_regular_expression", "100%", 80)}}</p>
+
+<p>In this example, the {{HTMLElement("input")}} element accepts one of two possible values: the string "banana" or the string "cherry"; both case-sensitive (For learning purposes only; terrible user experience).</p>
+
+<p>At this point, try changing the value inside the <a href="/en-US/docs/Web/HTML/Attributes/pattern"><code>pattern</code></a> attribute to equal some of the examples you saw earlier, and look at how that affects the values you can enter to make the input value valid. Try writing some of your own, and see how it goes. Make them fruit-related where possible so that your examples make sense!</p>
+
+<p>If a non-empty value of the {{HTMLElement("input")}} doesn't match the regular expression's pattern, the <code>input</code> will match the {{cssxref(':invalid')}} pseudoclass, and the {{domxref('validityState.patternMismatch','theInput.validity.patternMismatch')}} will return <code>true</code> when the form is submitted.</p>
+
+<p>The <code><a href="/en-US/docs/Web/API/ValidityState/patternMismatch">patternMismatch</a></code> returns true if the element's value doesn't match the provided pattern; false otherwise. When true, the form will be prevented from being submitted in supporting browsers.</p>
+
+<p><strong>Note:</strong> Some {{HTMLElement("input")}} element types don't need a <a href="/en-US/docs/Web/HTML/Attributes/pattern"><code>pattern</code></a> attribute to be validated. Specifying the <code>email</code> type, for example, validates the inputs value against a regular expression matching a well-formed email address or a comma-separated list of email addresses if it has the <a href="/en-US/docs/Web/HTML/Attributes/multiple"><code>multiple</code></a> attribute. As a further example, fields with the <code>url</code> type require a properly formed URL.</p>
+
+<p><strong>Note</strong>: The {{HTMLElement("textarea")}} element doesn't support the <a href="/en-US/docs/Web/HTML/Attributes/pattern"><code>pattern</code></a> attribute.</p>
+
+<h3 id="Constraining_the_length_of_your_entries">Constraining the length of your entries</h3>
+
+<p>You can constrain the character length of all text fields created by {{HTMLElement("input")}} or {{HTMLElement("textarea")}} by using the <a href="/en-US/docs/Web/HTML/Attributes/minlength"><code>minlength</code></a> and <code><a href="/en-US/docs/Web/HTML/Attributes/maxlength">maxlength</a></code> attributes. A field is invalid - ({{domxref('validityState.tooShort','tooShort')}}) - if it has a value and that value has fewer characters than the <a href="/en-US/docs/Web/HTML/Attributes/minlength"><code>minlength</code></a> value or longer than the <code><a href="/en-US/docs/Web/HTML/Attributes/maxlength">maxlength</a></code>value  - ({{domxref('validityState.tooLong','tooLong')}}).</p>
+
+<p>Browsers often don't let the user type a longer value than expected into text fields. A better user experience to <code>maxlength</code> - to not being allowed to enter more than a limited number of characters - is to allow the user to enter text, providing character count feedback in an accessible manner and letting them edit their content down to size. An example of this is the character limit when Tweeting. JavaScript, including <a href="https://github.com/mimo84/bootstrap-maxlength">solutions using <code>maxlength</code></a>, can be used.</p>
+
+<h3 id="Constraining_the_values_of_your_entries">Constraining the values of your entries</h3>
+
+<p>For number fields (i.e. <code>&lt;input type="number"&gt;</code>), the <code><a href="/en-US/docs/Web/HTML/Attributes/min">min</a></code> and <code><a href="/en-US/docs/Web/HTML/Attributes/max">max</a></code> attributes also provide a validation constraint. If the field's value is lower than the <code><a href="/en-US/docs/Web/HTML/Attributes/min">min</a></code> attribute the {{domxref('validityState.rangeUnderflow','rangeUnderflow')}} returns true. If higher than the <code><a href="/en-US/docs/Web/HTML/Attributes/max">max</a></code> attribute, {{domxref('validityState.rangeOverflow','rangeOverflow')}} returns true. Either way, the field will be invalid.</p>
+
+<p>Let's look at another example. Create a new copy of the <a href="https://github.com/mdn/learning-area/blob/master/html/forms/form-validation/fruit-start.html">fruit-start.html</a> file.</p>
+
+<p>Now delete the contents of the <code>&lt;body&gt;</code> element, and replace it with the following:</p>
+
+<pre class="brush: html">&lt;form&gt;
+  &lt;div&gt;
+    &lt;label for="choose"&gt;Would you prefer a banana or a cherry?&lt;/label&gt;
+    &lt;input type="text" id="choose" name="i_like" required minlength="6" maxlength="6"&gt;
+  &lt;/div&gt;
+  &lt;div&gt;
+    &lt;label for="number"&gt;How many would you like?&lt;/label&gt;
+    &lt;input type="number" id="number" name="amount" value="1" min="1" max="10"&gt;
+  &lt;/div&gt;
+  &lt;div&gt;
+    &lt;button&gt;Submit&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/form&gt;</pre>
+
+<ul>
+ <li>Here you'll see that we've given the <code>text</code> field a <code>minlength</code> and <code>maxlength</code> of six, which is the same length as banana and cherry. Entering fewer characters will show as invalid and <code>element.validity.tooShort</code> will return true upon constraint validation. Entering more characters is not possible in most browsers, but <code>element.validity.tooLong</code> would return true.</li>
+ <li>We've also given the <code>number</code> field a <code>min</code> of one and a <code>max</code> of ten. Entered numbers outside this range will show as invalid; users won't be able to use the increment/decrement arrows to move the value outside of this range. If the user manually enters a number outside of this range, constraint validation will return true for either <code>element.validity.rangeUnderflow</code> or <code>element.validity.rangeOverflow</code>. The <code>step</code> attribute defaults to <code>1</code>, meaning floats, like 3.2, will also show as invalid, returning <code>true</code> for {{domxref('validityState.stepMismatch','stepMismatch')}} during constraint validation. The number is not required, so removing the value is valid; neither a <code>stepMismatch</code> nor a <code>rangeUnderflow</code></li>
+</ul>
+
+<pre class="brush: css">input:invalid {
+  border: 2px dashed red;
+}
+
+input:valid {
+  border: 2px solid black;
+}
+
+div {
+  margin-bottom: 10px;
+}</pre>
+
+<p>Here is the example running live:</p>
+
+<p>{{EmbedLiveSample("Constraining_the_values_of_your_entries", "100%", 100)}}</p>
+
+<p><strong>Note</strong>: <code>&lt;input type="number"&gt;</code> (and other types, such as <code>range</code> and <code>date</code>) can also take a <a href="/en-US/docs/Web/HTML/Attributes/step"><code>step</code></a> attribute, which specifies what increment the value will go up or down by when the input controls are used (such as the up and down number buttons).</p>
+
+<h3 id="Full_example">Full example</h3>
+
+<p>Here is a full example to show usage of HTML's built-in validation features.</p>
+
+<pre class="brush: html">&lt;form&gt;
+  &lt;p&gt;
+    &lt;fieldset&gt;
+      &lt;legend&gt;Do you have a driver's license?&lt;abbr title="This field is mandatory" aria-label="required"&gt;*&lt;/abbr&gt;&lt;/legend&gt;
+      &lt;!-- While only one radio button in a same-named group can be selected at a time,
+           and therefore only one radio button in a same-named group having the "required"
+           attribute suffices in making a selection a requirement --&gt; 
+      &lt;input type="radio" required name="driver" id="r1" value="yes"&gt;&lt;label for="r1"&gt;Yes&lt;/label&gt;
+      &lt;input type="radio" required name="driver" id="r2" value="no"&gt;&lt;label for="r2"&gt;No&lt;/label&gt;
+    &lt;/fieldset&gt;
+  &lt;/p&gt;
+  &lt;p&gt;
+    &lt;label for="n1"&gt;How old are you?&lt;/label&gt;
+    &lt;!-- The pattern attribute can act as a fallback for browsers which
+         don't implement the number input type but support the pattern attribute.
+         Please note that browsers that support the pattern attribute will make it
+         fail silently when used with a number field.
+         Its usage here acts only as a fallback --&gt;
+    &lt;input type="number" min="12" max="120" step="1" id="n1" name="age"
+           pattern="\d+"&gt;
+  &lt;/p&gt;
+  &lt;p&gt;
+    &lt;label for="t1"&gt;What's your favorite fruit?&lt;abbr title="This field is mandatory" aria-label="required"&gt;*&lt;/abbr&gt;&lt;/label&gt;
+    &lt;input type="text" id="t1" name="fruit" list="l1" required
+           pattern="[Bb]anana|[Cc]herry|[Aa]pple|[Ss]trawberry|[Ll]emon|[Oo]range"&gt;
+    &lt;datalist id="l1"&gt;
+      &lt;option&gt;Banana&lt;/option&gt;
+      &lt;option&gt;Cherry&lt;/option&gt;
+      &lt;option&gt;Apple&lt;/option&gt;
+      &lt;option&gt;Strawberry&lt;/option&gt;
+      &lt;option&gt;Lemon&lt;/option&gt;
+      &lt;option&gt;Orange&lt;/option&gt;
+    &lt;/datalist&gt;
+  &lt;/p&gt;
+  &lt;p&gt;
+    &lt;label for="t2"&gt;What's your e-mail address?&lt;/label&gt;
+    &lt;input type="email" id="t2" name="email"&gt;
+  &lt;/p&gt;
+  &lt;p&gt;
+    &lt;label for="t3"&gt;Leave a short message&lt;/label&gt;
+    &lt;textarea id="t3" name="msg" maxlength="140" rows="5"&gt;&lt;/textarea&gt;
+  &lt;/p&gt;
+  &lt;p&gt;
+    &lt;button&gt;Submit&lt;/button&gt;
+  &lt;/p&gt;
+&lt;/form&gt;</pre>
+
+<pre class="brush: css">form {
+  font: 1em sans-serif;
+  max-width: 320px;
+}
+
+p &gt; label {
+  display: block;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="number"],
+textarea,
+fieldset {
+  width : 100%;
+  border: 1px solid #333;
+  box-sizing: border-box;
+}
+
+input:invalid {
+  box-shadow: 0 0 5px 1px red;
+}
+
+input:focus:invalid {
+  box-shadow: none;
+}</pre>
+
+<p>{{EmbedLiveSample("Full_example", "100%", 420)}}</p>
+
+<p>See <a href="/en-US/docs/Web/Guide/HTML/HTML5/Constraint_validation#Validation-related_attributes">Validation-related attributes</a> for a complete list of attributes that can be used to constrain input values and the input types that support them.</p>
+
+<div class="blockIndicator note">
+<p>Note: This example was created for illustrative purposes. Use the most apporpriate form control for the data required. If you are limiting the values to a defined set of values, as we have done with <em>fruit</em>, use a {{htmlelement('select')}}.</p>
+</div>
+
+<h2 id="Customized_error_messages">Customized error messages</h2>
+
+<p>As you saw in the examples above, each time a user tries to submit an invalid form, the browser displays an error message. The way this message is displayed depends on the browser.</p>
+
+<p>These automated messages have two drawbacks:</p>
+
+<ul>
+ <li>There is no standard way to change their look and feel with CSS.</li>
+ <li>They depend on the browser locale, which means that you can have a page in one language but an error message displayed in another language.</li>
+</ul>
+
+<table>
+ <caption>French versions of feedback messages on an English page</caption>
+ <thead>
+  <tr>
+   <th scope="col">Browser</th>
+   <th scope="col">Rendering</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>Firefox 17 (Windows 7)</td>
+   <td><img alt="Example of an error message with Firefox in French on an English page" src="/files/4329/error-firefox-win7.png" style="height: 97px; width: 228px;"></td>
+  </tr>
+  <tr>
+   <td>Chrome 22 (Windows 7)</td>
+   <td><img alt="Example of an error message with Chrome in French on an English page" src="/files/4327/error-chrome-win7.png" style="height: 96px; width: 261px;"></td>
+  </tr>
+  <tr>
+   <td>Opera 12.10 (Mac OSX)</td>
+   <td><img alt="Example of an error message with Opera in French on an English page" src="/files/4331/error-opera-macos.png" style="height: 83px; width: 218px;"></td>
+  </tr>
+ </tbody>
+</table>
+
+<p>To customize the text of these messages, you must use JavaScript; there is no way to do it using only HTML and CSS.</p>
+
+<p>HTML5 provides the <a href="/en-US/docs/Web/API/Constraint_validation" rel="external">constraint validation API</a> to check and customize the state of a form element. Here's a brief example of changing the text of the error message.:</p>
+
+<pre class="brush: html">&lt;form&gt;
+  &lt;label for="mail"&gt;I would like you to provide me an e-mail&lt;/label&gt;
+  &lt;input type="email" id="mail" name="mail"&gt;
+  &lt;button&gt;Submit&lt;/button&gt;
+&lt;/form&gt;</pre>
+
+<p>In JavaScript, you call the <a href="/en-US/docs/HTML/HTML5/Constraint_validation#Constraint_API's_element.setCustomValidity()"><code>setCustomValidity()</code></a> method:</p>
+
+<pre class="brush: js">const email = document.getElementById("mail");
+
+email.addEventListener("input", function (event) {
+  if (email.validity.typeMismatch) {
+    email.setCustomValidity("I am expecting an e-mail!");
+  } else {
+    email.setCustomValidity("");
+  }
+});</pre>
+
+<p>{{EmbedLiveSample("Customized_error_messages", "100%", 80)}}</p>
+
+<p>Note: if you set a custom validity message you must set the custom validity message to the empty string when the value is valid or the form will never be submitted.</p>
+
+<h2 id="Validating_forms_using_JavaScript">Validating forms using JavaScript</h2>
+
+<p>You must use JavaScript if you want to take control over the look and feel of native error messages or to deal with legacy browsers that do not support HTML's built-in form validation.</p>
+
+<h3 id="The_constraint_validation_API">The constraint validation API</h3>
+
+<p>Most browsers support the constraint validation API. This API consists of a set of methods and properties available on specific form element interfaces:</p>
+
+<ul>
+ <li><code><a href="/en-US/docs/Web/API/HTMLButtonElement">HTMLButtonElement</a></code></li>
+ <li><code><a href="/en-US/docs/Web/API/HTMLFieldSetElement">HTMLFieldSetElement</a></code></li>
+ <li><code><a href="/en-US/docs/Web/API/HTMLInputElement">HTMLInputElement</a></code></li>
+ <li><code><a href="/en-US/docs/Web/API/HTMLOutputElement">HTMLOutputElement</a></code></li>
+ <li><code><a href="/en-US/docs/Web/API/HTMLSelectElement">HTMLSelectElement</a></code></li>
+ <li><code><a href="/en-US/docs/Web/API/HTMLTextAreaElement">HTMLTextAreaElement</a></code></li>
+</ul>
+
+<h4 id="Constraint_validation_API_properties">Constraint validation API properties</h4>
+
+<table>
+ <thead>
+  <tr>
+   <th scope="col">Property</th>
+   <th scope="col">Description</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td><code>validationMessage</code></td>
+   <td>A localized message describing the validation constraints that the control doesn't satisfy (if any) or the empty string if the control is not a candidate for constraint validation (<code>willValidate</code> is <code>false</code>) or the element's value satisfies its constraints.</td>
+  </tr>
+  <tr>
+   <td><code>validity</code></td>
+   <td>A {{domxref("ValidityState")}} object describing the validity state of the element. See that article for details of possible validity states.</td>
+  </tr>
+  <tr>
+   <td><code>willValidate</code></td>
+   <td>Returns <code>true</code> if the element will be validated when the form is submitted; <code>false</code> otherwise.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h4 id="Constraint_validation_API_methods">Constraint validation API methods</h4>
+
+<table>
+ <thead>
+  <tr>
+   <th scope="col">Method</th>
+   <th scope="col">Description</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td><code>checkValidity()</code></td>
+   <td>Returns <code>true</code> if the element's value has no validity problems; <code>false</code> otherwise. If the element is invalid, this method also causes an {{event("invalid")}} event at the element.</td>
+  </tr>
+  <tr>
+   <td>{{domxref("HTMLFormElement.reportValidity()")}}</td>
+   <td>Returns <code>true</code> if the element or its child controls satisfy validation constraints. When <code>false</code> is returned, cancelable {{event("invalid")}} events are fired for each invalid element and validation problems are reported to the user.</td>
+  </tr>
+  <tr>
+   <td><code>setCustomValidity(<em>message</em>)</code></td>
+   <td>Adds a custom error message to the element; if you set a custom error message, the element is considered to be invalid, and the specified error is displayed. This lets you use JavaScript code to establish a validation failure other than those offered by the standard constraint validation API. The message is shown to the user when reporting the problem.<br>
+    <br>
+    If the argument is the empty string, the custom error is cleared.</td>
+  </tr>
+ </tbody>
+</table>
+
+<p>For legacy browsers, it's possible to use a <a href="https://hyperform.js.org/" rel="external">polyfill such as Hyperform </a> to compensate for the lack of support for the constraint validation API. Because you're already using JavaScript, using a polyfill isn't an added burden to your website or web application's design or implementation.</p>
+
+<h4 id="Example_using_the_constraint_validation_API">Example using the constraint validation API</h4>
+
+<p>Let's see how to use this API to build custom error messages. First, the HTML:</p>
+
+<pre class="brush: html">&lt;form novalidate&gt;
+  &lt;p&gt;
+    &lt;label for="mail"&gt;
+      &lt;span&gt;Please enter an email address:&lt;/span&gt;
+      &lt;input type="email" id="mail" name="mail"&gt;
+      &lt;span class="error" aria-live="polite"&gt;&lt;/span&gt;
+    &lt;/label&gt;
+  &lt;/p&gt;
+  &lt;button&gt;Submit&lt;/button&gt;
+&lt;/form&gt;</pre>
+
+<p>This simple form uses the <code><a href="/en-US/docs/Web/HTML/Attributes/novalidate">novalidate</a></code> attribute to turn off the browser's automatic validation; this lets our script take control over validation. However, this doesn't disable support for the constraint validation API nor the application of the CSS pseudo-class {{cssxref(":valid")}}, {{cssxref(":invalid")}}, {{cssxref(":in-range")}} and {{cssxref(":out-of-range")}} classes. That means that even though the browser doesn't automatically check the validity of the form before sending its data, you can still do it yourself and style the form accordingly.</p>
+
+<p>The <a href="/en-US/docs/Accessibility/ARIA/ARIA_Live_Regions"><code>aria-live</code></a> attribute makes sure that our custom error message will be presented to everyone, including those using assistive technologies, such as screen readers.</p>
+
+<h5 id="CSS">CSS</h5>
+
+<p>This CSS styles our form and the error output to look more attractive.</p>
+
+<pre class="brush: css">/* This is just to make the example nicer */
+body {
+  font: 1em sans-serif;
+  padding: 0;
+  margin : 0;
+}
+
+form {
+  max-width: 200px;
+}
+
+p * {
+  display: block;
+}
+
+input[type=email]{
+  -webkit-appearance: none;
+
+  width: 100%;
+  border: 1px solid #333;
+  margin: 0;
+
+  font-family: inherit;
+  font-size: 90%;
+
+  box-sizing: border-box;
+}
+
+/* This is our style for the invalid fields */
+input:invalid{
+  border-color: #900;
+  background-color: #FDD;
+}
+
+input:focus:invalid {
+  outline: none;
+}
+
+/* This is the style of our error messages */
+.error {
+  width  : 100%;
+  padding: 0;
+ 
+  font-size: 80%;
+  color: white;
+  background-color: #900;
+  border-radius: 0 0 5px 5px;
+ 
+  box-sizing: border-box;
+}
+
+.error.active {
+  padding: 0.3em;
+}</pre>
+
+<h5 id="JavaScript">JavaScript</h5>
+
+<p>The following JavaScript code handles the custom error validation.</p>
+
+<pre class="brush: js">// There are many ways to pick a DOM node; here we get the form itself and the email
+// input box, as well as the span element into which we will place the error message.
+
+const form  = document.getElementsByTagName('form')[0];
+const email = document.getElementById('mail');
+const error = document.querySelector('.error');
+
+email.addEventListener("input", function (event) {
+  // Each time the user types something, we check if the
+  // email field is valid.
+  if (email.validity.valid) {
+    // In case there is an error message visible, if the field
+    // is valid, we remove the error message.
+    error.innerHTML = ""; // Reset the content of the message
+    error.className = "error"; // Reset the visual state of the message
+  }
+}, false);
+form.addEventListener("submit", function (event) {
+  // Each time the user tries to send the data, we check
+  // if the email field is valid.
+  if (!email.validity.valid) {
+    
+    // If the field is not valid, we display a custom
+    // error message.
+    error.innerHTML = "I expect an e-mail.";
+    error.className = "error active";
+    // And we prevent the form from being sent by canceling the event
+    event.preventDefault();
+  }
+}, false);</pre>
+
+<p>Here is the live result:</p>
+
+<p>{{EmbedLiveSample("Example_using_the_constraint_validation_API", "100%", 130)}}</p>
+
+<p>The constraint validation API gives you a powerful tool to handle form validation, letting you have enormous control over the user interface above and beyond what you can do with HTML and CSS alone.</p>
+
+<h3 id="Validating_forms_without_a_built-in_API">Validating forms without a built-in API</h3>
+
+<p>Sometimes, such as with legacy browsers or <a href="/en-US/docs/HTML/Forms/How_to_build_custom_form_widgets">custom widgets</a>, you won't be able to or won't want to use the constraint validation API. In that case, you're still able to use JavaScript to validate your form. Validating a form is more a question of user interface than real data validation.</p>
+
+<p>To validate a form, ask yourself a few questions:</p>
+
+<dl>
+ <dt>What kind of validation should I perform?</dt>
+ <dd>You need to determine how to validate your data: string operations, type conversion, regular expressions, and so on. It's up to you. Just remember that form data is always text and is always provided to your script as strings.</dd>
+ <dt>What should I do if the form doesn't validate?</dt>
+ <dd>This is clearly a UI matter. You have to decide how the form will behave. Does the form send the data anyway? Should you highlight the fields that are in error? Should you display error messages?</dd>
+ <dt>How can I help the user to correct invalid data?</dt>
+ <dd>In order to reduce the user's frustration, it's very important to provide as much helpful information as possible in order to guide them in correcting their inputs. You should offer up-front suggestions so they know what's expected, as well as clear error messages. If you want to dig into form validation UI requirements, there are some useful articles you should read:
+ <ul>
+  <li>SmashingMagazine: <a href="http://uxdesign.smashingmagazine.com/2012/06/27/form-field-validation-errors-only-approach/" rel="external">Form-Field Validation: The Errors-Only Approach</a></li>
+  <li>SmashingMagazine: <a href="http://www.smashingmagazine.com/2009/07/07/web-form-validation-best-practices-and-tutorials/" rel="external">Web Form Validation: Best Practices and Tutorials</a></li>
+  <li>Six Revision: <a href="http://sixrevisions.com/user-interface/best-practices-for-hints-and-validation-in-web-forms/" rel="external">Best Practices for Hints and Validation in Web Forms</a></li>
+  <li>A List Apart: <a href="http://www.alistapart.com/articles/inline-validation-in-web-forms/" rel="external">Inline Validation in Web Forms</a></li>
+ </ul>
+ </dd>
+</dl>
+
+<h4 id="An_example_that_doesnt_use_the_constraint_validation_API">An example that doesn't use the constraint validation API</h4>
+
+<p>In order to illustrate this, let's rebuild the previous example so that it works with legacy browsers:</p>
+
+<pre class="brush: html">&lt;form&gt;
+  &lt;p&gt;
+    &lt;label for="mail"&gt;
+        &lt;span&gt;Please enter an email address:&lt;/span&gt;
+        &lt;input type="text" class="mail" id="mail" name="mail"&gt;
+        &lt;span class="error" aria-live="polite"&gt;&lt;/span&gt;
+    &lt;/label&gt;
+  &lt;p&gt;
+  &lt;!-- Some legacy browsers need to have the `type` attribute
+       explicitly set to `submit` on the `button`element --&gt;
+  &lt;button type="submit"&gt;Submit&lt;/button&gt;
+&lt;/form&gt;</pre>
+
+<p>As you can see, the HTML is almost the same; we just removed the HTML validation features. Note that <a href="/en-US/docs/Accessibility/ARIA">ARIA</a> is an independent specification that's not specifically related to HTML5.</p>
+
+<h5 id="CSS_2">CSS</h5>
+
+<p>Similarly, the CSS doesn't need to change very much; we just turn the {{cssxref(":invalid")}} CSS pseudo-class into a real class and avoid using the attribute selector that doesn't work on Internet Explorer 6.</p>
+
+<pre class="brush: css">/* This is just to make the example nicer */
+body {
+  font: 1em sans-serif;
+  padding: 0;
+  margin : 0;
+}
+
+form {
+  max-width: 200px;
+}
+
+p * {
+  display: block;
+}
+
+input.mail {
+  -webkit-appearance: none;
+
+  width: 100%;
+  border: 1px solid #333;
+  margin: 0;
+
+  font-family: inherit;
+  font-size: 90%;
+
+  box-sizing: border-box;
+}
+
+/* This is our style for the invalid fields */
+input.invalid{
+  border-color: #900;
+  background-color: #FDD;
+}
+
+input:focus.invalid {
+  outline: none;
+}
+
+/* This is the style of our error messages */
+.error {
+  width  : 100%;
+  padding: 0;
+ 
+  font-size: 80%;
+  color: white;
+  background-color: #900;
+  border-radius: 0 0 5px 5px;
+  box-sizing: border-box;
+}
+
+.error.active {
+  padding: 0.3em;
+}</pre>
+
+<h5 id="JavaScript_2">JavaScript</h5>
+
+<p>The big changes are in the JavaScript code, which needs to do much more of the heavy lifting.</p>
+
+<pre class="brush: js">// There are fewer ways to pick a DOM node with legacy browsers
+const form  = document.getElementsByTagName('form')[0];
+const email = document.getElementById('mail');
+
+// The following is a trick to reach the next sibling Element node in the DOM
+// This is dangerous because you can easily build an infinite loop.
+// In modern browsers, you should prefer using element.nextElementSibling
+let error = email;
+while ((error = error.nextSibling).nodeType != 1);
+
+// As per the HTML5 Specification
+const emailRegExp = /^[a-zA-Z0-9.!#$%&amp;'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
+
+// Many legacy browsers do not support the addEventListener method.
+// Here is a simple way to handle this; it's far from the only one.
+function addEvent(element, event, callback) {
+  let previousEventCallBack = element["on"+event];
+  element["on"+event] = function (e) {
+    const output = callback(e);
+
+    // A callback that returns `false` stops the callback chain
+    // and interrupts the execution of the event callback.
+    if (output === false) return false;
+
+    if (typeof previousEventCallBack === 'function') {
+      output = previousEventCallBack(e);
+      if(output === false) return false;
+    }
+  }
+};
+
+// Now we can rebuild our validation constraint
+// Because we do not rely on CSS pseudo-class, we have to 
+// explicitly set the valid/invalid class on our email field
+addEvent(window, "load", function () {
+  // Here, we test if the field is empty (remember, the field is not required)
+  // If it is not, we check if its content is a well-formed e-mail address.
+  const test = email.value.length === 0 || emailRegExp.test(email.value);
+
+  email.className = test ? "valid" : "invalid";
+});
+
+// This defines what happens when the user types in the field
+addEvent(email, "input", function () {
+  const test = email.value.length === 0 || emailRegExp.test(email.value);
+  if (test) {
+    email.className = "valid";
+    error.innerHTML = "";
+    error.className = "error";
+  } else {
+    email.className = "invalid";
+  }
+});
+
+// This defines what happens when the user tries to submit the data
+addEvent(form, "submit", function () {
+  const test = email.value.length === 0 || emailRegExp.test(email.value);
+
+  if (!test) {
+    email.className = "invalid";
+    error.innerHTML = "I expect an e-mail, darling!";
+    error.className = "error active";
+
+    // Some legacy browsers do not support the event.preventDefault() method
+    return false;
+  } else {
+    email.className = "valid";
+    error.innerHTML = "";
+    error.className = "error";
+  }
+});</pre>
+
+<p>The result looks like this:</p>
+
+<p>{{EmbedLiveSample("An_example_that_doesnt_use_the_constraint_validation_API", "100%", 130)}}</p>
+
+<p>As you can see, it's not that hard to build a validation system on your own. The difficult part is to make it generic enough to use it both cross-platform and on any form you might create. There are many libraries available to perform form validation; you shouldn't hesitate to use them. Here are a few examples:</p>
+
+<ul>
+ <li>Standalone library
+  <ul>
+   <li><a href="http://rickharrison.github.com/validate.js/" rel="external">Validate.js</a></li>
+  </ul>
+ </li>
+ <li>jQuery plug-in:
+  <ul>
+   <li><a href="http://bassistance.de/jquery-plugins/jquery-plugin-validation/" rel="external">Validation</a></li>
+  </ul>
+ </li>
+</ul>
+
+<h4 id="Remote_validation">Remote validation</h4>
+
+<p>In some cases, it can be useful to perform some remote validation. This kind of validation is necessary when the data entered by the user is tied to additional data stored on the server side of your application. One use case for this is registration forms, where you ask for a username. To avoid duplication, it's smarter to perform an AJAX request to check the availability of the username rather than asking the user to send the data and then sending back the form with an error.</p>
+
+<p>Performing such a validation requires taking a few precautions:</p>
+
+<ul>
+ <li>It requires exposing an API and some data publicly; be sure it is not sensitive data.</li>
+ <li>Network lag requires performing asynchronous validation. This requires some UI work in order to be sure that the user will not be blocked if the validation is not performed properly.</li>
+</ul>
+
+<h2 id="Conclusion">Conclusion</h2>
+
+<p>Form validation does not require complex JavaScript, but it does require thinking carefully about the user. Always remember to help your user to correct the data they provide. To that end, be sure to:</p>
+
+<ul>
+ <li>Display explicit error messages.</li>
+ <li>Be permissive about the input format.</li>
+ <li>Point out exactly where the error occurs, especially on large forms.</li>
+</ul>
+
+<p>Once you have checked that the form is filled out correctly, the form can be submitted. We'll cover <a href="/en-US/docs/Learn/HTML/Forms/Sending_and_retrieving_form_data">sending form data</a> next.</p>
+
+<p>{{PreviousMenuNext("Learn/Forms/UI_pseudo-classes", "Learn/Forms/Sending_and_retrieving_form_data", "Learn/HTML/Forms")}}</p>
+
+<h2 id="In_this_module">In this module</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Learn/HTML/Forms/Your_first_HTML_form">Your first HTML form</a></li>
+ <li><a href="/en-US/docs/Learn/HTML/Forms/How_to_structure_an_HTML_form">How to structure an HTML form</a></li>
+ <li><a href="/en-US/docs/Learn/HTML/Forms/The_native_form_widgets">The native form widgets</a></li>
+ <li><a href="/en-US/docs/Learn/HTML/Forms/HTML5_input_types">HTML5 input types</a></li>
+ <li><a href="/en-US/docs/Learn/HTML/Forms/Additional_form_controls">Additional form controls</a></li>
+ <li><a href="/en-US/docs/Learn/HTML/Forms/UI_pseudo-classes">UI pseudo-classes</a></li>
+ <li><a href="/en-US/docs/Learn/HTML/Forms/Styling_HTML_forms">Styling HTML forms</a></li>
+ <li><a href="/en-US/docs/Learn/HTML/Forms/Form_validation">Form data validation</a></li>
+ <li><a href="/en-US/docs/Learn/HTML/Forms/Sending_and_retrieving_form_data">Sending form data</a></li>
+</ul>
+
+<h3 id="Advanced_Topics">Advanced Topics</h3>
+
+<ul>
+ <li><a href="/en-US/docs/Learn/HTML/Forms/Sending_forms_through_JavaScript">Sending forms through JavaScript</a></li>
+ <li><a href="/en-US/docs/Learn/HTML/Forms/How_to_build_custom_form_widgets">How to build custom form widgets</a></li>
+ <li><a href="/en-US/docs/Learn/HTML/Forms/HTML_forms_in_legacy_browsers">HTML forms in legacy browsers</a></li>
+ <li><a href="/en-US/docs/Learn/HTML/Forms/Advanced_styling_for_HTML_forms">Advanced styling for HTML forms</a></li>
+ <li><a href="/en-US/docs/Learn/HTML/Forms/Property_compatibility_table_for_form_widgets">Property compatibility table for form widgets</a></li>
+</ul>

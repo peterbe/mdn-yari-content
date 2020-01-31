@@ -1,0 +1,257 @@
+<div>{{jsSidebar("Statements")}}</div>
+
+<p><strong><code>let</code></strong> 文はブロックスコープの局所変数を宣言します。任意で値を代入して初期化できます。</p>
+
+<div>{{EmbedInteractiveExample("pages/js/statement-let.html")}}</div>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox">let var1 [= value1] [, var2 [= value2]] [, ..., varN [= valueN]];
+</pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<dl>
+ <dt><code>var1</code>, <code>var2</code>, …, <code>varN</code></dt>
+ <dd>変数の名前。任意の有効な識別子を指定できます。</dd>
+ <dt><code>value1</code>, <code>value2</code>, …, <code>valueN</code> {{optional_inline}}</dt>
+ <dd>変数の初期値。任意の有効な式を指定できます。</dd>
+</dl>
+
+<h2 id="Description" name="Description">説明</h2>
+
+<p><strong><code>let</code></strong> を使用することで、変数のスコープをそれが使用された{{jsxref("statements/block", "ブロック", "", 1)}}、文または式に限定することができます。これは {{jsxref("statements/var", "var")}} キーワードとは異なり、グローバル変数を定義したり、ブロックスコープに留まらない関数全体でのローカル変数を定義したりしません。その他の {{jsxref("statements/var", "var")}} と <code>let</code> の違いは後者が{{anch("Temporal dead zone", "パーサーが評価したときにのみ value に初期化されます（下記参照）")}}。</p>
+
+<p>{{jsxref("statements/const", "const", "Description")}} と同様に、<code>let</code> はグローバル（一番上のスコープ）で宣言されたときに {{domxref("window")}} オブジェクトのプロパティを生成しません。</p>
+
+<p>なぜ "<strong>let</strong>" という名前が選ばれたのかについては、<a href="https://stackoverflow.com/questions/37916940/why-was-the-name-let-chosen-for-block-scoped-variable-declarations-in-javascri">こちら</a> で解説されています。</p>
+
+<h3 id="Scoping_rules_2" name="Scoping_rules_2">スコーピングのルール</h3>
+
+<p><strong><code>let</code></strong> で定義された変数では、自身が定義されたブロックがスコープになります。そのブロックに含まれている全てのサブブロックでも同様です。この点において <strong><code>let</code></strong> のふるまいは <strong><code>var</code></strong> にとてもよく似ています。主に違うのは、<strong><code>var</code></strong> で定義された変数のスコープはそれを含んでいる関数全体になるということです。次のコードはその例です。</p>
+
+<pre class="brush:js">function varTest() {
+  var x = 31;
+  if (true) {
+    var x = 71;  // 同じ変数です!
+    console.log(x);  // 71
+  }
+  console.log(x);  // 71
+}
+
+function letTest() {
+  let x = 31;
+  if (true) {
+    let x = 71;  // 異なる変数
+    console.log(x);  // 71
+  }
+  console.log(x);  // 31
+}
+</pre>
+
+<p id="Scoping_rules"><strong><code>var</code></strong> とは異なり、プログラムのトップレベルと関数で、グローバルオブジェクト上にプロパティを生成しません。たとえば:</p>
+
+<pre class="brush:js">var x = 'global';
+let y = 'global';
+console.log(this.x); // "global"
+console.log(this.y); // undefined
+</pre>
+
+<h3 id="Emulating_private_members" name="Emulating_private_members">プライベートメンバーのエミュレート</h3>
+
+<p><a href="/ja/docs/Glossary/Constructor">constructor</a> で処理することで、<a href="/ja/docs/Web/JavaScript/Closures">クロージャ</a>を使用することなくプライベートメンバーを生成するために <strong><code>let</code></strong> ステートメントを使用できます:</p>
+
+<pre class="brush:js">var Thing;
+
+{
+  let privateScope = new WeakMap();
+  let counter = 0;
+
+  Thing = function() {
+    this.someProperty = 'foo';
+    
+    privateScope.set(this, {
+      hidden: ++counter,
+    });
+  };
+
+  Thing.prototype.showPublic = function() {
+    return this.someProperty;
+  };
+
+  Thing.prototype.showPrivate = function() {
+    return privateScope.get(this).hidden;
+  };
+}
+
+console.log(typeof privateScope);
+// "undefined"
+
+var thing = new Thing();
+
+console.log(thing);
+// Thing {someProperty: "foo"}
+
+thing.showPublic();
+// "foo"
+
+thing.showPrivate();
+// 1
+</pre>
+
+<p>局所変数をクロージャで閉じた場合と同様に、 <code>var</code> を使ってプライバシーパターンを作成できますが、上の例のようなブロックスコープではなく、関数スコープ（通常はモジュールパターンのIIFE）が必要です。</p>
+
+<h3 id="Redeclarations" name="Redeclarations">再宣言</h3>
+
+<p>同じ関数かブロックスコープで同じ変数を再宣言すると {{jsxref("SyntaxError")}} が発生します。</p>
+
+<pre class="brush: js example-bad">if (x) {
+  let foo;
+  let foo; // SyntaxError が投げられます。
+}</pre>
+
+<p>{{jsxref("Statements/switch", "switch")}} 文には 1 つのブロックしかないため、エラーを発生させてしまうかもしれません。</p>
+
+<pre class="brush: js example-bad">let x = 1;
+switch(x) {
+  case 0:
+    let foo;
+    break;
+    
+  case 1:
+    let foo; // 再宣言によって TypeError
+    break;
+}</pre>
+
+<p>ですが、case 節の中にネストされたブロックは、新しいブロックスコープのレキシカル環境をつくるように指示します（それは重要です）。それは上記の再宣言エラーを発生させないでしょう。</p>
+
+<pre class="brush: js">let x = 1;
+
+switch(x) {
+  case 0: {
+    let foo;
+    break;
+  }  
+  case 1: {
+    let foo;
+    break;
+  }
+}</pre>
+
+<h3 id="Temporal_dead_zone" name="Temporal_dead_zone">Temporal dead zone</h3>
+
+<p>{{jsxref("undefined")}} の値で始まる {{jsxref("Statements/var", "var", "var_hoisting")}} 変数と異なり、 <code>let</code> 変数は定義が評価されるまで初期化されません。変数を宣言より前で参照することは {{jsxref("ReferenceError")}} を引き起こします。ブロックの始めから変数宣言が実行されるまで、変数は "temporal dead zone" の中にいるのです。</p>
+
+<pre class="brush: js example-bad">function do_something() {
+  console.log(bar); // undefined
+  console.log(foo); // ReferenceError
+  var bar = 1;
+  let foo = 2;
+}</pre>
+
+<h3 id="The_temporal_dead_zone_and_typeof" name="The_temporal_dead_zone_and_typeof">Temporal dead zone と <code>typeof</code></h3>
+
+<p>単純に宣言されていない変数や <code>undefined</code> の値を保持する変数とは異なり、 TDZ内の変数の型を確認するために <code>typeof</code> 演算子を使用すると、{{jsxref("ReferenceError")}} がスローされます：</p>
+
+<pre class="brush: js">// 'undefined' が表示されます
+console.log(typeof undeclaredVariable);
+// 'ReferenceError' が発生します
+console.log(typeof i);
+let i = 10;</pre>
+
+<h3 id="Another_example_of_temporal_dead_zone_combined_with_lexical_scoping" name="Another_example_of_temporal_dead_zone_combined_with_lexical_scoping">レキシカルスコープと組み合わせた Temporal dead zone の例</h3>
+
+<p>レキシカルスコープにより、式 <code>(foo + 55)</code> 内の識別子 <strong>"foo"</strong> は、<u>if ブロックの foo</u> に評価され、<u>その上にある</u> 33 の値を持つ<u>変数 foo</u> には評価<strong>されません</strong>。<br>
+ その行では、<u>if ブロックの "foo"</u> はすでにレキシカル環境で作成されていますが、未だ（ステートメントそのものの一部である）その初期化に到達・<strong>終了</strong>していないので、その foo はまだ Temporal dead zone 内にあります。</p>
+
+<pre class="brush: js example-bad">function test(){
+   var foo = 33;
+   if (true) {
+      let foo = (foo + 55); // ReferenceError
+   }
+}
+
+</pre>
+
+<p>この現象は、次のような状況であなたを混乱させる可能性があります。<code>let n of n.a</code> 命令は<u>for ループブロック</u>のプライベートスコープにすでに存在し、したがって、識別子 <strong>"n.a"</strong> は、<u>命令自体の最初の部分にある 'n' オブジェクト</u> ("let n") のプロパティ 'a' に解決されます。その宣言ステートメントに到達・<strong>終了</strong>していないので、その n 及び n.a はまだ Temporal dead zone 内にあります。</p>
+
+<pre class="brush: js example-bad">function go(n) {
+  // n here is defined!
+  console.log(n); // Object {a: [1,2,3]}
+
+  for (let n of n.a) { // ReferenceError
+    console.log(n);
+  }
+}
+
+go({a: [1, 2, 3]});
+</pre>
+
+<h2 id="Other_situations" name="Other_situations">そのほかの例</h2>
+
+<p>ブロックの中で使うなら、<strong><code>let</code></strong> の変数のスコープはそのブロックの中に制限されます。スコープが自身の宣言された関数全体になる <strong><code>var</code></strong> との違いに注意してください。</p>
+
+<pre class="brush: js">var a = 1;
+var b = 2;
+
+if (a === 1) {
+  var a = 11; // スコープはグローバル
+  let b = 22; // スコープは if ブロック内
+
+  console.log(a);  // 11
+  console.log(b);  // 22
+} 
+
+console.log(a); // 11
+console.log(b); // 2</pre>
+
+<p>しかし、下記の <strong><code>var</code></strong> と <strong><code>let</code></strong> 宣言の組み合わせは、<strong><code>var</code></strong> がブロックの先頭に配置されているため、{{jsxref("SyntaxError")}} です。 これによって、変数が暗黙的に再宣言されます。</p>
+
+<pre class="brush: js example-bad">let x = 1;
+
+if (true) {
+  var x = 2; // 再宣言による SyntaxError
+}
+</pre>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">ステータス</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-let-and-const-declarations', 'Let and Const Declarations')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td>初期定義。let 式や let ブロックは定義されていない。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-let-and-const-declarations', 'Let and Const Declarations')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td></td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザー互換性</h2>
+
+<div class="hidden">The compatibility table on this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</div>
+
+<p>{{Compat("javascript.statements.let")}}</p>
+
+<h2 id="See_also" name="See_also">関連項目</h2>
+
+<ul>
+ <li>{{jsxref("Statements/var", "var")}}</li>
+ <li>{{jsxref("Statements/const", "const")}}</li>
+ <li><a href="https://hacks.mozilla.org/2015/07/es6-in-depth-let-and-const/">ES6 In Depth: <code>let</code> and <code>const</code></a></li>
+ <li><a href="https://blog.mozilla.org/addons/2015/10/14/breaking-changes-let-const-firefox-nightly-44/">Breaking changes in <code>let</code> and <code>const</code> in Firefox 44</a></li>
+ <li><a href="https://github.com/getify/You-Dont-Know-JS/blob/master/scope%20%26%20closures/ch3.md">You Don't Know JS: Scope &amp; Closures: Chapter 3: Function vs. Block Scope</a></li>
+ <li><a href="https://stackoverflow.com/a/33198850/1125029">StackOverflow: What is the Temporal Dead Zone.</a></li>
+ <li><a href="https://stackoverflow.com/questions/762011/whats-the-difference-between-using-let-and-var-to-declare-a-variable">StackOverflow: What is the difference between using let and var?</a></li>
+</ul>

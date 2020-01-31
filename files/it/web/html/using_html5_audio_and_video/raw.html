@@ -1,0 +1,174 @@
+<p>HTML5 introduce un supporto integrato per i media attraverso gli elementi  {{ HTMLElement("audio") }} e {{ HTMLElement("video") }}, offrendo la capacità di integrare facilmente <em>media</em> in documenti HTML</p>
+<p> </p>
+<p> </p>
+<h2 id="Incorporare_i_media">Incorporare i media</h2>
+<p>Integrare i media nel documento HTML è banale:</p>
+<div style="overflow: hidden;">
+ <pre class="brush: html">&lt;video src="http://v2v.cc/~j/theora_testsuite/320x240.ogg" controls&gt;
+  Your browser does not support the &lt;code&gt;video&lt;/code&gt; element.
+&lt;/video&gt;</pre>
+ <p>Questo esempio riproduce un video d'esempio, con controlli di riproduzione, dal sito web Theora.</p>
+ <p>Ecco un esempio per incorporare <em>audio</em> nel tuo documento HTML</p>
+ <pre class="brush: html">&lt;audio src="/test/audio.ogg"&gt;
+&lt;p&gt;Your browser does not support the audio element.&lt;/p&gt;
+&lt;/audio&gt;</pre>
+</div>
+<p>L'attributo <code>src</code> può essere una URL del file audio o il percorso al file sul sistema locale.</p>
+<div style="overflow: hidden;">
+ <pre class="brush: html">&lt;audio src="audio.ogg" controls autoplay loop&gt;
+&lt;p&gt;Your browser does not support the audio element &lt;/p&gt;
+&lt;/audio&gt;</pre>
+</div>
+<p>Questo esempio di codice utilizza gli attributi dell'elemento {{ HTMLElement("audio") }}:</p>
+<ul>
+ <li><code>controls</code> : Visualizza di controlli standard di HTML5 per l'audio su pagina web.</li>
+ <li><code>autoplay</code> : Rende automatica la riproduzione dell'audio.</li>
+ <li><code>loop</code> : Rende automatica la ripetizione (ciclo) dell'audio.</li>
+</ul>
+<div style="overflow: hidden;">
+ <pre class="brush: html">&lt;audio src="audio.mp3" preload="auto" controls&gt;&lt;/audio&gt;</pre>
+</div>
+<p>L'attributo <code>preload</code> è utilizzato nell'elemento audio per bufferizzare file di grandi dimensioni:</p>
+<ul>
+ <li><code>"none"</code> non bufferizza il file</li>
+ <li><code>"auto"</code> bufferizza il media</li>
+ <li><code>"metadata"</code> bufferizza solo i metadati del file</li>
+</ul>
+<p>Possono essere specificati più file sorgenti utilizzando l'elemento {{ HTMLElement("source") }} al fine di fornire codifiche audio e video differenti per differenti browser. Per esempio:</p>
+<pre class="brush: html">&lt;video controls&gt;
+  &lt;source src="foo.ogg" type="video/ogg"&gt;
+  &lt;source src="foo.mp4" type="video/mp4"&gt;
+  Your browser does not support the &lt;code&gt;video&lt;/code&gt; element.
+&lt;/video&gt;
+</pre>
+<p>In tal modo è riprodotto il file Ogg nei browser che supportano lo supportano. Se non supportato, il browser utilizza il file MPEG-4. Vedi anche la lista dei <a href="/en-US/docs/Media_formats_supported_by_the_audio_and_video_elements" title="Media formats supported by the audio and video elements">formati supportati dagli elementi audio e video</a> nei differenti browser.</p>
+<p>E' anche possibile specificare quali codec sono necessari ai media; ciò permette al browser di prendere decisioni più intelligenti:</p>
+<pre class="brush: html">&lt;video controls&gt;
+  &lt;source src="foo.ogg" type="video/ogg; codecs=dirac, speex"&gt;
+  Your browser does not support the &lt;code&gt;video&lt;/code&gt; element.
+&lt;/video&gt;</pre>
+<p>Nell'esempio è specificato che il video utilizza i codec Dirac e Speex. Se il browser supporta Ogg, ma non i codec specificati, il video non sarà caricato.</p>
+<p>SE l'attributo <code>type</code> non è specificato, il tipo del media è recuperato dal server e controllato per verificare che il browser possa gestirlo; se non può essere riprodotto, è controllata la <code>sorgente</code> successiva. Se nessuno degli elementi <code>sorgente</code> specificati può essere utilizzato, un evento di <code>errore </code>è inviato all'elemento <code>video</code>. Se è specificato l'attributo <code>type</code>, questi è confrontato con i tipi riproducibili dal browser e se non riconosciuto, il server non viene interrogato; invece, la <code>sorgente </code>successiva è immediatamente controllata. </p>
+<p>Vedere <a href="/en-US/docs/DOM/Media_events" title="https://developer.mozilla.org/en/DOM/Media_events">eventi dei media</a> per un elenco completo degli eventi associati con la riproduzione dei media. Per dettagli sui formati dei media supportati dai differenti browser, vedere <a href="/en-US/docs/Media_formats_supported_by_the_audio_and_video_elements" title="/en-US/docs/Media_formats_supported_by_the_audio_and_video_elements">formati dei media supportati degli elementi audio e video</a>.</p>
+<h2 id="Controllare_la_riproduzione_dei_media">Controllare la riproduzione dei media</h2>
+<p>Una volta incorporato il media nel documento HTML utilizzando i nuovi elementi, è possibile controllarli tramite codice JavaScript. Per esempio, per avviare (o riavviare) la riproduzione, puoi fare:</p>
+<pre class="brush: js">var v = document.getElementsByTagName("video")[0];
+v.play();
+</pre>
+<p>La prima linea ottiene il primo elemento video nel documenti, e il secondo chiama il metodo <a href="/en-US/docs/XPCOM_Interface_Reference/NsIDOMHTMLMediaElement#play()" title="nsIDOMHTMLMediaElement#play()"><code>play()</code></a> dell'elemento, come definitto nell'interfaccia {{ interface("nsIDOMHTMLMediaElement") }} che è utilizzata per implementare gli elementi dei media.</p>
+<p>Controlalre un riproduttore audio in HTML5 per riprodurre, porre in pausa, aumentare e diminuire il volume utilizzando Javascript è semplice.</p>
+<pre class="brush: html">&lt;audio id="demo" src="audio.mp3"&gt;&lt;/audio&gt;
+&lt;div&gt;
+  &lt;button onclick="document.getElementById('demo').play()"&gt;Play the Audio&lt;/button&gt;
+  &lt;button onclick="document.getElementById('demo').pause()"&gt;Pause the Audio&lt;/button&gt;
+  &lt;button onclick="document.getElementById('demo').volume+=0.1"&gt;Increase Volume&lt;/button&gt;
+  &lt;button onclick="document.getElementById('demo').volume-=0.1"&gt;Decrease Volume&lt;/button&gt;
+&lt;/div&gt; 
+</pre>
+<h2 id="Fermare_il_download_del_media">Fermare il download del media</h2>
+<p>Se fermare la riproduzione del media è tanto semplice quanto chiamare il metodo pause() dell'elemento, il browser continua a scaricare il media finché l'elemento non è elimitao tramite il garbage collector.</p>
+<p>Segue un trucco per fermare immediatamente il download:</p>
+<pre class="brush: js">var mediaElement = document.getElementById("myMediaElementID");
+mediaElement.pause();
+mediaElement.src = ""; 
+</pre>
+<p>Impostando l'attributo <code>src</code> dell'elemento del media a una stringa vuota, è distrutto il decoder interno dell'elemento, che ferma il download della rete.</p>
+<h2 id="Cercare_attraverso_i_media">Cercare attraverso i media</h2>
+<p>Gli elementi per i media forniscono il supporto per spostare la posizione corrente di riproduzione ad un punto specificato nel contenuto del media. Ciò è fatto impostando il valore della proprietà <code>currentTime</code> dell'elemento; vedere {{ domxref("HTMLMediaElement") }} per ulteriori dettagli sulle proprietà dell'elemento. Settare semplicemente il valore del tempo, in secondi, al punto in cui si desidera far continuare la riproduzione.</p>
+<p>E' possibile utilizzare la proprietà <code>seekable</code> per determinare l'intervallo dei media che è attualmente disponibile per la ricerca. Questi ritorna un oggetto {{ domxref("TimeRanges") }} che elenca gli intervalli di tempo in cui cercare.</p>
+<pre class="brush: js">var mediaElement = document.getElementById('mediaElementID');
+mediaElement.seekable.start();  // Returns the starting time (in seconds)
+mediaElement.seekable.end();    // Returns the ending time (in seconds)
+mediaElement.currentTime = 122; // Seek to 122 seconds
+mediaElement.played.end();      // Returns the number of seconds the browser has played
+</pre>
+<h2 id="Specificare_l'intervallo_di_riproduzione">Specificare l'intervallo di riproduzione</h2>
+<p>When specifying the URI of media for an {{ HTMLElement("audio") }} or {{ HTMLElement("video") }} element, you can optionally include additional information to specify the portion of the media to play. To do this, append a hash mark ("#") followed by the media fragment description.</p>
+<p>A time range is specified using the syntax:</p>
+<pre>#t=[starttime][,endtime]</pre>
+<p>The time can be specified as a number of seconds (as a floating-point value) or as an hours/minutes/seconds time separated with colons (such as 2:05:01 for 2 hours, 5 minutes, and 1 second).</p>
+<p>A few examples:</p>
+<dl>
+ <dt>
+  <span class="nowiki">http://foo.com/video.ogg#t=10,20</span></dt>
+ <dd>
+  Specifies that the video should play the range 10 seconds through 20 seconds.</dd>
+ <dt>
+  <span class="nowiki">http://foo.com/video.ogg#t=,10.5</span></dt>
+ <dd>
+  Specifies that the video should play from the beginning through 10.5 seconds.</dd>
+ <dt>
+  <span class="nowiki">http://foo.com/video.ogg#t=,02:00:00</span></dt>
+ <dd>
+  Specifies that the video should play from the beginning through two hours.</dd>
+ <dt>
+  <span class="nowiki">http://foo.com/video.ogg#t=60</span></dt>
+ <dd>
+  Specifies that the video should start playing at 60 seconds and play through the end of the video.</dd>
+</dl>
+<div class="geckoVersionNote" style="">
+ <p>{{ gecko_callout_heading("9.0") }}</p>
+ <p>The playback range portion of the media element URI specification was added to Gecko 9.0 {{ geckoRelease("9.0") }}. At this time, this is the only part of the <a class="external" href="http://www.w3.org/TR/media-frags/" title="http://www.w3.org/TR/media-frags/">Media Fragments URI specification</a> implemented by Gecko, and it can only be used when specifying the source for media elements, and not in the address bar.</p>
+</div>
+<h2 id="Fallback_options">Fallback options</h2>
+<p>HTML included between, for example, the opening and closing tags of media elements is processed by browsers that don't support HTML5 media. You can take advantage of this fact to provide alternative fallback media for those browsers.</p>
+<p>This section provides two possible fallback options for video. In each case, if the browser supports HTML5 video, that is used; otherwise, the fallback option is used.</p>
+<h3 id="Using_Flash">Using Flash</h3>
+<p>You can use Flash to play a Flash format movie if the {{ HTMLElement("video") }} element isn't supported:</p>
+<pre class="brush: html">&lt;video src="video.ogv" controls&gt;
+    &lt;object data="flvplayer.swf" type="application/x-shockwave-flash"&gt;
+      &lt;param value="flvplayer.swf" name="movie"/&gt;
+    &lt;/object&gt;
+&lt;/video&gt;</pre>
+<p>Note that you shouldn't include <code>classid</code> in the <code>object</code> tag in order to be compatible with browsers other than Internet Explorer.</p>
+<h3 id="Playing_Ogg_videos_using_a_Java_applet">Playing Ogg videos using a Java applet</h3>
+<p>There's a Java applet called <a class="external" href="http://maikmerten.livejournal.com/2256.html" title="http://maikmerten.livejournal.com/2256.html">Cortado</a> that you can use as a fallback to play Ogg videos in browsers that have Java support but don't support HTML5 video:</p>
+<pre class="brush: html">&lt;video src="my_ogg_video.ogg" controls width="320" height="240"&gt;
+  &lt;object type="application/x-java-applet" width="320" height="240"&gt;
+     &lt;param name="archive" value="cortado.jar"&gt;
+     &lt;param name="code" value="com.fluendo.player.Cortado.class"&gt;
+     &lt;param name="url" value="my_ogg_video.ogg"&gt;
+     &lt;p&gt;You need to install Java to play this file.&lt;/p&gt;
+  &lt;/object&gt;
+&lt;/video&gt;</pre>
+<p>If you do not create an alternate child element of the cortado object element, such as the {{ HTMLElement("p") }} element above, FireFox 3.5 installations that handle the video natively but do not have Java installed will incorrectly inform the user that they need to install a plugin to view content on the page.</p>
+<p>{{ h1_gecko_minversion("Error handling", "2.0") }}</p>
+<p>Starting in Gecko 2.0 {{ geckoRelease("2.0") }}, error handling has been revised to match the latest version of the HTML5 specification. Instead of the <code>error</code> event being dispatched to the media element itself, it now gets delivered to the child {{ HTMLElement("source") }} elements corresponding to the sources resulting in the error.</p>
+<p>This lets you detect which sources failed to load, which may be useful. Consider this HTML:</p>
+<pre class="brush: html">&lt;video&gt;
+&lt;source id="mp4_src"
+  src="video.mp4"
+  type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"'&gt;
+&lt;/source&gt;
+&lt;source id="3gp_src"
+  src="video.3gp"
+  type='video/3gpp; codecs="mp4v.20.8, samr"'&gt;
+&lt;/source&gt;
+&lt;source id="ogg_src"
+  src="video.ogv"
+  type='video/ogg; codecs="theora, vorbis"'&gt;
+&lt;/source&gt;
+&lt;/video&gt;</pre>
+<p>Since Firefox doesn't support MP4 and 3GP due to their patent-encumbered nature, the {{ HTMLElement("source") }} elements with the IDs "mp4_src" and "3gp_src" will receive <code>error</code> events before the Ogg resource is loaded. The sources are tried in the order in which they appear, and once one loads successfully, the remaining sources aren't tried at all.</p>
+<h3 id="Detecting_when_no_sources_have_loaded">Detecting when no sources have loaded</h3>
+<p>To detect that all child {{ HTMLElement("source") }} elements have failed to load, check the value of the media element's <code>networkState</code> attribute. If this is <code>HTMLMediaElement.NETWORK_NO_SOURCE</code>, you know that all the sources failed to load.</p>
+<p>If at that point you add another source by inserting a new {{ HTMLElement("source") }} element as a child of the media element, Gecko attempts to load the specified resource.</p>
+<h2 id="See_also">See also</h2>
+<ul>
+ <li>The media-related HTML elements: {{ HTMLElement("audio") }}, {{ HTMLElement("video") }}, {{ HTMLElement("source") }};</li>
+ <li><a href="/en-US/docs/Manipulating_video_using_canvas" title="Manipulating video using canvas">Manipulating video using canvas</a></li>
+ <li><a href="/en-US/docs/Introducing_the_Audio_API_Extension" title="Introducing the Audio API Extension">Introducing the Audio API Extension</a></li>
+ <li>{{ interface("nsIDOMHTMLMediaElement") }}</li>
+ <li><a href="/en-US/docs/Media_formats_supported_by_the_audio_and_video_elements" title="Media formats supported by the audio and video elements">Media formats supported by the audio and video elements</a></li>
+ <li><a class="external" href="http://en.flossmanuals.net/ogg-theora/" title="http://en.flossmanuals.net/ogg-theora/">Theora Cookbook</a></li>
+ <li><a class="external" href="http://popcornjs.org/" title="http://popcornjs.org/">Popcorn.js - The HTML5 Media Framework</a></li>
+ <li><a class="external" href="http://www.html5video.org/kaltura-html5/" title="http://www.html5video.org/kaltura-html5/">Kaltura Video Library Solution</a>, a JavaScript library (mwEmbed) which supports a seamless fallback with HTML5, VLC Player, Java Cortado and OMTK Flash Vorbis player. (It is used by Wikimedia)</li>
+ <li><a class="external" href="http://omtk.org/flash/index.html" title="http://omtk.org/flash/index.html">OMTK - Flash</a>, a Flash library which implements a Vorbis decoder</li>
+ <li><a class="external" href="http://www.projekktor.com" title="http://www.projekktor.com">Projekktor Player</a>, a JavaScript wrapper for audio- and video-tags with flash fallback, open source, GPL</li>
+ <li><a class="external" href="http://www.theora.org/cortado/" title="http://www.theora.org/cortado/">Applet Cortado</a>, an audio/video playback solution in Java maintained by Xiph.org</li>
+ <li><a class="external" href="http://videojs.com" title="Video.js HTML5 Video Player">Video.JS</a>, an open source HTML5 video player and framework.</li>
+ <li><a class="external" href="http://mediaelementjs.com/" title="http://mediaelementjs.com/">MediaElement.js</a> - open source HTML5 audio/video framework with a custom Flash shim that mimic HTML5 media API for older browsers.</li>
+ <li><a class="external" href="http://www.hdwebplayer.com" title="http://www.hdwebplayer.com">Flv Player</a> - HTML5 fallback support video player</li>
+</ul>
+<div>
+ {{ HTML5ArticleTOC() }}</div>

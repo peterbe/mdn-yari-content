@@ -1,0 +1,241 @@
+<div>{{jsSidebar("Objects")}}</div>
+
+<p>Die Methode <code><strong>eval()</strong></code> (engl. to evaluate = evaluieren, ausführen) wertet einen String aus und führt ihn als JavaScript-Code aus.</p>
+
+<h2 id="Syntax" name="Syntax">Syntax</h2>
+
+<pre class="syntaxbox">eval(<em>string</em>)</pre>
+
+<h3 id="Parameters" name="Parameters">Parameter</h3>
+
+<dl>
+ <dt><code>string</code></dt>
+ <dd>Ein String, der einen JavaScript-Ausdruck, eine JavaScript-Anweisung oder eine Folge von JavaScript-Anweisungen enthält. Der Ausdruck kann Variablen und Eigenschaften existierender Objekte enthalten.</dd>
+</dl>
+
+<h3 id="Rückgabewert">Rückgabewert</h3>
+
+<p>Einen String, der das Resultat des übergebenen, ausgeführten Quelltext repräsentiert. Wenn das Resultat leer ist, wurde {{jsxref("undefined")}} zurückgegeben.</p>
+
+<h2 id="Description" name="Description">Beschreibung</h2>
+
+<p><code>eval()</code> ist eine Funktions-Eigenschaft des globalen Objektes.</p>
+
+<p>Das Argument der <code>eval()</code> Funktion ist vom Typ string. Wenn der String eine Ausdruck repräsentiert, wird <code>eval()</code> diesen Ausdruck auswerten. Wenn das Argument ein oder mehr JavaScript Anweisungen beinhaltet, wird <code>eval() </code>diese ausführen. Benutze nicht <code>eval() </code>um einen arithmetischen Ausdruck auszuführen; JavaScript wertet arithmetischen Ausdrücke automatisch aus.</p>
+
+<p>Wenn du einen arithmetischen Ausdruck als String konstruierst, kannst du <code>eval()</code> nutzen, um diesen zu einem späteren Zeitpunkt auszuwerten. Beispiel: Stell dir vor du hast die Variable x. Du kannst die Ausführung dieses Ausdrucks zu einem späteren Zeitpunkt verschieben und dabei x hineinbeziehen, indem du den Wert des Strings wiedergibst. Sagen wir mal du ordnest den Rückgabewert von "3 * x + 2" einer Variable zu und rufst diese zu einem späteren Zeitpunkt im Script mit <code>eval()</code> auf.</p>
+
+<p>Wenn das Argumemt von <code>eval()</code> nicht ein String ist, wird <code>eval()</code> den Rückgabewert unverändert wiedergeben. Im folgenden Beispiel ist der <code>String</code> Konstruktor festgelegt, und <code>eval()</code> gibt ein String-Objekt wieder, anstelle diesen <code>String</code> auszuwerten.</p>
+
+<pre class="brush:js">eval(new String("2 + 2")); // Rückgabewert ist ein String Objekt mit dem Inhalt: "2 + 2"
+eval("2 + 2");             // Rückgabewert: 4
+</pre>
+
+<p>Du kannst diese Limitation umgehen indem du eine generische Weise mit <code>toString() </code>verwendest.</p>
+
+<pre class="brush:js">var expression = new String("2 + 2");
+eval(expression.toString());
+</pre>
+
+<p>If you use the <code>eval</code> function <em>indirectly,</em> by invoking it via a reference other than <code>eval</code>, <a href="http://www.ecma-international.org/ecma-262/5.1/#sec-10.4.2">as of ECMAScript 5</a> it works at global scope rather than local scope; this means, for instance, that function declarations create global functions, and that the code being evaluated doesn't have access to local variables within the scope where it's being called.</p>
+
+<pre class="brush:js">function test() {
+  var x = 2, y = 4;
+  console.log(eval("x + y"));  // Direct call, uses local scope, result is 6
+  var geval = eval;
+  console.log(geval("x + y")); // Indirect call, uses global scope, throws ReferenceError because `x` is undefined
+}
+</pre>
+
+<h2 id="Don't_use_eval_needlessly!">Don't use <code>eval</code> needlessly!</h2>
+
+<p><code>eval()</code> is a dangerous function, which executes the code it's passed with the privileges of the caller. If you run <code>eval()</code> with a string that could be affected by a malicious party, you may end up running malicious code on the user's machine with the permissions of your webpage / extension. More importantly, third party code can see the scope in which <code>eval()</code> was invoked, which can lead to possible attacks in ways to which the similar {{jsxref("Global_Objects/Function", "Function")}} is not susceptible.</p>
+
+<p><code>eval()</code> is also generally slower than the alternatives, since it has to invoke the JS interpreter, while many other constructs are optimized by modern JS engines.</p>
+
+<p>There are safer (and faster!) alternatives to <code>eval()</code> for common use-cases.</p>
+
+<h3 id="Accessing_member_properties">Accessing member properties</h3>
+
+<p>You should not use <code>eval()</code> to convert property names into properties. Consider the following example where the property of the object to be accessed is not known until the code is executed. This can be done with eval:</p>
+
+<pre class="brush:js">var obj = { a: 20, b: 30 };
+var propname = getPropName();  // returns "a" or "b"
+
+eval( "var result = obj." + propname );
+</pre>
+
+<p>However, <code>eval()</code> is not necessary here. In fact, its use here is discouraged. Instead, use the <a href="/en-US/docs/Web/JavaScript/Reference/Operators/Property_Accessors" title="JavaScript/Reference/Operators/Member_Operators">property accessors</a>, which are much faster and safer:</p>
+
+<pre class="brush:js">var obj = { a: 20, b: 30 };
+var propname = getPropName();  // returns "a" or "b"
+var result = obj[ propname ];  //  obj[ "a" ] is the same as obj.a 
+</pre>
+
+<h3 id="Use_functions_instead_of_evaluating_snippets_of_code">Use functions instead of evaluating snippets of code</h3>
+
+<p>JavaScript has <a class="external" href="http://en.wikipedia.org/wiki/First-class_function" title="http://en.wikipedia.org/wiki/First-class_function">first-class functions</a>, which means you can pass functions as arguments to other APIs, store them in variables and objects' properties, and so on. Many DOM APIs are designed with this in mind, so you can (and should) write:</p>
+
+<pre class="brush: js">// instead of setTimeout(" ... ", 1000) use:
+setTimeout(function() { ... }, 1000); 
+
+// instead of elt.setAttribute("onclick", "...") use:
+elt.addEventListener("click", function() { ... } , false); </pre>
+
+<p><a href="/en-US/docs/Web/JavaScript/Closures" title="JavaScript/Guide/Closures">Closures</a> are also helpful as a way to create parameterized functions without concatenating strings.</p>
+
+<h3 id="Parsing_JSON_(converting_strings_to_JavaScript_objects)">Parsing JSON (converting strings to JavaScript objects)</h3>
+
+<p>If the string you're calling <code>eval()</code> on contains data (for example, an array: <code>"[1, 2, 3]"</code>), as opposed to code, you should consider switching to <a href="/en-US/docs/Glossary/JSON" title="JSON">JSON</a>, which allows the string to use a subset of JavaScript syntax to represent data. See also <a href="/en-US/docs/Downloading_JSON_and_JavaScript_in_extensions" title="Downloading_JSON_and_JavaScript_in_extensions">Downloading JSON and JavaScript in extensions</a>.</p>
+
+<p>Note that since JSON syntax is limited compared to JavaScript syntax, many valid JavaScript literals will not parse as JSON. For example, trailing commas are not allowed in JSON, and property names (keys) in object literals must be enclosed in quotes. Be sure to use a JSON serializer to generate strings that will be later parsed as JSON.</p>
+
+<h3 id="Pass_data_instead_of_code">Pass data instead of code</h3>
+
+<p>For example, an extension designed to scrape contents of web-pages could have the scraping rules defined in <a href="/en-US/docs/XPath" title="XPath">XPath</a> instead of JavaScript code.</p>
+
+<h3 id="Run_code_with_limited_privileges">Run code with limited privileges</h3>
+
+<p>If you must run code, consider running it with reduced privileges. This advice applies mainly to extensions and XUL applications, which can use <a href="/en-US/docs/Components.utils.evalInSandbox" title="Components.utils.evalInSandbox">Components.utils.evalInSandbox</a> for this.</p>
+
+<h2 id="Examples">Examples</h2>
+
+<h3 id="Using_eval">Using <code>eval</code></h3>
+
+<p>In the following code, both of the statements containing <code>eval()</code> return 42. The first evaluates the string "<code>x + y + 1</code>"; the second evaluates the string "<code>42</code>".</p>
+
+<pre class="brush:js">var x = 2;
+var y = 39;
+var z = "42";
+eval("x + y + 1"); // returns 42
+eval(z);           // returns 42 
+</pre>
+
+<h3 id="Using_eval_to_evaluate_a_string_of_JavaScript_statements">Using <code>eval</code> to evaluate a string of JavaScript statements</h3>
+
+<p>The following example uses <code>eval()</code> to evaluate the string <code>str</code>. This string consists of JavaScript statements that open an alert dialog box and assign <code>z</code> a value of 42 if <code>x</code> is five, and assigns 0 to <code>z</code> otherwise. When the second statement is executed, <code>eval()</code> will cause these statements to be performed, and it will also evaluate the set of statements and return the value that is assigned to <code>z</code>.</p>
+
+<pre class="brush:js">var x = 5;
+var str = "if (x == 5) {console.log('z is 42'); z = 42;} else z = 0; ";
+
+console.log("z is ", eval(str));</pre>
+
+<h3 id="Last_expression_is_evaluated">Last expression is evaluated</h3>
+
+<p><code>eval()</code> returns the value of the last expression evaluated.</p>
+
+<pre class="brush:js">var str = "if ( a ) { 1+1; } else { 1+2; }";
+var a = true;
+var b = eval(str);  // returns 2
+ 
+console.log("b is : " + b);
+
+a = false;
+b = eval(str);  // returns 3
+
+console.log("b is : " + b);</pre>
+
+<h3 id="eval_as_a_string_defining_function_requires_(_and_)_as_prefix_and_suffix"><code>eval</code> as a string defining function requires "(" and ")" as prefix and suffix</h3>
+
+<pre class="brush:js">var fctStr1 = "function a() {}"
+var fctStr2 = "(function a() {})"
+var fct1 = eval(fctStr1)  // return undefined
+var fct2 = eval(fctStr2)  // return a function
+</pre>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Status</th>
+   <th scope="col">Comment</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES1')}}</td>
+   <td>{{Spec2('ES1')}}</td>
+   <td>Initial definition.</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-15.1.2.1', 'eval')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-eval-x', 'eval')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-eval-x', 'eval')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<p>{{CompatibilityTable}}</p>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Chrome for Android</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="Gecko-specific_notes">Gecko-specific notes</h2>
+
+<ul>
+ <li>Historically <code>eval()</code> had an optional second argument, specifying an object in whose context the evaluation was to be performed. This argument was non-standard, and was removed from SpiderMonkey in Gecko 1.9.1 (Firefox 3.5). See {{bug(442333)}}.</li>
+</ul>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li>{{jsxref("Global_Objects/uneval", "uneval()")}}</li>
+ <li><a href="/en-US/docs/Web/JavaScript/Reference/Operators/Property_Accessors">Property accessors</a></li>
+</ul>

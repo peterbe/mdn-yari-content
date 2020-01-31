@@ -1,0 +1,56 @@
+<div>{{JSRef}}</div>
+
+<p><code>Promise.any()</code> takes an iterable of {{JSxRef("Promise")}} objects and, as soon as one of the promises in the iterable fulfills, returns a single promise that resolves with the value from that promise. If no promises in the iterable fulfill (if all of the given promises are rejected), then the returned promise is rejected with an object that is still up for debate: either an array of rejection reasons, or an {{JSxRef("Global_Objects/AggregateError", "AggregateError")}}, a new subclass of {{JSxRef("Error")}} that groups together individual errors. Essentially, this method is the opposite of {{JSxRef("Promise.all()")}}.</p>
+
+<div class="blockIndicator warning">
+<p><strong>Warning!</strong> The <code>Promise.any()</code> method is experimental and not fully supported by all browsers. It is currently in the <a href="https://github.com/tc39/proposal-promise-any" rel="external">TC39 Candidate stage (Stage 3)</a>.</p>
+</div>
+
+<h2 id="Syntax">Syntax</h2>
+
+<pre>Promise.any(<var>iterable</var>);</pre>
+
+<h3 id="Parameters">Parameters</h3>
+
+<dl>
+ <dt><code>iterable</code></dt>
+ <dd>An <a href="/en-US/docs/Web/JavaScript/Guide/iterable">iterable</a> object, such as an {{JSxRef("Array")}}.</dd>
+</dl>
+
+<h3 id="Return_value">Return value</h3>
+
+<ul>
+ <li>An <strong>already resolved</strong> {{JSxRef("Promise")}} if the <var>iterable</var> passed is empty.</li>
+ <li>An <strong>asynchronously resolved</strong> {{JSxRef("Promise")}} if the <var>iterable</var> passed contains no promises.</li>
+ <li>A <strong>pending</strong> {{JSxRef("Promise")}} in all other cases. This returned promise is then resolved/rejected <strong>asynchronously</strong> (as soon as the stack is empty) when any of the promises in the given <var>iterable</var> resolve, or if all the promises have rejected.</li>
+</ul>
+
+<h2 id="Description">Description</h2>
+
+<p>This method is useful for returning the first promise that fulfills. It short-circuits after a promise fulfills, so it does not wait for the other promises to complete once it finds one. Unlike {{JSxRef("Promise.all()")}}, which returns an <em>array</em> of resolved values, we only get one resolved value (assuming at least one promise resolves). This can be beneficial if we need only one promise to resolve but we do not care which one does. Also, unlike {{JSxRef("Promise.race()")}}, which returns the first <em>settled</em> value, this method returns the first <em>resolved</em> value. This method will ignore all rejected promises up until the first promise that resolves.</p>
+
+<h3 id="Fulfillment">Fulfillment</h3>
+
+<p>If any of the passed-in promises fulfill, the returned promise asynchronously fulfills with the value of the promise that fulfilled, whether or not the other promises have fulfilled or rejected.</p>
+
+<ul>
+ <li>If an empty <var>iterable</var> is passed, then this method returns (synchronously) an already resolved promise.</li>
+ <li>If any of the passed-in promises fulfill, or are not promises, the promise returned by <code>Promise.any</code> is fulfilled asynchronously.</li>
+</ul>
+
+<h3 id="Rejection">Rejection</h3>
+
+<p>If all of the passed-in promises reject, <code>Promise.any</code> asynchronously rejects with one of two options (which have not yet been agreed upon): either</p>
+
+<ul>
+ <li>an array containing <strong>all </strong>the rejection reasons of the <var>iterable</var> passed as the argument, or</li>
+ <li>an {{JSxRef("Global_Objects/AggregateError", "AggregateError")}} object, which extends {{JSxRef("Error")}}, and contains a pointer to an array of exceptions.</li>
+</ul>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li>{{JSxRef("Promise")}}</li>
+ <li>{{JSxRef("Promise.all()")}}</li>
+ <li>{{JSxRef("Promise.race()")}}</li>
+</ul>

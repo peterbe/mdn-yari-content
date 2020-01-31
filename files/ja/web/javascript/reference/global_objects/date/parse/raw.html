@@ -1,0 +1,166 @@
+<div>{{JSRef}}</div>
+
+<p><strong><code>Date.parse()</code></strong> メソッドは、日時を表す文字列を解釈し、協定世界時 (UTC) 1970 年 1 月 1 日 00:00:00 からの経過時間を表すミリ秒単位の数値を返します。または、文字列を解釈できなかったり不正な日付 (例えば 2015-02-31) が指定された場合 <code>NaN</code> を返します。</p>
+
+<p>ES5 に準拠して実装されるまで <code>Date.parse</code> の使用は推奨されません。文字列の解釈は全体的に実装依存です。これらには多くの異なる実装があり、文字列の解釈が異なることがあるため、日付の文字列は手動で解釈するべきです (多くの異なる書式に対応したライブラリの使用が助けになるでしょう)。</p>
+
+<div>{{EmbedInteractiveExample("pages/js/date-parse.html")}}</div>
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<p>直接呼び出し:</p>
+
+<pre class="syntaxbox">Date.parse(<var>dateString</var>)</pre>
+
+<p>省略呼び出し:</p>
+
+<pre class="syntaxbox">new Date(<var>dateString</var>)</pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<dl>
+ <dt><code>dateString</code></dt>
+ <dd><a href="http://tools.ietf.org/html/rfc2822#section-3.3">RFC2822</a> または (派生の) ISO 8601 の日付を表す文字列 (他の書式が使用されることがあるため、結果は期待値にならない可能性があります)。</dd>
+</dl>
+
+<h3 id="Return_value" name="Return_value">戻り値</h3>
+
+<p>"1 January 1970 00:00:00 UTC" からの経過時間をミリ秒単位で表す数値。このメソッドに与えられた日付を表す文字列の解釈により取得される日付。引数に正しい値が与えられない場合、{{jsxref("NaN")}} を返します。</p>
+
+<h2 id="Description" name="Description">説明</h2>
+
+<p><code>parse</code> メソッドは、日時の文字列 (例えば "<code>Dec 25, 1995</code>") を取り、1970 年 1 月 1 日 00:00:00 (UTC) からのミリ秒単位の経過時間を表す数値を返します。この関数は、例えば {{jsxref("Date.prototype.setTime()", "setTime()")}} メソッドと {{jsxref("Global_Objects/Date", "Date")}} オブジェクトを組み合わせて使い、文字列値を基にして日時の値をセットするときに役立ちます。</p>
+
+<p>時刻を表す文字列を与えると、<code>parse()</code> は time 値を返します。これは、<code>"Mon, 25 Dec 1995 13:30:00 GMT"</code> のような RFC2822 / IETF 標準の日付構文 (<a href="http://tools.ietf.org/html/rfc2822#section-3.3">RFC2822 Section 3.3</a>) を受け入れます。また、アメリカ大陸のタイムゾーンの省略形を解釈できますが、一般的な使用にはタイムゾーンオフセットを使用してください。例えば、<code>"Mon, 25 Dec 1995 13:30:00 +0430"</code> (グリニッジ標準時より 4 時間 30 分東)。</p>
+
+<p>GMT と UTC は等価とみなされます。タイムゾーン情報を含まない文字列は、地方時のタイムゾーンが使用され、<a href="http://tools.ietf.org/html/rfc2822#section-3.3">RFC2822 Section 3.3</a> 準拠の書式の引数として判断されます。</p>
+
+<p>日付文字列の解釈の多様性により結果の一貫性がないため、文字列は常に手動で解釈することをおすすめします。特に、ECMAScript の実装がエンジンによって異なるため、<code>"2015-10-12 12:00:00"</code> のような文字列は、<code>NaN</code> を返したり、UTC または地方時として解釈されたりします。</p>
+
+<h3 id="ECMAScript_5_ISO-8601_書式のサポート">ECMAScript 5 ISO-8601 書式のサポート</h3>
+
+<p>日時の文字列は、<a href="http://www.w3.org/TR/NOTE-datetime">ISO 8601</a> の書式になるでしょう。例えば、<code>"2011-10-10"</code> (日付のみ) または <code>"2011-10-10T14:48:00"</code> (日付と時刻) の解釈が可能です。文字列が ISO 8601 の日付のみの場合、UTC タイムゾーンを使用して引数を判断します。文字列が簡略化された <a href="http://www.w3.org/TR/NOTE-datetime">ISO 8601</a> 書式の日付と時刻の場合、地方時として扱われます。</p>
+
+<p>タイムゾーン指定の引数は、日付文字列を解釈して引数を判断するときに使用されます。戻り値は常に、協定世界時 (UTC) 1970 年 1 月 1 日 00:00:00 から引数に指定した時点までの経過時間を表すミリ秒単位の数値、または解釈できない場合 <code>NaN</code> です。</p>
+
+<p><code>parse</code> は {{jsxref("Date")}} の静的メソッドなので、生成した {{jsxref("Date")}} インスタンスのメソッドとしてではなく、常に <code>Date.parse()</code> のように使います。</p>
+
+<h3 id="想定されるタイムゾーンの違い">想定されるタイムゾーンの違い</h3>
+
+<p><code>"March 7, 2014"</code> の日付文字列を渡すと、<code>parse()</code> はタイムゾーンを地方時として想定しますが、<code>"2014-03-07"</code> のような ISO 書式を与えると UTC のタイムゾーンを想定します (ES5 および ECMAScript 2015 の仕様)。そのため、これらの文字列を使用して生成した {{jsxref("Date")}} オブジェクトは、システムが UTC と同じタイムゾーンに設定されていない限り、サポートされる ECMAScript のバージョンに依存して異なる時刻を表す可能性があります。これは、2 つの同じ日付を表す文字列の結果が、変換される与えた文字列の書式の違いによって、異なる値になる可能性があることを意味します。</p>
+
+<h3 id="実装特有の日付書式へのフォールバック">実装特有の日付書式へのフォールバック</h3>
+
+<p>ECMAScript 仕様の状況: 与えた文字列が標準仕様の書式になっていない場合、この関数は、実装特有のヒューリスティクスまたは実装特有の解釈アルゴリズムにフォールバックします。解釈できない文字列や ISO 書式文字列における不正な要素値を含む日付を渡すと、<code>Date.parse()</code> は {{jsxref("NaN")}} を返すでしょう。</p>
+
+<p>しかし、日付文字列の不正な値は、ECMA-262 で定義された簡略化された ISO 書式として理解されず、ブラウザや与えた値に依存して、結果的に {{jsxref("NaN")}} を返すかもしれません。その例:</p>
+
+<pre class="brush: js">// 不正な値を持つ 非 ISO 文字列
+new Date('23/25/2014');
+</pre>
+
+<p>これは、Firefox 30 では、地方時の 2015 年 11 月 25 日として扱われ、Safari 7 では不正な値として処理されます。しかし、文字列が ISO 書式の文字列として理解され、不正な値を含む場合、ES5 以降の仕様に準拠するすべてのブラウザが {{jsxref("NaN")}} を返します:</p>
+
+<pre class="brush: js">// 不正な値を持つ ISO 文字列
+new Date('2014-25-23').toISOString();
+// ES5 準拠のすべてのブラウザが "RangeError: invalid date" を返す
+</pre>
+
+<p>SpiderMonkey の実装特有のヒューリスティックは、<a href="http://mxr.mozilla.org/mozilla-central/source/js/src/jsdate.cpp?rev=64553c483cd1#889"><code>jsdate.cpp</code></a> で見つけられます。<code>"10 06 2014"</code> の文字列は、非 ISO 書式の例として挙げられ、このようにカスタムルーチンにフォールバックされます。この解釈の動作を説明する <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1023155#c6">ルーチンのアウトライン</a> も参照してください。</p>
+
+<pre class="brush: js">new Date('10 06 2014');
+</pre>
+
+<p>これは、2014 年 6 月 10 日ではなく、地方時の 2014 年 10 月 6 日 として扱われます。他の例:</p>
+
+<pre class="brush: js">new Date('foo-bar 2014').toString();
+// 戻り値: "Invalid Date"
+
+Date.parse('foo-bar 2014');
+// 戻り値: NaN
+</pre>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<h3 id="Date.parse()_を使う"><code>Date.parse()</code> を使う</h3>
+
+<p><code>IPOdate</code> が既存の {{jsxref("Date")}} オブジェクトならば、次のようにして、これを 1995 年 8 月 9 日 (地方時) にセットできます:</p>
+
+<pre class="brush: js">IPOdate.setTime(Date.parse('Aug 9, 1995'));</pre>
+
+<p>他の非標準の日付文字列の解釈の例:</p>
+
+<pre class="brush: js">Date.parse('Aug 9, 1995');</pre>
+
+<p>タイムゾーン GMT+0900 では <code>807894000000</code> を返し、他のタイムゾーンでは他の値を返します。タイムゾーンが指定されておらず ISO 書式でないため、デフォルトで地方時のタイムゾーンが使用されます。</p>
+
+<pre class="brush: js">Date.parse('Wed, 09 Aug 1995 00:00:00 GMT');</pre>
+
+<p>GMT (UTC) が指定されているため、地方時のタイムゾーンに関わらず、<code>807926400000</code> を返します。</p>
+
+<pre class="brush: js">Date.parse('Wed, 09 Aug 1995 00:00:00');</pre>
+
+<p>タイムゾーン GMT+0900 では <code>807894000000</code> を返し、他のタイムゾーンでは他の値を返します。引数にタイムゾーンが指定されておらず、非 ISO 書式であるため、地方時として扱われます。</p>
+
+<pre class="brush: js">Date.parse('Thu, 01 Jan 1970 00:00:00 GMT');</pre>
+
+<p>GMT (UTC) のタイムゾーンが指定されているため、地方時のタイムゾーンに関わらず <code>0</code> を返します。</p>
+
+<pre class="brush: js">Date.parse('Thu, 01 Jan 1970 00:00:00');</pre>
+
+<p>タイムゾーン GMT+0900 では <code>-32400000</code> を返し、他のタイムゾーンでは他の値を返します。タイムゾーンが指定されておらず、非 ISO 書式であるため、地方時のタイムゾーンが使用されます。</p>
+
+<pre class="brush: js">Date.parse('Thu, 01 Jan 1970 00:00:00 GMT-0400');</pre>
+
+<p>GMT (UTC) のタイムゾーンが指定されているため、地方時のタイムゾーンに関わらず <code>14400000</code> を返します。</p>
+
+<h2 id="Specifications" name="Specifications">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">策定状況</th>
+   <th scope="col">備考</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES1')}}</td>
+   <td>{{Spec2('ES1')}}</td>
+   <td>初期定義。JavaScript 1.0 で実装。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES5.1', '#sec-15.9.4.2', 'Date.parse')}}</td>
+   <td>{{Spec2('ES5.1')}}</td>
+   <td>簡略化された ISO 8601 書式が追加された。</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES6', '#sec-date.parse', 'Date.parse')}}</td>
+   <td>{{Spec2('ES6')}}</td>
+   <td> </td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-date.parse', 'Date.parse')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td> </td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザー実装状況</h2>
+
+<p class="hidden">The compatibility table in this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</p>
+
+<p>{{Compat("javascript.builtins.Date.parse")}}</p>
+
+<h2 id="Compatibility_notes" name="Compatibility_notes">互換性ノート</h2>
+
+<ul>
+ <li>Firefox 49 {{geckoRelease(49)}} で、2 桁の「年」の解釈が、Internet Explorer に代わって Google Chrome ブラウザに沿うように変更されました。現在、<code>50</code> 以下の 2 桁の「年」は 21 世紀の年として解釈されます。例えば <code>04/16/17</code> は、以前は 1917 年 4 月 16 日と解釈されていましたが、現在は 2017 年 4 月 16 日と解釈されます。これは、相互運用性の問題や不明瞭な年を回避しますが、実装により異なる値を避けるため、"2017-04-16" のような ISO 8601 書式の使用が推奨されます ({{bug(1265136)}})。</li>
+</ul>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li>{{jsxref("Date.UTC()")}}</li>
+</ul>

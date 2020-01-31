@@ -1,0 +1,74 @@
+<p class="summary">对众多应用程序而言，动画对提供友好的用户体验有着关键的作用，我们有很多方式生成 web 动画，比如 CSS.</p>
+
+<p class="summary">{{cssxref("transition","transitions")}}/{{cssxref("animation","animations")}} 或者 JavaScript 动画 (使用 {{domxref("Window.requestAnimationFrame","requestAnimationFrame()")}}).</p>
+
+<p class="summary">在这篇文章中，我们分析 CSS 动画和 JavaScript 动画的性能差异</p>
+
+<h2 id="CSS_transitions_and_animations">CSS transitions and animations</h2>
+
+<p>CSS 中 transitions 和 animations 都可以用于编写动画，它们都有各自的使用场景：</p>
+
+<ul>
+ <li>CSS {{cssxref("transition","transitions")}} 提供了一个简单的的方式去创造当前样式与结束状态样式之间的动画，比如一个 button 的普通状态和 hover 状态。尽管一个元素处于过渡状态中，新的过渡动画也会立即从当前样式开始，而不是直接跳转到CSS的最终状态。浏览 <a href="https://developer.mozilla.org/en-US/docs/Web/Guide/CSS/Using_CSS_transitions">Using CSS transitions</a> 以获取更多细节。</li>
+ <li>另一方面，CSS {{cssxref("animation","animations")}}, 允许开发者去通过一个初始状态属性值集合与最终状态属性值集合创造动画，而不是单单的初始和最终状态。 CSS animations 由两部分组成: 一个描述 CSS 动画的样式, 以及一个指定动画初始状态，中间状态以及最终状态样式的关键帧集合。浏览 <a href="https://developer.mozilla.org/en-US/docs/Web/Guide/CSS/Using_CSS_animations">Using CSS animations</a> 以获取更多细节.</li>
+</ul>
+
+<p>就性能方面来说, 无论通过CSS animations 还是 transitions 创造动画，都没有区别。在这篇文章其二者都归类为相同的 CSS-based 之下.</p>
+
+<h2 id="requestAnimationFrame">requestAnimationFrame</h2>
+
+<p>The {{domxref("Window.requestAnimationFrame","requestAnimationFrame()")}} API provides an efficient way to make animations in JavaScript. The callback function of the method is called by the browser before the next repaint on each frame. Compared to {{domxref("WindowTimers.setTimeout","setTimeout()")}}/{{domxref("WindowTimers.setInterval","setInterval()")}}, which need a specific delay parameter, <code>requestAnimationFrame()</code> is much more efficient. Developers can create an animation by simply changing an element's style each time the loop is called (or updating the Canvas draw, or whatever.)</p>
+
+<div class="note">
+<p><strong>Note</strong>: Like CSS transitions and animations, <code>requestAnimationFrame()</code> pauses when the current tab is pushed into the background.</p>
+</div>
+
+<p>更多细节请阅读 <a href="https://hacks.mozilla.org/2011/08/animating-with-javascript-from-setinterval-to-requestanimationframe/">animating with JavaScript from setinterval to requestAnimationFrame</a>.</p>
+
+<h2 id="性能对比_transitions_vs._requestAnimationFrame">性能对比:<br>
+ transitions vs. requestAnimationFrame</h2>
+
+<p>事实上，大多数场景下, 基于 CSS 的 动画几乎是跟 JavaScript 动画表现一致 — 至少在 FireFox 上是如此. 一些基于 Javascript 的动画库, 像 <a href="http://greensock.com/gsap">GSAP</a> and <a href="http://velocityjs.org/">Velocity.JS</a>, 甚至声称他们在性能上可以做得比 <a href="https://css-tricks.com/myth-busting-css-animations-vs-javascript/">native CSS transitions/animations</a> （原生的 CSS transitions/animations）更好. 这是可行的，因为在重绘事件发生之前，CSS transitions/animations 在主的 UI 线程仅仅是重新采集元素的样式, 这跟通过 <code>requestAnimationFrame()</code> 回调，获取重新采集元素样式是一样的, 也是在下一次重绘之前触发. 假如二者都是在主 UI 线程创建的动画，那它们在性能方面没有差异.</p>
+
+<p>在这一节，我们将会使用 FireFox 通过一个性能测试，去看看哪种动画方式更好</p>
+
+<h3 id="启用_FPS_工具">启用 FPS 工具</h3>
+
+<p>Before going through the example, please enable FPS tools first to see the current frame rate:</p>
+
+<ol>
+ <li>In the URL bar, enter <em>about:config</em>; click the <em>I’ll be careful, I promise!</em> button to enter the config screen.<br>
+  <img alt="" src="https://mdn.mozillademos.org/files/11137/Pic1.png" style="height: 349px; width: 600px;"><br>
+   </li>
+ <li>In the search bar, search for the <code>layers.acceleration.draw-fps</code> preference.</li>
+ <li>Double-click the entry to set the value to <code>true</code>. Now you will be able to see three little purple boxes at the upper left corner of the Firefox window. The first box represents FPS.<br>
+  <img alt="" src="https://mdn.mozillademos.org/files/11139/Pic2.png" style="height: 215px; width: 562px;"></li>
+</ol>
+
+<h3 id="Running_the_performance_test">Running the performance test</h3>
+
+<p>Initially in the test seen below, a total of 1000 {{htmlelement("div")}} elements are transformed by CSS animation. </p>
+
+<p><span style="line-height: 16.7999992370605px;">{{JSFiddleEmbed("https://jsfiddle.net/zt94oew2/1/","","480")}}</span></p>
+
+<p>The animation can be switched to <code>requestAnimationFrame()</code> by clicking the toggle button.</p>
+
+<p>Try running them both now, comparing the FPS for each (the first purple box.) You should see that the performance of CSS animations and <code>requestAnimationFrame()</code> are very close.</p>
+
+<h3 id="Off_main_thread_animation">Off main thread animation</h3>
+
+<p>Even given the test results above, we'd argue that CSS animations are the better choice. But how? The key is that as long as the properties we want to animate do not trigger reflow/repaint (read <a href="http://csstriggers.com/">CSS triggers</a> for more information), we can move those sampling operations out of the main thread. The most common property is the CSS transform. If an element is promoted as a <a href="https://wiki.mozilla.org/Gecko:Overview#Graphics">layer</a>, animating transform properties can be done in the GPU, meaning better  performance/efficiency, especially on mobile. Find out more details in <a href="https://wiki.mozilla.org/Platform/GFX/OffMainThreadCompositing">OffMainThreadCompositing</a>.</p>
+
+<p>To enable the OMTA (Off Main Thread Animation) in Firefox, you can go to <em>about:config</em> and search for the <code>layers.offmainthreadcomposition.async-animations</code>. Toggle its value to <code>true</code>.</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/11141/Pic3.png" style="height: 210px; width: 536px;"></p>
+
+<p>After enabling OMTA, try running the above test again. You should see that the FPS of the CSS animations will now be significantly higher.</p>
+
+<div class="note">
+<p><strong>Note</strong>: In Nightly/Developer Edition, you should see that OMTA is enabled by default, so you might have to do the tests the other way around (test with it enabled first, then disable to test without OMTA.)</p>
+</div>
+
+<h2 id="Summary">Summary</h2>
+
+<p>Browsers are able to optimize rendering flows. In summary, we should always try to create our animations using CSS transitions/animations where possible. If your animations are really complex, you may have to rely on JavaScript-based animations instead.</p>

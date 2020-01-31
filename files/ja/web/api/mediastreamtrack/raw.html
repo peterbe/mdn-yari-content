@@ -1,0 +1,498 @@
+<div>{{APIRef("Media Capture and Streams")}}</div>
+
+<p><span class="seoSummary"><strong><code>MediaStreamTrack</code></strong><strong> </strong>インタフェースは、ストリームに含まれる一つのメディアトラックを表現します。 一般的に、オーディオやビデオのトラックですが、他の種類のトラックも存在することができます。</span></p>
+
+<h2 id="プロパティ">プロパティ</h2>
+
+<p>以下に示すプロパティに加えて、<code>MediaStreamTrack</code>は制約可能なプロパティを持っています。これらのプロパティは、{{domxref("MediaStreamTrack.applyConstraints", "applyConstraints()")}}によって設定でき、{{domxref("MediaStreamTrack.getConstraints", "getConstraints()")}}と{{domxref("MediaStreamTrack.getSettings", "getSettings()")}}によって取得できます。制約可能なプロパティを用いて適切に動作させるためにはどのようにすればいいかを知りたい場合は、<a href="/en-US/docs/Web/API/Media_Streams_API/Constraints">Capabilities, constraints, and settings</a>を見てください。適切に動作させなかった場合の結果として、あなたが作成したコードは信頼できないものになります。</p>
+
+<dl>
+ <dt>{{domxref("MediaStreamTrack.contentHint")}}</dt>
+ <dd>このプロパティは文字列でありWebアプリケーションによって使用されます。APIの利用者がどの様にして扱うべきかをガイドするためのヒント情報としてトラックが含んでいるコンテンツのタイプを提供します。</dd>
+ <dt>{{domxref("MediaStreamTrack.enabled")}}</dt>
+ <dd>このプロパティはBoolean型です。トラックが有効の場合は<code>true</code>の値になり、メディアソースストリームを描画することができます。 トラックが無効の場合は<code>false</code>の値になり、メディアソースストリームに描画されません。トラックの接続が解除された場合、この値は変更することはできますが影響を与えることはありません。</dd>
+ <dt>{{domxref("MediaStreamTrack.id")}} {{readonlyInline}}</dt>
+ <dd>トラックの固有識別子(GUID)を含む{{domxref("DOMString")}}を返します。この識別子はブラウザによって生成されます。</dd>
+ <dt>{{domxref("MediaStreamTrack.kind")}} {{readonlyInline}}</dt>
+ <dd>{{domxref("DOMString")}}を返します。このトラックがオーディオトラックの場合は<code>"audio"</code>が設定され、ビデオトラックの場合は<code>"video"</code>が設定されます。ソースからの関連付けが解除された場合、この値が変更されることはありません。</dd>
+ <dt>{{domxref("MediaStreamTrack.label")}} {{readonlyInline}}</dt>
+ <dd><code>"internal microphone"</code>のようなトラックソースを識別するユーザエージェントによって割り当てられたラベルを含む{{domxref("DOMString")}}を返します。この文字列は空になることもあり、ソースが接続されていないと空になります。トラックのソースとの関連付けが解除されても、このラベルは変更されません。</dd>
+ <dt>{{domxref("MediaStreamTrack.muted")}} {{readonlyInline}}</dt>
+ <dd>Booleanの値を返します。トラックがミュートであるかどうかを示します。</dd>
+ <dt>{{domxref("MediaStreamTrack.readonly")}} {{readonlyInline}}</dt>
+ <dd>Booleanの値を返します。トラックが読み取り専用の場合(ビデオファイルソースやカメラなどの設定を変更することができないもののような)は<code>true</code>を返し、それ以外の場合は<code>false</code>を返します。</dd>
+ <dt>{{domxref("MediaStreamTrack.readyState")}} {{readonlyInline}}</dt>
+ <dd>トラックの状態を表す列挙型の値を返します。この値は次のどれかになります。
+ <ul>
+  <li><code>"live"</code>は入力デバイスが接続されており、ベストエフォートでリアルタイムなデータを提供することを表します。この状態では、<code>MediaStreamTrack.enabled</code>属性を用いることで、データの出力のオンとオフを切り替えることができます。</li>
+  <li><code>"ended"</code>は入力デバイスがこれ以上データを提供することがなく、新しいデータも一切提供されないことを示します。</li>
+ </ul>
+ </dd>
+ <dt>{{domxref("MediaStreamTrack.remote")}} {{obsolete_inline("")}} {{readonlyInline}}</dt>
+ <dd>Booleanの値を返します。トラックのソースが{{domxref("RTCPeerConnection")}}の場合は<code>true</code>であり、それ以外は<code>false</code>です。</dd>
+</dl>
+
+<h3 id="イベントハンドラ">イベントハンドラ</h3>
+
+<dl>
+ <dt>{{domxref("MediaStreamTrack.onstarted")}}</dt>
+ <dd>{{event("started")}}イベントが発生した時に実行する処理を含む{{domxref("EventHandler")}}です。このイベントは新しい{{domxref("MediaStreamTrack")}}オブジェクトが追加された時に発生します。</dd>
+ <dt>{{domxref("MediaStreamTrack.onmute")}}</dt>
+ <dd>{{event("mute")}}イベントが発生した時に実行する処理を含む{{domxref("EventHandler")}}です。このイベントは、{{domxref("MediaStreamTrack")}}オブジェクトのソースが一時的にデータを提供することができない時に発生します。</dd>
+ <dt>{{domxref("MediaStreamTrack.onunmute")}}</dt>
+ <dd>{{event("unmute")}}イベントが発生した時に実行する処理を含む{{domxref("EventHandler")}}です。このイベントは、{{domxref("MediaStreamTrack")}}オブジェクトのソースが一時的にデータを提供できない状態から復帰した時に発生します。</dd>
+ <dt>{{domxref("MediaStreamTrack.onoverconstrained")}}</dt>
+ <dd>{{event("overconstrained")}}イベントが発生した時に実行する処理を含む{{domxref("EventHandler")}}です。このエラーイベントは、影響を受けた各トラック(複数のトラックが同一のソースを共有している時)で発生します。このイベントは、ユーザエージェントが与えられたソースに対して現在の制約を評価し、与えられた制約でソースを設定することができない時に発生します。 過制約のため、ユーザエージェントは影響をうけた各トラックをミュートにします。影響を受けたトラックは、現在のソースの有効な能力に配慮してアプリケーションが制約を調整するまでmutedの状態を維持します。</dd>
+ <dt>{{domxref("MediaStreamTrack.onended")}}</dt>
+ <dd>{{event("ended_(MediaStream)", "ended")}}イベントが発生した時に実行する処理を含む{{domxref("EventHandler")}}です。このイベントは、{{domxref("MediaStreamTrack")}}オブジェクトのソースが、これ以上データを提供することがないか、ユーザーの操作によって許可が無効になったか、ソースデバイスが取り出されたか、リモートのピアがデータの送信を停止した時に発生します。</dd>
+</dl>
+
+<h2 id="メソッド">メソッド</h2>
+
+<dl>
+ <dt>{{domxref("MediaStreamTrack.applyConstraints()")}}</dt>
+ <dd><code>MediaStreamTrack</code>の有効な制約可能な値についての許容できる値の範囲を指定します。</dd>
+ <dt>{{domxref("MediaStreamTrack.clone()")}}</dt>
+ <dd><code>MediaStreamTrack</code>の複製を返します。</dd>
+ <dt>{{domxref("MediaStreamTrack.getCapabilities()")}}</dt>
+ <dd><code>MediaStreamTrack</code>で有効な制約可能なプロパティの一覧を返します。</dd>
+ <dt>{{domxref("MediaStreamTrack.getConstraints()")}}</dt>
+ <dd>トラックに設定されている制約を含む{{domxref('MediaTrackConstraints')}}を返します。戻り値は、最後に{{domxref("MediaStreamTrack.applyConstraints", "applyConstraints()")}}を用いて設定した制約に一致します。</dd>
+ <dt>{{domxref("MediaStreamTrack.getSettings()")}}</dt>
+ <dd><code>MediaStreamTrack</code>の制約可能なプロパティの値を含む{{domxref("MediaTrackSettings")}}オブジェクトを返します。</dd>
+ <dt>{{domxref("MediaStreamTrack.stop()")}}</dt>
+ <dd>トラックに関連付けられたソースの再生を停止し、ソースとトラックの関連付けを解除します。トラックの状態は<code>ended</code>に設定されます。</dd>
+</dl>
+
+<h2 id="仕様">仕様</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様</th>
+   <th scope="col">状態</th>
+   <th scope="col">コメント</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('Media Capture', '#mediastreamtrack', 'MediaStreamTrack')}}</td>
+   <td>{{Spec2('Media Capture')}}</td>
+   <td>初版</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="ブラウザ互換性">ブラウザ互換性</h2>
+
+<div>{{CompatibilityTable}}</div>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Edge</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari (WebKit)</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatGeckoDesktop(22)}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>applyConstraints()</code></td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>clone()</code></td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatGeckoDesktop(48)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>contentHint</code></td>
+   <td>{{CompatChrome(60)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatOpera(47)}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>enabled</code></td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatGeckoDesktop(23)}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>getConstraints()</code></td>
+   <td>{{CompatChrome(53)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatGeckoDesktop(50)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatOpera(40)}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>getSettings()</code></td>
+   <td>{{CompatChrome(53)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatGeckoDesktop(50)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatOpera(40)}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>getSources()</code></td>
+   <td>{{CompatVersionUnknown}}<br>
+    Removed {{CompatChrome(56)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatVersionUnknown}}<br>
+    Removed {{CompatOpera(43)}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>id</code></td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatGeckoDesktop(22)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>kind</code></td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatGeckoDesktop(22)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>label</code></td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatGeckoDesktop(22)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>muted</code></td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>onmute</code></td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>onoverconstrained</code></td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>onended</code></td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatGeckoDesktop(50)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>onunmute</code></td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>readyState</code></td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatGeckoDesktop(50)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>remote</code></td>
+   <td>{{CompatChrome(48)}}<br>
+    Removed {{CompatChrome(59)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatOpera(35)}}<br>
+    Removed {{CompatOpera(46)}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>stop()</code></td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatGeckoDesktop(34)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android Webview</th>
+   <th>Chrome for Android</th>
+   <th>Edge</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Phone</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatGeckoMobile(22)}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>applyConstraints()</code></td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>clone()</code></td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>contentHint</code></td>
+   <td>{{CompatChrome(60)}}</td>
+   <td>{{CompatChrome(60)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatOperaMobile(47)}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>enabled</code></td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>getConstraints()</code></td>
+   <td>{{CompatChrome(53)}}</td>
+   <td>{{CompatChrome(52.0)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatGeckoDesktop(50)}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatOperaMobile(40)}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>getSettings()</code></td>
+   <td>{{CompatChrome(53)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatOperaMobile(40)}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>getSources()</code></td>
+   <td>{{CompatVersionUnknown}}<br>
+    Removed {{CompatChrome(56)}}</td>
+   <td>{{CompatChrome(56)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatVersionUnknown}}<br>
+    Removed {{CompatOperaMobile(43)}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>id</code></td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>kind</code></td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>label</code></td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>muted</code></td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>onended</code></td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>onmute</code></td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>onoverconstrained</code></td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>onunmute</code></td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>readyState</code></td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>remote</code></td>
+   <td>{{CompatChrome(48)}}<br>
+    Removed {{CompatChrome(59)}}</td>
+   <td>{{CompatChrome(48)}}<br>
+    Removed {{CompatChrome(59)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatOperaMobile(35)}}<br>
+    Removed {{CompatOperaMobile(46)}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td><code>stop()</code></td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatGeckoMobile(34)}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatVersionUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<h2 id="関連項目">関連項目</h2>
+
+<ul>
+ <li>Media Capture and Streams API</li>
+ <li>{{domxref("MediaStream")}}</li>
+ <li>{{domxref("AudioStreamTrack")}} and {{domxref("VideoStreamTrack")}}</li>
+ <li><a href="/en-US/docs/WebRTC/MediaStream_API" title="/en-US/docs/WebRTC/MediaStream_API">Using the MediaStream API</a></li>
+</ul>

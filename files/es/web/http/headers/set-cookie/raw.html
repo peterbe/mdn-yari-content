@@ -1,0 +1,162 @@
+<div>{{HTTPSidebar}}</div>
+
+<div></div>
+
+<div>La cabecera de respuesta HTTP <strong>Set-Cookie</strong> se usa para enviar cookies desde el servidor al agente de usuario.</div>
+
+<div></div>
+
+<div>Para más información, visite la guía sobre <a href="/es/docs/Web/HTTP/Cookies">cookies HTTP</a>.</div>
+
+<div></div>
+
+<table class="properties">
+ <tbody>
+  <tr>
+   <th scope="row">Tipo de cabecera</th>
+   <td>{{Glossary("Response header")}}</td>
+  </tr>
+  <tr>
+   <th scope="row">{{Glossary("Forbidden header name")}}</th>
+   <td>no</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Sintaxis">Sintaxis</h2>
+
+<pre class="syntaxbox">Set-Cookie: &lt;cookie-name&gt;=&lt;cookie-value&gt; 
+Set-Cookie: &lt;cookie-name&gt;=&lt;cookie-value&gt;; Expires=&lt;date&gt;
+Set-Cookie: &lt;cookie-name&gt;=&lt;cookie-value&gt;; Max-Age=&lt;non-zero-digit&gt;
+Set-Cookie: &lt;cookie-name&gt;=&lt;cookie-value&gt;; Domain=&lt;domain-value&gt;
+Set-Cookie: &lt;cookie-name&gt;=&lt;cookie-value&gt;; Path=&lt;path-value&gt;
+Set-Cookie: &lt;cookie-name&gt;=&lt;cookie-value&gt;; Secure
+Set-Cookie: &lt;cookie-name&gt;=&lt;cookie-value&gt;; HttpOnly
+
+Set-Cookie: &lt;cookie-name&gt;=&lt;cookie-value&gt;; SameSite=Strict
+Set-Cookie: &lt;cookie-name&gt;=&lt;cookie-value&gt;; SameSite=Lax
+
+// Es posible usar múltiples directivas, por ejemplo:
+Set-Cookie: &lt;cookie-name&gt;=&lt;cookie-value&gt;; Domain=&lt;domain-value&gt;; Secure; HttpOnly
+</pre>
+
+<h2 id="Directivas">Directivas</h2>
+
+<dl>
+ <dt><code>&lt;cookie-name&gt;=&lt;cookie-value&gt;</code></dt>
+ <dd>Una cookie comienza con un par nombre-valor:
+ <ul>
+  <li>Un &lt;cookie-name&gt; puede ser cualquier cosa excepto caracteres de control (CTLs) o espacios y tabulaciones. Tampoco debe contener caracteres de separación como los siguientes: ( ) &lt; &gt; @ , ; : \ " /  [ ] ? = { }.</li>
+  <li>Un &lt;cookie-value&gt; opcionalmente puede ser establecido dentro de comillas dobles y se permite usar cualquier caracter US-ASCII excluyendo CTLs, espacios en blanco, comillas dobles, comas, punto y coma y la barra invertida. <strong>Codificación:</strong> Muchas implementaciones realizan codificación de URL sobre los valores de la cookie, aunque esto no es requerido por la especificación RFC. Esto ayuda a satisfacer los requerimientos sobre los caracteres permitidos para &lt;cookie-value&gt;.</li>
+  <li><strong><code>Prefijo __Secure-</code></strong>: Las cookies cuyo nombre comience por <code>__Secure-</code> (los guiones forman parte del prefijo) deben ser establecidas con la bandera <code>secure </code>y deben provenir de una página segura (HTTPS).</li>
+  <li><strong><code>Prefijo __Host-</code></strong>: Las cookies cuyo nombre comience por <code>__Host-</code> deben ser establecidas con la bandera <code>secure</code>, provenir de una página segura (HTTPS), no deben tener especificado un dominio (y por tanto no son enviadas a subdominios) y la ruta debe ser "/".</li>
+ </ul>
+ </dd>
+ <dt>Expires=&lt;date&gt; {{optional_inline}}</dt>
+ <dd>
+ <p>El tiempo de de vida útil de una cookie como marca HTTP-date timestamp. Ver {{HTTPHeader("Date")}} para el detalle del formato. Si no está especificado, la cookie tendrá el tiempo de vida de una <strong>session cookie. </strong>Una sesión finaliza cuando el cliente lo culmina, esto quiere decir que la sesión será removida en ese punto. Sin embargo, muchos navegadores web tiene una caracteristica llamada "restaurar" que almacenará todas tus pestañas para tenerlas cuando vuelvas la próxima véz. Las cookies tambien estarán presente como si nunca hubieras cerrado el navegador.</p>
+ </dd>
+ <dt>Max-Age=&lt;non-zero-digit&gt; {{optional_inline}}</dt>
+ <dd>Número de milisegundos hasta que la cookie expira. Un cero o un número negativo va a expirar la cookie inmediatamente. Los navegadores antiguos (ie6, ie7, and ie8) no soportan max-age. Para otros navegadores, si ambos estan definidos (<code>Expires</code> y <code>Max-Age</code>), <code>Max-Age</code> tendrá mayor importancia.</dd>
+ <dt>Domain=&lt;domain-value&gt; {{optional_inline}}</dt>
+ <dd>Specifies those hosts to which the cookie will be sent. If not specified, defaults to the host portion of the current document location (but not including subdomains). Contrary to earlier specifications, leading dots in domain names are ignored. If a domain is specified, subdomains are always included.</dd>
+ <dt>Path=&lt;path-value&gt; {{optional_inline}}</dt>
+ <dd>Indicates a URL path that must exist in the requested resource before sending the Cookie header. The %x2F ("/") character is interpreted as a directory separator and sub directories will be matched as well (e.g. path=/docs, "/docs", "/docs/Web/", or "/docs/Web/HTTP" will all be matched).</dd>
+ <dt>Secure {{optional_inline}}</dt>
+ <dd>A secure cookie will only be sent to the server when a request is made using SSL and the HTTPS protocol. However, confidential or sensitive information should never be stored or transmitted in HTTP Cookies as the entire mechanism is inherently insecure and this doesn't mean that any information is encrypted, for example.
+ <p class="note"><strong>Note:</strong> Insecure sites (<code>http:</code>) can't set cookies with the "secure" directive anymore (new in Chrome 52+ and Firefox 52+).</p>
+ </dd>
+ <dt>HttpOnly {{optional_inline}}</dt>
+ <dd>HTTP-only cookies aren't accessible via JavaScript through the {{domxref("Document.cookie")}} property, the {{domxref("XMLHttpRequest")}} and {{domxref("Request")}} APIs to mitigate attacks against cross-site scripting ({{Glossary("XSS")}}).</dd>
+ <dt>SameSite=Strict<br>
+ SameSite=Lax {{optional_inline}} {{experimental_inline}}</dt>
+ <dd>
+ <p>Allows servers to assert that a cookie ought not to be sent along with cross-site requests, which provides some protection against cross-site request forgery attacks ({{Glossary("CSRF")}}).</p>
+ </dd>
+</dl>
+
+<h2 id="Examples">Examples</h2>
+
+<h3 id="Session_cookie">Session cookie</h3>
+
+<p>Session cookies will get removed when the client is shut down. They don't specify the <code>Expires</code> or <code>Max-Age</code> directives. Note that web browser have often enabled session restoring.</p>
+
+<pre>Set-Cookie: sessionid=38afes7a8; httponly; Path=/</pre>
+
+<h3 id="Permanent_cookie">Permanent cookie</h3>
+
+<p>Instead of expiring when the client is closed, permanent cookies expire at a specific date (<code>Expires</code>) or after a specific length of time (<code>Max-Age</code>).</p>
+
+<pre>Set-Cookie: id=a3fWa; Expires=Wed, 21 Oct 2015 07:28:00 GMT; Secure; HttpOnly
+</pre>
+
+<h3 id="Invalid_domains">Invalid domains</h3>
+
+<p>A cookie belonging to a domain that does not include the origin server <a href="https://tools.ietf.org/html/rfc6265#section-4.1.2.3">should be rejected by the user agent</a>. The following cookie will be rejected if it was set by a server hosted on originalcompany.com.</p>
+
+<pre>Set-Cookie: qwerty=219ffwef9w0f; Domain=somecompany.co.uk; Path=/; Expires=Wed, 30 Aug 2019 00:00:00 GMT</pre>
+
+<h3 id="Cookie_prefixes">Cookie prefixes</h3>
+
+<p>Cookies names with the prefixes <code>__Secure-</code> and <code>__Host-</code> can be used only if they are set with the <code>secure</code> directive from a secure (HTTPS) origin. In addition, cookies with the <code>__Host-</code> prefix must have a path of "/" (the entire host) and must not have a domain attribute. For clients that don't implement cookie prefixes, you cannot count on having these additional assurances and the cookies will always be accepted.</p>
+
+<pre>// Both accepted when from a secure origin (HTTPS)
+Set-Cookie: __Secure-ID=123; Secure; Domain=example.com
+Set-Cookie: __Host-ID=123; Secure; Path=/
+
+// Rejected due to missing Secure directive
+Set-Cookie: __Secure-id=1
+
+// Rejected due to the missing Path=/ directive (unless at root of the site)
+Set-Cookie: __Host-id=1; Secure
+
+// Rejected due to setting a domain
+Set-Cookie: __Host-id=1; Secure; Path=/; domain=example.com
+</pre>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">Specification</th>
+   <th scope="col">Title</th>
+  </tr>
+  <tr>
+   <td>{{RFC("6265", "Set-Cookie", "4.1")}}</td>
+   <td>HTTP State Management Mechanism</td>
+  </tr>
+  <tr>
+   <td>{{RFC("draft-ietf-httpbis-cookie-prefixes-00")}}</td>
+   <td>Cookie Prefixes</td>
+  </tr>
+  <tr>
+   <td>{{RFC("draft-ietf-httpbis-cookie-same-site-00")}}</td>
+   <td>Same-Site Cookies</td>
+  </tr>
+  <tr>
+   <td>{{RFC("draft-ietf-httpbis-cookie-alone-01")}}</td>
+   <td>Strict Secure Cookies</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<p class="hidden">The compatibility table in this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</p>
+
+<p>{{Compat("http/headers/set-cookie", "Set-Cookie")}}</p>
+
+<h2 id="Compatibility_notes">Compatibility notes</h2>
+
+<ul>
+ <li>Starting with Chrome 52 and Firefox 52, insecure sites (<code>http:</code>) can't set cookies with the "secure" directive anymore.</li>
+</ul>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Web/HTTP/Cookies">HTTP cookies</a></li>
+ <li>{{HTTPHeader("Cookie")}}</li>
+ <li>{{domxref("Document.cookie")}}</li>
+</ul>

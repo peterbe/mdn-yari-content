@@ -1,0 +1,226 @@
+<p>L'API FileHandle permet de manipuler des fichiers, y compris en les créant et en les modifiant (contrairement à l'API <a href="/fr/docs/DOM/File" title="DOM/File">File</a>). L'édition de fichiers utilise un système de verrou par tour pour éviter des situations de compétition</p>
+<h2 id="API">API</h2>
+<h3 id="Créer_une_instance_FileHandle">Créer une instance FileHandle</h3>
+<p>Afin de créer une instance FileHandle, il est nécessaire de disposer d'une base de données <a href="/fr/docs/Web/API/IDBFactory" title="IndexedDB/IDBFactory#open">IndexedDB</a>.</p>
+<div style="overflow: hidden;">
+  <pre class="brush: js">var idbreq = indexedDB.open("MaBaseDeDonnees");
+
+idbreq.onsuccess = function(){
+  var db = idbreq.result;
+  var handleReq = db.mozCreateFileHandle("test.bin", "binary");
+    
+  handleReq.onsuccess = function(){
+    var handle = handleReq.result;
+    console.log('handle', handle);
+  };
+};
+</pre>
+</div>
+<p><code>mozCreateFileHandle()</code>reçoit deux arguments : un nom et un type, optionel. Ces deux arguments sont seulement descriptifs et ne sont pas utilisés par la base de données. Le nom peut être une chaîne de caractères vide et n'a pas à être unique. L'API ne porte aucune attention à la valeur de ces paramètres.</p>
+<p>Le fragment de code ci-dessus crée un fichier temporaire qui n'existe qu'avec cette instance de FileHandle. Si vous souhaitez qu'un fichier subsiste après une actualisation de page ou un redémarrage d'applications, il faudra stocker le fichier de manière permanente, éventuellement au sein de la base de données.</p>
+<pre class="brush: js">var transaction = db.transaction(["test"], "readwrite");
+var objectStore = transaction.objectStore("test");
+objectStore.add(myFile, myKey).onsuccess = function(event) {
+  // Le fichier est maintenant référencé en base de donnée.
+}
+</pre>
+<h3 id="L'interface_FileHandle">L'interface FileHandle</h3>
+<pre>interface FileHandle
+{
+  LockedFile open(optional DOMString mode);
+  DOMRequest getFile()
+  readonly attribute DOMString name;
+  readonly attribute DOMString type;
+  attribute Function? onabort;
+  attribute Function? onerror;
+};</pre>
+<dl>
+  <dt>
+    open([mode="readonly"])</dt>
+  <dd>
+    Returns a <a href="#LockedFile_interface">LockedFile</a>. <code>mode</code> can be <code>"readonly"</code> or <code>"readwrite"</code></dd>
+  <dt>
+    getFile()</dt>
+  <dd>
+    Returns a <a href="/en-US/docs/DOM/DOMRequest" title="/en-US/docs/DOM/DOMRequest">DOMRequest</a> for a File. Upon success, you receive a read-only "snapshot" of file's content in the form of a <a href="/en-US/docs/DOM/File" title="DOM/File">File</a> instance (that can be used anywhere a <a href="/en-US/docs/DOM/Blob" title="DOM/Blob">Blob</a> is accepted, like <a href="/en-US/docs/DOM/FileReader" title="DOM/FileReader">FileReader</a>, <a href="/en-US/docs/DOM/XMLHttpRequest" title="DOM/XMLHttpRequest">XMLHttpRequest</a>, etc).<br>
+    <pre class="brush: js">myFile.getFile().onsuccess = function(event) {
+  var file = event.target.result;
+  var transcation = myDatabase.transaction(["snapshots"], "readwrite");
+  var objectStore = transaction.objectStore("snapshots");
+  objectStore.add(file, snapshotKey).onsuccess = function(event) {
+    // A new readonly copy of the file has been created.
+  }
+}
+</pre>
+  </dd>
+  <dt>
+    name</dt>
+  <dd>
+    Nom de fichier</dd>
+  <dt>
+    type</dt>
+  <dd>
+    Réfère au type de contenuRefers to the content-type</dd>
+  <dt>
+    abort event</dt>
+  <dd>
+    Provoqué lorsque le fichier verrouillé a été interrompu</dd>
+  <dt>
+    error event</dt>
+  <dd>
+    Provoqué lorsqu'il y a une erreur interne quelconqueHappens when there is any sort of internal error</dd>
+</dl>
+<h3 id="L'interface_LockedFile">L'interface LockedFile</h3>
+<pre>interface LockedFile
+{
+  readonly attribute FileHandle fileHandle;
+  readonly attribute DOMString mode;
+  readonly attribute boolean active;
+  attribute any? location;
+  FileRequest getMetadata(optional FileMetadataParameters parameters);
+  FileRequest readAsArrayBuffer(unsigned long long size);
+  FileRequest readAsText(unsigned long long size, optional DOMString encoding);
+  FileRequest write(DOMString or ArrayBuffer or Blob value);
+  FileRequest append(DOMString or ArrayBuffer or Blob value);
+  FileRequest truncate(optional unsigned long long size);
+  FileRequest flush();
+  void abort();
+  attribute Function? oncomplete;
+  attribute Function? onabort;
+  attribute Function? onerror;
+};</pre>
+<dl>
+  <dt>
+    fileHandle</dt>
+  <dd>
+    FileHandle instance from which the lock was open</dd>
+  <dt>
+    mode</dt>
+  <dd>
+    <code>"readonly"</code> or <code>"readwrite"</code></dd>
+  <dt>
+    active</dt>
+  <dd>
+    When created, the LockedFile is active. This LockedFile is the only object with write access to the actual underlying file. Operations on a LockedFile are performed in <a href="http://en.wikipedia.org/wiki/Isolation_%28database_systems%29" title="http://en.wikipedia.org/wiki/Isolation_%28database_systems%29">isolation</a>, meaning that once a LockedFile is active, all operations of this LockedFile are guaranteed to happen sequentially on the underlying file without being interleaved with operations from other LockedFiles.</dd>
+  <dd>
+    When the LockedFile becomes inactive, trying to perform read/write operations on the via using the same LockedFile will throw an error.</dd>
+  <dt>
+    location</dt>
+  <dd>
+    Offset in the file. This value is changed automatically after every read and every write. Reads and writes occur starting at the location. <code>null</code> means end-of-file</dd>
+  <dt>
+    getMetadata(parameters)</dt>
+  <dd>
+    Returns a <a href="/en-US/docs/WebAPI/FileHandle_API#FileRequest_interface" title="WebAPI/FileHandle_API#FileRequest_interface">FileRequest</a> for metadata. The argument is an object with parameter names as object keys and booleans as value to retrieve the given properties asynchronously. No value means <code>true</code>. Currently, the possible parameters are <code>size</code> and <code>lastModified</code>.</dd>
+  <dt>
+    readAsArrayBuffer(size)</dt>
+  <dd>
+    Returns a <a href="/en-US/docs/WebAPI/FileHandle_API#FileRequest_interface" title="WebAPI/FileHandle_API#FileRequest_interface">FileRequest</a> for an <a href="/en-US/docs/JavaScript/Typed_arrays/ArrayBuffer" title="JavaScript/Typed_arrays/ArrayBuffer">ArrayBuffer</a> of the given <code>size</code>. The operation starts at the <code>location</code>. Moves <code>location</code> by the number of read bytes.</dd>
+  <dt>
+    readAsText(size [, encoding])</dt>
+  <dd>
+    Returns a <a href="/en-US/docs/WebAPI/FileHandle_API#FileRequest_interface" title="WebAPI/FileHandle_API#FileRequest_interface">FileRequest</a> for a string of the given <code>size</code> with the provided <code>encoding</code>. The operation starts at the <code>location</code>. Moves <code>location</code> by the number of read bytes. Works the same way as the equivalent method in the <a href="/en-US/docs/DOM/FileReader" title="DOM/FileReader">FileReader</a> API.<br>
+    <pre class="brush: js">var lockedFile = myFile.open();
+var request = lockedFile.readAsText(3);
+request.onsuccess = function(event) {
+  var text = request.result;
+  // 3 characters have been read.
+}
+</pre>
+  </dd>
+  <dt>
+    write(value)</dt>
+  <dd>
+    Returns a <a href="/en-US/docs/WebAPI/FileHandle_API#FileRequest_interface" title="WebAPI/FileHandle_API#FileRequest_interface">FileRequest</a> for the success or failure of the write operation. The write starts at the <code>location</code> and moves the location by the number of written bytes.<br>
+    <pre class="brush: js">var lockedFile = myFile.open("readwrite");
+var request = lockedFile.write("foo");
+request.onsuccess = function(event) {
+  // The string "foo" has been written.
+}
+</pre>
+  </dd>
+  <dt>
+    append(value)</dt>
+  <dd>
+    Returns a <a href="/en-US/docs/WebAPI/FileHandle_API#FileRequest_interface" title="WebAPI/FileHandle_API#FileRequest_interface">FileRequest</a> for the success or failure of the append operation. The value is appended at the end of the file, regardless of the <code>location</code>. After the data is appended, <code>location</code> is set to <code>null</code>.</dd>
+  <dt>
+    truncate([size])</dt>
+  <dd>
+    Returns a <a href="/en-US/docs/WebAPI/FileHandle_API#FileRequest_interface" title="WebAPI/FileHandle_API#FileRequest_interface">FileRequest</a> for the success or failure of the truncate operation.</dd>
+  <dd>
+    If the method is called with a single argument, after a successful truncate, what remains on the file are the first <code>size</code> bytes <strong>regardless</strong> of the <code>location</code>.</dd>
+  <dd>
+    If the method is called with no argument, what remains is the <code>location</code> first bytes.</dd>
+  <dt>
+    flush()</dt>
+  <dd>
+    This forces the buffered data to be transfered to disk. After a success notified by the returned FileRequest, you can be guaranteed that if the application crashes or is inadvertedly interrupted, the data is on disk.</dd>
+  <dt>
+    abort()</dt>
+  <dd>
+    Makes the LockedFile inactive and cancels all not already perfomed operations.</dd>
+  <dt>
+    complete, abort, error events</dt>
+</dl>
+<h3 id="FileRequest_interface">FileRequest interface</h3>
+<p>An object of this type is returned by all asynchronous operations of the LockedFile interface. It inherits from <a href="/en-US/docs/DOM/DOMRequest" title="DOM/DOMRequest">DOMRequest</a> and is similar to <a href="/en-US/docs/IndexedDB/IDBRequest" title="IndexedDB/IDBRequest">IDBRequest</a>, with the addition of the <code>onprogress </code>event. Upon success, the, the result of the requested file operation is accessible from the <code>result </code>property.</p>
+<pre>interface FileRequest : DOMRequest
+{
+  readonly attribute LockedFile lockedFile;
+  attribute Function? onprogress;
+};</pre>
+<dl>
+  <dt>
+     </dt>
+</dl>
+<h2 id="Description">Description</h2>
+<h3 id="Pourquoi_une_API_différente_de_FileWriter">Pourquoi une API différente de FileWriter?</h3>
+<p>The <a href="http://dev.w3.org/2009/dap/file-system/file-writer.html" title="http://dev.w3.org/2009/dap/file-system/file-writer.html">FileWriter specification</a> defines FileWriters, objects aiming at representing editable files. <a href="http://lists.w3.org/Archives/Public/public-webapps/2012JanMar/0886.html" title="http://lists.w3.org/Archives/Public/public-webapps/2012JanMar/0886.html">Discussions on public-webapps</a> led to the conclusion that the API would poorly behave in the case of different entities writing concurrently on the same file. The outcome of this discussion is the FileHandle API with its LockedFile and transaction mechanim.</p>
+<h2 id="Compatibilité_des_navigateurs">Compatibilité des navigateurs</h2>
+<div>
+  {{CompatibilityTable}}</div>
+<div id="compat-desktop">
+  <table class="compat-table">
+    <tbody>
+      <tr>
+        <th>Fonctionnalité</th>
+        <th>Chrome</th>
+        <th>Firefox (Gecko)</th>
+        <th>Internet Explorer</th>
+        <th>Opera</th>
+        <th>Safari</th>
+      </tr>
+      <tr>
+        <td>Support simple</td>
+        <td>{{CompatNo}}</td>
+        <td>15</td>
+        <td>{{CompatNo}}</td>
+        <td>{{CompatNo}}</td>
+        <td>{{CompatNo}}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<div id="compat-mobile">
+  <table class="compat-table">
+    <tbody>
+      <tr>
+        <th>Fonctionnalité</th>
+        <th>Android</th>
+        <th>Firefox Mobile (Gecko)</th>
+        <th>IE Mobile</th>
+        <th>Opera Mobile</th>
+        <th>Safari Mobile</th>
+      </tr>
+      <tr>
+        <td>Support simple</td>
+        <td>{{CompatNo}}</td>
+        <td>15</td>
+        <td>{{CompatNo}}</td>
+        <td>{{CompatNo}}</td>
+        <td>{{CompatNo}}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<p> </p>

@@ -1,0 +1,186 @@
+<div>{{JSRef}}</div>
+
+<p>The <strong><code>Math.pow()</code></strong> function returns the <code>base</code> to the <code>exponent</code> power, that is, <code>base<sup>exponent</sup></code>.</p>
+
+<div>{{EmbedInteractiveExample("pages/js/math-pow.html")}}</div>
+
+<p class="hidden">The source for this interactive example is stored in a GitHub repository. If you'd like to contribute to the interactive examples project, please clone <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> and send us a pull request.</p>
+
+<h2 id="Syntax">Syntax</h2>
+
+<pre class="syntaxbox"><code>Math.pow(<var>base</var>, <var>exponent</var>)</code></pre>
+
+<h3 id="Parameters">Parameters</h3>
+
+<dl>
+	<dt><code>base</code></dt>
+	<dd>The base number.</dd>
+	<dt><code>exponent</code></dt>
+	<dd>The exponent used to raise the <code>base</code>.</dd>
+</dl>
+
+<h3 id="Return_value">Return value</h3>
+
+<p>A number representing the given base taken to the power of the given exponent.</p>
+
+<h2 id="Description">Description</h2>
+
+<p>The <strong><code>Math.pow()</code></strong> function returns the <code>base</code> to the <code>exponent</code> power, that is, <code>base<sup>exponent</sup></code>, the base and the exponent are in decimal numeral system.</p>
+
+<p>Because <code>pow()</code> is a static method of <code>Math</code>, you always use it as <code>Math.pow()</code>, rather than as a method of a <code>Math</code> object you created (<code>Math</code> has no constructor).</p>
+
+<h2 id="Examples">Examples</h2>
+
+<h3 id="Using_Math.pow">Using <code>Math.pow()</code></h3>
+
+<pre class="brush: js">// simple
+Math.pow(7, 2);    // 49
+Math.pow(7, 3);    // 343
+Math.pow(2, 10);   // 1024
+// fractional exponents
+Math.pow(4, 0.5);  // 2 (square root of 4)
+Math.pow(8, 1/3);  // 2 (cube root of 8)
+Math.pow(2, 0.5);  // 1.4142135623730951 (square root of 2)
+Math.pow(2, 1/3);  // 1.2599210498948732 (cube root of 2)
+// signed exponents
+Math.pow(7, -2);   // 0.02040816326530612 (1/49)
+Math.pow(8, -1/3); // 0.5
+// signed bases
+Math.pow(-7, 2);   // 49 (squares are positive)
+Math.pow(-7, 3);   // -343 (cubes can be negative)
+Math.pow(-7, 0.5); // NaN (negative numbers don't have a real square root)
+// due to "even" and "odd" roots laying close to each other, 
+// and limits in the floating number precision, 
+// negative bases with fractional exponents always return NaN
+Math.pow(-7, 1/3); // NaN 
+</pre>
+
+<h2 id="Demonstrative_Implementation">Demonstrative Implementation</h2>
+
+<p>For those who desire to understand how Math.pow might work internally, please view the following code. The below code recursively does multiplication by the pow of two. Do not use the following code to replace Math.pow because the following code will always be slower than Math.pow because Math.pow is implemented natively by the browser. Thus, although the intention of the code below is to demonstate the efficient binary algorithim likely in use under the hood, the code below itself is intented to be educational but not efficient.</p>
+
+<pre class="brush: js">function toThePowerOf(number, power) {
+    if (power != power || (power != 0 &amp;&amp; power == power/2)) {
+        // the power is infinity or NaN, so return it
+        return power;
+    }
+
+    if (power == 1) {
+        // base case for numbers without decimals (|n| &gt; 1)
+        return number;
+    }
+
+    if (power == 0) {
+        // base case for decimal-only numbers  (1 &gt; |n| &gt; 0)
+        return 1;
+    }
+
+    if (power &lt; 0) {
+        // negative exponents indicate reciprocal
+        return 1 / toThePowerOf(number, -power);
+    }
+
+    if (0 &lt; power &amp;&amp; power &lt; 2) {
+        // The `0 &lt; power` is not really needed because of prior
+        //    checked cases
+        var hasLeadingOne = false;
+        if (Math.floor(power) == 1) {
+            // the power is 1.decimal, but not 1
+            power = power - 1;
+            hasLeadingOne = true;
+        } else {
+            // the power is only a decimal
+            hasLeadingOne = false;
+        }
+
+        var doublePower = toThePowerOf(number, power * 2);
+        var fullPower = Math.sqrt(doublePower);
+
+        if (hasLeadingOne) {
+            // insert the number via multiplication here
+            fullPower = fullPower * number;
+        }
+
+        return fullPower;
+    } else if (getDecimal(power) != 0) {
+        // the power is greater than two, but has a decimal
+        var wholePower = Math.floor(power);
+        var decimalPower = getDecimal(power);
+        return toThePowerOf(number, wholePower) * toThePowerOf(number, decimalPower);
+    } else {
+        var hasTrailingOne = (power % 2) == 1;
+
+        if (hasTrailingOne) {
+            power = power - 1;
+        }
+
+        // the number is greater than one
+        // x^n --&gt; x^floor(n/2)
+        var halfPower = toThePowerOf(number, Math.floor(power / 2));
+
+        // x^floor(n/2) -&gt; x^n
+        var fullPower = halfPower * halfPower;
+
+        if (hasTrailingOne) {
+            // multiply it against the number
+            fullPower = fullPower * number;
+        }
+
+        return fullPower;
+    }
+}
+function getDecimal(number) {
+    if (number &lt; 0) {
+        // ensure absolute value
+        number = -number;
+    }
+    return number % 1;
+}</pre>
+
+<h2 id="Specifications">Specifications</h2>
+
+<table class="standard-table">
+	<tbody>
+		<tr>
+			<th scope="col">Specification</th>
+			<th scope="col">Status</th>
+			<th scope="col">Comment</th>
+		</tr>
+		<tr>
+			<td>{{SpecName('ES1')}}</td>
+			<td>{{Spec2('ES1')}}</td>
+			<td>Initial definition. Implemented in JavaScript 1.0.</td>
+		</tr>
+		<tr>
+			<td>{{SpecName('ES5.1', '#sec-15.8.2.13', 'Math.pow')}}</td>
+			<td>{{Spec2('ES5.1')}}</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>{{SpecName('ES6', '#sec-math.pow', 'Math.pow')}}</td>
+			<td>{{Spec2('ES6')}}</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>{{SpecName('ESDraft', '#sec-math.pow', 'Math.pow')}}</td>
+			<td>{{Spec2('ESDraft')}}</td>
+			<td></td>
+		</tr>
+	</tbody>
+</table>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<p class="hidden">The compatibility table in this page is generated from structured data. If you'd like to contribute to the data, please check out <a href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> and send us a pull request.</p>
+
+<p>{{Compat("javascript.builtins.Math.pow")}}</p>
+
+<h2 id="See_also">See also</h2>
+
+<ul>
+	<li>{{jsxref("Math.cbrt()")}}</li>
+	<li>{{jsxref("Math.exp()")}}</li>
+	<li>{{jsxref("Math.log()")}}</li>
+	<li>{{jsxref("Math.sqrt()")}}</li>
+	<li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Arithmetic_Operators#Exponentiation" title="Arithmetic operators take numerical values (either literals or variables) as their operands and return a single numerical value. The standard arithmetic operators are addition (+), subtraction (-), multiplication (*), and division (/).">Exponentiation operator</a> {{experimental_inline}}</li>
+</ul>

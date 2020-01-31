@@ -1,0 +1,305 @@
+<div>
+<div>{{jsSidebar("Statements")}}</div>
+</div>
+
+<h2 id="Summary" name="Summary">Descrizione</h2>
+
+<pre>l'istruzione <strong>let </strong>dichiara il blocco della visibilità di una variabile e, facoltativamente la inizializza ad un valore.</pre>
+
+<h2 id="Syntax" name="Syntax">Sintassi</h2>
+
+<p><code>let</code> definizione:</p>
+
+<pre class="syntaxbox">let var1 [= value1] [, var2 [= value2]] [, ..., varN [= valueN]];</pre>
+
+<p><code>let</code> expressione:</p>
+
+<pre class="syntaxbox">let (var1 [= value1] [, var2 [= value2]] [, ..., varN [= valueN]]) expression;</pre>
+
+<p><code>let</code> assegnamento:</p>
+
+<pre class="syntaxbox">let (var1 [= value1] [, var2 [= value2]] [, ..., varN [= valueN]]) statement;</pre>
+
+<h3 id="Parameters" name="Parameters">Parametri</h3>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th scope="col">Parametri</th>
+   <th scope="col">Descrizione</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td><code>var1</code>, <code>var2</code>, …, <code>varN</code></td>
+   <td>Nome della variabile. Qualunque nome valido va bene.</td>
+  </tr>
+  <tr>
+   <td><code>value1</code>, <code>value2</code>, …, <code>valueN</code></td>
+   <td>Valore iniziale della variabile.  Qualunque espressione valida va bene.</td>
+  </tr>
+  <tr>
+   <td><code>expression</code></td>
+   <td>Qualunque <a href="/it/docs/JavaScript/Guide/Expressions_and_Operators#Expressions" title="JavaScript/Guide/Expressions and Operators#Expressions">espressione</a> valida.</td>
+  </tr>
+  <tr>
+   <td><code>statement</code></td>
+   <td>Qualunque <a href="/it/docs/JavaScript/Reference/Statements" title="JavaScript/Reference/Statements">assegnamento</a> valido.</td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Description" name="Description">Descrizione</h2>
+
+<p><strong><code>let</code></strong> permette di dichiarare variabili limitandone la visibilità ad un blocco di codice, ad un assegnazione, ad un' espressione in cui è usata. Contrariamente alla parola chiave <a href="/it/docs/JavaScript/Reference/Statements/var" title="JavaScript/Reference/Statements/var"><code>var</code></a>, che invece definisce una variabile globalmente in uno script o localmente in un qualunque blocco di codice di una funzione.</p>
+
+<h2 id="Block_scoping" name="Block_scoping">Blocco della visibilità</h2>
+
+<p>Le variabili inizializzate da <code>let</code> sono legate al blocco dell'espressione in cui sono dichiarate.</p>
+
+<p>Dichiarare nuovamente la stessa variabile con <code>let</code> restituisce l'errore <code><a href="/it/docs/JavaScript/Reference/Global_Objects/TypeError" title="TypeError">TypeError</a>.</code></p>
+
+<pre class="brush: js"><code>
+if (x) {
+  let foo;
+  let foo; // lancia un errore TypeError.
+}</code></pre>
+
+<p><code>Nelle funzioni invece non ci sono limiti ai riassegnamenti.</code></p>
+
+<pre class="brush: js"><code>
+function do_something() {
+  let foo;
+  let foo; // This works fine.
+}</code></pre>
+
+<div class="warning"><code><strong>Attenzione:</strong> ECMAScript 6 (a partire da Aprile, 2012) rende illegale questo tipo di comportamento. Ciò significa che le future versioni di JavaScript saranno probabilmente allineate e genereranno un <code><a href="/it/docs/JavaScript/Reference/Global_Objects/TypeError" title="TypeError">TypeError</a> se utilizzerai questa prassi!</code></code></div>
+
+<p>Potresti imbatterti in errori in un blocco <a href="/it/docs/JavaScript/Reference/Statements/switch" title="switch"><code>switch</code></a> perché i casi non vengono separati ma fanno parte tutti dello stesso blocco.</p>
+
+<pre class="brush: js"><code>
+switch (x) {
+  case 0:
+    let foo;
+    break;
+    
+  case 1:
+    let foo; // TypeError for redeclaration.
+    break;
+}</code></pre>
+
+<h2 id="Examples" name="Examples"><code>Esempi</code></h2>
+
+<p>Una <em><code>let</code> expression</em> può essere usata per limitare la visibilità della variabile dichiarata alla sola espressione chiamata.</p>
+
+<pre class="brush: js"><code>
+var a = 5;
+let(a = 6) alert(a); // 6
+alert(a); // 5</code></pre>
+
+<p>Usando <code>let</code> in un blocco di codice ne limitiamo la visibilità al solo blocco racchiuso. Nel codice di esempio nota come le due assegnazioni nel blocco <code>if</code> diano due risultati diversi.</p>
+
+<pre class="brush: js"><code>
+var a = 5;
+var b = 10;
+
+if (a === 5) {
+  let a = 4; // La visibilità è dentro il blocco if
+  var b = 1; // La visibilità è dentro la funzione
+
+  console.log(a);  // 4
+  console.log(b);  // 1
+} 
+
+console.log(a); // 5
+console.log(b); // 1</code></pre>
+
+<p>Puoi usare <strong><code>let</code></strong> come iteratore in un ciclo <strong><code>for</code></strong> invece di usare una nuova variabile globale.</p>
+
+<pre class="brush: js"><code>
+for (let i = 0; i&lt;10; i++) {
+  alert(i); // 1, 2, 3, 4 ... 9
+}
+
+alert(i); // i non è definita</code></pre>
+
+<p>Quando lavori con i costruttori puoi usare <code>let</code> per creare in'interfaccia privata senza chiusure.</p>
+
+<pre class="brush: js"><code>
+/*\
+|*|
+|*|  :: Una API pubblica e riutilizzabile per i costruttori ... ::
+|*|
+\*/
+
+let (
+  switchScope = function (oOwner, fConstructor) {
+    return oOwner &amp;&amp; oOwner.constructor === fConstructor ? oOwner : this;
+  }
+) {
+  function buildIndoors (fConstructor) {
+    const oPrivate = new fConstructor(this);
+    this.getScope = oPrivate.getScope = switchScope.bind(this, oPrivate);
+    return oPrivate;
+  }
+}
+
+/*\
+|*|
+|*|  :: Use of the *let* statement in order to create a private interface without closures... ::
+|*|
+\*/
+
+let (
+
+  /* "Secrets" is the constructor of the private interface */
+
+  Secrets = function Secrets (oPublic /* (the public interface) */) {
+    /* setting a private property... */
+    this.password = Math.floor(Math.random() * 1e16).toString(36);
+    /* you can also store the public interface into a private property... */
+    /* this.publicInterface = oPublic; */
+    alert("I\'m getting a public property from a private constructor...: somePublicProperty: " + oPublic.somePublicProperty);
+  }
+
+) {
+
+  /* "User" is the constructor of the public interface */
+
+  function User (sNick) {
+    /* setting a public property... */
+    this.somePublicProperty = "Hello World!";
+    const oPrivate = this.createScope(Secrets); /* (the private interface) */
+    /* setting a public property... */
+    this.user = sNick;
+    alert("I\'m getting a private property from a public constructor...: password: " + oPrivate.password);
+  }
+
+  User.prototype.somePublicMethod = function () {
+    const oPrivate = this.getScope(Secrets); /* (the private interface) */
+    alert("I\'m getting a public property from a public method...: user: " + this.user);
+    alert("I\'m getting a private property from a public method...: password: " + oPrivate.password);
+    oPrivate.somePrivateMethod();
+  };
+
+  Secrets.prototype.somePrivateMethod = function () {
+    const oPublic = this.getScope(); /* (the public interface) */
+    alert("I\'m getting a public property from a private method...: user: " + oPublic.user);
+    alert("I\'m getting a private property from a private method...: password: " + this.password);
+  };
+
+  /* ...creating a mutual access... */
+
+  User.prototype.createScope = buildIndoors;
+}
+
+/* out of the *let* statement you have not access to the private interface! */
+
+const johnSmith = new User("John Smith");
+johnSmith.somePublicMethod();</code></pre>
+
+<h2 id="Browser_compatibility">Browser compatibility</h2>
+
+<p>{{CompatibilityTable}}</p>
+
+<div id="compat-desktop">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Chrome</th>
+   <th>Edge</th>
+   <th>Firefox (Gecko)</th>
+   <th>Internet Explorer</th>
+   <th>Opera</th>
+   <th>Safari</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatChrome(41.0)}}</td>
+   <td>12</td>
+   <td>{{ CompatGeckoDesktop(44) }}</td>
+   <td>11</td>
+   <td>17</td>
+   <td>{{CompatSafari(10.0)}}</td>
+  </tr>
+  <tr>
+   <td>Temporal dead zone</td>
+   <td>{{CompatUnknown}}</td>
+   <td>12</td>
+   <td>{{ CompatGeckoDesktop(35) }}</td>
+   <td>11</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td>Allowed in {{Glossary("sloppy mode")}}</td>
+   <td>{{CompatChrome(49.0)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatGeckoDesktop(44)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<div id="compat-mobile">
+<table class="compat-table">
+ <tbody>
+  <tr>
+   <th>Feature</th>
+   <th>Android</th>
+   <th>Android Webview</th>
+   <th>Firefox Mobile (Gecko)</th>
+   <th>IE Mobile</th>
+   <th>Opera Mobile</th>
+   <th>Safari Mobile</th>
+   <th>Chrome for Android</th>
+  </tr>
+  <tr>
+   <td>Basic support</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatChrome(41.0)}}</td>
+   <td>{{ CompatGeckoMobile(44) }}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatSafari(10.0)}}</td>
+   <td>{{CompatChrome(41.0)}}</td>
+  </tr>
+  <tr>
+   <td>Temporal dead zone</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{ CompatGeckoMobile(35) }}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+  </tr>
+  <tr>
+   <td>Allowed in {{Glossary("sloppy mode")}}</td>
+   <td>{{CompatNo}}</td>
+   <td>{{CompatChrome(49.0)}}</td>
+   <td>{{CompatGeckoDesktop(44)}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatUnknown}}</td>
+   <td>{{CompatChrome(49.0)}}</td>
+  </tr>
+ </tbody>
+</table>
+</div>
+
+<p> </p>
+
+<h2 id="See_also" name="See_also"> </h2>
+
+<h2 id="See_also" name="See_also"><code>See also</code></h2>
+
+<ul>
+ <li><code><a href="/it/docs/JavaScript/Reference/Statements/var" title="JavaScript/Reference/Statements/var"><code>var</code></a></code></li>
+ <li><code><a href="/it/docs/JavaScript/Reference/Statements/const" title="JavaScript/Reference/Statements/const"><code>const</code></a></code></li>
+ <li><code><a href="/it/docs/JavaScript/New_in_JavaScript/1.7#Block_scope_with_let_(Merge_into_let_Statement)" title="JavaScript/New in JavaScript/1.7#Block scope with let (Merge into let Statement)">New in JavaScript 1.7</a></code></li>
+</ul>

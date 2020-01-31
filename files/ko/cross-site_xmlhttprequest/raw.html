@@ -1,0 +1,142 @@
+<p>{{ Fx_minversion_header(3) }}
+Firefox 3에서는 <a class="external" href="http://www.w3.org/TR/access-control/">W3C 접근 제어</a> 초안을 구현하였으며, 이는 다른 웹 사이트로 <a href="ko/XMLHttpRequest">XMLHttpRequests</a>를 수행할 수 있는 기능을 제공합니다.
+</p>
+<h3 id=".EA.B0.9C.EC.9A.94" name=".EA.B0.9C.EC.9A.94"> 개요 </h3>
+<p><a class="external" href="http://www.w3.org/TR/access-control/">W3C Access Control</a> 구조는 브라우저 기반의 요청(<a href="ko/XMLHttpRequest">XMLHttpRequest</a>)을 통해 문서를 요청되는 경우 누가 할 수 있는지 또는 없는지에 대한 제어를 가능하게 해 줍니다.
+</p><p>Additionally, this access control scheme gives applications the ability to allow for cross-site requests. Thus one could, theoretically, request a document from google.com, via an XMLHttpRequest in a page on yoursite.com (once the access control points were put in place). This level of control gives content creators greater amounts of flexibility when it comes to allowing their users to build mashups and applications using their information.
+</p>
+<h3 id=".EC.82.AC.EC.9A.A9.EB.B2.95" name=".EC.82.AC.EC.9A.A9.EB.B2.95"> 사용법 </h3>
+<p>Firefox 3에서 두 가지 방법으로 <a class="external" href="http://www.w3.org/TR/access-control/">W3C Access Controls</a>을 사용할 수 있습니다. 첫 번째는 HTTP 응답 헤더에 새로운 Access-Control 헤더(모든 유형의 리소스에 대해서 사용할 수 있으며 여러분이 사용하는 웹서버를 직접 관리할 수 있을 때 가능)를 추가하는 방법이고, 두 번째는 XML 문서인 경우에만 사용 가능한 것으로 문서에 접근 제어 처리 지시자(access control processing instruction)를 추가하는 방법입니다.
+</p>
+<h4 id="Access-Control_.ED.97.A4.EB.8D.94" name="Access-Control_.ED.97.A4.EB.8D.94"> Access-Control 헤더 </h4>
+<p>이 방법은 크로스 사이트 XMLHttpRequest를 허용케 하는 가장 유연한 수단입니다. Specifically, if you provide an additional Access-Control header in your request response, like the following, which will grant access to any web application on mozilla.org.
+</p>
+<pre class="eval"> Access-Control: allow &lt;mozilla.org&gt;
+</pre>
+<p>Access-Control 헤더는 요청의 방법과 원 위치(origin)를 기반으로 리소스 접근에 대한 허용 또는 차단을 제어할 수 있게 해 줍니다.
+</p><p>다음은 유효한 Acess-Control 헤더들의 예제입니다.
+</p>
+<pre class="eval"> // 모든 사람이 제한 없이 리소스에 접근하는 것을 허용합니다.
+ Access-Control: allow &lt;*&gt;
+ 
+ // 모든 사람이 예외 없이 대상 리소스에 접근하는 것을 거부합니다.
+ Access-Control: deny &lt;*&gt;
+ 
+ // 'mozilla.org'에서 호스트되는 사이트만이 이 리소스에 접근할 수 있습니다.
+ // (서브 도메인을 포함합니다.)
+ Access-Control: allow &lt;mozilla.org&gt;
+ 
+ // mozilla.org의 developer.mozilla.org를 제외한 모든 서브 도메인에서 해당 리소스에 접근할 수 있습니다.
+ Access-Control: allow &lt;mozilla.org&gt; exclude &lt;developer.mozilla.org&gt;
+ 
+ // GET, POST 요청으로 접근하는 developer.mozilla.org 도메인의 80 포트에서만 리소스에 접근할 수 있습니다.
+ Access-Control: allow &lt;developer.mozilla.org:80&gt; method GET, POST
+</pre>
+<p><a class="external" href="http://www.w3.org/TR/access-control/#access-control0">W3C Access Control working draft</a>에서 더 많은 샘플 패턴의 예제를 찾을 수 있습니다.
+</p>
+<h5 id=".EC.98.88.EC.A0.9C" name=".EC.98.88.EC.A0.9C"> 예제 </h5>
+<p>다음 예제는 별도의 웹사이트에서 HTML 파일을 요청하는 것입니다. 해당 HTML 파일은 별도의 Access-Control 헤더가 포함되도록 PHP 스크립트로 생성됩니다. 여러분의 웹 서버에 header.html을 올려두더라도 모든 사이트가 허가되도록 되어 있으므로 여전히 요청이 동작하는 것을 확인할 수 있을 것입니다.
+</p><p><b><a class="external" href="http://ejohn.org/apps/xdomain/header.html">header.html</a></b>
+</p>
+<pre class="eval"> &lt;html&gt;
+ &lt;head&gt;
+ &lt;script&gt;
+ window.onload = function(){
+   var xhr = new XMLHttpRequest();
+   xhr.open("GET", <span class="nowiki">"http://dev.jquery.com/~john/xdomain/test.php"</span>, true);
+   xhr.onreadystatechange = function(){
+     if ( xhr.readyState == 4 ) {
+       if ( xhr.status == 200 ) {
+         document.body.innerHTML = "My Name is: " + xhr.responseText;
+       } else {
+         document.body.innerHTML = "ERROR";
+       }
+     }
+   };
+   xhr.send(null);
+ };
+ &lt;/script&gt;
+ &lt;/head&gt;
+ &lt;body&gt;
+ Loading...
+ &lt;/body&gt;
+ &lt;/html&gt;
+</pre>
+<p><b><a class="external" href="http://dev.jquery.com/~john/xdomain/test.php">test.php</a></b>
+</p>
+<pre class="eval"> <span class="comment">Change this to allow &lt;yourdomain.com&gt; to make it accessible to your site, or allow &lt;*&gt; for ANYONE to be able to access it.</span>
+ &lt;?php header('Access-Control: allow &lt;ejohn.org&gt;'); ?&gt;
+ &lt;b&gt;John Resig&lt;/b&gt;
+</pre>
+<h4 id="XML_.EC.B2.98.EB.A6.AC_.EC.A7.80.EC.8B.9C.EC.9E.90" name="XML_.EC.B2.98.EB.A6.AC_.EC.A7.80.EC.8B.9C.EC.9E.90"> XML 처리 지시자 </h4>
+<p>XML에는 XML 프로세서가 특별한 처리를 할 수 있도록 별도의 명령을 포함할 수 있는 기능을 제공합니다. Access Control 초안에서는 크로스 사이트의 방법으로 XML 문서가 원격에서 접근이 가능하도록 하는 특별한 명령을 제공하고 있습니다.
+</p><p>예를 들어 다음의 acess-control 처리 지시자는 mozilla.org에 있는 모든 사이트가 해당 처리 지시자를 포함하는 XML 문서에 접근할 수 있게 해 줍니다.
+</p>
+<pre class="eval"> &lt;?access-control allow="mozilla.org"?&gt;
+</pre>
+<p>아래는 XML 문서로의 접근 권한을 제어하는 access-control 처리 지시자를 사용하는 예제들입니다.
+</p>
+<pre class="eval"> // 모든 사람이 제한 없이 리소스에 접근하는 것을 허용합니다.
+ &lt;?access-control allow="*"?&gt;
+ 
+ // 모든 사람이 예외 없이 대상 리소스에 접근하는 것을 거부합니다.
+ &lt;?access-control deny="*"?&gt;
+ 
+ // 'mozilla.org'에서 호스트되는 사이트만이 이 리소스에 접근할 수 있습니다.
+ // (서브 도메인을 포함합니다.)
+ &lt;?access-control deny="mozilla.org"?&gt;
+
+ // developer.mozilla.org를 제외한 mozilla.org 및 이의 모든 서브 도메인에서 해당 리소스에 접근할 수 있습니다. 
+ &lt;?access-control allow="mozilla.org" exclude="developer.mozilla.org"?&gt;
+ 
+ // developer.mozilla.org 도메인의 80 포트에서 GET, POST 요청인 경우만 해당 리소스에 접근할 수 있습니다.
+ &lt;?access-control allow="developer.mozilla.org" method="GET POST"?&gt;
+</pre>
+<p><a class="external" href="http://www.w3.org/TR/access-control/#access-control0">W3C Access Control working draft</a>에서 더 많은 샘플 패턴의 예제를 찾을 수 있습니다.
+</p>
+<h5 id=".EC.98.88.EC.A0.9C_2" name=".EC.98.88.EC.A0.9C_2"> 예제 </h5>
+<p>다음 예제는 별도의 웹사이트에서 XML 파일을 요청하는 것입니다. 해당 XML 파일에는 어떤 웹사이트에서도 접근이 가능하다는 것을 알려주는 접근 제어(access-control) 처리 지시자를 포함하고 있습니다. 여러분의 웹 서버에 ac.html 파일을 올려두더라도 모든 사이트가 허가되도록 되어 있으므로 여전히 요청이 동작하는 것을 확인할 수 있을 것입니다.
+</p><p><b><a class="external" href="http://ejohn.org/apps/xdomain/ac.html">ac.html</a></b>
+</p>
+<pre class="eval"> &lt;html&gt;
+ &lt;head&gt;
+ &lt;script&gt;
+ window.onload = function(){
+   var xhr = new XMLHttpRequest();
+   xhr.open("GET", <span class="nowiki">"http://dev.jquery.com/~john/xdomain/test.xml"</span>, true);
+   xhr.onreadystatechange = function(){
+     if ( xhr.readyState == 4 ) {
+       if ( xhr.status == 200 ) {
+         document.body.innerHTML = "My Name is: " +
+           xhr.responseXML.getElementsByTagName("name")[0].firstChild.nodeValue;
+       } else {
+         document.body.innerHTML = "ERROR";
+       }
+     }
+   };
+   xhr.send(null);
+ };
+ &lt;/script&gt;
+ &lt;/head&gt;
+ &lt;body&gt;
+ Loading...
+ &lt;/body&gt;
+ &lt;/html&gt;
+</pre>
+<p><b><a class="external" href="http://dev.jquery.com/~john/xdomain/test.xml">test.xml</a></b>
+</p>
+<pre class="eval"> &lt;?xml version="1.0" encoding="UTF-8"?&gt;
+ <span class="comment">Change this to allow="yourdomain.com" to make it accessible to your site, or allow="*" for ANYONE to be able to access it.</span>
+ &lt;?access-control allow="ejohn.org"?&gt;
+ &lt;simple&gt;&lt;name&gt;John Resig&lt;/name&gt;&lt;/simple&gt;
+</pre>
+<h3 id=".EC.B0.B8.EC.A1.B0" name=".EC.B0.B8.EC.A1.B0"> 참조 </h3>
+<ul><li> <a class="external" href="http://www.w3.org/TR/access-control/">W3C Access Control working draft</a>
+</li><li> <a class="link-https" href="https://bugzilla.mozilla.org/show_bug.cgi?id=389508">The bug tracking the implementation of Cross-Site XMLHttpRequest</a>
+</li></ul>
+<h3 id=".EC.B0.B8.EA.B3.A0" name=".EC.B0.B8.EA.B3.A0"> 참고 </h3>
+<ul><li> <code><a href="ko/XMLHttpRequest">XMLHttpRequest</a></code>
+</li></ul>
+<div class="noinclude">
+</div>
+{{ languages( { "en": "en/Cross-Site_XMLHttpRequest", "fr": "fr/Requ\u00eates_XMLHttpRequest_inter-sites", "pl": "pl/\u017b\u0105dania_XMLHttpRequest_przesy\u0142ane_mi\u0119dzy_witrynami" } ) }}

@@ -1,0 +1,306 @@
+<p>{{LearnSidebar}}{{PreviousMenuNext("Learn/Forms/Advanced_form_styling", "Learn/Forms/Form_validation", "Learn/Forms")}}</p>
+
+<p>In the previous articles we covered the the various form controls. In this article we talk about how to style target them with CSS.</p>
+
+<p class="summary"><span class="seoSummary">In this article, the user will learn how to use <a href="/en-US/docs/CSS" title="/en-US/docs/CSS">CSS</a> selectors, specifically UI pseudo-classes, to target HTML form controls based on their current state. </span>  Let's dig in.</p>
+
+<h2 id="Targeting_UI_widgets">Targeting UI widgets</h2>
+
+<p><a href="http://www.w3.org/TR/CSS21/selector.html#dynamic-pseudo-classes" rel="external">CSS 2.1</a> gave us three pseudo-classes: {{cssxref(":active")}},  {{cssxref(":focus")}}, and {{cssxref(":hover")}}. <a href="http://www.w3.org/TR/css3-selectors/" rel="external">CSS Selector Level 3</a> and <a href="http://dev.w3.org/csswg/css3-ui/#pseudo-classes" rel="external">CSS Basic UI Level 3</a> added more pseudo-classes related to HTML forms that enable targeting of form controls based on the state of a widget.</p>
+
+<h3 id="required_and_optional">:required and :optional</h3>
+
+<p>The <strong><code>{{cssxref(':required')}}</code></strong> pseudo-class only matches <code>{{htmlelement('input')}}</code>, <code>{{htmlelement('select')}}</code>, and <code>{{htmlelement('textarea')}}</code> elements that have the <code><a href="/en-US/docs/Web/HTML/Attributes/required">required</a></code> attribute set. If an element has the <code>required</code> attribute but doesn't support the attribute, it will not match; for example, <code>form:required {}</code> wont match anything since {{htmlelement('form')}} doesn't support the <code><a href="/en-US/docs/Web/HTML/Attributes/required">required</a></code> attribute.</p>
+
+<p>The <strong>{{cssxref(':optional')}}</strong>  <a href="https://wiki.developer.mozilla.org/en-US/docs/Web/CSS/Pseudo-classes">pseudo-class</a> matches any element that supports the <code>required</code> attribute but which doesn't have the <code>required</code> attribute currently set. These include {{htmlelement('input')}}, {{htmlelement('select')}}, and {{htmlelement('textarea')}} elements only.</p>
+
+<p>Note that if one radio button in a same-named group of radio buttons has the required attribute, all the radio buttons will  be invalid until one is selected, but only the one(s) with the attribute assigned will actually match <strong>{{cssxref(':required')}}.</strong></p>
+
+<h4 id="HTML">HTML</h4>
+
+<pre class="brush: html">&lt;fieldset&gt;
+  &lt;legend&gt;Which colors do you like?&lt;/legend&gt;
+  &lt;ul&gt;
+    &lt;li&gt;
+      &lt;input type="checkbox" name="color" value="red" required id="red1"&gt;
+      &lt;label for="red1"&gt;Red&lt;/label&gt;
+    &lt;/li&gt;
+    &lt;li&gt;
+      &lt;input type="checkbox" name="color" value="green" id="green1"&gt;
+      &lt;label for="green1"&gt;Green&lt;/label&gt;
+    &lt;/li&gt;
+    &lt;li&gt;
+      &lt;input type="checkbox" name="color" value="blue" id="blue1"&gt;
+      &lt;label for="blue1"&gt;Blue&lt;/label&gt;
+    &lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/fieldset&gt;
+
+&lt;fieldset&gt;
+  &lt;legend&gt;Which is your favorite?&lt;/legend&gt;
+  &lt;ul&gt;
+    &lt;li&gt;
+      &lt;input type="radio" name="color" value="red" required id="red2"&gt;
+      &lt;label for="red2"&gt;Red&lt;/label&gt;
+    &lt;/li&gt;
+    &lt;li&gt;
+      &lt;input type="radio" name="color" value="green" id="green2"&gt;
+      &lt;label for="green2"&gt;Green&lt;/label&gt;
+    &lt;/li&gt;
+    &lt;li&gt;
+      &lt;input type="radio" name="color" value="blue" id="blue2"&gt;
+      &lt;label for="blue2"&gt;Blue&lt;/label&gt;
+    &lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/fieldset&gt;</pre>
+
+<h4 id="CSS">CSS</h4>
+
+<pre class="brush: css">:required + label {
+  color: red;
+}
+
+:optional + label {
+  color: blue;
+} 
+
+:invalid + label {
+  text-decoration: underline;
+}</pre>
+
+<h4 id="Result">Result</h4>
+
+<p>{{EmbedLiveSample('required_and_optional', 300, 250)}}</p>
+
+<h3 id="enabled_and_disabled">:enabled and :disabled</h3>
+
+<p>An enabled element is an element that can be activated; it can be selected, clicked on, typed into, etc.  The {{cssxref(":enabled")}} <a href="/en-US/docs/Web/CSS">CSS</a> <a href="/en-US/docs/Web/CSS/Pseudo-classes">pseudo-class</a> represents an enabled element whereas {{cssxref(":disabled")}} represents a disabled element. A disabled element is an element which could have an enabled state, but is currently not enabled.</p>
+
+<p>This example shows a basic shipping form. It uses the <a href="/en-US/docs/Web/JavaScript">JavaScript</a> {{event("change")}} event to let the user enable/disable the billing fields.</p>
+
+<h4 id="HTML_2">HTML</h4>
+
+<pre class="brush: html">&lt;form action="#"&gt;
+  &lt;fieldset id="shipping"&gt;
+    &lt;legend&gt;Shipping address&lt;/legend&gt;
+    &lt;input type="text" placeholder="Name"&gt;
+    &lt;input type="text" placeholder="Address"&gt;
+    &lt;input type="text" placeholder="Zip Code"&gt;
+  &lt;/fieldset&gt;
+  &lt;br&gt;
+  &lt;fieldset id="billing"&gt;
+    &lt;legend&gt;Billing address&lt;/legend&gt;
+    &lt;label for="billing-checkbox"&gt;Same as shipping address:&lt;/label&gt;
+    &lt;input type="checkbox" id="billing-checkbox" checked&gt;
+    &lt;br&gt;
+    &lt;input type="text" placeholder="Name" disabled&gt;
+    &lt;input type="text" placeholder="Address" disabled&gt;
+    &lt;input type="text" placeholder="Zip Code" disabled&gt;
+  &lt;/fieldset&gt;
+&lt;/form&gt;
+</pre>
+
+<h4 id="CSS_2">CSS</h4>
+
+<pre class="brush: css">input[type="text"]:disabled {
+  background: #ccc;
+}
+</pre>
+
+<h4 id="JavaScript">JavaScript</h4>
+
+<pre class="brush: js">// Wait for the page to finish loading
+document.addEventListener('DOMContentLoaded', function () {
+  // Attach `change` event listener to checkbox
+  document.getElementById('billing-checkbox').onchange = toggleBilling;
+}, false);
+
+function toggleBilling() {
+  // Select the billing text fields
+  var billingItems = document.querySelectorAll('#billing input[type="text"]');
+
+  // Toggle the billing text fields
+  for (var i = 0; i &lt; billingItems.length; i++) {
+    billingItems[i].disabled = !billingItems[i].disabled;
+  }
+}
+</pre>
+
+<h4 id="Result_2">Result</h4>
+
+<p>{{EmbedLiveSample('enabled_and_disabled', 300, 250)}}</p>
+
+<h3 id="checked_indeterminate_and_default">:checked, :indeterminate, and :default</h3>
+
+<p>{{HTMLElement("input/radio", "radio buttons")}} and {{HTMLElement("input/checkbox", "checkboxes")}} can be checked or unchecked. When checked, they will be matched by the {{cssxref(":checked")}} pseudo-class. Some are by default checked, meaning they were checked at page load. These match the  {{cssxref(":default")}} pseudo-class, even if the user unchecks them.</p>
+
+<p>When they are neither checked nor unchecked, they are considered <em>indeterminate</em> and will match the {{cssxref(":indeterminate")}} pseudo-class. Elements which are indeterminate include {{HTMLElement("input/radio")}} elements, when all radio buttons in a same-named group are unchecked, {{HTMLElement("input/checkbox")}} whose <code>indeterminate</code> property is set to <code>true</code> via JavaScript, and {{HTMLElement("progress")}} elements that have no value.</p>
+
+<h4 id="HTML_3">HTML</h4>
+
+<pre class="brush: html">&lt;div&gt;
+  &lt;input type="checkbox" id="checkbox1" checked&gt;
+  &lt;label for="checkbox1"&gt;This checkbox is checked by default. I am always italic.&lt;/label&gt;
+&lt;/div&gt;
+&lt;div&gt;
+  &lt;input type="checkbox" id="checkbox2"&gt;
+  &lt;label for="checkbox2"&gt;This checkbox needs to be checked. I am never italic.&lt;/label&gt;
+&lt;/div&gt;
+&lt;div&gt; 
+  &lt;label for="progress1"&gt;This progress has no value&lt;/label&gt; 
+  &lt;progress id="progress1"&gt;
+&lt;/div&gt;
+&lt;div&gt;
+  &lt;label for="progress2"&gt;This progress has a value&lt;/label&gt;
+  &lt;progress id="progress2" value="5"&gt;
+&lt;/div&gt;</pre>
+
+<h4 id="CSS_3">CSS</h4>
+
+<pre class="brush: css; hightlight[5]">input:default + label {
+  font-style: italic;
+}
+input:checked + label { 
+  color: red; 
+  font-weight: bold;
+}
+input:indeterminate + label { 
+  background-color: palegoldenrod; 
+}
+progress:indeterminate {
+  outline: 2px green dashed;
+}
+</pre>
+
+<h4 id="JavaScript_2">JavaScript</h4>
+
+<pre class="brush: js">document.getElementsById("checkbox1").indeterminate = true;
+</pre>
+
+<p>{{EmbedLiveSample('checked_indeterminate_and_default', 'auto', 150)}}</p>
+
+<h3 id="valid_invalid_and_in-range_out-of-range">:valid &amp; :invalid and :in-range &amp; :out-of-range</h3>
+
+<p>Form controls with <a href="/en-US/docs/Web/Guide/HTML/HTML5/Constraint_validation">constraint limitations</a> can be targeted based on whether they are {{cssxref(":valid")}} or {{cssxref(":invalid")}}. Some elements are invalid because they are required but have no value; such an element would be matched by both the {{cssxref(":invalid")}} and {{cssxref(":required")}} pseudoclasses, dropping {{cssxref(":invalid")}} match and gaining the {{cssxref(":valid")}} when updated with a valid value; while still matching the {{cssxref(":required")}} pseudoclasses.</p>
+
+<p>The {{cssxref(":in-range")}} and {{cssxref(":out-range")}} <a href="/en-US/docs/CSS/Pseudo-classes" title="Pseudo-classes">pseudo-classes</a> represents  {{htmlelement("input")}} elements whose current value is inside and outside the range limits specified by the {{htmlattrxref("min", "input")}} and {{htmlattrxref("max","input")}} attributes respectively. Inputs matched by the {{cssxref(":out-of-range")}} pseudo-class also match the {{cssxref(":invalid")}} pseudo-class.</p>
+
+<h4 id="HTML_4">HTML</h4>
+
+<pre class="brush: html">&lt;form action="#" method="get"&gt;
+&lt;p&gt;Values between 0 and 100 that are divisible by 10 are valid&lt;/p&gt;
+  &lt;ul&gt;
+    &lt;li&gt;
+      &lt;input id="value1" name="value1" type="number" max="100" min="0" step="10" required&gt;
+      &lt;label for="value1"&gt;
+        &lt;span class="required"&gt;(required)&lt;/span&gt;
+        Your value is 
+      &lt;/label&gt;
+    &lt;/li&gt;
+    &lt;li&gt; 
+      &lt;input id="value2" name="value2" type="number" max="100" min="0" step="10"&gt; 
+      &lt;label for="value2"&gt;
+        &lt;span class="required"&gt;(required)&lt;/span&gt;
+        Your value is
+      &lt;/label&gt;
+    &lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/form&gt;</pre>
+
+<div id="example">
+<h4 id="CSS_4">CSS</h4>
+
+<pre class="brush: css;">li {
+  line-height: 2em;
+}
+
+input:required + label {
+  font-weight: bold;
+}
+/* if not required, hide the "required" from users, including screen readers  */ 
+input:not(:required) + label &gt; .required { 
+  display: none; 
+}
+
+input:valid {
+  border: 2px solid green;
+  font-weight: bold;
+}
+
+input:invalid {
+  border: 2px solid red;
+}
+
+input:in-range {
+  background-color: rgba(0, 255, 0, 0.25);
+}
+
+/* notice that a value can only be out-of-range if a value exists */
+input:out-of-range {
+  background-color: rgba(255, 0, 0, 0.25);
+  border: 2px solid red;
+}
+
+/* null values are in-range. */
+input:in-range + label::after {
+  content: ' in range.';
+}
+
+input:out-of-range + label::after {
+  content: ' out of range.';
+}</pre>
+
+<h4 id="Result_3">Result</h4>
+</div>
+
+<div>{{EmbedLiveSample('valid_invalid_and_in-range_out-of-range', 600, 140)}}</div>
+
+<div>Note that a missing value is not out-of-range. A value can be invalid if it is out of range or, if required, simply missing.</div>
+
+<h3 id="read-only_and_read-write">:read-only and :read-write</h3>
+
+<div>The {{cssxref(":read-only")}} pseudo-elements represents an element (such as <code>input</code> or <code>textarea</code>) that is not editable by the user. The {{cssxref(":read-write")}} pseudo-elements represents an element (such as <code>input</code> or <code>textarea</code>) that is editable by the user.</div>
+
+<div></div>
+
+<h3 id="More_pseudo-classes">More pseudo-classes</h3>
+
+<div>There are a few more pseudo-classes of interest:</div>
+
+<ul>
+ <li>The {{cssxref(":focus-within")}} pseudo-class matches an ancestor element of an element that has received focus or has focus itself.</li>
+ <li>The {{cssxref("<strong><code>:focus-visible")}}</code></strong> pseudo-class match the subset of elements that match the {{CSSxRef(":focus")}} that received focus via keyboard interaction (rather than touch or mouse).</li>
+ <li>The {{cssxref(":placeholder-shown")}} pseudo-class matches {{htmlelement('input')}} and {{htmlelement('textarea')}} elements that support and currently have the <code><a href="/en-US/docs/Web/HTML/Attributes/placeholder">placeholder</a></code> attribute, and still have the placeholder showing because the value of the element is still empty.</li>
+ <li>The {{cssxref(":blank")}}<strong> </strong>pseudo-class selects empty user input elements including  {{HTMLElement("input")}} and {{HTMLElement("textarea")}}. {{cssxref(":empty")}} also matches elements that have no children, like {{HTMLElement("input")}}, but also matches other empty elements like {{HTMLElement("br")}} and {{HTMLElement("hr")}}. <code>:empty</code> has browser support; the <code>:blank</code> pseudo-class is not yet fully defined.</li>
+ <li>When the <code><a href="https://drafts.csswg.org/selectors-4/#user-invalid-pseudo">:user-invalid</a></code> pseudo-class is supported, it will be similar to {{cssxref(":invalid")}}, but with better user experience. If the value is valid when receiving focus, the element may match <code>:invalid</code> as the user enters data if the value is temporarily invalid but will only match <code>:user-invalid</code> when the element loses focus. If the value was originally invalid, matching both <code>:invalid</code> and <code>:user-invalid</code>, similar to <code>:invalid</code>, it will stop matching <code>:user-invalid</code> is the value does become valid.</li>
+</ul>
+
+<h2 id="Conclusion">Conclusion</h2>
+
+<p>Now that we have new and varied ways of targeting form controls, we can style them. Next, we'll dive into <a href="/en-US/docs/Learn/HTML/Forms/Styling_HTML_forms">styling HTML forms</a>.</p>
+
+<p>{{PreviousMenuNext("Learn/Forms/Advanced_form_styling", "Learn/Forms/Form_validation", "Learn/Forms")}}</p>
+
+<h2 id="In_this_module">In this module</h2>
+
+<ul>
+ <li><a href="/en-US/docs/Learn/HTML/Forms/Your_first_HTML_form">Your first HTML form</a></li>
+ <li><a href="/en-US/docs/Learn/HTML/Forms/How_to_structure_an_HTML_form">How to structure an HTML form</a></li>
+ <li><a href="/en-US/docs/Learn/HTML/Forms/The_native_form_widgets">The native form widgets</a></li>
+ <li><a href="/en-US/docs/Learn/HTML/Forms/HTML5_input_types">HTML5 input types</a></li>
+ <li><a href="/en-US/docs/Learn/HTML/Forms/Additional_form_controls">Additional form controls</a></li>
+ <li><a href="/en-US/docs/Learn/HTML/Forms/UI_pseudo-classes">UI pseudo-classes</a></li>
+ <li><a href="/en-US/docs/Learn/HTML/Forms/Styling_HTML_forms">Styling HTML forms</a></li>
+ <li><a href="/en-US/docs/Learn/HTML/Forms/Form_validation">Form data validation</a></li>
+ <li><a href="/en-US/docs/Learn/HTML/Forms/Sending_and_retrieving_form_data">Sending form data</a></li>
+</ul>
+
+<h3 id="Advanced_Topics">Advanced Topics</h3>
+
+<ul>
+ <li><a href="/en-US/docs/Learn/HTML/Forms/Sending_forms_through_JavaScript">Sending forms through JavaScript</a></li>
+ <li><a href="/en-US/docs/Learn/HTML/Forms/How_to_build_custom_form_widgets">How to build custom form widgets</a></li>
+ <li><a href="/en-US/docs/Learn/HTML/Forms/HTML_forms_in_legacy_browsers">HTML forms in legacy browsers</a></li>
+ <li><a href="/en-US/docs/Learn/HTML/Forms/Advanced_styling_for_HTML_forms">Advanced styling for HTML forms</a></li>
+ <li><a href="/en-US/docs/Learn/HTML/Forms/Property_compatibility_table_for_form_widgets">Property compatibility table for form widgets</a></li>
+</ul>

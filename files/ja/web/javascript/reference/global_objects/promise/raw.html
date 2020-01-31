@@ -1,0 +1,248 @@
+<div>{{JSRef}}</div>
+
+<p><strong><code>Promise</code></strong> オブジェクトは非同期処理の最終的な完了処理（もしくは失敗）およびその結果の値を表現します。</p>
+
+<div class="blockIndicator note">
+<p><strong>メモ:</strong> この記事は Promise のコンストラクターと、そのようなオブジェクトのメソッドやプロパティを説明します。 Promise の挙動と使用法について学ぶには、最初に <a href="/ja/docs/Web/JavaScript/Guide/Using_promises">Promise の使用</a>をお読みください。通常、コンストラクターは、 Promise にまだ対応していない関数をラップするのに使われます。</p>
+</div>
+
+<div>{{EmbedInteractiveExample("pages/js/promise-constructor.html")}}</div>
+
+<p class="hidden">このデモのソースファイルは GitHub リポジトリに格納されています。デモプロジェクトに協力したい場合は、 <a href="https://github.com/mdn/interactive-examples">https://github.com/mdn/interactive-examples</a> をクローンしてプルリクエストを送信してください。</p>
+
+<h2 id="Syntax" name="Syntax">構文</h2>
+
+<pre class="syntaxbox">new Promise(<var>executor</var>);</pre>
+
+<h3 id="Parameters" name="Parameters">引数</h3>
+
+<dl>
+ <dt><code><var>executor</var></code></dt>
+ <dd>2 つの引数 <code>resolve</code> と <code>reject</code> を取る関数。<code>executor</code> 関数は <code>resolve</code> 関数と <code>reject</code> 関数が渡されて Promise が実装されるとすぐに実行されます (<code>Promise</code> コンストラクターがオブジェクトを返すよりも前に executor は実行されます)。 <code>resolve</code> 関数と <code>reject</code> 関数は呼び出されると Promise に対してそれぞれ resolve (解決) もしくは reject (拒否) を行います。executor は通常、非同期の作業を開始して、完了した際に <code>resolve</code> 関数 (成功した場合) もしくは <code>reject</code> 関数 (エラーが発生した場合) のいずれか一方を呼び出します。 executor 関数でエラーが投げられた場合、 Promise は reject されます。 executor の返値は無視されます。</dd>
+</dl>
+
+<h2 id="Description" name="Description">解説</h2>
+
+<p><code><strong>Promise</strong></code> インターフェイスは作成時点では分からなくてもよい値へのプロキシです。 Promise を用いることで、非同期アクションの成功や失敗に対するハンドラーを関連付けることができます。これにより、非同期メソッドは、最終的な値を返すのではなく、未来のある時点で値を持つ Promise を返すことで、同期メソッドと同じように値を返すことができるようになります。</p>
+
+<p><code>Promise</code> の状態は以下のいずれかとなります。</p>
+
+<ul>
+ <li><em>pending</em>: 初期状態。成功も失敗もしていません。</li>
+ <li><em>fulfilled</em>: 処理が成功して完了したことを意味します。</li>
+ <li><em>rejected</em>: 処理が失敗したことを意味します。</li>
+</ul>
+
+<p>pending 状態の Promise は、何らかの値を持つ <em>fulfilled</em> 状態、もしくは何らかの理由 (エラー) を持つ <em>rejected</em> 状態のいずれかに変わります。そのどちらとなっても、<code>then</code> メソッドによって関連付けられたハンドラーが呼ばれます。 (対応するハンドラーがアタッチされたとき、既に Promise が成功または失敗していても、そのハンドラーは呼ばれます。よって、非同期処理とその関連付けられたハンドラーとの競合は発生しません。)</p>
+
+<p><code>{{JSxRef("Promise.then", "Promise.prototype.then()")}}</code> メソッドと <code>{{JSxRef("Promise.catch", "Promise.prototype.catch()")}}</code> メソッドもまた Promise を返すので、これらをチェーン (連鎖) させることができます。</p>
+
+<p><img alt="" src="https://mdn.mozillademos.org/files/15911/promises.png" style="height: 297px; width: 801px;"></p>
+
+<div class="blockIndicator note">
+<p><strong>混乱を避けるために:</strong> Scheme に代表されるいくつかの言語では、遅延評価や計算を延期する機構を持っており、これらも "Promise" と呼ばれます。 JavaScript における Promise は、すでに起きつつある処理を表します。そしてこの処理はコールバックを使うことでチェーンさせることができます。式を遅延評価する方法を探しているのであれば、引数なしの<a href="/ja/docs/Web/JavaScript/Reference/Functions/Arrow_functions">アロー関数</a>を考えてください。 <code>f = () =&gt; <em>expression</em></code> のように実現でき、遅延評価される式が作成され、 <code>f()</code> を呼ぶことでその式を評価できます。</p>
+</div>
+
+<div class="blockIndicator note">
+<p><strong>メモ</strong>: Promise は fulfilled か failed のどちらかになった場合は、 pending ではなく settled と呼ばれます。また解決 (<em>resolved</em>) という用語も目にされたことがあると思います。解決とは、Promise が解決または他の promise の状態にマッチするために" locked in "したことを意味します。<a href="https://github.com/domenic/promises-unwrapping/blob/master/docs/states-and-fates.md">States and fates</a> では、 Promise の技術についてより詳細に述べられています。</p>
+</div>
+
+<h2 id="Properties" name="Properties">プロパティ</h2>
+
+<dl>
+ <dt><code>Promise.length</code></dt>
+ <dd>長さを表し、常に 1 (コンストラクターの引数の数)。</dd>
+ <dt>{{JSxRef("Promise.prototype")}}</dt>
+ <dd><code>Promise</code> コンストラクターのプロトタイプを表す。</dd>
+</dl>
+
+<h2 id="Methods" name="Methods">メソッド</h2>
+
+<dl>
+ <dt>{{JSxRef("Promise.all", "Promise.all(iterable)")}}</dt>
+ <dd>すべての Promise が解決されるか、拒否されるかするまで待ちます。</dd>
+ <dd>返却された Promise が解決された場合、解決された Promise が、複数の Promise が含まれる iterable で定義された通りの順番で入った集合配列の値によって解決されます。拒否された場合は、 iterable の中で拒否された最初の Promise の理由によって拒否されます。</dd>
+ <dt>{{JSxRef("Promise.allSettled", "Promise.allSettled(iterable)")}}</dt>
+ <dd>すべての Promise が完了する (それぞれが解決するか、拒否される) まで待ちます。</dd>
+ <dd>Promise を返し、これはすべての与えられた Promise が解決または拒否された後で、それぞれの Promise の結果を記述するオブジェクトの配列で解決されます。</dd>
+ <dt>{{JSxRef("Promise.race", "Promise.race(iterable)")}}</dt>
+ <dd>Promise のうちの1つが解決または拒否されるまで待ちます。</dd>
+ <dd>返された Promise が解決された場合、 iterable の中で最初に解決された Promise の値によって解決されます。拒否された場合、最初に拒否された Promise の理由によって拒否されます。</dd>
+ <dt>{{JSxRef("Promise.reject", "Promise.reject(reason)")}}</dt>
+ <dd>与えられた理由で拒否された新しい <code>Promise</code> オブジェクトを返します。</dd>
+ <dt>{{JSxRef("Promise.resolve", "Promise.resolve(value)")}}</dt>
+ <dd>与えられた値で解決された新しい <code>Promise</code> オブジェクトを返します。もし値が thenable (つまり <code>then</code> メソッドを持っているオブジェクト) ならば、返される Promise はその thenable をたどり、その結果を採用します。そうでなければ、返される Promise は与えられた値で解決されます。一般に、ある値が Promise かどうかがわからない場合は、{{JSxRef("Promise.resolve", "Promise.resolve(value)")}} を使って Promise にして扱います。</dd>
+</dl>
+
+<h2 id="Promise_prototype" name="Promise_prototype">Promise プロトタイプ</h2>
+
+<h3 id="Properties_2" name="Properties_2">プロパティ</h3>
+
+<p>{{Page('ja/Web/JavaScript/Reference/Global_Objects/Promise/prototype','プロパティ')}}</p>
+
+<h3 id="Methods_2" name="Methods_2">メソッド</h3>
+
+<p>{{Page('ja/Web/JavaScript/Reference/Global_Objects/Promise/prototype','メソッド')}}</p>
+
+<h2 id="Creating_a_Promise" name="Creating_a_Promise">Promise を作成する</h2>
+
+<p><code>Promise</code> オブジェクトは <code>new</code> キーワードとコンストラクターで作成されます。コンストラクターは executor 関数と呼ばれる引数を取ります。 executor 関数は 2 つの関数を引数として取ります。1 つめの関数 (<code>resolve</code>) は非同期タスクが成功して完了した場合に呼び出され、タスクの結果を値として返します。2 つめの関数 (<code>reject</code>) はタスクが失敗した場合に呼び出され、失敗した理由 (典型的には error オブジェクト) を返します。</p>
+
+<pre class="brush: js">const myFirstPromise = new Promise((resolve, reject) =&gt; {
+  // do something asynchronous which eventually calls either:
+  //
+  //   resolve(someValue); // fulfilled
+  // or
+  //   reject("failure reason"); // rejected
+});
+</pre>
+
+<p>Promise 機能を持つ関数を作るには、単純に Promise オブジェクトを返すようにします。</p>
+
+<pre class="brush: js">function myAsyncFunction(url) {
+  return new Promise((resolve, reject) =&gt; {
+    const xhr = new XMLHttpRequest();
+    xhr.open("GET", url);
+    xhr.onload = () =&gt; resolve(xhr.responseText);
+    xhr.onerror = () =&gt; reject(xhr.statusText);
+    xhr.send();
+  });
+}</pre>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<h3 id="Basic_Example" name="Basic_Example">基本的な使用例</h3>
+
+<pre class="brush: js">let myFirstPromise = new Promise((resolve, reject) =&gt; {
+  // We call resolve(...) when what we were doing asynchronously was successful, and reject(...) when it failed.
+  // In this example, we use setTimeout(...) to simulate async code. 
+  // In reality, you will probably be using something like XHR or an HTML5 API.
+  setTimeout(function(){
+    resolve("Success!"); // Yay! Everything went well!
+  }, 250);
+});
+
+myFirstPromise.then((successMessage) =&gt; {
+  // successMessage is whatever we passed in the resolve(...) function above.
+  // It doesn't have to be a string, but if it is only a succeed message, it probably will be.
+  console.log("Yay! " + successMessage);
+});
+</pre>
+
+<h3 id="Advanced_Example" name="Advanced_Example">応用例</h3>
+
+<div class="hidden">
+<pre class="brush: html">&lt;button id="btn"&gt;Make a promise!&lt;/button&gt;
+&lt;div id="log"&gt;&lt;/div&gt;
+</pre>
+</div>
+
+<p>以下の例は <code>Promise</code> の仕組みを示したものです。 <code>testPromise()</code> メソッドは {{HTMLElement("button")}} をクリックする度に呼び出されます。<code>testPromise()</code> メソッドは、 {{domxref("window.setTimeout()")}} を用いて、1秒から 3秒のランダムな時間の後、メソッドがこれまでに呼ばれた回数で成功する Promise を作成します。 <code>Promise()</code> コンストラクターは Promise を作成するために使用されます。</p>
+
+<p>Promise の成功は、 {{JSxRef("Promise.prototype.then()","p1.then()")}} で設定されたコールバックによって記録されます。この記録から、メソッドの同期処理部分が、 Promise による非同期処理からどのように分離されているかがわかります。</p>
+
+<pre class="brush: js">'use strict';
+var promiseCount = 0;
+
+function testPromise() {
+    let thisPromiseCount = ++promiseCount;
+
+    let log = document.getElementById('log');
+    log.insertAdjacentHTML('beforeend', thisPromiseCount +
+        ') 開始 (&lt;small&gt;同期処理開始&lt;/small&gt;)&lt;br/&gt;');
+
+    // 新しい Promise を作成: 1～3秒後に結果を返すことを約束します
+    let p1 = new Promise(
+        // executor 関数は Promise の成功または失敗に応じて呼ばれます
+       (resolve, reject) =&gt; {
+            log.insertAdjacentHTML('beforeend', thisPromiseCount +
+                ') Promise 開始 (&lt;small&gt;非同期処理開始&lt;/small&gt;)&lt;br/&gt;');
+            // 非同期を作成するための一例です
+            window.setTimeout(
+                function() {
+                    // 約束を果たしました!
+                    resolve(thisPromiseCount);
+                }, Math.random() * 2000 + 1000);
+        }
+    );
+
+    // Promise が成功した時に何をするかを定めます then() で成功した時
+    // catch() で失敗した時
+    p1.then(
+        // メッセージと値を記録します
+        function(val) {
+            log.insertAdjacentHTML('beforeend', val +
+                ') Promise 成功 (&lt;small&gt;非同期処理終了&lt;/small&gt;)&lt;br/&gt;');
+        }).catch(
+        // 失敗した理由を記録します
+       (reason) =&gt; {
+            console.log('Handle rejected promise ('+reason+') here.');
+        });
+
+    log.insertAdjacentHTML('beforeend', thisPromiseCount +
+        ') Promise は作成されました (&lt;small&gt;同期処理終了&lt;/small&gt;)&lt;br/&gt;');
+}</pre>
+
+<div class="hidden">
+<pre class="brush: js">if ("Promise" in window) {
+  let btn = document.getElementById("btn");
+  btn.addEventListener("click",testPromise);
+} else {
+  log = document.getElementById('log');
+  log.innerHTML = "Live example not available as your browser doesn't support the &lt;code&gt;Promise&lt;code&gt; interface.";
+}
+</pre>
+</div>
+
+<p>この例はボタンをクリックすると実行されます。あなたのブラウザーが <code>Promise</code> に対応している必要があります。短い時間の間に何度かボタンをクリックすると、それぞれの promise が次々と成功するのがわかります。</p>
+
+<p>{{EmbedLiveSample("Advanced_Example", "500", "200")}}</p>
+
+<h2 id="Loading_an_image_with_XHR" name="Loading_an_image_with_XHR">XHR による画像の読み込み</h2>
+
+<p><code>Promise</code> と {{domxref("XMLHttpRequest")}} で画像を読み込む別の例は、 MDN GitHub <a href="https://github.com/mdn/js-examples/tree/master/promises-test">js-examples</a> リポジトリにあり、<a href="https://mdn.github.io/js-examples/promises-test/">動作を確認する</a>ことができます。それぞれの行のコメントで Promise と XHR の構造がよくわかるはずです。</p>
+
+<h2 id="Specifications" name="Specifications">仕様書</h2>
+
+<table class="standard-table">
+ <tbody>
+  <tr>
+   <th scope="col">仕様書</th>
+   <th scope="col">状態</th>
+   <th scope="col">備考</th>
+  </tr>
+  <tr>
+   <td>{{SpecName('ES2015', '#sec-promise-objects', 'Promise')}}</td>
+   <td>{{Spec2('ES2015')}}</td>
+   <td>ECMA 標準での初回定義</td>
+  </tr>
+  <tr>
+   <td>{{SpecName('ESDraft', '#sec-promise-objects', 'Promise')}}</td>
+   <td>{{Spec2('ESDraft')}}</td>
+   <td></td>
+  </tr>
+ </tbody>
+</table>
+
+<h2 id="Browser_compatibility" name="Browser_compatibility">ブラウザーの互換性</h2>
+
+<p class="hidden">互換性データに協力していただけるのであれば、 <a class="external" href="https://github.com/mdn/browser-compat-data">https://github.com/mdn/browser-compat-data</a> に対してプルリクエストを書いてください。</p>
+
+<p>{{Compat("javascript.builtins.Promise")}}</p>
+
+<h2 id="See_also" name="See_also">関連情報</h2>
+
+<ul>
+ <li><a href="/ja/docs/Web/JavaScript/Guide/Using_promises">Promise の使用</a></li>
+ <li><a href="http://promisesaplus.com/">Promises/A+ specification</a></li>
+ <li><a href="https://medium.com/@ramsunvtech/promises-of-promise-part-1-53f769245a53">Venkatraman.R - JS Promise (Part 1, Basics)</a></li>
+ <li><a href="https://medium.com/@ramsunvtech/js-promise-part-2-q-js-when-js-and-rsvp-js-af596232525c#.dzlqh6ski">Venkatraman.R - JS Promise (Part 2 - Using Q.js, When.js and RSVP.js)</a></li>
+ <li><a href="https://tech.io/playgrounds/11107/tools-for-promises-unittesting/introduction">Venkatraman.R - Tools for Promises Unit Testing</a></li>
+ <li><a href="http://www.html5rocks.com/en/tutorials/es6/promises/">Jake Archibald: JavaScript Promises: There and Back Again</a></li>
+ <li><a href="http://de.slideshare.net/domenicdenicola/callbacks-promises-and-coroutines-oh-my-the-evolution-of-asynchronicity-in-javascript">Domenic Denicola: Callbacks, Promises, and Coroutines – Asynchronous Programming Patterns in JavaScript</a></li>
+ <li><a href="http://www.mattgreer.org/articles/promises-in-wicked-detail/">Matt Greer: JavaScript Promises ... In Wicked Detail</a></li>
+ <li><a href="https://www.promisejs.org/">Forbes Lindesay: promisejs.org</a></li>
+ <li><a href="https://github.com/anonyco/SPromiseMeSpeedJS/blob/master/README.md">Speed-polyfill to polyfill both promise availability and promise performance.</a></li>
+ <li><a href="https://github.com/jakearchibald/es6-promise/">Promise polyfill</a></li>
+ <li><a href="https://www.udacity.com/course/javascript-promises--ud898">Udacity: JavaScript Promises</a></li>
+</ul>

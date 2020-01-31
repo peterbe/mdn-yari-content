@@ -1,0 +1,426 @@
+<p>{{LearnSidebar}}{{PreviousMenuNext("Learn/HTML/Forms/Styling_HTML_forms", "Learn/HTML/Forms/Property_compatibility_table_for_form_widgets", "Learn/HTML/Forms")}}</p>
+
+<p class="summary">本記事では、<a href="/ja/docs/HTML" title="/ja/docs/HTML">HTML</a> フォームでカスタマイズが難しい一部のウィジェットで <a href="/ja/docs/CSS" title="CSS">CSS</a> を使用する方法を見ていきます。<a href="/ja/docs/HTML/Forms/Styling_HTML_forms" title="HTML/Forms/Styling_HTML_forms">前の記事</a>で見たように、テキストフィールドやボタンでの CSS 使用はまったく問題がありません。ここからは、HTML フォームへのスタイル設定の闇の部分を見ていきます。</p>
+
+<p>始める前に、2 種類の HTML フォームウィジェットについておさらいしましょう:</p>
+
+<dl>
+ <dt>不良</dt>
+ <dd>スタイルの設定が難しく複雑なトリックが必要であり、時に CSS3 の高度な知識が必要である要素。</dd>
+ <dt>劣悪</dt>
+ <dd>これらの要素では、CSS によるスタイル設定はあきらめましょう。あなたが可能なことはせいぜいわずかなものですが、それを各ブラウザに対してあてにすることはできません。また、それら要素の見た目を完全にコントロールすることもできません。</dd>
+</dl>
+
+<h2 id="CSS_expressiveness" name="CSS_expressiveness">CSS の表現力</h2>
+
+<p>テキストフィールドやボタン以外のフォームウィジェットに存在する大きな問題は多くの場合、CSS には複雑なウィジェットへ適切にスタイルを設定できるほど十分な表現力がないことです。</p>
+
+<p>最近の HTML および CSS の進化により、CSS の表現力が拡張されてきました:</p>
+
+<ul>
+ <li><a href="http://www.w3.org/TR/CSS21/selector.html#dynamic-pseudo-classes" rel="external" title="http://www.w3.org/TR/CSS21/selector.html#dynamic-pseudo-classes">CSS 2.1</a> の表現力は限られていましたが、疑似クラスが 3 つだけありました:
+
+  <ul>
+   <li>{{cssxref(":active")}}</li>
+   <li>{{cssxref(":focus")}}</li>
+   <li>{{cssxref(":hover")}}</li>
+  </ul>
+ </li>
+ <li><a href="http://www.w3.org/TR/css3-selectors/" rel="external" title="http://www.w3.org/TR/css3-selectors/">CSS Selector Level 3</a> で、HTML フォームに関係する疑似クラスがいくつか追加されました:
+  <ul>
+   <li>{{cssxref(":enabled")}}</li>
+   <li>{{cssxref(":disabled")}}</li>
+   <li>{{cssxref(":checked")}}</li>
+   <li>{{cssxref(":indeterminate")}}</li>
+  </ul>
+ </li>
+ <li><a href="http://dev.w3.org/csswg/css3-ui/#pseudo-classes" rel="external" title="http://dev.w3.org/csswg/css3-ui/#pseudo-classes">CSS Basic UI Level 3</a> でも、ウィジェットの状態を示す疑似クラスがいくつか追加されました:
+  <ul>
+   <li>{{cssxref(":default")}}</li>
+   <li>{{cssxref(":valid")}}</li>
+   <li>{{cssxref(":invalid")}}</li>
+   <li>{{cssxref(":in-range")}}</li>
+   <li>{{cssxref(":out-of-range")}}</li>
+   <li>{{cssxref(":required")}}</li>
+   <li>{{cssxref(":optional")}}</li>
+   <li>{{cssxref(":read-only")}}</li>
+   <li>{{cssxref(":read-write")}}</li>
+  </ul>
+ </li>
+ <li><a href="http://dev.w3.org/csswg/selectors4/" rel="external" title="http://dev.w3.org/csswg/selectors4/">CSS Selector Level 4</a> は、現在も策定中で活発な議論が続いていますが、フォーム関連の疑似クラスは1つだけ追加されています。
+  <ul>
+   <li>{{cssxref(":invalid")}} 疑似クラスの改良に過ぎない {{cssxref(":user-error")}}</li>
+  </ul>
+ </li>
+</ul>
+
+<p>これは良いスタートですが、日付ピッカーなどの複雑なウィジェットをスタイルするには不十分です。</p>
+
+<p>フォームの CSS の表現力を拡張するブラウザベンダーによる実験的な機能がいくつかあり、利用可能なものを知ることは良いことです。</p>
+
+<div class="warning">
+<p><strong>警告:</strong> これらの実験は興味深いものの、<strong>非標準です</strong>。それらを使用する場合 (そしてできればするべきではないですが)、自己責任で行ってください。</p>
+</div>
+
+<ul>
+ <li><a href="/ja/docs/CSS/CSS_Reference/Mozilla_Extensions" title="CSS/CSS_Reference/Mozilla_Extensions">Mozilla CSS 拡張仕様</a>
+
+  <ul>
+   <li>{{cssxref(":-moz-placeholder")}}</li>
+   <li>{{cssxref(":-moz-submit-invalid")}}</li>
+   <li>{{cssxref(":-moz-ui-invalid")}}</li>
+   <li>{{cssxref(":-moz-ui-valid")}}</li>
+  </ul>
+ </li>
+ <li><a href="/ja/docs/CSS/CSS_Reference/Webkit_Extensions" title="CSS/CSS_Reference/Webkit_Extensions">WebKit CSS 拡張仕様</a>
+  <ul>
+   <li>{{cssxref("::-webkit-input-placeholder")}}</li>
+   <li><a href="http://trac.webkit.org/wiki/Styling%20Form%20Controls" rel="external" title="http://trac.webkit.org/wiki/Styling Form Controls">ほか多数</a></li>
+  </ul>
+ </li>
+ <li><a href="http://msdn.microsoft.com/en-us/library/ie/hh869403%28v=vs.85%29.aspx" rel="external" title="http://msdn.microsoft.com/en-us/library/ie/hh869403%28v=vs.85%29.aspx">Microsoft CSS 拡張仕様</a>
+  <ul>
+   <li><code><a href="https://msdn.microsoft.com/library/hh772745%28v=vs.85%29.aspx" rel="external" title="https://msdn.microsoft.com/library/hh772745%28v=vs.85%29.aspx">:-ms-input-placeholder</a></code></li>
+  </ul>
+ </li>
+</ul>
+
+<h3 id="Controlling_the_appearance_of_form_elements" name="Controlling_the_appearance_of_form_elements">フォーム要素の外見を制御する</h3>
+
+<p>WebKit (Chrome、Safari、Opera) および Gecko (Firefox) ブラウザは、{{cssxref("-webkit-appearance")}} または {{cssxref("-moz-appearance")}} という独自のプロパティを持っています。<strong>このプロパティの値のほとんどは標準ではないため、使用しないでください</strong>。実際には、WebKit と Gecko の動作が異なっています。しかしながら、知っておくとよい値が１つあります: <code>none</code> です。この値によって、与えられたウィジェットのスタイルを (ほぼ完全に) コントロールできます。</p>
+
+<p>だから要素にスタイルを適用するのに問題がある場合は、そのプロパティを試してみてください。これからいくつか例を見ていきますが、よく知られている使い方は、WebKit ブラウザのスタイリング検索フィールドです。</p>
+
+<pre class="brush: html">&lt;form&gt;
+    &lt;input type="search"&gt;
+&lt;/form&gt;</pre>
+
+<pre class="brush: css">input[type=search] {
+    border: 1px dotted #999;
+    border-radius: 0;
+    -webkit-appearance: none;
+}</pre>
+
+<p>{{EmbedLiveSample("Controlling_the_appearance_of_form_elements", 250, 40)}}</p>
+
+<div class="note">
+<p><strong>注意:</strong> Web 技術について語る際に将来を予測するのは困難です。CSS の表現力を拡張するのは難しく、また将来の展望を示す <a href="http://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/shadow/index.html" rel="external" title="http://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/shadow/index.html">Shadow DOM</a> のような他の仕様の調査が行われています。十分なスタイル設定を可能にするための探求はまだ終わりません。</p>
+</div>
+
+<h2 id="Examples" name="Examples">例</h2>
+
+<h3 id="Check_boxes_and_radio_buttons" name="Check_boxes_and_radio_buttons">チェックボックスとラジオボタン</h3>
+
+<p>チェックボックスやラジオボタンのスタイリングは難しい場合があります。たとえば、チェックボックスやラジオボタンのサイズはデフォルトのデザインの変更が意図されておらず、ブラウザで試してみると非常に異なる反応を示します。</p>
+
+<h4 id="A_simple_test_case" name="A_simple_test_case">シンプルなテストケース</h4>
+
+<pre class="brush: html">&lt;span&gt;&lt;input type="checkbox"&gt;&lt;/span&gt;</pre>
+
+<pre class="brush: css">span {
+    display: inline-block;
+    background: red;
+}
+
+input[type=checkbox] {
+    width : 100px;
+    height: 100px;
+}</pre>
+
+<p>さまざまなブラウザでの処理方法は以下のとおりです:</p>
+
+<table>
+ <thead>
+  <tr>
+   <th scope="col">ブラウザ</th>
+   <th scope="col">レンダリング</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>Firefox 57 (Mac OSX)</td>
+   <td><img alt="" src="https://mdn.mozillademos.org/files/15671/firefox-mac-checkbox.png" style="height: 118px; width: 120px;"></td>
+  </tr>
+  <tr>
+   <td>Firefox 57 (Windows 10)</td>
+   <td><img alt="" src="https://mdn.mozillademos.org/files/15691/firefox-windows-checkbox.png" style="height: 115px; width: 113px;"></td>
+  </tr>
+  <tr>
+   <td>Chrome 63 (Mac OSX)</td>
+   <td><img alt="" src="https://mdn.mozillademos.org/files/15676/chrome-mac-checkbox.png" style="height: 117px; width: 116px;"></td>
+  </tr>
+  <tr>
+   <td>Chrome 63 (Windows 10)</td>
+   <td><img alt="" src="https://mdn.mozillademos.org/files/15681/chrome-windows-checkbox.png" style="height: 117px; width: 120px;"></td>
+  </tr>
+  <tr>
+   <td>Opera 49 (Mac OSX)</td>
+   <td><img alt="" src="https://mdn.mozillademos.org/files/15701/opera-mac-checkbox.png" style="height: 119px; width: 118px;"></td>
+  </tr>
+  <tr>
+   <td>Internet Explorer 11 (Windows 10)</td>
+   <td><img alt="" src="https://mdn.mozillademos.org/files/15696/ie11-checkbox.png" style="height: 112px; width: 119px;"></td>
+  </tr>
+  <tr>
+   <td>Edge 16 (Windows 10)</td>
+   <td><img alt="" src="https://mdn.mozillademos.org/files/15686/edge-checkbox.png" style="height: 118px; width: 119px;"></td>
+  </tr>
+ </tbody>
+</table>
+
+<h4 id="A_more_complex_example" name="A_more_complex_example">より複雑な例</h4>
+
+<p>Internet Explorer には {{cssxref("-webkit-appearance")}} や {{cssxref("-moz-appearance")}} のようなプロパティはないかもしれませんが、チェックボックスをカスタマイズする方法はあります！ この HTML の例を見てみましょう：</p>
+
+<pre class="brush: html">&lt;form&gt;
+  &lt;fieldset&gt;
+    &lt;legend&gt;Fruit preferences&lt;/legend&gt;
+
+    &lt;p&gt;
+      &lt;label&gt;
+        &lt;input type="checkbox" name="fruit-1" value="cherry"&gt;
+        I like cherry
+      &lt;/label&gt;
+    &lt;/p&gt;
+    &lt;p&gt;
+      &lt;label&gt;
+        &lt;input type="checkbox" name="fruit-2" value="banana" disabled&gt;
+        I can't like banana
+      &lt;/label&gt;
+    &lt;/p&gt;
+    &lt;p&gt;
+      &lt;label&gt;
+        &lt;input type="checkbox" name="fruit-3" value="strawberry"&gt;
+        I like strawberry
+      &lt;/label&gt;
+    &lt;/p&gt;
+  &lt;/fieldset&gt;
+&lt;/form&gt;</pre>
+
+<p>さて、カスタムチェックボックスデザインでこれらのスタイルを設定しましょう。</p>
+
+<p>計画では、ネイティブのチェックボックスを独自のデザインに置き換えることです。元のチェックボックスを解除することから始めましょう：</p>
+
+<pre class="brush: css">input[type=checkbox] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+input[type=checkbox]::-ms-check {
+  display: none;
+}</pre>
+
+<p>{{cssxref(":checked")}} と {{cssxref(":disabled")}} 擬似クラスを使用して、状態の変化に合わせてカスタムチェックボックスの外観を変更します：</p>
+
+<pre class="brush: css">input[type=checkbox] {
+  position: relative;
+  width: 1em;
+  height: 1em;
+  border: 1px solid gray;
+  /* Adjusts the position of the checkboxes on the text baseline */ 
+  vertical-align: -2px;
+  /* Set here so that Windows' High-Contrast Mode can override */
+  color: green;
+}
+
+input[type=checkbox]::before {
+  content: "✔";
+  position: absolute;
+  font-size: 1.2em;
+  right: 0;
+  top: -0.3em;
+  visibility: hidden;
+}
+
+input[type=checkbox]:checked::before {
+  /* Use `visibility` instead of `display` to avoid recalculating layout */
+  visibility: visible;
+}
+
+input[type=checkbox]:disabled {
+  border-color: black;
+  background: #ddd;
+  color: gray;
+}</pre>
+
+<p>実際の結果が表示されます。</p>
+
+<p>{{EmbedLiveSample("A_more_complex_example", 250, 130)}}</p>
+
+<p>{{cssxref("appearance")}} や {{cssxref(":-ms-check")}} をサポートしていないブラウザでこれらのチェックボックスを表示しても、問題はありません - チェックボックスのように見えます！</p>
+
+<p>この手法は、<code>-ms-<em><strong>check</strong></em></code> という名前にもかかわらず、ラジオボタンでも機能します。</p>
+
+<h3 id="Dealing_with_the_select_nightmare" name="Dealing_with_the_select_nightmare">select の悪夢に対処する</h3>
+
+<p>{{HTMLElement("select")}} 要素は、プラットフォーム間で一貫してスタイルを設定することは不可能とみなされます。しかし、いくつかのスタイルは実行可能です。例を見てみましょう：</p>
+
+<pre class="brush: html">&lt;select&gt;
+  &lt;option&gt;Cherry&lt;/option&gt;
+  &lt;option&gt;Banana&lt;/option&gt;
+  &lt;option&gt;Strawberry&lt;/option&gt;
+&lt;/select&gt;</pre>
+
+<pre class="brush: css">select {
+  width   : 80px;
+  padding : 10px;
+}
+
+option {
+  padding : 5px;
+  color   : red;
+}</pre>
+
+<p>次の表は、異なるブラウザがどのようにこれを処理するかを示しています。最初の2つの列に上記の CSS が表示されます。2番目の2つの列では、この追加 CSS を使用して外観をより詳細に制御します。</p>
+
+<pre class="brush: css">select, option {
+  -webkit-appearance: none; /* WebKit/Chromium */
+  -moz-appearance: none; /* Gecko */
+}
+
+/* Internet Explorer 10–11 and Edge */
+select::-ms-expand {
+  display: none;
+}</pre>
+
+<table class="standard-table">
+ <thead>
+  <tr>
+   <th rowspan="2" scope="col">ブラウザ</th>
+   <th rowspan="2" scope="col">OS</th>
+   <th colspan="2" scope="col">通常のレンダリング</th>
+   <th colspan="2" scope="col">調整したレンダリング</th>
+  </tr>
+  <tr>
+   <th scope="col">閉じた状態</th>
+   <th scope="col">開いた状態</th>
+   <th scope="col">閉じた状態</th>
+   <th scope="col">開いた状態</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td rowspan="2">Firefox 57</td>
+   <td>macOS</td>
+   <td style="text-align: center; vertical-align: top;"><img alt="" src="https://mdn.mozillademos.org/files/15672/firefox-mac-select-1-closed.png" style="height: 55px; width: 91px;"></td>
+   <td style="text-align: center; vertical-align: top;"><img alt="" src="https://mdn.mozillademos.org/files/15673/firefox-mac-select-1-open.png" style="height: 76px; width: 119px;"></td>
+   <td style="text-align: center; vertical-align: top;"><img alt="" src="https://mdn.mozillademos.org/files/15674/firefox-mac-select-2-closed.png" style="height: 67px; width: 94px;"></td>
+   <td style="text-align: center; vertical-align: top;"><img alt="" src="https://mdn.mozillademos.org/files/15675/firefox-mac-select-2-open.png" style="height: 82px; width: 116px;"></td>
+  </tr>
+  <tr>
+   <td>Windows 10</td>
+   <td style="text-align: center; vertical-align: top;"><img alt="" src="https://mdn.mozillademos.org/files/15692/firefox-windows-select-1-closed.png" style="height: 65px; width: 92px;"></td>
+   <td style="text-align: center; vertical-align: top;"><img alt="" src="https://mdn.mozillademos.org/files/15693/firefox-windows-select-1-open.png" style="height: 129px; width: 103px;"></td>
+   <td style="text-align: center; vertical-align: top;"><img alt="" src="https://mdn.mozillademos.org/files/15694/firefox-windows-select-2-closed.png" style="height: 69px; width: 92px;"></td>
+   <td style="text-align: center; vertical-align: top;"><img alt="" src="https://mdn.mozillademos.org/files/15695/firefox-windows-select-2-open.png" style="height: 144px; width: 108px;"></td>
+  </tr>
+  <tr>
+   <td rowspan="2">Chrome 63</td>
+   <td>macOS</td>
+   <td style="vertical-align: top; text-align: center;"><img alt="" src="https://mdn.mozillademos.org/files/15677/chrome-mac-select-1-closed.png" style="height: 36px; width: 92px;"></td>
+   <td style="vertical-align: top; text-align: center;"><img alt="" src="https://mdn.mozillademos.org/files/15678/chrome-mac-select-1-open.png" style="height: 62px; width: 108px;"></td>
+   <td style="text-align: center; vertical-align: top;"><img alt="" src="https://mdn.mozillademos.org/files/15684/chrome-windows-select-2-closed.png" style="height: 53px; width: 92px;"></td>
+   <td style="text-align: center; vertical-align: top;"><img alt="" src="https://mdn.mozillademos.org/files/15680/chrome-mac-select-2-open.png" style="height: 75px; width: 110px;"></td>
+  </tr>
+  <tr>
+   <td>Windows 10</td>
+   <td style="text-align: center; vertical-align: top;"><img alt="" src="https://mdn.mozillademos.org/files/15682/chrome-windows-select-1-closed.png" style="height: 50px; width: 91px;"></td>
+   <td style="text-align: center; vertical-align: top;"><img alt="" src="https://mdn.mozillademos.org/files/15683/chrome-windows-select-1-open.png" style="height: 95px; width: 91px;"></td>
+   <td style="text-align: center; vertical-align: top;"><img alt="" src="https://mdn.mozillademos.org/files/15684/chrome-windows-select-2-closed.png" style="height: 53px; width: 92px;"></td>
+   <td style="text-align: center; vertical-align: top;"><img alt="" src="https://mdn.mozillademos.org/files/15685/chrome-windows-select-2-open.png" style="height: 104px; width: 93px;"></td>
+  </tr>
+  <tr>
+   <td>Opera 49</td>
+   <td>macOS</td>
+   <td style="text-align: center; vertical-align: top;"><img alt="" src="https://mdn.mozillademos.org/files/15702/opera-mac-select-1-closed.png" style="height: 33px; width: 92px;"></td>
+   <td style="text-align: center; vertical-align: top;"><img alt="" src="https://mdn.mozillademos.org/files/15703/opera-mac-select-1-open.png" style="height: 67px; width: 115px;"></td>
+   <td style="text-align: center; vertical-align: top;"><img alt="" src="https://mdn.mozillademos.org/files/15704/opera-mac-select-2-closed.png" style="height: 49px; width: 89px;"></td>
+   <td style="text-align: center; vertical-align: top;"><img alt="" src="https://mdn.mozillademos.org/files/15705/opera-mac-select-2-open.png" style="height: 77px; width: 115px;"></td>
+  </tr>
+  <tr>
+   <td>IE11</td>
+   <td>Windows 10</td>
+   <td style="text-align: center; vertical-align: top;"><img alt="" src="https://mdn.mozillademos.org/files/15689/edge-select-2-closed.png" style="height: 51px; width: 89px;"></td>
+   <td style="text-align: center; vertical-align: top;"><img alt="" src="https://mdn.mozillademos.org/files/15698/ie11-select-1-open.png" style="height: 84px; width: 120px;"></td>
+   <td style="text-align: center; vertical-align: middle;"><img alt="" src="https://mdn.mozillademos.org/files/15689/edge-select-2-closed.png" style="height: 51px; width: 89px;"></td>
+   <td style="text-align: center; vertical-align: middle;"><img alt="" src="https://mdn.mozillademos.org/files/15700/ie11-select-2-open.png" style="height: 89px; width: 123px;"></td>
+  </tr>
+  <tr>
+   <td>Edge 16</td>
+   <td>Windows 10</td>
+   <td style="text-align: center; vertical-align: top;"><img alt="" src="https://mdn.mozillademos.org/files/15689/edge-select-2-closed.png" style="height: 51px; width: 89px;"></td>
+   <td style="text-align: center; vertical-align: top;"><img alt="" src="https://mdn.mozillademos.org/files/15688/edge-select-1-open.png" style="height: 84px; width: 105px;"></td>
+   <td style="text-align: center; vertical-align: middle;"><img alt="" src="https://mdn.mozillademos.org/files/15689/edge-select-2-closed.png" style="height: 51px; width: 89px;"></td>
+   <td style="text-align: center; vertical-align: middle;"><img alt="" src="https://mdn.mozillademos.org/files/15690/edge-select-2-open.png" style="height: 83px; width: 93px;"></td>
+  </tr>
+ </tbody>
+</table>
+
+<p>ご覧のように正規化プロパティの助けを借りても、問題はまだ残っています：</p>
+
+<ul>
+ <li>{{HTMLElement("option")}} 要素の開いている状態のメニューは、OS 間で一貫していない特定のスタイルのみを受け入れます</li>
+ <li>{{cssxref("padding")}} プロパティは、OS とブラウザ間で矛盾しています</li>
+ <li>Internet Explorer バージョン 9 以下では、多くのスタイリングが許可されていません</li>
+</ul>
+
+<p>CSS はこれらのウィジェットの外観を一貫して見直すのには適していないかもしれませんが、ブラウザと OS の違いがあっても実行することを望む限り、一部を調整することが可能です。</p>
+
+<p>次の記事「<a href="/ja/docs/Learn/HTML/Forms/Property_compatibility_table_for_form_widgets">Form ウィジェットのプロパティ互換表</a>」は、どのプロパティが適切かを理解するのに役立ちます。</p>
+
+<h2 id="The_road_to_nicer_forms_useful_libraries_and_polyfills" name="The_road_to_nicer_forms_useful_libraries_and_polyfills">よりよいフォームへの道: 役に立つライブラリとポリフィル</h2>
+
+<p>CSS はチェックボックスやラジオボタンのために十分に表現されていますが、より高度なウィジェットでは十分ではありません。</p>
+
+<ul>
+ <li>時間関連入力ピッカー。例えば <code>&lt;input type="date"&gt;</code>、<code>&lt;input type="datetime-local"&gt;</code>、<code>&lt;input type="week"&gt;</code> など</li>
+ <li><code>&lt;input type="color"&gt;</code> のカラーピッカー</li>
+</ul>
+
+<p>フォームウィジェットを完全にコントロールしたい場合は、JavaScript に頼るしかありません。<a href="/ja/docs/Learn/HTML/Forms/How_to_build_custom_form_widgets">カスタムフォームウィジェットをビルドする方法</a>の記事では、独自のフォームウィジェットを作成する方法を見ていきますが、そこには役に立つ便利なライブラリがいくつかあります。</p>
+
+<ul>
+ <li><a href="http://sprawsm.com/uni-form/" rel="external">Uni-form</a> はフォームマークアップを標準化し、CSS でスタイリングするフレームワークです。jQuery で使用すると、いくつかの追加機能も提供されますが、これはオプションです</li>
+ <li><a href="http://formalize.me/" rel="external">Formalize</a> は、フォームの正規化とカスタマイズを支援する共通の JavaScript フレームワーク (jQuery、Dojo、YUIなど) の拡張です</li>
+ <li><a href="http://www.emblematiq.com/lab/niceforms/" rel="external">Niceforms</a> はスタンドアロンの JavaScript メソッドで、Web フォームを完全にカスタマイズできます。あなたは、組み込みのテーマのいくつかを使用することも、独自のテーマを作成することもできます</li>
+</ul>
+
+<p>次のライブラリはフォームだけではありませんが、HTML フォームを処理するための非常に興味深い機能を備えています：</p>
+
+<ul>
+ <li><a href="http://jqueryui.com/" rel="external">jQuery UI</a> には日付ピッカーなどのカスタマイズ可能なウィジェットが用意されています (アクセシビリティに特に注意してください)</li>
+ <li><a href="http://twitter.github.com/bootstrap/base-css.html#forms" rel="external">Twitter Bootstrap</a> はフォームを正規化するのに役立ちます</li>
+ <li><a href="https://afarkas.github.io/webshim/demos/" rel="external">WebShim</a> は、ブラウザの HTML5 サポートに対処するのに役立つ巨大なツールです。Web フォームの部分は本当に役に立ちます</li>
+</ul>
+
+<p>CSS と JavaScript には副作用があることに注意してください。したがって、それらのライブラリのいずれかを使用することを選択した場合は、スクリプトが失敗した場合に備えて、堅牢なフォールバック HTML を用意する必要があります。スクリプトが失敗する理由はたくさんあります。特にモバイル環境では、これらのケースを可能な限り最善に処理するように Web サイトやアプリケーションを設計する必要があります。</p>
+
+<h2 id="まとめ">まとめ</h2>
+
+<p>HTML フォームで CSS を使用するのはまだ困難ですが、しばしばそれらを回避する方法があります。クリーンでユニバーサルな解決方法はありませんが、最新のブラウザでは新しい可能性があります。今のところ、最良の解決策は、HTML フォームウィジェットに適用されたときに異なるブラウザが CSS をサポートする方法の詳細を学ぶことです。</p>
+
+<p>このガイドの次の記事では、さまざまな HTML フォームウィジェットが最も重要な CSS プロパティをどの程度うまくサポートしているかを調べます: <a href="/ja/docs/Property_compatibility_table_for_form_widgets">フォームウィジェット向けプロパティ実装状況一覧</a></p>
+
+<h2 id="あわせて参照">あわせて参照</h2>
+
+<ul>
+ <li><a href="http://www.smashingmagazine.com/2011/06/27/useful-ideas-and-guidelines-for-good-web-form-design/" rel="external">Useful ideas and guidelines for good web form design</a></li>
+</ul>
+
+<p>{{PreviousMenuNext("Learn/HTML/Forms/Styling_HTML_forms", "Learn/HTML/Forms/Property_compatibility_table_for_form_widgets", "Learn/HTML/Forms")}}</p>
+
+<h2 id="In_this_module" name="In_this_module">このモジュール</h2>
+
+<ul>
+ <li><a href="/ja/docs/Learn/HTML/Forms/Your_first_HTML_form">初めての HTML フォーム</a></li>
+ <li><a href="/ja/docs/Learn/HTML/Forms/How_to_structure_an_HTML_form">HTML フォームの構築方法</a></li>
+ <li><a href="/ja/docs/Learn/HTML/Forms/The_native_form_widgets">ネイティブフォームウィジェット</a></li>
+ <li><a href="/ja/docs/Learn/HTML/Forms/Sending_and_retrieving_form_data">フォームデータの送信</a></li>
+ <li><a href="/ja/docs/Learn/HTML/Forms/Data_form_validation">フォームデータの検証</a></li>
+ <li><a href="/ja/docs/Learn/HTML/Forms/How_to_build_custom_form_widgets">カスタムフォームウィジェットの作成方法</a></li>
+ <li><a href="/ja/docs/Learn/HTML/Forms/Sending_forms_through_JavaScript">JavaScript によるフォームの送信</a></li>
+ <li><a href="/ja/docs/Learn/HTML/Forms/HTML_forms_in_legacy_browsers">古いブラウザでの HTML フォーム</a></li>
+ <li><a href="/ja/docs/Learn/HTML/Forms/Styling_HTML_forms">HTML フォームへのスタイル設定</a></li>
+ <li><a href="/ja/docs/Learn/HTML/Forms/Advanced_styling_for_HTML_forms">HTML フォームへの高度なスタイル設定</a></li>
+ <li><a href="/ja/docs/Property_compatibility_table_for_form_widgets">フォームウィジェット向けプロパティ実装状況一覧</a></li>
+</ul>

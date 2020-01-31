@@ -1,0 +1,57 @@
+<p>This page covers the basic steps needed to build a bleeding-edge, development version of Firefox. For additional, more detailed information, see the <a class="internal" href="/En/Developer_Guide/Build_Instructions" title="En/Build Documentation">build documentation</a>.</p>
+<h2 id="Install_build_prerequisites">Install build prerequisites</h2>
+<p>Before you can build Firefox, you'll need the build tools listed below and a few gigabytes of free disk space. Builds will be slow unless you have at least 2GB of RAM.</p>
+<h3 id="One-Line_Bootstrapping">One-Line Bootstrapping</h3>
+<p>If you are using Windows then please start working from the <a href="/en-US/docs/Simple_Firefox_build#Windows" title="/en-US/docs/Simple_Firefox_build#Windows">Windows header below</a>. This bootstrap process does not seem to work for Windows, Mozilla provides an executable that will install requirements like python and other tools automatically and easiliy.</p>
+<p>On every platform <strong>except Windows</strong>, you can attempt running our system bootstrapping script to install all system dependencies:</p>
+<pre><span class="difflineplus">wget --no-check-certificate https://hg.mozilla.org/mozilla-central/raw-file/default/python/mozboot/bin/bootstrap.py &amp;&amp; python bootstrap.py</span></pre>
+<p><span class="difflineplus">If this works, great! If not, see the appropriate section below.</span> If you encounter an error, consider <a href="https://bugzilla.mozilla.org/enter_bug.cgi?product=Core&amp;component=Build%20Config" title="https://bugzilla.mozilla.org/enter_bug.cgi?product=Core&amp;component=Build%20Config">filing a bug</a> saying that the bootstrapper didn't work. Please include output and relevant operating system details.</p>
+<h4 id="Common_Bootstrapper_Failures">Common Bootstrapper Failures</h4>
+<h5 id="Missing_wget">Missing wget</h5>
+<pre class="bz_comment_text" id="comment_text_0">wget: command not found</pre>
+<p>If you see the above, you don't have wget installed. Try curl:</p>
+<pre class="bz_comment_text" id="comment_text_0">curl <span class="difflineplus">https://hg.mozilla.org/mozilla-central/raw-file/default/python/mozboot/bin/bootstrap.py &gt; bootstrap.py &amp;&amp; python bootstrap.py</span></pre>
+<p><span class="difflineplus">If you don't have curl, download the file in your browser and run it by hand:</span></p>
+<pre><span class="difflineplus">python bootstrap.py</span></pre>
+<h3 id="Linux">Linux</h3>
+<p>The above bootstrap scripts supports popular Linux distributions. If it doesn't work for you, see <a href="/En/Developer_Guide/Build_Instructions/Linux_Prerequisites" title="https://developer.mozilla.org/En/Developer_Guide/Build_Instructions/Linux_Prerequisites">Linux build prerequisites</a> for more.</p>
+<h3 id="Mac">Mac</h3>
+<p>The above bootstrap script should work on OS X 10.6 and newer. If it doesn't, see <a class="internal" href="/En/Developer_Guide/Build_Instructions/Mac_OS_X_Prerequisites" title="en/Mac_OS_X_Build_Prerequisites">Mac OS X build prerequisites</a>.</p>
+<h3 id="Windows">Windows</h3>
+<ul>
+  <li>Make sure your system is up-to-date through Windows Update. (Windows XP needs at least <a class="external" href="http://www.microsoft.com/windowsxp/sp2/default.mspx">Service Pack 2</a> and <a class="external" href="http://www.microsoft.com/downloads/info.aspx?na=47&amp;p=3&amp;SrcDisplayLang=en&amp;SrcCategoryId=&amp;SrcFamilyId=4377f86d-c913-4b5c-b87e-ef72e5b4e065&amp;u=details.aspx?familyid=0856EACB-4362-4B0D-8EDD-AAB15C5E04F5&amp;displaylang=en">.NET Framework 2.0</a>.)</li>
+  <li>Install a version of Visual Studio that supports C++ development: <a href="http://www.microsoft.com/visualstudio/eng/downloads" title="http://www.microsoft.com/visualstudio/eng/downloads">VS 2012 for Windows Desktop</a> Pro or Express (free), or VC++ 2010 Pro or <a class="external" href="http://go.microsoft.com/?linkid=9709949" title="http://go.microsoft.com/?linkid=9709949">Express (free)</a>, or VC++ 2008 Pro or <a class="external" href="http://www.microsoft.com/downloads/details.aspx?FamilyId=F3FBB04E-92C2-4701-B4BA-92E26E408569&amp;displaylang=en" title="http://www.microsoft.com/downloads/details.aspx?FamilyId=F3FBB04E-92C2-4701-B4BA-92E26E408569&amp;displaylang=en">Express with SP1 (free)</a> (Warning ! From Firefox 10, the compilator is Visual Studio 2010; if you want to use it, you must use a previous version of it !), or 2005 Professional.</li>
+  <li>You may need to install one or more Windows SDKs. See <a class="internal" href="/En/Windows_SDK_versions" title="En/Windows SDK versions">Windows SDK versions</a> for a quick guide.</li>
+  <li>Install the <a class="external" href="http://www.microsoft.com/download/en/details.aspx?displaylang=en&amp;id=6812" title="http://www.microsoft.com/download/en/details.aspx?displaylang=en&amp;id=6812">June 2010 DirectX SDK</a> (even VS 2012 requires this).</li>
+  <li>Install <a class="external" href="http://ftp.mozilla.org/pub/mozilla.org/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe" title="http://ftp.mozilla.org/pub/mozilla.org/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe">MozillaBuild</a>, a package of additional build tools. (If you see a Windows error dialog giving you the option to re-install with the 'correct settings', choose that option and after that all should be well.)</li>
+</ul>
+<p>The rest of the build steps are done from the MSYS shell installed with MozillaBuild (the MINGW32 shell).</p>
+<p><strong>(NOTE</strong> that this is not the same as an MS-DOS CMD.EXE Shell.)</p>
+<p>Use the shortcuts on your desktop, or run <code>c:\mozilla-build\start-msvcX.bat</code> (where X is 8 for VS 2005, 9 for VS 2008, 10 for VS 2010, and 11 for VS 2012). <strong>Even if you're on 64-bit Windows, do not use the <code>start-msvcX-x64.bat</code> files </strong>(unless you know what you're doing), since they are <strong>experimental</strong> and <strong>unsupported</strong>. See the <a class="external" href="http://wiki.mozilla-x86-64.com/How_To_Build_Windows_x64_Build" rel="external nofollow" title="http://wiki.mozilla-x86-64.com/How_To_Build_Windows_x64_Build">Build:MozillaBuild For x64 wiki page</a>.</p>
+<p>Problems? See <a class="internal" href="/En/Developer_Guide/Build_Instructions/Windows_Prerequisites" title="en/Windows_Build_Prerequisites">Windows build prerequisites</a>.</p>
+<h2 id="Get_the_source">Get the source</h2>
+<div class="note">
+  <strong>Note:</strong> On Windows, you won't be able to build the Firefox source code if it's under a directory with spaces in the path (e.g. don't use "Documents and Settings"). You can pick any other location, such as a new directory C:\mozilla-central</div>
+<p>Get the latest source code from Mozilla's Mercurial code repository. This may take a while; it's a lot of code!</p>
+<pre>hg clone http://hg.mozilla.org/mozilla-central
+</pre>
+<div class="warning">
+  On some types of network connections, "hg clone" might fail because it gets interrupted.  If your "hg clone" command won't finish, try using a <a href="/En/Developer_Guide/Source_Code/Mercurial#Bundles" title="https://developer.mozilla.org/en/Mozilla_Source_Code_%28Mercurial%29#Bundles">Mercurial bundle</a> instead.</div>
+<h2 id="Build_configuration_(optional)">Build configuration (optional)</h2>
+<p>By default, the build system creates a release build of Firefox roughly equivalent to the official Firefox release builds. If that's not exactly what you want, there are many build configuration options to choose from, although it's <strong>strongly</strong> recommended that you only use options that you fully understand. The normal way to specify build options is to place them in a file named '.mozconfig' at the root of your mozilla source tree. For example, to create a debug build instead of a release build, that file would contain:</p>
+<pre>ac_add_options --enable-debug
+</pre>
+<p>For more on configuration options, see the page on <a href="/en/Configuring_Build_Options" title="en/Configuring Build Options">configuring build options</a>.</p>
+<h2 id="Building">Building</h2>
+<p>To start the build, cd into the <code>mozilla-central </code>subdirectory (created automatically by the <code>hg clone</code> command), and run:</p>
+<pre>./mach build
+</pre>
+<p>Building can take a significant amount of time, depending on your system, OS and chosen build options. Linux builds on a fast box may take under 15 minutes, but Windows builds on a slow box may take several hours. See <strong><a href="/en/Developer_Guide/Mozilla_build_FAQ#Making_builds_faster" title="https://developer.mozilla.org/en/Mozilla_Build_FAQ#Making_builds_faster">tips for making builds faster</a></strong>.</p>
+<p>Various compiled files, libraries, and the Firefox executable will be found in your object directory (under <code>mozilla-central/</code>), which is prefixed with <code>obj-</code>. The exact name depends on your system and OS. For example, a Mac user may get an object directory name of <code>obj-x86_64-apple-darwin10.7.3/</code>.</p>
+<p>From the object directory, <strong>Windows</strong> users should run <code>dist/bin/firefox.exe</code>, <strong>Linux</strong> users should run <code>dist/bin/firefox</code>, and <strong>OS X</strong> users should run <code>dist/Nightly.app/Contents/MacOS/firefox.</code></p>
+<h2 id="How_to_update_and_build_again">How to update and build again</h2>
+<p>To pull the latest changes and update the code in your <code>mozilla-central</code> working directory, run the command:</p>
+<pre>hg pull -u
+</pre>
+<p>Then just re-run the <em>mach</em> command above. This will only recompile files that changed, but it's still a long haul. An <a class="internal" href="/en/Incremental_Build" title="En/Incremental Build">incremental build</a> can be faster.</p>
+<p>{{ languages( { "ja": "ja/Simple_Firefox_build" } ) }}</p>
